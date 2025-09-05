@@ -1,0 +1,2 @@
+import React from "react";
+export default function UnauthorizedPage() { return <div className="min-h-screen flex items-center justify-center"><div className="text-center"><h1 className="text-4xl font-bold">401</h1><p>Unauthorized</p></div></div>; }
