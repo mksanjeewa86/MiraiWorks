@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useReducer, useEffect, type ReactNode } from 'react';
 import type { User, AuthResponse, LoginCredentials, RegisterData } from '@/types';
+import { authApi } from '@/services/authApi';
 
 interface AuthState {
   user: User | null;
@@ -100,65 +101,6 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
   }
 }
 
-// Simple API functions (will be replaced with proper API integration)
-const authApi = {
-  login: async (credentials: LoginCredentials): Promise<{ data: AuthResponse }> => {
-    const response = await fetch('http://localhost:8001/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(credentials),
-    });
-    if (!response.ok) throw new Error('Login failed');
-    return { data: await response.json() };
-  },
-  
-  register: async (data: RegisterData): Promise<{ data: AuthResponse }> => {
-    const response = await fetch('http://localhost:8001/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) throw new Error('Registration failed');
-    return { data: await response.json() };
-  },
-  
-  verifyTwoFactor: async (request: { code: string }): Promise<{ data: AuthResponse }> => {
-    const response = await fetch('http://localhost:8001/api/auth/verify-2fa', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(request),
-    });
-    if (!response.ok) throw new Error('2FA verification failed');
-    return { data: await response.json() };
-  },
-  
-  refreshToken: async (refreshToken: string): Promise<{ data: AuthResponse }> => {
-    const response = await fetch('http://localhost:8001/api/auth/refresh', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refresh_token: refreshToken }),
-    });
-    if (!response.ok) throw new Error('Token refresh failed');
-    return { data: await response.json() };
-  },
-  
-  getCurrentUser: async (): Promise<{ data: User }> => {
-    const token = localStorage.getItem('accessToken');
-    const response = await fetch('http://localhost:8001/api/auth/me', {
-      headers: { 'Authorization': `Bearer ${token}` },
-    });
-    if (!response.ok) throw new Error('Failed to get current user');
-    return { data: await response.json() };
-  },
-  
-  logout: async (): Promise<void> => {
-    const token = localStorage.getItem('accessToken');
-    await fetch('http://localhost:8001/api/auth/logout', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}` },
-    });
-  },
-};
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
@@ -172,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (token && refreshToken) {
         try {
           // Verify token and get user data
-          const response = await authApi.getCurrentUser();
+          const response = await authApi.me(token);
           dispatch({
             type: 'AUTH_SUCCESS',
             payload: {

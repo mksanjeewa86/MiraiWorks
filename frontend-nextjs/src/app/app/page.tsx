@@ -1,0 +1,29 @@
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+
+export default function AppPage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading) {
+      if (!user) {
+        // Redirect to login if not authenticated
+        router.push('/auth/login?redirect=/app');
+      } else {
+        // Redirect to dashboard if authenticated
+        router.push('/dashboard');
+      }
+    }
+  }, [user, loading, router]);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <LoadingSpinner className="w-8 h-8" />
+    </div>
+  );
+}
