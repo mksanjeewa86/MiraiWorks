@@ -13,7 +13,7 @@ import {
   Mail, 
   Phone, 
   Globe, 
-  LinkedIn, 
+  Linkedin, 
   Github,
   Calendar,
   Award,
@@ -319,7 +319,7 @@ export default function ProfilePage() {
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        <LinkedIn className="h-4 w-4" />
+                        <Linkedin className="h-4 w-4" />
                         LinkedIn
                         <ExternalLink className="h-3 w-3" />
                       </a>
