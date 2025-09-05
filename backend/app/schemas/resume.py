@@ -1,7 +1,16 @@
-from pydantic import BaseModel, validator, Field
-from typing import List, Optional, Dict, Any
 from datetime import datetime
-from app.utils.constants import ResumeStatus, ResumeVisibility, SectionType
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+
+from pydantic import BaseModel
+from pydantic import Field
+from pydantic import validator
+
+from app.utils.constants import ResumeStatus
+from app.utils.constants import ResumeVisibility
+from app.utils.constants import SectionType
 
 
 # Base schemas

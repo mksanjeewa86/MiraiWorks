@@ -1,24 +1,33 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request, Query
+import logging
+from datetime import datetime
+from datetime import timedelta
+from typing import List
+from typing import Optional
+
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Query
+from fastapi import Request
+from fastapi import status
+from sqlalchemy import and_
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, or_, update, delete
-from sqlalchemy.orm import selectinload
-from typing import List, Optional
-from datetime import datetime, timedelta
+
 from app.database import get_db
+from app.dependencies import get_current_active_user
+from app.models.calendar_integration import ExternalCalendarAccount
 from app.models.user import User
-from app.models.calendar_integration import ExternalCalendarAccount, SyncedEvent
-from app.schemas.calendar import (
-    CalendarAccountCreate, CalendarAccountInfo, CalendarInfo,
-    EventCreate, EventUpdate, EventInfo, EventsListRequest, EventsListResponse,
-    CalendarSyncRequest, CalendarSyncResponse, AvailabilityRequest, AvailabilityResponse,
-    WebhookVerification, CalendarWebhookData
-)
-from app.dependencies import get_current_active_user, get_client_ip
+from app.schemas.calendar import CalendarAccountInfo
+from app.schemas.calendar import CalendarInfo
+from app.schemas.calendar import CalendarSyncRequest
+from app.schemas.calendar import CalendarSyncResponse
+from app.schemas.calendar import CalendarWebhookData
+from app.schemas.calendar import EventInfo
+from app.schemas.calendar import EventsListRequest
+from app.schemas.calendar import EventsListResponse
 from app.services.calendar_service import google_calendar_service
 from app.services.microsoft_calendar_service import microsoft_calendar_service
-from app.utils.permissions import requires_permission
-from app.utils.constants import UserRole
-import logging
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

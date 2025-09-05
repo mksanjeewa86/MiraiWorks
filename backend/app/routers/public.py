@@ -1,16 +1,26 @@
-from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Response
+from typing import List
+from typing import Optional
+
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import Query
+from fastapi import Response
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.user import User
-from app.services.public_service import PublicService, CompanyProfileService
-from app.services.auth_service import get_current_user_optional, get_current_user
-from app.schemas.public import (
-    PublicStats, JobSearchParams, JobSearchResponse, JobResponse, JobSummary,
-    CompanySearchParams, CompanySearchResponse, PublicCompany,
-    JobApplicationCreate, JobApplicationResponse, CompanyProfileResponse
-)
+from app.schemas.public import CompanySearchParams
+from app.schemas.public import CompanySearchResponse
+from app.schemas.public import JobApplicationCreate
+from app.schemas.public import JobApplicationResponse
+from app.schemas.public import JobResponse
+from app.schemas.public import JobSearchParams
+from app.schemas.public import JobSearchResponse
+from app.schemas.public import JobSummary
+from app.schemas.public import PublicCompany
+from app.schemas.public import PublicStats
+from app.services.auth_service import get_current_user
+from app.services.public_service import PublicService
 
 router = APIRouter(prefix="/public", tags=["public"])
 

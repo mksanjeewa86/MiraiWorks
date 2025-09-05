@@ -1,16 +1,17 @@
+from unittest.mock import patch
+
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from app.models.user import User
-from app.models.company import Company
-from app.models.message import Conversation, Message
+
 from app.models.attachment import Attachment
-from app.models.role import Role, UserRole as UserRoleModel
-from app.utils.constants import UserRole, CompanyType, MessageType, VirusStatus
+from app.models.company import Company
+from app.models.role import UserRole as UserRoleModel
+from app.models.user import User
 from app.services.messaging_service import messaging_service
-import io
-from unittest.mock import patch, AsyncMock
+from app.utils.constants import CompanyType
+from app.utils.constants import UserRole
+from app.utils.constants import VirusStatus
 
 
 @pytest.fixture

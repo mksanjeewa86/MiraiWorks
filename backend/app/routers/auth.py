@@ -1,28 +1,44 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+import logging
+import secrets
+from datetime import datetime
+from datetime import timedelta
+from typing import List
+
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Request
+from fastapi import status
+from sqlalchemy import select
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
 from sqlalchemy.orm import selectinload
+
 from app.database import get_db
-from app.models.user import User
+from app.dependencies import check_rate_limit
+from app.dependencies import get_client_ip
+from app.dependencies import get_current_active_user
+from app.dependencies import store_2fa_code
+from app.dependencies import verify_2fa_code
 from app.models.auth import PasswordResetRequest
 from app.models.notification import Notification
-from app.schemas.auth import (
-    LoginRequest, LoginResponse, TwoFAVerifyRequest, TwoFAVerifyResponse,
-    RefreshTokenRequest, RefreshTokenResponse, PasswordResetRequest as PWResetSchema,
-    PasswordResetApproveRequest, ChangePasswordRequest, UserInfo,
-    PasswordResetRequestInfo
-)
+from app.models.user import User
+from app.schemas.auth import ChangePasswordRequest
+from app.schemas.auth import LoginRequest
+from app.schemas.auth import LoginResponse
+from app.schemas.auth import PasswordResetApproveRequest
+from app.schemas.auth import PasswordResetRequest as PWResetSchema
+from app.schemas.auth import PasswordResetRequestInfo
+from app.schemas.auth import RefreshTokenRequest
+from app.schemas.auth import RefreshTokenResponse
+from app.schemas.auth import TwoFAVerifyRequest
+from app.schemas.auth import TwoFAVerifyResponse
+from app.schemas.auth import UserInfo
 from app.services.auth_service import auth_service
 from app.services.email_service import email_service
-from app.dependencies import (
-    get_current_user, get_current_active_user, 
-    store_2fa_code, verify_2fa_code, check_rate_limit, get_client_ip
-)
-from app.utils.permissions import requires_permission, is_company_admin, is_super_admin
-from app.utils.constants import UserRole, NotificationType
-from datetime import datetime, timedelta
-import secrets
-import logging
+from app.utils.constants import NotificationType
+from app.utils.permissions import is_company_admin
+from app.utils.permissions import is_super_admin
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

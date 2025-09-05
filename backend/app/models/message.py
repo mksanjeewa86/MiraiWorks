@@ -1,6 +1,14 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Boolean, Table
-from sqlalchemy.sql import func
+from sqlalchemy import Boolean
+from sqlalchemy import Column
+from sqlalchemy import DateTime
+from sqlalchemy import ForeignKey
+from sqlalchemy import Integer
+from sqlalchemy import String
+from sqlalchemy import Table
+from sqlalchemy import Text
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
+
 from app.database import Base
 from app.utils.constants import MessageType
 
@@ -80,4 +88,5 @@ class MessageRead(Base):
 
 # Update User model to include conversation relationship
 from app.models.user import User
+
 User.conversations = relationship("Conversation", secondary=conversation_participants, back_populates="participants")

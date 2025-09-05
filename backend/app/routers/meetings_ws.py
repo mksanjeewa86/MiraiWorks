@@ -1,17 +1,26 @@
+import asyncio
 import json
 import logging
-import asyncio
 from datetime import datetime
-from typing import Dict, Set, Optional
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from typing import Dict
+from typing import Optional
+from typing import Set
+
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import WebSocket
+from fastapi import WebSocketDisconnect
+from fastapi import status
 from sqlalchemy import and_
+from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models.user import User
-from app.models.meeting import Meeting, ParticipantStatus, MeetingStatus, meeting_participants
+from app.models.meeting import Meeting
+from app.models.meeting import MeetingStatus
+from app.models.meeting import ParticipantStatus
+from app.models.meeting import meeting_participants
 from app.services.meeting_service import MeetingService
-from app.services.auth_service import AuthService
 from app.utils.websocket_auth import get_user_from_websocket
 
 logger = logging.getLogger(__name__)

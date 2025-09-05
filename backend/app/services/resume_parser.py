@@ -1,10 +1,10 @@
-from typing import Dict, Any, List, Optional, BinaryIO
-from datetime import datetime
+import logging
 import re
-import json
-from app.utils.logger import get_logger
+from typing import Any
+from typing import Dict
+from typing import List
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class ResumeParser:
@@ -64,8 +64,9 @@ class ResumeParser:
     async def _extract_from_pdf(self, file_content: bytes) -> str:
         """Extract text from PDF file."""
         try:
-            import PyPDF2
             from io import BytesIO
+
+            import PyPDF2
             
             pdf_reader = PyPDF2.PdfReader(BytesIO(file_content))
             text_content = ""
@@ -78,8 +79,9 @@ class ResumeParser:
         except ImportError:
             # Fallback to pdfplumber if PyPDF2 not available
             try:
-                import pdfplumber
                 from io import BytesIO
+
+                import pdfplumber
                 
                 text_content = ""
                 with pdfplumber.open(BytesIO(file_content)) as pdf:
@@ -99,8 +101,9 @@ class ResumeParser:
     async def _extract_from_word(self, file_content: bytes, file_extension: str) -> str:
         """Extract text from Word document."""
         try:
-            import docx
             from io import BytesIO
+
+            import docx
             
             if file_extension == '.docx':
                 doc = docx.Document(BytesIO(file_content))
@@ -220,7 +223,7 @@ class ResumeParser:
     
     def _extract_summary(self, text: str) -> str:
         """Extract professional summary or objective."""
-        text_lower = text.lower()
+        text.lower()
         
         # Common section headers for summaries
         summary_headers = [
@@ -447,7 +450,7 @@ class ResumeParser:
     
     def _extract_section(self, text: str, headers: List[str]) -> str:
         """Extract a specific section from the resume text."""
-        text_lower = text.lower()
+        text.lower()
         
         for header in headers:
             # Look for section headers

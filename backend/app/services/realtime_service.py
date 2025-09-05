@@ -1,9 +1,13 @@
 import json
-import asyncio
 import logging
-from typing import Dict, Any, Optional, List
 from datetime import datetime
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+
 import redis.asyncio as redis
+
 from app.config import settings
 from app.schemas.message import WSMessage
 
@@ -255,8 +259,8 @@ class RealtimeService:
     
     def _get_server_id(self) -> str:
         """Get unique server identifier."""
-        import socket
         import os
+        import socket
         hostname = socket.gethostname()
         pid = os.getpid()
         return f"{hostname}:{pid}"

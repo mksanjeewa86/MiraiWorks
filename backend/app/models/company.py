@@ -1,6 +1,12 @@
-from sqlalchemy import Column, Integer, String, DateTime, Enum, Text
-from sqlalchemy.sql import func
+from sqlalchemy import Column
+from sqlalchemy import DateTime
+from sqlalchemy import Enum
+from sqlalchemy import Integer
+from sqlalchemy import String
+from sqlalchemy import Text
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
+
 from app.database import Base
 from app.utils.constants import CompanyType
 

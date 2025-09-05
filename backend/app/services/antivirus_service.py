@@ -1,14 +1,18 @@
+import logging
 import socket
 import struct
-from typing import Optional, Tuple
 from datetime import datetime
+from typing import Optional
+from typing import Tuple
+
+from sqlalchemy import select
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
+
 from app.config import settings
 from app.models.attachment import Attachment
-from app.utils.constants import VirusStatus
 from app.services.storage_service import storage_service
-import logging
+from app.utils.constants import VirusStatus
 
 logger = logging.getLogger(__name__)
 

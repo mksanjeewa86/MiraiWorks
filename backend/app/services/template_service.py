@@ -1,10 +1,16 @@
-from jinja2 import Environment, BaseLoader, Template
-from typing import Dict, Any, List, Optional
-from app.models.resume import Resume, ResumeTemplate
-from app.utils.logger import get_logger
-import json
+import logging
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
 
-logger = get_logger(__name__)
+from jinja2 import BaseLoader
+from jinja2 import Environment
+from jinja2 import Template
+
+from app.models.resume import Resume
+
+logger = logging.getLogger(__name__)
 
 
 class TemplateService:

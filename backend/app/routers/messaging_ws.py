@@ -1,20 +1,29 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, HTTPException, status, Query
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from sqlalchemy.orm import selectinload
-from typing import Dict, Set, Optional, List
 import json
-import asyncio
 import logging
 from datetime import datetime
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Set
+
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Query
+from fastapi import WebSocket
+from fastapi import WebSocketDisconnect
+from fastapi import status
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
 from app.database import get_db
 from app.models.user import User
-from app.models.message import Conversation
+from app.schemas.message import WSError
+from app.schemas.message import WSMessage
+from app.schemas.message import WSTyping
 from app.services.auth_service import auth_service
 from app.services.messaging_service import messaging_service
-from app.schemas.message import WSMessage, WSMessageNew, WSTyping, WSError, TypingIndicator
-from app.dependencies import get_redis
-import redis.asyncio as redis
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

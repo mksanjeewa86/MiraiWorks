@@ -1,6 +1,8 @@
 from urllib.parse import parse_qs
-from typing import Optional
-from fastapi import WebSocket, HTTPException, status
+
+from fastapi import HTTPException
+from fastapi import WebSocket
+from fastapi import status
 from sqlalchemy.orm import Session
 
 from app.models.user import User
@@ -40,7 +42,7 @@ async def get_user_from_websocket(websocket: WebSocket, db: Session) -> User:
                 detail="Invalid authentication token"
             )
         return user
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication failed"

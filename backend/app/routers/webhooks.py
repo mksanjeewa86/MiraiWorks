@@ -1,21 +1,24 @@
-from fastapi import APIRouter, Request, HTTPException, Depends, BackgroundTasks
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.database import get_db
-from app.models.calendar_integration import CalendarIntegration, CalendarEvent
-from app.models.interview import Interview
-from app.services.calendar_service import CalendarService
-from app.services.microsoft_calendar_service import MicrosoftCalendarService
-from app.services.interview_service import InterviewService
-from app.utils.auth import get_current_user
-from app.utils.logger import get_logger
-from typing import Dict, Any
 import json
-import hmac
-import hashlib
+import logging
 from datetime import datetime
+from typing import Any
+from typing import Dict
+
+from fastapi import APIRouter
+from fastapi import BackgroundTasks
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Request
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.database import get_db
+from app.models.calendar_integration import ExternalCalendarAccount
+from app.services.calendar_service import CalendarService
+from app.services.interview_service import InterviewService
+from app.services.microsoft_calendar_service import MicrosoftCalendarService
 
 router = APIRouter(prefix="/webhooks", tags=["webhooks"])
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 @router.post("/google/calendar")
@@ -27,7 +30,7 @@ async def google_calendar_webhook(
     """Handle Google Calendar webhook notifications for event changes."""
     try:
         # Get the raw body for verification
-        body = await request.body()
+        await request.body()
         headers = request.headers
         
         # Verify webhook authenticity
@@ -41,7 +44,7 @@ async def google_calendar_webhook(
         logger.info(f"Received Google Calendar webhook: {resource_state} for {resource_id}")
         
         # Find the calendar integration for this channel
-        calendar_integration = await CalendarIntegration.get_by_channel_id(db, channel_id)
+        calendar_integration = await ExternalCalendarAccount.get_by_channel_id(db, channel_id)
         if not calendar_integration:
             logger.warning(f"No calendar integration found for channel {channel_id}")
             return {"status": "ignored"}
@@ -94,7 +97,7 @@ async def microsoft_calendar_webhook(
             logger.info(f"Microsoft webhook: {change_type} for {resource}")
             
             # Find calendar integration by subscription ID
-            calendar_integration = await CalendarIntegration.get_by_subscription_id(
+            calendar_integration = await ExternalCalendarAccount.get_by_subscription_id(
                 db, subscription_id
             )
             if calendar_integration:
@@ -120,7 +123,7 @@ async def sync_google_calendar_events(
 ):
     """Background task to sync Google Calendar events after webhook notification."""
     try:
-        calendar_integration = await CalendarIntegration.get(db, calendar_integration_id)
+        calendar_integration = await ExternalCalendarAccount.get(db, calendar_integration_id)
         if not calendar_integration:
             logger.error(f"Calendar integration {calendar_integration_id} not found")
             return
@@ -161,7 +164,7 @@ async def sync_microsoft_calendar_events(
 ):
     """Background task to sync Microsoft Calendar events after webhook notification."""
     try:
-        calendar_integration = await CalendarIntegration.get(db, calendar_integration_id)
+        calendar_integration = await ExternalCalendarAccount.get(db, calendar_integration_id)
         if not calendar_integration:
             logger.error(f"Calendar integration {calendar_integration_id} not found")
             return
@@ -199,7 +202,7 @@ async def sync_microsoft_calendar_events(
 
 async def process_calendar_event_update(
     db: AsyncSession,
-    calendar_integration: CalendarIntegration,
+    calendar_integration: ExternalCalendarAccount,
     event_data: Dict[str, Any],
     provider: str
 ):

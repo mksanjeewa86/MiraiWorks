@@ -1,20 +1,30 @@
 import logging
-from typing import Dict, List, Optional, Any, Tuple
-from datetime import datetime, timedelta
+from datetime import datetime
+from datetime import timedelta
+from typing import List
+from typing import Optional
+
+from fastapi import HTTPException
+from fastapi import status
+from sqlalchemy import and_
+from sqlalchemy import or_
+from sqlalchemy import select
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, or_, update
-from sqlalchemy.orm import selectinload, joinedload
-from fastapi import HTTPException, status
-from app.models.user import User
+from sqlalchemy.orm import selectinload
+
+from app.models.calendar_integration import ExternalCalendarAccount
+from app.models.calendar_integration import SyncedEvent
 from app.models.company import Company
-from app.models.interview import Interview, InterviewProposal
-from app.models.calendar_integration import ExternalCalendarAccount, SyncedEvent
-from app.models.notification import Notification
-from app.utils.constants import UserRole, InterviewStatus, NotificationType
-from app.utils.permissions import get_user_roles, is_super_admin, is_company_admin
+from app.models.interview import Interview
+from app.models.interview import InterviewProposal
+from app.models.user import User
 from app.services.calendar_service import google_calendar_service
 from app.services.microsoft_calendar_service import microsoft_calendar_service
-from app.services.email_service import email_service
+from app.utils.constants import InterviewStatus
+from app.utils.constants import UserRole
+from app.utils.permissions import is_company_admin
+from app.utils.permissions import is_super_admin
 
 logger = logging.getLogger(__name__)
 
@@ -647,7 +657,6 @@ class InterviewService:
     ):
         """Send notifications about new proposal."""
         # Implementation would create notifications and send emails
-        pass
     
     async def _send_response_notifications(
         self,
@@ -656,7 +665,6 @@ class InterviewService:
     ):
         """Send notifications about proposal response."""
         # Implementation would create notifications and send emails
-        pass
     
     async def _send_cancellation_notifications(
         self,
@@ -666,7 +674,6 @@ class InterviewService:
     ):
         """Send notifications about interview cancellation."""
         # Implementation would create notifications and send emails
-        pass
     
     async def _send_reschedule_notifications(
         self,
@@ -677,7 +684,6 @@ class InterviewService:
     ):
         """Send notifications about interview reschedule."""
         # Implementation would create notifications and send emails
-        pass
     
     async def _cancel_calendar_events(self, db: AsyncSession, interview: Interview):
         """Cancel calendar events for interview."""

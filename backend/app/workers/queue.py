@@ -1,5 +1,5 @@
-import asyncio
 from celery import Celery
+
 from app.config import settings
 
 # Create Celery instance

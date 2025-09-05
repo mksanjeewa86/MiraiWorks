@@ -1,11 +1,12 @@
+import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request
+
+from fastapi import FastAPI
+from fastapi import Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
-import logging
-import redis.asyncio as redis
-from app.config import settings
+
 from app.database import init_db
 from app.dependencies import get_redis
 
@@ -115,7 +116,14 @@ async def root():
 
 
 # Include routers
-from app.routers import auth, messaging, messaging_ws, calendar, interviews, webhooks, resumes
+from app.routers import auth
+from app.routers import calendar
+from app.routers import interviews
+from app.routers import messaging
+from app.routers import messaging_ws
+from app.routers import resumes
+from app.routers import webhooks
+
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(messaging.router, prefix="/api/messaging", tags=["messaging"])
 app.include_router(messaging_ws.router, prefix="/ws", tags=["websocket"])

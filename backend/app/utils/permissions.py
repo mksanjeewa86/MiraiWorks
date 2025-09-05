@@ -1,8 +1,10 @@
 from functools import wraps
-from typing import List, Optional
-from fastapi import HTTPException, status, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.database import get_db
+from typing import List
+from typing import Optional
+
+from fastapi import HTTPException
+from fastapi import status
+
 from app.models.user import User
 from app.rbac import has_permission
 from app.utils.constants import UserRole

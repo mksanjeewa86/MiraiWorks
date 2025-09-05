@@ -1,24 +1,30 @@
-import uuid
 import secrets
-from datetime import datetime, timedelta
-from typing import List, Optional, Dict, Any
-from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, func
-from fastapi import HTTPException, status
+from datetime import datetime
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
 
-from app.models.meeting import (
-    Meeting, MeetingRecording, MeetingTranscript, MeetingSummary,
-    meeting_participants, MeetingType, MeetingStatus, ParticipantRole, ParticipantStatus
-)
-from app.models.user import User
+from fastapi import HTTPException
+from fastapi import status
+from sqlalchemy import and_
+from sqlalchemy.orm import Session
+
 from app.models.interview import Interview
-from app.models.company import Company
-from app.schemas.meeting import (
-    MeetingCreate, MeetingUpdate, MeetingListParams,
-    MeetingParticipantCreate, MeetingParticipantUpdate
-)
-from app.utils.permissions import validate_company_access, has_permission
+from app.models.meeting import Meeting
+from app.models.meeting import MeetingStatus
+from app.models.meeting import MeetingType
+from app.models.meeting import ParticipantRole
+from app.models.meeting import ParticipantStatus
+from app.models.meeting import meeting_participants
+from app.models.user import User
+from app.schemas.meeting import MeetingCreate
+from app.schemas.meeting import MeetingListParams
+from app.schemas.meeting import MeetingParticipantCreate
+from app.schemas.meeting import MeetingUpdate
 from app.services.audit_service import log_action
+from app.utils.permissions import has_permission
+from app.utils.permissions import validate_company_access
 
 
 class MeetingService:

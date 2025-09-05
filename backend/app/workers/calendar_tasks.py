@@ -1,17 +1,19 @@
+import asyncio
+import logging
+from datetime import datetime
+from datetime import timedelta
+
 from celery import Celery
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
-from app.models.calendar_integration import CalendarIntegration, CalendarEvent
+
+from app.core.config import settings
+from app.models.calendar_integration import CalendarIntegration
 from app.models.interview import Interview
 from app.services.calendar_service import CalendarService
-from app.services.microsoft_calendar_service import MicrosoftCalendarService
 from app.services.interview_service import InterviewService
-from app.core.config import settings
-from app.utils.logger import get_logger
-from datetime import datetime, timedelta
-from typing import List, Optional
-import asyncio
-import os
+from app.services.microsoft_calendar_service import MicrosoftCalendarService
 
 # Initialize Celery
 celery_app = Celery(
@@ -38,7 +40,7 @@ celery_app.conf.update(
     task_max_retries=3,
 )
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 # Database setup for async tasks
 engine = create_async_engine(settings.DATABASE_URL, echo=False)
@@ -329,7 +331,6 @@ async def _process_calendar_event(
     """Process a calendar event from webhook or sync."""
     # This is similar to the webhook processing logic
     # Implementation would be similar to process_calendar_event_update in webhooks.py
-    pass
 
 
 async def _create_calendar_event_for_interview(
@@ -404,7 +405,6 @@ async def _update_calendar_event_for_interview(
         return
     
     # Implementation would update the existing event
-    pass
 
 
 async def _delete_calendar_event_for_interview(

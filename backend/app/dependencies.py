@@ -1,14 +1,19 @@
 from typing import Optional
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlalchemy.ext.asyncio import AsyncSession
+
+import redis.asyncio as redis
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import status
+from fastapi.security import HTTPAuthorizationCredentials
+from fastapi.security import HTTPBearer
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+
+from app.config import settings
 from app.database import get_db
 from app.models.user import User
 from app.services.auth_service import auth_service
-import redis.asyncio as redis
-from app.config import settings
 
 security = HTTPBearer()
 

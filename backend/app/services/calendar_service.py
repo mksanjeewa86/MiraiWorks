@@ -1,15 +1,18 @@
-import json
 import logging
-from typing import Dict, List, Optional, Any, Tuple
-from datetime import datetime, timedelta
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
-from fastapi import HTTPException, status
+from datetime import datetime
+from datetime import timedelta
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+
 import httpx
+from fastapi import HTTPException
+from fastapi import status
+from sqlalchemy import update
+
 from app.config import settings
-from app.models.calendar_integration import ExternalCalendarAccount, SyncedEvent
-from app.models.user import User
-from app.utils.constants import UserRole
+from app.models.calendar_integration import ExternalCalendarAccount
 
 logger = logging.getLogger(__name__)
 

@@ -1,6 +1,14 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Boolean, JSON
-from sqlalchemy.sql import func
+from sqlalchemy import JSON
+from sqlalchemy import Boolean
+from sqlalchemy import Column
+from sqlalchemy import DateTime
+from sqlalchemy import ForeignKey
+from sqlalchemy import Integer
+from sqlalchemy import String
+from sqlalchemy import Text
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
+
 from app.database import Base
 
 
@@ -42,6 +50,27 @@ class ExternalCalendarAccount(Base):
     
     def __repr__(self):
         return f"<ExternalCalendarAccount(id={self.id}, user_id={self.user_id}, provider='{self.provider}', email='{self.email}')>"
+    
+    @classmethod
+    async def get_by_channel_id(cls, db, channel_id: str):
+        """Get calendar account by webhook channel ID."""
+        from sqlalchemy import select
+        result = await db.execute(select(cls).where(cls.webhook_id == channel_id))
+        return result.scalars().first()
+    
+    @classmethod
+    async def get_by_subscription_id(cls, db, subscription_id: str):
+        """Get calendar account by subscription ID."""
+        from sqlalchemy import select
+        result = await db.execute(select(cls).where(cls.webhook_id == subscription_id))
+        return result.scalars().first()
+    
+    @classmethod
+    async def get(cls, db, account_id: int):
+        """Get calendar account by ID."""
+        from sqlalchemy import select
+        result = await db.execute(select(cls).where(cls.id == account_id))
+        return result.scalars().first()
 
 
 class SyncedEvent(Base):

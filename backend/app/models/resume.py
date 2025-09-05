@@ -1,17 +1,25 @@
-from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, JSON, Enum as SQLEnum
-from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
-from app.models.base import BaseModel
-from app.utils.constants import ResumeStatus, ResumeVisibility, SectionType
 from datetime import datetime
-from typing import Optional, Dict, Any, List
-import enum
+
+from sqlalchemy import JSON
+from sqlalchemy import Boolean
+from sqlalchemy import Column
+from sqlalchemy import DateTime
+from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import ForeignKey
+from sqlalchemy import Integer
+from sqlalchemy import String
+from sqlalchemy import Text
+from sqlalchemy.orm import relationship
+
+from app.models.base import BaseModel
+from app.utils.constants import ResumeStatus
+from app.utils.constants import ResumeVisibility
+from app.utils.constants import SectionType
 
 
 class Resume(BaseModel):
     __tablename__ = "resumes"
     
-    id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     
     # Basic info
@@ -104,7 +112,6 @@ class Resume(BaseModel):
 class ResumeSection(BaseModel):
     __tablename__ = "resume_sections"
     
-    id = Column(Integer, primary_key=True, index=True)
     resume_id = Column(Integer, ForeignKey("resumes.id"), nullable=False)
     
     # Section info
@@ -129,7 +136,6 @@ class ResumeSection(BaseModel):
 class WorkExperience(BaseModel):
     __tablename__ = "work_experiences"
     
-    id = Column(Integer, primary_key=True, index=True)
     resume_id = Column(Integer, ForeignKey("resumes.id"), nullable=False)
     
     # Job details
@@ -162,7 +168,6 @@ class WorkExperience(BaseModel):
 class Education(BaseModel):
     __tablename__ = "educations"
     
-    id = Column(Integer, primary_key=True, index=True)
     resume_id = Column(Integer, ForeignKey("resumes.id"), nullable=False)
     
     # Education details
@@ -198,7 +203,6 @@ class Education(BaseModel):
 class Skill(BaseModel):
     __tablename__ = "skills"
     
-    id = Column(Integer, primary_key=True, index=True)
     resume_id = Column(Integer, ForeignKey("resumes.id"), nullable=False)
     
     # Skill details
@@ -220,7 +224,6 @@ class Skill(BaseModel):
 class Project(BaseModel):
     __tablename__ = "projects"
     
-    id = Column(Integer, primary_key=True, index=True)
     resume_id = Column(Integer, ForeignKey("resumes.id"), nullable=False)
     
     # Project details
@@ -255,7 +258,6 @@ class Project(BaseModel):
 class Certification(BaseModel):
     __tablename__ = "certifications"
     
-    id = Column(Integer, primary_key=True, index=True)
     resume_id = Column(Integer, ForeignKey("resumes.id"), nullable=False)
     
     # Certification details
@@ -285,7 +287,6 @@ class Certification(BaseModel):
 class Language(BaseModel):
     __tablename__ = "languages"
     
-    id = Column(Integer, primary_key=True, index=True)
     resume_id = Column(Integer, ForeignKey("resumes.id"), nullable=False)
     
     # Language details
@@ -305,7 +306,6 @@ class Language(BaseModel):
 class Reference(BaseModel):
     __tablename__ = "references"
     
-    id = Column(Integer, primary_key=True, index=True)
     resume_id = Column(Integer, ForeignKey("resumes.id"), nullable=False)
     
     # Reference details
@@ -314,7 +314,7 @@ class Reference(BaseModel):
     company_name = Column(String(200))
     email = Column(String(255))
     phone = Column(String(20))
-    relationship = Column(String(100))  # e.g., "Former Manager", "Colleague"
+    reference_relationship = Column(String(100))  # e.g., "Former Manager", "Colleague"
     
     # Display options
     is_visible = Column(Boolean, default=True)
@@ -329,8 +329,6 @@ class Reference(BaseModel):
 
 class ResumeTemplate(BaseModel):
     __tablename__ = "resume_templates"
-    
-    id = Column(Integer, primary_key=True, index=True)
     
     # Template details
     name = Column(String(100), nullable=False, unique=True)

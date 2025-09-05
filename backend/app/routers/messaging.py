@@ -1,26 +1,44 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Request
+import logging
+from typing import Optional
+
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Request
+from fastapi import status
+from sqlalchemy import desc
+from sqlalchemy import func
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, desc, func
-from sqlalchemy.orm import selectinload, joinedload
-from typing import List, Optional
+from sqlalchemy.orm import selectinload
+
 from app.database import get_db
-from app.models.user import User
-from app.models.message import Conversation, Message, MessageRead
+from app.dependencies import check_rate_limit
+from app.dependencies import get_client_ip
+from app.dependencies import get_current_active_user
 from app.models.attachment import Attachment
-from app.schemas.message import (
-    ConversationCreate, ConversationInfo, ConversationListRequest, ConversationListResponse,
-    MessageCreate, MessageUpdate, MessageInfo, MessageListRequest, MessageListResponse,
-    FileUploadRequest, FileUploadResponse, MessageReadRequest, AttachmentScanComplete,
-    ConversationParticipant, AttachmentInfo
-)
-from app.dependencies import get_current_active_user, get_client_ip, check_rate_limit
+from app.models.message import Conversation
+from app.models.message import Message
+from app.models.message import MessageRead
+from app.models.user import User
+from app.schemas.message import AttachmentInfo
+from app.schemas.message import AttachmentScanComplete
+from app.schemas.message import ConversationCreate
+from app.schemas.message import ConversationInfo
+from app.schemas.message import ConversationListRequest
+from app.schemas.message import ConversationListResponse
+from app.schemas.message import ConversationParticipant
+from app.schemas.message import FileUploadRequest
+from app.schemas.message import FileUploadResponse
+from app.schemas.message import MessageCreate
+from app.schemas.message import MessageInfo
+from app.schemas.message import MessageListRequest
+from app.schemas.message import MessageListResponse
+from app.schemas.message import MessageReadRequest
+from app.services.antivirus_service import antivirus_service
 from app.services.messaging_service import messaging_service
 from app.services.storage_service import storage_service
-from app.services.antivirus_service import antivirus_service
-from app.utils.constants import MessageType, VirusStatus
-from app.utils.permissions import requires_permission
-from datetime import datetime, timedelta
-import logging
+from app.utils.constants import VirusStatus
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

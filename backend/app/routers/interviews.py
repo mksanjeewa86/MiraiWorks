@@ -1,24 +1,44 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, or_, func
-from sqlalchemy.orm import selectinload, joinedload
-from typing import List, Optional
-from datetime import datetime, timedelta
-from app.database import get_db
-from app.models.user import User
-from app.models.company import Company
-from app.models.interview import Interview, InterviewProposal
-from app.schemas.interview import (
-    InterviewCreate, InterviewUpdate, InterviewInfo, InterviewCancel, InterviewReschedule,
-    ProposalCreate, ProposalResponse, ProposalInfo, ParticipantInfo,
-    InterviewsListRequest, InterviewsListResponse, InterviewStats,
-    InterviewCalendarEvent, CalendarIntegrationStatus
-)
-from app.dependencies import get_current_active_user
-from app.services.interview_service import interview_service
-from app.utils.permissions import requires_permission, is_super_admin, is_company_admin
-from app.utils.constants import InterviewStatus, UserRole
 import logging
+from datetime import datetime
+from datetime import timedelta
+from typing import List
+from typing import Optional
+
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Query
+from fastapi import status
+from sqlalchemy import func
+from sqlalchemy import or_
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
+from app.database import get_db
+from app.dependencies import get_current_active_user
+from app.models.interview import Interview
+from app.models.interview import InterviewProposal
+from app.models.user import User
+from app.schemas.interview import CalendarIntegrationStatus
+from app.schemas.interview import InterviewCalendarEvent
+from app.schemas.interview import InterviewCancel
+from app.schemas.interview import InterviewCreate
+from app.schemas.interview import InterviewInfo
+from app.schemas.interview import InterviewReschedule
+from app.schemas.interview import InterviewsListRequest
+from app.schemas.interview import InterviewsListResponse
+from app.schemas.interview import InterviewStats
+from app.schemas.interview import InterviewUpdate
+from app.schemas.interview import ParticipantInfo
+from app.schemas.interview import ProposalCreate
+from app.schemas.interview import ProposalInfo
+from app.schemas.interview import ProposalResponse
+from app.services.interview_service import interview_service
+from app.utils.constants import InterviewStatus
+from app.utils.permissions import is_company_admin
+from app.utils.permissions import is_super_admin
+from app.utils.permissions import requires_permission
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

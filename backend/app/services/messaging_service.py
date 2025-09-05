@@ -1,15 +1,25 @@
-from typing import List, Dict, Any, Optional, Tuple
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, or_, desc
-from sqlalchemy.orm import selectinload, joinedload
-from fastapi import HTTPException, status
-from app.models.user import User
-from app.models.company import Company
-from app.models.message import Conversation, Message, MessageRead, conversation_participants
-from app.models.attachment import Attachment
-from app.utils.constants import UserRole, MessageType
-from app.utils.permissions import get_user_roles
 import logging
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+
+from fastapi import HTTPException
+from fastapi import status
+from sqlalchemy import desc
+from sqlalchemy import or_
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
+from app.models.message import Conversation
+from app.models.message import Message
+from app.models.message import MessageRead
+from app.models.message import conversation_participants
+from app.models.user import User
+from app.utils.constants import MessageType
+from app.utils.constants import UserRole
 
 logger = logging.getLogger(__name__)
 

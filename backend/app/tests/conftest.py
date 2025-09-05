@@ -1,17 +1,24 @@
-import pytest
 import asyncio
-from typing import AsyncGenerator, Generator
-from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.pool import StaticPool
-from app.database import Base, get_db
-from app.main import app
-from app.models.user import User
-from app.models.company import Company
-from app.models.role import Role, UserRole
-from app.services.auth_service import auth_service
-from app.utils.constants import UserRole as UserRoleEnum, CompanyType
+from typing import AsyncGenerator
+from typing import Generator
 
+import pytest
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.pool import StaticPool
+
+from app.database import Base
+from app.database import get_db
+from app.main import app
+from app.models.company import Company
+from app.models.role import Role
+from app.models.role import UserRole
+from app.models.user import User
+from app.services.auth_service import auth_service
+from app.utils.constants import CompanyType
+from app.utils.constants import UserRole as UserRoleEnum
 
 # Test database URL (SQLite in memory)
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"

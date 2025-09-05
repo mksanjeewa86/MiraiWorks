@@ -1,17 +1,24 @@
-import secrets
 import hashlib
-from datetime import datetime, timedelta
-from typing import Optional, Dict, Any
-from jose import JWTError, jwt
+import secrets
+from datetime import datetime
+from datetime import timedelta
+from typing import Any
+from typing import Dict
+from typing import Optional
+
+from jose import JWTError
+from jose import jwt
 from passlib.context import CryptContext
+from sqlalchemy import select
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
 from sqlalchemy.orm import selectinload
+
 from app.config import settings
-from app.models.user import User
 from app.models.auth import RefreshToken
-from app.utils.constants import UserRole
+from app.models.user import User
 from app.rbac import is_admin_role
+from app.utils.constants import UserRole
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

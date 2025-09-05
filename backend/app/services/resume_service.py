@@ -1,23 +1,33 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, or_, func
-from app.models.resume import (
-    Resume, ResumeSection, WorkExperience, Education, Skill, 
-    Project, Certification, Language, Reference, ResumeTemplate, ResumeShare
-)
-from app.models.user import User
-from app.schemas.resume import (
-    ResumeCreate, ResumeUpdate, WorkExperienceCreate, EducationCreate,
-    SkillCreate, ProjectCreate, CertificationCreate, LanguageCreate, ReferenceCreate
-)
-from app.utils.constants import ResumeStatus, ResumeVisibility, SectionType
-from app.utils.logger import get_logger
-from datetime import datetime, timedelta
-from typing import Optional, List, Dict, Any
+import logging
+import re
 import secrets
 import string
-import re
+from datetime import datetime
+from datetime import timedelta
+from typing import List
+from typing import Optional
 
-logger = get_logger(__name__)
+from sqlalchemy import and_
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models.resume import Education
+from app.models.resume import Project
+from app.models.resume import Resume
+from app.models.resume import ResumeSection
+from app.models.resume import ResumeShare
+from app.models.resume import ResumeTemplate
+from app.models.resume import Skill
+from app.models.resume import WorkExperience
+from app.schemas.resume import EducationCreate
+from app.schemas.resume import ResumeCreate
+from app.schemas.resume import ResumeUpdate
+from app.schemas.resume import SkillCreate
+from app.schemas.resume import WorkExperienceCreate
+from app.utils.constants import ResumeStatus
+from app.utils.constants import ResumeVisibility
+
+logger = logging.getLogger(__name__)
 
 
 class ResumeService:

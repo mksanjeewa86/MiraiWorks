@@ -1,15 +1,21 @@
-from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Query
+from fastapi import status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.user import User
-from app.services.meeting_service import MeetingService
+from app.schemas.meeting import MeetingCreate
+from app.schemas.meeting import MeetingJoinRequest
+from app.schemas.meeting import MeetingJoinResponse
+from app.schemas.meeting import MeetingListParams
+from app.schemas.meeting import MeetingListResponse
+from app.schemas.meeting import MeetingResponse
+from app.schemas.meeting import MeetingUpdate
 from app.services.auth_service import get_current_user
-from app.schemas.meeting import (
-    MeetingCreate, MeetingUpdate, MeetingResponse, MeetingListResponse, MeetingListParams,
-    MeetingJoinRequest, MeetingJoinResponse, WebRTCSignal
-)
+from app.services.meeting_service import MeetingService
 from app.utils.permissions import requires_permission
 
 router = APIRouter(prefix="/meetings", tags=["meetings"])

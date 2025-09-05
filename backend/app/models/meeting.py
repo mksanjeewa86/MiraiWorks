@@ -1,9 +1,23 @@
-from datetime import datetime, timedelta
-from typing import List, Optional
+from datetime import datetime
+from datetime import timedelta
 from enum import Enum
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text, ForeignKey, Table, UniqueConstraint, Index
-from sqlalchemy.orm import relationship, Mapped, mapped_column
+from typing import Optional
+
+from sqlalchemy import Boolean
+from sqlalchemy import Column
+from sqlalchemy import DateTime
+from sqlalchemy import ForeignKey
+from sqlalchemy import Index
+from sqlalchemy import Integer
+from sqlalchemy import String
+from sqlalchemy import Table
+from sqlalchemy import Text
+from sqlalchemy import UniqueConstraint
 from sqlalchemy.dialects.mysql import LONGTEXT
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import relationship
+
 from .base import Base
 
 

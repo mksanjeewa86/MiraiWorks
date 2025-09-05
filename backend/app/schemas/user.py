@@ -1,6 +1,11 @@
-from pydantic import BaseModel, EmailStr, validator
-from typing import List, Optional
 from datetime import datetime
+from typing import List
+from typing import Optional
+
+from pydantic import BaseModel
+from pydantic import EmailStr
+from pydantic import validator
+
 from app.utils.constants import UserRole
 
 

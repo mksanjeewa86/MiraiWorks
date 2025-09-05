@@ -1,12 +1,20 @@
 import hashlib
+import logging
 import uuid
-from typing import Optional, Dict, Any, BinaryIO, Tuple
-from datetime import datetime, timedelta
+from datetime import datetime
+from datetime import timedelta
+from typing import Any
+from typing import Dict
+from typing import Optional
+from typing import Tuple
+
+from fastapi import HTTPException
+from fastapi import UploadFile
+from fastapi import status
 from minio import Minio
 from minio.error import S3Error
-from fastapi import HTTPException, status, UploadFile
+
 from app.config import settings
-import logging
 
 logger = logging.getLogger(__name__)
 

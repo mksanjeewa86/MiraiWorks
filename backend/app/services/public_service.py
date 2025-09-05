@@ -1,16 +1,25 @@
-from typing import List, Optional, Dict, Any, Tuple
-from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, func, desc, asc
-from fastapi import HTTPException, status
+from typing import Any
+from typing import Dict
+from typing import List
 
-from app.models.job import Job, JobApplication, CompanyProfile, JobStatus
+from fastapi import HTTPException
+from fastapi import status
+from sqlalchemy import asc
+from sqlalchemy import desc
+from sqlalchemy import func
+from sqlalchemy import or_
+from sqlalchemy.orm import Session
+
 from app.models.company import Company
+from app.models.job import CompanyProfile
+from app.models.job import Job
+from app.models.job import JobApplication
+from app.models.job import JobStatus
 from app.models.user import User
-from app.schemas.public import (
-    JobCreate, JobUpdate, JobSearchParams, CompanySearchParams,
-    JobApplicationCreate, JobApplicationUpdate, CompanyProfileCreate, CompanyProfileUpdate
-)
-from app.utils.text_search import create_search_vector, search_jobs, search_companies
+from app.schemas.public import CompanyProfileUpdate
+from app.schemas.public import CompanySearchParams
+from app.schemas.public import JobApplicationCreate
+from app.schemas.public import JobSearchParams
 from app.services.audit_service import log_action
 
 

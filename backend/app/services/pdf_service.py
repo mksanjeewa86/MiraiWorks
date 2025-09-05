@@ -1,15 +1,16 @@
-from typing import Optional, Dict, Any, BinaryIO
-from app.models.resume import Resume
-from app.services.template_service import TemplateService
-from app.services.storage_service import StorageService
-from app.utils.logger import get_logger
-from datetime import datetime, timedelta
-import asyncio
-import os
-import tempfile
+import logging
 import uuid
+from datetime import datetime
+from datetime import timedelta
+from typing import Any
+from typing import Dict
+from typing import Optional
 
-logger = get_logger(__name__)
+from app.models.resume import Resume
+from app.services.storage_service import StorageService
+from app.services.template_service import TemplateService
+
+logger = logging.getLogger(__name__)
 
 
 class PDFService:
@@ -139,7 +140,7 @@ class PDFService:
         """Convert HTML to PDF using WeasyPrint."""
         try:
             import weasyprint
-            
+
             # Configure CSS for print
             css_string = f"""
             @page {{
@@ -236,7 +237,6 @@ class PDFService:
     async def _is_playwright_available(self) -> bool:
         """Check if Playwright is available."""
         try:
-            import playwright
             return True
         except ImportError:
             return False
@@ -244,7 +244,6 @@ class PDFService:
     async def _is_weasyprint_available(self) -> bool:
         """Check if WeasyPrint is available."""
         try:
-            import weasyprint
             return True
         except ImportError:
             return False
@@ -286,8 +285,9 @@ class PDFService:
         """Convert first page of PDF to image."""
         try:
             # Using pdf2image library
-            from pdf2image import convert_from_bytes
             from io import BytesIO
+
+            from pdf2image import convert_from_bytes
             
             images = convert_from_bytes(pdf_data, first_page=1, last_page=1, dpi=150)
             
@@ -317,7 +317,6 @@ class PDFService:
         for resume_id in resume_ids:
             try:
                 # Get resume with ownership check
-                from sqlalchemy.ext.asyncio import AsyncSession
                 from app.database import get_db
                 
                 async with get_db() as db:

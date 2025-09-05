@@ -1,9 +1,9 @@
 import asyncio
-from celery import current_task
-from app.workers.queue import celery_app
+import logging
+
 from app.database import AsyncSessionLocal
 from app.services.antivirus_service import antivirus_service
-import logging
+from app.workers.queue import celery_app
 
 logger = logging.getLogger(__name__)
 
@@ -44,10 +44,12 @@ async def _scan_file_async(attachment_id: int) -> bool:
 
 async def _mark_scan_failed(attachment_id: int):
     """Mark file scan as failed."""
+    from datetime import datetime
+
     from sqlalchemy import update
+
     from app.models.attachment import Attachment
     from app.utils.constants import VirusStatus
-    from datetime import datetime
     
     async with AsyncSessionLocal() as db:
         await db.execute(
@@ -101,10 +103,14 @@ def cleanup_old_attachments():
 
 async def _cleanup_attachments_async() -> int:
     """Clean up old deleted attachments."""
-    from sqlalchemy import select, delete
+    from datetime import datetime
+    from datetime import timedelta
+
+    from sqlalchemy import delete
+    from sqlalchemy import select
+
     from app.models.attachment import Attachment
     from app.services.storage_service import storage_service
-    from datetime import datetime, timedelta
     
     cleaned_count = 0
     

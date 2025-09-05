@@ -1,32 +1,45 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks, Response
-from fastapi.responses import HTMLResponse, RedirectResponse
-from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Optional
+import logging
 from datetime import datetime
+from typing import List
+from typing import Optional
+
+from fastapi import APIRouter
+from fastapi import BackgroundTasks
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Query
+from fastapi.responses import HTMLResponse
+from fastapi.responses import RedirectResponse
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.database import get_db
-from app.services.resume_service import ResumeService
-from app.services.template_service import TemplateService
-from app.services.pdf_service import PDFService
+from app.dependencies import get_current_user
 from app.models.user import User
-from app.schemas.resume import (
-    ResumeCreate, ResumeUpdate, ResumeInfo, ResumeListRequest, ResumeListResponse,
-    WorkExperienceCreate, WorkExperienceUpdate, WorkExperienceInfo,
-    EducationCreate, EducationUpdate, EducationInfo,
-    SkillCreate, SkillUpdate, SkillInfo,
-    ProjectCreate, ProjectUpdate, ProjectInfo,
-    CertificationCreate, CertificationUpdate, CertificationInfo,
-    LanguageCreate, LanguageUpdate, LanguageInfo,
-    ReferenceCreate, ReferenceUpdate, ReferenceInfo,
-    SectionCreate, SectionUpdate, SectionInfo,
-    ResumeTemplateInfo, ShareLinkCreate, ShareLinkInfo,
-    ResumeStats, BulkResumeAction, BulkActionResult,
-    PDFGenerationRequest, PDFGenerationResponse
-)
-from app.utils.auth import get_current_user
-from app.utils.logger import get_logger
+from app.schemas.resume import BulkActionResult
+from app.schemas.resume import BulkResumeAction
+from app.schemas.resume import EducationCreate
+from app.schemas.resume import EducationInfo
+from app.schemas.resume import PDFGenerationRequest
+from app.schemas.resume import PDFGenerationResponse
+from app.schemas.resume import ProjectCreate
+from app.schemas.resume import ProjectInfo
+from app.schemas.resume import ResumeCreate
+from app.schemas.resume import ResumeInfo
+from app.schemas.resume import ResumeListResponse
+from app.schemas.resume import ResumeStats
+from app.schemas.resume import ResumeTemplateInfo
+from app.schemas.resume import ResumeUpdate
+from app.schemas.resume import ShareLinkCreate
+from app.schemas.resume import ShareLinkInfo
+from app.schemas.resume import SkillCreate
+from app.schemas.resume import SkillInfo
+from app.schemas.resume import WorkExperienceCreate
+from app.schemas.resume import WorkExperienceInfo
+from app.services.pdf_service import PDFService
+from app.services.resume_service import ResumeService
 
 router = APIRouter(prefix="/resumes", tags=["resumes"])
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 # Resume CRUD Operations
@@ -242,7 +255,6 @@ async def add_project(
 ):
     """Add project to a resume."""
     # Implementation similar to other add methods
-    pass
 
 
 # Template Management
