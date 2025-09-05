@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { messagesApi } from '../../services/api';
-import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
@@ -117,7 +116,7 @@ export default function MessagesPage() {
       const response = await messagesApi.getConversations();
       setState(prev => ({ 
         ...prev, 
-        conversations: response.data,
+        conversations: response.data || [],
         loading: false 
       }));
     } catch (error: any) {
@@ -139,8 +138,8 @@ export default function MessagesPage() {
 
       setState(prev => ({
         ...prev,
-        activeConversation: conversationResponse.data,
-        messages: messagesResponse.data.data,
+        activeConversation: conversationResponse.data || null,
+        messages: messagesResponse.data?.items || [],
         error: null
       }));
 
@@ -164,7 +163,7 @@ export default function MessagesPage() {
     setState(prev => ({ ...prev, sending: true }));
 
     try {
-      const response = await messagesApi.sendMessage(
+      await messagesApi.sendMessage(
         parseInt(conversationId),
         state.newMessage.trim()
       );
@@ -252,7 +251,7 @@ export default function MessagesPage() {
   const filteredConversations = state.conversations.filter(conv =>
     conv.title?.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
     conv.participants.some(p => 
-      p.full_name?.toLowerCase().includes(state.searchQuery.toLowerCase())
+      p.user.full_name?.toLowerCase().includes(state.searchQuery.toLowerCase())
     )
   );
 
@@ -293,7 +292,7 @@ export default function MessagesPage() {
                   <div className="flex items-center space-x-3">
                     <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
                       <span className="text-sm font-semibold text-gray-700">
-                        {conversation.participants[0]?.full_name?.charAt(0) || 'C'}
+                        {conversation.participants[0]?.user?.full_name?.charAt(0) || 'C'}
                       </span>
                     </div>
                     <div className="flex-1 min-w-0">
@@ -301,8 +300,8 @@ export default function MessagesPage() {
                         <p className="text-sm font-medium text-gray-900 truncate">
                           {conversation.title || 
                            conversation.participants
-                             .filter(p => p.id !== user?.id)
-                             .map(p => p.full_name)
+                             .filter(p => p.user.id !== user?.id)
+                             .map(p => p.user.full_name)
                              .join(', ')
                           }
                         </p>
@@ -347,15 +346,15 @@ export default function MessagesPage() {
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
                     <span className="text-sm font-semibold text-gray-700">
-                      {state.activeConversation.participants[0]?.full_name?.charAt(0) || 'C'}
+                      {state.activeConversation.participants[0]?.user?.full_name?.charAt(0) || 'C'}
                     </span>
                   </div>
                   <div>
                     <h2 className="text-lg font-semibold text-gray-900">
                       {state.activeConversation.title ||
                        state.activeConversation.participants
-                         .filter(p => p.id !== user?.id)
-                         .map(p => p.full_name)
+                         .filter(p => p.user.id !== user?.id)
+                         .map(p => p.user.full_name)
                          .join(', ')
                       }
                     </h2>

@@ -31,7 +31,11 @@ import SettingsPage from './pages/settings/SettingsPage';
 
 // Public pages
 import PublicLayout from './layouts/PublicLayout';
-import HomePage from './pages/public/HomePage';
+import LandingPage from './pages/public/LandingPage';
+import JobsPage from './pages/public/JobsPage';
+import JobDetailPage from './pages/public/JobDetailPage';
+import CompaniesPage from './pages/public/CompaniesPage';
+import CompanyDetailPage from './pages/public/CompanyDetailPage';
 import AboutPage from './pages/public/AboutPage';
 import ContactPage from './pages/public/ContactPage';
 import CompanyProfilePage from './pages/public/CompanyProfilePage';
@@ -62,7 +66,11 @@ function App() {
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<PublicLayout />}>
-                <Route index element={<HomePage />} />
+                <Route index element={<LandingPage />} />
+                <Route path="jobs" element={<JobsPage />} />
+                <Route path="jobs/:slug" element={<JobDetailPage />} />
+                <Route path="companies" element={<CompaniesPage />} />
+                <Route path="companies/:slug" element={<CompanyDetailPage />} />
                 <Route path="about" element={<AboutPage />} />
                 <Route path="contact" element={<ContactPage />} />
                 <Route path="company/:slug" element={<CompanyProfilePage />} />

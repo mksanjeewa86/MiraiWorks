@@ -10,6 +10,7 @@ class Company(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False, index=True)
+    domain = Column(String(255), nullable=True, unique=True, index=True)
     type = Column(Enum(CompanyType), nullable=False, index=True)
     email = Column(String(255), nullable=True, index=True)
     phone = Column(String(50), nullable=True)
@@ -22,6 +23,8 @@ class Company(Base):
 
     # Relationships
     users = relationship("User", back_populates="company", cascade="all, delete-orphan")
+    jobs = relationship("Job", back_populates="company", cascade="all, delete-orphan")
+    profile = relationship("CompanyProfile", back_populates="company", uselist=False, cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<Company(id={self.id}, name='{self.name}', type='{self.type}')>"

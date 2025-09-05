@@ -18,7 +18,8 @@
       "Bash(sed:*)",
       "Bash(npx tsc:*)",
       "mcp__ide__getDiagnostics",
-      "Bash(timeout 30s npm run build)"
+      "Bash(timeout 30s npm run build)",
+      "Bash(npx vite build:*)"
     ],
     "deny": [],
     "ask": []

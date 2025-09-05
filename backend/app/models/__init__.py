@@ -7,6 +7,10 @@ from .audit import AuditLog
 from .notification import Notification
 from .message import Conversation, Message, MessageRead, conversation_participants
 from .attachment import Attachment
+from .interview import Interview, InterviewProposal
+from .resume import Resume, WorkExperience, Education, Skill, Project, Certification, Language, Reference
+from .meeting import Meeting, MeetingRecording, MeetingTranscript, MeetingSummary, meeting_participants
+from .job import Job, JobApplication, CompanyProfile
 
 __all__ = [
     "Company",
@@ -23,4 +27,22 @@ __all__ = [
     "MessageRead",
     "conversation_participants",
     "Attachment",
+    "Interview",
+    "InterviewProposal",
+    "Resume",
+    "WorkExperience",
+    "Education", 
+    "Skill",
+    "Project",
+    "Certification",
+    "Language",
+    "Reference",
+    "Meeting",
+    "MeetingRecording",
+    "MeetingTranscript", 
+    "MeetingSummary",
+    "meeting_participants",
+    "Job",
+    "JobApplication",
+    "CompanyProfile",
 ]

@@ -156,19 +156,12 @@ The project follows a phased development approach:
 3. **Phase 3**: Calendar integrations and interview scheduling ✅
 4. **Phase 4**: Resume builder with PDF generation ✅
 5. **Phase 5**: Frontend foundation with React/TypeScript/Tailwind ✅
+6. **Phase 5.5**: Complete role-based dashboard layouts and messaging UI ✅
+7. **Phase 3.5**: **Online Interview Service** (WebRTC + Transcription) ✅
 
 **Upcoming Phases:**
-6. **Phase 5.5**: Complete role-based dashboard layouts and messaging UI
-7. **Phase 3.5**: **Online Interview Service** (WebRTC + Transcription)
-   - Meeting models: Meeting, MeetingParticipant, MeetingRecording, MeetingTranscript, MeetingSummary
-   - Two interview types: **casual** (Candidate↔Recruiter) and **main** (Candidate↔Employer)
-   - WebRTC signaling via WebSocket with coturn NAT traversal
-   - Video calls, screen sharing, in-call chat, file sharing
-   - Recording consent management and RBAC-enforced access
-   - Speech-to-text transcription and AI-powered summaries
-   - Integration with existing interview scheduling system
 8. **Phase 6**: Public website and company profile pages
-9. **Phase 7**: Advanced features (virtual backgrounds, expression viewer)
+9. **Phase 7**: Advanced meeting features (virtual backgrounds, expression viewer)
 10. **Phase 8**: CI/CD pipeline and security hardening
 
 ## Code Quality Standards

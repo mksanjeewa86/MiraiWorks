@@ -13,7 +13,9 @@ import type {
   Resume,
   CalendarIntegration,
   CalendarEvent,
-  DashboardStats
+  DashboardStats,
+  Meeting,
+  MeetingJoinResponse
 } from '../types';
 
 // Create axios instance
@@ -343,6 +345,82 @@ export const resumesApi = {
     apiPost<any>(`/api/resumes/${resumeId}/projects`, data),
 };
 
+// Meetings API
+export const meetingsApi = {
+  listMeetings: (params?: {
+    status?: string;
+    meeting_type?: string;
+    start_date?: string;
+    end_date?: string;
+    participant_id?: number;
+    page?: number;
+    limit?: number;
+  }): Promise<ApiResponse<any>> =>
+    apiGet<any>('/api/meetings', { params }),
+
+  getMeeting: (id: number): Promise<ApiResponse<Meeting>> =>
+    apiGet<Meeting>(`/api/meetings/${id}`),
+
+  getMeetingByRoomId: (roomId: string): Promise<ApiResponse<Meeting>> =>
+    apiGet<Meeting>(`/api/meetings/room/${roomId}`),
+
+  createMeeting: (data: {
+    title: string;
+    description?: string;
+    meeting_type: string;
+    scheduled_start: string;
+    scheduled_end: string;
+    interview_id?: number;
+    participants: Array<{
+      user_id: number;
+      role: string;
+      can_record?: boolean;
+    }>;
+    recording_enabled?: boolean;
+    transcription_enabled?: boolean;
+    auto_summary?: boolean;
+    access_code?: string;
+  }): Promise<ApiResponse<Meeting>> =>
+    apiPost<Meeting>('/api/meetings', data),
+
+  updateMeeting: (id: number, data: {
+    title?: string;
+    description?: string;
+    status?: string;
+    scheduled_start?: string;
+    scheduled_end?: string;
+    recording_enabled?: boolean;
+    transcription_enabled?: boolean;
+    auto_summary?: boolean;
+    access_code?: string;
+  }): Promise<ApiResponse<Meeting>> =>
+    apiPut<Meeting>(`/api/meetings/${id}`, data),
+
+  deleteMeeting: (id: number): Promise<ApiResponse<void>> =>
+    apiDelete<void>(`/api/meetings/${id}`),
+
+  joinMeeting: (roomId: string, accessCode?: string): Promise<ApiResponse<MeetingJoinResponse>> =>
+    apiPost<MeetingJoinResponse>(`/api/meetings/join/${roomId}`, { access_code: accessCode }),
+
+  leaveMeeting: (roomId: string): Promise<ApiResponse<void>> =>
+    apiPost<void>(`/api/meetings/leave/${roomId}`),
+
+  getMeetingRecordings: (id: number): Promise<ApiResponse<any>> =>
+    apiGet<any>(`/api/meetings/${id}/recordings`),
+
+  getMeetingTranscripts: (id: number): Promise<ApiResponse<any>> =>
+    apiGet<any>(`/api/meetings/${id}/transcripts`),
+
+  getMeetingTranscript: (meetingId: number, transcriptId: number): Promise<ApiResponse<any>> =>
+    apiGet<any>(`/api/meetings/${meetingId}/transcripts/${transcriptId}`),
+
+  getMeetingSummaries: (id: number): Promise<ApiResponse<any>> =>
+    apiGet<any>(`/api/meetings/${id}/summaries`),
+
+  getMeetingSummary: (meetingId: number, summaryId: number): Promise<ApiResponse<any>> =>
+    apiGet<any>(`/api/meetings/${meetingId}/summaries/${summaryId}`),
+};
+
 // Dashboard API
 export const dashboardApi = {
   getStats: (): Promise<ApiResponse<DashboardStats>> =>
@@ -351,5 +429,17 @@ export const dashboardApi = {
   getRecentActivity: (limit?: number): Promise<ApiResponse<any[]>> =>
     apiGet<any[]>('/api/dashboard/activity', { params: { limit } }),
 };
+
+// Public API for unauthenticated requests
+export const publicApi = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Export the axios instance for direct use
+export const apiClient = api;
 
 export default api;

@@ -63,6 +63,7 @@ class Interview(Base):
     
     proposals = relationship("InterviewProposal", back_populates="interview", cascade="all, delete-orphan")
     synced_events = relationship("SyncedEvent", back_populates="interview", cascade="all, delete-orphan")
+    meetings = relationship("Meeting", back_populates="interview", cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<Interview(id={self.id}, title='{self.title}', status='{self.status}', candidate_id={self.candidate_id})>"
