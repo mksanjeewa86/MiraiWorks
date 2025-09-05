@@ -5,6 +5,8 @@ from .role import Role, UserRole
 from .auth import RefreshToken, PasswordResetRequest, OauthAccount
 from .audit import AuditLog
 from .notification import Notification
+from .message import Conversation, Message, MessageRead, conversation_participants
+from .attachment import Attachment
 
 __all__ = [
     "Company",
@@ -16,4 +18,9 @@ __all__ = [
     "OauthAccount",
     "AuditLog",
     "Notification",
+    "Conversation",
+    "Message",
+    "MessageRead",
+    "conversation_participants",
+    "Attachment",
 ]
