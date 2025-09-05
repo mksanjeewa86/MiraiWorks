@@ -28,7 +28,8 @@
       "Bash(npm run dev:*)",
       "Bash(docker-compose up:*)",
       "Bash(pip install:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(git reset:*)"
     ],
     "deny": [],
     "ask": []
