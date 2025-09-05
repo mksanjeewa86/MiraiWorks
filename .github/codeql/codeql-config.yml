@@ -1,0 +1,20 @@
+name: "MiraiWorks CodeQL Config"
+
+disable-default-queries: false
+
+queries:
+  - uses: security-and-quality
+  - uses: security-extended
+
+paths-ignore:
+  - frontend/node_modules
+  - frontend/dist
+  - backend/__pycache__
+  - backend/.pytest_cache
+  - platform/
+  - "**/*.test.*"
+  - "**/*.spec.*"
+
+paths:
+  - backend/app
+  - frontend/src

@@ -21,7 +21,9 @@
       "Bash(timeout 30s npm run build)",
       "Bash(npx vite build:*)",
       "Bash(timeout 45s npm run build)",
-      "Bash(timeout 60s npm run build)"
+      "Bash(timeout 60s npm run build)",
+      "Bash(npm run typecheck:*)",
+      "Bash(python:*)"
     ],
     "deny": [],
     "ask": []

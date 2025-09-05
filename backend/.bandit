@@ -1,0 +1,20 @@
+[bandit]
+# Security linting configuration for Python backend
+
+# Skip tests that are not applicable or too noisy
+skips = B101,B601
+
+# Confidence levels: HIGH, MEDIUM, LOW
+confidence = HIGH
+
+# Security test IDs to exclude
+exclude_dirs = /tests,/migrations,/__pycache__,/.git
+
+# Additional paths to scan
+paths = app/
+
+# Output format: json, xml, txt, html, yaml, csv
+format = txt
+
+# Include full file paths in report
+include = *.py

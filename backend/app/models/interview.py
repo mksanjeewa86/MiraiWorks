@@ -22,7 +22,7 @@ class Interview(Base):
     position_title = Column(String(255), nullable=True)
     
     # Status and workflow
-    status = Column(String(50), nullable=False, default=InterviewStatus.PROPOSED.value, index=True)
+    status = Column(String(50), nullable=False, default=InterviewStatus.PENDING_SCHEDULE.value, index=True)
     interview_type = Column(String(50), nullable=False, default='video')  # video, phone, in_person
     
     # Scheduling (finalized details)

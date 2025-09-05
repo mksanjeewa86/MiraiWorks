@@ -1,0 +1,271 @@
+name: Security Scanning
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run security scans daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  # Secret scanning
+  secret-scan:
+    name: Secret Detection
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Run TruffleHog OSS
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        base: main
+        head: HEAD
+        extra_args: --debug --only-verified
+
+    - name: Run GitLeaks
+      uses: gitleaks/gitleaks-action@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Container security scanning
+  container-security:
+    name: Container Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build backend image
+      run: |
+        docker build -t miraiworks-backend:latest ./backend
+
+    - name: Build frontend image  
+      run: |
+        docker build -t miraiworks-frontend:latest ./frontend
+
+    - name: Run Trivy vulnerability scanner on backend
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'miraiworks-backend:latest'
+        format: 'sarif'
+        output: 'trivy-backend.sarif'
+
+    - name: Run Trivy vulnerability scanner on frontend
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'miraiworks-frontend:latest'
+        format: 'sarif'
+        output: 'trivy-frontend.sarif'
+
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-backend.sarif'
+
+    - name: Upload Trivy frontend results
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-frontend.sarif'
+
+  # SAST (Static Application Security Testing)
+  sast-scan:
+    name: Static Application Security Testing
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: python, javascript
+        config-file: ./.github/codeql/codeql-config.yml
+
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v2
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
+      with:
+        category: "/language:python,javascript"
+
+    - name: Run Semgrep
+      uses: semgrep/semgrep-action@v1
+      with:
+        config: >-
+          p/security-audit
+          p/python
+          p/javascript
+          p/react
+          p/typescript
+      env:
+        SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+
+  # Infrastructure security
+  infrastructure-security:
+    name: Infrastructure Security
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Run Checkov on Docker files
+      uses: bridgecrewio/checkov-action@master
+      with:
+        directory: .
+        framework: dockerfile
+        output_format: sarif
+        output_file_path: checkov-dockerfile.sarif
+
+    - name: Run Checkov on Docker Compose
+      uses: bridgecrewio/checkov-action@master
+      with:
+        directory: ./platform
+        framework: docker_compose
+        output_format: sarif
+        output_file_path: checkov-compose.sarif
+
+    - name: Upload Checkov results
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: checkov-dockerfile.sarif
+
+  # Dependency security check
+  dependency-security:
+    name: Dependency Security Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install Python dependencies
+      working-directory: ./backend
+      run: |
+        pip install -r requirements.txt
+        pip install safety bandit
+
+    - name: Install Node.js dependencies
+      working-directory: ./frontend
+      run: npm ci
+
+    - name: Run Safety (Python dependencies)
+      working-directory: ./backend
+      run: |
+        safety check --json --output safety-report.json
+        safety check --short-report
+
+    - name: Run Bandit (Python security linting)
+      working-directory: ./backend
+      run: |
+        bandit -r app/ -f json -o bandit-report.json
+        bandit -r app/ -ll
+
+    - name: Run npm audit (Node.js dependencies)
+      working-directory: ./frontend
+      run: |
+        npm audit --audit-level=moderate
+
+    - name: Upload security reports
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: dependency-security-reports
+        path: |
+          backend/safety-report.json
+          backend/bandit-report.json
+
+  # Security configuration validation
+  security-config:
+    name: Security Configuration Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Validate security headers configuration
+      run: |
+        # Check if security headers are properly configured
+        if ! grep -r "X-Content-Type-Options" backend/; then
+          echo "❌ Missing X-Content-Type-Options header"
+          exit 1
+        fi
+        
+        if ! grep -r "X-Frame-Options" backend/; then
+          echo "❌ Missing X-Frame-Options header"
+          exit 1
+        fi
+        
+        if ! grep -r "Strict-Transport-Security" backend/; then
+          echo "❌ Missing HSTS header"
+          exit 1
+        fi
+        
+        echo "✅ Security headers configuration validated"
+
+    - name: Check environment variable usage
+      run: |
+        # Ensure no hardcoded secrets or sensitive data
+        suspicious_patterns=(
+          "password.*=.*['\"][^'\"]*['\"]"
+          "secret.*=.*['\"][^'\"]*['\"]"
+          "key.*=.*['\"][^'\"]*['\"]"
+          "token.*=.*['\"][^'\"]*['\"]"
+        )
+        
+        violations=()
+        for pattern in "${suspicious_patterns[@]}"; do
+          if grep -r -i "$pattern" backend/ frontend/ --exclude-dir=node_modules --exclude-dir=__pycache__; then
+            violations+=("$pattern")
+          fi
+        done
+        
+        if [ ${#violations[@]} -gt 0 ]; then
+          echo "❌ Found potential hardcoded secrets"
+          exit 1
+        else
+          echo "✅ No hardcoded secrets detected"
+        fi
+
+    - name: Validate CORS configuration
+      working-directory: ./backend
+      run: |
+        python -c "
+        import sys
+        import os
+        sys.path.append('.')
+        
+        try:
+            from app.core.config import settings
+            
+            # Check if CORS is properly configured for production
+            if hasattr(settings, 'BACKEND_CORS_ORIGINS'):
+                cors_origins = getattr(settings, 'BACKEND_CORS_ORIGINS', [])
+                if '*' in cors_origins:
+                    print('❌ Wildcard CORS origin detected - security risk')
+                    sys.exit(1)
+                else:
+                    print('✅ CORS configuration validated')
+            else:
+                print('⚠️ CORS configuration not found')
+        except Exception as e:
+            print(f'⚠️ Could not validate CORS configuration: {e}')
+        "
