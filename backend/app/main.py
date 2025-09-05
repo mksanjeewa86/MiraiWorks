@@ -115,10 +115,13 @@ async def root():
 
 
 # Include routers
-from app.routers import auth, messaging, messaging_ws
+from app.routers import auth, messaging, messaging_ws, calendar, interviews, webhooks
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(messaging.router, prefix="/api/messaging", tags=["messaging"])
 app.include_router(messaging_ws.router, prefix="/ws", tags=["websocket"])
+app.include_router(calendar.router, prefix="/api/calendar", tags=["calendar"])
+app.include_router(interviews.router, prefix="/api/interviews", tags=["interviews"])
+app.include_router(webhooks.router, prefix="/webhooks", tags=["webhooks"])
 # TODO: Include other routers when implemented
 # from app.routers import users, companies
 # app.include_router(users.router, prefix="/api/users", tags=["users"])
