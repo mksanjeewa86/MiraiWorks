@@ -12,7 +12,7 @@ from fastapi import Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.models.calendar_integration import ExternalCalendarAccount
+from app.models.calendar_integration import ExternalCalendarAccount, SyncedEvent
 from app.services.calendar_service import CalendarService
 from app.services.interview_service import InterviewService
 from app.services.microsoft_calendar_service import MicrosoftCalendarService
@@ -188,7 +188,7 @@ async def sync_microsoft_calendar_events(
                 
         elif change_type == "deleted":
             # Remove the event from our database
-            await CalendarEvent.delete_by_external_id(db, event_id)
+            await SyncedEvent.delete_by_external_id(db, event_id)
         
         # Update last sync time
         calendar_integration.last_sync_at = datetime.utcnow()
@@ -273,11 +273,12 @@ async def process_calendar_event_update(
             logger.info(f"Updated interview {interview.id} from calendar event {event_id}")
         
         # Update or create calendar event record
-        existing_event = await CalendarEvent.get_by_external_id(db, event_id)
+        existing_event = await SyncedEvent.get_by_external_id(db, event_id)
         
         event_data_dict = {
-            "calendar_integration_id": calendar_integration.id,
+            "calendar_account_id": calendar_integration.id,
             "external_event_id": event_id,
+            "external_calendar_id": calendar_integration.calendar_id or "",
             "title": title,
             "description": description,
             "location": location,
@@ -290,11 +291,11 @@ async def process_calendar_event_update(
         
         if existing_event:
             for key, value in event_data_dict.items():
-                if key != "calendar_integration_id":  # Don't update this
+                if key != "calendar_account_id":  # Don't update this
                     setattr(existing_event, key, value)
             await existing_event.save(db)
         else:
-            calendar_event = CalendarEvent(**event_data_dict)
+            calendar_event = SyncedEvent(**event_data_dict)
             await calendar_event.save(db)
         
     except Exception as e:

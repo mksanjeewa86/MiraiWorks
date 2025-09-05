@@ -71,6 +71,12 @@ class ExternalCalendarAccount(Base):
         from sqlalchemy import select
         result = await db.execute(select(cls).where(cls.id == account_id))
         return result.scalars().first()
+    
+    async def save(self, db):
+        """Save the calendar account to database."""
+        db.add(self)
+        await db.commit()
+        await db.refresh(self)
 
 
 class SyncedEvent(Base):
@@ -118,3 +124,23 @@ class SyncedEvent(Base):
     
     def __repr__(self):
         return f"<SyncedEvent(id={self.id}, title='{self.title}', start={self.start_datetime})>"
+    
+    @classmethod
+    async def get_by_external_id(cls, db, external_event_id: str):
+        """Get synced event by external event ID."""
+        from sqlalchemy import select
+        result = await db.execute(select(cls).where(cls.external_event_id == external_event_id))
+        return result.scalars().first()
+    
+    @classmethod
+    async def delete_by_external_id(cls, db, external_event_id: str):
+        """Delete synced event by external event ID."""
+        from sqlalchemy import delete
+        await db.execute(delete(cls).where(cls.external_event_id == external_event_id))
+        await db.commit()
+    
+    async def save(self, db):
+        """Save the synced event to database."""
+        db.add(self)
+        await db.commit()
+        await db.refresh(self)
