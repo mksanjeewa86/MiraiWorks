@@ -55,7 +55,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-primary-600">MiraiWorks</h1>
+          <h1 className="text-3xl font-bold text-brand-primary">MiraiWorks</h1>
           <p className="mt-2 text-sm text-gray-600">HR & Recruitment Platform</p>
         </div>
       </div>
@@ -108,7 +108,7 @@ export default function LoginPage() {
                 <div className="text-sm">
                   <Link
                     to="/forgot-password"
-                    className="font-medium text-primary-600 hover:text-primary-500"
+                    className="font-medium text-brand-primary hover:opacity-80"
                   >
                     Forgot your password?
                   </Link>

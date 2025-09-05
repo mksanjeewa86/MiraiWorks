@@ -117,7 +117,7 @@ export default function Sidebar({
   }
 
   const sidebarClasses = `
-    fixed lg:relative top-0 left-0 z-40 h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 
+    fixed lg:relative top-0 left-0 z-40 h-screen border-r
     transition-all duration-300 ease-in-out
     ${isMobile ? 'w-64' : isCollapsed ? 'w-16' : 'w-64'}
     ${isMobile && !isOpen ? '-translate-x-full' : 'translate-x-0'}
@@ -135,10 +135,10 @@ export default function Sidebar({
         />
       )}
 
-      <aside className={sidebarClasses}>
+      <aside className={sidebarClasses} style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}>
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
+          <div className="flex items-center justify-between p-4" style={{ borderBottom: '1px solid var(--border-color)' }}>
             {!isCollapsed && (
               <span className="text-lg font-semibold text-gray-900 dark:text-white">
                 Navigation
@@ -149,7 +149,7 @@ export default function Sidebar({
               {!isMobile && (
                 <button
                   onClick={onToggleCollapse}
-                  className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  className="p-1.5 rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-800" style={{ backgroundColor: 'transparent' }}
                   aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
                 >
                   {isCollapsed ? (
@@ -163,7 +163,7 @@ export default function Sidebar({
               {isMobile && (
                 <button
                   onClick={onClose}
-                  className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors lg:hidden"
+                  className="p-1.5 rounded-lg transition-colors lg:hidden hover:bg-gray-100 dark:hover:bg-gray-800" style={{ backgroundColor: 'transparent' }}
                   aria-label="Close sidebar"
                 >
                   <X className="h-4 w-4 text-gray-500" />
@@ -186,16 +186,17 @@ export default function Sidebar({
                   className={`
                     group flex items-center px-3 py-2.5 rounded-2xl text-sm font-medium transition-all duration-200
                     ${active 
-                      ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400' 
-                      : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'
+                      ? 'text-brand-primary' 
+                      : 'hover:bg-gray-50 dark:hover:bg-gray-800'
                     }
                   `}
+                  style={active ? { backgroundColor: 'rgba(108, 99, 255, 0.1)' } : undefined}
                   title={isCollapsed ? item.name : undefined}
                 >
                   <Icon className={`
                     h-5 w-5 flex-shrink-0 transition-colors
                     ${active 
-                      ? 'text-primary-600 dark:text-primary-400' 
+                      ? 'text-brand-primary' 
                       : 'text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200'
                     }
                   `} />
@@ -208,7 +209,7 @@ export default function Sidebar({
                   
                   {/* Active indicator */}
                   {active && (
-                    <div className="ml-auto w-2 h-2 bg-primary-600 dark:bg-primary-400 rounded-full" />
+                    <div className="ml-auto w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--brand-primary)' }} />
                   )}
                 </Link>
               )
@@ -217,9 +218,9 @@ export default function Sidebar({
 
           {/* User info (collapsed state) */}
           {isCollapsed && user && (
-            <div className="p-4 border-t border-gray-200 dark:border-gray-800">
+            <div className="p-4" style={{ borderTop: '1px solid var(--border-color)' }}>
               <div className="flex items-center justify-center">
-                <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium" style={{ backgroundColor: 'var(--brand-primary)' }}>
                   {user.first_name?.[0] || user.email[0].toUpperCase()}
                 </div>
               </div>
@@ -228,9 +229,9 @@ export default function Sidebar({
 
           {/* User info (expanded state) */}
           {!isCollapsed && user && (
-            <div className="p-4 border-t border-gray-200 dark:border-gray-800">
+            <div className="p-4" style={{ borderTop: '1px solid var(--border-color)' }}>
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-medium" style={{ backgroundColor: 'var(--brand-primary)' }}>
                   {user.first_name?.[0] || user.email[0].toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">

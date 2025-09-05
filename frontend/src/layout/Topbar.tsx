@@ -39,7 +39,7 @@ export default function Topbar({ onMenuClick, onThemeToggle, isDark }: TopbarPro
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
+    <header className="sticky top-0 z-50 w-full border-b" style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}>
       <div className="flex items-center justify-between px-4 py-3">
         {/* Left side */}
         <div className="flex items-center space-x-4">
@@ -96,7 +96,7 @@ export default function Topbar({ onMenuClick, onThemeToggle, isDark }: TopbarPro
                       key={notification.id}
                       className="flex items-start space-x-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl cursor-pointer"
                     >
-                      <div className={`w-2 h-2 rounded-full mt-2 ${notification.unread ? 'bg-primary-500' : 'bg-gray-300'}`} />
+                      <div className="w-2 h-2 rounded-full mt-2" style={{ backgroundColor: notification.unread ? 'var(--brand-primary)' : '#d1d5db' }} />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-gray-900 dark:text-white">{notification.title}</p>
                         <p className="text-xs text-muted-500 mt-1">{notification.type}</p>
@@ -106,7 +106,7 @@ export default function Topbar({ onMenuClick, onThemeToggle, isDark }: TopbarPro
                 </div>
 
                 <div className="px-3 py-2 border-t border-gray-100 dark:border-gray-700 mt-2">
-                  <button className="text-sm text-primary-600 hover:text-primary-700 font-medium">
+                  <button className="text-sm font-medium text-brand-primary hover:opacity-80">
                     View all notifications
                   </button>
                 </div>
@@ -134,7 +134,7 @@ export default function Topbar({ onMenuClick, onThemeToggle, isDark }: TopbarPro
                 className="flex items-center space-x-2 p-2 rounded-2xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 aria-label="User menu"
               >
-                <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium" style={{ backgroundColor: 'var(--brand-primary)' }}>
                   {getUserInitials()}
                 </div>
                 <span className="hidden md:inline text-sm font-medium text-gray-700 dark:text-gray-200">
