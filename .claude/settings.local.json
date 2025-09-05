@@ -29,7 +29,8 @@
       "Bash(docker-compose up:*)",
       "Bash(pip install:*)",
       "Bash(curl:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Read(//c/Users/mksan/OneDrive/ドキュメント/projects/**)"
     ],
     "deny": [],
     "ask": []

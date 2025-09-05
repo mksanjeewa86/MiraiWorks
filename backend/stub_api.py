@@ -18,7 +18,7 @@ app = FastAPI(title="MiraiWorks HRMS - Demo API", version="1.0.0")
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3001", "http://127.0.0.1:3001", "http://localhost:3000", "http://127.0.0.1:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -51,7 +51,8 @@ class LoginRequest(BaseModel):
 
 class LoginResponse(BaseModel):
     access_token: str
-    token_type: str
+    refresh_token: str
+    expires_in: int
     user: Dict[str, Any]
 
 class User(BaseModel):
@@ -141,8 +142,9 @@ async def login(login_request: LoginRequest):
     
     # For demo, accept any password
     return LoginResponse(
-        access_token="demo_token_" + str(user["id"]),
-        token_type="bearer",
+        access_token="demo_access_token_" + str(user["id"]),
+        refresh_token="demo_refresh_token_" + str(user["id"]),
+        expires_in=3600,
         user=user
     )
 
