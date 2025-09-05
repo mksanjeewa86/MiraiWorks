@@ -35,11 +35,11 @@ export const useVirtualBackground = (videoStream?: MediaStream) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const backgroundImageRef = useRef<HTMLImageElement | null>(null);
-  const animationFrameRef = useRef<number>();
+  const animationFrameRef = useRef<number | undefined>(undefined);
   const modelRef = useRef<any>(null);
 
   // Check if virtual background is supported
-  const checkSupport = useCallback(async () => {
+  const checkSupport = useCallback(() => {
     try {
       // Check if the browser supports OffscreenCanvas and WebAssembly
       const hasOffscreenCanvas = 'OffscreenCanvas' in window;
@@ -70,8 +70,10 @@ export const useVirtualBackground = (videoStream?: MediaStream) => {
     try {
       setState(prev => ({ ...prev, isProcessing: true }));
 
-      // Dynamically import MediaPipe selfie segmentation
-      const { SelfieSegmentation } = await import('@mediapipe/selfie_segmentation');
+      // Dynamically import MediaPipe selfie segmentation (optional dependency)
+      const { SelfieSegmentation } = await import('@mediapipe/selfie_segmentation').catch(() => {
+        throw new Error('MediaPipe Selfie Segmentation is not available. Please install it with: npm install @mediapipe/selfie_segmentation');
+      });
       
       const selfieSegmentation = new SelfieSegmentation({
         locateFile: (file: string) => {
@@ -84,12 +86,12 @@ export const useVirtualBackground = (videoStream?: MediaStream) => {
         selfieMode: true,
       });
 
-      await new Promise((resolve, reject) => {
-        selfieSegmentation.onResults((results: any) => {
-          resolve(results);
+      await new Promise<void>((resolve, reject) => {
+        selfieSegmentation.onResults(() => {
+          // Results handler will be set up later
         });
 
-        selfieSegmentation.initialize().then(resolve).catch(reject);
+        selfieSegmentation.initialize().then(() => resolve()).catch(reject);
       });
 
       modelRef.current = selfieSegmentation;

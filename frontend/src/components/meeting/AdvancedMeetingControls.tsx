@@ -6,17 +6,9 @@ interface AdvancedMeetingControlsProps {
   localStream?: MediaStream;
   isHost?: boolean;
   isRecording?: boolean;
-  participants?: Array<{
-    id: number;
-    user_id: number;
-    name: string;
-    role: string;
-    status: string;
-  }>;
   onStreamChange?: (stream: MediaStream | null) => void;
   onRecordingToggle?: () => void;
   onMeetingQualityChange?: (quality: 'auto' | 'high' | 'medium' | 'low') => void;
-  onAdvancedSettingsOpen?: () => void;
 }
 
 interface MeetingQuality {
@@ -41,11 +33,9 @@ const AdvancedMeetingControls: React.FC<AdvancedMeetingControlsProps> = ({
   localStream,
   isHost = false,
   isRecording = false,
-  participants = [],
   onStreamChange,
   onRecordingToggle,
-  onMeetingQualityChange,
-  onAdvancedSettingsOpen
+  onMeetingQualityChange
 }) => {
   const [showVirtualBg, setShowVirtualBg] = useState(false);
   const [showExpressions, setShowExpressions] = useState(false);
@@ -128,11 +118,6 @@ const AdvancedMeetingControls: React.FC<AdvancedMeetingControlsProps> = ({
     return 'Poor';
   };
 
-  const getBandwidthLabel = (bandwidth: number): string => {
-    if (bandwidth >= 2) return 'High';
-    if (bandwidth >= 1) return 'Medium';
-    return 'Low';
-  };
 
   return (
     <div className="space-y-4">
@@ -285,7 +270,6 @@ const AdvancedMeetingControls: React.FC<AdvancedMeetingControlsProps> = ({
               <ExpressionViewer 
                 videoStream={localStream} 
                 isHost={isHost}
-                participantName="You"
               />
             </div>
           </div>

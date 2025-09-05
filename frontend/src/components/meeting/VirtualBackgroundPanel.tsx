@@ -19,7 +19,6 @@ const VirtualBackgroundPanel: React.FC<VirtualBackgroundPanelProps> = ({
     isSupported,
     isEnabled,
     isProcessing,
-    currentBackground,
     availableBackgrounds,
     error,
     enableBackground,

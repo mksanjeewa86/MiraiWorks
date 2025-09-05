@@ -79,8 +79,10 @@ export const useExpressionAnalysis = (videoStream?: MediaStream) => {
     try {
       setState(prev => ({ ...prev, isAnalyzing: true }));
 
-      // Dynamically import face-api.js
-      const faceapi = await import('face-api.js');
+      // Dynamically import face-api.js (optional dependency)
+      const faceapi = await import('face-api.js').catch(() => {
+        throw new Error('Face-API.js is not available. Please install it with: npm install face-api.js');
+      });
 
       // Load required models
       const MODEL_URL = '/models'; // Assumes models are served from public/models/
@@ -147,9 +149,8 @@ export const useExpressionAnalysis = (videoStream?: MediaStream) => {
           emotionData[a[0] as keyof EmotionData] > emotionData[b[0] as keyof EmotionData] ? a : b
         )[0] as keyof EmotionData;
 
-        // Calculate engagement level based on expressions and face orientation
-        const landmarks = detection.landmarks;
-        const engagementLevel = calculateEngagement(emotionData, landmarks);
+        // Calculate engagement level based on expressions
+        const engagementLevel = calculateEngagement(emotionData);
 
         // Update state
         setState(prev => ({
@@ -169,7 +170,7 @@ export const useExpressionAnalysis = (videoStream?: MediaStream) => {
   }, [state.isEnabled]);
 
   // Calculate engagement level from facial data
-  const calculateEngagement = useCallback((emotions: EmotionData, landmarks?: any): number => {
+  const calculateEngagement = useCallback((emotions: EmotionData): number => {
     // Basic engagement calculation based on emotions
     const positiveEmotions = emotions.happy + emotions.surprised;
     const negativeEmotions = emotions.sad + emotions.angry + emotions.fearful + emotions.disgusted;

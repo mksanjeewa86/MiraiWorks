@@ -45,7 +45,7 @@ interface AudioLevelData {
   is_speaking: boolean;
 }
 
-export const useMeetingAnalytics = (meetingId?: number) => {
+export const useMeetingAnalytics = () => {
   const [analytics, setAnalytics] = useState<MeetingAnalyticsData>({
     start_time: Date.now(),
     total_duration: 0,
@@ -73,7 +73,6 @@ export const useMeetingAnalytics = (meetingId?: number) => {
   const analyserNodesRef = useRef<Map<number, AnalyserNode>>(new Map());
   const audioDataRef = useRef<Map<number, AudioLevelData[]>>(new Map());
   const speakingThreshold = 0.1; // Audio level threshold for detecting speech
-  const silenceTimeout = 2000; // ms of silence before considering someone stopped speaking
 
   // Initialize audio analysis
   const initializeAudioAnalysis = useCallback(async () => {

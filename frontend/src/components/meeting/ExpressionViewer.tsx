@@ -4,18 +4,15 @@ import { useExpressionAnalysis } from '../../hooks/useExpressionAnalysis';
 interface ExpressionViewerProps {
   videoStream?: MediaStream;
   isHost?: boolean;
-  participantName?: string;
   onEngagementChange?: (engagement: number) => void;
 }
 
 const ExpressionViewer: React.FC<ExpressionViewerProps> = ({
   videoStream,
   isHost = false,
-  participantName = 'Participant',
   onEngagementChange
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
 
   const {
     isSupported,
@@ -25,11 +22,9 @@ const ExpressionViewer: React.FC<ExpressionViewerProps> = ({
     currentEmotion,
     dominantEmotion,
     engagementLevel,
-    engagementHistory,
     error,
     enableAnalysis,
     disableAnalysis,
-    requestConsent,
     getAverageEngagement,
     getEngagementTrend
   } = useExpressionAnalysis(videoStream);
@@ -274,39 +269,6 @@ const ExpressionViewer: React.FC<ExpressionViewerProps> = ({
         </div>
       )}
 
-      {/* Settings Panel */}
-      {showSettings && (
-        <div className="border-t p-4">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-gray-700">
-                Enable Expression Analysis
-              </label>
-              <button
-                onClick={handleToggleAnalysis}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  isEnabled ? 'bg-blue-600' : 'bg-gray-200'
-                }`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    isEnabled ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
-              </button>
-            </div>
-
-            {!hasConsent && (
-              <button
-                onClick={requestConsent}
-                className="w-full text-left text-sm text-blue-600 hover:text-blue-800 transition-colors"
-              >
-                Grant permission for expression analysis →
-              </button>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 };

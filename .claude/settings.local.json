@@ -19,7 +19,9 @@
       "Bash(npx tsc:*)",
       "mcp__ide__getDiagnostics",
       "Bash(timeout 30s npm run build)",
-      "Bash(npx vite build:*)"
+      "Bash(npx vite build:*)",
+      "Bash(timeout 45s npm run build)",
+      "Bash(timeout 60s npm run build)"
     ],
     "deny": [],
     "ask": []
