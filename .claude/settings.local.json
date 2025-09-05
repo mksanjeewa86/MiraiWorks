@@ -23,7 +23,8 @@
       "Bash(timeout 45s npm run build)",
       "Bash(timeout 60s npm run build)",
       "Bash(npm run typecheck:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(gh run list:*)"
     ],
     "deny": [],
     "ask": []
