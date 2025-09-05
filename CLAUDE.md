@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-MiraiWorks is a modern HR & recruitment management platform built with FastAPI (Python) backend and React/TypeScript frontend. The system supports candidates, recruiters, and employers with real-time messaging, calendar sync, resume building, secure interview scheduling, and **Online Interview Service** with video calls, transcription (文字起こし), and summarization (要約).
+MiraiWorks is a modern HR & recruitment management platform built with FastAPI (Python) backend and React/TypeScript frontend. The system supports candidates, recruiters, and employers with real-time messaging, calendar sync, resume building, secure interview scheduling, **Online Interview Service** with video calls, transcription (文字起こし), summarization (要約), and a **public job board** with company profiles and application management.
 
 ## Architecture
 
@@ -45,6 +45,13 @@ npm run lint         # ESLint
 npm run typecheck    # TypeScript checking
 npm test             # Vitest unit tests
 npm run test:e2e     # Playwright end-to-end tests
+
+# Public website routes available:
+# / - Landing page with featured jobs and companies
+# /jobs - Job search with advanced filters
+# /jobs/:slug - Individual job detail pages
+# /companies - Company directory
+# /companies/:slug - Company profile pages
 ```
 
 ### Infrastructure
@@ -90,6 +97,15 @@ curl http://localhost:3478/health  # Check coturn health
 - **File Sharing**: In-meeting files go through same antivirus pipeline
 - **Transcription**: Speech-to-text (文字起こし) only when consented
 - **Summarization**: AI-powered meeting summaries (要約) generated post-meeting
+
+### Public Job Board & Company Profiles
+- **Job Posting Models**: Complete job posting system with Job, JobApplication, and CompanyProfile models
+- **Public API**: Unauthenticated endpoints for job search, company discovery, and application submission
+- **Advanced Search**: Full-text search with filters for location, job type, experience level, salary range, and skills
+- **Company Profiles**: Public company pages with customizable slugs, media galleries, culture information, and benefits
+- **SEO Optimization**: XML sitemaps, robots.txt, RSS feeds, and slug-based URLs for search engine visibility
+- **Job Applications**: Complete application workflow with duplicate prevention and authentication integration
+- **Responsive Design**: Mobile-optimized interfaces for job seekers browsing on any device
 
 ### Real-time Features
 - WebSocket connections managed in `routers/messaging_ws.py` and `routers/meetings_ws.py`
@@ -158,9 +174,9 @@ The project follows a phased development approach:
 5. **Phase 5**: Frontend foundation with React/TypeScript/Tailwind ✅
 6. **Phase 5.5**: Complete role-based dashboard layouts and messaging UI ✅
 7. **Phase 3.5**: **Online Interview Service** (WebRTC + Transcription) ✅
+8. **Phase 6**: **Public website and company profile pages** ✅
 
 **Upcoming Phases:**
-8. **Phase 6**: Public website and company profile pages
 9. **Phase 7**: Advanced meeting features (virtual backgrounds, expression viewer)
 10. **Phase 8**: CI/CD pipeline and security hardening
 
@@ -190,6 +206,8 @@ Keep `docs/` folder synchronized with code changes:
 - `INTERVIEW_FLOW.md` - Interview types and participant rules
 - `MEETINGS.md` - **Online Interview Service details**
 - `TRANSCRIPTION_SUMMARY.md` - **STT & summary pipeline**
+- `PUBLIC_WEBSITE.md` - **Public job board and company profiles**
+- `SEO_OPTIMIZATION.md` - **Search engine optimization implementation**
 - `ADR/` - Architecture Decision Records
 
 ## CI/CD Pipeline
