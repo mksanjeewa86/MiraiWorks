@@ -7,7 +7,18 @@
       "Bash(npm create:*)",
       "Bash(npm install)",
       "Bash(npm install:*)",
-      "Bash(npx tailwindcss init:*)"
+      "Bash(npx tailwindcss init:*)",
+      "Bash(npm run build:*)",
+      "Bash(find:*)",
+      "Bash(for file in pages/auth/TwoFactorPage.tsx pages/calendar/CalendarPage.tsx pages/dashboard/CompanyAdminDashboard.tsx pages/dashboard/EmployerDashboard.tsx pages/dashboard/RecruiterDashboard.tsx pages/dashboard/SuperAdminDashboard.tsx)",
+      "Bash(do echo \"Processing $file\")",
+      "Bash(head:*)",
+      "Bash(done)",
+      "Bash(for file in pages/interviews/InterviewsPage.tsx pages/messages/MessagesPage.tsx pages/profile/ProfilePage.tsx pages/resumes/ResumeBuilderPage.tsx pages/resumes/ResumePreviewPage.tsx pages/resumes/ResumesPage.tsx pages/settings/SettingsPage.tsx)",
+      "Bash(sed:*)",
+      "Bash(npx tsc:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(timeout 30s npm run build)"
     ],
     "deny": [],
     "ask": []

@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { User, AuthResponse, LoginCredentials, RegisterData } from '../types';
+import { createContext, useContext, useReducer, useEffect, type ReactNode } from 'react';
+import type { User, AuthResponse, LoginCredentials, RegisterData } from '../types';
 import { authApi } from '../services/api';
 
 interface AuthState {
@@ -25,7 +25,7 @@ interface AuthContextType extends AuthState {
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
   verifyTwoFactor: (code: string) => Promise<void>;
-  refreshAuth: () => Promise<void>;
+  refreshAuth: () => Promise<AuthResponse>;
   updateUser: (user: User) => void;
   clearError: () => void;
 }
@@ -99,7 +99,7 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
   }
 }
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
   // Initialize auth state on mount
@@ -115,7 +115,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           dispatch({
             type: 'AUTH_SUCCESS',
             payload: {
-              user: response.data,
+              user: response.data!,
               accessToken: token,
               refreshToken: refreshToken,
               expiresIn: 3600, // Will be updated on refresh
@@ -146,10 +146,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await authApi.login(credentials);
       
       // Store tokens
-      localStorage.setItem('accessToken', response.data.accessToken);
-      localStorage.setItem('refreshToken', response.data.refreshToken);
+      localStorage.setItem('accessToken', response.data!.accessToken);
+      localStorage.setItem('refreshToken', response.data!.refreshToken);
       
-      dispatch({ type: 'AUTH_SUCCESS', payload: response.data });
+      dispatch({ type: 'AUTH_SUCCESS', payload: response.data! });
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Login failed';
       dispatch({ type: 'AUTH_ERROR', payload: errorMessage });
@@ -163,10 +163,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await authApi.register(data);
       
       // Store tokens
-      localStorage.setItem('accessToken', response.data.accessToken);
-      localStorage.setItem('refreshToken', response.data.refreshToken);
+      localStorage.setItem('accessToken', response.data!.accessToken);
+      localStorage.setItem('refreshToken', response.data!.refreshToken);
       
-      dispatch({ type: 'AUTH_SUCCESS', payload: response.data });
+      dispatch({ type: 'AUTH_SUCCESS', payload: response.data! });
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Registration failed';
       dispatch({ type: 'AUTH_ERROR', payload: errorMessage });
@@ -180,10 +180,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await authApi.verifyTwoFactor({ code });
       
       // Store tokens
-      localStorage.setItem('accessToken', response.data.accessToken);
-      localStorage.setItem('refreshToken', response.data.refreshToken);
+      localStorage.setItem('accessToken', response.data!.accessToken);
+      localStorage.setItem('refreshToken', response.data!.refreshToken);
       
-      dispatch({ type: 'AUTH_SUCCESS', payload: response.data });
+      dispatch({ type: 'AUTH_SUCCESS', payload: response.data! });
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || '2FA verification failed';
       dispatch({ type: 'AUTH_ERROR', payload: errorMessage });
@@ -201,13 +201,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await authApi.refreshToken(refreshToken);
       
       // Store new tokens
-      localStorage.setItem('accessToken', response.data.accessToken);
-      if (response.data.refreshToken) {
-        localStorage.setItem('refreshToken', response.data.refreshToken);
+      localStorage.setItem('accessToken', response.data!.accessToken);
+      if (response.data!.refreshToken) {
+        localStorage.setItem('refreshToken', response.data!.refreshToken);
       }
       
-      dispatch({ type: 'AUTH_SUCCESS', payload: response.data });
-      return response.data;
+      dispatch({ type: 'AUTH_SUCCESS', payload: response.data! });
+      return response.data!;
     } catch (error) {
       // Refresh failed, clear auth
       localStorage.removeItem('accessToken');

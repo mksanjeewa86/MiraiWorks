@@ -1,8 +1,8 @@
-import React from 'react';
+import { type ReactNode } from 'react';
 import { clsx } from 'clsx';
 
 interface CardProps {
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
   padding?: 'none' | 'sm' | 'md' | 'lg';
   shadow?: 'none' | 'sm' | 'md' | 'lg';
@@ -42,7 +42,7 @@ export default function Card({
   );
 }
 
-export function CardHeader({ children, className }: { children: React.ReactNode; className?: string }) {
+export function CardHeader({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <div className={clsx('card-header', className)}>
       {children}
@@ -50,7 +50,7 @@ export function CardHeader({ children, className }: { children: React.ReactNode;
   );
 }
 
-export function CardContent({ children, className }: { children: React.ReactNode; className?: string }) {
+export function CardContent({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <div className={clsx('card-content', className)}>
       {children}
@@ -58,7 +58,7 @@ export function CardContent({ children, className }: { children: React.ReactNode
   );
 }
 
-export function CardTitle({ children, className }: { children: React.ReactNode; className?: string }) {
+export function CardTitle({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <h3 className={clsx('text-lg font-semibold leading-none tracking-tight', className)}>
       {children}
@@ -66,7 +66,7 @@ export function CardTitle({ children, className }: { children: React.ReactNode; 
   );
 }
 
-export function CardDescription({ children, className }: { children: React.ReactNode; className?: string }) {
+export function CardDescription({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <p className={clsx('text-sm text-gray-500', className)}>
       {children}

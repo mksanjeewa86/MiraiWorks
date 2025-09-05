@@ -1,5 +1,5 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { 
+import axios, { type AxiosInstance } from 'axios';
+import type { 
   AuthResponse, 
   LoginCredentials, 
   RegisterData, 
@@ -75,91 +75,102 @@ api.interceptors.response.use(
   }
 );
 
-// Helper function for handling API responses
-const handleResponse = <T>(response: AxiosResponse<ApiResponse<T>>): ApiResponse<T> => {
-  return response.data;
-};
+// Helper functions for typed API calls
+const apiGet = <T>(url: string, config?: any): Promise<ApiResponse<T>> =>
+  api.get(url, config).then(response => response.data as ApiResponse<T>);
+
+const apiPost = <T>(url: string, data?: any, config?: any): Promise<ApiResponse<T>> =>
+  api.post(url, data, config).then(response => response.data as ApiResponse<T>);
+
+const apiPut = <T>(url: string, data?: any, config?: any): Promise<ApiResponse<T>> =>
+  api.put(url, data, config).then(response => response.data as ApiResponse<T>);
+
+const apiPatch = <T>(url: string, data?: any, config?: any): Promise<ApiResponse<T>> =>
+  api.patch(url, data, config).then(response => response.data as ApiResponse<T>);
+
+const apiDelete = <T>(url: string, config?: any): Promise<ApiResponse<T>> =>
+  api.delete(url, config).then(response => response.data as ApiResponse<T>);
 
 // Authentication API
 export const authApi = {
   login: (credentials: LoginCredentials): Promise<ApiResponse<AuthResponse>> =>
-    api.post('/api/auth/login', credentials).then(handleResponse),
+    apiPost<AuthResponse>('/api/auth/login', credentials),
 
   register: (data: RegisterData): Promise<ApiResponse<AuthResponse>> =>
-    api.post('/api/auth/register', data).then(handleResponse),
+    apiPost<AuthResponse>('/api/auth/register', data),
 
   verifyTwoFactor: (data: TwoFactorRequest): Promise<ApiResponse<AuthResponse>> =>
-    api.post('/api/auth/verify-2fa', data).then(handleResponse),
+    apiPost<AuthResponse>('/api/auth/verify-2fa', data),
 
   refreshToken: (refreshToken: string): Promise<ApiResponse<AuthResponse>> =>
-    api.post('/api/auth/refresh', { refresh_token: refreshToken }).then(handleResponse),
+    apiPost<AuthResponse>('/api/auth/refresh', { refresh_token: refreshToken }),
 
   logout: (): Promise<void> =>
     api.post('/api/auth/logout').then(() => {}),
 
   getCurrentUser: (): Promise<ApiResponse<User>> =>
-    api.get('/api/auth/me').then(handleResponse),
+    apiGet<User>('/api/auth/me'),
 
   requestPasswordReset: (email: string): Promise<ApiResponse<void>> =>
-    api.post('/api/auth/request-password-reset', { email }).then(handleResponse),
+    apiPost<void>('/api/auth/request-password-reset', { email }),
 
   resetPassword: (token: string, newPassword: string): Promise<ApiResponse<void>> =>
-    api.post('/api/auth/reset-password', { token, new_password: newPassword }).then(handleResponse),
+    apiPost<void>('/api/auth/reset-password', { token, new_password: newPassword }),
 };
 
 // Users API
 export const usersApi = {
   getUsers: (params?: { page?: number; limit?: number; search?: string }): Promise<ApiResponse<PaginatedResponse<User>>> =>
-    api.get('/api/users', { params }).then(handleResponse),
+    apiGet<PaginatedResponse<User>>('/api/users', { params }),
 
   getUser: (id: number): Promise<ApiResponse<User>> =>
-    api.get(`/api/users/${id}`).then(handleResponse),
+    apiGet<User>(`/api/users/${id}`),
 
   updateUser: (id: number, data: Partial<User>): Promise<ApiResponse<User>> =>
-    api.put(`/api/users/${id}`, data).then(handleResponse),
+    apiPut<User>(`/api/users/${id}`, data),
 
   deleteUser: (id: number): Promise<ApiResponse<void>> =>
-    api.delete(`/api/users/${id}`).then(handleResponse),
+    apiDelete<void>(`/api/users/${id}`),
 
   bulkImportUsers: (file: File): Promise<ApiResponse<{ imported: number; errors: string[] }>> => {
     const formData = new FormData();
     formData.append('file', file);
-    return api.post('/api/users/bulk-import', formData, {
+    return apiPost<{ imported: number; errors: string[] }>('/api/users/bulk-import', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
-    }).then(handleResponse);
+    });
   },
 };
 
 // Messages API
 export const messagesApi = {
   getConversations: (): Promise<ApiResponse<Conversation[]>> =>
-    api.get('/api/messaging/conversations').then(handleResponse),
+    apiGet<Conversation[]>('/api/messaging/conversations'),
 
   getConversation: (id: number): Promise<ApiResponse<Conversation>> =>
-    api.get(`/api/messaging/conversations/${id}`).then(handleResponse),
+    apiGet<Conversation>(`/api/messaging/conversations/${id}`),
 
   createConversation: (participantIds: number[], title?: string): Promise<ApiResponse<Conversation>> =>
-    api.post('/api/messaging/conversations', { participant_ids: participantIds, title }).then(handleResponse),
+    apiPost<Conversation>('/api/messaging/conversations', { participant_ids: participantIds, title }),
 
   getMessages: (conversationId: number, params?: { page?: number; limit?: number }): Promise<ApiResponse<PaginatedResponse<Message>>> =>
-    api.get(`/api/messaging/conversations/${conversationId}/messages`, { params }).then(handleResponse),
+    apiGet<PaginatedResponse<Message>>(`/api/messaging/conversations/${conversationId}/messages`, { params }),
 
   sendMessage: (conversationId: number, content: string, attachmentId?: number): Promise<ApiResponse<Message>> =>
-    api.post(`/api/messaging/conversations/${conversationId}/messages`, {
+    apiPost<Message>(`/api/messaging/conversations/${conversationId}/messages`, {
       content,
       attachment_id: attachmentId,
-    }).then(handleResponse),
+    }),
 
   uploadAttachment: (file: File): Promise<ApiResponse<{ attachment_id: number; filename: string }>> => {
     const formData = new FormData();
     formData.append('file', file);
-    return api.post('/api/messaging/upload', formData, {
+    return apiPost<{ attachment_id: number; filename: string }>('/api/messaging/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
-    }).then(handleResponse);
+    });
   },
 
   markAsRead: (conversationId: number): Promise<ApiResponse<void>> =>
-    api.post(`/api/messaging/conversations/${conversationId}/read`).then(handleResponse),
+    apiPost<void>(`/api/messaging/conversations/${conversationId}/read`),
 };
 
 // Interviews API
@@ -171,10 +182,10 @@ export const interviewsApi = {
     limit?: number;
     offset?: number;
   }): Promise<ApiResponse<{ interviews: Interview[]; total: number; has_more: boolean }>> =>
-    api.get('/api/interviews', { params }).then(handleResponse),
+    apiGet<{ interviews: Interview[]; total: number; has_more: boolean }>('/api/interviews', { params }),
 
   getInterview: (id: number): Promise<ApiResponse<Interview>> =>
-    api.get(`/api/interviews/${id}`).then(handleResponse),
+    apiGet<Interview>(`/api/interviews/${id}`),
 
   createInterview: (data: {
     candidate_id: number;
@@ -185,13 +196,13 @@ export const interviewsApi = {
     position_title?: string;
     interview_type: string;
   }): Promise<ApiResponse<Interview>> =>
-    api.post('/api/interviews', data).then(handleResponse),
+    apiPost<Interview>('/api/interviews', data),
 
   updateInterview: (id: number, data: Partial<Interview>): Promise<ApiResponse<Interview>> =>
-    api.put(`/api/interviews/${id}`, data).then(handleResponse),
+    apiPut<Interview>(`/api/interviews/${id}`, data),
 
   cancelInterview: (id: number, reason?: string): Promise<ApiResponse<Interview>> =>
-    api.patch(`/api/interviews/${id}/cancel`, { reason }).then(handleResponse),
+    apiPatch<Interview>(`/api/interviews/${id}/cancel`, { reason }),
 
   createProposal: (interviewId: number, data: {
     start_datetime: string;
@@ -200,13 +211,13 @@ export const interviewsApi = {
     location?: string;
     notes?: string;
   }): Promise<ApiResponse<any>> =>
-    api.post(`/api/interviews/${interviewId}/proposals`, data).then(handleResponse),
+    apiPost<any>(`/api/interviews/${interviewId}/proposals`, data),
 
   respondToProposal: (proposalId: number, data: {
     response: 'accepted' | 'declined';
     notes?: string;
   }): Promise<ApiResponse<any>> =>
-    api.post(`/api/interviews/proposals/${proposalId}/respond`, data).then(handleResponse),
+    apiPost<any>(`/api/interviews/proposals/${proposalId}/respond`, data),
 
   getStats: (): Promise<ApiResponse<{
     total_interviews: number;
@@ -215,32 +226,38 @@ export const interviewsApi = {
     upcoming_count: number;
     completed_count: number;
   }>> =>
-    api.get('/api/interviews/stats').then(handleResponse),
+    apiGet<{
+      total_interviews: number;
+      by_status: Record<string, number>;
+      by_type: Record<string, number>;
+      upcoming_count: number;
+      completed_count: number;
+    }>('/api/interviews/stats'),
 };
 
 // Calendar API
 export const calendarApi = {
   getAccounts: (): Promise<ApiResponse<{ accounts: CalendarIntegration[] }>> =>
-    api.get('/api/calendar/accounts').then(handleResponse),
+    apiGet<{ accounts: CalendarIntegration[] }>('/api/calendar/accounts'),
 
   connectCalendar: (provider: 'google' | 'microsoft'): Promise<ApiResponse<{ auth_url: string; state: string }>> =>
-    api.post('/api/calendar/connect', { provider }).then(handleResponse),
+    apiPost<{ auth_url: string; state: string }>('/api/calendar/connect', { provider }),
 
   disconnectCalendar: (accountId: number): Promise<ApiResponse<void>> =>
-    api.delete(`/api/calendar/accounts/${accountId}`).then(handleResponse),
+    apiDelete<void>(`/api/calendar/accounts/${accountId}`),
 
   getCalendars: (): Promise<ApiResponse<any[]>> =>
-    api.get('/api/calendar/calendars').then(handleResponse),
+    apiGet<any[]>('/api/calendar/calendars'),
 
   getEvents: (params?: {
     start_date?: string;
     end_date?: string;
     calendar_id?: string;
   }): Promise<ApiResponse<{ events: CalendarEvent[] }>> =>
-    api.get('/api/calendar/events', { params }).then(handleResponse),
+    apiGet<{ events: CalendarEvent[] }>('/api/calendar/events', { params }),
 
   syncCalendars: (): Promise<ApiResponse<{ success: boolean; synced_events: number }>> =>
-    api.post('/api/calendar/sync').then(handleResponse),
+    apiPost<{ success: boolean; synced_events: number }>('/api/calendar/sync'),
 
   checkAvailability: (data: {
     participant_emails: string[];
@@ -248,7 +265,7 @@ export const calendarApi = {
     preferred_times?: any[];
     timezone: string;
   }): Promise<ApiResponse<any>> =>
-    api.post('/api/calendar/availability', data).then(handleResponse),
+    apiPost<any>('/api/calendar/availability', data),
 };
 
 // Resumes API
@@ -258,10 +275,10 @@ export const resumesApi = {
     limit?: number;
     offset?: number;
   }): Promise<ApiResponse<{ resumes: Resume[]; total: number; has_more: boolean }>> =>
-    api.get('/api/resumes', { params }).then(handleResponse),
+    apiGet<{ resumes: Resume[]; total: number; has_more: boolean }>('/api/resumes', { params }),
 
   getResume: (id: number): Promise<ApiResponse<Resume>> =>
-    api.get(`/api/resumes/${id}`).then(handleResponse),
+    apiGet<Resume>(`/api/resumes/${id}`),
 
   createResume: (data: {
     title: string;
@@ -276,19 +293,19 @@ export const resumesApi = {
     professional_summary?: string;
     template_id?: string;
   }): Promise<ApiResponse<Resume>> =>
-    api.post('/api/resumes', data).then(handleResponse),
+    apiPost<Resume>('/api/resumes', data),
 
   updateResume: (id: number, data: Partial<Resume>): Promise<ApiResponse<Resume>> =>
-    api.put(`/api/resumes/${id}`, data).then(handleResponse),
+    apiPut<Resume>(`/api/resumes/${id}`, data),
 
   deleteResume: (id: number): Promise<ApiResponse<void>> =>
-    api.delete(`/api/resumes/${id}`).then(handleResponse),
+    apiDelete<void>(`/api/resumes/${id}`),
 
   duplicateResume: (id: number): Promise<ApiResponse<Resume>> =>
-    api.post(`/api/resumes/${id}/duplicate`).then(handleResponse),
+    apiPost<Resume>(`/api/resumes/${id}/duplicate`),
 
   getTemplates: (): Promise<ApiResponse<any[]>> =>
-    api.get('/api/resumes/templates/available').then(handleResponse),
+    apiGet<any[]>('/api/resumes/templates/available'),
 
   previewResume: (id: number, templateId?: string): Promise<string> =>
     api.get(`/api/resumes/${id}/preview`, {
@@ -301,7 +318,7 @@ export const resumesApi = {
     include_contact_info?: boolean;
     watermark?: string;
   }): Promise<ApiResponse<{ pdf_url: string; expires_at: string; file_size: number }>> =>
-    api.post(`/api/resumes/${id}/generate-pdf`, { resume_id: id, ...data }).then(handleResponse),
+    apiPost<{ pdf_url: string; expires_at: string; file_size: number }>(`/api/resumes/${id}/generate-pdf`, { resume_id: id, ...data }),
 
   createShareLink: (id: number, data: {
     recipient_email?: string;
@@ -311,28 +328,28 @@ export const resumesApi = {
     allow_download?: boolean;
     show_contact_info?: boolean;
   }): Promise<ApiResponse<{ share_token: string }>> =>
-    api.post(`/api/resumes/${id}/share`, data).then(handleResponse),
+    apiPost<{ share_token: string }>(`/api/resumes/${id}/share`, data),
 
   addWorkExperience: (resumeId: number, data: any): Promise<ApiResponse<any>> =>
-    api.post(`/api/resumes/${resumeId}/experiences`, data).then(handleResponse),
+    apiPost<any>(`/api/resumes/${resumeId}/experiences`, data),
 
   addEducation: (resumeId: number, data: any): Promise<ApiResponse<any>> =>
-    api.post(`/api/resumes/${resumeId}/education`, data).then(handleResponse),
+    apiPost<any>(`/api/resumes/${resumeId}/education`, data),
 
   addSkill: (resumeId: number, data: any): Promise<ApiResponse<any>> =>
-    api.post(`/api/resumes/${resumeId}/skills`, data).then(handleResponse),
+    apiPost<any>(`/api/resumes/${resumeId}/skills`, data),
 
   addProject: (resumeId: number, data: any): Promise<ApiResponse<any>> =>
-    api.post(`/api/resumes/${resumeId}/projects`, data).then(handleResponse),
+    apiPost<any>(`/api/resumes/${resumeId}/projects`, data),
 };
 
 // Dashboard API
 export const dashboardApi = {
   getStats: (): Promise<ApiResponse<DashboardStats>> =>
-    api.get('/api/dashboard/stats').then(handleResponse),
+    apiGet<DashboardStats>('/api/dashboard/stats'),
 
   getRecentActivity: (limit?: number): Promise<ApiResponse<any[]>> =>
-    api.get('/api/dashboard/activity', { params: { limit } }).then(handleResponse),
+    apiGet<any[]>('/api/dashboard/activity', { params: { limit } }),
 };
 
 export default api;
