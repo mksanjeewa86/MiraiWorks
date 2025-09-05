@@ -1,0 +1,38 @@
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Boolean
+from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
+from app.database import Base
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, ForeignKey("companies.id", ondelete="CASCADE"), nullable=True, index=True)
+    email = Column(String(255), nullable=False, unique=True, index=True)
+    hashed_password = Column(String(255), nullable=True)  # Nullable for SSO-only users
+    first_name = Column(String(100), nullable=False)
+    last_name = Column(String(100), nullable=False)
+    phone = Column(String(50), nullable=True)
+    is_active = Column(Boolean, nullable=False, default=True, index=True)
+    is_admin = Column(Boolean, nullable=False, default=False, index=True)
+    require_2fa = Column(Boolean, nullable=False, default=False, index=True)
+    last_login = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    # Relationships
+    company = relationship("Company", back_populates="users")
+    user_roles = relationship("UserRole", back_populates="user", cascade="all, delete-orphan")
+    refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
+    password_reset_requests = relationship("PasswordResetRequest", back_populates="user", cascade="all, delete-orphan")
+    oauth_accounts = relationship("OauthAccount", back_populates="user", cascade="all, delete-orphan")
+    audit_logs = relationship("AuditLog", back_populates="actor", cascade="all, delete-orphan")
+    notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
+
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}"
+    
+    def __repr__(self):
+        return f"<User(id={self.id}, email='{self.email}', company_id={self.company_id})>"

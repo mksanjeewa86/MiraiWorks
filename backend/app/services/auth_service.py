@@ -1,0 +1,193 @@
+import secrets
+import hashlib
+from datetime import datetime, timedelta
+from typing import Optional, Dict, Any
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, update
+from sqlalchemy.orm import selectinload
+from app.config import settings
+from app.models.user import User
+from app.models.auth import RefreshToken
+from app.utils.constants import UserRole
+from app.rbac import is_admin_role
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+class AuthService:
+    def __init__(self):
+        self.pwd_context = pwd_context
+        self.secret_key = settings.jwt_secret
+        self.algorithm = "HS256"
+        self.access_token_expire_minutes = settings.jwt_access_ttl_min
+        self.refresh_token_expire_days = settings.jwt_refresh_ttl_days
+
+    def verify_password(self, plain_password: str, hashed_password: str) -> bool:
+        """Verify a password against its hash."""
+        return self.pwd_context.verify(plain_password, hashed_password)
+
+    def get_password_hash(self, password: str) -> str:
+        """Hash a password."""
+        return self.pwd_context.hash(password)
+
+    def create_access_token(self, data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:
+        """Create a JWT access token."""
+        to_encode = data.copy()
+        if expires_delta:
+            expire = datetime.utcnow() + expires_delta
+        else:
+            expire = datetime.utcnow() + timedelta(minutes=self.access_token_expire_minutes)
+        
+        to_encode.update({"exp": expire, "type": "access"})
+        encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
+        return encoded_jwt
+
+    def create_refresh_token(self) -> str:
+        """Create a random refresh token."""
+        return secrets.token_urlsafe(32)
+
+    def hash_token(self, token: str) -> str:
+        """Hash a token for secure storage."""
+        return hashlib.sha256(token.encode()).hexdigest()
+
+    def verify_token(self, token: str, token_type: str = "access") -> Optional[Dict[str, Any]]:
+        """Verify and decode a JWT token."""
+        try:
+            payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
+            if payload.get("type") != token_type:
+                return None
+            return payload
+        except JWTError:
+            return None
+
+    async def store_refresh_token(
+        self, 
+        db: AsyncSession, 
+        user_id: int, 
+        token: str
+    ) -> RefreshToken:
+        """Store a refresh token in the database."""
+        token_hash = self.hash_token(token)
+        expires_at = datetime.utcnow() + timedelta(days=self.refresh_token_expire_days)
+        
+        refresh_token = RefreshToken(
+            user_id=user_id,
+            token_hash=token_hash,
+            expires_at=expires_at
+        )
+        
+        db.add(refresh_token)
+        await db.commit()
+        await db.refresh(refresh_token)
+        return refresh_token
+
+    async def revoke_refresh_token(self, db: AsyncSession, token: str) -> bool:
+        """Revoke a refresh token."""
+        token_hash = self.hash_token(token)
+        
+        result = await db.execute(
+            update(RefreshToken)
+            .where(RefreshToken.token_hash == token_hash)
+            .values(is_revoked=True, revoked_at=datetime.utcnow())
+        )
+        
+        await db.commit()
+        return result.rowcount > 0
+
+    async def verify_refresh_token(self, db: AsyncSession, token: str) -> Optional[User]:
+        """Verify a refresh token and return the associated user."""
+        token_hash = self.hash_token(token)
+        
+        result = await db.execute(
+            select(RefreshToken)
+            .options(selectinload(RefreshToken.user))
+            .where(
+                RefreshToken.token_hash == token_hash,
+                RefreshToken.is_revoked == False,
+                RefreshToken.expires_at > datetime.utcnow()
+            )
+        )
+        
+        refresh_token = result.scalar_one_or_none()
+        if not refresh_token:
+            return None
+        
+        return refresh_token.user
+
+    async def authenticate_user(self, db: AsyncSession, email: str, password: str) -> Optional[User]:
+        """Authenticate a user with email and password."""
+        result = await db.execute(
+            select(User)
+            .options(selectinload(User.company), selectinload(User.user_roles))
+            .where(User.email == email, User.is_active == True)
+        )
+        
+        user = result.scalar_one_or_none()
+        if not user or not user.hashed_password:
+            return None
+        
+        if not self.verify_password(password, user.hashed_password):
+            return None
+        
+        return user
+
+    def generate_2fa_code(self) -> str:
+        """Generate a 6-digit 2FA code."""
+        return str(secrets.randbelow(900000) + 100000)
+
+    def requires_2fa(self, user: User) -> bool:
+        """Check if user requires 2FA based on role and settings."""
+        if not settings.force_2fa_for_admins:
+            return False
+            
+        # Check if user has any admin roles
+        for user_role in user.user_roles:
+            if is_admin_role(UserRole(user_role.role.name)):
+                return True
+        
+        return user.require_2fa
+
+    async def create_login_tokens(
+        self, 
+        db: AsyncSession, 
+        user: User
+    ) -> Dict[str, Any]:
+        """Create access and refresh tokens for a user."""
+        # Update last login
+        user.last_login = datetime.utcnow()
+        await db.commit()
+        
+        # Create access token payload
+        access_token_data = {
+            "sub": str(user.id),
+            "email": user.email,
+            "company_id": user.company_id,
+            "roles": [ur.role.name for ur in user.user_roles],
+        }
+        
+        # Create tokens
+        access_token = self.create_access_token(access_token_data)
+        refresh_token = self.create_refresh_token()
+        
+        # Store refresh token
+        await self.store_refresh_token(db, user.id, refresh_token)
+        
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer",
+            "expires_in": self.access_token_expire_minutes * 60,
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "full_name": user.full_name,
+                "company_id": user.company_id,
+                "roles": [ur.role.name for ur in user.user_roles],
+            }
+        }
+
+
+# Global instance
+auth_service = AuthService()
