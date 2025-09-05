@@ -4,14 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-MiraiWorks is a modern HR & recruitment management platform built with FastAPI (Python) backend and React/TypeScript frontend. The system supports candidates, recruiters, and employers with real-time messaging, calendar sync, resume building, and secure interview scheduling.
+MiraiWorks is a modern HR & recruitment management platform built with FastAPI (Python) backend and React/TypeScript frontend. The system supports candidates, recruiters, and employers with real-time messaging, calendar sync, resume building, secure interview scheduling, and **Online Interview Service** with video calls, transcription (文字起こし), and summarization (要約).
 
 ## Architecture
 
 This is a microservices-oriented monorepo with the following structure:
 - `backend/` - FastAPI application with SQLAlchemy, MySQL, Redis, Celery
 - `frontend/` - React + TypeScript + Tailwind CSS application 
-- `platform/` - Docker infrastructure services (MySQL, Redis, MinIO, ClamAV, Mailpit)
+- `platform/` - Docker infrastructure services (MySQL, Redis, MinIO, ClamAV, Mailpit, **coturn TURN/STUN server**)
 - `docs/` - Living documentation that must stay synchronized with code
 
 ## Development Commands
@@ -50,13 +50,17 @@ npm run test:e2e     # Playwright end-to-end tests
 ### Infrastructure
 ```bash
 # From platform/ directory
-docker-compose up -d     # Start all services
+docker-compose up -d     # Start all services (includes coturn)
 docker-compose down      # Stop all services
 docker-compose logs -f   # View logs
+docker-compose logs coturn  # View TURN server logs
 
 # From project root
 ./scripts/dev-up.sh      # Start development environment
 ./scripts/lint.sh        # Lint all code
+
+# Test WebRTC connectivity
+curl http://localhost:3478/health  # Check coturn health
 ```
 
 ## Key Technical Patterns
@@ -76,16 +80,32 @@ docker-compose logs -f   # View logs
   - Candidate ↔ Employer (must go through Recruiter)
 - **File Security**: All uploads go through ClamAV virus scanning before availability
 
+### Online Interview Service Rules
+- **Interview Types**:
+  - **Casual**: Candidate ↔ Recruiter (1:1 interviews)
+  - **Main**: Candidate ↔ Employer (recruiter as optional observer/organizer)
+- **Participant Validation**: Strict RBAC enforcement based on interview type
+- **Recording Consent**: Required flags for recording/transcription stored with meeting
+- **Artifact Security**: All meeting recordings/transcripts/summaries access controlled by RBAC
+- **File Sharing**: In-meeting files go through same antivirus pipeline
+- **Transcription**: Speech-to-text (文字起こし) only when consented
+- **Summarization**: AI-powered meeting summaries (要約) generated post-meeting
+
 ### Real-time Features
-- WebSocket connections managed in `routers/messaging_ws.py`
+- WebSocket connections managed in `routers/messaging_ws.py` and `routers/meetings_ws.py`
 - Use Redis pub/sub for horizontal scaling of real-time features
 - Message delivery receipts and typing indicators supported
+- **WebRTC signaling** for video calls with coturn TURN/STUN server
+- In-call chat, screen sharing, file sharing, and real-time presence
 
 ### External Integrations
 - **Calendar Sync**: Bi-directional with Google Calendar and Microsoft Graph APIs
 - **Storage**: MinIO S3-compatible storage with presigned URLs
 - **Email**: Mailpit for development, configurable SMTP for production
 - **SSO**: Google and Microsoft OAuth (only for existing users, no auto-provisioning)
+- **WebRTC**: coturn server for NAT traversal and media relay
+- **Speech-to-Text**: Transcription service for meeting recordings (文字起こし)
+- **AI Summarization**: Meeting summary generation (要約)
 
 ## Environment Configuration
 
@@ -101,10 +121,15 @@ All configuration comes from environment variables (no hardcoded values):
 - `JWT_SECRET`, `JWT_ACCESS_TTL_MIN`, `JWT_REFRESH_TTL_DAYS` - Auth tokens
 - `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` - SSO
 - `MS_OAUTH_CLIENT_ID`, `MS_OAUTH_CLIENT_SECRET` - SSO
+- `COTURN_HOST`, `COTURN_PORT`, `COTURN_SECRET` - TURN/STUN server
+- `STT_SERVICE_URL`, `STT_API_KEY` - Speech-to-text service
+- `OPENAI_API_KEY` - AI summarization service
 
 **Frontend (.env):**
 - `VITE_API_URL` - Backend API base URL
 - `VITE_WS_URL` - WebSocket URL for real-time features
+- `VITE_MEETINGS_WS_URL` - WebSocket URL for meeting signaling
+- `VITE_TURN_SERVER_URL` - TURN server URL for WebRTC
 
 ## Testing Requirements
 
@@ -119,18 +144,32 @@ All configuration comes from environment variables (no hardcoded values):
 - **Unit/Component**: Vitest + React Testing Library
 - **End-to-End**: Playwright for critical user journeys
 - Test authentication flows, real-time messaging, calendar integration
+- **WebRTC Tests**: Mock MediaStream and RTCPeerConnection for meeting components
 
 ## Implementation Phases
 
 The project follows a phased development approach:
 
-1. **Phase 0**: Core configuration, database setup, RBAC foundation
-2. **Phase 1**: Authentication, user management, admin capabilities  
-3. **Phase 2**: Real-time messaging with file upload security
-4. **Phase 3**: Calendar integrations and interview scheduling
-5. **Phase 4**: Resume builder with PDF generation
-6. **Phase 5**: Role-specific dashboards and public website
-7. **Phase 6**: CI/CD pipeline and security hardening
+**Completed Phases:**
+1. **Phase 1**: Authentication, user management, admin capabilities ✅
+2. **Phase 2**: Real-time messaging with file upload security ✅
+3. **Phase 3**: Calendar integrations and interview scheduling ✅
+4. **Phase 4**: Resume builder with PDF generation ✅
+5. **Phase 5**: Frontend foundation with React/TypeScript/Tailwind ✅
+
+**Upcoming Phases:**
+6. **Phase 5.5**: Complete role-based dashboard layouts and messaging UI
+7. **Phase 3.5**: **Online Interview Service** (WebRTC + Transcription)
+   - Meeting models: Meeting, MeetingParticipant, MeetingRecording, MeetingTranscript, MeetingSummary
+   - Two interview types: **casual** (Candidate↔Recruiter) and **main** (Candidate↔Employer)
+   - WebRTC signaling via WebSocket with coturn NAT traversal
+   - Video calls, screen sharing, in-call chat, file sharing
+   - Recording consent management and RBAC-enforced access
+   - Speech-to-text transcription and AI-powered summaries
+   - Integration with existing interview scheduling system
+8. **Phase 6**: Public website and company profile pages
+9. **Phase 7**: Advanced features (virtual backgrounds, expression viewer)
+10. **Phase 8**: CI/CD pipeline and security hardening
 
 ## Code Quality Standards
 
@@ -155,6 +194,9 @@ Keep `docs/` folder synchronized with code changes:
 - `API.md` - OpenAPI/Swagger documentation  
 - `MESSAGING_RULES.md` - Communication flow constraints
 - `SECURITY.md` - Security implementation details
+- `INTERVIEW_FLOW.md` - Interview types and participant rules
+- `MEETINGS.md` - **Online Interview Service details**
+- `TRANSCRIPTION_SUMMARY.md` - **STT & summary pipeline**
 - `ADR/` - Architecture Decision Records
 
 ## CI/CD Pipeline
