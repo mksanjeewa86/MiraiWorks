@@ -56,8 +56,8 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
         isAuthenticated: true,
         isLoading: false,
         error: null,
-        accessToken: action.payload.accessToken,
-        refreshToken: action.payload.refreshToken,
+        accessToken: action.payload.access_token,
+        refreshToken: action.payload.refresh_token,
       };
     case 'AUTH_ERROR':
       return {
@@ -116,9 +116,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             type: 'AUTH_SUCCESS',
             payload: {
               user: response.data!,
-              accessToken: token,
-              refreshToken: refreshToken,
-              expiresIn: 3600, // Will be updated on refresh
+              access_token: token,
+              refresh_token: refreshToken,
+              expires_in: 3600, // Will be updated on refresh
             },
           });
         } catch (error) {
@@ -146,8 +146,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await authApi.login(credentials);
       
       // Store tokens
-      localStorage.setItem('accessToken', response.data!.accessToken);
-      localStorage.setItem('refreshToken', response.data!.refreshToken);
+      localStorage.setItem('accessToken', response.data!.access_token);
+      localStorage.setItem('refreshToken', response.data!.refresh_token);
       
       dispatch({ type: 'AUTH_SUCCESS', payload: response.data! });
     } catch (error: any) {
@@ -163,8 +163,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await authApi.register(data);
       
       // Store tokens
-      localStorage.setItem('accessToken', response.data!.accessToken);
-      localStorage.setItem('refreshToken', response.data!.refreshToken);
+      localStorage.setItem('accessToken', response.data!.access_token);
+      localStorage.setItem('refreshToken', response.data!.refresh_token);
       
       dispatch({ type: 'AUTH_SUCCESS', payload: response.data! });
     } catch (error: any) {
@@ -180,8 +180,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await authApi.verifyTwoFactor({ code });
       
       // Store tokens
-      localStorage.setItem('accessToken', response.data!.accessToken);
-      localStorage.setItem('refreshToken', response.data!.refreshToken);
+      localStorage.setItem('accessToken', response.data!.access_token);
+      localStorage.setItem('refreshToken', response.data!.refresh_token);
       
       dispatch({ type: 'AUTH_SUCCESS', payload: response.data! });
     } catch (error: any) {
@@ -201,9 +201,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await authApi.refreshToken(refreshToken);
       
       // Store new tokens
-      localStorage.setItem('accessToken', response.data!.accessToken);
-      if (response.data!.refreshToken) {
-        localStorage.setItem('refreshToken', response.data!.refreshToken);
+      localStorage.setItem('accessToken', response.data!.access_token);
+      if (response.data!.refresh_token) {
+        localStorage.setItem('refreshToken', response.data!.refresh_token);
       }
       
       dispatch({ type: 'AUTH_SUCCESS', payload: response.data! });

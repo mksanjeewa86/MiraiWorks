@@ -2,27 +2,27 @@
 export interface User {
   id: number;
   email: string;
-  firstName: string;
-  lastName: string;
-  fullName: string;
+  first_name: string;
+  last_name: string;
+  full_name: string;
   phone?: string;
-  companyId: number;
-  isActive: boolean;
-  isAdmin: boolean;
-  require2fa: boolean;
-  lastLogin?: string;
-  createdAt: string;
-  updatedAt: string;
+  company_id: number;
+  is_active: boolean;
+  is_admin: boolean;
+  require_2fa: boolean;
+  last_login?: string;
+  created_at: string;
+  updated_at: string;
   roles: UserRole[];
   company: Company;
 }
 
 export interface UserRole {
   id: number;
-  userId: number;
-  roleId: number;
-  assignedAt: string;
-  assignedBy: number;
+  user_id: number;
+  role_id: number;
+  assigned_at: string;
+  assigned_by: number;
   role: Role;
 }
 
@@ -50,9 +50,9 @@ export interface Company {
   description?: string;
   website?: string;
   logo?: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 // Authentication Types
@@ -64,19 +64,19 @@ export interface LoginCredentials {
 export interface RegisterData {
   email: string;
   password: string;
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   phone?: string;
-  companyName: string;
-  companyDomain: string;
+  company_name: string;
+  company_domain: string;
   industry?: string;
 }
 
 export interface AuthResponse {
   user: User;
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number;
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
 }
 
 export interface TwoFactorRequest {
@@ -86,101 +86,104 @@ export interface TwoFactorRequest {
 // Message Types
 export interface Message {
   id: number;
-  conversationId: number;
-  senderId: number;
+  conversation_id: number;
+  sender_id: number;
   content: string;
-  messageType: 'text' | 'file' | 'system';
-  attachmentId?: number;
-  isRead: boolean;
-  createdAt: string;
-  updatedAt: string;
+  message_type: 'text' | 'file' | 'system';
+  attachment_id?: number;
+  is_read: boolean;
+  created_at: string;
+  updated_at: string;
   sender: User;
   attachment?: MessageAttachment;
+  read_by?: User[];
 }
 
 export interface MessageAttachment {
   id: number;
   filename: string;
-  originalName: string;
-  mimeType: string;
+  original_name: string;
+  mime_type: string;
   size: number;
-  virusStatus: 'pending' | 'clean' | 'infected' | 'error';
-  uploadedAt: string;
+  virus_status: 'pending' | 'clean' | 'infected' | 'error';
+  uploaded_at: string;
 }
 
 export interface Conversation {
   id: number;
   title?: string;
-  isGroup: boolean;
-  createdBy: number;
-  lastMessageAt?: string;
-  createdAt: string;
+  is_group: boolean;
+  created_by: number;
+  last_message_at?: string;
+  created_at: string;
   participants: ConversationParticipant[];
-  lastMessage?: Message;
-  unreadCount: number;
+  last_message?: Message;
+  unread_count: number;
 }
 
 export interface ConversationParticipant {
   id: number;
-  conversationId: number;
-  userId: number;
-  joinedAt: string;
-  lastReadAt?: string;
+  conversation_id: number;
+  user_id: number;
+  joined_at: string;
+  last_read_at?: string;
   user: User;
 }
 
 // Interview Types
 export interface Interview {
   id: number;
-  candidateId: number;
-  recruiterId: number;
-  employerCompanyId: number;
+  candidate_id: number;
+  recruiter_id: number;
+  employer_company_id: number;
   title: string;
   description?: string;
-  positionTitle?: string;
+  position_title?: string;
   status: 'pending_schedule' | 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
-  interviewType: 'video' | 'phone' | 'in_person';
-  scheduledStart?: string;
-  scheduledEnd?: string;
+  interview_type: 'video' | 'phone' | 'in_person';
+  scheduled_start?: string;
+  scheduled_end?: string;
+  scheduled_at?: string;
   timezone?: string;
   location?: string;
-  meetingUrl?: string;
-  durationMinutes?: number;
+  meeting_url?: string;
+  duration_minutes?: number;
   notes?: string;
-  preparationNotes?: string;
-  createdBy?: number;
-  confirmedBy?: number;
-  confirmedAt?: string;
-  cancelledBy?: number;
-  cancelledAt?: string;
-  cancellationReason?: string;
-  createdAt: string;
-  updatedAt: string;
+  preparation_notes?: string;
+  created_by?: number;
+  confirmed_by?: number;
+  confirmed_at?: string;
+  cancelled_by?: number;
+  cancelled_at?: string;
+  cancellation_reason?: string;
+  created_at: string;
+  updated_at: string;
   candidate: User;
   recruiter: User;
-  employerCompanyName: string;
+  candidate_name?: string;
+  company_name?: string;
   proposals: InterviewProposal[];
-  activeProposalCount: number;
+  active_proposal_count: number;
 }
 
 export interface InterviewProposal {
   id: number;
-  interviewId: number;
-  proposedBy: number;
-  proposerName: string;
-  proposerRole: string;
-  startDatetime: string;
-  endDatetime: string;
+  interview_id: number;
+  proposed_by: number;
+  proposer_name: string;
+  proposer_role: string;
+  start_datetime: string;
+  end_datetime: string;
   timezone: string;
   location?: string;
   notes?: string;
   status: 'pending' | 'accepted' | 'declined' | 'expired';
-  respondedBy?: number;
-  responderName?: string;
-  respondedAt?: string;
-  responseNotes?: string;
-  expiresAt?: string;
-  createdAt: string;
+  responded_by?: number;
+  responder_name?: string;
+  responded_at?: string;
+  response_notes?: string;
+  expires_at?: string;
+  created_at: string;
 }
 
 // Calendar Types
@@ -217,32 +220,33 @@ export interface CalendarEvent {
 // Resume Types
 export interface Resume {
   id: number;
-  userId: number;
+  user_id: number;
   title: string;
   description?: string;
-  fullName?: string;
+  full_name?: string;
   email?: string;
   phone?: string;
   location?: string;
   website?: string;
-  linkedinUrl?: string;
-  githubUrl?: string;
-  professionalSummary?: string;
+  linkedin_url?: string;
+  github_url?: string;
+  professional_summary?: string;
   objective?: string;
   status: 'draft' | 'published' | 'archived';
   visibility: 'private' | 'public' | 'unlisted';
-  templateId: string;
-  themeColor: string;
-  fontFamily: string;
-  customCss?: string;
-  isPrimary: boolean;
-  viewCount: number;
-  downloadCount: number;
-  lastViewedAt?: string;
+  template_id: string;
+  theme_color: string;
+  font_family: string;
+  custom_css?: string;
+  is_primary: boolean;
+  is_public: boolean;
+  view_count: number;
+  download_count: number;
+  last_viewed_at?: string;
   slug: string;
-  shareToken: string;
-  createdAt: string;
-  updatedAt: string;
+  share_token: string;
+  created_at: string;
+  updated_at: string;
   sections: ResumeSection[];
   experiences: WorkExperience[];
   educations: Education[];
