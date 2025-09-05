@@ -29,6 +29,7 @@ class User(Base):
     oauth_accounts = relationship("OauthAccount", back_populates="user", cascade="all, delete-orphan")
     audit_logs = relationship("AuditLog", back_populates="actor", cascade="all, delete-orphan")
     notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
+    resumes = relationship("Resume", back_populates="user", cascade="all, delete-orphan")
 
     @property
     def full_name(self):

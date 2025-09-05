@@ -21,11 +21,43 @@ class MessageType(str, Enum):
 
 
 class InterviewStatus(str, Enum):
-    PROPOSED = "proposed"
-    ACCEPTED = "accepted"
+    PENDING_SCHEDULE = "pending_schedule"
+    SCHEDULED = "scheduled"
     CONFIRMED = "confirmed"
-    CANCELLED = "cancelled"
+    IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
+    CANCELLED = "cancelled"
+
+
+class ProposalStatus(str, Enum):
+    PENDING = "pending"
+    ACCEPTED = "accepted"
+    DECLINED = "declined"
+    EXPIRED = "expired"
+
+
+class ResumeStatus(str, Enum):
+    DRAFT = "draft"
+    PUBLISHED = "published"
+    ARCHIVED = "archived"
+
+
+class ResumeVisibility(str, Enum):
+    PRIVATE = "private"
+    PUBLIC = "public"
+    UNLISTED = "unlisted"  # Public but not searchable
+
+
+class SectionType(str, Enum):
+    SUMMARY = "summary"
+    EXPERIENCE = "experience"
+    EDUCATION = "education"
+    SKILLS = "skills"
+    PROJECTS = "projects"
+    CERTIFICATIONS = "certifications"
+    LANGUAGES = "languages"
+    REFERENCES = "references"
+    CUSTOM = "custom"
 
 
 class NotificationType(str, Enum):
