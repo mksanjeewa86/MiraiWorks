@@ -50,6 +50,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
       setSidebarOpen(false) // Closed by default on mobile
     } else {
       // Restore desktop sidebar state
+      setSidebarOpen(true) // Always open on desktop
       const savedCollapsed = localStorage.getItem('sidebarCollapsed')
       setSidebarCollapsed(savedCollapsed === 'true')
     }
@@ -106,9 +107,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
         />
         
         <main className={`
-          flex-1 min-h-[calc(100vh-4rem)] transition-all duration-300
-          ${!isMobile && !sidebarCollapsed ? 'lg:ml-0' : ''}
-          ${isMobile ? 'ml-0' : ''}
+          flex-1 min-h-[calc(100vh-4rem)] transition-all duration-300 pt-16
+          ${!isMobile && !sidebarCollapsed ? 'lg:ml-64' : !isMobile && sidebarCollapsed ? 'lg:ml-16' : 'ml-0'}
         `}>
           <div className="p-6">
             {children}

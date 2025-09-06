@@ -14,6 +14,11 @@ export default function JobsPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedType, setSelectedType] = useState('all');
 
+  // Set page title
+  useEffect(() => {
+    document.title = 'Jobs - MiraiWorks';
+  }, []);
+
   // Fetch jobs from API
   useEffect(() => {
     const fetchJobs = async () => {

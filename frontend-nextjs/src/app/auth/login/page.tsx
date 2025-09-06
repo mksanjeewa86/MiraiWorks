@@ -55,7 +55,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Error Message */}
             {error && (
-              <div className="p-4 rounded-2xl bg-red-50 border border-red-200">
+              <div className="p-4 rounded-2xl bg-red-50 border border-red-200" data-testid="error-message">
                 <p className="text-sm text-red-600">{error}</p>
               </div>
             )}
@@ -74,6 +74,7 @@ export default function LoginPage() {
                 placeholder="Enter your email"
                 required
                 autoComplete="email"
+                data-testid="email-input"
               />
             </div>
 
@@ -92,6 +93,7 @@ export default function LoginPage() {
                   placeholder="Enter your password"
                   required
                   autoComplete="current-password"
+                  data-testid="password-input"
                 />
                 <button
                   type="button"
@@ -132,6 +134,7 @@ export default function LoginPage() {
               type="submit"
               disabled={loading}
               className="btn btn-primary w-full"
+              data-testid="login-button"
             >
               {loading ? (
                 <>

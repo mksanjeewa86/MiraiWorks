@@ -32,24 +32,28 @@ jobs:
       with:
         node-version: 18
         cache: 'npm'
-        cache-dependency-path: |
-          backend-express/package-lock.json
-          frontend-nextjs/package-lock.json
+        cache-dependency-path: frontend-nextjs/package-lock.json
 
-    # Backend Setup
+    # Backend Setup (Python FastAPI)
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
     - name: Install backend dependencies
       run: |
-        cd backend-express
-        npm ci
+        cd backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
 
-    - name: Setup database
+    - name: Setup database and create sample data
       run: |
-        cd backend-express
+        cd backend
         # Wait for MySQL to be ready
         sleep 30
-        # Run migrations/seed data
-        npm run migrate || echo "Migration script not found"
-        npm run seed || echo "Seed script not found"
+        # Create sample data
+        python create_sample_data.py || echo "Sample data creation failed"
       env:
         DB_HOST: localhost
         DB_PORT: 3306
@@ -59,18 +63,18 @@ jobs:
 
     - name: Start backend server
       run: |
-        cd backend-express
-        npm start &
-        sleep 10
+        cd backend
+        python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+        sleep 15
+        # Test if server is running
+        curl -f http://localhost:8000/health || echo "Backend health check failed"
       env:
-        NODE_ENV: test
-        PORT: 8000
         DB_HOST: localhost
         DB_PORT: 3306
         DB_USER: hrms
         DB_PASSWORD: hrms
         DB_NAME: miraiworks
-        JWT_SECRET: test-secret-key-for-ci
+        JWT_SECRET: test-secret-key-for-ci-very-long-and-secure
 
     # Frontend Setup
     - name: Install frontend dependencies

@@ -120,11 +120,12 @@ export default function Sidebar({
   }
 
   const sidebarClasses = `
-    fixed lg:relative top-0 left-0 z-40 h-screen border-r
+    fixed left-0 z-40 border-r
     transition-all duration-300 ease-in-out
-    ${isMobile ? 'w-64' : isCollapsed ? 'w-16' : 'w-64'}
+    ${isMobile ? 'top-0 h-screen w-64' : 'top-16 h-[calc(100vh-4rem)] w-64'}
+    ${isCollapsed && !isMobile ? 'w-16' : ''}
     ${isMobile && !isOpen ? '-translate-x-full' : 'translate-x-0'}
-    ${!isMobile && isOpen ? 'block' : isMobile ? 'block' : 'hidden lg:block'}
+    lg:translate-x-0
   `
 
   return (
@@ -138,7 +139,13 @@ export default function Sidebar({
         />
       )}
 
-      <aside className={sidebarClasses} style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}>
+      <aside 
+        className={sidebarClasses} 
+        style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
+        data-testid="sidebar"
+        data-collapsed={isCollapsed}
+        data-mobile={isMobile}
+      >
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-4" style={{ borderBottom: '1px solid var(--border-color)' }}>
