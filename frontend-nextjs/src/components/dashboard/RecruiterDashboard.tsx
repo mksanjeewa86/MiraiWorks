@@ -34,8 +34,8 @@ export default function RecruiterDashboard() {
       const response = await dashboardApi.getStats();
       setStats(response.data as RecruiterStats);
       setError(null);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load dashboard data');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
     } finally {
       setLoading(false);
     }
@@ -85,7 +85,7 @@ export default function RecruiterDashboard() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>Recruiter Dashboard</h1>
-        <p className="mt-1" style={{ color: 'var(--text-secondary)' }}>Hello {user?.full_name}, here's your recruitment overview.</p>
+        <p className="mt-1" style={{ color: 'var(--text-secondary)' }}>Hello {user?.full_name}, here&apos;s your recruitment overview.</p>
       </div>
 
       {/* Stats Overview */}

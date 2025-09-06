@@ -50,7 +50,7 @@ export default function RegisterPage() {
     try {
       await registerUser(data);
       router.push('/dashboard');
-    } catch (err) {
+    } catch {
       // Error is handled by AuthContext
     } finally {
       setLoading(false);

@@ -42,7 +42,7 @@ export default function ResetPasswordForm({ onSubmit, isLoading = false, error }
     try {
       await onSubmit(data.password);
       setIsSubmitted(true);
-    } catch (err) {
+    } catch {
       // Error handled by parent
     } finally {
       setIsSubmitting(false);

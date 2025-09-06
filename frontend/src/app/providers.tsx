@@ -1,6 +1,4 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { useState } from 'react'
-import { AuthContext } from '../contexts/AuthContext'
 import ErrorBoundary from '../components/ErrorBoundary'
 
 const queryClient = new QueryClient({

@@ -1,6 +1,7 @@
 import type { 
   ApiResponse, 
   DashboardStats,
+  ActivityItem,
 } from '@/types';
 
 // Dashboard API
@@ -19,10 +20,10 @@ export const dashboardApi = {
     }
     
     const data = await response.json();
-    return { data };
+    return { data, success: true };
   },
   
-  getRecentActivity: async (limit?: number): Promise<ApiResponse<any[]>> => {
+  getRecentActivity: async (limit?: number): Promise<ApiResponse<ActivityItem[]>> => {
     const token = localStorage.getItem('accessToken');
     const url = new URL('http://localhost:8001/api/dashboard/activity');
     if (limit) url.searchParams.set('limit', limit.toString());
@@ -39,6 +40,6 @@ export const dashboardApi = {
     }
     
     const data = await response.json();
-    return { data };
+    return { data, success: true };
   },
 };

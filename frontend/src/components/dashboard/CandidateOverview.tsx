@@ -113,7 +113,7 @@ export default function CandidateOverview() {
     fetchData();
   }, []);
 
-  const getActivityIcon = (type: string, status?: string) => {
+  const getActivityIcon = (type: string) => {
     switch (type) {
       case 'application':
         return <Briefcase className="h-5 w-5" />;
@@ -128,18 +128,6 @@ export default function CandidateOverview() {
     }
   };
 
-  const getStatusColor = (status?: string) => {
-    switch (status) {
-      case 'completed':
-        return 'text-accent-600 dark:text-accent-400';
-      case 'scheduled':
-        return 'text-blue-600 dark:text-blue-400';
-      case 'pending':
-        return 'text-orange-600 dark:text-orange-400';
-      default:
-        return 'text-muted-600 dark:text-muted-400';
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -208,7 +196,7 @@ export default function CandidateOverview() {
             <div className="loading-skeleton" style={{ height: '250px' }} />
           ) : (
             <SimpleLineChart
-              data={activityData}
+              data={activityData.map(item => ({ ...item, value: item.applications }))}
               dataKey="applications"
               height={250}
               color="var(--brand-primary)"
@@ -297,7 +285,7 @@ export default function CandidateOverview() {
                            '#F59E0B'
                   }}
                 >
-                  {getActivityIcon(activity.type, activity.status)}
+                  {getActivityIcon(activity.type)}
                 </div>
                 <div className="flex-1" style={{ minWidth: 0 }}>
                   <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>

@@ -8,6 +8,16 @@ interface ChartData {
   [key: string]: string | number;
 }
 
+interface PieChartLabelProps {
+  cx: number;
+  cy: number;
+  midAngle?: number;
+  innerRadius: number;
+  outerRadius: number;
+  percent?: number;
+  index?: number;
+}
+
 // Line Chart Component
 interface LineChartProps {
   data: ChartData[];
@@ -185,7 +195,8 @@ export function SimplePieChart({
   showLabels = false,
   showLegend = true
 }: PieChartProps) {
-  const renderLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
+  const renderLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: PieChartLabelProps) => {
+    if (midAngle === undefined || percent === undefined) return null;
     const RADIAN = Math.PI / 180;
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);

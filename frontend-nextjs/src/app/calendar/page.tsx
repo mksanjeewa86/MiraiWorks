@@ -18,6 +18,56 @@ interface CalendarState {
   viewMode: 'month' | 'week' | 'day';
 }
 
+// Mock events data - moved outside component to prevent re-creation
+const createMockEvents = (user: { id?: string | number; role?: string; email?: string }): CalendarEvent[] => [
+  {
+    id: '1',
+    title: 'Interview with Sarah Johnson',
+    description: 'Senior Frontend Developer Position',
+    startDatetime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
+    endDatetime: new Date(Date.now() + 24 * 60 * 60 * 1000 + 60 * 60 * 1000).toISOString(), // 1 hour
+    location: 'Conference Room A',
+    isAllDay: false,
+    isRecurring: false,
+    attendees: [
+      user?.email || 'user@example.com',
+      'sarah.johnson@company.com'
+    ],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: '2',
+    title: 'Team Standup',
+    description: 'Weekly team sync meeting',
+    startDatetime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // Day after tomorrow
+    endDatetime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000 + 30 * 60 * 1000).toISOString(), // 30 min
+    location: 'Zoom',
+    isAllDay: false,
+    isRecurring: false,
+    attendees: [
+      user?.email || 'user@example.com'
+    ],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: '3',
+    title: 'Client Presentation',
+    description: 'Quarterly business review',
+    startDatetime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // Next week
+    endDatetime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString(), // 2 hours
+    location: 'Client Office',
+    isAllDay: false,
+    isRecurring: false,
+    attendees: [
+      user?.email || 'user@example.com'
+    ],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }
+];
+
 export default function CalendarPage() {
   const { user } = useAuth();
   
@@ -29,58 +79,9 @@ export default function CalendarPage() {
     viewMode: 'month'
   });
 
-  // Mock events data
-  const mockEvents: CalendarEvent[] = [
-    {
-      id: '1',
-      title: 'Interview with Sarah Johnson',
-      description: 'Senior Frontend Developer Position',
-      start_time: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
-      end_time: new Date(Date.now() + 24 * 60 * 60 * 1000 + 60 * 60 * 1000).toISOString(), // 1 hour
-      event_type: 'interview',
-      location: 'Conference Room A',
-      attendees: [
-        { id: '1', email: user?.email || '', full_name: user?.full_name || '', role: user?.role || 'candidate' },
-        { id: '2', email: 'sarah.johnson@company.com', full_name: 'Sarah Johnson', role: 'candidate' }
-      ],
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      created_by: user?.id || '1'
-    },
-    {
-      id: '2',
-      title: 'Team Standup',
-      description: 'Weekly team sync meeting',
-      start_time: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // Day after tomorrow
-      end_time: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000 + 30 * 60 * 1000).toISOString(), // 30 min
-      event_type: 'meeting',
-      location: 'Zoom',
-      attendees: [
-        { id: '1', email: user?.email || '', full_name: user?.full_name || '', role: user?.role || 'candidate' }
-      ],
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      created_by: user?.id || '1'
-    },
-    {
-      id: '3',
-      title: 'Client Presentation',
-      description: 'Quarterly business review',
-      start_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // Next week
-      end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString(), // 2 hours
-      event_type: 'meeting',
-      location: 'Client Office',
-      attendees: [
-        { id: '1', email: user?.email || '', full_name: user?.full_name || '', role: user?.role || 'candidate' }
-      ],
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      created_by: user?.id || '1'
-    }
-  ];
-
   useEffect(() => {
     // Simulate loading events
+    const mockEvents = createMockEvents(user || {});
     setTimeout(() => {
       setState(prev => ({
         ...prev,
@@ -88,7 +89,7 @@ export default function CalendarPage() {
         loading: false
       }));
     }, 1000);
-  }, []);
+  }, [user]);
 
   const getDaysInMonth = (date: Date) => {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
@@ -114,20 +115,13 @@ export default function CalendarPage() {
 
   const getEventsForDate = (date: Date) => {
     return state.events.filter(event => {
-      const eventDate = new Date(event.start_time);
+      const eventDate = new Date(event.startDatetime);
       return eventDate.toDateString() === date.toDateString();
     });
   };
 
-  const getEventTypeColor = (eventType: string) => {
-    switch (eventType) {
-      case 'interview':
-        return 'primary';
-      case 'meeting':
-        return 'success';
-      default:
-        return 'secondary';
-    }
+  const getEventTypeColor = (): "primary" | "secondary" | "success" | "warning" | "error" | undefined => {
+    return 'primary'; // Default color since event_type was removed
   };
 
   const navigateMonth = (direction: 'prev' | 'next') => {
@@ -198,8 +192,8 @@ export default function CalendarPage() {
 
   const selectedDateEvents = state.selectedDate ? getEventsForDate(state.selectedDate) : [];
   const upcomingEvents = state.events
-    .filter(event => new Date(event.start_time) > new Date())
-    .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
+    .filter(event => new Date(event.startDatetime) > new Date())
+    .sort((a, b) => new Date(a.startDatetime).getTime() - new Date(b.startDatetime).getTime())
     .slice(0, 5);
 
   if (state.loading) {
@@ -308,14 +302,14 @@ export default function CalendarPage() {
                           <h4 className="font-medium" style={{ color: 'var(--text-primary)' }}>
                             {event.title}
                           </h4>
-                          <Badge variant={getEventTypeColor(event.event_type)}>
-                            {event.event_type}
+                          <Badge variant={getEventTypeColor()}>
+                            Event
                           </Badge>
                         </div>
                         <div className="space-y-1 text-sm" style={{ color: 'var(--text-secondary)' }}>
                           <div className="flex items-center gap-2">
                             <Clock className="h-4 w-4" />
-                            {formatTime(event.start_time)} - {formatTime(event.end_time)}
+                            {formatTime(event.startDatetime)} - {formatTime(event.endDatetime)}
                           </div>
                           {event.location && (
                             <div className="flex items-center gap-2">
@@ -355,14 +349,14 @@ export default function CalendarPage() {
                         <h4 className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
                           {event.title}
                         </h4>
-                        <Badge variant={getEventTypeColor(event.event_type)} size="sm">
-                          {event.event_type}
+                        <Badge variant={getEventTypeColor()} size="sm">
+                          Event
                         </Badge>
                       </div>
                       <div className="text-xs space-y-1" style={{ color: 'var(--text-secondary)' }}>
                         <div className="flex items-center gap-1">
                           <CalendarIcon className="h-3 w-3" />
-                          {formatDate(event.start_time)} at {formatTime(event.start_time)}
+                          {formatDate(event.startDatetime)} at {formatTime(event.startDatetime)}
                         </div>
                         {event.location && (
                           <div className="flex items-center gap-1">

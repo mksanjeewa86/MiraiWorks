@@ -84,7 +84,7 @@ export default function TwoFactorForm({ onSubmit, onResend, isLoading = false, e
     setIsSubmitting(true);
     try {
       await onSubmit(code);
-    } catch (err) {
+    } catch {
       // Error handled by parent
     } finally {
       setIsSubmitting(false);
@@ -97,7 +97,7 @@ export default function TwoFactorForm({ onSubmit, onResend, isLoading = false, e
     setIsResending(true);
     try {
       await onResend();
-    } catch (err) {
+    } catch {
       // Error handled by parent
     } finally {
       setIsResending(false);
@@ -132,7 +132,9 @@ export default function TwoFactorForm({ onSubmit, onResend, isLoading = false, e
           {codeDigits.map((digit, index) => (
             <input
               key={index}
-              ref={(el) => (inputRefs.current[index] = el)}
+              ref={(el) => {
+                inputRefs.current[index] = el;
+              }}
               type="text"
               inputMode="numeric"
               pattern="[0-9]"

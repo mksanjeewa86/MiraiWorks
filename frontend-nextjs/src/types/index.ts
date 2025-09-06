@@ -395,7 +395,7 @@ export interface ResumeTemplate {
 }
 
 // API Response Types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   data?: T;
   message?: string;
   success: boolean;
@@ -429,7 +429,7 @@ export interface Notification {
   type: string;
   title: string;
   message: string;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
   isRead: boolean;
   createdAt: string;
 }
@@ -437,7 +437,7 @@ export interface Notification {
 // WebSocket Types
 export interface WebSocketMessage {
   type: string;
-  payload: any;
+  payload: unknown;
   timestamp: string;
 }
 
@@ -595,7 +595,7 @@ export interface RTCIceServer {
 
 export interface WebRTCSignal {
   type: string;
-  data: any;
+  data: unknown;
   target_user_id?: number;
   sender_id?: number;
   room_id: string;
@@ -617,7 +617,7 @@ export interface DashboardStats {
   totalInterviews?: number;
   totalResumes?: number;
   activeConversations?: number;
-  recentActivity?: any[];
+  recentActivity?: ActivityItem[];
 }
 
 export interface ActivityItem {
@@ -627,5 +627,5 @@ export interface ActivityItem {
   description: string;
   timestamp: string;
   userId?: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }

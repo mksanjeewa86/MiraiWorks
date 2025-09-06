@@ -37,7 +37,7 @@ export default function ForgotPasswordForm({ onSubmit, isLoading = false, error 
     try {
       await onSubmit(data.email);
       setIsSubmitted(true);
-    } catch (err) {
+    } catch {
       // Error handled by parent
     } finally {
       setIsSubmitting(false);
@@ -54,13 +54,13 @@ export default function ForgotPasswordForm({ onSubmit, isLoading = false, error 
           Check your email
         </h3>
         <p className="text-sm text-muted-600 dark:text-muted-300 mb-4">
-          We've sent a password reset link to:
+          We&apos;ve sent a password reset link to:
         </p>
         <p className="text-sm font-medium text-gray-900 dark:text-white mb-6">
           {getValues('email')}
         </p>
         <p className="text-xs text-muted-500 dark:text-muted-400">
-          Didn't receive the email? Check your spam folder or try again.
+          Didn&apos;t receive the email? Check your spam folder or try again.
         </p>
       </div>
     );
@@ -73,7 +73,7 @@ export default function ForgotPasswordForm({ onSubmit, isLoading = false, error 
           Reset your password
         </h3>
         <p className="text-sm text-muted-600 dark:text-muted-300">
-          Enter your email address and we'll send you a link to reset your password
+          Enter your email address and we&apos;ll send you a link to reset your password
         </p>
       </div>
 

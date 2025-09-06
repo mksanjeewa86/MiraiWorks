@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import TwoFactorForm from '@/components/auth/TwoFactorForm';
 import Brand from '@/components/common/Brand';
 
-export default function TwoFactorPage() {
+function TwoFactorContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated, verifyTwoFactor, error, clearError } = useAuth();
@@ -88,7 +88,7 @@ export default function TwoFactorPage() {
           <TwoFactorForm
             onSubmit={handleTwoFactorSubmit}
             onResend={handleResend}
-            error={twoFactorError || error}
+            error={twoFactorError || error || undefined}
           />
 
           {/* Back to Login */}
@@ -104,5 +104,26 @@ export default function TwoFactorPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function TwoFactorPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-950">
+        <div className="max-w-md w-full">
+          <div className="text-center">
+            <Brand className="justify-center mb-8" />
+            <div className="card p-8">
+              <div className="animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }>
+      <TwoFactorContent />
+    </Suspense>
   );
 }

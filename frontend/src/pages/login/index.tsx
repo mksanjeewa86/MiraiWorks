@@ -1,13 +1,13 @@
-import { useState, useContext } from 'react';
+import { useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { AuthContext } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import Brand from '../../components/common/Brand';
 import LoginForm from '../../components/auth/LoginForm';
 import TwoFactorForm from '../../components/auth/TwoFactorForm';
 import PasswordResetRequest from '../../components/auth/PasswordResetRequest';
 
 export default function LoginPage() {
-  const { isAuthenticated, user } = useContext(AuthContext);
+  const { isAuthenticated, user } = useAuth();
   const location = useLocation();
   const [showTwoFactor, setShowTwoFactor] = useState(false);
   const [showPasswordReset, setShowPasswordReset] = useState(false);
@@ -22,7 +22,7 @@ export default function LoginPage() {
 
   const handleLoginSuccess = () => {
     // Check if user needs 2FA (admin roles)
-    const needsTwoFactor = user?.role && ['super_admin', 'company_admin'].includes(user.role);
+    const needsTwoFactor = user?.roles?.[0]?.role?.name && ['super_admin', 'company_admin'].includes(user.roles[0].role.name);
     
     if (needsTwoFactor) {
       setShowTwoFactor(true);
@@ -93,7 +93,7 @@ export default function LoginPage() {
             <TwoFactorForm
               onSubmit={handleTwoFactorSubmit}
               onResend={handleTwoFactorResend}
-              error={twoFactorError}
+              error={twoFactorError ?? undefined}
             />
           ) : (
             <>

@@ -13,8 +13,7 @@ import {
   ChevronRight
 } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
-import { useContext } from 'react'
-import { AuthContext } from '../contexts/AuthContext'
+import { useAuth } from '../contexts/AuthContext'
 
 interface SidebarProps {
   isOpen: boolean
@@ -101,12 +100,12 @@ export default function Sidebar({
   onToggleCollapse, 
   isMobile 
 }: SidebarProps) {
-  const { user } = useContext(AuthContext)
+  const { user } = useAuth()
   const location = useLocation()
 
   // Filter navigation items based on user role
   const visibleItems = navigationItems.filter(item => 
-    user?.role && item.roles.includes(user.role)
+    user?.roles?.[0]?.role?.name && item.roles.includes(user.roles[0].role.name)
   )
 
   const isActive = (href: string) => {
@@ -239,7 +238,7 @@ export default function Sidebar({
                     {`${user.first_name} ${user.last_name}`.trim() || 'User'}
                   </p>
                   <p className="text-xs text-muted-500 truncate">
-                    {user.role?.replace('_', ' ').toUpperCase()}
+                    {user.roles?.[0]?.role?.name?.replace('_', ' ').toUpperCase()}
                   </p>
                 </div>
               </div>

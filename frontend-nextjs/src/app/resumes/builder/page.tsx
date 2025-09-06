@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/layout/AppLayout';
 import Card from '@/components/ui/Card';
@@ -23,7 +23,7 @@ import {
   FileText,
   Palette
 } from 'lucide-react';
-import type { Resume, Experience, Education, Certification, Project, Language } from '@/types';
+import type { Resume, WorkExperience, Skill } from '@/types';
 
 interface ResumeBuilderState {
   activeSection: 'template' | 'personal' | 'experience' | 'education' | 'skills' | 'certifications' | 'projects' | 'languages' | 'preview';
@@ -41,23 +41,29 @@ export default function ResumeBuilderPage() {
       title: '',
       description: '',
       template_id: 'modern',
-      personal_info: {
-        full_name: user?.full_name || '',
-        email: user?.email || '',
-        phone: '',
-        address: '',
-        linkedin: '',
-        website: '',
-        github: ''
-      },
-      experience: [],
-      education: [],
+      theme_color: '#3b82f6',
+      font_family: 'Inter',
+      status: 'draft',
+      visibility: 'private',
+      full_name: user?.full_name || '',
+      email: user?.email || '',
+      phone: '',
+      location: '',
+      website: '',
+      linkedin_url: '',
+      github_url: '',
+      professional_summary: '',
+      experiences: [],
+      educations: [],
       skills: [],
       certifications: [],
       projects: [],
       languages: [],
       is_primary: false,
-      is_public: false
+      is_public: false,
+      view_count: 0,
+      download_count: 0,
+      sections: []
     },
     saving: false,
     errors: {}
@@ -94,40 +100,44 @@ export default function ResumeBuilderPage() {
       ...prev,
       resume: {
         ...prev.resume,
-        personal_info: {
-          ...prev.resume.personal_info!,
-          [field]: value
-        }
+        [field]: value
       }
     }));
   };
 
   const addExperience = () => {
-    const newExperience: Experience = {
-      company: '',
-      position: '',
-      start_date: '',
-      end_date: null,
-      description: '',
-      location: ''
-    };
-    
-    setState(prev => ({
-      ...prev,
-      resume: {
-        ...prev.resume,
-        experience: [...(prev.resume.experience || []), newExperience]
-      }
-    }));
-  };
-
-  const updateExperience = (index: number, field: string, value: string | null) => {
     setState(prev => {
-      const experience = [...(prev.resume.experience || [])];
-      experience[index] = { ...experience[index], [field]: value };
+      const newExperience: Partial<WorkExperience> = {
+        companyName: '',
+        positionTitle: '',
+        startDate: '',
+        endDate: undefined,
+        description: '',
+        location: '',
+        isCurrent: false,
+        achievements: [],
+        technologies: [],
+        isVisible: true,
+        displayOrder: (prev.resume.experiences?.length || 0) + 1
+      };
+      
       return {
         ...prev,
-        resume: { ...prev.resume, experience }
+        resume: {
+          ...prev.resume,
+          experiences: [...(prev.resume.experiences || []), newExperience as WorkExperience]
+        }
+      };
+    });
+  };
+
+  const updateExperience = (index: number, field: string, value: string | null | boolean) => {
+    setState(prev => {
+      const experiences = [...(prev.resume.experiences || [])];
+      experiences[index] = { ...experiences[index], [field]: value };
+      return {
+        ...prev,
+        resume: { ...prev.resume, experiences }
       };
     });
   };
@@ -137,68 +147,43 @@ export default function ResumeBuilderPage() {
       ...prev,
       resume: {
         ...prev.resume,
-        experience: prev.resume.experience?.filter((_, i) => i !== index)
+        experiences: prev.resume.experiences?.filter((_, i) => i !== index)
       }
     }));
   };
 
-  const addEducation = () => {
-    const newEducation: Education = {
-      institution: '',
-      degree: '',
-      start_date: '',
-      end_date: '',
-      location: ''
-    };
-    
-    setState(prev => ({
-      ...prev,
-      resume: {
-        ...prev.resume,
-        education: [...(prev.resume.education || []), newEducation]
-      }
-    }));
-  };
+  // Education functions removed as they are not currently used
+  // TODO: Implement education section
 
-  const updateEducation = (index: number, field: string, value: string) => {
-    setState(prev => {
-      const education = [...(prev.resume.education || [])];
-      education[index] = { ...education[index], [field]: value };
-      return {
-        ...prev,
-        resume: { ...prev.resume, education }
-      };
-    });
-  };
-
-  const removeEducation = (index: number) => {
-    setState(prev => ({
-      ...prev,
-      resume: {
-        ...prev.resume,
-        education: prev.resume.education?.filter((_, i) => i !== index)
-      }
-    }));
-  };
-
-  const addSkill = (skill: string) => {
-    if (skill.trim() && !state.resume.skills?.includes(skill.trim())) {
-      setState(prev => ({
-        ...prev,
-        resume: {
-          ...prev.resume,
-          skills: [...(prev.resume.skills || []), skill.trim()]
-        }
-      }));
+  const addSkill = (skillName: string) => {
+    if (skillName.trim() && !state.resume.skills?.some(s => s.name === skillName.trim())) {
+      setState(prev => {
+        const newSkill: Partial<Skill> = {
+          name: skillName.trim(),
+          category: 'General',
+          proficiencyLevel: 3,
+          proficiencyLabel: 'Intermediate',
+          isVisible: true,
+          displayOrder: (prev.resume.skills?.length || 0) + 1
+        };
+        
+        return {
+          ...prev,
+          resume: {
+            ...prev.resume,
+            skills: [...(prev.resume.skills || []), newSkill as Skill]
+          }
+        };
+      });
     }
   };
 
-  const removeSkill = (skill: string) => {
+  const removeSkill = (skillName: string) => {
     setState(prev => ({
       ...prev,
       resume: {
         ...prev.resume,
-        skills: prev.resume.skills?.filter(s => s !== skill)
+        skills: prev.resume.skills?.filter(s => s.name !== skillName)
       }
     }));
   };
@@ -223,15 +208,18 @@ export default function ResumeBuilderPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {templates.map(template => (
-          <Card 
+          <div 
             key={template.id}
-            className={`p-6 cursor-pointer transition-all ${
-              state.resume.template_id === template.id 
-                ? 'ring-2 ring-brand-primary border-brand-primary' 
-                : 'hover:shadow-md'
-            }`}
+            className={`cursor-pointer transition-all`}
             onClick={() => updateResume({ template_id: template.id })}
           >
+            <Card 
+              className={`p-6 ${
+                state.resume.template_id === template.id 
+                  ? 'ring-2 ring-brand-primary border-brand-primary' 
+                  : 'hover:shadow-md'
+              }`}
+            >
             <div className="flex items-start gap-4">
               <div className="text-4xl">{template.preview}</div>
               <div className="flex-1">
@@ -244,6 +232,7 @@ export default function ResumeBuilderPage() {
               </div>
             </div>
           </Card>
+          </div>
         ))}
       </div>
 
@@ -277,46 +266,46 @@ export default function ResumeBuilderPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input
           label="Full Name"
-          value={state.resume.personal_info?.full_name || ''}
+          value={state.resume.full_name || ''}
           onChange={(e) => updatePersonalInfo('full_name', e.target.value)}
           required
         />
         <Input
           label="Email"
           type="email"
-          value={state.resume.personal_info?.email || ''}
+          value={state.resume.email || ''}
           onChange={(e) => updatePersonalInfo('email', e.target.value)}
           required
         />
         <Input
           label="Phone"
-          value={state.resume.personal_info?.phone || ''}
+          value={state.resume.phone || ''}
           onChange={(e) => updatePersonalInfo('phone', e.target.value)}
         />
         <Input
-          label="Address"
-          value={state.resume.personal_info?.address || ''}
-          onChange={(e) => updatePersonalInfo('address', e.target.value)}
+          label="Location"
+          value={state.resume.location || ''}
+          onChange={(e) => updatePersonalInfo('location', e.target.value)}
         />
         <Input
-          label="LinkedIn"
-          value={state.resume.personal_info?.linkedin || ''}
-          onChange={(e) => updatePersonalInfo('linkedin', e.target.value)}
-          placeholder="linkedin.com/in/yourprofile"
+          label="LinkedIn URL"
+          value={state.resume.linkedin_url || ''}
+          onChange={(e) => updatePersonalInfo('linkedin_url', e.target.value)}
+          placeholder="https://linkedin.com/in/yourprofile"
         />
         <Input
           label="Website"
-          value={state.resume.personal_info?.website || ''}
+          value={state.resume.website || ''}
           onChange={(e) => updatePersonalInfo('website', e.target.value)}
-          placeholder="yourwebsite.com"
+          placeholder="https://yourwebsite.com"
         />
       </div>
       
       <Input
-        label="GitHub (optional)"
-        value={state.resume.personal_info?.github || ''}
-        onChange={(e) => updatePersonalInfo('github', e.target.value)}
-        placeholder="github.com/yourusername"
+        label="GitHub URL (optional)"
+        value={state.resume.github_url || ''}
+        onChange={(e) => updatePersonalInfo('github_url', e.target.value)}
+        placeholder="https://github.com/yourusername"
       />
     </div>
   );
@@ -337,7 +326,7 @@ export default function ResumeBuilderPage() {
       </div>
 
       <div className="space-y-6">
-        {state.resume.experience?.map((exp, index) => (
+        {state.resume.experiences?.map((exp, index) => (
           <Card key={index} className="p-6">
             <div className="flex items-start justify-between mb-4">
               <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>
@@ -355,28 +344,28 @@ export default function ResumeBuilderPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
                 label="Company"
-                value={exp.company}
-                onChange={(e) => updateExperience(index, 'company', e.target.value)}
+                value={exp.companyName}
+                onChange={(e) => updateExperience(index, 'companyName', e.target.value)}
                 required
               />
               <Input
                 label="Position"
-                value={exp.position}
-                onChange={(e) => updateExperience(index, 'position', e.target.value)}
+                value={exp.positionTitle}
+                onChange={(e) => updateExperience(index, 'positionTitle', e.target.value)}
                 required
               />
               <Input
                 label="Start Date"
                 type="month"
-                value={exp.start_date}
-                onChange={(e) => updateExperience(index, 'start_date', e.target.value)}
+                value={exp.startDate}
+                onChange={(e) => updateExperience(index, 'startDate', e.target.value)}
                 required
               />
               <Input
                 label="End Date"
                 type="month"
-                value={exp.end_date || ''}
-                onChange={(e) => updateExperience(index, 'end_date', e.target.value || null)}
+                value={exp.endDate || ''}
+                onChange={(e) => updateExperience(index, 'endDate', e.target.value || null)}
                 helperText="Leave blank if current position"
               />
             </div>
@@ -402,7 +391,8 @@ export default function ResumeBuilderPage() {
               </div>
             </div>
           </Card>
-        )) || (
+        ))}
+        {(!state.resume.experiences || state.resume.experiences.length === 0) && (
           <div className="text-center py-8">
             <Briefcase className="h-12 w-12 mx-auto mb-4" style={{ color: 'var(--text-muted)' }} />
             <p style={{ color: 'var(--text-secondary)' }}>No work experience added yet</p>
@@ -416,60 +406,79 @@ export default function ResumeBuilderPage() {
     </div>
   );
 
-  const renderSkillsSection = () => {
-    const [newSkill, setNewSkill] = useState('');
+const SkillsSection = ({ 
+  skills, 
+  onAddSkill, 
+  onRemoveSkill 
+}: { 
+  skills: Skill[] | undefined;
+  onAddSkill: (skill: string) => void;
+  onRemoveSkill: (skill: string) => void;
+}) => {
+  const [newSkill, setNewSkill] = useState('');
 
-    return (
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Skills</h2>
-          <p style={{ color: 'var(--text-secondary)' }}>
-            Add your technical and soft skills
-          </p>
-        </div>
-
-        <div className="flex gap-2">
-          <Input
-            value={newSkill}
-            onChange={(e) => setNewSkill(e.target.value)}
-            placeholder="Enter a skill"
-            onKeyPress={(e) => {
-              if (e.key === 'Enter') {
-                addSkill(newSkill);
-                setNewSkill('');
-              }
-            }}
-          />
-          <Button 
-            onClick={() => {
-              addSkill(newSkill);
-              setNewSkill('');
-            }}
-            disabled={!newSkill.trim()}
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {state.resume.skills?.map((skill, index) => (
-            <div
-              key={index}
-              className="flex items-center gap-2 px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full"
-            >
-              <span className="text-sm" style={{ color: 'var(--text-primary)' }}>{skill}</span>
-              <button
-                onClick={() => removeSkill(skill)}
-                className="text-red-500 hover:text-red-700"
-              >
-                <Trash2 className="h-3 w-3" />
-              </button>
-            </div>
-          )) || (
-            <p style={{ color: 'var(--text-secondary)' }}>No skills added yet</p>
-          )}
-        </div>
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Skills</h2>
+        <p style={{ color: 'var(--text-secondary)' }}>
+          Add your technical and soft skills
+        </p>
       </div>
+
+      <div className="flex gap-2">
+        <Input
+          value={newSkill}
+          onChange={(e) => setNewSkill(e.target.value)}
+          placeholder="Enter a skill"
+          onKeyPress={(e) => {
+            if (e.key === 'Enter') {
+              onAddSkill(newSkill);
+              setNewSkill('');
+            }
+          }}
+        />
+        <Button 
+          onClick={() => {
+            onAddSkill(newSkill);
+            setNewSkill('');
+          }}
+          disabled={!newSkill.trim()}
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {skills?.map((skill, index) => (
+          <div
+            key={index}
+            className="flex items-center gap-2 px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full"
+          >
+            <span className="text-sm" style={{ color: 'var(--text-primary)' }}>{skill.name}</span>
+            <button
+              onClick={() => onRemoveSkill(skill.name)}
+              className="text-red-500 hover:text-red-700"
+            >
+              <Trash2 className="h-3 w-3" />
+            </button>
+          </div>
+        ))}
+        {(!skills || skills.length === 0) && (
+          <p style={{ color: 'var(--text-secondary)' }}>No skills added yet</p>
+        )}
+      </div>
+    </div>
+  );
+};
+
+  const renderSkillsSection = () => {
+    return (
+      <SkillsSection 
+        skills={state.resume.skills}
+        onAddSkill={addSkill}
+        onRemoveSkill={removeSkill}
+      />
     );
   };
 
@@ -524,7 +533,7 @@ export default function ResumeBuilderPage() {
           <div className="text-center py-16">
             <FileText className="h-16 w-16 mx-auto mb-4" style={{ color: 'var(--text-muted)' }} />
             <p style={{ color: 'var(--text-secondary)' }}>
-              Section "{state.activeSection}" is under development
+              Section &quot;{state.activeSection}&quot; is under development
             </p>
           </div>
         );
@@ -575,7 +584,7 @@ export default function ResumeBuilderPage() {
               return (
                 <button
                   key={section.id}
-                  onClick={() => setState(prev => ({ ...prev, activeSection: section.id as any }))}
+                  onClick={() => setState(prev => ({ ...prev, activeSection: section.id as 'template' | 'personal' | 'experience' | 'education' | 'skills' | 'certifications' | 'projects' | 'languages' | 'preview' }))}
                   className={`w-full text-left p-3 rounded-lg transition-colors flex items-center gap-3 ${
                     isActive
                       ? 'bg-brand-primary text-white'

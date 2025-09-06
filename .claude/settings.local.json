@@ -30,7 +30,12 @@
       "Bash(pip install:*)",
       "Bash(curl:*)",
       "Bash(git reset:*)",
-      "Read(//c/Users/mksan/OneDrive/ドキュメント/projects/**)"
+      "Read(//c/Users/mksan/OneDrive/ドキュメント/projects/**)",
+      "Bash(npm run lint)",
+      "Bash(timeout 30s npm run dev)",
+      "Bash(npm run type-check:*)",
+      "Bash(npm run:*)",
+      "Bash(timeout 10s npm run dev)"
     ],
     "deny": [],
     "ask": []

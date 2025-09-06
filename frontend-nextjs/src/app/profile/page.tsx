@@ -15,15 +15,12 @@ import {
   Globe, 
   Linkedin, 
   Github,
-  Calendar,
   Award,
   Briefcase,
   GraduationCap,
-  Users,
   Star,
   ExternalLink,
-  Camera,
-  Upload
+  Camera
 } from 'lucide-react';
 
 interface ProfileData {
@@ -79,107 +76,108 @@ interface ProfileData {
   };
 }
 
+// Mock profile data - moved outside component to prevent re-creation
+const createMockProfile = (user: { id?: string | number; role?: string; email?: string; full_name?: string }): ProfileData => ({
+  personal_info: {
+    full_name: user?.full_name || 'John Doe',
+    email: user?.email || 'john.doe@example.com',
+    phone: '+1 (555) 123-4567',
+    location: 'San Francisco, CA',
+    bio: 'Passionate full-stack developer with 5+ years of experience building scalable web applications. Expertise in React, Node.js, and cloud technologies. Always eager to learn new technologies and solve complex problems.',
+    website: 'johndoe.dev',
+    linkedin: 'linkedin.com/in/johndoe',
+    github: 'github.com/johndoe'
+  },
+  professional_info: {
+    current_title: 'Senior Frontend Developer',
+    current_company: 'TechCorp Inc.',
+    experience_years: 5,
+    industry: 'Technology',
+    specializations: ['Frontend Development', 'React', 'TypeScript', 'Node.js', 'AWS']
+  },
+  education: [
+    {
+      institution: 'University of California, Berkeley',
+      degree: 'Bachelor of Science',
+      field: 'Computer Science',
+      year: '2020',
+      gpa: '3.8'
+    },
+    {
+      institution: 'Stanford University',
+      degree: 'Certificate',
+      field: 'Machine Learning',
+      year: '2022'
+    }
+  ],
+  experience: [
+    {
+      company: 'TechCorp Inc.',
+      position: 'Senior Frontend Developer',
+      duration: '2022 - Present',
+      description: 'Lead frontend development for React-based applications, mentor junior developers, and improved application performance by 40%.',
+      current: true
+    },
+    {
+      company: 'StartupCo',
+      position: 'Frontend Developer',
+      duration: '2020 - 2022',
+      description: 'Developed responsive web applications using React, Redux, and modern CSS frameworks.',
+      current: false
+    }
+  ],
+  skills: {
+    technical: ['React', 'TypeScript', 'JavaScript', 'Node.js', 'Python', 'AWS', 'Docker', 'GraphQL', 'PostgreSQL'],
+    soft: ['Leadership', 'Problem Solving', 'Communication', 'Team Collaboration', 'Project Management'],
+    languages: [
+      { name: 'English', proficiency: 'Native' },
+      { name: 'Spanish', proficiency: 'Intermediate' },
+      { name: 'French', proficiency: 'Beginner' }
+    ]
+  },
+  achievements: [
+    {
+      title: 'AWS Certified Developer',
+      description: 'Amazon Web Services certification for cloud development',
+      date: '2023-06',
+      type: 'certification'
+    },
+    {
+      title: 'Best Innovation Award',
+      description: 'Awarded for developing the real-time collaboration feature',
+      date: '2023-03',
+      type: 'award'
+    },
+    {
+      title: 'Open Source Project: React Components Library',
+      description: 'Created and maintain a popular React components library with 2k+ stars',
+      date: '2022-12',
+      type: 'project'
+    }
+  ],
+  stats: {
+    profile_views: 234,
+    connections: 89,
+    endorsements: 42,
+    applications_sent: 15,
+    interviews_completed: 8
+  }
+});
+
 export default function ProfilePage() {
   const { user } = useAuth();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
 
-  // Mock profile data
-  const mockProfile: ProfileData = {
-    personal_info: {
-      full_name: user?.full_name || 'John Doe',
-      email: user?.email || 'john.doe@example.com',
-      phone: '+1 (555) 123-4567',
-      location: 'San Francisco, CA',
-      bio: 'Passionate full-stack developer with 5+ years of experience building scalable web applications. Expertise in React, Node.js, and cloud technologies. Always eager to learn new technologies and solve complex problems.',
-      website: 'johndoe.dev',
-      linkedin: 'linkedin.com/in/johndoe',
-      github: 'github.com/johndoe'
-    },
-    professional_info: {
-      current_title: 'Senior Frontend Developer',
-      current_company: 'TechCorp Inc.',
-      experience_years: 5,
-      industry: 'Technology',
-      specializations: ['Frontend Development', 'React', 'TypeScript', 'Node.js', 'AWS']
-    },
-    education: [
-      {
-        institution: 'University of California, Berkeley',
-        degree: 'Bachelor of Science',
-        field: 'Computer Science',
-        year: '2020',
-        gpa: '3.8'
-      },
-      {
-        institution: 'Stanford University',
-        degree: 'Certificate',
-        field: 'Machine Learning',
-        year: '2022'
-      }
-    ],
-    experience: [
-      {
-        company: 'TechCorp Inc.',
-        position: 'Senior Frontend Developer',
-        duration: '2022 - Present',
-        description: 'Lead frontend development for React-based applications, mentor junior developers, and improved application performance by 40%.',
-        current: true
-      },
-      {
-        company: 'StartupCo',
-        position: 'Frontend Developer',
-        duration: '2020 - 2022',
-        description: 'Developed responsive web applications using React, Redux, and modern CSS frameworks.',
-        current: false
-      }
-    ],
-    skills: {
-      technical: ['React', 'TypeScript', 'JavaScript', 'Node.js', 'Python', 'AWS', 'Docker', 'GraphQL', 'PostgreSQL'],
-      soft: ['Leadership', 'Problem Solving', 'Communication', 'Team Collaboration', 'Project Management'],
-      languages: [
-        { name: 'English', proficiency: 'Native' },
-        { name: 'Spanish', proficiency: 'Intermediate' },
-        { name: 'French', proficiency: 'Beginner' }
-      ]
-    },
-    achievements: [
-      {
-        title: 'AWS Certified Developer',
-        description: 'Amazon Web Services certification for cloud development',
-        date: '2023-06',
-        type: 'certification'
-      },
-      {
-        title: 'Best Innovation Award',
-        description: 'Awarded for developing the real-time collaboration feature',
-        date: '2023-03',
-        type: 'award'
-      },
-      {
-        title: 'Open Source Project: React Components Library',
-        description: 'Created and maintain a popular React components library with 2k+ stars',
-        date: '2022-12',
-        type: 'project'
-      }
-    ],
-    stats: {
-      profile_views: 234,
-      connections: 89,
-      endorsements: 42,
-      applications_sent: 15,
-      interviews_completed: 8
-    }
-  };
-
   useEffect(() => {
     // Simulate loading profile data
+    const mockProfile = createMockProfile(user || {});
     setTimeout(() => {
       setProfile(mockProfile);
       setLoading(false);
     }, 1000);
-  }, []);
+  }, [user]);
 
   const getAchievementIcon = (type: string) => {
     switch (type) {

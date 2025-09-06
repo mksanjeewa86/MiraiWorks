@@ -42,7 +42,7 @@ export default function LoginForm({ onSuccess, onForgotPassword }: LoginFormProp
     try {
       await login(data);
       onSuccess?.();
-    } catch (err) {
+    } catch {
       // Error is handled by the auth context
     } finally {
       setIsSubmitting(false);

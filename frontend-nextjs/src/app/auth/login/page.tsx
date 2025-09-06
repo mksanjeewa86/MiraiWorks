@@ -29,7 +29,7 @@ export default function LoginPage() {
     try {
       await login({ email, password });
       router.push('/dashboard');
-    } catch (err) {
+    } catch {
       // Error is handled by AuthContext
     } finally {
       setLoading(false);
@@ -147,7 +147,7 @@ export default function LoginPage() {
           {/* Sign Up Link */}
           <div className="mt-6 text-center">
             <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <Link
                 href="/auth/register"
                 className="font-medium text-brand-primary hover:text-brand-primary-dark"

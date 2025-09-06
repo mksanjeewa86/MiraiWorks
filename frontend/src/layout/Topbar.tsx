@@ -1,7 +1,7 @@
 import { Bell, Settings, User, LogOut, Sun, Moon, Menu } from 'lucide-react'
-import { useState, useContext } from 'react'
+import { useState } from 'react'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
-import { AuthContext } from '../contexts/AuthContext'
+import { useAuth } from '../contexts/AuthContext'
 import Brand from '../components/common/Brand'
 import SearchInput from '../components/common/SearchInput'
 
@@ -12,7 +12,7 @@ interface TopbarProps {
 }
 
 export default function Topbar({ onMenuClick, onThemeToggle, isDark }: TopbarProps) {
-  const { user, logout } = useContext(AuthContext)
+  const { user, logout } = useAuth()
   const [notifications] = useState([
     { id: 1, title: 'New interview scheduled', type: 'interview', unread: true },
     { id: 2, title: 'Application update', type: 'application', unread: true },

@@ -25,7 +25,7 @@ export const authApi = {
     }
     
     const data = await response.json();
-    return { data };
+    return { data, success: true };
   },
 
   register: async (registerData: RegisterData): Promise<ApiResponse<AuthResponse>> => {
@@ -43,7 +43,7 @@ export const authApi = {
     }
     
     const data = await response.json();
-    return { data };
+    return { data, success: true };
   },
 
   me: async (token: string): Promise<ApiResponse<User>> => {
@@ -60,7 +60,7 @@ export const authApi = {
     }
     
     const data = await response.json();
-    return { data };
+    return { data, success: true };
   },
 
   refreshToken: async (refreshToken: string): Promise<ApiResponse<AuthResponse>> => {
@@ -78,7 +78,7 @@ export const authApi = {
     }
     
     const data = await response.json();
-    return { data };
+    return { data, success: true };
   },
 
   verifyTwoFactor: async (data: { code: string }): Promise<ApiResponse<AuthResponse>> => {
@@ -96,7 +96,7 @@ export const authApi = {
     }
     
     const responseData = await response.json();
-    return { data: responseData };
+    return { data: responseData, success: true };
   },
 
   logout: async (token: string): Promise<void> => {

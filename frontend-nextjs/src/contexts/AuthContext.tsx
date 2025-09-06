@@ -124,11 +124,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               expires_in: 3600, // Will be updated on refresh
             },
           });
-        } catch (error) {
+        } catch {
           // Token might be expired, try to refresh
           try {
             await refreshAuth();
-          } catch (refreshError) {
+          } catch {
             // Both tokens invalid, clear auth
             localStorage.removeItem('accessToken');
             localStorage.removeItem('refreshToken');
@@ -153,8 +153,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('refreshToken', response.data!.refresh_token);
       
       dispatch({ type: 'AUTH_SUCCESS', payload: response.data! });
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Login failed';
+    } catch (error: unknown) {
+      const errorMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Login failed';
       dispatch({ type: 'AUTH_ERROR', payload: errorMessage });
       throw error;
     }
@@ -170,8 +170,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('refreshToken', response.data!.refresh_token);
       
       dispatch({ type: 'AUTH_SUCCESS', payload: response.data! });
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Registration failed';
+    } catch (error: unknown) {
+      const errorMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Registration failed';
       dispatch({ type: 'AUTH_ERROR', payload: errorMessage });
       throw error;
     }
@@ -187,8 +187,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('refreshToken', response.data!.refresh_token);
       
       dispatch({ type: 'AUTH_SUCCESS', payload: response.data! });
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || '2FA verification failed';
+    } catch (error: unknown) {
+      const errorMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || '2FA verification failed';
       dispatch({ type: 'AUTH_ERROR', payload: errorMessage });
       throw error;
     }
@@ -226,7 +226,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     // Call logout API if token exists
     if (state.accessToken) {
-      authApi.logout().catch(() => {
+      authApi.logout(state.accessToken).catch(() => {
         // Ignore errors on logout
       });
     }

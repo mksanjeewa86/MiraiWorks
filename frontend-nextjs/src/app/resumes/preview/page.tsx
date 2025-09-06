@@ -11,7 +11,6 @@ import {
   Download, 
   Edit, 
   Share, 
-  Eye,
   Mail,
   Phone,
   MapPin,
@@ -21,116 +20,244 @@ import {
   Calendar,
   Building
 } from 'lucide-react';
-import type { Resume } from '@/types';
+import type { Resume, User } from '@/types';
+
+// Mock resume data for preview - moved outside component to prevent re-creation
+const createMockResume = (user: User | null): Resume => ({
+  id: 1,
+  title: 'Senior Frontend Developer Resume',
+  description: 'Comprehensive resume for senior frontend positions with React and TypeScript experience',
+  user_id: user?.id || 1,
+  template_id: 'modern',
+  theme_color: '#3b82f6',
+  font_family: 'Inter',
+  status: 'published',
+  visibility: 'private',
+  slug: 'senior-frontend-developer-preview',
+  share_token: 'preview123',
+  view_count: 156,
+  download_count: 23,
+  full_name: 'John Doe',
+  email: 'john.doe@example.com',
+  phone: '+1 (555) 123-4567',
+  location: 'San Francisco, CA',
+  linkedin_url: 'https://linkedin.com/in/johndoe',
+  website: 'https://johndoe.dev',
+  github_url: 'https://github.com/johndoe',
+  professional_summary: 'Senior Frontend Developer with 5+ years of experience building scalable web applications using React, TypeScript, and modern development practices.',
+  experiences: [
+    {
+      id: 1,
+      resumeId: 1,
+      companyName: 'TechCorp Inc.',
+      positionTitle: 'Senior Frontend Developer',
+      startDate: '2022-01-01',
+      endDate: undefined,
+      isCurrent: true,
+      description: 'Led development of React-based applications with TypeScript, mentored junior developers, and improved application performance by 40%. Collaborated with cross-functional teams to deliver high-quality user experiences.',
+      location: 'San Francisco, CA',
+      achievements: ['Improved app performance by 40%', 'Mentored 5 junior developers', 'Led migration to TypeScript'],
+      technologies: ['React', 'TypeScript', 'Node.js', 'AWS'],
+      isVisible: true,
+      displayOrder: 1,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 2,
+      resumeId: 1,
+      companyName: 'StartupCo',
+      positionTitle: 'Frontend Developer',
+      startDate: '2020-03-01',
+      endDate: '2021-12-31',
+      isCurrent: false,
+      description: 'Developed responsive web applications using React, Redux, and modern CSS frameworks. Implemented component libraries and design systems that reduced development time by 30%.',
+      location: 'Remote',
+      achievements: ['Reduced development time by 30%', 'Built component library', 'Implemented design system'],
+      technologies: ['React', 'Redux', 'CSS3', 'JavaScript'],
+      isVisible: true,
+      displayOrder: 2,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 3,
+      resumeId: 1,
+      companyName: 'WebAgency',
+      positionTitle: 'Junior Developer',
+      startDate: '2019-06-01',
+      endDate: '2020-02-28',
+      isCurrent: false,
+      description: 'Built client websites using HTML, CSS, JavaScript, and WordPress. Gained experience with modern development workflows and agile methodologies.',
+      location: 'New York, NY',
+      achievements: ['Delivered 10+ client projects', 'Learned agile methodologies', 'Gained web development foundation'],
+      technologies: ['HTML', 'CSS', 'JavaScript', 'WordPress'],
+      isVisible: true,
+      displayOrder: 3,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+  ],
+  educations: [
+    {
+      id: 1,
+      resumeId: 1,
+      institutionName: 'University of California, Berkeley',
+      degree: 'Bachelor of Science in Computer Science',
+      fieldOfStudy: 'Computer Science',
+      startDate: '2016-09-01',
+      endDate: '2020-05-31',
+      isCurrent: false,
+      gpa: '3.8',
+      location: 'Berkeley, CA',
+      description: 'Focused on software engineering, algorithms, and data structures.',
+      courses: ['Data Structures', 'Algorithms', 'Software Engineering', 'Database Systems', 'Computer Networks'],
+      isVisible: true,
+      displayOrder: 1,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+  ],
+  skills: [
+    { id: 1, resumeId: 1, name: 'React', category: 'Frontend', proficiencyLevel: 5, proficiencyLabel: 'Expert', isVisible: true, displayOrder: 1, createdAt: new Date().toISOString() },
+    { id: 2, resumeId: 1, name: 'TypeScript', category: 'Programming Languages', proficiencyLevel: 5, proficiencyLabel: 'Expert', isVisible: true, displayOrder: 2, createdAt: new Date().toISOString() },
+    { id: 3, resumeId: 1, name: 'JavaScript', category: 'Programming Languages', proficiencyLevel: 5, proficiencyLabel: 'Expert', isVisible: true, displayOrder: 3, createdAt: new Date().toISOString() },
+    { id: 4, resumeId: 1, name: 'Node.js', category: 'Backend', proficiencyLevel: 4, proficiencyLabel: 'Advanced', isVisible: true, displayOrder: 4, createdAt: new Date().toISOString() },
+    { id: 5, resumeId: 1, name: 'Python', category: 'Programming Languages', proficiencyLevel: 3, proficiencyLabel: 'Intermediate', isVisible: true, displayOrder: 5, createdAt: new Date().toISOString() },
+    { id: 6, resumeId: 1, name: 'AWS', category: 'Cloud', proficiencyLevel: 4, proficiencyLabel: 'Advanced', isVisible: true, displayOrder: 6, createdAt: new Date().toISOString() },
+    { id: 7, resumeId: 1, name: 'Docker', category: 'DevOps', proficiencyLevel: 3, proficiencyLabel: 'Intermediate', isVisible: true, displayOrder: 7, createdAt: new Date().toISOString() },
+    { id: 8, resumeId: 1, name: 'GraphQL', category: 'APIs', proficiencyLevel: 4, proficiencyLabel: 'Advanced', isVisible: true, displayOrder: 8, createdAt: new Date().toISOString() },
+    { id: 9, resumeId: 1, name: 'Redux', category: 'State Management', proficiencyLevel: 4, proficiencyLabel: 'Advanced', isVisible: true, displayOrder: 9, createdAt: new Date().toISOString() },
+    { id: 10, resumeId: 1, name: 'Next.js', category: 'Frontend', proficiencyLevel: 4, proficiencyLabel: 'Advanced', isVisible: true, displayOrder: 10, createdAt: new Date().toISOString() },
+    { id: 11, resumeId: 1, name: 'Tailwind CSS', category: 'CSS', proficiencyLevel: 4, proficiencyLabel: 'Advanced', isVisible: true, displayOrder: 11, createdAt: new Date().toISOString() },
+    { id: 12, resumeId: 1, name: 'Git', category: 'Version Control', proficiencyLevel: 5, proficiencyLabel: 'Expert', isVisible: true, displayOrder: 12, createdAt: new Date().toISOString() },
+    { id: 13, resumeId: 1, name: 'Jest', category: 'Testing', proficiencyLevel: 4, proficiencyLabel: 'Advanced', isVisible: true, displayOrder: 13, createdAt: new Date().toISOString() },
+    { id: 14, resumeId: 1, name: 'Cypress', category: 'Testing', proficiencyLevel: 3, proficiencyLabel: 'Intermediate', isVisible: true, displayOrder: 14, createdAt: new Date().toISOString() },
+    { id: 15, resumeId: 1, name: 'Webpack', category: 'Build Tools', proficiencyLevel: 3, proficiencyLabel: 'Intermediate', isVisible: true, displayOrder: 15, createdAt: new Date().toISOString() },
+    { id: 16, resumeId: 1, name: 'MongoDB', category: 'Database', proficiencyLevel: 3, proficiencyLabel: 'Intermediate', isVisible: true, displayOrder: 16, createdAt: new Date().toISOString() },
+    { id: 17, resumeId: 1, name: 'PostgreSQL', category: 'Database', proficiencyLevel: 4, proficiencyLabel: 'Advanced', isVisible: true, displayOrder: 17, createdAt: new Date().toISOString() }
+  ],
+  certifications: [
+    {
+      id: 1,
+      resumeId: 1,
+      name: 'AWS Certified Developer - Associate',
+      issuingOrganization: 'Amazon Web Services',
+      credentialId: 'AWS-12345',
+      credentialUrl: 'https://aws.amazon.com/certification/',
+      issueDate: '2023-06-01',
+      expirationDate: '2026-06-01',
+      doesNotExpire: false,
+      description: 'Validates technical expertise in developing and maintaining applications on the AWS platform.',
+      isVisible: true,
+      displayOrder: 1,
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 2,
+      resumeId: 1,
+      name: 'React Developer Certification',
+      issuingOrganization: 'Meta',
+      credentialId: 'META-67890',
+      credentialUrl: 'https://developers.facebook.com/certificate/',
+      issueDate: '2022-11-01',
+      expirationDate: undefined,
+      doesNotExpire: true,
+      description: 'Professional certification for React development skills and best practices.',
+      isVisible: true,
+      displayOrder: 2,
+      createdAt: new Date().toISOString()
+    }
+  ],
+  projects: [
+    {
+      id: 1,
+      resumeId: 1,
+      name: 'E-commerce Platform',
+      description: 'Built a full-stack e-commerce platform using React, Node.js, and PostgreSQL with features like payment processing, inventory management, and real-time notifications.',
+      projectUrl: 'https://ecommerce-demo.johndoe.dev',
+      githubUrl: 'https://github.com/johndoe/ecommerce',
+      demoUrl: 'https://ecommerce-demo.johndoe.dev',
+      startDate: '2023-01-01',
+      endDate: '2023-08-31',
+      isOngoing: false,
+      technologies: ['React', 'Node.js', 'PostgreSQL', 'Stripe', 'Socket.io'],
+      role: 'Full-Stack Developer',
+      isVisible: true,
+      displayOrder: 1,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 2,
+      resumeId: 1,
+      name: 'Task Management App',
+      description: 'Developed a collaborative task management application with real-time updates, drag-and-drop functionality, and team collaboration features.',
+      projectUrl: 'https://taskapp.dev',
+      githubUrl: 'https://github.com/johndoe/taskapp',
+      demoUrl: 'https://taskapp-demo.dev',
+      startDate: '2022-09-01',
+      endDate: '2022-12-31',
+      isOngoing: false,
+      technologies: ['React', 'TypeScript', 'MongoDB', 'Express', 'Socket.io'],
+      role: 'Frontend Developer',
+      isVisible: true,
+      displayOrder: 2,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+  ],
+  languages: [
+    {
+      id: 1,
+      resumeId: 1,
+      name: 'English',
+      proficiency: 'native',
+      isVisible: true,
+      displayOrder: 1,
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 2,
+      resumeId: 1,
+      name: 'Spanish',
+      proficiency: 'intermediate',
+      isVisible: true,
+      displayOrder: 2,
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 3,
+      resumeId: 1,
+      name: 'French',
+      proficiency: 'beginner',
+      isVisible: true,
+      displayOrder: 3,
+      createdAt: new Date().toISOString()
+    }
+  ],
+  sections: [],
+  references: [],
+  is_primary: true,
+  is_public: false,
+  last_viewed_at: new Date().toISOString(),
+  created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+  updated_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+});
 
 export default function ResumePreviewPage() {
   const { user } = useAuth();
   const [resume, setResume] = useState<Resume | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Mock resume data for preview
-  const mockResume: Resume = {
-    id: '1',
-    title: 'Senior Frontend Developer Resume',
-    description: 'Comprehensive resume for senior frontend positions with React and TypeScript experience',
-    template_id: 'modern',
-    personal_info: {
-      full_name: 'John Doe',
-      email: 'john.doe@example.com',
-      phone: '+1 (555) 123-4567',
-      address: 'San Francisco, CA',
-      linkedin: 'linkedin.com/in/johndoe',
-      website: 'johndoe.dev',
-      github: 'github.com/johndoe'
-    },
-    experience: [
-      {
-        company: 'TechCorp Inc.',
-        position: 'Senior Frontend Developer',
-        start_date: '2022-01',
-        end_date: null,
-        description: 'Led development of React-based applications with TypeScript, mentored junior developers, and improved application performance by 40%. Collaborated with cross-functional teams to deliver high-quality user experiences.',
-        location: 'San Francisco, CA'
-      },
-      {
-        company: 'StartupCo',
-        position: 'Frontend Developer',
-        start_date: '2020-03',
-        end_date: '2021-12',
-        description: 'Developed responsive web applications using React, Redux, and modern CSS frameworks. Implemented component libraries and design systems that reduced development time by 30%.',
-        location: 'Remote'
-      },
-      {
-        company: 'WebAgency',
-        position: 'Junior Developer',
-        start_date: '2019-06',
-        end_date: '2020-02',
-        description: 'Built client websites using HTML, CSS, JavaScript, and WordPress. Gained experience with modern development workflows and agile methodologies.',
-        location: 'New York, NY'
-      }
-    ],
-    education: [
-      {
-        institution: 'University of California, Berkeley',
-        degree: 'Bachelor of Science in Computer Science',
-        start_date: '2016-09',
-        end_date: '2020-05',
-        gpa: '3.8',
-        location: 'Berkeley, CA'
-      }
-    ],
-    skills: [
-      'React', 'TypeScript', 'JavaScript', 'Node.js', 'Python', 'AWS', 
-      'Docker', 'GraphQL', 'Redux', 'Next.js', 'Tailwind CSS', 'Git',
-      'Jest', 'Cypress', 'Webpack', 'MongoDB', 'PostgreSQL'
-    ],
-    certifications: [
-      {
-        name: 'AWS Certified Developer - Associate',
-        issuer: 'Amazon Web Services',
-        date: '2023-06',
-        credential_id: 'AWS-12345'
-      },
-      {
-        name: 'React Developer Certification',
-        issuer: 'Meta',
-        date: '2022-11',
-        credential_id: 'META-67890'
-      }
-    ],
-    projects: [
-      {
-        name: 'E-commerce Platform',
-        description: 'Built a full-stack e-commerce platform using React, Node.js, and PostgreSQL with features like payment processing, inventory management, and real-time notifications.',
-        technologies: ['React', 'Node.js', 'PostgreSQL', 'Stripe', 'Socket.io'],
-        url: 'https://github.com/johndoe/ecommerce'
-      },
-      {
-        name: 'Task Management App',
-        description: 'Developed a collaborative task management application with real-time updates, drag-and-drop functionality, and team collaboration features.',
-        technologies: ['React', 'TypeScript', 'MongoDB', 'Express', 'Socket.io'],
-        url: 'https://taskapp.dev'
-      }
-    ],
-    languages: [
-      { name: 'English', proficiency: 'native' },
-      { name: 'Spanish', proficiency: 'intermediate' },
-      { name: 'French', proficiency: 'beginner' }
-    ],
-    is_primary: true,
-    is_public: false,
-    created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-    updated_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    user_id: user?.id || '1'
-  };
-
   useEffect(() => {
     // Simulate loading resume data
+    const mockResume = createMockResume(user);
     setTimeout(() => {
       setResume(mockResume);
       setLoading(false);
     }, 1000);
-  }, []);
+  }, [user]);
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'Present';
@@ -223,51 +350,51 @@ export default function ResumePreviewPage() {
             {/* Personal Information Header */}
             <div className="border-b border-gray-200 pb-6 mb-8">
               <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                {resume.personal_info.full_name}
+                {resume.full_name}
               </h1>
               
               <div className="flex flex-wrap items-center gap-4 text-gray-600">
-                {resume.personal_info.email && (
+                {resume.email && (
                   <div className="flex items-center gap-1">
                     <Mail className="h-4 w-4" />
-                    <span>{resume.personal_info.email}</span>
+                    <span>{resume.email}</span>
                   </div>
                 )}
-                {resume.personal_info.phone && (
+                {resume.phone && (
                   <div className="flex items-center gap-1">
                     <Phone className="h-4 w-4" />
-                    <span>{resume.personal_info.phone}</span>
+                    <span>{resume.phone}</span>
                   </div>
                 )}
-                {resume.personal_info.address && (
+                {resume.location && (
                   <div className="flex items-center gap-1">
                     <MapPin className="h-4 w-4" />
-                    <span>{resume.personal_info.address}</span>
+                    <span>{resume.location}</span>
                   </div>
                 )}
               </div>
 
               <div className="flex flex-wrap items-center gap-4 mt-2 text-gray-600">
-                {resume.personal_info.website && (
+                {resume.website && (
                   <div className="flex items-center gap-1">
                     <Globe className="h-4 w-4" />
-                    <a href={`https://${resume.personal_info.website}`} className="hover:underline">
-                      {resume.personal_info.website}
+                    <a href={resume.website} className="hover:underline">
+                      {resume.website.replace('https://', '').replace('http://', '')}
                     </a>
                   </div>
                 )}
-                {resume.personal_info.linkedin && (
+                {resume.linkedin_url && (
                   <div className="flex items-center gap-1">
                     <Linkedin className="h-4 w-4" />
-                    <a href={`https://${resume.personal_info.linkedin}`} className="hover:underline">
+                    <a href={resume.linkedin_url} className="hover:underline">
                       LinkedIn
                     </a>
                   </div>
                 )}
-                {resume.personal_info.github && (
+                {resume.github_url && (
                   <div className="flex items-center gap-1">
                     <Github className="h-4 w-4" />
-                    <a href={`https://${resume.personal_info.github}`} className="hover:underline">
+                    <a href={resume.github_url} className="hover:underline">
                       GitHub
                     </a>
                   </div>
@@ -276,25 +403,25 @@ export default function ResumePreviewPage() {
             </div>
 
             {/* Experience Section */}
-            {resume.experience && resume.experience.length > 0 && (
+            {resume.experiences && resume.experiences.length > 0 && (
               <div className="mb-8">
                 <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                   <Building className="h-6 w-6" />
                   Work Experience
                 </h2>
                 <div className="space-y-6">
-                  {resume.experience.map((exp, index) => (
+                  {resume.experiences.map((exp, index) => (
                     <div key={index} className="border-l-2 border-blue-500 pl-6 relative">
                       <div className="absolute -left-2 top-0 w-4 h-4 bg-blue-500 rounded-full"></div>
                       <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
                         <div>
-                          <h3 className="text-xl font-semibold text-gray-900">{exp.position}</h3>
-                          <p className="text-lg text-blue-600 font-medium">{exp.company}</p>
+                          <h3 className="text-xl font-semibold text-gray-900">{exp.positionTitle}</h3>
+                          <p className="text-lg text-blue-600 font-medium">{exp.companyName}</p>
                         </div>
                         <div className="text-right text-gray-600">
                           <div className="flex items-center gap-1">
                             <Calendar className="h-4 w-4" />
-                            <span>{formatDate(exp.start_date)} - {formatDate(exp.end_date)}</span>
+                            <span>{formatDate(exp.startDate)} - {formatDate(exp.endDate || null)}</span>
                           </div>
                           {exp.location && (
                             <div className="flex items-center gap-1 mt-1">
@@ -312,19 +439,19 @@ export default function ResumePreviewPage() {
             )}
 
             {/* Education Section */}
-            {resume.education && resume.education.length > 0 && (
+            {resume.educations && resume.educations.length > 0 && (
               <div className="mb-8">
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">Education</h2>
                 <div className="space-y-4">
-                  {resume.education.map((edu, index) => (
+                  {resume.educations.map((edu, index) => (
                     <div key={index} className="flex flex-wrap items-start justify-between gap-2">
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900">{edu.degree}</h3>
-                        <p className="text-blue-600 font-medium">{edu.institution}</p>
+                        <p className="text-blue-600 font-medium">{edu.institutionName}</p>
                         {edu.location && <p className="text-gray-600">{edu.location}</p>}
                       </div>
                       <div className="text-right text-gray-600">
-                        <p>{formatDate(edu.start_date)} - {formatDate(edu.end_date)}</p>
+                        <p>{formatDate(edu.startDate)} - {formatDate(edu.endDate || null)}</p>
                         {edu.gpa && <p>GPA: {edu.gpa}</p>}
                       </div>
                     </div>
@@ -343,7 +470,7 @@ export default function ResumePreviewPage() {
                       key={index}
                       className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
                     >
-                      {skill}
+                      {skill.name}
                     </span>
                   ))}
                 </div>
@@ -359,9 +486,9 @@ export default function ResumePreviewPage() {
                     <div key={index}>
                       <div className="flex items-start justify-between gap-2 mb-2">
                         <h3 className="text-lg font-semibold text-gray-900">{project.name}</h3>
-                        {project.url && (
+                        {project.projectUrl && (
                           <a
-                            href={project.url}
+                            href={project.projectUrl}
                             className="text-blue-600 hover:underline text-sm"
                             target="_blank"
                             rel="noopener noreferrer"
@@ -396,12 +523,12 @@ export default function ResumePreviewPage() {
                     <div key={index} className="flex items-start justify-between gap-2">
                       <div>
                         <h3 className="font-semibold text-gray-900">{cert.name}</h3>
-                        <p className="text-blue-600">{cert.issuer}</p>
-                        {cert.credential_id && (
-                          <p className="text-sm text-gray-600">ID: {cert.credential_id}</p>
+                        <p className="text-blue-600">{cert.issuingOrganization}</p>
+                        {cert.credentialId && (
+                          <p className="text-sm text-gray-600">ID: {cert.credentialId}</p>
                         )}
                       </div>
-                      <p className="text-gray-600">{formatDate(cert.date)}</p>
+                      <p className="text-gray-600">{formatDate(cert.issueDate)}</p>
                     </div>
                   ))}
                 </div>

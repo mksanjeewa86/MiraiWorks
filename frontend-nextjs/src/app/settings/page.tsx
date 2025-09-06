@@ -19,8 +19,7 @@ import {
   Globe,
   Moon,
   Sun,
-  Monitor,
-  Lock
+  Monitor
 } from 'lucide-react';
 
 interface SettingsState {
@@ -547,7 +546,7 @@ export default function SettingsPage() {
               return (
                 <button
                   key={section.id}
-                  onClick={() => setState(prev => ({ ...prev, activeSection: section.id as any }))}
+                  onClick={() => setState(prev => ({ ...prev, activeSection: section.id as 'account' | 'security' | 'notifications' | 'preferences' }))}
                   className={`w-full text-left p-3 rounded-lg transition-colors flex items-center gap-3 ${
                     isActive
                       ? 'bg-brand-primary text-white'

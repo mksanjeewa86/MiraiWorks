@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { dashboardApi } from '@/services/api';
 import Card from '@/components/ui/Card';
-import Badge from '@/components/ui/Badge';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Button from '@/components/ui/Button';
 import type { DashboardStats } from '@/types';
@@ -27,8 +26,8 @@ export default function EmployerDashboard() {
       const response = await dashboardApi.getStats();
       setStats(response.data as EmployerStats);
       setError(null);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load dashboard data');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
     } finally {
       setLoading(false);
     }

@@ -21,6 +21,252 @@ interface MessagesPageState {
   searchQuery: string;
 }
 
+// Mock data for development - moved outside component to prevent re-creation
+const mockConversations: Conversation[] = [
+  {
+    id: 1,
+    title: 'Tech Interview Discussion',
+    is_group: false,
+    created_by: 1,
+    participants: [
+      { 
+        id: 1,
+        conversation_id: 1,
+        user_id: 2,
+        joined_at: '2024-01-15T10:30:00.000Z',
+        user: { 
+          id: 2, 
+          email: 'jane.smith@techcorp.com', 
+          first_name: 'Jane',
+          last_name: 'Smith',
+          full_name: 'Jane Smith',
+          phone: '+1-555-0123',
+          company_id: 1,
+          is_active: true,
+          is_admin: false,
+          require_2fa: false,
+          last_login: '2024-01-15T09:00:00.000Z',
+          created_at: '2023-12-01T10:00:00.000Z',
+          updated_at: '2024-01-15T09:00:00.000Z',
+          roles: [],
+          company: {
+            id: 1,
+            name: 'TechCorp',
+            domain: 'techcorp.com',
+            industry: 'Technology',
+            is_active: true,
+            created_at: '2023-11-01T10:00:00.000Z',
+            updated_at: '2023-12-01T10:00:00.000Z'
+          }
+        } as User
+      }
+    ],
+    last_message: {
+      id: 1,
+      content: 'Thanks for your interest in the Senior Developer position. Let\'s schedule a call to discuss further.',
+      sender_id: 2,
+      conversation_id: 1,
+      message_type: 'text',
+      is_read: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      sender: { 
+        id: 2, 
+        email: 'jane.smith@techcorp.com', 
+        first_name: 'Jane',
+        last_name: 'Smith',
+        full_name: 'Jane Smith',
+        phone: '+1-555-0123',
+        company_id: 1,
+        is_active: true,
+        is_admin: false,
+        require_2fa: false,
+        last_login: '2024-01-15T09:00:00.000Z',
+        created_at: '2023-12-01T10:00:00.000Z',
+        updated_at: '2024-01-15T09:00:00.000Z',
+        roles: [],
+        company: {
+          id: 1,
+          name: 'TechCorp',
+          domain: 'techcorp.com',
+          industry: 'Technology',
+          is_active: true,
+          created_at: '2023-11-01T10:00:00.000Z',
+          updated_at: '2023-12-01T10:00:00.000Z'
+        }
+      } as User
+    } as Message,
+    unread_count: 2,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 2,
+    title: 'Resume Feedback',
+    is_group: false,
+    created_by: 3,
+    participants: [
+      { 
+        id: 2,
+        conversation_id: 2,
+        user_id: 3,
+        joined_at: '2024-01-16T14:20:00.000Z',
+        user: { 
+          id: 3, 
+          email: 'mike.johnson@startupco.com', 
+          first_name: 'Mike',
+          last_name: 'Johnson',
+          full_name: 'Mike Johnson',
+          phone: '+1-555-0456',
+          company_id: 2,
+          is_active: true,
+          is_admin: false,
+          require_2fa: false,
+          last_login: '2024-01-16T13:30:00.000Z',
+          created_at: '2023-11-15T10:00:00.000Z',
+          updated_at: '2024-01-16T13:30:00.000Z',
+          roles: [],
+          company: {
+            id: 2,
+            name: 'StartupCo',
+            domain: 'startupco.com',
+            industry: 'Technology',
+            is_active: true,
+            created_at: '2023-10-15T10:00:00.000Z',
+            updated_at: '2023-11-15T10:00:00.000Z'
+          }
+        } as User
+      }
+    ],
+    last_message: {
+      id: 2,
+      content: 'Your resume looks great! I\'d like to move forward with an interview.',
+      sender_id: 3,
+      conversation_id: 2,
+      message_type: 'text',
+      is_read: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      sender: { 
+        id: 3, 
+        email: 'mike.johnson@startupco.com', 
+        first_name: 'Mike',
+        last_name: 'Johnson',
+        full_name: 'Mike Johnson',
+        phone: '+1-555-0456',
+        company_id: 2,
+        is_active: true,
+        is_admin: false,
+        require_2fa: false,
+        last_login: '2024-01-16T13:30:00.000Z',
+        created_at: '2023-11-15T10:00:00.000Z',
+        updated_at: '2024-01-16T13:30:00.000Z',
+        roles: [],
+        company: {
+          id: 2,
+          name: 'StartupCo',
+          domain: 'startupco.com',
+          industry: 'Technology',
+          is_active: true,
+          created_at: '2023-10-15T10:00:00.000Z',
+          updated_at: '2023-11-15T10:00:00.000Z'
+        }
+      } as User
+    } as Message,
+    unread_count: 0,
+    created_at: new Date().toISOString()
+  }
+];
+
+const createMockMessages = (user: User | null): Message[] => {
+  const mockCurrentUser: User = {
+    id: user?.id || 1,
+    email: 'current@example.com',
+    first_name: 'Current',
+    last_name: 'User',
+    full_name: 'Current User',
+    phone: '+1-555-0789',
+    company_id: 3,
+    is_active: true,
+    is_admin: false,
+    require_2fa: false,
+    last_login: new Date().toISOString(),
+    created_at: '2023-10-01T10:00:00.000Z',
+    updated_at: new Date().toISOString(),
+    roles: [],
+    company: {
+      id: 3,
+      name: 'Current Company',
+      domain: 'example.com',
+      industry: 'Technology',
+      is_active: true,
+      created_at: '2023-09-01T10:00:00.000Z',
+      updated_at: '2023-10-01T10:00:00.000Z'
+    }
+  };
+
+  const mockRecruiter: User = {
+    id: 2,
+    email: 'jane.smith@techcorp.com',
+    first_name: 'Jane',
+    last_name: 'Smith',
+    full_name: 'Jane Smith',
+    phone: '+1-555-0123',
+    company_id: 1,
+    is_active: true,
+    is_admin: false,
+    require_2fa: false,
+    last_login: '2024-01-15T09:00:00.000Z',
+    created_at: '2023-12-01T10:00:00.000Z',
+    updated_at: '2024-01-15T09:00:00.000Z',
+    roles: [],
+    company: {
+      id: 1,
+      name: 'TechCorp',
+      domain: 'techcorp.com',
+      industry: 'Technology',
+      is_active: true,
+      created_at: '2023-11-01T10:00:00.000Z',
+      updated_at: '2023-12-01T10:00:00.000Z'
+    }
+  };
+
+  return [
+    {
+      id: 1,
+      content: 'Hello! I saw your job posting for the Senior Developer role and I\'m very interested.',
+      sender_id: mockCurrentUser.id,
+      conversation_id: 1,
+      message_type: 'text',
+      is_read: true,
+      created_at: new Date(Date.now() - 3600000).toISOString(),
+      updated_at: new Date(Date.now() - 3600000).toISOString(),
+      sender: mockCurrentUser
+    } as Message,
+    {
+      id: 2,
+      content: 'Thanks for your interest in the Senior Developer position. Let\'s schedule a call to discuss further.',
+      sender_id: 2,
+      conversation_id: 1,
+      message_type: 'text',
+      is_read: true,
+      created_at: new Date(Date.now() - 1800000).toISOString(),
+      updated_at: new Date(Date.now() - 1800000).toISOString(),
+      sender: mockRecruiter
+    } as Message,
+    {
+      id: 3,
+      content: 'That sounds great! I\'m available for a call this week. What time works best for you?',
+      sender_id: mockCurrentUser.id,
+      conversation_id: 1,
+      message_type: 'text',
+      is_read: true,
+      created_at: new Date(Date.now() - 900000).toISOString(),
+      updated_at: new Date(Date.now() - 900000).toISOString(),
+      sender: mockCurrentUser
+    } as Message
+  ];
+};
+
 export default function MessagesPage() {
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -35,87 +281,6 @@ export default function MessagesPage() {
     newMessage: '',
     searchQuery: '',
   });
-
-  // Mock data for development
-  const mockConversations: Conversation[] = [
-    {
-      id: 1,
-      title: 'Tech Interview Discussion',
-      participants: [
-        { 
-          user: { 
-            id: 2, 
-            email: 'jane.smith@techcorp.com', 
-            full_name: 'Jane Smith',
-            role: 'recruiter' 
-          } as User
-        }
-      ],
-      last_message: {
-        id: 1,
-        content: 'Thanks for your interest in the Senior Developer position. Let\'s schedule a call to discuss further.',
-        sender_id: 2,
-        conversation_id: 1,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      },
-      unread_count: 2,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    {
-      id: 2,
-      title: 'Resume Feedback',
-      participants: [
-        { 
-          user: { 
-            id: 3, 
-            email: 'mike.johnson@startupco.com', 
-            full_name: 'Mike Johnson',
-            role: 'employer' 
-          } as User
-        }
-      ],
-      last_message: {
-        id: 2,
-        content: 'Your resume looks great! I\'d like to move forward with an interview.',
-        sender_id: 3,
-        conversation_id: 2,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      },
-      unread_count: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    }
-  ];
-
-  const mockMessages: Message[] = [
-    {
-      id: 1,
-      content: 'Hello! I saw your job posting for the Senior Developer role and I\'m very interested.',
-      sender_id: user?.id || 1,
-      conversation_id: 1,
-      created_at: new Date(Date.now() - 3600000).toISOString(),
-      updated_at: new Date(Date.now() - 3600000).toISOString()
-    },
-    {
-      id: 2,
-      content: 'Thanks for your interest in the Senior Developer position. Let\'s schedule a call to discuss further.',
-      sender_id: 2,
-      conversation_id: 1,
-      created_at: new Date(Date.now() - 1800000).toISOString(),
-      updated_at: new Date(Date.now() - 1800000).toISOString()
-    },
-    {
-      id: 3,
-      content: 'That sounds great! I\'m available for a call this week. What time works best for you?',
-      sender_id: user?.id || 1,
-      conversation_id: 1,
-      created_at: new Date(Date.now() - 900000).toISOString(),
-      updated_at: new Date(Date.now() - 900000).toISOString()
-    }
-  ];
 
   useEffect(() => {
     // Simulate API load
@@ -140,6 +305,7 @@ export default function MessagesPage() {
     setState(prev => ({ ...prev, activeConversationId: conversationId }));
     
     // Load messages for this conversation (mock)
+    const mockMessages = createMockMessages(user);
     const conversationMessages = mockMessages.filter(msg => msg.conversation_id === conversationId);
     setState(prev => ({ ...prev, messages: conversationMessages }));
   };
@@ -151,13 +317,42 @@ export default function MessagesPage() {
     setState(prev => ({ ...prev, sending: true }));
 
     // Mock sending message
+    const currentUserMock: User = {
+      id: user?.id || 1,
+      email: user?.email || 'current@example.com',
+      first_name: user?.first_name || 'Current',
+      last_name: user?.last_name || 'User',
+      full_name: user?.full_name || 'Current User',
+      phone: '+1-555-0789',
+      company_id: 3,
+      is_active: true,
+      is_admin: false,
+      require_2fa: false,
+      last_login: new Date().toISOString(),
+      created_at: '2023-10-01T10:00:00.000Z',
+      updated_at: new Date().toISOString(),
+      roles: [],
+      company: {
+        id: 3,
+        name: 'Current Company',
+        domain: 'example.com',
+        industry: 'Technology',
+        is_active: true,
+        created_at: '2023-09-01T10:00:00.000Z',
+        updated_at: '2023-10-01T10:00:00.000Z'
+      }
+    };
+
     const newMessage: Message = {
       id: Date.now(),
       content: state.newMessage.trim(),
       sender_id: user?.id || 1,
       conversation_id: state.activeConversationId!,
+      message_type: 'text',
+      is_read: false,
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
+      sender: currentUserMock
     };
 
     setTimeout(() => {

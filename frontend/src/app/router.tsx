@@ -1,6 +1,5 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
-import { useContext } from 'react'
-import { AuthContext } from '../contexts/AuthContext'
+import { useAuth } from '../contexts/AuthContext'
 import AppLayout from '../layout/AppLayout'
 import PublicLayout from '../layouts/PublicLayout'
 
@@ -45,9 +44,9 @@ function ProtectedRoute({
   children: React.ReactNode
   requiredRoles?: string[]
 }) {
-  const { isAuthenticated, user, loading } = useContext(AuthContext)
+  const { isAuthenticated, user, isLoading } = useAuth()
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2" style={{ borderColor: 'var(--brand-primary)' }}></div>
@@ -59,7 +58,7 @@ function ProtectedRoute({
     return <Navigate to="/login" replace />
   }
 
-  if (requiredRoles && user?.role && !requiredRoles.includes(user.role)) {
+  if (requiredRoles && user?.roles?.[0]?.role?.name && !requiredRoles.includes(user.roles[0].role.name)) {
     return <Navigate to="/unauthorized" replace />
   }
 
@@ -68,9 +67,9 @@ function ProtectedRoute({
 
 // Public Route Guard (redirect authenticated users)
 function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, loading } = useContext(AuthContext)
+  const { isAuthenticated, isLoading } = useAuth()
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2" style={{ borderColor: 'var(--brand-primary)' }}></div>
@@ -87,9 +86,9 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 
 // Dashboard Route Component
 function DashboardRoute() {
-  const { user } = useContext(AuthContext)
+  const { user } = useAuth()
 
-  switch (user?.role) {
+  switch (user?.roles?.[0]?.role?.name) {
     case 'candidate':
       return <CandidateDashboard />
     case 'recruiter':

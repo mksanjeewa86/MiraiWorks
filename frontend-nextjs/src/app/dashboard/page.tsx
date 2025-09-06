@@ -2,7 +2,6 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/layout/AppLayout';
-import CandidateOverview from '@/components/dashboard/CandidateOverview';
 import CandidateDashboard from '@/components/dashboard/CandidateDashboard';
 import RecruiterDashboard from '@/components/dashboard/RecruiterDashboard';
 import EmployerDashboard from '@/components/dashboard/EmployerDashboard';
@@ -32,7 +31,7 @@ export default function DashboardPage() {
   }
 
   const renderDashboard = () => {
-    switch (user?.role) {
+    switch (user?.roles?.[0]?.role?.name) {
       case 'candidate':
         return <CandidateDashboard />;
       case 'recruiter':

@@ -33,8 +33,8 @@ export default function CandidateDashboard() {
       const response = await dashboardApi.getStats();
       setStats(response.data as CandidateStats);
       setError(null);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load dashboard data');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
     } finally {
       setLoading(false);
     }
@@ -96,7 +96,7 @@ export default function CandidateDashboard() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>Candidate Dashboard</h1>
-        <p className="mt-1" style={{ color: 'var(--text-secondary)' }}>Welcome back, {user?.full_name}! Here's your career progress.</p>
+        <p className="mt-1" style={{ color: 'var(--text-secondary)' }}>Welcome back, {user?.full_name}! Here&apos;s your career progress.</p>
       </div>
 
       {/* Stats Overview */}
@@ -180,7 +180,7 @@ export default function CandidateDashboard() {
 
         {/* Progress Chart */}
         <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>This Month's Progress</h3>
+          <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>This Month&apos;s Progress</h3>
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <span style={{ color: 'var(--text-secondary)' }}>Applications Sent</span>
