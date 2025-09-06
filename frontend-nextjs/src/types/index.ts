@@ -55,6 +55,37 @@ export interface Company {
   updated_at: string;
 }
 
+// Job and Application Types
+export interface Job {
+  id: number;
+  title: string;
+  description: string;
+  company: string;
+  location: string;
+  salary: string;
+  type: string;
+  category: string;
+  requirements: string[];
+  postedDate: string;
+  featured: boolean;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface JobApplication {
+  id: number;
+  job_id: number;
+  user_id: number;
+  status: string;
+  cover_letter?: string;
+  resume_id?: number;
+  applied_at: string;
+  updated_at: string;
+  job: Job;
+  applicant: User;
+}
+
 // Authentication Types
 export interface LoginCredentials {
   email: string;

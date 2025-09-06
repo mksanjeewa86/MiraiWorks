@@ -1,108 +1,47 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import WebsiteLayout from '@/components/website/WebsiteLayout';
-
-interface Job {
-  id: string;
-  title: string;
-  company: string;
-  location: string;
-  type: 'full-time' | 'part-time' | 'contract' | 'remote';
-  salary: string;
-  description: string;
-  requirements: string[];
-  category: string;
-  postedDate: string;
-  featured: boolean;
-}
+import { jobsApi } from '@/services/api';
+import type { Job } from '@/types';
 
 export default function JobsPage() {
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedType, setSelectedType] = useState('all');
 
-  const mockJobs: Job[] = [
-    {
-      id: '1',
-      title: 'Senior Frontend Developer',
-      company: 'TechCorp Inc.',
-      location: 'San Francisco, CA',
-      type: 'full-time',
-      salary: '$120k - $180k',
-      description: 'We are looking for a Senior Frontend Developer to join our growing team. You will be responsible for building responsive web applications using React, TypeScript, and modern web technologies.',
-      requirements: ['5+ years React experience', 'TypeScript proficiency', 'Experience with Next.js', 'Knowledge of CSS frameworks'],
-      category: 'technology',
-      postedDate: '2025-01-05',
-      featured: true
-    },
-    {
-      id: '2',
-      title: 'Product Marketing Manager',
-      company: 'StartupCo',
-      location: 'New York, NY',
-      type: 'full-time',
-      salary: '$90k - $140k',
-      description: 'Join our marketing team as a Product Marketing Manager. You will develop go-to-market strategies and work closely with product and sales teams.',
-      requirements: ['3+ years marketing experience', 'Product marketing background', 'Strong communication skills', 'Analytics experience'],
-      category: 'marketing',
-      postedDate: '2025-01-04',
-      featured: false
-    },
-    {
-      id: '3',
-      title: 'DevOps Engineer',
-      company: 'CloudTech Solutions',
-      location: 'Remote',
-      type: 'remote',
-      salary: '$100k - $160k',
-      description: 'We need a DevOps Engineer to help us scale our cloud infrastructure. Experience with AWS, Docker, and Kubernetes required.',
-      requirements: ['AWS certification preferred', 'Docker & Kubernetes', 'CI/CD pipeline experience', 'Infrastructure as Code'],
-      category: 'technology',
-      postedDate: '2025-01-03',
-      featured: true
-    },
-    {
-      id: '4',
-      title: 'UX/UI Designer',
-      company: 'DesignStudio',
-      location: 'Los Angeles, CA',
-      type: 'full-time',
-      salary: '$80k - $120k',
-      description: 'Creative UX/UI Designer wanted to join our design team. You will work on user experience design for web and mobile applications.',
-      requirements: ['3+ years UX/UI experience', 'Figma proficiency', 'User research skills', 'Design system experience'],
-      category: 'design',
-      postedDate: '2025-01-02',
-      featured: false
-    },
-    {
-      id: '5',
-      title: 'Sales Development Representative',
-      company: 'SalesPro Inc.',
-      location: 'Chicago, IL',
-      type: 'full-time',
-      salary: '$50k - $80k + Commission',
-      description: 'High-energy Sales Development Representative needed to generate leads and qualify prospects for our sales team.',
-      requirements: ['1+ years sales experience', 'CRM experience', 'Strong communication skills', 'Goal-oriented mindset'],
-      category: 'sales',
-      postedDate: '2025-01-01',
-      featured: false
-    },
-    {
-      id: '6',
-      title: 'Data Scientist',
-      company: 'DataCorp',
-      location: 'Seattle, WA',
-      type: 'full-time',
-      salary: '$130k - $200k',
-      description: 'Join our data science team to build machine learning models and analyze large datasets to drive business insights.',
-      requirements: ['PhD in related field preferred', 'Python/R proficiency', 'Machine learning expertise', 'SQL skills'],
-      category: 'technology',
-      postedDate: '2024-12-30',
-      featured: true
-    }
-  ];
+  // Fetch jobs from API
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        
+        const filters = {
+          category: selectedCategory !== 'all' ? selectedCategory : undefined,
+          type: selectedType !== 'all' ? selectedType : undefined,
+          search: searchQuery || undefined,
+          limit: 50
+        };
+        
+        const response = await jobsApi.getPublic(filters);
+        setJobs(response.data?.jobs || []);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch jobs');
+        console.error('Failed to fetch jobs:', err);
+        // Fallback to empty array on error
+        setJobs([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJobs();
+  }, [searchQuery, selectedCategory, selectedType]);
 
   const categories = [
     { value: 'all', label: 'All Categories' },
@@ -122,16 +61,8 @@ export default function JobsPage() {
     { value: 'remote', label: 'Remote' }
   ];
 
-  const filteredJobs = mockJobs.filter(job => {
-    const matchesSearch = job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         job.location.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesCategory = selectedCategory === 'all' || job.category === selectedCategory;
-    const matchesType = selectedType === 'all' || job.type === selectedType;
-
-    return matchesSearch && matchesCategory && matchesType;
-  });
+  // Jobs are already filtered by the API based on search, category, and type
+  const filteredJobs = jobs;
 
   const getJobTypeColor = (type: string) => {
     switch (type) {
@@ -212,8 +143,31 @@ export default function JobsPage() {
             </p>
           </div>
 
-          <div className="space-y-6">
-            {filteredJobs.map(job => (
+          {loading && (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading jobs...</p>
+            </div>
+          )}
+
+          {error && (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">❌</div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Error Loading Jobs</h3>
+              <p className="text-red-600 mb-6">{error}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-6 py-3 font-medium rounded-lg text-white transition-colors"
+                style={{ backgroundColor: 'var(--brand-primary)' }}
+              >
+                Try Again
+              </button>
+            </div>
+          )}
+
+          {!loading && !error && (
+            <div className="space-y-6">
+              {filteredJobs.map(job => (
               <div 
                 key={job.id} 
                 className={`bg-white rounded-lg border shadow-sm hover:shadow-md transition-shadow p-6 ${
@@ -245,7 +199,7 @@ export default function JobsPage() {
                     </p>
 
                     <div className="flex flex-wrap gap-2 mb-4">
-                      {job.requirements.slice(0, 3).map((req, index) => (
+                      {job.requirements?.slice(0, 3).map((req: string, index: number) => (
                         <span 
                           key={index}
                           className="px-3 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full"
@@ -253,9 +207,9 @@ export default function JobsPage() {
                           {req}
                         </span>
                       ))}
-                      {job.requirements.length > 3 && (
+                      {(job.requirements?.length || 0) > 3 && (
                         <span className="px-3 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full">
-                          +{job.requirements.length - 3} more
+                          +{(job.requirements?.length || 0) - 3} more
                         </span>
                       )}
                     </div>
@@ -282,9 +236,10 @@ export default function JobsPage() {
                 </div>
               </div>
             ))}
-          </div>
+            </div>
+          )}
 
-          {filteredJobs.length === 0 && (
+          {!loading && !error && filteredJobs.length === 0 && (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">🔍</div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">No jobs found</h3>

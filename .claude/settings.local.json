@@ -40,7 +40,9 @@
       "Bash(claude mcp add:*)",
       "Bash(claude mcp:*)",
       "Bash(docker inspect:*)",
-      "Bash(docker exec:*)"
+      "Bash(docker exec:*)",
+      "Bash(timeout 30s npm run typecheck)",
+      "Bash(timeout 120s npm run build)"
     ],
     "deny": [],
     "ask": []

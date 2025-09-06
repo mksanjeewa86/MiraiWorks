@@ -1,95 +1,66 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/layout/AppLayout';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, Clock, MapPin, Users } from 'lucide-react';
+import { calendarApi } from '@/services/api';
 import type { CalendarEvent } from '@/types';
 
 interface CalendarState {
   currentDate: Date;
   events: CalendarEvent[];
   loading: boolean;
+  error: string;
   selectedDate: Date | null;
   viewMode: 'month' | 'week' | 'day';
 }
 
-// Mock events data - moved outside component to prevent re-creation
-const createMockEvents = (user: { id?: string | number; role?: string; email?: string }): CalendarEvent[] => [
-  {
-    id: '1',
-    title: 'Interview with Sarah Johnson',
-    description: 'Senior Frontend Developer Position',
-    startDatetime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
-    endDatetime: new Date(Date.now() + 24 * 60 * 60 * 1000 + 60 * 60 * 1000).toISOString(), // 1 hour
-    location: 'Conference Room A',
-    isAllDay: false,
-    isRecurring: false,
-    attendees: [
-      user?.email || 'user@example.com',
-      'sarah.johnson@company.com'
-    ],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: '2',
-    title: 'Team Standup',
-    description: 'Weekly team sync meeting',
-    startDatetime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // Day after tomorrow
-    endDatetime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000 + 30 * 60 * 1000).toISOString(), // 30 min
-    location: 'Zoom',
-    isAllDay: false,
-    isRecurring: false,
-    attendees: [
-      user?.email || 'user@example.com'
-    ],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: '3',
-    title: 'Client Presentation',
-    description: 'Quarterly business review',
-    startDatetime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // Next week
-    endDatetime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString(), // 2 hours
-    location: 'Client Office',
-    isAllDay: false,
-    isRecurring: false,
-    attendees: [
-      user?.email || 'user@example.com'
-    ],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  }
-];
-
 export default function CalendarPage() {
-  const { user } = useAuth();
   
   const [state, setState] = useState<CalendarState>({
     currentDate: new Date(),
     events: [],
     loading: true,
+    error: '',
     selectedDate: null,
     viewMode: 'month'
   });
 
   useEffect(() => {
-    // Simulate loading events
-    const mockEvents = createMockEvents(user || {});
-    setTimeout(() => {
-      setState(prev => ({
-        ...prev,
-        events: mockEvents,
-        loading: false
-      }));
-    }, 1000);
-  }, [user]);
+    const fetchEvents = async () => {
+      try {
+        setState(prev => ({ ...prev, loading: true, error: '' }));
+        
+        const startDate = new Date(state.currentDate.getFullYear(), state.currentDate.getMonth(), 1).toISOString();
+        const endDate = new Date(state.currentDate.getFullYear(), state.currentDate.getMonth() + 1, 0).toISOString();
+        
+        const response = await calendarApi.getEvents({
+          startDate: startDate,
+          endDate: endDate
+        });
+        
+        setState(prev => ({
+          ...prev,
+          events: response.data || [],
+          loading: false
+        }));
+      } catch (err) {
+        setState(prev => ({
+          ...prev,
+          error: err instanceof Error ? err.message : 'Failed to load events',
+          events: [],
+          loading: false
+        }));
+        console.error('Failed to fetch calendar events:', err);
+      }
+    };
+
+    fetchEvents();
+  }, [state.currentDate]);
 
   const getDaysInMonth = (date: Date) => {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
@@ -201,6 +172,21 @@ export default function CalendarPage() {
       <AppLayout>
         <div className="flex items-center justify-center h-64">
           <LoadingSpinner className="w-8 h-8" />
+        </div>
+      </AppLayout>
+    );
+  }
+
+  if (state.error) {
+    return (
+      <AppLayout>
+        <div className="flex flex-col items-center justify-center h-64">
+          <div className="text-6xl mb-4">❌</div>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">Error Loading Calendar</h3>
+          <p className="text-red-600 mb-6">{state.error}</p>
+          <Button onClick={() => window.location.reload()}>
+            Try Again
+          </Button>
         </div>
       </AppLayout>
     );

@@ -7,226 +7,34 @@ import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { Calendar, Clock, MapPin, Video, Phone, Users, Plus, Filter } from 'lucide-react';
+import { interviewsApi } from '@/services/api';
 import type { Interview } from '@/types';
 
-// Mock interview data - moved outside component to prevent re-creation
-const mockInterviews: Interview[] = [
-  {
-    id: 1,
-    candidate_id: 101,
-    recruiter_id: 201,
-    employer_company_id: 301,
-    title: 'Senior Frontend Developer Interview',
-    description: 'Technical interview for React/TypeScript position',
-    position_title: 'Senior Frontend Developer',
-    status: 'scheduled',
-    interview_type: 'video',
-    scheduled_start: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-    scheduled_end: new Date(Date.now() + 24 * 60 * 60 * 1000 + 60 * 60 * 1000).toISOString(), // 1 hour later
-    scheduled_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
-    timezone: 'America/New_York',
-    location: 'Zoom Meeting',
-    meeting_url: 'https://zoom.us/j/123456789',
-    duration_minutes: 60,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    candidate: {
-      id: 101,
-      email: 'john.doe@email.com',
-      first_name: 'John',
-      last_name: 'Doe',
-      full_name: 'John Doe',
-      company_id: 401,
-      is_active: true,
-      is_admin: false,
-      require_2fa: false,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      roles: [],
-      company: {
-        id: 401,
-        name: 'Candidate Corp',
-        domain: 'candidatecorp.com',
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-    },
-    recruiter: {
-      id: 201,
-      email: 'jane.smith@techcorp.com',
-      first_name: 'Jane',
-      last_name: 'Smith',
-      full_name: 'Jane Smith',
-      company_id: 301,
-      is_active: true,
-      is_admin: false,
-      require_2fa: false,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      roles: [],
-      company: {
-        id: 301,
-        name: 'TechCorp Inc.',
-        domain: 'techcorp.com',
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-    },
-    candidate_name: 'John Doe',
-    company_name: 'TechCorp Inc.',
-    proposals: [],
-    active_proposal_count: 0
-  },
-  {
-    id: 2,
-    candidate_id: 102,
-    recruiter_id: 202,
-    employer_company_id: 302,
-    title: 'Product Manager Discussion',
-    description: 'Initial screening call for PM role',
-    position_title: 'Product Manager',
-    status: 'scheduled',
-    interview_type: 'phone',
-    scheduled_start: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-    scheduled_end: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000 + 45 * 60 * 1000).toISOString(), // 45 minutes later
-    scheduled_at: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // Day after tomorrow
-    timezone: 'America/Los_Angeles',
-    location: 'Phone Call',
-    duration_minutes: 45,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    candidate: {
-      id: 102,
-      email: 'sarah.wilson@email.com',
-      first_name: 'Sarah',
-      last_name: 'Wilson',
-      full_name: 'Sarah Wilson',
-      company_id: 402,
-      is_active: true,
-      is_admin: false,
-      require_2fa: false,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      roles: [],
-      company: {
-        id: 402,
-        name: 'Wilson Consulting',
-        domain: 'wilsonconsulting.com',
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-    },
-    recruiter: {
-      id: 202,
-      email: 'mike.johnson@startupco.com',
-      first_name: 'Mike',
-      last_name: 'Johnson',
-      full_name: 'Mike Johnson',
-      company_id: 302,
-      is_active: true,
-      is_admin: false,
-      require_2fa: false,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      roles: [],
-      company: {
-        id: 302,
-        name: 'StartupCo',
-        domain: 'startupco.com',
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-    },
-    candidate_name: 'Sarah Wilson',
-    company_name: 'StartupCo',
-    proposals: [],
-    active_proposal_count: 0
-  },
-  {
-    id: 3,
-    candidate_id: 103,
-    recruiter_id: 203,
-    employer_company_id: 303,
-    title: 'Final Round Interview',
-    description: 'Final interview with leadership team',
-    position_title: 'Senior Software Engineer',
-    status: 'completed',
-    interview_type: 'in_person',
-    scheduled_start: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    scheduled_end: new Date(Date.now() - 24 * 60 * 60 * 1000 + 90 * 60 * 1000).toISOString(), // 90 minutes later
-    scheduled_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // Yesterday
-    timezone: 'America/Chicago',
-    location: 'Conference Room A, Main Office',
-    duration_minutes: 90,
-    notes: 'Great candidate, strong technical skills and cultural fit.',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    candidate: {
-      id: 103,
-      email: 'alex.brown@email.com',
-      first_name: 'Alex',
-      last_name: 'Brown',
-      full_name: 'Alex Brown',
-      company_id: 403,
-      is_active: true,
-      is_admin: false,
-      require_2fa: false,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      roles: [],
-      company: {
-        id: 403,
-        name: 'Brown Tech Solutions',
-        domain: 'browntech.com',
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-    },
-    recruiter: {
-      id: 203,
-      email: 'david.lee@enterprise.com',
-      first_name: 'David',
-      last_name: 'Lee',
-      full_name: 'David Lee',
-      company_id: 303,
-      is_active: true,
-      is_admin: false,
-      require_2fa: false,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      roles: [],
-      company: {
-        id: 303,
-        name: 'Enterprise Corp',
-        domain: 'enterprise.com',
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-    },
-    candidate_name: 'Alex Brown',
-    company_name: 'Enterprise Corp',
-    proposals: [],
-    active_proposal_count: 0
-  }
-];
 
 export default function InterviewsPage() {
   const [interviews, setInterviews] = useState<Interview[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>('');
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'completed' | 'cancelled'>('all');
 
   useEffect(() => {
-    // Simulate loading interviews
-    setTimeout(() => {
-      setInterviews(mockInterviews);
-      setLoading(false);
-    }, 1000);
+    const fetchInterviews = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        
+        const response = await interviewsApi.getAll();
+        setInterviews(response.data || []);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load interviews');
+        console.error('Failed to fetch interviews:', err);
+        setInterviews([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInterviews();
   }, []);
 
   const getStatusColor = (status: string) => {
@@ -276,6 +84,21 @@ export default function InterviewsPage() {
       <AppLayout>
         <div className="flex items-center justify-center h-64">
           <LoadingSpinner className="w-8 h-8" />
+        </div>
+      </AppLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AppLayout>
+        <div className="flex flex-col items-center justify-center h-64">
+          <div className="text-6xl mb-4">❌</div>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">Error Loading Interviews</h3>
+          <p className="text-red-600 mb-6">{error}</p>
+          <Button onClick={() => window.location.reload()}>
+            Try Again
+          </Button>
         </div>
       </AppLayout>
     );
