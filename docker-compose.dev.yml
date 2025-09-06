@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  db:
+    image: mysql:8.0
+    container_name: miraiworks_db_dev
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: miraiworks
+      MYSQL_USER: hrms
+      MYSQL_PASSWORD: hrms
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_dev_data:/var/lib/mysql
+    networks:
+      - miraiworks-dev-network
+
+  # Redis for caching and sessions
+  redis:
+    image: redis:7-alpine
+    container_name: miraiworks_redis_dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_dev_data:/data
+    networks:
+      - miraiworks-dev-network
+
+  # Backend API (Python FastAPI) - Development mode
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: miraiworks_backend_dev
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_USER=hrms
+      - DB_PASSWORD=hrms
+      - DB_NAME=miraiworks
+      - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET=dev-secret-key-not-for-production
+      - PYTHONPATH=/app
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - db
+      - redis
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    networks:
+      - miraiworks-dev-network
+
+volumes:
+  mysql_dev_data:
+    driver: local
+  redis_dev_data:
+    driver: local
+
+networks:
+  miraiworks-dev-network:
+    driver: bridge
+    name: miraiworks-dev-network

@@ -54,14 +54,14 @@ WORKDIR /app
 # Copy application code
 COPY --chown=appuser:appuser . .
 
+# Create directory for logs with proper permissions (before switching to non-root user)
+RUN mkdir -p /app/logs && chown -R appuser:appuser /app/logs
+
 # Remove any sensitive files that shouldn't be in the container
 RUN rm -rf .env* *.key *.pem tests/ .git/ .gitignore
 
 # Switch to non-root user
 USER appuser
-
-# Create directory for logs with proper permissions
-RUN mkdir -p /app/logs
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \

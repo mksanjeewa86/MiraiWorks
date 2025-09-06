@@ -42,7 +42,8 @@
       "Bash(docker inspect:*)",
       "Bash(docker exec:*)",
       "Bash(timeout 30s npm run typecheck)",
-      "Bash(timeout 120s npm run build)"
+      "Bash(timeout 120s npm run build)",
+      "Bash(docker-compose:*)"
     ],
     "deny": [],
     "ask": []
