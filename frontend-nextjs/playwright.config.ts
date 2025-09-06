@@ -13,10 +13,12 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
+  /* Use multiple workers for faster CI execution */
+  workers: process.env.CI ? '50%' : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: [['html', { outputFolder: './tests/reports/playwright-report' }]],
+  reporter: process.env.CI 
+    ? [['github'], ['html', { outputFolder: './tests/reports/playwright-report', open: 'never' }]]
+    : [['html', { outputFolder: './tests/reports/playwright-report' }]],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
@@ -28,28 +30,42 @@ export default defineConfig({
     /* Take screenshot on failure */
     screenshot: 'only-on-failure',
 
-    /* Record video on failure */
-    video: 'retain-on-failure',
+    /* Record video on failure - only in CI to save time locally */
+    video: process.env.CI ? 'retain-on-failure' : 'off',
+
+    /* Timeout for each action (e.g. click, fill, etc.) */
+    actionTimeout: 15 * 1000,
+
+    /* Timeout for each navigation action */
+    navigationTimeout: 30 * 1000,
   },
 
   /* Configure projects for major browsers */
-  projects: [
+  projects: process.env.CI ? [
+    // In CI, focus on Chromium for speed (most common browser)
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
-
+    // Test one mobile viewport
+    {
+      name: 'Mobile Chrome',
+      use: { ...devices['Pixel 5'] },
+    },
+  ] : [
+    // Locally, test all browsers
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
     },
-
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
     },
-
-    /* Test against mobile viewports. */
     {
       name: 'Mobile Chrome',
       use: { ...devices['Pixel 5'] },
@@ -58,6 +74,7 @@ export default defineConfig({
       name: 'Mobile Safari',
       use: { ...devices['iPhone 12'] },
     },
+  ],
 
     /* Test against branded browsers. */
     // {

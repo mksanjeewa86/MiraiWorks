@@ -8,8 +8,12 @@ on:
 
 jobs:
   test:
-    timeout-minutes: 60
+    timeout-minutes: 30
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     
     services:
       mysql:
@@ -93,10 +97,10 @@ jobs:
         npm run build
 
     # Run Tests (Playwright will start its own server via webServer config)
-    - name: Run Playwright tests
+    - name: Run Playwright tests (Shard ${{ matrix.shard }}/4)
       run: |
         cd frontend-nextjs
-        npx playwright test
+        npx playwright test --shard=${{ matrix.shard }}/4
       env:
         CI: true
         NODE_ENV: production
@@ -106,7 +110,7 @@ jobs:
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: playwright-results
+        name: playwright-results-${{ matrix.shard }}
         path: frontend-nextjs/tests/results/
         retention-days: 7
 
@@ -114,6 +118,6 @@ jobs:
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: playwright-report
+        name: playwright-report-${{ matrix.shard }}
         path: frontend-nextjs/tests/reports/
         retention-days: 7
