@@ -1,0 +1,122 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: miraiworks
+          MYSQL_USER: hrms
+          MYSQL_PASSWORD: hrms
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18
+        cache: 'npm'
+        cache-dependency-path: |
+          backend-express/package-lock.json
+          frontend-nextjs/package-lock.json
+
+    # Backend Setup
+    - name: Install backend dependencies
+      run: |
+        cd backend-express
+        npm ci
+
+    - name: Setup database
+      run: |
+        cd backend-express
+        # Wait for MySQL to be ready
+        sleep 30
+        # Run migrations/seed data
+        npm run migrate || echo "Migration script not found"
+        npm run seed || echo "Seed script not found"
+      env:
+        DB_HOST: localhost
+        DB_PORT: 3306
+        DB_USER: hrms
+        DB_PASSWORD: hrms
+        DB_NAME: miraiworks
+
+    - name: Start backend server
+      run: |
+        cd backend-express
+        npm start &
+        sleep 10
+      env:
+        NODE_ENV: test
+        PORT: 8000
+        DB_HOST: localhost
+        DB_PORT: 3306
+        DB_USER: hrms
+        DB_PASSWORD: hrms
+        DB_NAME: miraiworks
+        JWT_SECRET: test-secret-key-for-ci
+
+    # Frontend Setup
+    - name: Install frontend dependencies
+      run: |
+        cd frontend-nextjs
+        npm ci
+
+    - name: Install Playwright Browsers
+      run: |
+        cd frontend-nextjs
+        npx playwright install --with-deps
+
+    - name: Build frontend
+      run: |
+        cd frontend-nextjs
+        npm run build
+
+    - name: Start frontend server
+      run: |
+        cd frontend-nextjs
+        npm start &
+        sleep 10
+      env:
+        NODE_ENV: production
+        NEXT_PUBLIC_API_URL: http://localhost:8000/api
+
+    # Run Tests
+    - name: Run Playwright tests
+      run: |
+        cd frontend-nextjs
+        npx playwright test
+      env:
+        CI: true
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-results
+        path: frontend-nextjs/test-results/
+        retention-days: 7
+
+    - name: Upload HTML report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-report
+        path: frontend-nextjs/playwright-report/
+        retention-days: 7
