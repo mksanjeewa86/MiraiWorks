@@ -5,7 +5,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # Database
-    db_url: str = "mysql+asyncmy://hrms:hrms123@localhost:3306/hrms"
+    db_url: str = "mysql+asyncmy://hrms:hrms@localhost:3306/miraiworks"
     
     # Redis
     redis_url: str = "redis://localhost:6379/0"

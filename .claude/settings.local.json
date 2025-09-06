@@ -35,7 +35,12 @@
       "Bash(timeout 30s npm run dev)",
       "Bash(npm run type-check:*)",
       "Bash(npm run:*)",
-      "Bash(timeout 10s npm run dev)"
+      "Bash(timeout 10s npm run dev)",
+      "Bash(npx:*)",
+      "Bash(claude mcp add:*)",
+      "Bash(claude mcp:*)",
+      "Bash(docker inspect:*)",
+      "Bash(docker exec:*)"
     ],
     "deny": [],
     "ask": []
