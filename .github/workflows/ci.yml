@@ -16,6 +16,18 @@ jobs:
     name: Backend Tests & Linting
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: test_miraiworks
+          MYSQL_USER: test_user
+          MYSQL_PASSWORD: test_password
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
     steps:
     - uses: actions/checkout@v4
 
@@ -31,6 +43,17 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt || echo "Some dependencies failed to install, continuing..."
 
+    - name: Wait for MySQL to be ready
+      run: |
+        for i in {1..30}; do
+          if mysql -h 127.0.0.1 -P 3306 -u test_user -ptest_password -e "SELECT 1" >/dev/null 2>&1; then
+            echo "MySQL is ready!"
+            break
+          fi
+          echo "Waiting for MySQL... (attempt $i)"
+          sleep 2
+        done
+
     - name: Code formatting check (Black)
       working-directory: ./backend
       run: black --check --diff . || echo "Black formatting check failed, but continuing..."
@@ -42,6 +65,30 @@ jobs:
     - name: Type checking (MyPy) 
       working-directory: ./backend
       run: mypy app/ --ignore-missing-imports || echo "MyPy type checking failed, but continuing..."
+
+    - name: Run unit tests (PyTest)
+      working-directory: ./backend
+      env:
+        PYTHONPATH: .
+        DB_HOST: localhost
+        DB_PORT: 3306
+        DB_USER: test_user
+        DB_PASSWORD: test_password
+        DB_NAME: test_miraiworks
+        JWT_SECRET: test-secret-key-for-ci-very-long-and-secure
+      run: |
+        export PYTHONPATH=$PWD
+        pytest tests/ app/tests/ || echo "Some tests failed, but continuing..."
+
+    - name: Upload test coverage reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: backend-coverage-reports
+        path: |
+          backend/htmlcov/
+          backend/coverage.xml
+        retention-days: 7
 
     - name: Basic configuration test
       working-directory: ./backend

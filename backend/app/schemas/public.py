@@ -86,7 +86,7 @@ class CompanyProfileBase(BaseModel):
     funding_stage: Optional[str] = None
     benefits_summary: Optional[str] = None
     perks_highlights: Optional[List[str]] = None
-    custom_slug: Optional[str] = Field(None, min_length=3, max_length=100, regex="^[a-z0-9-]+$")
+    custom_slug: Optional[str] = Field(None, min_length=3, max_length=100, pattern="^[a-z0-9-]+$")
 
 
 class CompanyProfileCreate(CompanyProfileBase):
@@ -117,7 +117,7 @@ class CompanyProfileUpdate(BaseModel):
     benefits_summary: Optional[str] = None
     perks_highlights: Optional[List[str]] = None
     is_public: Optional[bool] = None
-    custom_slug: Optional[str] = Field(None, min_length=3, max_length=100, regex="^[a-z0-9-]+$")
+    custom_slug: Optional[str] = Field(None, min_length=3, max_length=100, pattern="^[a-z0-9-]+$")
 
 
 class CompanyProfileResponse(CompanyProfileBase):
@@ -322,8 +322,8 @@ class JobSearchParams(BaseModel):
     salary_min: Optional[int] = None
     salary_max: Optional[int] = None
     skills: Optional[List[str]] = None
-    sort_by: str = Field("published_date", regex="^(published_date|relevance|salary|company)$")
-    sort_order: str = Field("desc", regex="^(asc|desc)$")
+    sort_by: str = Field("published_date", pattern="^(published_date|relevance|salary|company)$")
+    sort_order: str = Field("desc", pattern="^(asc|desc)$")
     page: int = Field(1, ge=1)
     limit: int = Field(20, ge=1, le=100)
     featured_only: bool = False
@@ -344,8 +344,8 @@ class CompanySearchParams(BaseModel):
     location: Optional[str] = None
     employee_count: Optional[str] = None
     funding_stage: Optional[str] = None
-    sort_by: str = Field("name", regex="^(name|founded_year|employee_count)$")
-    sort_order: str = Field("asc", regex="^(asc|desc)$")
+    sort_by: str = Field("name", pattern="^(name|founded_year|employee_count)$")
+    sort_order: str = Field("asc", pattern="^(asc|desc)$")
     page: int = Field(1, ge=1)
     limit: int = Field(20, ge=1, le=100)
 

@@ -33,7 +33,7 @@ class ResumeBase(BaseModel):
     
     # Template and styling
     template_id: Optional[str] = Field("modern", max_length=50)
-    theme_color: Optional[str] = Field("#2563eb", regex=r"^#[0-9A-Fa-f]{6}$")
+    theme_color: Optional[str] = Field("#2563eb", pattern=r"^#[0-9A-Fa-f]{6}$")
     font_family: Optional[str] = Field("Inter", max_length=50)
     custom_css: Optional[str] = None
     
@@ -67,7 +67,7 @@ class ResumeUpdate(BaseModel):
     professional_summary: Optional[str] = None
     objective: Optional[str] = None
     template_id: Optional[str] = Field(None, max_length=50)
-    theme_color: Optional[str] = Field(None, regex=r"^#[0-9A-Fa-f]{6}$")
+    theme_color: Optional[str] = Field(None, pattern=r"^#[0-9A-Fa-f]{6}$")
     font_family: Optional[str] = Field(None, max_length=50)
     custom_css: Optional[str] = None
     status: Optional[ResumeStatus] = None
@@ -512,7 +512,7 @@ class ResumeStats(BaseModel):
 
 # Bulk operations
 class BulkResumeAction(BaseModel):
-    action: str = Field(..., regex="^(delete|archive|publish|make_private|make_public)$")
+    action: str = Field(..., pattern="^(delete|archive|publish|make_private|make_public)$")
     resume_ids: List[int] = Field(..., min_items=1)
 
 
@@ -525,7 +525,7 @@ class BulkActionResult(BaseModel):
 # PDF generation
 class PDFGenerationRequest(BaseModel):
     resume_id: int
-    format: str = Field("A4", regex="^(A4|Letter)$")
+    format: str = Field("A4", pattern="^(A4|Letter)$")
     include_contact_info: bool = True
     watermark: Optional[str] = None
 
