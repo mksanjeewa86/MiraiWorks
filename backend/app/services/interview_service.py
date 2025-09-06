@@ -19,6 +19,7 @@ from app.models.company import Company
 from app.models.interview import Interview
 from app.models.interview import InterviewProposal
 from app.models.user import User
+from app.models.role import UserRole as UserRoleModel
 from app.services.calendar_service import google_calendar_service
 from app.services.microsoft_calendar_service import microsoft_calendar_service
 from app.utils.constants import InterviewStatus
@@ -333,7 +334,7 @@ class InterviewService:
         # Get users with roles
         users_result = await db.execute(
             select(User).options(
-                selectinload(User.user_roles).selectinload("role"),
+                selectinload(User.user_roles).selectinload(UserRoleModel.role),
                 selectinload(User.company)
             ).where(User.id.in_([candidate_id, recruiter_id]))
         )
@@ -625,7 +626,7 @@ class InterviewService:
         
         # Check if user is admin
         user_result = await db.execute(
-            select(User).options(selectinload(User.user_roles).selectinload("role"))
+            select(User).options(selectinload(User.user_roles).selectinload(UserRoleModel.role))
             .where(User.id == user_id)
         )
         user = user_result.scalar_one_or_none()

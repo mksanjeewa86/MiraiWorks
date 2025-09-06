@@ -32,6 +32,26 @@ async def get_public_stats(db: Session = Depends(get_db)):
     return service.get_public_stats()
 
 
+@router.get("/jobs", response_model=JobSearchResponse)
+async def get_jobs(
+    limit: int = Query(50, ge=1, le=100, description="Items per page"),
+    page: int = Query(1, ge=1, description="Page number"),
+    db: Session = Depends(get_db)
+):
+    """Get all public jobs with basic pagination"""
+    params = JobSearchParams(
+        page=page,
+        limit=limit,
+        sort_by="published_date",
+        sort_order="desc"
+    )
+    
+    service = PublicService(db)
+    result = service.search_jobs(params)
+    
+    return JobSearchResponse(**result)
+
+
 @router.get("/jobs/search", response_model=JobSearchResponse)
 async def search_jobs(
     q: Optional[str] = Query(None, description="Search query"),

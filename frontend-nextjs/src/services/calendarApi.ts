@@ -1,6 +1,6 @@
 import type { ApiResponse, CalendarEvent } from '@/types';
 
-const API_BASE_URL = 'http://localhost:8001';
+const API_BASE_URL = 'http://localhost:8000';
 
 // Calendar API
 export const calendarApi = {

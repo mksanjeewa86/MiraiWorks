@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.user import User
 from app.models.company import Company
 from app.models.calendar_integration import CalendarIntegration, CalendarEvent
-from app.services.calendar_service import CalendarService
+from app.services.calendar_service import GoogleCalendarService
 from app.services.microsoft_calendar_service import MicrosoftCalendarService
 
 
@@ -15,7 +15,7 @@ class TestCalendarService:
     
     @pytest.fixture
     async def calendar_service(self):
-        return CalendarService()
+        return GoogleCalendarService()
     
     @pytest.fixture
     async def mock_user(self, db_session: AsyncSession):
@@ -217,7 +217,7 @@ class TestMicrosoftCalendarService:
     
     @pytest.fixture
     async def microsoft_service(self):
-        return MicrosoftCalendarService()
+        return MicrosoftGoogleCalendarService()
     
     @pytest.fixture
     async def microsoft_integration(self, db_session: AsyncSession, mock_user: User):

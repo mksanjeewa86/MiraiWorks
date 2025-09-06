@@ -18,6 +18,7 @@ from app.models.message import Message
 from app.models.message import MessageRead
 from app.models.message import conversation_participants
 from app.models.user import User
+from app.models.role import UserRole as UserRoleModel
 from app.utils.constants import MessageType
 from app.utils.constants import UserRole
 
@@ -38,7 +39,7 @@ class MessagingRulesService:
         result = await db.execute(
             select(User)
             .options(
-                selectinload(User.user_roles).selectinload("role"),
+                selectinload(User.user_roles).selectinload(UserRoleModel.role),
                 selectinload(User.company)
             )
             .where(User.id.in_([user1_id, user2_id]))
@@ -132,7 +133,7 @@ class MessagingRulesService:
         result = await db.execute(
             select(User)
             .options(
-                selectinload(User.user_roles).selectinload("role"),
+                selectinload(User.user_roles).selectinload(UserRoleModel.role),
                 selectinload(User.company)
             )
             .where(User.id == user_id)

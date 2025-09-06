@@ -1,6 +1,6 @@
 import type { ApiResponse, Company } from '@/types';
 
-const API_BASE_URL = 'http://localhost:8001';
+const API_BASE_URL = 'http://localhost:8000';
 
 // Companies API
 export const companiesApi = {

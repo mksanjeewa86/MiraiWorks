@@ -1,14 +1,32 @@
 import type { ApiResponse, Conversation, Message } from '@/types';
 
-const API_BASE_URL = 'http://localhost:8001';
+const API_BASE_URL = 'http://localhost:8000';
 
 // Messages API
 export const messagesApi = {
-  getConversations: async (): Promise<ApiResponse<Conversation[]>> => {
-    const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/conversations`, {
+  getConversations: async (token?: string): Promise<ApiResponse<Conversation[]>> => {
+    const authToken = token || localStorage.getItem('accessToken');
+    const response = await fetch(`${API_BASE_URL}/api/messaging/conversations`, {
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `Bearer ${authToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const responseData = await response.json();
+    return { data: responseData.conversations || [], success: true };
+  },
+
+  markConversationAsRead: async (conversationId: number, token?: string): Promise<ApiResponse<any>> => {
+    const authToken = token || localStorage.getItem('accessToken');
+    const response = await fetch(`${API_BASE_URL}/api/messaging/conversations/${conversationId}/read`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${authToken}`,
         'Content-Type': 'application/json',
       },
     });
@@ -23,7 +41,7 @@ export const messagesApi = {
 
   getConversation: async (id: number): Promise<ApiResponse<Conversation>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/conversations/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/api/messaging/conversations/${id}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -45,7 +63,7 @@ export const messagesApi = {
     totalPages: number;
   }>> => {
     const token = localStorage.getItem('accessToken');
-    const url = new URL(`${API_BASE_URL}/api/conversations/${conversationId}/messages`);
+    const url = new URL(`${API_BASE_URL}/api/messaging/conversations/${conversationId}/messages`);
     url.searchParams.set('page', page.toString());
     url.searchParams.set('limit', limit.toString());
     
@@ -70,7 +88,7 @@ export const messagesApi = {
     attachmentUrl?: string;
   }): Promise<ApiResponse<Message>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/conversations/${conversationId}/messages`, {
+    const response = await fetch(`${API_BASE_URL}/api/messaging/conversations/${conversationId}/messages`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -94,7 +112,7 @@ export const messagesApi = {
     isGroup?: boolean;
   }): Promise<ApiResponse<Conversation>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/conversations`, {
+    const response = await fetch(`${API_BASE_URL}/api/messaging/conversations`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -114,7 +132,7 @@ export const messagesApi = {
 
   markAsRead: async (conversationId: number): Promise<ApiResponse<void>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/conversations/${conversationId}/read`, {
+    const response = await fetch(`${API_BASE_URL}/api/messaging/conversations/${conversationId}/read`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,

@@ -85,7 +85,7 @@ async def create_sample_users(db: AsyncSession, companies: dict):
     users_data = [
         {
             "email": "admin@techcorp.com",
-            "password": "admin123!",
+            "password": "password",
             "first_name": "Alice",
             "last_name": "Johnson",
             "role": UserRoleEnum.COMPANY_ADMIN,
@@ -93,7 +93,7 @@ async def create_sample_users(db: AsyncSession, companies: dict):
         },
         {
             "email": "recruiter@globalrecruiters.com",
-            "password": "recruiter123!",
+            "password": "password",
             "first_name": "Sarah",
             "last_name": "Wilson",
             "role": UserRoleEnum.RECRUITER,
@@ -101,7 +101,7 @@ async def create_sample_users(db: AsyncSession, companies: dict):
         },
         {
             "email": "jane.candidate@email.com",
-            "password": "candidate123!",
+            "password": "password",
             "first_name": "Jane",
             "last_name": "Developer",
             "role": UserRoleEnum.CANDIDATE,
@@ -109,7 +109,7 @@ async def create_sample_users(db: AsyncSession, companies: dict):
         },
         {
             "email": "john.candidate@email.com",
-            "password": "candidate123!",
+            "password": "password",
             "first_name": "John",
             "last_name": "Engineer",
             "role": UserRoleEnum.CANDIDATE,
@@ -190,10 +190,10 @@ async def main():
         print(f"Created {len(companies)} companies and {len(users)} users")
         
         print("\nLogin credentials:")
-        print("  Company Admin: admin@techcorp.com / admin123!")
-        print("  Recruiter: recruiter@globalrecruiters.com / recruiter123!")
-        print("  Candidate: jane.candidate@email.com / candidate123!")
-        print("  Candidate: john.candidate@email.com / candidate123!")
+        print("  Company Admin: admin@techcorp.com / password")
+        print("  Recruiter: recruiter@globalrecruiters.com / password")
+        print("  Candidate: jane.candidate@email.com / password")
+        print("  Candidate: john.candidate@email.com / password")
         
     except Exception as e:
         print(f"Error: {str(e)}")

@@ -13,6 +13,7 @@ from sqlalchemy.orm import selectinload
 from app.config import settings
 from app.database import get_db
 from app.models.user import User
+from app.models.role import UserRole as UserRoleModel
 from app.services.auth_service import auth_service
 
 security = HTTPBearer()
@@ -57,7 +58,7 @@ async def get_current_user(
         select(User)
         .options(
             selectinload(User.company),
-            selectinload(User.user_roles).selectinload("role")
+            selectinload(User.user_roles).selectinload(UserRoleModel.role)
         )
         .where(User.id == user_id, User.is_active == True)
     )

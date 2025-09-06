@@ -38,7 +38,7 @@ from app.schemas.resume import WorkExperienceInfo
 from app.services.pdf_service import PDFService
 from app.services.resume_service import ResumeService
 
-router = APIRouter(prefix="/resumes", tags=["resumes"])
+router = APIRouter(tags=["resumes"])
 logger = logging.getLogger(__name__)
 
 

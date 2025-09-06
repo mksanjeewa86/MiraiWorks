@@ -17,6 +17,7 @@ from sqlalchemy.orm import selectinload
 from app.config import settings
 from app.models.auth import RefreshToken
 from app.models.user import User
+from app.models.role import UserRole as UserRoleModel
 from app.rbac import is_admin_role
 from app.utils.constants import UserRole
 
@@ -127,7 +128,10 @@ class AuthService:
         """Authenticate a user with email and password."""
         result = await db.execute(
             select(User)
-            .options(selectinload(User.company), selectinload(User.user_roles))
+            .options(
+                selectinload(User.company), 
+                selectinload(User.user_roles).selectinload(UserRoleModel.role)
+            )
             .where(User.email == email, User.is_active == True)
         )
         
@@ -144,13 +148,24 @@ class AuthService:
         """Generate a 6-digit 2FA code."""
         return str(secrets.randbelow(900000) + 100000)
 
-    def requires_2fa(self, user: User) -> bool:
+    async def requires_2fa(self, db: AsyncSession, user: User) -> bool:
         """Check if user requires 2FA based on role and settings."""
         if not settings.force_2fa_for_admins:
             return False
             
+        # Check if user has any admin roles by requerying with eager loading
+        result = await db.execute(
+            select(User)
+            .options(selectinload(User.user_roles).selectinload(UserRoleModel.role))
+            .where(User.id == user.id)
+        )
+        
+        user_with_roles = result.scalar_one_or_none()
+        if not user_with_roles:
+            return user.require_2fa
+            
         # Check if user has any admin roles
-        for user_role in user.user_roles:
+        for user_role in user_with_roles.user_roles:
             if is_admin_role(UserRole(user_role.role.name)):
                 return True
         

@@ -13,11 +13,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.calendar_integration import ExternalCalendarAccount, SyncedEvent
-from app.services.calendar_service import CalendarService
+from app.services.calendar_service import GoogleCalendarService
 from app.services.interview_service import InterviewService
 from app.services.microsoft_calendar_service import MicrosoftCalendarService
 
-router = APIRouter(prefix="/webhooks", tags=["webhooks"])
+router = APIRouter(tags=["webhooks"])
 logger = logging.getLogger(__name__)
 
 
@@ -128,7 +128,7 @@ async def sync_google_calendar_events(
             logger.error(f"Calendar integration {calendar_integration_id} not found")
             return
         
-        calendar_service = CalendarService()
+        calendar_service = GoogleCalendarService()
         
         # Get updated events from Google Calendar
         events = await calendar_service.list_events(

@@ -70,6 +70,26 @@ class ChangePasswordRequest(BaseModel):
         return v
 
 
+class RoleInfo(BaseModel):
+    id: int
+    name: str
+    description: Optional[str] = None
+    
+    class Config:
+        from_attributes = True
+
+
+class UserRoleInfo(BaseModel):
+    id: int
+    user_id: int
+    role_id: int
+    created_at: datetime
+    role: RoleInfo
+    
+    class Config:
+        from_attributes = True
+
+
 class UserInfo(BaseModel):
     id: int
     email: str
@@ -77,7 +97,7 @@ class UserInfo(BaseModel):
     last_name: str
     full_name: str
     company_id: Optional[int]
-    roles: List[str]
+    roles: List[UserRoleInfo]
     is_active: bool
     last_login: Optional[datetime]
     

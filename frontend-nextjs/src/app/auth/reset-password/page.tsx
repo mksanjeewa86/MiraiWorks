@@ -32,7 +32,7 @@ function ResetPasswordContent() {
 
     try {
       // Call reset password API
-      const response = await fetch('http://localhost:8001/api/auth/reset-password', {
+      const response = await fetch('http://localhost:8000/api/auth/reset-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -108,9 +108,9 @@ async def main():
         if not admin_email:
             admin_email = "admin@miraiworks.com"
         
-        admin_password = input("Enter super admin password [admin123!@#]: ").strip()
+        admin_password = input("Enter super admin password [password]: ").strip()
         if not admin_password:
-            admin_password = "admin123!@#"
+            admin_password = "password"
         
         admin_first_name = input("Enter super admin first name [Super]: ").strip()
         if not admin_first_name:

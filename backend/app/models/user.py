@@ -31,7 +31,7 @@ class User(Base):
     company = relationship("Company", back_populates="users")
     user_roles = relationship("UserRole", back_populates="user", cascade="all, delete-orphan")
     refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
-    password_reset_requests = relationship("PasswordResetRequest", back_populates="user", cascade="all, delete-orphan")
+    password_reset_requests = relationship("PasswordResetRequest", back_populates="user", foreign_keys="PasswordResetRequest.user_id", cascade="all, delete-orphan")
     oauth_accounts = relationship("OauthAccount", back_populates="user", cascade="all, delete-orphan")
     audit_logs = relationship("AuditLog", back_populates="actor", cascade="all, delete-orphan")
     notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")

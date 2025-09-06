@@ -4,15 +4,15 @@ import type {
   ActivityItem,
 } from '@/types';
 
-const API_BASE_URL = 'http://localhost:8001';
+const API_BASE_URL = 'http://localhost:8000';
 
 // Dashboard API
 export const dashboardApi = {
-  getStats: async (): Promise<ApiResponse<DashboardStats>> => {
-    const token = localStorage.getItem('accessToken');
+  getStats: async (token?: string): Promise<ApiResponse<DashboardStats>> => {
+    const authToken = token || localStorage.getItem('accessToken');
     const response = await fetch(`${API_BASE_URL}/api/dashboard/stats`, {
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `Bearer ${authToken}`,
         'Content-Type': 'application/json',
       },
     });
@@ -25,14 +25,14 @@ export const dashboardApi = {
     return { data, success: true };
   },
   
-  getRecentActivity: async (limit?: number): Promise<ApiResponse<ActivityItem[]>> => {
-    const token = localStorage.getItem('accessToken');
+  getRecentActivity: async (limit?: number, token?: string): Promise<ApiResponse<ActivityItem[]>> => {
+    const authToken = token || localStorage.getItem('accessToken');
     const url = new URL(`${API_BASE_URL}/api/dashboard/activity`);
     if (limit) url.searchParams.set('limit', limit.toString());
     
     const response = await fetch(url.toString(), {
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `Bearer ${authToken}`,
         'Content-Type': 'application/json',
       },
     });

@@ -1,6 +1,6 @@
 import type { ApiResponse, Resume, WorkExperience, Education, Skill } from '@/types';
 
-const API_BASE_URL = 'http://localhost:8001';
+const API_BASE_URL = 'http://localhost:8000';
 
 // Resumes API
 export const resumesApi = {
@@ -17,8 +17,8 @@ export const resumesApi = {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     
-    const data = await response.json();
-    return { data, success: true };
+    const responseData = await response.json();
+    return { data: responseData.resumes, success: true };
   },
 
   getById: async (id: number): Promise<ApiResponse<Resume>> => {

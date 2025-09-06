@@ -22,6 +22,37 @@ export const testUsers = {
     password: 'Password123!',
     fullName: 'Admin User',
     role: 'admin'
+  },
+  // Real test users from the database
+  superAdmin: {
+    email: 'admin@miraiworks.com',
+    password: 'password',
+    fullName: 'Super Admin',
+    role: 'super_admin'
+  },
+  companyAdmin: {
+    email: 'admin@techcorp.com',
+    password: 'password',
+    fullName: 'Alice Johnson',
+    role: 'company_admin'
+  },
+  candidate1: {
+    email: 'jane.candidate@email.com',
+    password: 'password',
+    fullName: 'Jane Developer',
+    role: 'candidate'
+  },
+  candidate2: {
+    email: 'john.candidate@email.com',
+    password: 'password',
+    fullName: 'John Engineer',
+    role: 'candidate'
+  },
+  recruiterReal: {
+    email: 'recruiter@globalrecruiters.com',
+    password: 'password',
+    fullName: 'Sarah Wilson',
+    role: 'recruiter'
   }
 };
 

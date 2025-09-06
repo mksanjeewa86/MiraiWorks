@@ -43,7 +43,17 @@
       "Bash(docker exec:*)",
       "Bash(timeout 30s npm run typecheck)",
       "Bash(timeout 120s npm run build)",
-      "Bash(docker-compose:*)"
+      "Bash(docker-compose:*)",
+      "Bash(docker compose logs:*)",
+      "Bash(docker compose:*)",
+      "Bash(docker cp:*)",
+      "mcp__playwright__playwright_navigate",
+      "Bash(docker logs:*)",
+      "Bash(docker restart:*)",
+      "Bash(tasklist:*)",
+      "Bash(powershell:*)",
+      "Bash(docker start:*)",
+      "Bash(timeout:*)"
     ],
     "deny": [],
     "ask": []

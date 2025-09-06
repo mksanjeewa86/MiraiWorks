@@ -76,7 +76,7 @@ async def login(
         )
     
     # Check if 2FA is required
-    requires_2fa = auth_service.requires_2fa(user)
+    requires_2fa = await auth_service.requires_2fa(db, user)
     
     if requires_2fa:
         # Generate and send 2FA code
@@ -107,7 +107,7 @@ async def login(
             last_name=user.last_name,
             full_name=user.full_name,
             company_id=user.company_id,
-            roles=[ur.role.name for ur in user.user_roles],
+            roles=user.user_roles,
             is_active=user.is_active,
             last_login=user.last_login
         )
@@ -132,7 +132,7 @@ async def verify_2fa(
         select(User)
         .options(
             selectinload(User.company),
-            selectinload(User.user_roles).selectinload("role")
+            selectinload(User.user_roles).selectinload(UserRoleModel.role)
         )
         .where(User.id == verify_data.user_id, User.is_active == True)
     )
@@ -158,7 +158,7 @@ async def verify_2fa(
             last_name=user.last_name,
             full_name=user.full_name,
             company_id=user.company_id,
-            roles=[ur.role.name for ur in user.user_roles],
+            roles=user.user_roles,
             is_active=user.is_active,
             last_login=user.last_login
         )
@@ -391,7 +391,7 @@ async def get_current_user_info(
         last_name=current_user.last_name,
         full_name=current_user.full_name,
         company_id=current_user.company_id,
-        roles=[ur.role.name for ur in current_user.user_roles],
+        roles=current_user.user_roles,
         is_active=current_user.is_active,
         last_login=current_user.last_login
     )
