@@ -105,9 +105,9 @@ services:
       - FROM_EMAIL=noreply@miraiworks.com
       - FROM_NAME=MiraiWorks
       - PYTHONPATH=/app
-    # volumes:
-      # - ./backend:/app:ro
-      # - backend_logs:/app/logs
+    volumes:
+      - ./backend:/app:ro
+      - backend_logs:/app/logs
     depends_on:
       db:
         condition: service_healthy
@@ -158,8 +158,8 @@ volumes:
     driver: local
   minio_data:
     driver: local
-  # backend_logs:
-    # driver: local
+  backend_logs:
+    driver: local
 
 networks:
   miraiworks-network:

@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/layout/AppLayout';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { Search, Send, Plus, X, User, Phone, Video, MoreHorizontal } from 'lucide-react';
+import { Search, Send, Plus, X, User, Phone, Video, MoreHorizontal, RefreshCw } from 'lucide-react';
 import { messagesApi } from '@/services/api';
 import type { Conversation, Message } from '@/types';
 
@@ -18,22 +18,23 @@ interface MessagesPageState {
   sending: boolean;
   error: string | null;
   newMessage: string;
-  searchQuery: string;
-  showNewChatModal: boolean;
-  searchingParticipants: boolean;
-  participants: Array<{
+  activeTab: 'conversations' | 'contacts';
+  conversationSearchQuery: string;
+  contactSearchQuery: string;
+  searchingContacts: boolean;
+  contacts: Array<{
     id: number;
     email: string;
     full_name: string;
     company_name?: string;
     is_online?: boolean;
   }>;
-  participantSearch: string;
 }
 
 export default function MessagesPage() {
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isPageVisible = useRef(true);
   
   const [state, setState] = useState<MessagesPageState>({
     conversations: [],
@@ -43,11 +44,11 @@ export default function MessagesPage() {
     sending: false,
     error: null,
     newMessage: '',
-    searchQuery: '',
-    showNewChatModal: false,
-    searchingParticipants: false,
-    participants: [],
-    participantSearch: ''
+    activeTab: 'conversations',
+    conversationSearchQuery: '',
+    contactSearchQuery: '',
+    searchingContacts: false,
+    contacts: []
   });
 
   useEffect(() => {
@@ -55,10 +56,16 @@ export default function MessagesPage() {
       try {
         setState(prev => ({ ...prev, loading: true, error: null }));
         const response = await messagesApi.getConversations();
+        const conversations = response.data || [];
+        
         setState(prev => ({
           ...prev,
-          conversations: response.data || [],
-          loading: false
+          conversations,
+          loading: false,
+          // Auto-select the most recent conversation if exists
+          activeConversationId: conversations.length > 0 && !prev.activeConversationId
+            ? conversations[0].other_user_id 
+            : prev.activeConversationId
         }));
       } catch (err) {
         setState(prev => ({
@@ -71,11 +78,42 @@ export default function MessagesPage() {
     };
 
     fetchConversations();
+
+    // No polling - we'll use WebSocket events and manual refreshes instead
+    return () => {
+      // Cleanup will be handled by WebSocket connection
+    };
   }, []);
 
   useEffect(() => {
     scrollToBottom();
   }, [state.messages]);
+
+  // Fetch contacts when contacts tab is selected
+  useEffect(() => {
+    const fetchContacts = async () => {
+      if (state.activeTab !== 'contacts') return;
+      
+      try {
+        setState(prev => ({ ...prev, searchingContacts: true }));
+        const response = await messagesApi.searchParticipants(state.contactSearchQuery);
+        setState(prev => ({
+          ...prev,
+          contacts: response.data?.participants || [],
+          searchingContacts: false
+        }));
+      } catch (err) {
+        console.error('Failed to fetch contacts:', err);
+        setState(prev => ({
+          ...prev,
+          contacts: [],
+          searchingContacts: false
+        }));
+      }
+    };
+
+    fetchContacts();
+  }, [state.activeTab, state.contactSearchQuery]);
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -97,7 +135,65 @@ export default function MessagesPage() {
     };
 
     fetchMessages();
-  }, [state.activeConversationId]);
+
+    // No polling for messages - only load once when conversation changes
+    // New messages will be received via WebSocket
+    return () => {
+      // No cleanup needed for polling
+    };
+  }, [state.activeConversationId, state.sending]);
+
+  // Handle page visibility changes - just track visibility, no automatic refreshing
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      isPageVisible.current = !document.hidden;
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
+  // Manual refresh for conversation list only (no automatic refreshing)
+  const refreshConversationList = useCallback(async () => {
+    try {
+      const response = await messagesApi.getConversations();
+      setState(prev => ({
+        ...prev,
+        conversations: response.data || prev.conversations
+      }));
+    } catch (err) {
+      console.error('Failed to refresh conversation list:', err);
+    }
+  }, []);
+
+
+  // Function to add a new message to current conversation (for real-time updates)
+  const addNewMessage = useCallback((newMessage: Message) => {
+    setState(prev => {
+      // Only add if it's for the currently active conversation
+      if (prev.activeConversationId === newMessage.sender_id || 
+          prev.activeConversationId === newMessage.recipient_id) {
+        // Check if message already exists to avoid duplicates
+        const messageExists = prev.messages.some(msg => msg.id === newMessage.id);
+        if (!messageExists) {
+          return {
+            ...prev,
+            messages: [...prev.messages, newMessage]
+          };
+        }
+      }
+      return prev;
+    });
+
+    // Always refresh conversation list when new message arrives
+    refreshConversationList();
+    
+    // Scroll to bottom if new message is in active conversation
+    setTimeout(scrollToBottom, 100);
+  }, [refreshConversationList]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -112,7 +208,7 @@ export default function MessagesPage() {
       setState(prev => ({
         ...prev,
         conversations: prev.conversations.map(conv => 
-          conv.id === conversationId 
+          conv.other_user_id === conversationId 
             ? { ...conv, unread_count: 0 }
             : conv
         )
@@ -139,6 +235,12 @@ export default function MessagesPage() {
           messages: [...prev.messages, response.data as Message],
           newMessage: ''
         }));
+        
+        // Refresh conversation list after sending
+        refreshConversationList(); // Update conversation list after sending
+        
+        // Scroll to bottom after sending
+        setTimeout(scrollToBottom, 100);
       }
     } catch (err) {
       console.error('Failed to send message:', err);
@@ -236,19 +338,90 @@ export default function MessagesPage() {
 
 
   const filteredConversations = state.conversations.filter(conversation =>
-    conversation.title?.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
-    conversation.participants?.some(p => 
-      p.user?.full_name?.toLowerCase().includes(state.searchQuery.toLowerCase())
-    )
+    conversation.other_user_name?.toLowerCase().includes(state.conversationSearchQuery.toLowerCase()) ||
+    conversation.other_user_email?.toLowerCase().includes(state.conversationSearchQuery.toLowerCase()) ||
+    conversation.other_user_company?.toLowerCase().includes(state.conversationSearchQuery.toLowerCase())
   );
 
-  const activeConversation = state.conversations.find(c => c.id === state.activeConversationId);
+  const activeConversation = state.conversations.find(c => c.other_user_id === state.activeConversationId);
 
   if (state.loading) {
     return (
       <AppLayout>
-        <div className="flex items-center justify-center h-64">
-          <LoadingSpinner className="w-8 h-8" />
+        <div className="h-[calc(100vh-4rem)] flex bg-white dark:bg-gray-900">
+          {/* Conversations List - Loading State */}
+          <div className="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+            {/* Header */}
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Chats</h1>
+                  <p className="text-xs text-gray-500 mt-1">Active tab: conversations</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    onClick={refreshConversationList}
+                    size="sm" 
+                    variant="ghost"
+                    className="w-10 h-10 rounded-full p-0 flex items-center justify-center"
+                    title="Refresh conversations"
+                    disabled
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    onClick={handleNewChat}
+                    size="sm" 
+                    className="w-10 h-10 rounded-full p-0 flex items-center justify-center"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Tab Navigation */}
+              <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 mb-4">
+                <button
+                  className="flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm"
+                >
+                  Conversations
+                </button>
+                <button
+                  className="flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                >
+                  Contacts
+                </button>
+              </div>
+              
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder="Search messages or senders..."
+                  className="pl-10 bg-gray-50 dark:bg-gray-700 border-0 rounded-xl"
+                  disabled
+                />
+              </div>
+            </div>
+
+            {/* Loading Content */}
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <LoadingSpinner className="w-8 h-8 mx-auto mb-4" />
+                <p className="text-gray-500">Loading conversations...</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Messages Area - Loading State */}
+          <div className="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900">
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-4xl mb-4">💬</div>
+                <p className="text-gray-500">Loading messages...</p>
+              </div>
+            </div>
+          </div>
         </div>
       </AppLayout>
     );
@@ -277,88 +450,184 @@ export default function MessagesPage() {
           {/* Header */}
           <div className="p-6 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between mb-6">
-              <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Chats</h1>
-              <Button 
-                onClick={handleNewChat}
-                size="sm" 
-                className="w-10 h-10 rounded-full p-0 flex items-center justify-center"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
+              <div>
+                <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Chats</h1>
+                <p className="text-xs text-gray-500 mt-1">Active tab: {state.activeTab}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button 
+                  onClick={refreshConversationList}
+                  size="sm" 
+                  variant="ghost"
+                  className="w-10 h-10 rounded-full p-0 flex items-center justify-center"
+                  title="Refresh conversations"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+                <Button 
+                  onClick={handleNewChat}
+                  size="sm" 
+                  className="w-10 h-10 rounded-full p-0 flex items-center justify-center"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
+            
+            {/* Tab Navigation */}
+            <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 mb-4">
+              <button
+                onClick={() => {
+                  console.log('Conversations tab clicked');
+                  setState(prev => ({ ...prev, activeTab: 'conversations' }));
+                }}
+                className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors ${
+                  state.activeTab === 'conversations'
+                    ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                }`}
+              >
+                Conversations
+              </button>
+              <button
+                onClick={() => {
+                  console.log('Contacts tab clicked');
+                  setState(prev => ({ ...prev, activeTab: 'contacts' }));
+                }}
+                className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors ${
+                  state.activeTab === 'contacts'
+                    ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                }`}
+              >
+                Contacts
+              </button>
+            </div>
+            
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
                 type="text"
-                placeholder="Search conversations..."
-                value={state.searchQuery}
-                onChange={(e) => setState(prev => ({ ...prev, searchQuery: e.target.value }))}
+                placeholder={state.activeTab === 'conversations' ? 'Search messages or senders...' : 'Search contacts or companies...'}
+                value={state.activeTab === 'conversations' ? state.conversationSearchQuery : state.contactSearchQuery}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (state.activeTab === 'conversations') {
+                    setState(prev => ({ ...prev, conversationSearchQuery: value }));
+                  } else {
+                    setState(prev => ({ ...prev, contactSearchQuery: value }));
+                  }
+                }}
                 className="pl-10 bg-gray-50 dark:bg-gray-700 border-0 rounded-xl"
               />
             </div>
           </div>
 
-          {/* Conversations */}
+          {/* Tab Content */}
           <div className="flex-1 overflow-y-auto">
-            {filteredConversations.length > 0 ? (
-              filteredConversations.map(conversation => {
-                const lastMessage = conversation.last_message;
-                const isActive = conversation.id === state.activeConversationId;
-                const participant = conversation.participants?.[0]?.user;
-                
-                return (
+            {state.activeTab === 'conversations' ? (
+              /* Conversations Tab */
+              filteredConversations.length > 0 ? (
+                filteredConversations.map(conversation => {
+                  const lastMessage = conversation.last_message;
+                  const isActive = conversation.other_user_id === state.activeConversationId;
+                  
+                  return (
+                    <div
+                      key={conversation.other_user_id}
+                      onClick={() => handleConversationSelect(conversation.other_user_id)}
+                      className={`mx-3 my-1 p-4 rounded-2xl cursor-pointer transition-all hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                        isActive ? 'bg-blue-50 dark:bg-blue-900/20 shadow-sm' : ''
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-medium ${getAvatarColor(conversation.other_user_id || 0)}`}>
+                          {conversation.other_user_name ? getInitials(conversation.other_user_name) : '?'}
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <h3 className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)' }}>
+                              {conversation.other_user_name || 'Unknown Contact'}
+                            </h3>
+                            <div className="flex items-center gap-2">
+                              {lastMessage && (
+                                <span className="text-xs text-gray-400">
+                                  {formatTime(lastMessage.created_at)}
+                                </span>
+                              )}
+                              {conversation.unread_count > 0 && (
+                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <p className="text-xs text-gray-500 mb-1">
+                            {conversation.other_user_company || conversation.other_user_email || ''}
+                          </p>
+                          
+                          {lastMessage && (
+                            <p className="text-sm text-gray-600 dark:text-gray-300 truncate">
+                              {lastMessage.content}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="p-8 text-center">
+                  <div className="text-4xl mb-4">💬</div>
+                  <p className="text-gray-500">No conversations yet</p>
+                  <Button onClick={handleNewChat} className="mt-4" size="sm">
+                    Start a new chat
+                  </Button>
+                </div>
+              )
+            ) : (
+              /* Contacts Tab */
+              state.searchingContacts ? (
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="text-center">
+                    <LoadingSpinner className="w-8 h-8 mx-auto mb-4" />
+                    <p className="text-gray-500">Loading contacts...</p>
+                  </div>
+                </div>
+              ) : state.contacts.length > 0 ? (
+                state.contacts.map(contact => (
                   <div
-                    key={conversation.id}
-                    onClick={() => handleConversationSelect(conversation.id)}
-                    className={`mx-3 my-1 p-4 rounded-2xl cursor-pointer transition-all hover:bg-gray-50 dark:hover:bg-gray-700 ${
-                      isActive ? 'bg-blue-50 dark:bg-blue-900/20 shadow-sm' : ''
-                    }`}
+                    key={contact.id}
+                    onClick={() => handleConversationSelect(contact.id)}
+                    className="mx-3 my-1 p-4 rounded-2xl cursor-pointer transition-all hover:bg-gray-50 dark:hover:bg-gray-700"
                   >
                     <div className="flex items-center gap-3">
-                      {/* Avatar */}
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-medium ${getAvatarColor(participant?.id || 0)}`}>
-                        {participant?.full_name ? getInitials(participant.full_name) : '?'}
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-medium ${getAvatarColor(contact.id)}`}>
+                        {getInitials(contact.full_name)}
                       </div>
                       
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)' }}>
-                            {conversation.title || participant?.full_name || 'Unknown Contact'}
-                          </h3>
-                          <div className="flex items-center gap-2">
-                            {lastMessage && (
-                              <span className="text-xs text-gray-400">
-                                {formatTime(lastMessage.created_at)}
-                              </span>
-                            )}
-                            {conversation.unread_count > 0 && (
-                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                            )}
-                          </div>
-                        </div>
-                        
-                        <p className="text-xs text-gray-500 mb-1">
-                          {participant?.company?.name || ''}
+                        <h3 className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)' }}>
+                          {contact.full_name}
+                        </h3>
+                        <p className="text-sm text-gray-500 truncate">
+                          {contact.email}
                         </p>
-                        
-                        {lastMessage && (
-                          <p className="text-sm text-gray-600 dark:text-gray-300 truncate">
-                            {lastMessage.content}
+                        {contact.company_name && (
+                          <p className="text-xs text-gray-400 truncate">
+                            {contact.company_name}
                           </p>
                         )}
                       </div>
                     </div>
                   </div>
-                );
-              })
-            ) : (
-              <div className="p-8 text-center">
-                <div className="text-4xl mb-4">💬</div>
-                <p className="text-gray-500">No conversations yet</p>
-                <Button onClick={handleNewChat} className="mt-4" size="sm">
-                  Start a new chat
-                </Button>
-              </div>
+                ))
+              ) : (
+                <div className="p-8 text-center">
+                  <div className="text-4xl mb-4">👥</div>
+                  <p className="text-gray-500">No contacts found</p>
+                </div>
+              )
             )}
           </div>
         </div>
@@ -372,21 +641,19 @@ export default function MessagesPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     {/* Avatar */}
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium ${getAvatarColor(activeConversation?.participants?.[0]?.user?.id || 0)}`}>
-                      {activeConversation?.participants?.[0]?.user?.full_name 
-                        ? getInitials(activeConversation.participants[0].user.full_name) 
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium ${getAvatarColor(activeConversation?.other_user_id || 0)}`}>
+                      {activeConversation?.other_user_name 
+                        ? getInitials(activeConversation.other_user_name) 
                         : '?'}
                     </div>
                     
                     <div>
                       <h2 className="font-semibold" style={{ color: 'var(--text-primary)' }}>
-                        {activeConversation?.title || activeConversation?.participants?.[0]?.user?.full_name || 'Conversation'}
+                        {activeConversation?.other_user_name || 'Conversation'}
                       </h2>
-                      {activeConversation?.participants?.[0]?.user && (
-                        <p className="text-sm text-gray-500">
-                          {activeConversation.participants[0].user.company?.name || 'Online'}
-                        </p>
-                      )}
+                      <p className="text-sm text-gray-500">
+                        {activeConversation?.other_user_company || activeConversation?.other_user_email || 'Online'}
+                      </p>
                     </div>
                   </div>
                   
@@ -493,74 +760,6 @@ export default function MessagesPage() {
         </div>
       </div>
 
-      {/* New Chat Modal */}
-      {state.showNewChatModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md mx-4">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>New Chat</h2>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setState(prev => ({ ...prev, showNewChatModal: false }))}
-                className="w-8 h-8 rounded-full p-0"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            <div className="mb-6">
-              <Input
-                type="text"
-                placeholder="Search people..."
-                value={state.participantSearch}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setState(prev => ({ ...prev, participantSearch: value }));
-                  searchParticipants(value);
-                }}
-                className="rounded-xl"
-                autoFocus
-              />
-            </div>
-            
-            <div className="max-h-60 overflow-y-auto">
-              {state.searchingParticipants ? (
-                <div className="flex items-center justify-center py-8">
-                  <LoadingSpinner className="w-6 h-6" />
-                </div>
-              ) : state.participants.length > 0 ? (
-                <div className="space-y-2">
-                  {state.participants.map(participant => (
-                    <div
-                      key={participant.id}
-                      onClick={() => handleStartChat(participant.id)}
-                      className="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                    >
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium ${getAvatarColor(participant.id)}`}>
-                        {getInitials(participant.full_name)}
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-medium" style={{ color: 'var(--text-primary)' }}>
-                          {participant.full_name}
-                        </h3>
-                        <p className="text-sm text-gray-500">{participant.company_name}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <User className="h-12 w-12 mx-auto text-gray-400 mb-3" />
-                  <p className="text-gray-500">
-                    {state.participantSearch ? 'No users found' : 'Start typing to search for people'}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </AppLayout>
   );
 }

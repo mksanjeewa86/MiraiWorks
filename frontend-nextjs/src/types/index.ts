@@ -121,15 +121,34 @@ export interface Message {
   id: number;
   conversation_id: number;
   sender_id: number;
+  recipient_id?: number; // Add recipient_id for direct messages
   content: string;
   message_type: 'text' | 'file' | 'system';
   attachment_id?: number;
   is_read: boolean;
   created_at: string;
   updated_at: string;
-  sender: User;
+  sender?: User;
+  sender_name?: string;
   attachment?: MessageAttachment;
   read_by?: User[];
+}
+
+// Direct message info from backend
+export interface DirectMessageInfo {
+  id: number;
+  sender_id: number;
+  recipient_id: number;
+  sender_name: string;
+  recipient_name: string;
+  sender_email: string;
+  recipient_email: string;
+  content: string;
+  type: 'text' | 'file' | 'system';
+  is_read: boolean;
+  reply_to_id?: number;
+  created_at: string;
+  read_at?: string;
 }
 
 export interface MessageAttachment {
@@ -142,7 +161,21 @@ export interface MessageAttachment {
   uploaded_at: string;
 }
 
+// Direct messaging conversation summary
 export interface Conversation {
+  other_user_id: number;
+  other_user_name: string;
+  other_user_email: string;
+  other_user_company?: string;
+  last_message?: DirectMessageInfo;
+  last_message_content?: string;
+  last_message_at?: string;
+  unread_count: number;
+  last_activity: string;
+}
+
+// Legacy conversation interface (if needed)
+export interface LegacyConversation {
   id: number;
   title?: string;
   is_group: boolean;

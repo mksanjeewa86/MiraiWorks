@@ -11,7 +11,7 @@ from sqlalchemy.orm import selectinload
 
 from app.config import settings
 from app.models.auth import RefreshToken
-from app.models.role import UserRole as UserRoleModel
+from app.models.role import Role, UserRole as UserRoleModel
 from app.models.user import User
 from app.rbac import is_admin_role
 from app.utils.constants import UserRole
@@ -119,7 +119,9 @@ class AuthService:
 
         result = await db.execute(
             select(RefreshToken)
-            .options(selectinload(RefreshToken.user))
+            .options(
+                selectinload(RefreshToken.user).selectinload(User.user_roles).selectinload(UserRoleModel.role)
+            )
             .where(
                 RefreshToken.token_hash == token_hash,
                 RefreshToken.is_revoked == False,

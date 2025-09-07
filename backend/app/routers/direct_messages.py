@@ -8,6 +8,7 @@ from sqlalchemy.orm import selectinload
 from app.database import get_db
 from app.dependencies import get_current_active_user
 from app.models.direct_message import DirectMessage
+from app.models.role import Role, UserRole
 from app.models.user import User
 from app.schemas.direct_message import (
     ConversationListResponse,
@@ -226,25 +227,72 @@ async def mark_conversation_as_read(
     return {"message": f"Marked {count} messages as read"}
 
 
-@router.get("/participants/search")
-async def search_message_participants(
+@router.get("/participants")
+async def get_message_participants(
     query: Optional[str] = None,
+    limit: int = 50,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Get list of users current user can send messages to."""
-    participants = await rules_service.get_allowed_conversation_participants(
-        db, current_user.id
+    
+    # Get current user's roles to determine filtering logic
+    current_user_roles = [user_role.role.name for user_role in current_user.user_roles]
+    
+    # Build base query
+    query_stmt = (
+        select(User)
+        .join(User.user_roles)
+        .join(UserRole.role)
+        .where(
+            User.is_active == True,
+            User.id != current_user.id
+        )
+        .options(
+            selectinload(User.company),
+            selectinload(User.user_roles).selectinload(UserRole.role)
+        )
+        .order_by(User.first_name, User.last_name)
+        .limit(limit)
     )
-
-    # Apply search filter
+    
+    # Apply role-based filtering
+    if "super_admin" in current_user_roles:
+        # Super admin can message all company admins
+        query_stmt = query_stmt.where(Role.name == "company_admin")
+    elif "company_admin" in current_user_roles:
+        # Company admin can message super admin and other company admins
+        query_stmt = query_stmt.where(
+            or_(
+                Role.name == "super_admin",
+                Role.name == "company_admin"
+            )
+        )
+    # For other roles, no role-based filtering (can message anyone)
+    
+    # Apply search filter if provided
     if query:
-        query_lower = query.lower()
-        participants = [
-            p
-            for p in participants
-            if query_lower in p["full_name"].lower()
-            or query_lower in p["email"].lower()
-        ]
-
+        search_term = f"%{query}%"
+        query_stmt = query_stmt.where(
+            or_(
+                User.first_name.ilike(search_term),
+                User.last_name.ilike(search_term),
+                User.email.ilike(search_term),
+            )
+        )
+    
+    result = await db.execute(query_stmt)
+    users = result.scalars().all()
+    
+    # Format response
+    participants = []
+    for user in users:
+        participants.append({
+            "id": user.id,
+            "email": user.email,
+            "full_name": user.full_name,
+            "company_name": user.company.name if user.company else None,
+            "is_online": False  # Could be enhanced with presence tracking
+        })
+    
     return {"participants": participants}

@@ -1,10 +1,8 @@
-version: '3.8'
-
 services:
   # MySQL Database
   db:
     image: mysql:8.0
-    container_name: miraiworks_db_dev
+    container_name: miraiworks_db
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: root
@@ -14,58 +12,160 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - mysql_dev_data:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
+      - ./database/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+      interval: 10s
     networks:
-      - miraiworks-dev-network
+      - miraiworks-network
 
   # Redis for caching and sessions
   redis:
     image: redis:7-alpine
-    container_name: miraiworks_redis_dev
+    container_name: miraiworks_redis
     restart: unless-stopped
     ports:
       - "6379:6379"
     command: redis-server --appendonly yes
     volumes:
-      - redis_dev_data:/data
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      timeout: 10s
+      retries: 5
+      interval: 10s
     networks:
-      - miraiworks-dev-network
+      - miraiworks-network
 
-  # Backend API (Python FastAPI) - Development mode
+  # MinIO Object Storage
+  minio:
+    image: minio/minio:latest
+    container_name: miraiworks_minio
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin123
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      timeout: 10s
+      retries: 5
+      interval: 10s
+    networks:
+      - miraiworks-network
+
+  # MailCatcher for development email testing
+  mailcatcher:
+    image: schickling/mailcatcher
+    container_name: miraiworks_mailcatcher
+    restart: unless-stopped
+    ports:
+      - "1080:1080"  # Web interface
+      - "1025:1025"  # SMTP server
+    networks:
+      - miraiworks-network
+
+  # Backend API (Python FastAPI) - Development mode with hot reloading
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-      target: production
     container_name: miraiworks_backend_dev
     restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
+      - DB_URL=mysql+asyncmy://hrms:hrms@db:3306/miraiworks
       - DB_HOST=db
       - DB_PORT=3306
       - DB_USER=hrms
       - DB_PASSWORD=hrms
       - DB_NAME=miraiworks
       - REDIS_URL=redis://redis:6379/0
-      - JWT_SECRET=dev-secret-key-not-for-production
+      - S3_ENDPOINT=http://minio:9000
+      - S3_ACCESS_KEY=minioadmin
+      - S3_SECRET_KEY=minioadmin123
+      - S3_BUCKET=miraiworks
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+      - FORCE_2FA_FOR_ADMINS=false
+      - SMTP_HOST=mailcatcher
+      - SMTP_PORT=1025
+      - SMTP_USE_TLS=false
+      - SMTP_USE_SSL=false
+      - SMTP_USERNAME=
+      - SMTP_PASSWORD=
+      - FROM_EMAIL=noreply@miraiworks.com
+      - FROM_NAME=MiraiWorks
       - PYTHONPATH=/app
+      - WATCHFILES_FORCE_POLLING=true
     volumes:
-      - ./backend:/app
+      - ./backend:/app:cached
+      - backend_logs:/app/logs
     depends_on:
-      - db
-      - redis
-    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      mailcatcher:
+        condition: service_started
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "/app"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      timeout: 10s
+      retries: 5
+      interval: 30s
     networks:
-      - miraiworks-dev-network
+      - miraiworks-network
+
+  # Frontend (Next.js) - Development mode with volume mounting (production build but with hot reload)
+  frontend:
+    build:
+      context: ./frontend-nextjs
+      dockerfile: Dockerfile
+    container_name: miraiworks_frontend_dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api
+      - NEXT_TELEMETRY_DISABLED=1
+      - HOSTNAME=0.0.0.0
+      - PORT=3000
+    # Note: For true hot reloading, you'd need to rebuild when frontend code changes
+    # This setup allows for easier backend development with volume mounting
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:3000"]
+      timeout: 10s
+      retries: 5
+      interval: 30s
+    networks:
+      - miraiworks-network
 
 volumes:
-  mysql_dev_data:
+  mysql_data:
     driver: local
-  redis_dev_data:
+  redis_data:
+    driver: local
+  minio_data:
+    driver: local
+  backend_logs:
     driver: local
 
 networks:
-  miraiworks-dev-network:
+  miraiworks-network:
     driver: bridge
-    name: miraiworks-dev-network
+    name: miraiworks-network

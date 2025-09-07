@@ -183,7 +183,7 @@ export const messagesApi = {
     }>;
   }>> => {
     const token = localStorage.getItem('accessToken');
-    const url = new URL(`${API_BASE_URL}/api/public/users/search`);
+    const url = new URL(`${API_BASE_URL}/api/messages/participants`);
     if (query) {
       url.searchParams.set('query', query);
     }
@@ -201,6 +201,6 @@ export const messagesApi = {
     }
     
     const data = await response.json();
-    return { data: { participants: data.users || [] }, success: true };
+    return { data: { participants: data.participants || [] }, success: true };
   },
 };

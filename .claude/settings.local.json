@@ -55,7 +55,8 @@
       "Bash(docker start:*)",
       "Bash(timeout:*)",
       "Bash(ruff check:*)",
-      "Read(//c/Users/mksan/**)"
+      "Read(//c/Users/mksan/**)",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": []
