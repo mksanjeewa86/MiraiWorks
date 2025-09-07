@@ -7,21 +7,24 @@ export class AuthHelper {
   async login(userType: keyof typeof testUsers) {
     const user = testUsers[userType];
     
-    // Navigate to login page
-    await this.page.goto('/auth/login');
+    // Navigate to login page with faster loading
+    await this.page.goto('/auth/login', { waitUntil: 'domcontentloaded' });
     
     // Fill login form
     await this.page.fill('[data-testid="email-input"]', user.email);
     await this.page.fill('[data-testid="password-input"]', user.password);
     
-    // Submit form
-    await this.page.click('[data-testid="login-button"]');
+    // Submit form and wait for navigation
+    const [response] = await Promise.all([
+      this.page.waitForResponse(response => response.url().includes('/api/auth/login')),
+      this.page.click('[data-testid="login-button"]')
+    ]);
     
-    // Wait for successful login redirect
-    await expect(this.page).toHaveURL('/dashboard');
+    // Wait for successful login redirect with timeout
+    await expect(this.page).toHaveURL('/dashboard', { timeout: 10000 });
     
     // Verify user is logged in by checking for user menu or profile info
-    await expect(this.page.locator('[data-testid="user-menu"]')).toBeVisible();
+    await expect(this.page.locator('[data-testid="user-menu"]')).toBeVisible({ timeout: 5000 });
   }
 
   async logout() {
@@ -62,16 +65,23 @@ export class AuthHelper {
 
   async ensureLoggedOut() {
     try {
-      // Try to access dashboard - if successful, user is logged in
-      await this.page.goto('/dashboard', { timeout: 5000 });
+      // Clear all storage first for faster logout
+      await this.page.context().clearCookies();
+      await this.page.evaluate(() => {
+        localStorage.clear();
+        sessionStorage.clear();
+      });
       
-      // If we can access dashboard, logout
-      if (await this.page.locator('[data-testid="user-menu"]').isVisible()) {
+      // Check if still logged in after clearing storage
+      await this.page.goto('/dashboard', { timeout: 3000, waitUntil: 'domcontentloaded' });
+      
+      // If we can still access dashboard, do proper logout
+      if (await this.page.locator('[data-testid="user-menu"]').isVisible({ timeout: 2000 })) {
         await this.logout();
       }
     } catch {
       // User is already logged out or page doesn't exist
-      console.log('User is already logged out');
+      // This is expected when clearing storage works
     }
   }
 

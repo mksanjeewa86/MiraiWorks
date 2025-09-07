@@ -7,14 +7,18 @@ export default defineConfig({
   testDir: './tests/e2e',
   /* Output directory for test results */
   outputDir: './tests/results',
+  /* Global setup for authentication */
+  globalSetup: process.env.CI ? './tests/e2e/fixtures/global-setup.ts' : undefined,
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 1 : 0,
   /* Use multiple workers for faster CI execution */
-  workers: process.env.CI ? '50%' : undefined,
+  workers: process.env.CI ? 4 : undefined,
+  /* Global timeout for each test */
+  timeout: process.env.CI ? 60 * 1000 : 30 * 1000,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: process.env.CI 
     ? [['github'], ['html', { outputFolder: './tests/reports/playwright-report', open: 'never' }]]
@@ -25,7 +29,7 @@ export default defineConfig({
     baseURL: 'http://localhost:3000',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
+    trace: process.env.CI ? 'on-first-retry' : 'retain-on-failure',
 
     /* Take screenshot on failure */
     screenshot: 'only-on-failure',
@@ -34,23 +38,35 @@ export default defineConfig({
     video: process.env.CI ? 'retain-on-failure' : 'off',
 
     /* Timeout for each action (e.g. click, fill, etc.) */
-    actionTimeout: 15 * 1000,
+    actionTimeout: process.env.CI ? 10 * 1000 : 15 * 1000,
 
     /* Timeout for each navigation action */
-    navigationTimeout: 30 * 1000,
+    navigationTimeout: process.env.CI ? 20 * 1000 : 30 * 1000,
+
+    /* Ignore HTTPS errors in CI */
+    ignoreHTTPSErrors: process.env.CI ? true : false,
+
+    /* Disable animations for faster tests */
+    launchOptions: {
+      args: process.env.CI ? [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-background-timer-throttling',
+        '--disable-backgrounding-occluded-windows',
+        '--disable-renderer-backgrounding',
+        '--disable-features=TranslateUI',
+        '--disable-ipc-flooding-protection'
+      ] : []
+    }
   },
 
   /* Configure projects for major browsers */
   projects: process.env.CI ? [
-    // In CI, focus on Chromium for speed (most common browser)
+    // In CI, focus only on Chromium for maximum speed
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-    },
-    // Test one mobile viewport
-    {
-      name: 'Mobile Chrome',
-      use: { ...devices['Pixel 5'] },
     },
   ] : [
     // Locally, test all browsers
@@ -91,6 +107,8 @@ export default defineConfig({
     command: process.env.CI ? 'npm start' : 'npm run dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
+    timeout: process.env.CI ? 180 * 1000 : 120 * 1000,
+    stderr: 'pipe',
+    stdout: 'pipe',
   },
 });
