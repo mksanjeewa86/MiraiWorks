@@ -7,3 +7,4 @@ export { interviewsApi } from './interviewsApi';
 export { messagesApi } from './messagesApi';
 export { calendarApi } from './calendarApi';
 export { authApi } from './authApi';
+export { userSettingsApi } from './userSettingsApi';

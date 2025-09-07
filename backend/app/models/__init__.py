@@ -26,6 +26,7 @@ from .resume import (
 )
 from .role import Role, UserRole
 from .user import User
+from .user_settings import UserSettings
 
 __all__ = [
     "Company",
@@ -60,4 +61,5 @@ __all__ = [
     "Job",
     "JobApplication",
     "CompanyProfile",
+    "UserSettings",
 ]

@@ -11,6 +11,7 @@ from . import (
     messaging_ws,
     public,
     resumes,
+    user_settings,
     webhooks,
 )
 
@@ -26,6 +27,7 @@ def include_routers(app: FastAPI) -> None:
     app.include_router(interviews.router, prefix="/api/interviews", tags=["interviews"])
     app.include_router(webhooks.router, prefix="/api/webhooks", tags=["webhooks"])
     app.include_router(resumes.router, prefix="/api/resumes", tags=["resumes"])
+    app.include_router(user_settings.router, prefix="/api/user", tags=["user-settings"])
     app.include_router(public.router, prefix="/api/public", tags=["public"])
 
 

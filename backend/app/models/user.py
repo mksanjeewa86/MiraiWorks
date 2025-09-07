@@ -63,6 +63,9 @@ class User(Base):
     meetings = relationship(
         "Meeting", secondary="meeting_participants", back_populates="participants"
     )
+    settings = relationship(
+        "UserSettings", back_populates="user", cascade="all, delete-orphan", uselist=False
+    )
 
     @property
     def full_name(self):

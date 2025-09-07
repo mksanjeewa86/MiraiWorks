@@ -5,12 +5,15 @@ import AppLayout from '@/components/layout/AppLayout';
 import CandidateDashboard from '@/components/dashboard/CandidateDashboard';
 import RecruiterDashboard from '@/components/dashboard/RecruiterDashboard';
 import EmployerDashboard from '@/components/dashboard/EmployerDashboard';
+import CompanyAdminDashboard from '@/components/dashboard/CompanyAdminDashboard';
+import SuperAdminDashboard from '@/components/dashboard/SuperAdminDashboard';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function DashboardPage() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
+  
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -39,9 +42,9 @@ export default function DashboardPage() {
       case 'employer':
         return <EmployerDashboard />;
       case 'company_admin':
-        return <div className="p-6"><h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Company Admin Dashboard</h1><p style={{ color: 'var(--text-secondary)' }}>Coming soon...</p></div>;
+        return <CompanyAdminDashboard />;
       case 'super_admin':
-        return <div className="p-6"><h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Super Admin Dashboard</h1><p style={{ color: 'var(--text-secondary)' }}>Coming soon...</p></div>;
+        return <SuperAdminDashboard />;
       default:
         return <CandidateDashboard />;
     }

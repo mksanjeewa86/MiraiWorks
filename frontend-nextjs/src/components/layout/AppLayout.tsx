@@ -107,7 +107,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
         />
         
         <main className={`
-          flex-1 min-h-[calc(100vh-4rem)] transition-all duration-300 pt-16
+          flex-1 min-h-[calc(100vh-4rem)] transition-all duration-300
           ${!isMobile && !sidebarCollapsed ? 'lg:ml-64' : !isMobile && sidebarCollapsed ? 'lg:ml-16' : 'ml-0'}
         `}>
           <div className="p-6">

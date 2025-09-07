@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { userSettingsApi, UserSettings, UserProfile } from '@/services/userSettingsApi';
 import AppLayout from '@/components/layout/AppLayout';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -26,33 +27,13 @@ interface SettingsState {
   activeSection: 'account' | 'security' | 'notifications' | 'preferences';
   loading: boolean;
   saving: boolean;
-  profile: {
-    full_name: string;
-    email: string;
-    phone: string;
-    company: string;
-    job_title: string;
-    bio: string;
-  };
+  error: string | null;
+  profile: UserProfile | null;
+  settings: UserSettings | null;
   security: {
     current_password: string;
     new_password: string;
     confirm_password: string;
-    two_factor_enabled: boolean;
-  };
-  notifications: {
-    email_notifications: boolean;
-    push_notifications: boolean;
-    sms_notifications: boolean;
-    interview_reminders: boolean;
-    application_updates: boolean;
-    message_notifications: boolean;
-  };
-  preferences: {
-    theme: 'light' | 'dark' | 'system';
-    language: string;
-    timezone: string;
-    date_format: string;
   };
 }
 
@@ -63,33 +44,13 @@ export default function SettingsPage() {
     activeSection: 'account',
     loading: true,
     saving: false,
-    profile: {
-      full_name: user?.full_name || '',
-      email: user?.email || '',
-      phone: '',
-      company: '',
-      job_title: '',
-      bio: ''
-    },
+    error: null,
+    profile: null,
+    settings: null,
     security: {
       current_password: '',
       new_password: '',
-      confirm_password: '',
-      two_factor_enabled: false
-    },
-    notifications: {
-      email_notifications: true,
-      push_notifications: true,
-      sms_notifications: false,
-      interview_reminders: true,
-      application_updates: true,
-      message_notifications: true
-    },
-    preferences: {
-      theme: 'system',
-      language: 'en',
-      timezone: 'America/New_York',
-      date_format: 'MM/DD/YYYY'
+      confirm_password: ''
     }
   });
 
@@ -100,47 +61,108 @@ export default function SettingsPage() {
   });
 
   useEffect(() => {
-    // Simulate loading settings
-    setTimeout(() => {
-      setState(prev => ({ ...prev, loading: false }));
-    }, 1000);
-  }, []);
+    const loadUserData = async () => {
+      try {
+        setState(prev => ({ ...prev, loading: true, error: null }));
+        
+        // Load user profile and settings in parallel
+        const [profileResponse, settingsResponse] = await Promise.all([
+          userSettingsApi.getProfile(),
+          userSettingsApi.getSettings()
+        ]);
+        
+        setState(prev => ({
+          ...prev,
+          profile: profileResponse.data,
+          settings: settingsResponse.data,
+          loading: false
+        }));
+      } catch (error) {
+        console.error('Failed to load user data:', error);
+        setState(prev => ({
+          ...prev,
+          error: 'Failed to load user data',
+          loading: false
+        }));
+      }
+    };
+
+    if (user) {
+      loadUserData();
+    }
+  }, [user]);
 
   const updateProfile = (field: string, value: string) => {
     setState(prev => ({
       ...prev,
-      profile: { ...prev.profile, [field]: value }
+      profile: prev.profile ? { ...prev.profile, [field]: value } : null
     }));
   };
 
   const updateSecurity = (field: string, value: string | boolean) => {
-    setState(prev => ({
-      ...prev,
-      security: { ...prev.security, [field]: value }
-    }));
+    if (field === 'two_factor_enabled') {
+      setState(prev => ({
+        ...prev,
+        settings: prev.settings ? { ...prev.settings, two_factor_enabled: value as boolean } : null
+      }));
+    } else {
+      setState(prev => ({
+        ...prev,
+        security: { ...prev.security, [field]: value }
+      }));
+    }
   };
 
   const updateNotifications = (field: string, value: boolean) => {
     setState(prev => ({
       ...prev,
-      notifications: { ...prev.notifications, [field]: value }
+      settings: prev.settings ? { ...prev.settings, [field]: value } : null
     }));
   };
 
   const updatePreferences = (field: string, value: string) => {
     setState(prev => ({
       ...prev,
-      preferences: { ...prev.preferences, [field]: value }
+      settings: prev.settings ? { ...prev.settings, [field]: value } : null
     }));
   };
 
   const handleSave = async () => {
-    setState(prev => ({ ...prev, saving: true }));
+    if (!state.profile || !state.settings) return;
     
-    // Simulate saving
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    setState(prev => ({ ...prev, saving: false }));
+    try {
+      setState(prev => ({ ...prev, saving: true, error: null }));
+      
+      // Save profile and settings in parallel
+      const [profileResponse, settingsResponse] = await Promise.all([
+        userSettingsApi.updateProfile({
+          first_name: state.profile!.first_name,
+          last_name: state.profile!.last_name,
+          phone: state.profile!.phone,
+          job_title: state.profile!.job_title,
+          bio: state.profile!.bio
+        }),
+        userSettingsApi.updateSettings(state.settings)
+      ]);
+      
+      setState(prev => ({
+        ...prev,
+        profile: profileResponse.data,
+        settings: settingsResponse.data,
+        saving: false
+      }));
+      
+      // Show success message (you could add a toast notification here)
+      console.log('Settings saved successfully');
+      
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+      setState(prev => ({
+        ...prev,
+        error: 'Failed to save settings',
+        saving: false
+      }));
+    }
   };
 
   const sections = [
@@ -161,33 +183,35 @@ export default function SettingsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input
-          label="Full Name"
-          value={state.profile.full_name}
-          onChange={(e) => updateProfile('full_name', e.target.value)}
+          label="First Name"
+          value={state.profile?.first_name || ''}
+          onChange={(e) => updateProfile('first_name', e.target.value)}
+          required
+        />
+        <Input
+          label="Last Name"
+          value={state.profile?.last_name || ''}
+          onChange={(e) => updateProfile('last_name', e.target.value)}
           required
         />
         <Input
           label="Email"
           type="email"
-          value={state.profile.email}
+          value={state.profile?.email || ''}
           onChange={(e) => updateProfile('email', e.target.value)}
           required
+          disabled
         />
         <Input
           label="Phone"
-          value={state.profile.phone}
+          value={state.profile?.phone || ''}
           onChange={(e) => updateProfile('phone', e.target.value)}
-        />
-        <Input
-          label="Company"
-          value={state.profile.company}
-          onChange={(e) => updateProfile('company', e.target.value)}
         />
       </div>
       
       <Input
         label="Job Title"
-        value={state.profile.job_title}
+        value={state.profile?.job_title || ''}
         onChange={(e) => updateProfile('job_title', e.target.value)}
       />
 
@@ -199,7 +223,7 @@ export default function SettingsPage() {
           className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800"
           style={{ color: 'var(--text-primary)' }}
           rows={4}
-          value={state.profile.bio}
+          value={state.profile?.bio || ''}
           onChange={(e) => updateProfile('bio', e.target.value)}
           placeholder="Tell us about yourself..."
         />
@@ -290,17 +314,17 @@ export default function SettingsPage() {
             <input
               type="checkbox"
               id="two-factor"
-              checked={state.security.two_factor_enabled}
+              checked={state.settings?.two_factor_enabled || false}
               onChange={(e) => updateSecurity('two_factor_enabled', e.target.checked)}
               className="mr-2"
             />
             <label htmlFor="two-factor" className="cursor-pointer">
-              {state.security.two_factor_enabled ? 'Enabled' : 'Disabled'}
+              {state.settings?.two_factor_enabled ? 'Enabled' : 'Disabled'}
             </label>
           </div>
         </div>
         
-        {state.security.two_factor_enabled && (
+        {state.settings?.two_factor_enabled && (
           <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
             <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
               <Smartphone className="h-4 w-4" />
@@ -345,7 +369,7 @@ export default function SettingsPage() {
               </div>
               <input
                 type="checkbox"
-                checked={state.notifications[key as keyof typeof state.notifications] as boolean}
+                checked={state.settings?.[key as keyof UserSettings] as boolean || false}
                 onChange={(e) => updateNotifications(key, e.target.checked)}
                 className="scale-110"
               />
@@ -372,7 +396,7 @@ export default function SettingsPage() {
               </div>
               <input
                 type="checkbox"
-                checked={state.notifications[key as keyof typeof state.notifications] as boolean}
+                checked={state.settings?.[key as keyof UserSettings] as boolean || false}
                 onChange={(e) => updateNotifications(key, e.target.checked)}
                 className="scale-110"
               />
@@ -412,7 +436,7 @@ export default function SettingsPage() {
                   key={value}
                   onClick={() => updatePreferences('theme', value)}
                   className={`p-3 rounded-lg border-2 transition-colors flex flex-col items-center gap-2 ${
-                    state.preferences.theme === value
+                    state.settings?.theme === value
                       ? 'border-brand-primary bg-brand-primary/10'
                       : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                   }`}
@@ -437,7 +461,7 @@ export default function SettingsPage() {
               Language
             </label>
             <select
-              value={state.preferences.language}
+              value={state.settings?.language || 'en'}
               onChange={(e) => updatePreferences('language', e.target.value)}
               className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800"
               style={{ color: 'var(--text-primary)' }}
@@ -455,7 +479,7 @@ export default function SettingsPage() {
               Timezone
             </label>
             <select
-              value={state.preferences.timezone}
+              value={state.settings?.timezone || 'America/New_York'}
               onChange={(e) => updatePreferences('timezone', e.target.value)}
               className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800"
               style={{ color: 'var(--text-primary)' }}
@@ -475,7 +499,7 @@ export default function SettingsPage() {
             Date Format
           </label>
           <select
-            value={state.preferences.date_format}
+            value={state.settings?.date_format || 'MM/DD/YYYY'}
             onChange={(e) => updatePreferences('date_format', e.target.value)}
             className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800"
             style={{ color: 'var(--text-primary)' }}
@@ -526,14 +550,19 @@ export default function SettingsPage() {
             </p>
           </div>
           
-          <Button 
-            onClick={handleSave}
-            disabled={state.saving}
-            className="flex items-center gap-2"
-          >
-            {state.saving ? <LoadingSpinner className="w-4 h-4" /> : <Save className="h-4 w-4" />}
-            {state.saving ? 'Saving...' : 'Save Changes'}
-          </Button>
+          <div className="flex items-center gap-4">
+            {state.error && (
+              <p className="text-red-600 text-sm">{state.error}</p>
+            )}
+            <Button 
+              onClick={handleSave}
+              disabled={state.saving || !state.profile || !state.settings}
+              className="flex items-center gap-2"
+            >
+              {state.saving ? <LoadingSpinner className="w-4 h-4" /> : <Save className="h-4 w-4" />}
+              {state.saving ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
