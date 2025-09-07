@@ -1,11 +1,13 @@
 import asyncio
 from logging.config import fileConfig
+
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
+
 from alembic import context
-from app.database import Base
 from app.config import settings
+from app.database import Base
 
 # Import all models to ensure they are registered with SQLAlchemy
 from app.models import *

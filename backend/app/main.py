@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 
 from app.database import init_db
 from app.dependencies import get_redis
+from app.routers import include_routers
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -77,6 +78,4 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 
 # Include routers
-from app.routers import include_routers
-
 include_routers(app)
