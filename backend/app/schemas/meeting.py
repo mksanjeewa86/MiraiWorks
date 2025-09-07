@@ -1,16 +1,13 @@
 from datetime import datetime
 from enum import Enum
-from typing import List
 from typing import Optional
 
-from pydantic import BaseModel
-from pydantic import Field
-from pydantic import validator
+from pydantic import BaseModel, Field, validator
 
 
 class MeetingType(str, Enum):
     CASUAL = "casual"  # Candidate ↔ Recruiter (1:1 interviews)
-    MAIN = "main"      # Candidate ↔ Employer (recruiter as optional observer/organizer)
+    MAIN = "main"  # Candidate ↔ Employer (recruiter as optional observer/organizer)
 
 
 class MeetingStatus(str, Enum):
@@ -23,9 +20,9 @@ class MeetingStatus(str, Enum):
 
 
 class ParticipantRole(str, Enum):
-    HOST = "host"           # Meeting organizer
+    HOST = "host"  # Meeting organizer
     PARTICIPANT = "participant"  # Regular participant
-    OBSERVER = "observer"   # View-only (e.g., recruiter in main interviews)
+    OBSERVER = "observer"  # View-only (e.g., recruiter in main interviews)
 
 
 class ParticipantStatus(str, Enum):
@@ -91,47 +88,47 @@ class MeetingBase(BaseModel):
     auto_summary: bool = False
     access_code: Optional[str] = Field(None, min_length=4, max_length=50)
 
-    @validator('scheduled_end')
+    @validator("scheduled_end")
     def end_after_start(cls, v, values):
-        if 'scheduled_start' in values and v <= values['scheduled_start']:
-            raise ValueError('scheduled_end must be after scheduled_start')
+        if "scheduled_start" in values and v <= values["scheduled_start"]:
+            raise ValueError("scheduled_end must be after scheduled_start")
         return v
 
-    @validator('scheduled_start')
+    @validator("scheduled_start")
     def not_in_past(cls, v):
         if v <= datetime.utcnow():
-            raise ValueError('scheduled_start must be in the future')
+            raise ValueError("scheduled_start must be in the future")
         return v
 
 
 class MeetingCreate(MeetingBase):
     interview_id: Optional[int] = None
-    participants: List[MeetingParticipantCreate] = Field(..., min_items=1)
+    participants: list[MeetingParticipantCreate] = Field(..., min_items=1)
 
-    @validator('participants')
+    @validator("participants")
     def validate_participants_by_type(cls, v, values):
-        if 'meeting_type' not in values:
+        if "meeting_type" not in values:
             return v
-        
-        meeting_type = values['meeting_type']
+
+        meeting_type = values["meeting_type"]
         roles = [p.role for p in v]
-        
+
         # Must have at least one host
         if ParticipantRole.HOST not in roles:
-            raise ValueError('Meeting must have at least one host')
-        
+            raise ValueError("Meeting must have at least one host")
+
         # Type-specific validations
         if meeting_type == MeetingType.CASUAL:
             # Casual interviews: 2 participants (candidate + recruiter)
             if len(v) != 2:
-                raise ValueError('Casual interviews must have exactly 2 participants')
+                raise ValueError("Casual interviews must have exactly 2 participants")
         elif meeting_type == MeetingType.MAIN:
             # Main interviews: at least 2 participants (candidate + employer), optional recruiter observer
             if len(v) < 2:
-                raise ValueError('Main interviews must have at least 2 participants')
+                raise ValueError("Main interviews must have at least 2 participants")
             if len(v) > 5:
-                raise ValueError('Main interviews can have maximum 5 participants')
-        
+                raise ValueError("Main interviews can have maximum 5 participants")
+
         return v
 
 
@@ -147,10 +144,15 @@ class MeetingUpdate(BaseModel):
     auto_summary: Optional[bool] = None
     access_code: Optional[str] = Field(None, min_length=4, max_length=50)
 
-    @validator('scheduled_end')
+    @validator("scheduled_end")
     def end_after_start(cls, v, values):
-        if 'scheduled_start' in values and v and values['scheduled_start'] and v <= values['scheduled_start']:
-            raise ValueError('scheduled_end must be after scheduled_start')
+        if (
+            "scheduled_start" in values
+            and v
+            and values["scheduled_start"]
+            and v <= values["scheduled_start"]
+        ):
+            raise ValueError("scheduled_end must be after scheduled_start")
         return v
 
 
@@ -173,10 +175,10 @@ class MeetingResponse(MeetingBase):
     can_join: bool
 
     # Relationships
-    participants: List[MeetingParticipantResponse] = []
-    recordings: List['MeetingRecordingResponse'] = []
-    transcripts: List['MeetingTranscriptResponse'] = []
-    summaries: List['MeetingSummaryResponse'] = []
+    participants: list[MeetingParticipantResponse] = []
+    recordings: list["MeetingRecordingResponse"] = []
+    transcripts: list["MeetingTranscriptResponse"] = []
+    summaries: list["MeetingSummaryResponse"] = []
 
     class Config:
         from_attributes = True
@@ -228,7 +230,7 @@ class MeetingRecordingResponse(MeetingRecordingBase):
 class MeetingTranscriptBase(BaseModel):
     transcript_text: str
     transcript_json: Optional[str] = None
-    language: str = 'ja'
+    language: str = "ja"
     confidence_score: Optional[float] = Field(None, ge=0.0, le=1.0)
     stt_service: str
     processing_duration_seconds: Optional[int] = None
@@ -330,7 +332,7 @@ class MeetingJoinResponse(BaseModel):
     room_id: str
     participant_id: int
     meeting: MeetingResponse
-    turn_servers: List[dict]
+    turn_servers: list[dict]
     error: Optional[str] = None
 
 
@@ -346,7 +348,7 @@ class MeetingListParams(BaseModel):
 
 
 class MeetingListResponse(BaseModel):
-    meetings: List[MeetingResponse]
+    meetings: list[MeetingResponse]
     total: int
     page: int
     limit: int
@@ -355,6 +357,6 @@ class MeetingListResponse(BaseModel):
 
 # Update model forward references
 MeetingResponse.model_rebuild()
-MeetingRecordingResponse.model_rebuild()  
+MeetingRecordingResponse.model_rebuild()
 MeetingTranscriptResponse.model_rebuild()
 MeetingSummaryResponse.model_rebuild()

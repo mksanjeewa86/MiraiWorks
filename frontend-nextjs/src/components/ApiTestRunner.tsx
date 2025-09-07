@@ -59,7 +59,7 @@ const ApiTestRunner: React.FC = () => {
     );
   };
 
-  const runTest = async (testName: string, testFn: () => Promise<any>): Promise<TestResult> => {
+  const runTest = async (testName: string, testFn: () => Promise<unknown>): Promise<TestResult> => {
     const start = Date.now();
     try {
       await testFn();
@@ -360,7 +360,7 @@ const ApiTestRunner: React.FC = () => {
 
       {testSuites.length === 0 && !isRunning && (
         <div className="text-center text-gray-500 py-8">
-          Click "Run All Tests" to start testing the API endpoints.
+          Click &quot;Run All Tests&quot; to start testing the API endpoints.
         </div>
       )}
     </div>

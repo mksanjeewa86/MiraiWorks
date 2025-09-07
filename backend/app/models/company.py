@@ -1,9 +1,4 @@
-from sqlalchemy import Column
-from sqlalchemy import DateTime
-from sqlalchemy import Enum
-from sqlalchemy import Integer
-from sqlalchemy import String
-from sqlalchemy import Text
+from sqlalchemy import Column, DateTime, Enum, Integer, String, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -24,13 +19,25 @@ class Company(Base):
     address = Column(Text, nullable=True)
     description = Column(Text, nullable=True)
     is_active = Column(String(1), nullable=False, default="1", index=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
 
     # Relationships
     users = relationship("User", back_populates="company", cascade="all, delete-orphan")
     jobs = relationship("Job", back_populates="company", cascade="all, delete-orphan")
-    profile = relationship("CompanyProfile", back_populates="company", uselist=False, cascade="all, delete-orphan")
-    
+    profile = relationship(
+        "CompanyProfile",
+        back_populates="company",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+
     def __repr__(self):
         return f"<Company(id={self.id}, name='{self.name}', type='{self.type}')>"

@@ -9,9 +9,9 @@ celery_app = Celery(
     backend=settings.redis_url,
     include=[
         "app.workers.jobs_files",
-        "app.workers.jobs_email", 
-        "app.workers.jobs_calendar"
-    ]
+        "app.workers.jobs_email",
+        "app.workers.jobs_calendar",
+    ],
 )
 
 # Celery configuration

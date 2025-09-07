@@ -1,5 +1,4 @@
 import logging
-from typing import List
 from typing import Optional
 
 from app.config import settings
@@ -16,10 +15,10 @@ class EmailService:
 
     async def send_email(
         self,
-        to_emails: List[str],
+        to_emails: list[str],
         subject: str,
         html_body: str,
-        text_body: Optional[str] = None
+        text_body: Optional[str] = None,
     ) -> bool:
         """Send an email via SMTP (stub for demo)."""
         # Stub implementation for demo purposes
@@ -31,12 +30,16 @@ class EmailService:
         logger.info(f"[STUB] Would send 2FA code {code} to {email}")
         return True
 
-    async def send_password_reset(self, email: str, reset_token: str, user_name: str) -> bool:
+    async def send_password_reset(
+        self, email: str, reset_token: str, user_name: str
+    ) -> bool:
         """Send password reset link via email."""
         logger.info(f"[STUB] Would send password reset token {reset_token} to {email}")
         return True
 
-    async def send_interview_notification(self, email: str, interview_data: dict) -> bool:
+    async def send_interview_notification(
+        self, email: str, interview_data: dict
+    ) -> bool:
         """Send interview notification email."""
         logger.info(f"[STUB] Would send interview notification to {email}")
         return True
@@ -46,12 +49,18 @@ class EmailService:
         logger.info(f"[STUB] Would send welcome email to {email} for role {role}")
         return True
 
-    async def send_password_reset_notification(self, email: str, user_name: str, admin_name: str) -> bool:
+    async def send_password_reset_notification(
+        self, email: str, user_name: str, admin_name: str
+    ) -> bool:
         """Send password reset request notification to admin."""
-        logger.info(f"[STUB] Would send password reset notification for {user_name} to admin {admin_name}")
+        logger.info(
+            f"[STUB] Would send password reset notification for {user_name} to admin {admin_name}"
+        )
         return True
 
-    async def send_user_activation(self, email: str, user_name: str, temporary_password: str) -> bool:
+    async def send_user_activation(
+        self, email: str, user_name: str, temporary_password: str
+    ) -> bool:
         """Send user activation email with temporary password."""
         logger.info(f"[STUB] Would send activation email to {email} with temp password")
         return True

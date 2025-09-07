@@ -1,13 +1,8 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
+from typing import Any, Optional
 
-from pydantic import BaseModel
-from pydantic import Field
-from pydantic import validator
+from pydantic import BaseModel, Field, validator
 
 
 class JobStatus(str, Enum):
@@ -66,11 +61,11 @@ class ApplicationStatus(str, Enum):
 class CompanyProfileBase(BaseModel):
     tagline: Optional[str] = None
     mission: Optional[str] = None
-    values: Optional[List[str]] = None
+    values: Optional[list[str]] = None
     culture: Optional[str] = None
     logo_url: Optional[str] = None
     banner_url: Optional[str] = None
-    gallery_images: Optional[List[str]] = None
+    gallery_images: Optional[list[str]] = None
     company_video_url: Optional[str] = None
     contact_email: Optional[str] = None
     phone: Optional[str] = None
@@ -85,8 +80,10 @@ class CompanyProfileBase(BaseModel):
     headquarters: Optional[str] = None
     funding_stage: Optional[str] = None
     benefits_summary: Optional[str] = None
-    perks_highlights: Optional[List[str]] = None
-    custom_slug: Optional[str] = Field(None, min_length=3, max_length=100, pattern="^[a-z0-9-]+$")
+    perks_highlights: Optional[list[str]] = None
+    custom_slug: Optional[str] = Field(
+        None, min_length=3, max_length=100, pattern="^[a-z0-9-]+$"
+    )
 
 
 class CompanyProfileCreate(CompanyProfileBase):
@@ -96,11 +93,11 @@ class CompanyProfileCreate(CompanyProfileBase):
 class CompanyProfileUpdate(BaseModel):
     tagline: Optional[str] = None
     mission: Optional[str] = None
-    values: Optional[List[str]] = None
+    values: Optional[list[str]] = None
     culture: Optional[str] = None
     logo_url: Optional[str] = None
     banner_url: Optional[str] = None
-    gallery_images: Optional[List[str]] = None
+    gallery_images: Optional[list[str]] = None
     company_video_url: Optional[str] = None
     contact_email: Optional[str] = None
     phone: Optional[str] = None
@@ -115,9 +112,11 @@ class CompanyProfileUpdate(BaseModel):
     headquarters: Optional[str] = None
     funding_stage: Optional[str] = None
     benefits_summary: Optional[str] = None
-    perks_highlights: Optional[List[str]] = None
+    perks_highlights: Optional[list[str]] = None
     is_public: Optional[bool] = None
-    custom_slug: Optional[str] = Field(None, min_length=3, max_length=100, pattern="^[a-z0-9-]+$")
+    custom_slug: Optional[str] = Field(
+        None, min_length=3, max_length=100, pattern="^[a-z0-9-]+$"
+    )
 
 
 class CompanyProfileResponse(CompanyProfileBase):
@@ -159,30 +158,34 @@ class JobBase(BaseModel):
     experience_level: ExperienceLevel = ExperienceLevel.MID_LEVEL
     remote_type: RemoteType = RemoteType.ON_SITE
     requirements: Optional[str] = None
-    preferred_skills: Optional[List[str]] = None
-    required_skills: Optional[List[str]] = None
+    preferred_skills: Optional[list[str]] = None
+    required_skills: Optional[list[str]] = None
     salary_min: Optional[int] = Field(None, ge=0)  # In cents
     salary_max: Optional[int] = Field(None, ge=0)  # In cents
     salary_type: SalaryType = SalaryType.ANNUAL
     salary_currency: str = Field("USD", min_length=3, max_length=3)
     show_salary: bool = False
-    benefits: Optional[List[str]] = None
-    perks: Optional[List[str]] = None
+    benefits: Optional[list[str]] = None
+    perks: Optional[list[str]] = None
     application_deadline: Optional[datetime] = None
     external_apply_url: Optional[str] = None
-    application_questions: Optional[List[Dict[str, Any]]] = None
+    application_questions: Optional[list[dict[str, Any]]] = None
 
-    @validator('salary_max')
+    @validator("salary_max")
     def salary_max_greater_than_min(cls, v, values):
-        if v is not None and 'salary_min' in values and values['salary_min'] is not None:
-            if v <= values['salary_min']:
-                raise ValueError('salary_max must be greater than salary_min')
+        if (
+            v is not None
+            and "salary_min" in values
+            and values["salary_min"] is not None
+        ):
+            if v <= values["salary_min"]:
+                raise ValueError("salary_max must be greater than salary_min")
         return v
 
-    @validator('application_deadline')
+    @validator("application_deadline")
     def deadline_in_future(cls, v):
         if v is not None and v <= datetime.utcnow():
-            raise ValueError('application_deadline must be in the future')
+            raise ValueError("application_deadline must be in the future")
         return v
 
 
@@ -202,18 +205,18 @@ class JobUpdate(BaseModel):
     experience_level: Optional[ExperienceLevel] = None
     remote_type: Optional[RemoteType] = None
     requirements: Optional[str] = None
-    preferred_skills: Optional[List[str]] = None
-    required_skills: Optional[List[str]] = None
+    preferred_skills: Optional[list[str]] = None
+    required_skills: Optional[list[str]] = None
     salary_min: Optional[int] = Field(None, ge=0)
     salary_max: Optional[int] = Field(None, ge=0)
     salary_type: Optional[SalaryType] = None
     salary_currency: Optional[str] = Field(None, min_length=3, max_length=3)
     show_salary: Optional[bool] = None
-    benefits: Optional[List[str]] = None
-    perks: Optional[List[str]] = None
+    benefits: Optional[list[str]] = None
+    perks: Optional[list[str]] = None
     application_deadline: Optional[datetime] = None
     external_apply_url: Optional[str] = None
-    application_questions: Optional[List[Dict[str, Any]]] = None
+    application_questions: Optional[list[dict[str, Any]]] = None
     status: Optional[JobStatus] = None
     is_featured: Optional[bool] = None
     is_urgent: Optional[bool] = None
@@ -248,6 +251,7 @@ class JobResponse(JobBase):
 
 class JobSummary(BaseModel):
     """Lightweight job summary for listings"""
+
     id: int
     title: str
     slug: str
@@ -272,7 +276,7 @@ class JobSummary(BaseModel):
 # Job Application Schemas
 class JobApplicationBase(BaseModel):
     cover_letter: Optional[str] = Field(None, max_length=5000)
-    application_answers: Optional[Dict[str, Any]] = None
+    application_answers: Optional[dict[str, Any]] = None
     source: Optional[str] = Field(None, max_length=100)
 
 
@@ -303,7 +307,7 @@ class JobApplicationResponse(JobApplicationBase):
 
     # Related data (populated when needed)
     job: Optional[JobResponse] = None
-    candidate: Optional[Dict[str, Any]] = None  # Limited candidate info
+    candidate: Optional[dict[str, Any]] = None  # Limited candidate info
 
     class Config:
         from_attributes = True
@@ -321,8 +325,10 @@ class JobSearchParams(BaseModel):
     remote_type: Optional[RemoteType] = None
     salary_min: Optional[int] = None
     salary_max: Optional[int] = None
-    skills: Optional[List[str]] = None
-    sort_by: str = Field("published_date", pattern="^(published_date|relevance|salary|company)$")
+    skills: Optional[list[str]] = None
+    sort_by: str = Field(
+        "published_date", pattern="^(published_date|relevance|salary|company)$"
+    )
     sort_order: str = Field("desc", pattern="^(asc|desc)$")
     page: int = Field(1, ge=1)
     limit: int = Field(20, ge=1, le=100)
@@ -330,12 +336,12 @@ class JobSearchParams(BaseModel):
 
 
 class JobSearchResponse(BaseModel):
-    jobs: List[JobSummary]
+    jobs: list[JobSummary]
     total: int
     page: int
     limit: int
     total_pages: int
-    filters: Dict[str, Any]  # Available filter values
+    filters: dict[str, Any]  # Available filter values
 
 
 class CompanySearchParams(BaseModel):
@@ -351,7 +357,7 @@ class CompanySearchParams(BaseModel):
 
 
 class CompanySearchResponse(BaseModel):
-    companies: List[PublicCompany]
+    companies: list[PublicCompany]
     total: int
     page: int
     limit: int
@@ -363,7 +369,7 @@ class PublicStats(BaseModel):
     total_companies: int
     total_jobs: int
     total_applications: int
-    featured_companies: List[PublicCompany]
-    latest_jobs: List[JobSummary]
-    job_categories: Dict[str, int]  # job_type -> count
-    location_stats: Dict[str, int]  # location -> count
+    featured_companies: list[PublicCompany]
+    latest_jobs: list[JobSummary]
+    job_categories: dict[str, int]  # job_type -> count
+    location_stats: dict[str, int]  # location -> count

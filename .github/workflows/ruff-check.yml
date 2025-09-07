@@ -1,0 +1,64 @@
+name: Ruff Code Quality
+
+on:
+  workflow_dispatch:  # Manual trigger
+  schedule:
+    - cron: '0 2 * * 1'  # Weekly on Monday at 2 AM UTC
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  ruff-comprehensive:
+    name: Comprehensive Ruff Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: 'pip'
+
+    - name: Install dependencies
+      working-directory: ./backend
+      run: |
+        python -m pip install --upgrade pip
+        pip install ruff
+
+    - name: Ruff Version
+      run: ruff --version
+
+    - name: Ruff Format Check
+      working-directory: ./backend
+      run: ruff format --check --diff .
+
+    - name: Ruff Lint Check (All Rules)
+      working-directory: ./backend
+      run: ruff check . --output-format=github
+
+    - name: Ruff Statistics
+      working-directory: ./backend
+      run: ruff check . --statistics
+
+    - name: Generate Ruff Report
+      working-directory: ./backend
+      run: |
+        echo "# Ruff Code Quality Report" > ruff-report.md
+        echo "" >> ruff-report.md
+        echo "## Summary" >> ruff-report.md
+        ruff check . --statistics >> ruff-report.md
+        echo "" >> ruff-report.md
+        echo "## Detailed Issues" >> ruff-report.md
+        ruff check . --output-format=json > ruff-results.json || true
+
+    - name: Upload Ruff Results
+      uses: actions/upload-artifact@v4
+      with:
+        name: ruff-analysis
+        path: |
+          backend/ruff-report.md
+          backend/ruff-results.json
+        retention-days: 30

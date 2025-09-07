@@ -1,12 +1,7 @@
 import logging
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
+from typing import Any, Optional
 
-from jinja2 import BaseLoader
-from jinja2 import Environment
-from jinja2 import Template
+from jinja2 import BaseLoader, Environment, Template
 
 from app.models.resume import Resume
 
@@ -15,12 +10,12 @@ logger = logging.getLogger(__name__)
 
 class TemplateService:
     """Service for managing resume templates and rendering."""
-    
+
     def __init__(self):
         self.jinja_env = Environment(loader=BaseLoader())
         self.default_templates = self._load_default_templates()
-    
-    def _load_default_templates(self) -> Dict[str, Dict[str, Any]]:
+
+    def _load_default_templates(self) -> dict[str, dict[str, Any]]:
         """Load default resume templates."""
         return {
             "modern": {
@@ -31,21 +26,27 @@ class TemplateService:
                 "html_template": self._get_modern_template(),
                 "css_styles": self._get_modern_styles(),
                 "template_data": {
-                    "sections": ["summary", "experience", "education", "skills", "projects"],
+                    "sections": [
+                        "summary",
+                        "experience",
+                        "education",
+                        "skills",
+                        "projects",
+                    ],
                     "layout": "single-column",
-                    "accent_color": "#2563eb"
+                    "accent_color": "#2563eb",
                 },
                 "color_scheme": {
                     "blue": "#2563eb",
                     "green": "#059669",
                     "purple": "#7c3aed",
-                    "orange": "#ea580c"
+                    "orange": "#ea580c",
                 },
                 "font_options": {
                     "Inter": "Inter, sans-serif",
                     "Roboto": "Roboto, sans-serif",
-                    "Open Sans": "Open Sans, sans-serif"
-                }
+                    "Open Sans": "Open Sans, sans-serif",
+                },
             },
             "classic": {
                 "name": "classic",
@@ -57,18 +58,18 @@ class TemplateService:
                 "template_data": {
                     "sections": ["summary", "experience", "education", "skills"],
                     "layout": "single-column",
-                    "accent_color": "#374151"
+                    "accent_color": "#374151",
                 },
                 "color_scheme": {
                     "black": "#374151",
                     "navy": "#1e40af",
-                    "dark-green": "#065f46"
+                    "dark-green": "#065f46",
                 },
                 "font_options": {
                     "Times New Roman": "Times New Roman, serif",
                     "Georgia": "Georgia, serif",
-                    "Crimson Text": "Crimson Text, serif"
-                }
+                    "Crimson Text": "Crimson Text, serif",
+                },
             },
             "creative": {
                 "name": "creative",
@@ -78,21 +79,27 @@ class TemplateService:
                 "html_template": self._get_creative_template(),
                 "css_styles": self._get_creative_styles(),
                 "template_data": {
-                    "sections": ["summary", "experience", "skills", "projects", "education"],
+                    "sections": [
+                        "summary",
+                        "experience",
+                        "skills",
+                        "projects",
+                        "education",
+                    ],
                     "layout": "two-column",
-                    "accent_color": "#ec4899"
+                    "accent_color": "#ec4899",
                 },
                 "color_scheme": {
                     "pink": "#ec4899",
                     "teal": "#0d9488",
                     "orange": "#f59e0b",
-                    "indigo": "#6366f1"
+                    "indigo": "#6366f1",
                 },
                 "font_options": {
                     "Montserrat": "Montserrat, sans-serif",
                     "Poppins": "Poppins, sans-serif",
-                    "Nunito": "Nunito, sans-serif"
-                }
+                    "Nunito": "Nunito, sans-serif",
+                },
             },
             "minimal": {
                 "name": "minimal",
@@ -104,57 +111,59 @@ class TemplateService:
                 "template_data": {
                     "sections": ["summary", "experience", "education", "skills"],
                     "layout": "single-column",
-                    "accent_color": "#000000"
+                    "accent_color": "#000000",
                 },
                 "color_scheme": {
                     "black": "#000000",
                     "gray": "#6b7280",
-                    "blue": "#3b82f6"
+                    "blue": "#3b82f6",
                 },
                 "font_options": {
                     "Helvetica": "Helvetica, Arial, sans-serif",
                     "Source Sans Pro": "Source Sans Pro, sans-serif",
-                    "Lato": "Lato, sans-serif"
-                }
-            }
+                    "Lato": "Lato, sans-serif",
+                },
+            },
         }
-    
+
     async def render_resume(
-        self, 
-        resume: Resume, 
+        self,
+        resume: Resume,
         template_name: Optional[str] = None,
-        custom_css: Optional[str] = None
+        custom_css: Optional[str] = None,
     ) -> str:
         """Render a resume to HTML using the specified template."""
         try:
             template_name = template_name or resume.template_id or "modern"
             template_config = self.default_templates.get(template_name)
-            
+
             if not template_config:
                 logger.warning(f"Template {template_name} not found, using modern")
                 template_config = self.default_templates["modern"]
-            
+
             # Prepare resume data for template
             resume_data = self._prepare_resume_data(resume)
-            
+
             # Render HTML
             template = Template(template_config["html_template"])
             html_content = template.render(
                 resume=resume_data,
                 template_config=template_config,
-                theme_color=resume.theme_color or template_config["template_data"]["accent_color"],
-                font_family=resume.font_family or list(template_config["font_options"].values())[0]
+                theme_color=resume.theme_color
+                or template_config["template_data"]["accent_color"],
+                font_family=resume.font_family
+                or list(template_config["font_options"].values())[0],
             )
-            
+
             # Combine CSS
             css_styles = self._combine_css(
                 template_config["css_styles"],
                 resume.custom_css,
                 custom_css,
                 resume.theme_color or template_config["template_data"]["accent_color"],
-                resume.font_family or list(template_config["font_options"].values())[0]
+                resume.font_family or list(template_config["font_options"].values())[0],
             )
-            
+
             # Wrap in full HTML document
             full_html = f"""
 <!DOCTYPE html>
@@ -172,14 +181,14 @@ class TemplateService:
 </body>
 </html>
             """
-            
+
             return full_html.strip()
-            
+
         except Exception as e:
             logger.error(f"Error rendering resume: {str(e)}")
             raise
-    
-    def _prepare_resume_data(self, resume: Resume) -> Dict[str, Any]:
+
+    def _prepare_resume_data(self, resume: Resume) -> dict[str, Any]:
         """Prepare resume data for template rendering."""
         return {
             "id": resume.id,
@@ -205,9 +214,12 @@ class TemplateService:
                     "is_current": exp.is_current,
                     "description": exp.description,
                     "achievements": exp.achievements or [],
-                    "technologies": exp.technologies or []
+                    "technologies": exp.technologies or [],
                 }
-                for exp in sorted(resume.experiences, key=lambda x: (x.display_order, -x.start_date.timestamp()))
+                for exp in sorted(
+                    resume.experiences,
+                    key=lambda x: (x.display_order, -x.start_date.timestamp()),
+                )
                 if exp.is_visible
             ],
             "educations": [
@@ -223,9 +235,12 @@ class TemplateService:
                     "gpa": edu.gpa,
                     "honors": edu.honors,
                     "description": edu.description,
-                    "courses": edu.courses or []
+                    "courses": edu.courses or [],
                 }
-                for edu in sorted(resume.educations, key=lambda x: (x.display_order, -x.start_date.timestamp()))
+                for edu in sorted(
+                    resume.educations,
+                    key=lambda x: (x.display_order, -x.start_date.timestamp()),
+                )
                 if edu.is_visible
             ],
             "skills": [
@@ -234,7 +249,7 @@ class TemplateService:
                     "name": skill.name,
                     "category": skill.category,
                     "proficiency_level": skill.proficiency_level,
-                    "proficiency_label": skill.proficiency_label
+                    "proficiency_label": skill.proficiency_label,
                 }
                 for skill in sorted(resume.skills, key=lambda x: x.display_order)
                 if skill.is_visible
@@ -251,7 +266,7 @@ class TemplateService:
                     "end_date": proj.end_date,
                     "is_ongoing": proj.is_ongoing,
                     "technologies": proj.technologies or [],
-                    "role": proj.role
+                    "role": proj.role,
                 }
                 for proj in sorted(resume.projects, key=lambda x: x.display_order)
                 if proj.is_visible
@@ -266,17 +281,16 @@ class TemplateService:
                     "issue_date": cert.issue_date,
                     "expiration_date": cert.expiration_date,
                     "does_not_expire": cert.does_not_expire,
-                    "description": cert.description
+                    "description": cert.description,
                 }
-                for cert in sorted(resume.certifications, key=lambda x: (x.display_order, -x.issue_date.timestamp()))
+                for cert in sorted(
+                    resume.certifications,
+                    key=lambda x: (x.display_order, -x.issue_date.timestamp()),
+                )
                 if cert.is_visible
             ],
             "languages": [
-                {
-                    "id": lang.id,
-                    "name": lang.name,
-                    "proficiency": lang.proficiency
-                }
+                {"id": lang.id, "name": lang.name, "proficiency": lang.proficiency}
                 for lang in sorted(resume.languages, key=lambda x: x.display_order)
                 if lang.is_visible
             ],
@@ -288,7 +302,7 @@ class TemplateService:
                     "company_name": ref.company_name,
                     "email": ref.email,
                     "phone": ref.phone,
-                    "relationship": ref.relationship
+                    "relationship": ref.relationship,
                 }
                 for ref in sorted(resume.references, key=lambda x: x.display_order)
                 if ref.is_visible
@@ -298,37 +312,37 @@ class TemplateService:
                     "id": section.id,
                     "section_type": section.section_type,
                     "title": section.title,
-                    "content": section.content
+                    "content": section.content,
                 }
                 for section in sorted(resume.sections, key=lambda x: x.display_order)
                 if section.is_visible
-            ]
+            ],
         }
-    
+
     def _combine_css(
-        self, 
-        template_css: str, 
-        resume_css: Optional[str], 
+        self,
+        template_css: str,
+        resume_css: Optional[str],
         custom_css: Optional[str],
         theme_color: str,
-        font_family: str
+        font_family: str,
     ) -> str:
         """Combine and customize CSS styles."""
         # Replace template variables
         css = template_css.replace("{{theme_color}}", theme_color)
         css = css.replace("{{font_family}}", font_family)
-        
+
         # Add resume-specific CSS
         if resume_css:
             css += f"\n/* Resume-specific styles */\n{resume_css}"
-        
+
         # Add custom CSS
         if custom_css:
             css += f"\n/* Custom styles */\n{custom_css}"
-        
+
         return css
-    
-    def get_available_templates(self) -> List[Dict[str, Any]]:
+
+    def get_available_templates(self) -> list[dict[str, Any]]:
         """Get list of available templates."""
         return [
             {
@@ -338,11 +352,11 @@ class TemplateService:
                 "category": template["category"],
                 "color_scheme": template["color_scheme"],
                 "font_options": template["font_options"],
-                "is_premium": False
+                "is_premium": False,
             }
             for template in self.default_templates.values()
         ]
-    
+
     def _get_modern_template(self) -> str:
         """Get the modern template HTML."""
         return """
@@ -361,7 +375,7 @@ class TemplateService:
                     {% if resume.github_url %}<div class="contact-item">💻 <a href="{{ resume.github_url }}">GitHub</a></div>{% endif %}
                 </div>
             </header>
-            
+
             {% if resume.professional_summary %}
             <section class="resume-section summary">
                 <h3 class="section-title">Professional Summary</h3>
@@ -370,7 +384,7 @@ class TemplateService:
                 </div>
             </section>
             {% endif %}
-            
+
             {% if resume.experiences %}
             <section class="resume-section experience">
                 <h3 class="section-title">Professional Experience</h3>
@@ -384,7 +398,7 @@ class TemplateService:
                             </div>
                             <div class="exp-meta">
                                 <span class="exp-date">
-                                    {{ exp.start_date.strftime('%m/%Y') }} - 
+                                    {{ exp.start_date.strftime('%m/%Y') }} -
                                     {% if exp.is_current %}Present{% else %}{{ exp.end_date.strftime('%m/%Y') if exp.end_date }}{% endif %}
                                 </span>
                                 {% if exp.location %}<span class="exp-location">{{ exp.location }}</span>{% endif %}
@@ -415,7 +429,7 @@ class TemplateService:
                 </div>
             </section>
             {% endif %}
-            
+
             {% if resume.educations %}
             <section class="resume-section education">
                 <h3 class="section-title">Education</h3>
@@ -429,7 +443,7 @@ class TemplateService:
                             </div>
                             <div class="edu-meta">
                                 <span class="edu-date">
-                                    {{ edu.start_date.strftime('%m/%Y') }} - 
+                                    {{ edu.start_date.strftime('%m/%Y') }} -
                                     {% if edu.is_current %}Present{% else %}{{ edu.end_date.strftime('%m/%Y') if edu.end_date }}{% endif %}
                                 </span>
                                 {% if edu.location %}<span class="edu-location">{{ edu.location }}</span>{% endif %}
@@ -443,7 +457,7 @@ class TemplateService:
                 </div>
             </section>
             {% endif %}
-            
+
             {% if resume.skills %}
             <section class="resume-section skills">
                 <h3 class="section-title">Skills</h3>
@@ -462,7 +476,7 @@ class TemplateService:
                 </div>
             </section>
             {% endif %}
-            
+
             {% if resume.projects %}
             <section class="resume-section projects">
                 <h3 class="section-title">Projects</h3>
@@ -492,7 +506,7 @@ class TemplateService:
             {% endif %}
         </div>
         """
-    
+
     def _get_modern_styles(self) -> str:
         """Get the modern template CSS."""
         return """
@@ -501,61 +515,61 @@ class TemplateService:
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: {{font_family}};
             line-height: 1.6;
             color: #333;
             background: #fff;
         }
-        
+
         .resume-container {
             max-width: 800px;
             margin: 0 auto;
             padding: 40px;
             background: white;
         }
-        
+
         .resume-header {
             border-bottom: 3px solid {{theme_color}};
             padding-bottom: 20px;
             margin-bottom: 30px;
         }
-        
+
         .name {
             font-size: 2.5rem;
             font-weight: 700;
             color: {{theme_color}};
             margin-bottom: 5px;
         }
-        
+
         .title {
             font-size: 1.2rem;
             color: #666;
             font-weight: 400;
             margin-bottom: 15px;
         }
-        
+
         .contact-info {
             display: flex;
             flex-wrap: wrap;
             gap: 15px;
         }
-        
+
         .contact-item {
             font-size: 0.9rem;
             color: #555;
         }
-        
+
         .contact-item a {
             color: {{theme_color}};
             text-decoration: none;
         }
-        
+
         .resume-section {
             margin-bottom: 30px;
         }
-        
+
         .section-title {
             font-size: 1.3rem;
             font-weight: 600;
@@ -564,54 +578,54 @@ class TemplateService:
             padding-bottom: 5px;
             margin-bottom: 15px;
         }
-        
+
         .experience-item, .education-item, .project-item {
             margin-bottom: 25px;
         }
-        
+
         .exp-header, .edu-header, .project-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 10px;
         }
-        
+
         .exp-title h4, .edu-title h4, .project-header h4 {
             font-size: 1.1rem;
             font-weight: 600;
             color: #333;
         }
-        
+
         .exp-title h5, .edu-title h5 {
             font-size: 1rem;
             font-weight: 500;
             color: {{theme_color}};
         }
-        
+
         .exp-date, .edu-date {
             font-weight: 500;
             color: #666;
             font-size: 0.9rem;
         }
-        
+
         .exp-location, .edu-location {
             font-size: 0.9rem;
             color: #666;
             display: block;
         }
-        
+
         .exp-achievements {
             list-style: none;
             padding-left: 0;
             margin: 10px 0;
         }
-        
+
         .exp-achievements li {
             position: relative;
             padding-left: 20px;
             margin-bottom: 5px;
         }
-        
+
         .exp-achievements li:before {
             content: "▸";
             position: absolute;
@@ -619,7 +633,7 @@ class TemplateService:
             color: {{theme_color}};
             font-weight: bold;
         }
-        
+
         .tech-tag {
             display: inline-block;
             background: #f3f4f6;
@@ -630,24 +644,24 @@ class TemplateService:
             margin-right: 8px;
             margin-bottom: 4px;
         }
-        
+
         .skill-category {
             margin-bottom: 15px;
         }
-        
+
         .skill-category-title {
             font-size: 1rem;
             font-weight: 600;
             color: #333;
             margin-bottom: 8px;
         }
-        
+
         .skill-list {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
         }
-        
+
         .skill-item {
             background: {{theme_color}};
             color: white;
@@ -656,35 +670,35 @@ class TemplateService:
             font-size: 0.85rem;
             font-weight: 500;
         }
-        
+
         .project-links {
             display: flex;
             gap: 10px;
         }
-        
+
         .project-links a {
             color: {{theme_color}};
             text-decoration: none;
             font-size: 0.9rem;
             font-weight: 500;
         }
-        
+
         .project-links a:hover {
             text-decoration: underline;
         }
-        
+
         @media print {
             .resume-container {
                 padding: 20px;
                 max-width: none;
             }
-            
+
             .contact-item a {
                 color: inherit;
             }
         }
         """
-    
+
     def _get_classic_template(self) -> str:
         """Get classic template HTML - simplified for brevity."""
         return """
@@ -700,7 +714,7 @@ class TemplateService:
             <!-- Similar structure but different styling -->
         </div>
         """
-    
+
     def _get_classic_styles(self) -> str:
         """Get classic template CSS - simplified for brevity."""
         return """
@@ -710,24 +724,24 @@ class TemplateService:
             font-weight: bold;
             margin-bottom: 10px;
         }
-        
+
         .classic-template .contact-info {
             text-align: center;
             margin-bottom: 20px;
         }
-        
+
         /* Additional classic styles... */
         """
-    
+
     # Similar methods for creative and minimal templates...
     def _get_creative_template(self) -> str:
         return "<div>Creative template HTML...</div>"
-    
+
     def _get_creative_styles(self) -> str:
         return "/* Creative template CSS... */"
-    
+
     def _get_minimal_template(self) -> str:
         return "<div>Minimal template HTML...</div>"
-    
+
     def _get_minimal_styles(self) -> str:
         return "/* Minimal template CSS... */"

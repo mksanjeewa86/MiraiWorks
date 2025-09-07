@@ -53,7 +53,8 @@
       "Bash(tasklist:*)",
       "Bash(powershell:*)",
       "Bash(docker start:*)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(ruff check:*)"
     ],
     "deny": [],
     "ask": []

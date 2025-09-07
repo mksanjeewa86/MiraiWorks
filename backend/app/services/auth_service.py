@@ -1,23 +1,18 @@
 import hashlib
 import secrets
-from datetime import datetime
-from datetime import timedelta
-from typing import Any
-from typing import Dict
-from typing import Optional
+from datetime import datetime, timedelta
+from typing import Any, Optional
 
-from jose import JWTError
-from jose import jwt
+from jose import JWTError, jwt
 from passlib.context import CryptContext
-from sqlalchemy import select
-from sqlalchemy import update
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.config import settings
 from app.models.auth import RefreshToken
-from app.models.user import User
 from app.models.role import UserRole as UserRoleModel
+from app.models.user import User
 from app.rbac import is_admin_role
 from app.utils.constants import UserRole
 
@@ -40,14 +35,18 @@ class AuthService:
         """Hash a password."""
         return self.pwd_context.hash(password)
 
-    def create_access_token(self, data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:
+    def create_access_token(
+        self, data: dict[str, Any], expires_delta: Optional[timedelta] = None
+    ) -> str:
         """Create a JWT access token."""
         to_encode = data.copy()
         if expires_delta:
             expire = datetime.utcnow() + expires_delta
         else:
-            expire = datetime.utcnow() + timedelta(minutes=self.access_token_expire_minutes)
-        
+            expire = datetime.utcnow() + timedelta(
+                minutes=self.access_token_expire_minutes
+            )
+
         to_encode.update({"exp": expire, "type": "access"})
         encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
         return encoded_jwt
@@ -60,7 +59,9 @@ class AuthService:
         """Hash a token for secure storage."""
         return hashlib.sha256(token.encode()).hexdigest()
 
-    def verify_token(self, token: str, token_type: str = "access") -> Optional[Dict[str, Any]]:
+    def verify_token(
+        self, token: str, token_type: str = "access"
+    ) -> Optional[dict[str, Any]]:
         """Verify and decode a JWT token."""
         try:
             payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
@@ -71,21 +72,16 @@ class AuthService:
             return None
 
     async def store_refresh_token(
-        self, 
-        db: AsyncSession, 
-        user_id: int, 
-        token: str
+        self, db: AsyncSession, user_id: int, token: str
     ) -> RefreshToken:
         """Store a refresh token in the database."""
         token_hash = self.hash_token(token)
         expires_at = datetime.utcnow() + timedelta(days=self.refresh_token_expire_days)
-        
+
         refresh_token = RefreshToken(
-            user_id=user_id,
-            token_hash=token_hash,
-            expires_at=expires_at
+            user_id=user_id, token_hash=token_hash, expires_at=expires_at
         )
-        
+
         db.add(refresh_token)
         await db.commit()
         await db.refresh(refresh_token)
@@ -94,54 +90,58 @@ class AuthService:
     async def revoke_refresh_token(self, db: AsyncSession, token: str) -> bool:
         """Revoke a refresh token."""
         token_hash = self.hash_token(token)
-        
+
         result = await db.execute(
             update(RefreshToken)
             .where(RefreshToken.token_hash == token_hash)
             .values(is_revoked=True, revoked_at=datetime.utcnow())
         )
-        
+
         await db.commit()
         return result.rowcount > 0
 
-    async def verify_refresh_token(self, db: AsyncSession, token: str) -> Optional[User]:
+    async def verify_refresh_token(
+        self, db: AsyncSession, token: str
+    ) -> Optional[User]:
         """Verify a refresh token and return the associated user."""
         token_hash = self.hash_token(token)
-        
+
         result = await db.execute(
             select(RefreshToken)
             .options(selectinload(RefreshToken.user))
             .where(
                 RefreshToken.token_hash == token_hash,
                 RefreshToken.is_revoked == False,
-                RefreshToken.expires_at > datetime.utcnow()
+                RefreshToken.expires_at > datetime.utcnow(),
             )
         )
-        
+
         refresh_token = result.scalar_one_or_none()
         if not refresh_token:
             return None
-        
+
         return refresh_token.user
 
-    async def authenticate_user(self, db: AsyncSession, email: str, password: str) -> Optional[User]:
+    async def authenticate_user(
+        self, db: AsyncSession, email: str, password: str
+    ) -> Optional[User]:
         """Authenticate a user with email and password."""
         result = await db.execute(
             select(User)
             .options(
-                selectinload(User.company), 
-                selectinload(User.user_roles).selectinload(UserRoleModel.role)
+                selectinload(User.company),
+                selectinload(User.user_roles).selectinload(UserRoleModel.role),
             )
             .where(User.email == email, User.is_active == True)
         )
-        
+
         user = result.scalar_one_or_none()
         if not user or not user.hashed_password:
             return None
-        
+
         if not self.verify_password(password, user.hashed_password):
             return None
-        
+
         return user
 
     def generate_2fa_code(self) -> str:
@@ -152,35 +152,31 @@ class AuthService:
         """Check if user requires 2FA based on role and settings."""
         if not settings.force_2fa_for_admins:
             return False
-            
+
         # Check if user has any admin roles by requerying with eager loading
         result = await db.execute(
             select(User)
             .options(selectinload(User.user_roles).selectinload(UserRoleModel.role))
             .where(User.id == user.id)
         )
-        
+
         user_with_roles = result.scalar_one_or_none()
         if not user_with_roles:
             return user.require_2fa
-            
+
         # Check if user has any admin roles
         for user_role in user_with_roles.user_roles:
             if is_admin_role(UserRole(user_role.role.name)):
                 return True
-        
+
         return user.require_2fa
 
-    async def create_login_tokens(
-        self, 
-        db: AsyncSession, 
-        user: User
-    ) -> Dict[str, Any]:
+    async def create_login_tokens(self, db: AsyncSession, user: User) -> dict[str, Any]:
         """Create access and refresh tokens for a user."""
         # Update last login
         user.last_login = datetime.utcnow()
         await db.commit()
-        
+
         # Create access token payload
         access_token_data = {
             "sub": str(user.id),
@@ -188,14 +184,14 @@ class AuthService:
             "company_id": user.company_id,
             "roles": [ur.role.name for ur in user.user_roles],
         }
-        
+
         # Create tokens
         access_token = self.create_access_token(access_token_data)
         refresh_token = self.create_refresh_token()
-        
+
         # Store refresh token
         await self.store_refresh_token(db, user.id, refresh_token)
-        
+
         return {
             "access_token": access_token,
             "refresh_token": refresh_token,
@@ -207,7 +203,7 @@ class AuthService:
                 "full_name": user.full_name,
                 "company_id": user.company_id,
                 "roles": [ur.role.name for ur in user.user_roles],
-            }
+            },
         }
 
 

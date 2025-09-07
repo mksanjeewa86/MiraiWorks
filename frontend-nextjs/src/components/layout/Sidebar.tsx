@@ -116,7 +116,7 @@ export default function Sidebar({
     if (href === '/dashboard') {
       return pathname === '/dashboard' || pathname === '/'
     }
-    return pathname.startsWith(href)
+    return pathname?.startsWith(href) ?? false
   }
 
   const sidebarClasses = `

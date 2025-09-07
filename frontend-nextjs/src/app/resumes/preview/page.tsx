@@ -25,7 +25,7 @@ import type { Resume, Education, Skill } from '@/types';
 
 function ResumePreviewContent() {
   const searchParams = useSearchParams();
-  const resumeId = searchParams.get('id');
+  const resumeId = searchParams?.get('id');
   
   const [resume, setResume] = useState<Resume | null>(null);
   const [loading, setLoading] = useState(true);

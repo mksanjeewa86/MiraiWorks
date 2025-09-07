@@ -1,19 +1,16 @@
 from typing import Optional
 
 import redis.asyncio as redis
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import status
-from fastapi.security import HTTPAuthorizationCredentials
-from fastapi.security import HTTPBearer
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.config import settings
 from app.database import get_db
-from app.models.user import User
 from app.models.role import UserRole as UserRoleModel
+from app.models.user import User
 from app.services.auth_service import auth_service
 
 security = HTTPBearer()
@@ -32,7 +29,7 @@ async def get_redis():
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ) -> User:
     """Get current authenticated user from JWT token."""
     credentials_exception = HTTPException(
@@ -40,54 +37,55 @@ async def get_current_user(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    
+
     if not credentials.credentials:
         raise credentials_exception
-    
+
     # Verify JWT token
     payload = auth_service.verify_token(credentials.credentials, "access")
     if payload is None:
         raise credentials_exception
-    
+
     user_id: int = int(payload.get("sub"))
     if user_id is None:
         raise credentials_exception
-    
+
     # Get user from database
     result = await db.execute(
         select(User)
         .options(
             selectinload(User.company),
-            selectinload(User.user_roles).selectinload(UserRoleModel.role)
+            selectinload(User.user_roles).selectinload(UserRoleModel.role),
         )
         .where(User.id == user_id, User.is_active == True)
     )
-    
+
     user = result.scalar_one_or_none()
     if user is None:
         raise credentials_exception
-    
+
     return user
 
 
-async def get_current_active_user(current_user: User = Depends(get_current_user)) -> User:
+async def get_current_active_user(
+    current_user: User = Depends(get_current_user)
+) -> User:
     """Get current active user."""
     if not current_user.is_active:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, 
-            detail="Inactive user"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user"
         )
     return current_user
 
 
 async def get_optional_current_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ) -> Optional[User]:
     """Get current user if authenticated, otherwise None."""
     if not credentials or not credentials.credentials:
         return None
-    
+
     try:
         return await get_current_user(credentials, db)
     except HTTPException:
@@ -112,7 +110,7 @@ async def verify_2fa_code(user_id: int, code: str) -> bool:
         redis_conn = await get_redis()
         key = f"2fa:{user_id}"
         stored_code = await redis_conn.get(key)
-        
+
         if stored_code and stored_code.decode() == code:
             # Delete the code after successful verification
             await redis_conn.delete(key)
@@ -127,11 +125,11 @@ async def check_rate_limit(key: str, limit: int = 5, window: int = 300) -> bool:
     try:
         redis_conn = await get_redis()
         current = await redis_conn.incr(key)
-        
+
         if current == 1:
             # First request, set TTL
             await redis_conn.expire(key, window)
-        
+
         return current <= limit
     except Exception:
         # If Redis is down, allow the request
@@ -144,9 +142,9 @@ async def get_client_ip(request) -> str:
     forwarded = request.headers.get("X-Forwarded-For")
     if forwarded:
         return forwarded.split(",")[0].strip()
-    
+
     real_ip = request.headers.get("X-Real-IP")
     if real_ip:
         return real_ip
-    
+
     return request.client.host if request.client else "unknown"

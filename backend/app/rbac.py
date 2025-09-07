@@ -1,28 +1,22 @@
-from typing import Dict
-from typing import Set
-
 from app.utils.constants import UserRole
 
 # Define permissions
 PERMISSIONS = {
     # User management
     "users.create": "Create users",
-    "users.read": "Read user data", 
+    "users.read": "Read user data",
     "users.update": "Update user data",
     "users.delete": "Delete users",
     "users.bulk_import": "Import users via CSV",
-    
     # Company management
     "companies.create": "Create companies",
     "companies.read": "Read company data",
     "companies.update": "Update company data",
     "companies.delete": "Delete companies",
-    
     # Messaging
     "messages.create": "Send messages",
     "messages.read": "Read messages",
     "messages.delete": "Delete messages",
-    
     # Interviews
     "interviews.create": "Create interviews",
     "interviews.read": "Read interview data",
@@ -30,18 +24,15 @@ PERMISSIONS = {
     "interviews.propose": "Propose interview times",
     "interviews.accept": "Accept interview proposals",
     "interviews.cancel": "Cancel interviews",
-    
     # Resumes
     "resumes.create": "Create resumes",
     "resumes.read": "Read resumes",
     "resumes.update": "Update resumes",
     "resumes.share": "Share resumes",
-    
     # Calendar
     "calendar.read": "Read calendar",
     "calendar.write": "Write to calendar",
     "calendar.integrate": "Integrate external calendars",
-    
     # Admin functions
     "admin.audit": "View audit logs",
     "admin.notifications": "Manage notifications",
@@ -49,50 +40,80 @@ PERMISSIONS = {
 }
 
 # Role permissions mapping
-ROLE_PERMISSIONS: Dict[UserRole, Set[str]] = {
+ROLE_PERMISSIONS: dict[UserRole, set[str]] = {
     UserRole.SUPER_ADMIN: {
         # Super admin has all permissions
         *PERMISSIONS.keys()
     },
-    
     UserRole.COMPANY_ADMIN: {
         # Company admin can manage users within their company
-        "users.create", "users.read", "users.update", "users.delete", "users.bulk_import",
-        "companies.read", "companies.update",
-        "messages.read", "messages.delete", 
-        "interviews.read", "interviews.update", "interviews.cancel",
+        "users.create",
+        "users.read",
+        "users.update",
+        "users.delete",
+        "users.bulk_import",
+        "companies.read",
+        "companies.update",
+        "messages.read",
+        "messages.delete",
+        "interviews.read",
+        "interviews.update",
+        "interviews.cancel",
         "resumes.read",
         "calendar.read",
-        "admin.notifications", "admin.password_reset",
+        "admin.notifications",
+        "admin.password_reset",
     },
-    
     UserRole.RECRUITER: {
         "users.read",  # Limited to candidates and employers they work with
-        "messages.create", "messages.read",
-        "interviews.create", "interviews.read", "interviews.update", "interviews.propose", "interviews.accept", "interviews.cancel",
-        "resumes.read", "resumes.share",
-        "calendar.read", "calendar.write", "calendar.integrate",
+        "messages.create",
+        "messages.read",
+        "interviews.create",
+        "interviews.read",
+        "interviews.update",
+        "interviews.propose",
+        "interviews.accept",
+        "interviews.cancel",
+        "resumes.read",
+        "resumes.share",
+        "calendar.read",
+        "calendar.write",
+        "calendar.integrate",
     },
-    
     UserRole.EMPLOYER: {
         "users.read",  # Limited to candidates through recruiters
-        "messages.create", "messages.read",
-        "interviews.read", "interviews.update", "interviews.propose", "interviews.accept", "interviews.cancel",
+        "messages.create",
+        "messages.read",
+        "interviews.read",
+        "interviews.update",
+        "interviews.propose",
+        "interviews.accept",
+        "interviews.cancel",
         "resumes.read",
-        "calendar.read", "calendar.write", "calendar.integrate",
+        "calendar.read",
+        "calendar.write",
+        "calendar.integrate",
     },
-    
     UserRole.CANDIDATE: {
-        "users.read", "users.update",  # Own profile only
-        "messages.create", "messages.read",
-        "interviews.read", "interviews.propose", "interviews.accept",
-        "resumes.create", "resumes.read", "resumes.update", "resumes.share",
-        "calendar.read", "calendar.write", "calendar.integrate",
+        "users.read",
+        "users.update",  # Own profile only
+        "messages.create",
+        "messages.read",
+        "interviews.read",
+        "interviews.propose",
+        "interviews.accept",
+        "resumes.create",
+        "resumes.read",
+        "resumes.update",
+        "resumes.share",
+        "calendar.read",
+        "calendar.write",
+        "calendar.integrate",
     },
 }
 
 
-def get_role_permissions(role: UserRole) -> Set[str]:
+def get_role_permissions(role: UserRole) -> set[str]:
     """Get permissions for a given role."""
     return ROLE_PERMISSIONS.get(role, set())
 

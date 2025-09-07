@@ -2,47 +2,43 @@ import logging
 import re
 import secrets
 import string
-from datetime import datetime
-from datetime import timedelta
-from typing import List
+from datetime import datetime, timedelta
 from typing import Optional
 
-from sqlalchemy import and_
-from sqlalchemy import select
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.resume import Education
-from app.models.resume import Project
-from app.models.resume import Resume
-from app.models.resume import ResumeSection
-from app.models.resume import ResumeShare
-from app.models.resume import ResumeTemplate
-from app.models.resume import Skill
-from app.models.resume import WorkExperience
-from app.schemas.resume import EducationCreate
-from app.schemas.resume import ResumeCreate
-from app.schemas.resume import ResumeUpdate
-from app.schemas.resume import SkillCreate
-from app.schemas.resume import WorkExperienceCreate
-from app.utils.constants import ResumeStatus
-from app.utils.constants import ResumeVisibility
+from app.models.resume import (
+    Education,
+    Project,
+    Resume,
+    ResumeSection,
+    ResumeShare,
+    ResumeTemplate,
+    Skill,
+    WorkExperience,
+)
+from app.schemas.resume import (
+    EducationCreate,
+    ResumeCreate,
+    ResumeUpdate,
+    SkillCreate,
+    WorkExperienceCreate,
+)
+from app.utils.constants import ResumeStatus, ResumeVisibility
 
 logger = logging.getLogger(__name__)
 
 
 class ResumeService:
-    
     async def create_resume(
-        self, 
-        db: AsyncSession, 
-        resume_data: ResumeCreate, 
-        user_id: int
+        self, db: AsyncSession, resume_data: ResumeCreate, user_id: int
     ) -> Resume:
         """Create a new resume."""
         try:
             # Generate unique slug
             slug = await self._generate_unique_slug(db, resume_data.title, user_id)
-            
+
             # Create resume
             resume = Resume(
                 user_id=user_id,
@@ -61,128 +57,156 @@ class ResumeService:
                 theme_color=resume_data.theme_color or "#2563eb",
                 font_family=resume_data.font_family or "Inter",
                 slug=slug,
-                share_token=self._generate_share_token()
+                share_token=self._generate_share_token(),
             )
-            
+
             db.add(resume)
             await db.commit()
             await db.refresh(resume)
-            
+
             logger.info(f"Created resume {resume.id} for user {user_id}")
             return resume
-            
+
         except Exception as e:
             logger.error(f"Error creating resume: {str(e)}")
             await db.rollback()
             raise
-    
-    async def get_resume(self, db: AsyncSession, resume_id: int, user_id: int) -> Optional[Resume]:
+
+    async def get_resume(
+        self, db: AsyncSession, resume_id: int, user_id: int
+    ) -> Optional[Resume]:
         """Get a resume by ID (with user ownership check)."""
         result = await db.execute(
             select(Resume)
             .where(and_(Resume.id == resume_id, Resume.user_id == user_id))
             .options(
                 # Eager load all related data
-                *[getattr(Resume, rel).load_only(*[c.name for c in getattr(Resume, rel).property.mapper.class_.__table__.columns])
-                  for rel in ['sections', 'experiences', 'educations', 'skills', 'projects', 'certifications', 'languages', 'references']]
+                *[
+                    getattr(Resume, rel).load_only(
+                        *[
+                            c.name
+                            for c in getattr(
+                                Resume, rel
+                            ).property.mapper.class_.__table__.columns
+                        ]
+                    )
+                    for rel in [
+                        "sections",
+                        "experiences",
+                        "educations",
+                        "skills",
+                        "projects",
+                        "certifications",
+                        "languages",
+                        "references",
+                    ]
+                ]
             )
         )
         return result.scalars().first()
-    
+
     async def get_resume_by_slug(self, db: AsyncSession, slug: str) -> Optional[Resume]:
         """Get a resume by slug (public access)."""
         result = await db.execute(
-            select(Resume)
-            .where(and_(Resume.slug == slug, Resume.visibility.in_([ResumeVisibility.PUBLIC, ResumeVisibility.UNLISTED])))
+            select(Resume).where(
+                and_(
+                    Resume.slug == slug,
+                    Resume.visibility.in_(
+                        [ResumeVisibility.PUBLIC, ResumeVisibility.UNLISTED]
+                    ),
+                )
+            )
         )
         resume = result.scalars().first()
-        
+
         if resume:
             # Increment view count
             resume.increment_view_count()
             await db.commit()
-        
+
         return resume
-    
+
     async def get_user_resumes(
-        self, 
-        db: AsyncSession, 
-        user_id: int, 
-        limit: int = 10, 
+        self,
+        db: AsyncSession,
+        user_id: int,
+        limit: int = 10,
         offset: int = 0,
-        status: Optional[ResumeStatus] = None
-    ) -> List[Resume]:
+        status: Optional[ResumeStatus] = None,
+    ) -> list[Resume]:
         """Get all resumes for a user."""
         query = select(Resume).where(Resume.user_id == user_id)
-        
+
         if status:
             query = query.where(Resume.status == status)
-        
+
         query = query.order_by(Resume.updated_at.desc()).limit(limit).offset(offset)
-        
+
         result = await db.execute(query)
         return result.scalars().all()
-    
+
     async def update_resume(
-        self, 
-        db: AsyncSession, 
-        resume_id: int, 
-        user_id: int, 
-        update_data: ResumeUpdate
+        self, db: AsyncSession, resume_id: int, user_id: int, update_data: ResumeUpdate
     ) -> Optional[Resume]:
         """Update a resume."""
         try:
             resume = await self.get_resume(db, resume_id, user_id)
             if not resume:
                 return None
-            
+
             # Update fields
             update_dict = update_data.dict(exclude_unset=True)
             for field, value in update_dict.items():
                 if hasattr(resume, field):
                     setattr(resume, field, value)
-            
+
             # Update slug if title changed
-            if 'title' in update_dict:
-                new_slug = await self._generate_unique_slug(db, update_data.title, user_id, resume.id)
+            if "title" in update_dict:
+                new_slug = await self._generate_unique_slug(
+                    db, update_data.title, user_id, resume.id
+                )
                 resume.slug = new_slug
-            
+
             await db.commit()
             await db.refresh(resume)
-            
+
             logger.info(f"Updated resume {resume_id}")
             return resume
-            
+
         except Exception as e:
             logger.error(f"Error updating resume: {str(e)}")
             await db.rollback()
             raise
-    
-    async def delete_resume(self, db: AsyncSession, resume_id: int, user_id: int) -> bool:
+
+    async def delete_resume(
+        self, db: AsyncSession, resume_id: int, user_id: int
+    ) -> bool:
         """Delete a resume."""
         try:
             resume = await self.get_resume(db, resume_id, user_id)
             if not resume:
                 return False
-            
+
             await db.delete(resume)
             await db.commit()
-            
+
             logger.info(f"Deleted resume {resume_id}")
             return True
-            
+
         except Exception as e:
             logger.error(f"Error deleting resume: {str(e)}")
             await db.rollback()
             raise
-    
-    async def duplicate_resume(self, db: AsyncSession, resume_id: int, user_id: int) -> Optional[Resume]:
+
+    async def duplicate_resume(
+        self, db: AsyncSession, resume_id: int, user_id: int
+    ) -> Optional[Resume]:
         """Duplicate an existing resume."""
         try:
             original = await self.get_resume(db, resume_id, user_id)
             if not original:
                 return None
-            
+
             # Create duplicate
             duplicate = Resume(
                 user_id=user_id,
@@ -201,14 +225,16 @@ class ResumeService:
                 theme_color=original.theme_color,
                 font_family=original.font_family,
                 custom_css=original.custom_css,
-                slug=await self._generate_unique_slug(db, f"{original.title} (Copy)", user_id),
+                slug=await self._generate_unique_slug(
+                    db, f"{original.title} (Copy)", user_id
+                ),
                 share_token=self._generate_share_token(),
-                status=ResumeStatus.DRAFT
+                status=ResumeStatus.DRAFT,
             )
-            
+
             db.add(duplicate)
             await db.flush()
-            
+
             # Duplicate all sections
             for section in original.sections:
                 new_section = ResumeSection(
@@ -218,10 +244,10 @@ class ResumeService:
                     content=section.content,
                     is_visible=section.is_visible,
                     display_order=section.display_order,
-                    custom_css=section.custom_css
+                    custom_css=section.custom_css,
                 )
                 db.add(new_section)
-            
+
             # Duplicate experiences
             for exp in original.experiences:
                 new_exp = WorkExperience(
@@ -236,31 +262,31 @@ class ResumeService:
                     description=exp.description,
                     achievements=exp.achievements,
                     technologies=exp.technologies,
-                    display_order=exp.display_order
+                    display_order=exp.display_order,
                 )
                 db.add(new_exp)
-            
+
             # Duplicate other sections similarly...
             await self._duplicate_related_data(db, original, duplicate)
-            
+
             await db.commit()
             await db.refresh(duplicate)
-            
+
             logger.info(f"Duplicated resume {resume_id} to {duplicate.id}")
             return duplicate
-            
+
         except Exception as e:
             logger.error(f"Error duplicating resume: {str(e)}")
             await db.rollback()
             raise
-    
+
     # Work Experience methods
     async def add_work_experience(
-        self, 
-        db: AsyncSession, 
-        resume_id: int, 
-        user_id: int, 
-        exp_data: WorkExperienceCreate
+        self,
+        db: AsyncSession,
+        resume_id: int,
+        user_id: int,
+        exp_data: WorkExperienceCreate,
     ) -> Optional[WorkExperience]:
         """Add work experience to a resume."""
         try:
@@ -268,7 +294,7 @@ class ResumeService:
             resume = await self.get_resume(db, resume_id, user_id)
             if not resume:
                 return None
-            
+
             experience = WorkExperience(
                 resume_id=resume_id,
                 company_name=exp_data.company_name,
@@ -281,26 +307,26 @@ class ResumeService:
                 description=exp_data.description,
                 achievements=exp_data.achievements,
                 technologies=exp_data.technologies,
-                display_order=exp_data.display_order or 0
+                display_order=exp_data.display_order or 0,
             )
-            
+
             db.add(experience)
             await db.commit()
             await db.refresh(experience)
-            
+
             return experience
-            
+
         except Exception as e:
             logger.error(f"Error adding work experience: {str(e)}")
             await db.rollback()
             raise
-    
+
     async def update_work_experience(
-        self, 
-        db: AsyncSession, 
-        exp_id: int, 
-        user_id: int, 
-        exp_data: WorkExperienceCreate
+        self,
+        db: AsyncSession,
+        exp_id: int,
+        user_id: int,
+        exp_data: WorkExperienceCreate,
     ) -> Optional[WorkExperience]:
         """Update work experience."""
         try:
@@ -311,39 +337,35 @@ class ResumeService:
                 .where(and_(WorkExperience.id == exp_id, Resume.user_id == user_id))
             )
             experience = result.scalars().first()
-            
+
             if not experience:
                 return None
-            
+
             # Update fields
             for field, value in exp_data.dict(exclude_unset=True).items():
                 if hasattr(experience, field):
                     setattr(experience, field, value)
-            
+
             await db.commit()
             await db.refresh(experience)
-            
+
             return experience
-            
+
         except Exception as e:
             logger.error(f"Error updating work experience: {str(e)}")
             await db.rollback()
             raise
-    
+
     # Similar methods for Education, Skills, etc.
     async def add_education(
-        self, 
-        db: AsyncSession, 
-        resume_id: int, 
-        user_id: int, 
-        edu_data: EducationCreate
+        self, db: AsyncSession, resume_id: int, user_id: int, edu_data: EducationCreate
     ) -> Optional[Education]:
         """Add education to a resume."""
         try:
             resume = await self.get_resume(db, resume_id, user_id)
             if not resume:
                 return None
-            
+
             education = Education(
                 resume_id=resume_id,
                 institution_name=edu_data.institution_name,
@@ -357,142 +379,139 @@ class ResumeService:
                 honors=edu_data.honors,
                 description=edu_data.description,
                 courses=edu_data.courses,
-                display_order=edu_data.display_order or 0
+                display_order=edu_data.display_order or 0,
             )
-            
+
             db.add(education)
             await db.commit()
             await db.refresh(education)
-            
+
             return education
-            
+
         except Exception as e:
             logger.error(f"Error adding education: {str(e)}")
             await db.rollback()
             raise
-    
+
     async def add_skill(
-        self, 
-        db: AsyncSession, 
-        resume_id: int, 
-        user_id: int, 
-        skill_data: SkillCreate
+        self, db: AsyncSession, resume_id: int, user_id: int, skill_data: SkillCreate
     ) -> Optional[Skill]:
         """Add skill to a resume."""
         try:
             resume = await self.get_resume(db, resume_id, user_id)
             if not resume:
                 return None
-            
+
             skill = Skill(
                 resume_id=resume_id,
                 name=skill_data.name,
                 category=skill_data.category,
                 proficiency_level=skill_data.proficiency_level,
                 proficiency_label=skill_data.proficiency_label,
-                display_order=skill_data.display_order or 0
+                display_order=skill_data.display_order or 0,
             )
-            
+
             db.add(skill)
             await db.commit()
             await db.refresh(skill)
-            
+
             return skill
-            
+
         except Exception as e:
             logger.error(f"Error adding skill: {str(e)}")
             await db.rollback()
             raise
-    
+
     # Resume sharing methods
     async def create_share_link(
-        self, 
-        db: AsyncSession, 
-        resume_id: int, 
+        self,
+        db: AsyncSession,
+        resume_id: int,
         user_id: int,
         recipient_email: Optional[str] = None,
         password: Optional[str] = None,
         expires_in_days: Optional[int] = None,
-        max_views: Optional[int] = None
+        max_views: Optional[int] = None,
     ) -> Optional[str]:
         """Create a shareable link for a resume."""
         try:
             resume = await self.get_resume(db, resume_id, user_id)
             if not resume:
                 return None
-            
+
             share_token = self._generate_share_token()
-            
+
             share = ResumeShare(
                 resume_id=resume_id,
                 share_token=share_token,
                 recipient_email=recipient_email,
                 password_protected=password is not None,
                 password_hash=self._hash_password(password) if password else None,
-                expires_at=datetime.utcnow() + timedelta(days=expires_in_days) if expires_in_days else None,
-                max_views=max_views
+                expires_at=datetime.utcnow() + timedelta(days=expires_in_days)
+                if expires_in_days
+                else None,
+                max_views=max_views,
             )
-            
+
             db.add(share)
             await db.commit()
-            
+
             return share_token
-            
+
         except Exception as e:
             logger.error(f"Error creating share link: {str(e)}")
             await db.rollback()
             raise
-    
+
     async def get_shared_resume(
-        self, 
-        db: AsyncSession, 
-        share_token: str, 
-        password: Optional[str] = None
+        self, db: AsyncSession, share_token: str, password: Optional[str] = None
     ) -> Optional[Resume]:
         """Get a resume via share token."""
         try:
             share = await ResumeShare.get_by_token(db, share_token)
             if not share or share.is_expired():
                 return None
-            
+
             # Check password if required
             if share.password_protected:
-                if not password or not self._verify_password(password, share.password_hash):
+                if not password or not self._verify_password(
+                    password, share.password_hash
+                ):
                     return None
-            
+
             # Increment view count
             share.view_count += 1
             share.last_viewed_at = datetime.utcnow()
-            
+
             # Get the resume
-            result = await db.execute(select(Resume).where(Resume.id == share.resume_id))
+            result = await db.execute(
+                select(Resume).where(Resume.id == share.resume_id)
+            )
             resume = result.scalars().first()
-            
+
             await db.commit()
             return resume
-            
+
         except Exception as e:
             logger.error(f"Error getting shared resume: {str(e)}")
             raise
-    
+
     # Template methods
-    async def get_templates(self, db: AsyncSession, include_premium: bool = False) -> List[ResumeTemplate]:
+    async def get_templates(
+        self, db: AsyncSession, include_premium: bool = False
+    ) -> list[ResumeTemplate]:
         """Get available resume templates."""
         return await ResumeTemplate.get_active_templates(db, include_premium)
-    
+
     async def apply_template(
-        self, 
-        db: AsyncSession, 
-        resume_id: int, 
-        user_id: int, 
-        template_id: str
+        self, db: AsyncSession, resume_id: int, user_id: int, template_id: str
     ) -> Optional[Resume]:
         """Apply a template to a resume."""
         try:
             resume = await self.get_resume(db, resume_id, user_id)
             if not resume:
                 return None
-            
+
             # Verify template exists
             result = await db.execute(
                 select(ResumeTemplate).where(ResumeTemplate.name == template_id)
@@ -500,69 +519,77 @@ class ResumeService:
             template = result.scalars().first()
             if not template:
                 raise ValueError(f"Template {template_id} not found")
-            
+
             resume.template_id = template_id
             template.usage_count += 1
-            
+
             await db.commit()
             await db.refresh(resume)
-            
+
             return resume
-            
+
         except Exception as e:
             logger.error(f"Error applying template: {str(e)}")
             await db.rollback()
             raise
-    
+
     # Utility methods
     async def _generate_unique_slug(
-        self, 
-        db: AsyncSession, 
-        title: str, 
-        user_id: int, 
-        exclude_id: Optional[int] = None
+        self,
+        db: AsyncSession,
+        title: str,
+        user_id: int,
+        exclude_id: Optional[int] = None,
     ) -> str:
         """Generate a unique slug for a resume."""
         base_slug = self._slugify(title)
         slug = base_slug
         counter = 1
-        
+
         while True:
-            query = select(Resume).where(and_(Resume.user_id == user_id, Resume.slug == slug))
+            query = select(Resume).where(
+                and_(Resume.user_id == user_id, Resume.slug == slug)
+            )
             if exclude_id:
                 query = query.where(Resume.id != exclude_id)
-            
+
             result = await db.execute(query)
             if not result.scalars().first():
                 break
-            
+
             slug = f"{base_slug}-{counter}"
             counter += 1
-        
+
         return slug
-    
+
     def _slugify(self, text: str) -> str:
         """Convert text to URL-friendly slug."""
         text = text.lower()
-        text = re.sub(r'[^\w\s-]', '', text)
-        text = re.sub(r'[-\s]+', '-', text)
-        return text.strip('-')[:50]
-    
+        text = re.sub(r"[^\w\s-]", "", text)
+        text = re.sub(r"[-\s]+", "-", text)
+        return text.strip("-")[:50]
+
     def _generate_share_token(self) -> str:
         """Generate a secure share token."""
-        return ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(32))
-    
+        return "".join(
+            secrets.choice(string.ascii_letters + string.digits) for _ in range(32)
+        )
+
     def _hash_password(self, password: str) -> str:
         """Hash password for share protection."""
         import bcrypt
-        return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-    
+
+        return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
     def _verify_password(self, password: str, hashed: str) -> bool:
         """Verify password against hash."""
         import bcrypt
-        return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
-    
-    async def _duplicate_related_data(self, db: AsyncSession, original: Resume, duplicate: Resume):
+
+        return bcrypt.checkpw(password.encode("utf-8"), hashed.encode("utf-8"))
+
+    async def _duplicate_related_data(
+        self, db: AsyncSession, original: Resume, duplicate: Resume
+    ):
         """Helper method to duplicate all related data."""
         # Education
         for edu in original.educations:
@@ -579,10 +606,10 @@ class ResumeService:
                 honors=edu.honors,
                 description=edu.description,
                 courses=edu.courses,
-                display_order=edu.display_order
+                display_order=edu.display_order,
             )
             db.add(new_edu)
-        
+
         # Skills
         for skill in original.skills:
             new_skill = Skill(
@@ -591,10 +618,10 @@ class ResumeService:
                 category=skill.category,
                 proficiency_level=skill.proficiency_level,
                 proficiency_label=skill.proficiency_label,
-                display_order=skill.display_order
+                display_order=skill.display_order,
             )
             db.add(new_skill)
-        
+
         # Projects
         for project in original.projects:
             new_project = Project(
@@ -609,8 +636,8 @@ class ResumeService:
                 is_ongoing=project.is_ongoing,
                 technologies=project.technologies,
                 role=project.role,
-                display_order=project.display_order
+                display_order=project.display_order,
             )
             db.add(new_project)
-        
+
         # Continue for other related entities...

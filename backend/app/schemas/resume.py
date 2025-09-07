@@ -1,23 +1,16 @@
 from datetime import datetime
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
+from typing import Any, Optional
 
-from pydantic import BaseModel
-from pydantic import Field
-from pydantic import validator
+from pydantic import BaseModel, Field, validator
 
-from app.utils.constants import ResumeStatus
-from app.utils.constants import ResumeVisibility
-from app.utils.constants import SectionType
+from app.utils.constants import ResumeStatus, ResumeVisibility, SectionType
 
 
 # Base schemas
 class ResumeBase(BaseModel):
     title: str = Field(..., min_length=1, max_length=200)
     description: Optional[str] = None
-    
+
     # Personal information
     full_name: Optional[str] = Field(None, max_length=100)
     email: Optional[str] = Field(None, max_length=255)
@@ -26,26 +19,26 @@ class ResumeBase(BaseModel):
     website: Optional[str] = Field(None, max_length=500)
     linkedin_url: Optional[str] = Field(None, max_length=500)
     github_url: Optional[str] = Field(None, max_length=500)
-    
+
     # Professional summary
     professional_summary: Optional[str] = None
     objective: Optional[str] = None
-    
+
     # Template and styling
     template_id: Optional[str] = Field("modern", max_length=50)
     theme_color: Optional[str] = Field("#2563eb", pattern=r"^#[0-9A-Fa-f]{6}$")
     font_family: Optional[str] = Field("Inter", max_length=50)
     custom_css: Optional[str] = None
-    
-    @validator('email')
+
+    @validator("email")
     def validate_email(cls, v):
-        if v and '@' not in v:
-            raise ValueError('Invalid email format')
+        if v and "@" not in v:
+            raise ValueError("Invalid email format")
         return v
-    
-    @validator('website', 'linkedin_url', 'github_url')
+
+    @validator("website", "linkedin_url", "github_url")
     def validate_urls(cls, v):
-        if v and not (v.startswith('http://') or v.startswith('https://')):
+        if v and not (v.startswith("http://") or v.startswith("https://")):
             return f"https://{v}"
         return v
 
@@ -85,20 +78,20 @@ class WorkExperienceBase(BaseModel):
     end_date: Optional[datetime] = None
     is_current: bool = False
     description: Optional[str] = None
-    achievements: Optional[List[str]] = []
-    technologies: Optional[List[str]] = []
+    achievements: Optional[list[str]] = []
+    technologies: Optional[list[str]] = []
     display_order: Optional[int] = 0
-    
-    @validator('end_date')
+
+    @validator("end_date")
     def validate_end_date(cls, v, values):
-        if v and 'start_date' in values and v <= values['start_date']:
-            raise ValueError('End date must be after start date')
+        if v and "start_date" in values and v <= values["start_date"]:
+            raise ValueError("End date must be after start date")
         return v
-    
-    @validator('is_current')
+
+    @validator("is_current")
     def validate_current_job(cls, v, values):
-        if v and values.get('end_date'):
-            raise ValueError('Current job cannot have end date')
+        if v and values.get("end_date"):
+            raise ValueError("Current job cannot have end date")
         return v
 
 
@@ -115,8 +108,8 @@ class WorkExperienceUpdate(BaseModel):
     end_date: Optional[datetime] = None
     is_current: Optional[bool] = None
     description: Optional[str] = None
-    achievements: Optional[List[str]] = None
-    technologies: Optional[List[str]] = None
+    achievements: Optional[list[str]] = None
+    technologies: Optional[list[str]] = None
     display_order: Optional[int] = None
     is_visible: Optional[bool] = None
 
@@ -127,7 +120,7 @@ class WorkExperienceInfo(WorkExperienceBase):
     is_visible: bool
     created_at: datetime
     updated_at: datetime
-    
+
     class Config:
         from_attributes = True
 
@@ -144,13 +137,13 @@ class EducationBase(BaseModel):
     gpa: Optional[str] = Field(None, max_length=10)
     honors: Optional[str] = Field(None, max_length=200)
     description: Optional[str] = None
-    courses: Optional[List[str]] = []
+    courses: Optional[list[str]] = []
     display_order: Optional[int] = 0
-    
-    @validator('end_date')
+
+    @validator("end_date")
     def validate_end_date(cls, v, values):
-        if v and 'start_date' in values and v <= values['start_date']:
-            raise ValueError('End date must be after start date')
+        if v and "start_date" in values and v <= values["start_date"]:
+            raise ValueError("End date must be after start date")
         return v
 
 
@@ -169,7 +162,7 @@ class EducationUpdate(BaseModel):
     gpa: Optional[str] = Field(None, max_length=10)
     honors: Optional[str] = Field(None, max_length=200)
     description: Optional[str] = None
-    courses: Optional[List[str]] = None
+    courses: Optional[list[str]] = None
     display_order: Optional[int] = None
     is_visible: Optional[bool] = None
 
@@ -180,7 +173,7 @@ class EducationInfo(EducationBase):
     is_visible: bool
     created_at: datetime
     updated_at: datetime
-    
+
     class Config:
         from_attributes = True
 
@@ -212,7 +205,7 @@ class SkillInfo(SkillBase):
     resume_id: int
     is_visible: bool
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
 
@@ -227,14 +220,19 @@ class ProjectBase(BaseModel):
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
     is_ongoing: bool = False
-    technologies: Optional[List[str]] = []
+    technologies: Optional[list[str]] = []
     role: Optional[str] = Field(None, max_length=100)
     display_order: Optional[int] = 0
-    
-    @validator('end_date')
+
+    @validator("end_date")
     def validate_end_date(cls, v, values):
-        if v and 'start_date' in values and values['start_date'] and v <= values['start_date']:
-            raise ValueError('End date must be after start date')
+        if (
+            v
+            and "start_date" in values
+            and values["start_date"]
+            and v <= values["start_date"]
+        ):
+            raise ValueError("End date must be after start date")
         return v
 
 
@@ -251,7 +249,7 @@ class ProjectUpdate(BaseModel):
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
     is_ongoing: Optional[bool] = None
-    technologies: Optional[List[str]] = None
+    technologies: Optional[list[str]] = None
     role: Optional[str] = Field(None, max_length=100)
     display_order: Optional[int] = None
     is_visible: Optional[bool] = None
@@ -263,7 +261,7 @@ class ProjectInfo(ProjectBase):
     is_visible: bool
     created_at: datetime
     updated_at: datetime
-    
+
     class Config:
         from_attributes = True
 
@@ -279,11 +277,11 @@ class CertificationBase(BaseModel):
     does_not_expire: bool = False
     description: Optional[str] = None
     display_order: Optional[int] = 0
-    
-    @validator('expiration_date')
+
+    @validator("expiration_date")
     def validate_expiration_date(cls, v, values):
-        if v and 'issue_date' in values and v <= values['issue_date']:
-            raise ValueError('Expiration date must be after issue date')
+        if v and "issue_date" in values and v <= values["issue_date"]:
+            raise ValueError("Expiration date must be after issue date")
         return v
 
 
@@ -309,7 +307,7 @@ class CertificationInfo(CertificationBase):
     resume_id: int
     is_visible: bool
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
 
@@ -337,7 +335,7 @@ class LanguageInfo(LanguageBase):
     resume_id: int
     is_visible: bool
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
 
@@ -351,11 +349,11 @@ class ReferenceBase(BaseModel):
     phone: Optional[str] = Field(None, max_length=20)
     relationship: Optional[str] = Field(None, max_length=100)
     display_order: Optional[int] = 0
-    
-    @validator('email')
+
+    @validator("email")
     def validate_email(cls, v):
-        if v and '@' not in v:
-            raise ValueError('Invalid email format')
+        if v and "@" not in v:
+            raise ValueError("Invalid email format")
         return v
 
 
@@ -380,7 +378,7 @@ class ReferenceInfo(ReferenceBase):
     is_visible: bool
     created_at: datetime
     updated_at: datetime
-    
+
     class Config:
         from_attributes = True
 
@@ -412,7 +410,7 @@ class SectionInfo(SectionBase):
     resume_id: int
     created_at: datetime
     updated_at: datetime
-    
+
     class Config:
         from_attributes = True
 
@@ -431,17 +429,17 @@ class ResumeInfo(ResumeBase):
     share_token: str
     created_at: datetime
     updated_at: datetime
-    
+
     # Related data
-    sections: List[SectionInfo] = []
-    experiences: List[WorkExperienceInfo] = []
-    educations: List[EducationInfo] = []
-    skills: List[SkillInfo] = []
-    projects: List[ProjectInfo] = []
-    certifications: List[CertificationInfo] = []
-    languages: List[LanguageInfo] = []
-    references: List[ReferenceInfo] = []
-    
+    sections: list[SectionInfo] = []
+    experiences: list[WorkExperienceInfo] = []
+    educations: list[EducationInfo] = []
+    skills: list[SkillInfo] = []
+    projects: list[ProjectInfo] = []
+    certifications: list[CertificationInfo] = []
+    languages: list[LanguageInfo] = []
+    references: list[ReferenceInfo] = []
+
     class Config:
         from_attributes = True
 
@@ -454,7 +452,7 @@ class ResumeListRequest(BaseModel):
 
 
 class ResumeListResponse(BaseModel):
-    resumes: List[ResumeInfo]
+    resumes: list[ResumeInfo]
     total: int
     has_more: bool
 
@@ -466,12 +464,12 @@ class ResumeTemplateInfo(BaseModel):
     display_name: str
     description: Optional[str]
     category: Optional[str]
-    color_scheme: Optional[Dict[str, Any]]
-    font_options: Optional[Dict[str, Any]]
+    color_scheme: Optional[dict[str, Any]]
+    font_options: Optional[dict[str, Any]]
     is_premium: bool
     usage_count: int
     preview_image_url: Optional[str]
-    
+
     class Config:
         from_attributes = True
 
@@ -502,8 +500,8 @@ class ShareLinkInfo(BaseModel):
 # Resume statistics
 class ResumeStats(BaseModel):
     total_resumes: int
-    by_status: Dict[str, int]
-    by_visibility: Dict[str, int]
+    by_status: dict[str, int]
+    by_visibility: dict[str, int]
     total_views: int
     total_downloads: int
     most_viewed_resume: Optional[str]  # Resume title
@@ -512,14 +510,16 @@ class ResumeStats(BaseModel):
 
 # Bulk operations
 class BulkResumeAction(BaseModel):
-    action: str = Field(..., pattern="^(delete|archive|publish|make_private|make_public)$")
-    resume_ids: List[int] = Field(..., min_items=1)
+    action: str = Field(
+        ..., pattern="^(delete|archive|publish|make_private|make_public)$"
+    )
+    resume_ids: list[int] = Field(..., min_items=1)
 
 
 class BulkActionResult(BaseModel):
     success_count: int
     error_count: int
-    errors: List[str] = []
+    errors: list[str] = []
 
 
 # PDF generation

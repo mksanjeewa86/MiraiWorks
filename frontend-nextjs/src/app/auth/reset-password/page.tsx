@@ -13,7 +13,7 @@ function ResetPasswordContent() {
   const [error, setError] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const token = searchParams.get('token');
+  const token = searchParams?.get('token');
 
   useEffect(() => {
     if (!token) {

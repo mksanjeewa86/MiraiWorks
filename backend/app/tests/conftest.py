@@ -1,20 +1,15 @@
 import asyncio
-from typing import AsyncGenerator
-from typing import Generator
+from collections.abc import AsyncGenerator, Generator
 
 import pytest
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.ext.asyncio import async_sessionmaker
-from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
-from app.database import Base
-from app.database import get_db
+from app.database import Base, get_db
 from app.main import app
 from app.models.company import Company
-from app.models.role import Role
-from app.models.role import UserRole
+from app.models.role import Role, UserRole
 from app.models.user import User
 from app.services.auth_service import auth_service
 from app.utils.constants import CompanyType
@@ -89,7 +84,7 @@ async def test_company(db_session: AsyncSession) -> Company:
         name="Test Company",
         type=CompanyType.RECRUITER,
         email="test@company.com",
-        is_active="1"
+        is_active="1",
     )
     db_session.add(company)
     await db_session.commit()
@@ -101,26 +96,25 @@ async def test_company(db_session: AsyncSession) -> Company:
 async def test_roles(db_session: AsyncSession) -> dict:
     """Create test roles."""
     roles = {}
-    
+
     for role_name in UserRoleEnum:
-        role = Role(
-            name=role_name.value,
-            description=f"Test {role_name.value} role"
-        )
+        role = Role(name=role_name.value, description=f"Test {role_name.value} role")
         db_session.add(role)
         roles[role_name.value] = role
-    
+
     await db_session.commit()
-    
+
     # Refresh all roles
     for role in roles.values():
         await db_session.refresh(role)
-    
+
     return roles
 
 
 @pytest.fixture
-async def test_user(db_session: AsyncSession, test_company: Company, test_roles: dict) -> User:
+async def test_user(
+    db_session: AsyncSession, test_company: Company, test_roles: dict
+) -> User:
     """Create test user."""
     user = User(
         email="test@example.com",
@@ -128,25 +122,26 @@ async def test_user(db_session: AsyncSession, test_company: Company, test_roles:
         last_name="User",
         company_id=test_company.id,
         hashed_password=auth_service.get_password_hash("testpassword123"),
-        is_active=True
+        is_active=True,
     )
     db_session.add(user)
     await db_session.commit()
     await db_session.refresh(user)
-    
+
     # Assign candidate role
     user_role = UserRole(
-        user_id=user.id,
-        role_id=test_roles[UserRoleEnum.CANDIDATE.value].id
+        user_id=user.id, role_id=test_roles[UserRoleEnum.CANDIDATE.value].id
     )
     db_session.add(user_role)
     await db_session.commit()
-    
+
     return user
 
 
 @pytest.fixture
-async def test_admin_user(db_session: AsyncSession, test_company: Company, test_roles: dict) -> User:
+async def test_admin_user(
+    db_session: AsyncSession, test_company: Company, test_roles: dict
+) -> User:
     """Create test admin user."""
     user = User(
         email="admin@example.com",
@@ -155,20 +150,19 @@ async def test_admin_user(db_session: AsyncSession, test_company: Company, test_
         company_id=test_company.id,
         hashed_password=auth_service.get_password_hash("adminpassword123"),
         is_active=True,
-        is_admin=True
+        is_admin=True,
     )
     db_session.add(user)
     await db_session.commit()
     await db_session.refresh(user)
-    
+
     # Assign company admin role
     user_role = UserRole(
-        user_id=user.id,
-        role_id=test_roles[UserRoleEnum.COMPANY_ADMIN.value].id
+        user_id=user.id, role_id=test_roles[UserRoleEnum.COMPANY_ADMIN.value].id
     )
     db_session.add(user_role)
     await db_session.commit()
-    
+
     return user
 
 
@@ -182,63 +176,56 @@ async def test_super_admin(db_session: AsyncSession, test_roles: dict) -> User:
         company_id=None,  # Super admin has no company
         hashed_password=auth_service.get_password_hash("superpassword123"),
         is_active=True,
-        is_admin=True
+        is_admin=True,
     )
     db_session.add(user)
     await db_session.commit()
     await db_session.refresh(user)
-    
+
     # Assign super admin role
     user_role = UserRole(
-        user_id=user.id,
-        role_id=test_roles[UserRoleEnum.SUPER_ADMIN.value].id
+        user_id=user.id, role_id=test_roles[UserRoleEnum.SUPER_ADMIN.value].id
     )
     db_session.add(user_role)
     await db_session.commit()
-    
+
     return user
 
 
 @pytest.fixture
 async def auth_headers(client: AsyncClient, test_user: User) -> dict:
     """Get authentication headers for test user."""
-    response = await client.post("/api/auth/login", json={
-        "email": test_user.email,
-        "password": "testpassword123"
-    })
+    response = await client.post(
+        "/api/auth/login",
+        json={"email": test_user.email, "password": "testpassword123"},
+    )
     assert response.status_code == 200
     token_data = response.json()
-    
-    return {
-        "Authorization": f"Bearer {token_data['access_token']}"
-    }
+
+    return {"Authorization": f"Bearer {token_data['access_token']}"}
 
 
 @pytest.fixture
 async def admin_auth_headers(client: AsyncClient, test_admin_user: User) -> dict:
     """Get authentication headers for admin user."""
-    response = await client.post("/api/auth/login", json={
-        "email": test_admin_user.email,
-        "password": "adminpassword123"
-    })
+    response = await client.post(
+        "/api/auth/login",
+        json={"email": test_admin_user.email, "password": "adminpassword123"},
+    )
     assert response.status_code == 200
     token_data = response.json()
-    
-    return {
-        "Authorization": f"Bearer {token_data['access_token']}"
-    }
+
+    return {"Authorization": f"Bearer {token_data['access_token']}"}
 
 
 @pytest.fixture
 async def super_admin_auth_headers(client: AsyncClient, test_super_admin: User) -> dict:
     """Get authentication headers for super admin user."""
-    response = await client.post("/api/auth/login", json={
-        "email": test_super_admin.email,
-        "password": "superpassword123"
-    })
+    response = await client.post(
+        "/api/auth/login",
+        json={"email": test_super_admin.email, "password": "superpassword123"},
+    )
     assert response.status_code == 200
     token_data = response.json()
-    
-    return {
-        "Authorization": f"Bearer {token_data['access_token']}"
-    }
+
+    return {"Authorization": f"Bearer {token_data['access_token']}"}

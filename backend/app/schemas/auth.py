@@ -1,10 +1,7 @@
 from datetime import datetime
-from typing import List
 from typing import Optional
 
-from pydantic import BaseModel
-from pydantic import EmailStr
-from pydantic import validator
+from pydantic import BaseModel, EmailStr, validator
 
 
 class LoginRequest(BaseModel):
@@ -18,7 +15,7 @@ class LoginResponse(BaseModel):
     token_type: str = "bearer"
     expires_in: int
     require_2fa: bool = False
-    user: Optional['UserInfo'] = None
+    user: Optional["UserInfo"] = None
 
 
 class TwoFAVerifyRequest(BaseModel):
@@ -31,7 +28,7 @@ class TwoFAVerifyResponse(BaseModel):
     refresh_token: str
     token_type: str = "bearer"
     expires_in: int
-    user: 'UserInfo'
+    user: "UserInfo"
 
 
 class RefreshTokenRequest(BaseModel):
@@ -51,22 +48,22 @@ class PasswordResetRequest(BaseModel):
 class PasswordResetApproveRequest(BaseModel):
     request_id: int
     new_password: str
-    
-    @validator('new_password')
+
+    @validator("new_password")
     def validate_password(cls, v):
         if len(v) < 8:
-            raise ValueError('Password must be at least 8 characters long')
+            raise ValueError("Password must be at least 8 characters long")
         return v
 
 
 class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str
-    
-    @validator('new_password')
+
+    @validator("new_password")
     def validate_password(cls, v):
         if len(v) < 8:
-            raise ValueError('Password must be at least 8 characters long')
+            raise ValueError("Password must be at least 8 characters long")
         return v
 
 
@@ -74,7 +71,7 @@ class RoleInfo(BaseModel):
     id: int
     name: str
     description: Optional[str] = None
-    
+
     class Config:
         from_attributes = True
 
@@ -85,7 +82,7 @@ class UserRoleInfo(BaseModel):
     role_id: int
     created_at: datetime
     role: RoleInfo
-    
+
     class Config:
         from_attributes = True
 
@@ -97,10 +94,10 @@ class UserInfo(BaseModel):
     last_name: str
     full_name: str
     company_id: Optional[int]
-    roles: List[UserRoleInfo]
+    roles: list[UserRoleInfo]
     is_active: bool
     last_login: Optional[datetime]
-    
+
     class Config:
         from_attributes = True
 
@@ -114,7 +111,7 @@ class PasswordResetRequestInfo(BaseModel):
     approved_by: Optional[int]
     approved_at: Optional[datetime]
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
 

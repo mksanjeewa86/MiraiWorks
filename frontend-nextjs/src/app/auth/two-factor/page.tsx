@@ -14,7 +14,7 @@ function TwoFactorContent() {
   const { isAuthenticated, verifyTwoFactor, error, clearError } = useAuth();
   const [twoFactorError, setTwoFactorError] = useState<string>('');
 
-  const email = searchParams.get('email');
+  const email = searchParams?.get('email');
 
   useEffect(() => {
     if (isAuthenticated) {

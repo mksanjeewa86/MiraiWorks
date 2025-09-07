@@ -21,7 +21,7 @@ export const messagesApi = {
     return { data: responseData.conversations || [], success: true };
   },
 
-  markConversationAsRead: async (conversationId: number, token?: string): Promise<ApiResponse<any>> => {
+  markConversationAsRead: async (conversationId: number, token?: string): Promise<ApiResponse<unknown>> => {
     const authToken = token || localStorage.getItem('accessToken');
     const response = await fetch(`${API_BASE_URL}/api/messaging/conversations/${conversationId}/read`, {
       method: 'PUT',

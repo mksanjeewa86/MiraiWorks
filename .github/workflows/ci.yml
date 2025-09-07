@@ -54,13 +54,17 @@ jobs:
           sleep 2
         done
 
-    - name: Code formatting check (Black)
+    - name: Code formatting check (Ruff)
       working-directory: ./backend
-      run: black --check --diff . || echo "Black formatting check failed, but continuing..."
+      run: ruff format --check . || echo "Ruff formatting check failed, but continuing..."
 
-    - name: Linting (Flake8)
+    - name: Linting (Ruff)
       working-directory: ./backend
-      run: flake8 app/ --count --select=E9,F63,F7,F82 --show-source --statistics || echo "Flake8 linting failed, but continuing..."
+      run: ruff check . || echo "Ruff linting failed, but continuing..."
+
+    - name: Critical Issues Check (Ruff)
+      working-directory: ./backend
+      run: ruff check . --select=E9,F63,F7,F82,E999,E902 --no-fix
 
     - name: Type checking (MyPy) 
       working-directory: ./backend
