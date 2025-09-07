@@ -2,7 +2,7 @@ import logging
 from typing import Any, Optional
 
 from fastapi import HTTPException, status
-from sqlalchemy import desc, or_, select
+from sqlalchemy import desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 

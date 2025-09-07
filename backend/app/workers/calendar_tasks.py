@@ -10,6 +10,7 @@ from app.config import settings
 from app.models.calendar_integration import CalendarIntegration
 from app.models.interview import Interview
 from app.services.calendar_service import GoogleCalendarService
+from app.services.microsoft_calendar_service import MicrosoftCalendarService
 from app.services.interview_service import InterviewService
 
 # Initialize Celery
@@ -139,7 +140,7 @@ async def _sync_calendar_events(
                     calendar_integration.sync_token = next_sync_token
 
             elif calendar_integration.provider == "microsoft":
-                service = MicrosoftGoogleCalendarService()
+                service = MicrosoftCalendarService()
 
                 # For Microsoft, we'll get events from the last sync time
                 start_time = None
@@ -256,7 +257,7 @@ async def _cleanup_expired_calendar_tokens():
                         refreshed_count += 1
 
                     elif integration.provider == "microsoft":
-                        service = MicrosoftGoogleCalendarService()
+                        service = MicrosoftCalendarService()
                         new_tokens = await service.refresh_access_token(
                             integration.refresh_token
                         )
@@ -397,7 +398,7 @@ async def _create_calendar_event_for_interview(
         await interview.save(db)
 
     elif integration.provider == "microsoft":
-        service = MicrosoftGoogleCalendarService()
+        service = MicrosoftCalendarService()
         event_data = {
             "subject": interview.title,
             "body": {"content": interview.description or ""},
@@ -445,7 +446,7 @@ async def _delete_calendar_event_for_interview(
             interview.external_calendar_event_id,
         )
     elif integration.provider == "microsoft":
-        service = MicrosoftGoogleCalendarService()
+        service = MicrosoftCalendarService()
         await service.delete_event(
             integration.access_token, interview.external_calendar_event_id
         )

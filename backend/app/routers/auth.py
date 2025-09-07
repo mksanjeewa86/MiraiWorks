@@ -17,6 +17,7 @@ from app.dependencies import (
 )
 from app.models.auth import PasswordResetRequest
 from app.models.notification import Notification
+from app.models.role import UserRole as UserRoleModel
 from app.models.user import User
 from app.schemas.auth import (
     ChangePasswordRequest,
