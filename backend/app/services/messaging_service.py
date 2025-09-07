@@ -57,12 +57,17 @@ class MessagingRulesService:
         if not user1.is_active or not user2.is_active:
             return False, "One or both users are inactive"
 
-        # Super admin can communicate with anyone
-        if (
-            UserRole.SUPER_ADMIN.value in user1_roles
-            or UserRole.SUPER_ADMIN.value in user2_roles
-        ):
-            return True, "Super admin access"
+        # Super admin can only communicate with company admins
+        if UserRole.SUPER_ADMIN.value in user1_roles:
+            if UserRole.COMPANY_ADMIN.value in user2_roles:
+                return True, "Super admin can communicate with company admin"
+            else:
+                return False, "Super admin can only communicate with company admins"
+        elif UserRole.SUPER_ADMIN.value in user2_roles:
+            if UserRole.COMPANY_ADMIN.value in user1_roles:
+                return True, "Super admin can communicate with company admin"
+            else:
+                return False, "Super admin can only communicate with company admins"
 
         # Company admin can communicate with users in their company
         if (
@@ -168,11 +173,18 @@ class MessagingRulesService:
         potential_participants = []
 
         if primary_role == UserRole.SUPER_ADMIN.value:
-            # Super admin can talk to anyone
+            # Super admin can only talk to company admins
+            from app.models.role import Role
             result = await db.execute(
                 select(User)
                 .options(selectinload(User.company))
-                .where(User.id != user_id, User.is_active == True)
+                .where(
+                    User.id != user_id,
+                    User.is_active == True,
+                    User.user_roles.any(
+                        UserRoleModel.role.has(name=UserRole.COMPANY_ADMIN.value)
+                    ),
+                )
             )
             potential_participants = result.scalars().all()
 

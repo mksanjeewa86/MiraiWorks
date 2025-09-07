@@ -1,4 +1,3 @@
-import logging
 import secrets
 from datetime import datetime, timedelta
 
@@ -35,10 +34,11 @@ from app.schemas.auth import PasswordResetRequest as PWResetSchema
 from app.services.auth_service import auth_service
 from app.services.email_service import email_service
 from app.utils.constants import NotificationType
+from app.utils.logging import get_logger
 from app.utils.permissions import is_company_admin, is_super_admin
 
 router = APIRouter()
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @router.post("/login", response_model=LoginResponse)
@@ -46,31 +46,78 @@ async def login(
     request: Request, login_data: LoginRequest, db: AsyncSession = Depends(get_db)
 ):
     """Authenticate user with email and password."""
-    client_ip = get_client_ip(request)
+    client_ip = await get_client_ip(request)
 
-    # Rate limiting
+    # Rate limiting (more generous limits for development)
     rate_key = f"login_attempts:{client_ip}:{login_data.email}"
-    if not await check_rate_limit(rate_key, limit=5, window=300):
+    if not await check_rate_limit(rate_key, limit=20, window=300):
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Too many login attempts. Please try again later.",
         )
 
     # Authenticate user
+    logger.info("Attempting user authentication", email=login_data.email, component="auth")
+    
     user = await auth_service.authenticate_user(
         db, login_data.email, login_data.password
     )
     if not user:
+        logger.warning("Authentication failed", email=login_data.email, reason="invalid_credentials", component="auth")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password"
         )
 
     if not user.is_active:
+        logger.warning("Authentication failed", email=login_data.email, user_id=user.id, reason="account_deactivated", component="auth")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Account is deactivated"
         )
+    
+    logger.info("User authenticated successfully", email=login_data.email, user_id=user.id, component="auth")
 
-    # Check if 2FA is required
+    # Debug: Check what the user object actually contains
+    user_dict = {
+        'id': user.id,
+        'email': user.email,
+        'require_2fa': user.require_2fa,
+        'require_2fa_type': type(user.require_2fa),
+        'is_active': user.is_active,
+        'is_admin': user.is_admin
+    }
+    print(f"[DEBUG] User object: {user_dict}")
+    
+    # Direct check of user's 2FA field  
+    if user.require_2fa:
+        logger.info("2FA required for user", user_id=user.id, email=user.email, component="2fa")
+        
+        # Generate and send 2FA code
+        code = auth_service.generate_2fa_code()
+        await store_2fa_code(user.id, code, ttl=600)  # 10 minutes
+
+        # Send 2FA code via email
+        await email_service.send_2fa_code(user.email, code, user.full_name)
+        logger.info("2FA code sent", user_id=user.id, component="2fa")
+
+        return LoginResponse(
+            access_token="", 
+            refresh_token="", 
+            require_2fa=True, 
+            expires_in=0,
+            user=UserInfo(
+                id=user.id,
+                email=user.email,
+                first_name=user.first_name,
+                last_name=user.last_name,
+                full_name=user.full_name,
+                company_id=user.company_id,
+                roles=user.user_roles,
+                is_active=user.is_active,
+                last_login=user.last_login,
+            )
+        )
+
+    # Check if 2FA is required (using the service method)
     requires_2fa = await auth_service.requires_2fa(db, user)
 
     if requires_2fa:
@@ -82,11 +129,27 @@ async def login(
         await email_service.send_2fa_code(user.email, code, user.full_name)
 
         return LoginResponse(
-            access_token="", refresh_token="", require_2fa=True, expires_in=0
+            access_token="", 
+            refresh_token="", 
+            require_2fa=True, 
+            expires_in=0,
+            user=UserInfo(
+                id=user.id,
+                email=user.email,
+                first_name=user.first_name,
+                last_name=user.last_name,
+                full_name=user.full_name,
+                company_id=user.company_id,
+                roles=user.user_roles,
+                is_active=user.is_active,
+                last_login=user.last_login,
+            )
         )
 
     # Create tokens without 2FA
+    logger.info("Creating login tokens", user_id=user.id, component="auth")
     tokens = await auth_service.create_login_tokens(db, user)
+    logger.info("Login successful", user_id=user.id, email=user.email, component="auth")
 
     return LoginResponse(
         access_token=tokens["access_token"],
@@ -189,9 +252,13 @@ async def refresh_token(
 
 
 @router.post("/logout")
-async def logout(refresh_data: RefreshTokenRequest, db: AsyncSession = Depends(get_db)):
-    """Logout user by revoking refresh token."""
-    await auth_service.revoke_refresh_token(db, refresh_data.refresh_token)
+async def logout(
+    current_user: User = Depends(get_current_active_user), 
+    db: AsyncSession = Depends(get_db)
+):
+    """Logout user by revoking all refresh tokens for the user."""
+    # Revoke all refresh tokens for this user
+    await auth_service.revoke_user_tokens(db, current_user.id)
     return {"message": "Logged out successfully"}
 
 

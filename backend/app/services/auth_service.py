@@ -100,6 +100,17 @@ class AuthService:
         await db.commit()
         return result.rowcount > 0
 
+    async def revoke_user_tokens(self, db: AsyncSession, user_id: int) -> bool:
+        """Revoke all refresh tokens for a user."""
+        result = await db.execute(
+            update(RefreshToken)
+            .where(RefreshToken.user_id == user_id, RefreshToken.is_revoked == False)
+            .values(is_revoked=True, revoked_at=datetime.utcnow())
+        )
+
+        await db.commit()
+        return result.rowcount > 0
+
     async def verify_refresh_token(
         self, db: AsyncSession, token: str
     ) -> Optional[User]:
@@ -149,27 +160,33 @@ class AuthService:
         return str(secrets.randbelow(900000) + 100000)
 
     async def requires_2fa(self, db: AsyncSession, user: User) -> bool:
-        """Check if user requires 2FA based on role and settings."""
-        if not settings.force_2fa_for_admins:
-            return False
-
-        # Check if user has any admin roles by requerying with eager loading
+        """Check if user requires 2FA based on user settings and role requirements."""
+        
+        # Get fresh user data from database instead of refreshing eager-loaded object
         result = await db.execute(
             select(User)
             .options(selectinload(User.user_roles).selectinload(UserRoleModel.role))
             .where(User.id == user.id)
         )
+        fresh_user = result.scalar_one_or_none()
+        if not fresh_user:
+            return False
+        
+        # First check user's individual 2FA setting
+        if fresh_user.require_2fa:
+            return True
+        
+        # If force_2fa_for_admins is disabled, only use individual settings
+        if not settings.force_2fa_for_admins:
+            return False
 
-        user_with_roles = result.scalar_one_or_none()
-        if not user_with_roles:
-            return user.require_2fa
-
-        # Check if user has any admin roles
-        for user_role in user_with_roles.user_roles:
+        # Check if user has any admin roles and force_2fa_for_admins is enabled
+        # (we already loaded the user with roles above)
+        for user_role in fresh_user.user_roles:
             if is_admin_role(UserRole(user_role.role.name)):
                 return True
 
-        return user.require_2fa
+        return False
 
     async def create_login_tokens(self, db: AsyncSession, user: User) -> dict[str, Any]:
         """Create access and refresh tokens for a user."""

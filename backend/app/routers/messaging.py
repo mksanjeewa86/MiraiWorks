@@ -372,7 +372,7 @@ async def create_file_upload(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=reason)
 
     # Rate limiting for uploads
-    client_ip = get_client_ip(request)
+    client_ip = await get_client_ip(request)
     if not await check_rate_limit(
         f"upload:{client_ip}", limit=10, window=300
     ):  # 10 uploads per 5 minutes
@@ -497,5 +497,22 @@ async def mark_conversation_read_put(
     db: AsyncSession = Depends(get_db),
 ):
     """Mark conversation as read (PUT method for frontend compatibility)."""
-    # For now, just return success - can implement actual read marking later
-    return {"message": "Conversation marked as read", "messages_marked_read": 0}
+    # Get the latest message ID in the conversation to mark all messages as read
+    latest_message_result = await db.execute(
+        select(Message.id)
+        .where(Message.conversation_id == conversation_id)
+        .order_by(desc(Message.id))
+        .limit(1)
+    )
+    latest_message_id = latest_message_result.scalar()
+    
+    if not latest_message_id:
+        # No messages in conversation
+        return {"message": "Conversation marked as read", "messages_marked_read": 0}
+    
+    # Mark all messages as read up to the latest message
+    read_count = await messaging_service.mark_messages_as_read(
+        db, conversation_id, current_user.id, latest_message_id
+    )
+    
+    return {"message": "Conversation marked as read", "messages_marked_read": read_count}

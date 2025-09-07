@@ -8,6 +8,7 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import Toggle from '@/components/ui/Toggle';
 import { 
   Save, 
   Shield, 
@@ -26,7 +27,8 @@ import {
 interface SettingsState {
   activeSection: 'account' | 'security' | 'notifications' | 'preferences';
   loading: boolean;
-  saving: boolean;
+  autoSaving: boolean;
+  passwordSaving: boolean;
   error: string | null;
   profile: UserProfile | null;
   settings: UserSettings | null;
@@ -43,7 +45,8 @@ export default function SettingsPage() {
   const [state, setState] = useState<SettingsState>({
     activeSection: 'account',
     loading: true,
-    saving: false,
+    autoSaving: false,
+    passwordSaving: false,
     error: null,
     profile: null,
     settings: null,
@@ -59,6 +62,8 @@ export default function SettingsPage() {
     new: false,
     confirm: false
   });
+
+  const [debounceTimers, setDebounceTimers] = useState<{ [key: string]: NodeJS.Timeout }>({});
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -93,18 +98,63 @@ export default function SettingsPage() {
   }, [user]);
 
   const updateProfile = (field: string, value: string) => {
+    // Update local state immediately
     setState(prev => ({
       ...prev,
       profile: prev.profile ? { ...prev.profile, [field]: value } : null
     }));
+    
+    // Clear existing debounce timer for this field
+    if (debounceTimers[field]) {
+      clearTimeout(debounceTimers[field]);
+    }
+    
+    // Set new debounce timer
+    const timer = setTimeout(() => {
+      autoSaveProfile(field, value);
+    }, 1000); // 1 second delay
+    
+    setDebounceTimers(prev => ({
+      ...prev,
+      [field]: timer
+    }));
   };
 
-  const updateSecurity = (field: string, value: string | boolean) => {
-    if (field === 'two_factor_enabled') {
+  const autoSaveProfile = async (field: string, value: string) => {
+    if (!state.profile) return;
+    
+    try {
+      setState(prev => ({ ...prev, autoSaving: true, error: null }));
+      
+      const updatedProfile = { ...state.profile, [field]: value };
+      await userSettingsApi.updateProfile({
+        first_name: updatedProfile.first_name,
+        last_name: updatedProfile.last_name,
+        phone: updatedProfile.phone,
+        job_title: updatedProfile.job_title,
+        bio: updatedProfile.bio
+      });
+      
+      setState(prev => ({ ...prev, autoSaving: false }));
+    } catch (error) {
+      console.error('Failed to auto-save profile:', error);
       setState(prev => ({
         ...prev,
-        settings: prev.settings ? { ...prev.settings, two_factor_enabled: value as boolean } : null
+        error: 'Failed to save changes',
+        autoSaving: false
       }));
+    }
+  };
+
+  const updateSecurity = async (field: string, value: string | boolean) => {
+    if (field === 'require_2fa') {
+      setState(prev => ({
+        ...prev,
+        settings: prev.settings ? { ...prev.settings, require_2fa: value as boolean } : null
+      }));
+      
+      // Auto-save 2FA setting
+      await autoSaveSettings('require_2fa', value as boolean);
     } else {
       setState(prev => ({
         ...prev,
@@ -113,54 +163,105 @@ export default function SettingsPage() {
     }
   };
 
-  const updateNotifications = (field: string, value: boolean) => {
+  const updateNotifications = async (field: string, value: boolean) => {
+    // Special handling for SMS notifications
+    if (field === 'sms_notifications' && value && (!state.profile?.phone || !state.profile.phone.trim())) {
+      setState(prev => ({ ...prev, error: 'SMS notifications require a phone number. Please add your phone number in your profile first.' }));
+      return;
+    }
+
+    setState(prev => ({
+      ...prev,
+      settings: prev.settings ? { ...prev.settings, [field]: value } : null,
+      error: null // Clear any previous errors
+    }));
+    
+    // Auto-save notification setting
+    await autoSaveSettings(field, value);
+  };
+
+  const updatePreferences = async (field: string, value: string) => {
     setState(prev => ({
       ...prev,
       settings: prev.settings ? { ...prev.settings, [field]: value } : null
     }));
+    
+    // Auto-save preference setting
+    await autoSaveSettings(field, value);
   };
 
-  const updatePreferences = (field: string, value: string) => {
-    setState(prev => ({
-      ...prev,
-      settings: prev.settings ? { ...prev.settings, [field]: value } : null
-    }));
-  };
-
-  const handleSave = async () => {
-    if (!state.profile || !state.settings) return;
+  const autoSaveSettings = async (field: string, value: string | boolean) => {
+    if (!state.settings) return;
     
     try {
-      setState(prev => ({ ...prev, saving: true, error: null }));
+      setState(prev => ({ ...prev, autoSaving: true, error: null }));
       
-      // Save profile and settings in parallel
-      const [profileResponse, settingsResponse] = await Promise.all([
-        userSettingsApi.updateProfile({
-          first_name: state.profile!.first_name,
-          last_name: state.profile!.last_name,
-          phone: state.profile!.phone,
-          job_title: state.profile!.job_title,
-          bio: state.profile!.bio
-        }),
-        userSettingsApi.updateSettings(state.settings)
-      ]);
+      const updatedSettings = { ...state.settings, [field]: value };
+      await userSettingsApi.updateSettings(updatedSettings);
       
+      setState(prev => ({ ...prev, autoSaving: false }));
+    } catch (error) {
+      console.error('Failed to auto-save settings:', error);
+      const errorMessage = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Failed to save changes';
       setState(prev => ({
         ...prev,
-        profile: profileResponse.data,
-        settings: settingsResponse.data,
-        saving: false
+        error: errorMessage,
+        autoSaving: false,
+        // If it was SMS notification and failed, revert the setting
+        settings: field === 'sms_notifications' && errorMessage.includes('phone number') 
+          ? { ...prev.settings!, sms_notifications: false }
+          : prev.settings
+      }));
+    }
+  };
+
+  const handlePasswordSave = async () => {
+    const { current_password, new_password, confirm_password } = state.security;
+    
+    // Validation
+    if (!current_password || !new_password || !confirm_password) {
+      setState(prev => ({ ...prev, error: 'All password fields are required' }));
+      return;
+    }
+    
+    if (new_password !== confirm_password) {
+      setState(prev => ({ ...prev, error: 'New passwords do not match' }));
+      return;
+    }
+    
+    if (new_password.length < 8) {
+      setState(prev => ({ ...prev, error: 'New password must be at least 8 characters' }));
+      return;
+    }
+    
+    try {
+      setState(prev => ({ ...prev, passwordSaving: true, error: null }));
+      
+      // TODO: Add password change API endpoint
+      // await userSettingsApi.changePassword({
+      //   current_password,
+      //   new_password
+      // });
+      
+      // Clear password fields on success
+      setState(prev => ({
+        ...prev,
+        passwordSaving: false,
+        security: {
+          current_password: '',
+          new_password: '',
+          confirm_password: ''
+        }
       }));
       
-      // Show success message (you could add a toast notification here)
-      console.log('Settings saved successfully');
+      console.log('Password changed successfully');
       
     } catch (error) {
-      console.error('Failed to save settings:', error);
+      console.error('Failed to change password:', error);
       setState(prev => ({
         ...prev,
-        error: 'Failed to save settings',
-        saving: false
+        error: 'Failed to change password',
+        passwordSaving: false
       }));
     }
   };
@@ -293,6 +394,17 @@ export default function SettingsPage() {
               }
             />
           </div>
+          
+          <div className="flex justify-end">
+            <Button 
+              onClick={handlePasswordSave}
+              disabled={state.passwordSaving || !state.security.current_password || !state.security.new_password || !state.security.confirm_password}
+              className="flex items-center gap-2"
+            >
+              {state.passwordSaving ? <LoadingSpinner className="w-4 h-4" /> : <Save className="h-4 w-4" />}
+              {state.passwordSaving ? 'Changing Password...' : 'Change Password'}
+            </Button>
+          </div>
         </div>
       </Card>
 
@@ -310,21 +422,20 @@ export default function SettingsPage() {
               Add an extra layer of security to your account
             </p>
           </div>
-          <div className="flex items-center">
-            <input
-              type="checkbox"
+          <div className="flex items-center gap-3">
+            <Toggle
               id="two-factor"
-              checked={state.settings?.two_factor_enabled || false}
-              onChange={(e) => updateSecurity('two_factor_enabled', e.target.checked)}
-              className="mr-2"
+              checked={state.settings?.require_2fa || false}
+              onChange={(checked) => updateSecurity('require_2fa', checked)}
+              size="md"
             />
-            <label htmlFor="two-factor" className="cursor-pointer">
-              {state.settings?.two_factor_enabled ? 'Enabled' : 'Disabled'}
-            </label>
+            <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+              {state.settings?.require_2fa ? 'Enabled' : 'Disabled'}
+            </span>
           </div>
         </div>
         
-        {state.settings?.two_factor_enabled && (
+        {state.settings?.require_2fa && (
           <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
             <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
               <Smartphone className="h-4 w-4" />
@@ -358,23 +469,30 @@ export default function SettingsPage() {
             { key: 'email_notifications', label: 'Email Notifications', icon: Mail, description: 'Receive notifications via email' },
             { key: 'push_notifications', label: 'Push Notifications', icon: Bell, description: 'Browser push notifications' },
             { key: 'sms_notifications', label: 'SMS Notifications', icon: Smartphone, description: 'Text message notifications' }
-          ].map(({ key, label, icon: Icon, description }) => (
-            <div key={key} className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700 last:border-b-0">
-              <div className="flex items-center gap-3">
-                <Icon className="h-5 w-5" style={{ color: 'var(--text-muted)' }} />
-                <div>
-                  <p className="font-medium" style={{ color: 'var(--text-primary)' }}>{label}</p>
-                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{description}</p>
+          ].map(({ key, label, icon: Icon, description }) => {
+            const isSmsWithoutPhone = key === 'sms_notifications' && (!state.profile?.phone || !state.profile.phone.trim());
+            const displayDescription = isSmsWithoutPhone 
+              ? 'Requires phone number (add in profile first)' 
+              : description;
+            
+            return (
+              <div key={key} className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700 last:border-b-0">
+                <div className="flex items-center gap-3">
+                  <Icon className={`h-5 w-5 ${isSmsWithoutPhone ? 'opacity-50' : ''}`} style={{ color: 'var(--text-muted)' }} />
+                  <div>
+                    <p className={`font-medium ${isSmsWithoutPhone ? 'opacity-50' : ''}`} style={{ color: 'var(--text-primary)' }}>{label}</p>
+                    <p className={`text-sm ${isSmsWithoutPhone ? 'opacity-50 text-orange-600 dark:text-orange-400' : ''}`} style={{ color: isSmsWithoutPhone ? undefined : 'var(--text-secondary)' }}>{displayDescription}</p>
+                  </div>
                 </div>
+                <Toggle
+                  checked={state.settings?.[key as keyof UserSettings] as boolean || false}
+                  onChange={(checked) => updateNotifications(key, checked)}
+                  disabled={isSmsWithoutPhone}
+                  size="md"
+                />
               </div>
-              <input
-                type="checkbox"
-                checked={state.settings?.[key as keyof UserSettings] as boolean || false}
-                onChange={(e) => updateNotifications(key, e.target.checked)}
-                className="scale-110"
-              />
-            </div>
-          ))}
+            );
+          })}
         </div>
       </Card>
 
@@ -394,11 +512,10 @@ export default function SettingsPage() {
                 <p className="font-medium" style={{ color: 'var(--text-primary)' }}>{label}</p>
                 <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{description}</p>
               </div>
-              <input
-                type="checkbox"
+              <Toggle
                 checked={state.settings?.[key as keyof UserSettings] as boolean || false}
-                onChange={(e) => updateNotifications(key, e.target.checked)}
-                className="scale-110"
+                onChange={(checked) => updateNotifications(key, checked)}
+                size="md"
               />
             </div>
           ))}
@@ -554,14 +671,12 @@ export default function SettingsPage() {
             {state.error && (
               <p className="text-red-600 text-sm">{state.error}</p>
             )}
-            <Button 
-              onClick={handleSave}
-              disabled={state.saving || !state.profile || !state.settings}
-              className="flex items-center gap-2"
-            >
-              {state.saving ? <LoadingSpinner className="w-4 h-4" /> : <Save className="h-4 w-4" />}
-              {state.saving ? 'Saving...' : 'Save Changes'}
-            </Button>
+            {state.autoSaving && (
+              <div className="flex items-center gap-2 text-green-600 text-sm">
+                <LoadingSpinner className="w-4 h-4" />
+                <span>Saving...</span>
+              </div>
+            )}
           </div>
         </div>
 

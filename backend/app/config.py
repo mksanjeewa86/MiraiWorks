@@ -23,7 +23,13 @@ class Settings(BaseSettings):
     # Email
     smtp_host: str = "localhost"
     smtp_port: int = 1025
-    smtp_from: str = "noreply@miraiworks.com"
+    smtp_use_tls: bool = False
+    smtp_use_ssl: bool = False
+    smtp_username: Optional[str] = None
+    smtp_password: Optional[str] = None
+    from_email: str = "noreply@miraiworks.com"
+    from_name: str = "MiraiWorks"
+    smtp_from: str = "noreply@miraiworks.com"  # Keep for backward compatibility
 
     # JWT
     jwt_secret: str = "development-secret-change-in-production"

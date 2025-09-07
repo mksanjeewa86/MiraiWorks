@@ -104,13 +104,15 @@ export interface RegisterData {
 }
 
 export interface AuthResponse {
-  user: User;
+  user?: User;
   access_token: string;
   refresh_token: string;
   expires_in: number;
+  require_2fa?: boolean;
 }
 
 export interface TwoFactorRequest {
+  user_id?: number;
   code: string;
 }
 

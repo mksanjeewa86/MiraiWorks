@@ -20,7 +20,7 @@ export interface UserSettings {
   date_format: string;
   
   // Security settings
-  two_factor_enabled: boolean;
+  require_2fa: boolean;
 }
 
 export interface UserProfile {
@@ -54,7 +54,7 @@ export interface UserSettingsUpdate {
   date_format?: string;
   
   // Security settings
-  two_factor_enabled?: boolean;
+  require_2fa?: boolean;
 }
 
 export interface UserProfileUpdate {
@@ -68,7 +68,7 @@ export interface UserProfileUpdate {
 // Helper function to get auth token from localStorage
 const getAuthToken = (): string | null => {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('authToken');
+    return localStorage.getItem('accessToken');
   }
   return null;
 };

@@ -12,7 +12,7 @@ from .meeting import (
     MeetingTranscript,
     meeting_participants,
 )
-from .message import Conversation, Message, MessageRead, conversation_participants
+from .direct_message import DirectMessage
 from .notification import Notification
 from .resume import (
     Certification,
@@ -38,10 +38,7 @@ __all__ = [
     "OauthAccount",
     "AuditLog",
     "Notification",
-    "Conversation",
-    "Message",
-    "MessageRead",
-    "conversation_participants",
+    "DirectMessage",
     "Attachment",
     "Interview",
     "InterviewProposal",

@@ -35,9 +35,6 @@ class UserSettings(Base):
     timezone = Column(String(50), nullable=False, default="America/New_York")
     date_format = Column(String(20), nullable=False, default="MM/DD/YYYY")
     
-    # Security settings
-    two_factor_enabled = Column(Boolean, nullable=False, default=False)
-    
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

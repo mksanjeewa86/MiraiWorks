@@ -11,6 +11,8 @@ interface AuthState {
   error: string | null;
   accessToken: string | null;
   refreshToken: string | null;
+  require2FA: boolean;
+  pendingUserId: number | null;
 }
 
 type AuthAction =
@@ -20,7 +22,8 @@ type AuthAction =
   | { type: 'LOGOUT' }
   | { type: 'CLEAR_ERROR' }
   | { type: 'UPDATE_USER'; payload: User }
-  | { type: 'SET_LOADING'; payload: boolean };
+  | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'REQUIRE_2FA'; payload: { userId: number; email: string } };
 
 interface AuthContextType extends AuthState {
   login: (credentials: LoginCredentials) => Promise<void>;
@@ -41,6 +44,8 @@ const initialState: AuthState = {
   error: null,
   accessToken: null,
   refreshToken: null,
+  require2FA: false,
+  pendingUserId: null,
 };
 
 function authReducer(state: AuthState, action: AuthAction): AuthState {
@@ -54,12 +59,14 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
     case 'AUTH_SUCCESS':
       return {
         ...state,
-        user: action.payload.user,
+        user: action.payload.user || null,
         isAuthenticated: true,
         isLoading: false,
         error: null,
         accessToken: action.payload.access_token,
         refreshToken: action.payload.refresh_token,
+        require2FA: false,
+        pendingUserId: null,
       };
     case 'AUTH_ERROR':
       return {
@@ -78,6 +85,20 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
         isAuthenticated: false,
         isLoading: false,
         error: null,
+        accessToken: null,
+        refreshToken: null,
+        require2FA: false,
+        pendingUserId: null,
+      };
+    case 'REQUIRE_2FA':
+      return {
+        ...state,
+        isLoading: false,
+        error: null,
+        require2FA: true,
+        pendingUserId: action.payload.userId,
+        isAuthenticated: false,
+        user: null,
         accessToken: null,
         refreshToken: null,
       };
@@ -148,7 +169,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await authApi.login(credentials);
       
-      // Store tokens
+      // Check if 2FA is required
+      if (response.data!.require_2fa && response.data!.user) {
+        dispatch({ 
+          type: 'REQUIRE_2FA', 
+          payload: { 
+            userId: response.data!.user.id,
+            email: response.data!.user.email
+          }
+        });
+        // Redirect will be handled by the component using this context
+        return;
+      }
+      
+      // Store tokens for successful login
       localStorage.setItem('accessToken', response.data!.access_token);
       localStorage.setItem('refreshToken', response.data!.refresh_token);
       
@@ -180,7 +214,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const verifyTwoFactor = async (code: string) => {
     dispatch({ type: 'AUTH_START' });
     try {
-      const response = await authApi.verifyTwoFactor({ code });
+      if (!state.pendingUserId) {
+        throw new Error('No pending 2FA verification');
+      }
+      
+      const response = await authApi.verifyTwoFactor({ 
+        user_id: state.pendingUserId,
+        code 
+      });
       
       // Store tokens
       localStorage.setItem('accessToken', response.data!.access_token);
@@ -232,6 +273,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     
     dispatch({ type: 'LOGOUT' });
+    
+    // Redirect to login page after logout
+    if (typeof window !== 'undefined') {
+      window.location.href = '/auth/login';
+    }
   };
 
   const updateUser = (user: User) => {

@@ -62,7 +62,7 @@ const navigationItems: NavItem[] = [
     name: 'Messages',
     href: '/messages',
     icon: MessageSquare,
-    roles: ['candidate', 'recruiter', 'employer', 'company_admin']
+    roles: ['candidate', 'recruiter', 'employer', 'company_admin', 'super_admin']
   },
   {
     name: 'Calendar',
@@ -122,8 +122,8 @@ export default function Sidebar({
   const sidebarClasses = `
     fixed left-0 z-40 border-r
     transition-all duration-300 ease-in-out
-    ${isMobile ? 'top-0 h-screen w-64' : 'top-16 h-[calc(100vh-4rem)] w-64'}
-    ${isCollapsed && !isMobile ? 'w-16' : ''}
+    ${isMobile ? 'top-0 h-screen' : 'top-16 h-[calc(100vh-4rem)]'}
+    ${isMobile ? 'w-64' : isCollapsed ? 'w-16' : 'w-64'}
     ${isMobile && !isOpen ? '-translate-x-full' : 'translate-x-0'}
     lg:translate-x-0
   `

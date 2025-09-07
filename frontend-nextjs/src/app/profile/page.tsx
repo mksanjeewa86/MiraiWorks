@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/layout/AppLayout';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { userSettingsApi, UserProfile, UserProfileUpdate } from '@/services/userSettingsApi';
 import { 
   Edit, 
   MapPin, 
@@ -76,37 +78,53 @@ interface ProfileData {
 }
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const router = useRouter();
   const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [editForm, setEditForm] = useState<UserProfileUpdate>({});
+  const [error, setError] = useState<string | null>(null);
+
+  // Authentication guard
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/auth/login');
+    }
+  }, [isAuthenticated, isLoading, router]);
 
   useEffect(() => {
-    const loadProfileData = () => {
+    const loadProfileData = async () => {
       if (!user) {
         setLoading(false);
         return;
       }
 
-      // Convert user data to profile format
-      const profileData: ProfileData = {
+      try {
+        const response = await userSettingsApi.getProfile();
+        setUserProfile(response.data);
+        
+        // Convert API data to display format  
+        const profileData: ProfileData = {
         personal_info: {
-          full_name: user.full_name || '',
-          email: user.email || '',
-          phone: user.phone || '',
-          location: '', // This would come from user profile data in the database
-          bio: 'Professional working in the technology sector.', // Default bio
-          avatar_url: undefined,
-          website: undefined,
-          linkedin: undefined,
+          full_name: response.data.full_name || '',
+          email: response.data.email || '',
+          phone: response.data.phone || '',
+          location: '', // Future: Add location to backend
+          bio: response.data.bio || 'Professional working in the technology sector.',
+          avatar_url: undefined, // Future: Add avatar support
+          website: undefined, // Future: Add website field
+          linkedin: undefined, // Future: Add social links
           github: undefined,
         },
         professional_info: {
-          current_title: 'Developer', // This would come from user profile data
+          current_title: response.data.job_title || 'Professional',
           current_company: user.company?.name || '',
-          experience_years: 3, // This would come from user profile data
+          experience_years: 3, // Future: Calculate from experience data
           industry: user.company?.industry || 'Technology',
-          specializations: ['Web Development'], // This would come from user profile data
+          specializations: ['Web Development'], // Future: Add skills/specializations
         },
         education: [
           // This would come from user education data in the database
@@ -154,12 +172,76 @@ export default function ProfilePage() {
         }
       };
 
-      setProfile(profileData);
-      setLoading(false);
+        setProfile(profileData);
+        setEditForm({
+          first_name: response.data.first_name,
+          last_name: response.data.last_name,
+          phone: response.data.phone,
+          job_title: response.data.job_title,
+          bio: response.data.bio,
+        });
+      } catch (err) {
+        console.error('Failed to load profile data:', err);
+        setError('Failed to load profile data. Please try again.');
+      } finally {
+        setLoading(false);
+      }
     };
 
     loadProfileData();
   }, [user]);
+
+  const handleSaveProfile = async () => {
+    if (!userProfile) return;
+    
+    setSaving(true);
+    setError(null);
+    
+    try {
+      const response = await userSettingsApi.updateProfile(editForm);
+      setUserProfile(response.data);
+      
+      // Update display profile
+      if (profile) {
+        const updatedProfile = {
+          ...profile,
+          personal_info: {
+            ...profile.personal_info,
+            full_name: response.data.full_name,
+            email: response.data.email,
+            phone: response.data.phone || '',
+            bio: response.data.bio || profile.personal_info.bio,
+          },
+          professional_info: {
+            ...profile.professional_info,
+            current_title: response.data.job_title || profile.professional_info.current_title,
+          },
+        };
+        setProfile(updatedProfile);
+      }
+      
+      setEditing(false);
+    } catch (err) {
+      console.error('Failed to update profile:', err);
+      setError('Failed to update profile. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    if (userProfile) {
+      setEditForm({
+        first_name: userProfile.first_name,
+        last_name: userProfile.last_name,
+        phone: userProfile.phone,
+        job_title: userProfile.job_title,
+        bio: userProfile.bio,
+      });
+    }
+    setEditing(false);
+    setError(null);
+  };
 
   const getAchievementIcon = (type: string) => {
     switch (type) {
@@ -208,6 +290,18 @@ export default function ProfilePage() {
     );
   }
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="loading-skeleton w-16 h-16 rounded-full"></div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
     <AppLayout>
       <div className="p-6">
@@ -219,14 +313,32 @@ export default function ProfilePage() {
               Manage your professional profile and settings
             </p>
           </div>
-          <Button 
-            className="flex items-center gap-2"
-            onClick={() => setEditing(!editing)}
-          >
-            <Edit className="h-4 w-4" />
-            {editing ? 'Save Profile' : 'Edit Profile'}
-          </Button>
+          <div className="flex gap-2">
+            {editing && (
+              <Button 
+                variant="outline"
+                onClick={handleCancelEdit}
+                disabled={saving}
+              >
+                Cancel
+              </Button>
+            )}
+            <Button 
+              className="flex items-center gap-2"
+              onClick={editing ? handleSaveProfile : () => setEditing(true)}
+              disabled={saving}
+            >
+              <Edit className="h-4 w-4" />
+              {saving ? 'Saving...' : editing ? 'Save Profile' : 'Edit Profile'}
+            </Button>
+          </div>
         </div>
+
+        {error && (
+          <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200">
+            <p className="text-red-600 text-sm">{error}</p>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Profile Section */}
@@ -246,40 +358,105 @@ export default function ProfilePage() {
                 </div>
                 
                 <div className="flex-1">
-                  <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
-                    {profile.personal_info.full_name}
-                  </h2>
-                  <p className="text-lg mb-4" style={{ color: 'var(--brand-primary)' }}>
-                    {profile.professional_info.current_title}
-                  </p>
-                  
-                  <div className="flex flex-wrap gap-4 text-sm" style={{ color: 'var(--text-secondary)' }}>
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4" />
-                      {profile.personal_info.email}
-                    </div>
-                    {profile.personal_info.phone && (
-                      <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4" />
-                        {profile.personal_info.phone}
+                  {editing ? (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
+                            First Name
+                          </label>
+                          <input
+                            type="text"
+                            className="input w-full"
+                            value={editForm.first_name || ''}
+                            onChange={(e) => setEditForm({ ...editForm, first_name: e.target.value })}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
+                            Last Name
+                          </label>
+                          <input
+                            type="text"
+                            className="input w-full"
+                            value={editForm.last_name || ''}
+                            onChange={(e) => setEditForm({ ...editForm, last_name: e.target.value })}
+                          />
+                        </div>
                       </div>
-                    )}
-                    {profile.personal_info.location && (
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4" />
-                        {profile.personal_info.location}
+                      <div>
+                        <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
+                          Job Title
+                        </label>
+                        <input
+                          type="text"
+                          className="input w-full"
+                          value={editForm.job_title || ''}
+                          onChange={(e) => setEditForm({ ...editForm, job_title: e.target.value })}
+                        />
                       </div>
-                    )}
-                    <div className="flex items-center gap-2">
-                      <Briefcase className="h-4 w-4" />
-                      {profile.professional_info.current_company}
+                      <div>
+                        <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
+                          Phone
+                        </label>
+                        <input
+                          type="tel"
+                          className="input w-full"
+                          value={editForm.phone || ''}
+                          onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
+                          Bio
+                        </label>
+                        <textarea
+                          className="input w-full"
+                          rows={3}
+                          value={editForm.bio || ''}
+                          onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
+                          placeholder="Tell us about yourself..."
+                        />
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <>
+                      <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+                        {profile.personal_info.full_name}
+                      </h2>
+                      <p className="text-lg mb-4" style={{ color: 'var(--brand-primary)' }}>
+                        {profile.professional_info.current_title}
+                      </p>
+                      
+                      <div className="flex flex-wrap gap-4 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-4 w-4" />
+                          {profile.personal_info.email}
+                        </div>
+                        {profile.personal_info.phone && (
+                          <div className="flex items-center gap-2">
+                            <Phone className="h-4 w-4" />
+                            {profile.personal_info.phone}
+                          </div>
+                        )}
+                        {profile.personal_info.location && (
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4" />
+                            {profile.personal_info.location}
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2">
+                          <Briefcase className="h-4 w-4" />
+                          {profile.professional_info.current_company}
+                        </div>
+                      </div>
 
-                  {profile.personal_info.bio && (
-                    <p className="mt-4" style={{ color: 'var(--text-secondary)' }}>
-                      {profile.personal_info.bio}
-                    </p>
+                      {profile.personal_info.bio && (
+                        <p className="mt-4" style={{ color: 'var(--text-secondary)' }}>
+                          {profile.personal_info.bio}
+                        </p>
+                      )}
+                    </>
                   )}
 
                   <div className="flex gap-3 mt-4">

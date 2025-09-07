@@ -1,8 +1,9 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.dependencies import get_current_user
@@ -30,8 +31,8 @@ class UserSettingsResponse(BaseModel):
     timezone: str = "America/New_York"
     date_format: str = "MM/DD/YYYY"
     
-    # Security settings
-    two_factor_enabled: bool = False
+    # Security settings (from User model)
+    require_2fa: bool = False
 
     class Config:
         from_attributes = True
@@ -56,8 +57,8 @@ class UserSettingsUpdate(BaseModel):
     timezone: Optional[str] = None
     date_format: Optional[str] = None
     
-    # Security settings
-    two_factor_enabled: Optional[bool] = None
+    # Security settings (from User model)
+    require_2fa: Optional[bool] = None
 
 
 class UserProfileUpdate(BaseModel):
@@ -85,29 +86,59 @@ class UserProfileResponse(BaseModel):
 @router.get("/settings", response_model=UserSettingsResponse)
 async def get_user_settings(
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Get current user's settings."""
-    settings = db.query(UserSettings).filter(UserSettings.user_id == current_user.id).first()
+    result = await db.execute(
+        select(UserSettings).where(UserSettings.user_id == current_user.id)
+    )
+    settings = result.scalar_one_or_none()
     
     if not settings:
         # Create default settings if they don't exist
         settings = UserSettings(user_id=current_user.id)
         db.add(settings)
-        db.commit()
-        db.refresh(settings)
+        await db.commit()
+        await db.refresh(settings)
     
-    return settings
+    # Combine settings from UserSettings and User models
+    # SMS notifications should be false if user has no phone number
+    sms_notifications = settings.sms_notifications
+    if not current_user.phone or not current_user.phone.strip():
+        sms_notifications = False
+    
+    return UserSettingsResponse(
+        # Profile settings (from UserSettings)
+        job_title=settings.job_title,
+        bio=settings.bio,
+        # Notification preferences (from UserSettings)
+        email_notifications=settings.email_notifications,
+        push_notifications=settings.push_notifications,
+        sms_notifications=sms_notifications,
+        interview_reminders=settings.interview_reminders,
+        application_updates=settings.application_updates,
+        message_notifications=settings.message_notifications,
+        # UI preferences (from UserSettings)
+        theme=settings.theme,
+        language=settings.language,
+        timezone=settings.timezone,
+        date_format=settings.date_format,
+        # Security settings (from User)
+        require_2fa=current_user.require_2fa
+    )
 
 
 @router.put("/settings", response_model=UserSettingsResponse)
 async def update_user_settings(
     settings_update: UserSettingsUpdate,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Update current user's settings."""
-    settings = db.query(UserSettings).filter(UserSettings.user_id == current_user.id).first()
+    result = await db.execute(
+        select(UserSettings).where(UserSettings.user_id == current_user.id)
+    )
+    settings = result.scalar_one_or_none()
     
     if not settings:
         settings = UserSettings(user_id=current_user.id)
@@ -115,23 +146,72 @@ async def update_user_settings(
     
     # Update only provided fields
     update_data = settings_update.model_dump(exclude_unset=True)
-    for field, value in update_data.items():
+    
+    # Validate SMS notifications require a phone number
+    if 'sms_notifications' in update_data and update_data['sms_notifications']:
+        if not current_user.phone or not current_user.phone.strip():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="SMS notifications require a phone number. Please add your phone number in your profile first."
+            )
+    
+    # Separate UserSettings fields and User fields
+    user_fields = {'require_2fa'}
+    settings_fields = {k: v for k, v in update_data.items() if k not in user_fields}
+    user_field_updates = {k: v for k, v in update_data.items() if k in user_fields}
+    
+    # Update UserSettings fields
+    for field, value in settings_fields.items():
         if hasattr(settings, field):
             setattr(settings, field, value)
     
-    db.commit()
-    db.refresh(settings)
-    return settings
+    # Update User fields
+    for field, value in user_field_updates.items():
+        if hasattr(current_user, field):
+            setattr(current_user, field, value)
+    
+    await db.commit()
+    await db.refresh(settings)
+    await db.refresh(current_user)
+    
+    # Return combined response
+    # SMS notifications should be false if user has no phone number
+    sms_notifications = settings.sms_notifications
+    if not current_user.phone or not current_user.phone.strip():
+        sms_notifications = False
+        
+    return UserSettingsResponse(
+        # Profile settings (from UserSettings)
+        job_title=settings.job_title,
+        bio=settings.bio,
+        # Notification preferences (from UserSettings)
+        email_notifications=settings.email_notifications,
+        push_notifications=settings.push_notifications,
+        sms_notifications=sms_notifications,
+        interview_reminders=settings.interview_reminders,
+        application_updates=settings.application_updates,
+        message_notifications=settings.message_notifications,
+        # UI preferences (from UserSettings)
+        theme=settings.theme,
+        language=settings.language,
+        timezone=settings.timezone,
+        date_format=settings.date_format,
+        # Security settings (from User)
+        require_2fa=current_user.require_2fa
+    )
 
 
 @router.get("/profile", response_model=UserProfileResponse)
 async def get_user_profile(
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Get current user's profile information."""
     # Get user with settings
-    user_settings = db.query(UserSettings).filter(UserSettings.user_id == current_user.id).first()
+    result = await db.execute(
+        select(UserSettings).where(UserSettings.user_id == current_user.id)
+    )
+    user_settings = result.scalar_one_or_none()
     
     return {
         "id": current_user.id,
@@ -149,7 +229,7 @@ async def get_user_profile(
 async def update_user_profile(
     profile_update: UserProfileUpdate,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Update current user's profile information."""
     update_data = profile_update.model_dump(exclude_unset=True)
@@ -165,7 +245,10 @@ async def update_user_profile(
     settings_data = {k: v for k, v in update_data.items() if k in settings_fields}
     
     if settings_data:
-        settings = db.query(UserSettings).filter(UserSettings.user_id == current_user.id).first()
+        result = await db.execute(
+            select(UserSettings).where(UserSettings.user_id == current_user.id)
+        )
+        settings = result.scalar_one_or_none()
         if not settings:
             settings = UserSettings(user_id=current_user.id)
             db.add(settings)
@@ -173,11 +256,14 @@ async def update_user_profile(
         for field, value in settings_data.items():
             setattr(settings, field, value)
     
-    db.commit()
-    db.refresh(current_user)
+    await db.commit()
+    await db.refresh(current_user)
     
     # Return updated profile
-    user_settings = db.query(UserSettings).filter(UserSettings.user_id == current_user.id).first()
+    result = await db.execute(
+        select(UserSettings).where(UserSettings.user_id == current_user.id)
+    )
+    user_settings = result.scalar_one_or_none()
     
     return {
         "id": current_user.id,

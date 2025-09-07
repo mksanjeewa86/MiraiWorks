@@ -81,8 +81,8 @@ export const authApi = {
     return { data, success: true };
   },
 
-  verifyTwoFactor: async (data: { code: string }): Promise<ApiResponse<AuthResponse>> => {
-    const response = await fetch(`${API_BASE_URL}/api/auth/verify-2fa`, {
+  verifyTwoFactor: async (data: { user_id: number; code: string }): Promise<ApiResponse<AuthResponse>> => {
+    const response = await fetch(`${API_BASE_URL}/api/auth/2fa/verify`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

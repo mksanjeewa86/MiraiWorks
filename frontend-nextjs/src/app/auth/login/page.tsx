@@ -12,14 +12,16 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { login, isAuthenticated, error, clearError } = useAuth();
+  const { login, isAuthenticated, require2FA, error, clearError } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     if (isAuthenticated) {
       router.push('/dashboard');
+    } else if (require2FA) {
+      router.push(`/auth/two-factor?email=${encodeURIComponent(email)}`);
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, require2FA, router, email]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,7 +30,7 @@ export default function LoginPage() {
     
     try {
       await login({ email, password });
-      router.push('/dashboard');
+      // Redirect is now handled by useEffect based on auth state
     } catch {
       // Error is handled by AuthContext
     } finally {
