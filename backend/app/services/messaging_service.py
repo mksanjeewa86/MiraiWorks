@@ -69,15 +69,16 @@ class MessagingRulesService:
             else:
                 return False, "Super admin can only communicate with company admins"
 
-        # Company admin can communicate with users in their company
-        if (
-            UserRole.COMPANY_ADMIN.value in user1_roles
-            and user1.company_id == user2.company_id
-        ) or (
-            UserRole.COMPANY_ADMIN.value in user2_roles
-            and user1.company_id == user2.company_id
-        ):
-            return True, "Company admin access"
+        # Company admins cannot communicate with each other - only with super admin
+        if (UserRole.COMPANY_ADMIN.value in user1_roles and 
+            UserRole.COMPANY_ADMIN.value in user2_roles):
+            return False, "Company admins cannot communicate with each other"
+
+        # Company admins can only communicate with super admin, not other users
+        if UserRole.COMPANY_ADMIN.value in user1_roles:
+            return False, "Company admins can only communicate with super admins"
+        elif UserRole.COMPANY_ADMIN.value in user2_roles:
+            return False, "Company admins can only communicate with super admins"
 
         # Determine primary roles (highest priority role)
         def get_primary_role(roles):
@@ -189,14 +190,17 @@ class MessagingRulesService:
             potential_participants = result.scalars().all()
 
         elif primary_role == UserRole.COMPANY_ADMIN.value:
-            # Company admin can talk to users in their company
+            # Company admin can only communicate with super admins
+            from app.models.role import Role
             result = await db.execute(
                 select(User)
                 .options(selectinload(User.company))
                 .where(
                     User.id != user_id,
-                    User.company_id == current_user.company_id,
                     User.is_active == True,
+                    User.user_roles.any(
+                        UserRoleModel.role.has(name=UserRole.SUPER_ADMIN.value)
+                    ),
                 )
             )
             potential_participants = result.scalars().all()
@@ -306,6 +310,25 @@ class MessagingService:
 
     def __init__(self):
         self.rules_service = MessagingRulesService()
+
+    async def find_or_create_conversation(
+        self,
+        db: AsyncSession,
+        participant_ids: list[int],
+        title: Optional[str] = None,
+    ) -> Conversation:
+        """Find existing conversation or create new one between participants."""
+        if len(participant_ids) == 2:
+            existing_conv = await self._find_existing_direct_conversation(
+                db, participant_ids
+            )
+            if existing_conv:
+                return existing_conv
+        
+        # Create new conversation - use first participant as creator
+        return await self.create_conversation(
+            db, participant_ids[0], participant_ids[1:], title
+        )
 
     async def create_conversation(
         self,

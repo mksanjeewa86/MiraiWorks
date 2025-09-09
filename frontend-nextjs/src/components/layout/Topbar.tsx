@@ -2,6 +2,7 @@
 
 import { Bell, Settings, User, LogOut, Sun, Moon, Menu } from 'lucide-react'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { useAuth } from '@/contexts/AuthContext'
 import Brand from '@/components/common/Brand'
@@ -15,6 +16,7 @@ interface TopbarProps {
 
 export default function Topbar({ onMenuClick, onThemeToggle, isDark }: TopbarProps) {
   const { user, logout } = useAuth()
+  const router = useRouter()
   const [notifications] = useState([
     { id: 1, title: 'New interview scheduled', type: 'interview', unread: true },
     { id: 2, title: 'Application update', type: 'application', unread: true },
@@ -38,6 +40,14 @@ export default function Topbar({ onMenuClick, onThemeToggle, isDark }: TopbarPro
     const first = user.first_name?.[0] || ''
     const last = user.last_name?.[0] || ''
     return (first + last).toUpperCase() || user.email[0].toUpperCase()
+  }
+
+  const handleProfileClick = () => {
+    router.push('/profile')
+  }
+
+  const handleSettingsClick = () => {
+    router.push('/settings')
   }
 
   return (
@@ -157,12 +167,18 @@ export default function Topbar({ onMenuClick, onThemeToggle, isDark }: TopbarPro
                   <p className="text-xs text-muted-500">{user?.email}</p>
                 </div>
                 
-                <DropdownMenu.Item className="flex items-center space-x-2 p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl cursor-pointer">
+                <DropdownMenu.Item 
+                  className="flex items-center space-x-2 p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl cursor-pointer"
+                  onClick={handleProfileClick}
+                >
                   <User className="h-4 w-4 text-gray-500" />
                   <span className="text-sm text-gray-700 dark:text-gray-200">Profile</span>
                 </DropdownMenu.Item>
                 
-                <DropdownMenu.Item className="flex items-center space-x-2 p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl cursor-pointer">
+                <DropdownMenu.Item 
+                  className="flex items-center space-x-2 p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl cursor-pointer"
+                  onClick={handleSettingsClick}
+                >
                   <Settings className="h-4 w-4 text-gray-500" />
                   <span className="text-sm text-gray-700 dark:text-gray-200">Settings</span>
                 </DropdownMenu.Item>

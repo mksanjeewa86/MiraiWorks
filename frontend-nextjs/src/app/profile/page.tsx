@@ -113,7 +113,7 @@ export default function ProfilePage() {
           email: response.data.email || '',
           phone: response.data.phone || '',
           location: '', // Future: Add location to backend
-          bio: response.data.bio || 'Professional working in the technology sector.',
+          bio: response.data.bio || 'Welcome to my professional profile. I am passionate about my work and always looking for new opportunities to grow and contribute.',
           avatar_url: undefined, // Future: Add avatar support
           website: undefined, // Future: Add website field
           linkedin: undefined, // Future: Add social links
@@ -412,10 +412,10 @@ export default function ProfilePage() {
                         </label>
                         <textarea
                           className="input w-full"
-                          rows={3}
+                          rows={4}
                           value={editForm.bio || ''}
                           onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
-                          placeholder="Tell us about yourself..."
+                          placeholder="Share your professional background, interests, and what makes you unique..."
                         />
                       </div>
                     </div>

@@ -1,249 +1,198 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/layout/AppLayout';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { Search, Send, Plus, X, User, Phone, Video, MoreHorizontal, RefreshCw } from 'lucide-react';
+import { Search, Send, Plus, Phone, Video, MoreHorizontal, Smile, Paperclip } from 'lucide-react';
 import { messagesApi } from '@/services/api';
+import { useWebSocket } from '@/hooks/useWebSocket';
 import type { Conversation, Message } from '@/types';
+import dynamic from 'next/dynamic';
+
+const EmojiPicker = dynamic(() => import('emoji-picker-react'), { 
+  ssr: false,
+  loading: () => <div>Loading...</div>
+});
 
 interface MessagesPageState {
   conversations: Conversation[];
   activeConversationId: number | null;
   messages: Message[];
   loading: boolean;
-  sending: boolean;
   error: string | null;
-  newMessage: string;
-  activeTab: 'conversations' | 'contacts';
+  sending: boolean;
   conversationSearchQuery: string;
-  contactSearchQuery: string;
-  searchingContacts: boolean;
+  activeTab: 'conversations' | 'contacts';
   contacts: Array<{
     id: number;
     email: string;
     full_name: string;
     company_name?: string;
-    is_online?: boolean;
   }>;
+  searchingContacts: boolean;
+  hasMoreMessages: boolean;
 }
 
 export default function MessagesPage() {
-  const { user } = useAuth();
+  const { user, accessToken } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const isPageVisible = useRef(true);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const messageInputRef = useRef<HTMLInputElement>(null);
   
   const [state, setState] = useState<MessagesPageState>({
     conversations: [],
     activeConversationId: null,
     messages: [],
     loading: true,
-    sending: false,
     error: null,
-    newMessage: '',
-    activeTab: 'conversations',
+    sending: false,
     conversationSearchQuery: '',
-    contactSearchQuery: '',
+    activeTab: 'conversations',
+    contacts: [],
     searchingContacts: false,
-    contacts: []
+    hasMoreMessages: false
   });
+
+  // Use separate state for input to prevent message list refreshes while typing
+  const [newMessage, setNewMessage] = useState('');
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchConversations = async () => {
       try {
         setState(prev => ({ ...prev, loading: true, error: null }));
         const response = await messagesApi.getConversations();
-        const conversations = response.data || [];
-        
-        setState(prev => ({
-          ...prev,
-          conversations,
-          loading: false,
-          // Auto-select the most recent conversation if exists
-          activeConversationId: conversations.length > 0 && !prev.activeConversationId
-            ? conversations[0].other_user_id 
-            : prev.activeConversationId
+        if (response.success && response.data) {
+          setState(prev => ({
+            ...prev,
+            conversations: response.data || [],
+            loading: false
+          }));
+        } else {
+          setState(prev => ({ 
+            ...prev, 
+            error: 'Failed to load conversations',
+            loading: false 
+          }));
+        }
+      } catch (error) {
+        setState(prev => ({ 
+          ...prev, 
+          error: 'Network error loading conversations',
+          loading: false 
         }));
-      } catch (err) {
+      }
+    };
+
+    if (user) {
+      fetchConversations();
+    }
+  }, [user]);
+
+  const fetchMessages = async () => {
+    if (!state.activeConversationId) return;
+    
+    try {
+      setState(prev => ({ ...prev, loading: true }));
+      const response = await messagesApi.getMessages(state.activeConversationId, 50);
+      if (response.success && response.data) {
         setState(prev => ({
           ...prev,
-          error: err instanceof Error ? err.message : 'Failed to load conversations',
+          messages: response.data?.messages || [],
+          hasMoreMessages: response.data?.has_more || false,
           loading: false
         }));
-        console.error('Failed to fetch conversations:', err);
+        setTimeout(scrollToBottom, 100);
       }
-    };
-
-    fetchConversations();
-
-    // No polling - we'll use WebSocket events and manual refreshes instead
-    return () => {
-      // Cleanup will be handled by WebSocket connection
-    };
-  }, []);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [state.messages]);
-
-  // Fetch contacts when contacts tab is selected
-  useEffect(() => {
-    const fetchContacts = async () => {
-      if (state.activeTab !== 'contacts') return;
-      
-      try {
-        setState(prev => ({ ...prev, searchingContacts: true }));
-        const response = await messagesApi.searchParticipants(state.contactSearchQuery);
-        setState(prev => ({
-          ...prev,
-          contacts: response.data?.participants || [],
-          searchingContacts: false
-        }));
-      } catch (err) {
-        console.error('Failed to fetch contacts:', err);
-        setState(prev => ({
-          ...prev,
-          contacts: [],
-          searchingContacts: false
-        }));
-      }
-    };
-
-    fetchContacts();
-  }, [state.activeTab, state.contactSearchQuery]);
-
-  useEffect(() => {
-    const fetchMessages = async () => {
-      if (!state.activeConversationId) return;
-      
-      try {
-        const response = await messagesApi.getMessages(state.activeConversationId);
-        setState(prev => ({
-          ...prev,
-          messages: response.data?.messages || []
-        }));
-      } catch (err) {
-        console.error('Failed to fetch messages:', err);
-        setState(prev => ({
-          ...prev,
-          messages: []
-        }));
-      }
-    };
-
-    fetchMessages();
-
-    // No polling for messages - only load once when conversation changes
-    // New messages will be received via WebSocket
-    return () => {
-      // No cleanup needed for polling
-    };
-  }, [state.activeConversationId, state.sending]);
-
-  // Handle page visibility changes - just track visibility, no automatic refreshing
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      isPageVisible.current = !document.hidden;
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, []);
-
-  // Manual refresh for conversation list only (no automatic refreshing)
-  const refreshConversationList = useCallback(async () => {
-    try {
-      const response = await messagesApi.getConversations();
-      setState(prev => ({
-        ...prev,
-        conversations: response.data || prev.conversations
-      }));
-    } catch (err) {
-      console.error('Failed to refresh conversation list:', err);
+    } catch (error) {
+      setState(prev => ({ ...prev, error: 'Failed to load messages', loading: false }));
     }
-  }, []);
+  };
 
+  useEffect(() => {
+    if (state.activeConversationId) {
+      fetchMessages();
+    }
+  }, [state.activeConversationId]);
 
-  // Function to add a new message to current conversation (for real-time updates)
-  const addNewMessage = useCallback((newMessage: Message) => {
-    setState(prev => {
-      // Only add if it's for the currently active conversation
-      if (prev.activeConversationId === newMessage.sender_id || 
-          prev.activeConversationId === newMessage.recipient_id) {
-        // Check if message already exists to avoid duplicates
-        const messageExists = prev.messages.some(msg => msg.id === newMessage.id);
-        if (!messageExists) {
-          return {
-            ...prev,
-            messages: [...prev.messages, newMessage]
-          };
-        }
+  // Memoize WebSocket connection to prevent reconnections during typing
+  const webSocketConfig = useMemo(() => {
+    const shouldConnect = !!(user && accessToken && state.activeConversationId);
+    return {
+      url: shouldConnect 
+        ? `${process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000'}/ws/direct/${state.activeConversationId}`
+        : '',
+      token: shouldConnect ? accessToken : '',
+    };
+  }, [user, accessToken, state.activeConversationId]);
+  
+  const { isConnected, sendMessage } = useWebSocket({
+    ...webSocketConfig,
+    onMessage: (message) => {
+      if (message.type === 'new_message') {
+        setState(prev => ({
+          ...prev,
+          messages: [...prev.messages, message.data as unknown as Message]
+        }));
+        setTimeout(scrollToBottom, 100);
+        refreshConversationList();
       }
-      return prev;
-    });
-
-    // Always refresh conversation list when new message arrives
-    refreshConversationList();
-    
-    // Scroll to bottom if new message is in active conversation
-    setTimeout(scrollToBottom, 100);
-  }, [refreshConversationList]);
+    }
+  });
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleConversationSelect = (conversationId: number) => {
-    setState(prev => ({ ...prev, activeConversationId: conversationId }));
-    
-    // Mark conversation as read
-    messagesApi.markAsRead(conversationId).then(() => {
-      // Update the local state to reflect the conversation is now read
-      setState(prev => ({
-        ...prev,
-        conversations: prev.conversations.map(conv => 
-          conv.other_user_id === conversationId 
-            ? { ...conv, unread_count: 0 }
-            : conv
-        )
-      }));
-    }).catch(err => {
-      console.error('Failed to mark conversation as read:', err);
-    });
-  };
-
-  const handleSendMessage = async () => {
-    if (!state.newMessage.trim() || !state.activeConversationId || state.sending) return;
-
+  const refreshConversationList = async () => {
     try {
-      setState(prev => ({ ...prev, sending: true }));
-      
-      const response = await messagesApi.sendMessage(state.activeConversationId, {
-        content: state.newMessage.trim(),
-        type: 'text'
-      });
-
+      const response = await messagesApi.getConversations();
       if (response.success && response.data) {
         setState(prev => ({
           ...prev,
-          messages: [...prev.messages, response.data as Message],
-          newMessage: ''
+          conversations: response.data || []
         }));
-        
-        // Refresh conversation list after sending
-        refreshConversationList(); // Update conversation list after sending
+      }
+    } catch (error) {
+      console.error('Failed to refresh conversations:', error);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !state.activeConversationId || state.sending) return;
+
+    const messageContent = newMessage.trim();
+    
+    // Clear input immediately for better UX
+    setNewMessage('');
+    setState(prev => ({ ...prev, sending: true }));
+
+    try {
+      const response = await messagesApi.sendMessage(state.activeConversationId, {
+        content: messageContent,
+        type: 'text'
+      });
+      if (response.success && response.data) {
+        // Add message to local state immediately
+        setState(prev => ({
+          ...prev,
+          messages: [...prev.messages, response.data as unknown as Message]
+        }));
         
         // Scroll to bottom after sending
         setTimeout(scrollToBottom, 100);
+        
+        // Refresh conversation list to update last message
+        refreshConversationList();
       }
-    } catch (err) {
-      console.error('Failed to send message:', err);
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      setNewMessage(messageContent); // Restore message on error
     } finally {
       setState(prev => ({ ...prev, sending: false }));
     }
@@ -256,62 +205,131 @@ export default function MessagesPage() {
     }
   };
 
-  const searchParticipants = async (query: string) => {
-    if (!query.trim()) {
-      setState(prev => ({ ...prev, participants: [] }));
-      return;
-    }
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !state.activeConversationId || uploadingFile) return;
 
+    setUploadingFile(true);
     try {
-      setState(prev => ({ ...prev, searchingParticipants: true }));
-      const response = await messagesApi.searchParticipants(query);
+      // First upload the file to the server
+      const uploadResponse = await messagesApi.uploadFile(file);
+      if (!uploadResponse.success || !uploadResponse.data) {
+        throw new Error('File upload failed');
+      }
+
+      // Then send a message with the file information
+      const response = await messagesApi.sendMessage(state.activeConversationId, {
+        content: `📎 ${uploadResponse.data.file_name}`,
+        type: 'file',
+        file_url: uploadResponse.data.file_url,
+        file_name: uploadResponse.data.file_name,
+        file_size: uploadResponse.data.file_size,
+        file_type: uploadResponse.data.file_type
+      });
+
+      if (response.success && response.data) {
+        setState(prev => ({
+          ...prev,
+          messages: [...prev.messages, response.data as unknown as Message]
+        }));
+        setTimeout(scrollToBottom, 100);
+        refreshConversationList();
+      }
+    } catch (error) {
+      console.error('File upload failed:', error);
       setState(prev => ({
         ...prev,
-        participants: response.data?.participants || [],
-        searchingParticipants: false
+        error: 'Failed to upload file. Please try again.'
       }));
-    } catch (err) {
-      console.error('Failed to search participants:', err);
-      setState(prev => ({
-        ...prev,
-        participants: [],
-        searchingParticipants: false
-      }));
+    } finally {
+      setUploadingFile(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
-  const handleNewChat = () => {
+  const handleAttachmentClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNewMessage(value);
+    
+    // Send typing indicator (only if WebSocket is connected)
+    if (isConnected && state.activeConversationId && sendMessage) {
+      sendMessage({
+        type: 'typing',
+        data: { is_typing: value.length > 0 }
+      });
+      
+      // Clear typing indicator after 3 seconds of no typing
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      
+      if (value.length > 0) {
+        typingTimeoutRef.current = setTimeout(() => {
+          if (isConnected && sendMessage) {
+            sendMessage({
+              type: 'typing', 
+              data: { is_typing: false }
+            });
+          }
+        }, 3000);
+      }
+    }
+  };
+
+  const handleConversationSelect = async (userId: number, fromContact = false) => {
     setState(prev => ({ 
       ...prev, 
-      showNewChatModal: true, 
-      participantSearch: '',
-      participants: []
+      activeConversationId: userId, 
+      messages: [],
+      // If selecting from contacts, switch to conversations tab
+      activeTab: fromContact ? 'conversations' : prev.activeTab
     }));
-    // Load initial participants
-    searchParticipants('');
+
+    // Fetch messages for the selected conversation
+    await fetchMessages();
+
+    // Focus message input when selecting a conversation, especially from contacts
+    if (fromContact) {
+      // Small delay to ensure the tab switch and render is complete
+      setTimeout(() => {
+        messageInputRef.current?.focus();
+      }, 100);
+      
+      // Refresh conversations to show the new conversation if it wasn't there before
+      refreshConversationList();
+    }
   };
 
-  const handleStartChat = async (participantId: number) => {
-    try {
-      // In direct messaging, just set the active conversation to the participant ID
-      // The conversation will be created when the first message is sent
-      // Messages will be loaded automatically via useEffect
-      setState(prev => ({
-        ...prev,
-        activeConversationId: participantId,
-        showNewChatModal: false
-      }));
-    } catch (err) {
-      console.error('Failed to start chat:', err);
+  const handleTabSwitch = async (tab: 'conversations' | 'contacts') => {
+    setState(prev => ({ ...prev, activeTab: tab }));
+    
+    if (tab === 'contacts' && state.contacts.length === 0) {
+      try {
+        setState(prev => ({ ...prev, searchingContacts: true }));
+        const response = await messagesApi.searchParticipants();
+        if (response.success && response.data) {
+          setState(prev => ({
+            ...prev,
+            contacts: response.data?.participants || [],
+            searchingContacts: false
+          }));
+        }
+      } catch (error) {
+        setState(prev => ({ ...prev, searchingContacts: false }));
+      }
     }
   };
 
   const getInitials = (name: string) => {
     return name
       .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
+      .map(word => word.charAt(0).toUpperCase())
       .slice(0, 2);
   };
 
@@ -336,7 +354,6 @@ export default function MessagesPage() {
     });
   };
 
-
   const filteredConversations = state.conversations.filter(conversation =>
     conversation.other_user_name?.toLowerCase().includes(state.conversationSearchQuery.toLowerCase()) ||
     conversation.other_user_email?.toLowerCase().includes(state.conversationSearchQuery.toLowerCase()) ||
@@ -349,46 +366,19 @@ export default function MessagesPage() {
     return (
       <AppLayout>
         <div className="h-[calc(100vh-4rem)] flex bg-white dark:bg-gray-900">
-          {/* Conversations List - Loading State */}
           <div className="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
-            {/* Header */}
             <div className="p-6 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Chats</h1>
-                  <p className="text-xs text-gray-500 mt-1">Active tab: conversations</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button 
-                    onClick={refreshConversationList}
-                    size="sm" 
-                    variant="ghost"
-                    className="w-10 h-10 rounded-full p-0 flex items-center justify-center"
-                    title="Refresh conversations"
-                    disabled
-                  >
-                    <RefreshCw className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    onClick={handleNewChat}
-                    size="sm" 
-                    className="w-10 h-10 rounded-full p-0 flex items-center justify-center"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
                 </div>
               </div>
               
-              {/* Tab Navigation */}
               <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 mb-4">
-                <button
-                  className="flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm"
-                >
+                <button className="flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm">
                   Conversations
                 </button>
-                <button
-                  className="flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
-                >
+                <button className="flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
                   Contacts
                 </button>
               </div>
@@ -404,7 +394,6 @@ export default function MessagesPage() {
               </div>
             </div>
 
-            {/* Loading Content */}
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
                 <LoadingSpinner className="w-8 h-8 mx-auto mb-4" />
@@ -413,7 +402,6 @@ export default function MessagesPage() {
             </div>
           </div>
 
-          {/* Messages Area - Loading State */}
           <div className="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900">
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
@@ -452,35 +440,13 @@ export default function MessagesPage() {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Chats</h1>
-                <p className="text-xs text-gray-500 mt-1">Active tab: {state.activeTab}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button 
-                  onClick={refreshConversationList}
-                  size="sm" 
-                  variant="ghost"
-                  className="w-10 h-10 rounded-full p-0 flex items-center justify-center"
-                  title="Refresh conversations"
-                >
-                  <RefreshCw className="h-4 w-4" />
-                </Button>
-                <Button 
-                  onClick={handleNewChat}
-                  size="sm" 
-                  className="w-10 h-10 rounded-full p-0 flex items-center justify-center"
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
               </div>
             </div>
             
             {/* Tab Navigation */}
             <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 mb-4">
               <button
-                onClick={() => {
-                  console.log('Conversations tab clicked');
-                  setState(prev => ({ ...prev, activeTab: 'conversations' }));
-                }}
+                onClick={() => handleTabSwitch('conversations')}
                 className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors ${
                   state.activeTab === 'conversations'
                     ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
@@ -490,10 +456,7 @@ export default function MessagesPage() {
                 Conversations
               </button>
               <button
-                onClick={() => {
-                  console.log('Contacts tab clicked');
-                  setState(prev => ({ ...prev, activeTab: 'contacts' }));
-                }}
+                onClick={() => handleTabSwitch('contacts')}
                 className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors ${
                   state.activeTab === 'contacts'
                     ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
@@ -508,85 +471,83 @@ export default function MessagesPage() {
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
                 type="text"
-                placeholder={state.activeTab === 'conversations' ? 'Search messages or senders...' : 'Search contacts or companies...'}
-                value={state.activeTab === 'conversations' ? state.conversationSearchQuery : state.contactSearchQuery}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (state.activeTab === 'conversations') {
-                    setState(prev => ({ ...prev, conversationSearchQuery: value }));
-                  } else {
-                    setState(prev => ({ ...prev, contactSearchQuery: value }));
-                  }
-                }}
+                placeholder="Search messages or senders..."
+                value={state.conversationSearchQuery}
+                onChange={(e) => setState(prev => ({ ...prev, conversationSearchQuery: e.target.value }))}
                 className="pl-10 bg-gray-50 dark:bg-gray-700 border-0 rounded-xl"
               />
             </div>
           </div>
 
-          {/* Tab Content */}
+          {/* Content based on active tab */}
           <div className="flex-1 overflow-y-auto">
             {state.activeTab === 'conversations' ? (
-              /* Conversations Tab */
+              // Conversations Tab
               filteredConversations.length > 0 ? (
-                filteredConversations.map(conversation => {
-                  const lastMessage = conversation.last_message;
-                  const isActive = conversation.other_user_id === state.activeConversationId;
-                  
-                  return (
-                    <div
-                      key={conversation.other_user_id}
-                      onClick={() => handleConversationSelect(conversation.other_user_id)}
-                      className={`mx-3 my-1 p-4 rounded-2xl cursor-pointer transition-all hover:bg-gray-50 dark:hover:bg-gray-700 ${
-                        isActive ? 'bg-blue-50 dark:bg-blue-900/20 shadow-sm' : ''
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-medium ${getAvatarColor(conversation.other_user_id || 0)}`}>
-                          {conversation.other_user_name ? getInitials(conversation.other_user_name) : '?'}
-                        </div>
-                        
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
-                            <h3 className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)' }}>
-                              {conversation.other_user_name || 'Unknown Contact'}
-                            </h3>
-                            <div className="flex items-center gap-2">
-                              {lastMessage && (
-                                <span className="text-xs text-gray-400">
-                                  {formatTime(lastMessage.created_at)}
-                                </span>
-                              )}
-                              {conversation.unread_count > 0 && (
-                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                              )}
-                            </div>
-                          </div>
-                          
-                          <p className="text-xs text-gray-500 mb-1">
-                            {conversation.other_user_company || conversation.other_user_email || ''}
-                          </p>
-                          
-                          {lastMessage && (
-                            <p className="text-sm text-gray-600 dark:text-gray-300 truncate">
-                              {lastMessage.content}
-                            </p>
+                filteredConversations.map(conversation => (
+                  <div
+                    key={conversation.other_user_id}
+                    onClick={() => handleConversationSelect(conversation.other_user_id)}
+                    className={`mx-3 my-1 p-4 rounded-2xl cursor-pointer transition-all hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                      state.activeConversationId === conversation.other_user_id 
+                        ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800' 
+                        : ''
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-medium ${getAvatarColor(conversation.other_user_id)}`}>
+                        {getInitials(conversation.other_user_name || '')}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <h3 className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)' }}>
+                            {conversation.other_user_name}
+                          </h3>
+                          {conversation.last_message && (
+                            <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
+                              {formatTime(conversation.last_message.created_at)}
+                            </span>
                           )}
                         </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm text-gray-500 truncate">
+                            {conversation.last_message ? (
+                              <>
+                                <span className="font-medium">
+                                  {conversation.last_message.sender_id === user?.id ? 'You' : conversation.last_message.sender_name}:
+                                </span>
+                                {' ' + conversation.last_message.content}
+                              </>
+                            ) : (
+                              conversation.other_user_email
+                            )}
+                          </p>
+                          {conversation.unread_count > 0 && (
+                            <div className="bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center ml-2 flex-shrink-0">
+                              {conversation.unread_count}
+                            </div>
+                          )}
+                        </div>
+                        
+                        {conversation.other_user_company && (
+                          <p className="text-xs text-gray-400 truncate mt-1">
+                            {conversation.other_user_company}
+                          </p>
+                        )}
                       </div>
                     </div>
-                  );
-                })
+                  </div>
+                ))
               ) : (
                 <div className="p-8 text-center">
                   <div className="text-4xl mb-4">💬</div>
                   <p className="text-gray-500">No conversations yet</p>
-                  <Button onClick={handleNewChat} className="mt-4" size="sm">
-                    Start a new chat
-                  </Button>
                 </div>
               )
             ) : (
-              /* Contacts Tab */
+              // Contacts Tab
               state.searchingContacts ? (
                 <div className="flex-1 flex items-center justify-center">
                   <div className="text-center">
@@ -598,8 +559,8 @@ export default function MessagesPage() {
                 state.contacts.map(contact => (
                   <div
                     key={contact.id}
-                    onClick={() => handleConversationSelect(contact.id)}
-                    className="mx-3 my-1 p-4 rounded-2xl cursor-pointer transition-all hover:bg-gray-50 dark:hover:bg-gray-700"
+                    onClick={() => handleConversationSelect(contact.id, true)}
+                    className="mx-3 my-1 p-4 rounded-2xl cursor-pointer transition-all hover:bg-gray-50 dark:hover:bg-gray-700 group relative"
                   >
                     <div className="flex items-center gap-3">
                       <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-medium ${getAvatarColor(contact.id)}`}>
@@ -619,6 +580,19 @@ export default function MessagesPage() {
                           </p>
                         )}
                       </div>
+
+                      {/* Send Message Button - Shows on hover */}
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleConversationSelect(contact.id, true);
+                        }}
+                        size="sm"
+                        title="Send message"
+                        className="opacity-0 group-hover:opacity-100 transition-all duration-200 bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg shadow-sm hover:shadow-md transform hover:scale-105"
+                      >
+                        <Send className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 ))
@@ -634,81 +608,85 @@ export default function MessagesPage() {
 
         {/* Messages Area */}
         <div className="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900">
-          {state.activeConversationId ? (
+          {state.activeConversationId && activeConversation ? (
             <>
               {/* Chat Header */}
-              <div className="p-6 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    {/* Avatar */}
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium ${getAvatarColor(activeConversation?.other_user_id || 0)}`}>
-                      {activeConversation?.other_user_name 
-                        ? getInitials(activeConversation.other_user_name) 
-                        : '?'}
-                    </div>
-                    
-                    <div>
-                      <h2 className="font-semibold" style={{ color: 'var(--text-primary)' }}>
-                        {activeConversation?.other_user_name || 'Conversation'}
-                      </h2>
-                      <p className="text-sm text-gray-500">
-                        {activeConversation?.other_user_company || activeConversation?.other_user_email || 'Online'}
-                      </p>
-                    </div>
+              <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium ${getAvatarColor(activeConversation.other_user_id)}`}>
+                    {getInitials(activeConversation.other_user_name || '')}
                   </div>
                   
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm" className="w-10 h-10 rounded-full p-0">
-                      <Phone className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" className="w-10 h-10 rounded-full p-0">
-                      <Video className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" className="w-10 h-10 rounded-full p-0">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
+                  <div>
+                    <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      {activeConversation.other_user_name}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      {activeConversation.other_user_email}
+                    </p>
                   </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Button size="sm" className="w-10 h-10 rounded-full p-0 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400">
+                    <Phone className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" className="w-10 h-10 rounded-full p-0 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400">
+                    <Video className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" className="w-10 h-10 rounded-full p-0 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                {state.messages.map((message, index) => {
-                  const isCurrentUser = message.sender_id === user?.id;
-                  const showAvatar = !isCurrentUser && (index === 0 || state.messages[index - 1].sender_id !== message.sender_id);
-                  
-                  return (
-                    <div
-                      key={message.id}
-                      className={`flex gap-3 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
-                    >
-                      {!isCurrentUser && (
-                        <div className="w-8">
-                          {showAvatar && (
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-medium ${getAvatarColor(message.sender?.id || 0)}`}>
-                              {message.sender?.full_name ? getInitials(message.sender.full_name) : '?'}
-                            </div>
+              <div className="flex-1 overflow-y-auto p-6">
+                {state.messages.map(message => (
+                  <div
+                    key={message.id}
+                    className={`flex mb-4 ${message.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
+                      message.sender_id === user?.id
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
+                    }`}>
+                      {message.type === 'file' && message.file_url ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Paperclip className="h-4 w-4" />
+                            <span className="text-sm font-medium">{message.file_name}</span>
+                          </div>
+                          {message.file_size && (
+                            <p className="text-xs opacity-75">
+                              {(message.file_size / (1024 * 1024)).toFixed(2)} MB
+                            </p>
                           )}
+                          <a
+                            href={`http://localhost:8000${message.file_url}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`inline-block px-3 py-1 text-xs rounded-full border transition-colors ${
+                              message.sender_id === user?.id
+                                ? 'border-white/30 hover:bg-white/20 text-white'
+                                : 'border-gray-300 hover:bg-gray-100 text-gray-700 dark:border-gray-600 dark:hover:bg-gray-700 dark:text-gray-300'
+                            }`}
+                          >
+                            Download
+                          </a>
                         </div>
+                      ) : (
+                        <p className="text-sm">{message.content}</p>
                       )}
-                      
-                      <div className={`max-w-md ${isCurrentUser ? 'items-end' : 'items-start'} flex flex-col`}>
-                        <div
-                          className={`px-4 py-3 rounded-2xl max-w-fit ${
-                            isCurrentUser
-                              ? 'bg-blue-500 text-white rounded-br-md'
-                              : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-bl-md border border-gray-200 dark:border-gray-600'
-                          }`}
-                        >
-                          <p className="text-sm leading-relaxed">{message.content}</p>
-                        </div>
-                        <div className={`text-xs text-gray-400 mt-1 ${isCurrentUser ? 'text-right' : 'text-left'}`}>
-                          {formatTime(message.created_at)}
-                        </div>
-                      </div>
+                      <p className={`text-xs mt-1 ${
+                        message.sender_id === user?.id ? 'text-blue-100' : 'text-gray-500'
+                      }`}>
+                        {formatTime(message.created_at)}
+                      </p>
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
                 <div ref={messagesEndRef} />
               </div>
 
@@ -717,18 +695,61 @@ export default function MessagesPage() {
                 <div className="flex gap-4 items-end">
                   <div className="flex-1 relative">
                     <Input
+                      ref={messageInputRef}
                       type="text"
                       placeholder="Type a message..."
-                      value={state.newMessage}
-                      onChange={(e) => setState(prev => ({ ...prev, newMessage: e.target.value }))}
+                      value={newMessage}
+                      onChange={handleInputChange}
                       onKeyPress={handleKeyPress}
-                      className="pr-12 rounded-2xl border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="pr-20 rounded-2xl border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       disabled={state.sending}
                     />
+                    
+                    {/* Emoji and Attachment buttons */}
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex gap-2">
+                      <Button
+                        type="button"
+                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                        className="w-8 h-8 p-0 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-gray-700"
+                      >
+                        <Smile className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={handleAttachmentClick}
+                        disabled={uploadingFile}
+                        className="w-8 h-8 p-0 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-gray-700"
+                      >
+                        <Paperclip className="h-4 w-4" />
+                      </Button>
+                    </div>
+
+                    {/* Hidden File Input */}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      accept="image/*,audio/*,video/*,.pdf,.doc,.docx,.txt"
+                    />
+
+                    {/* Emoji Picker */}
+                    {showEmojiPicker && (
+                      <div className="absolute bottom-full right-0 mb-2 z-10">
+                        <EmojiPicker
+                          onEmojiClick={(emojiData) => {
+                            setNewMessage(prev => prev + emojiData.emoji);
+                            setShowEmojiPicker(false);
+                          }}
+                          width={300}
+                          height={400}
+                        />
+                      </div>
+                    )}
                   </div>
                   <Button 
                     onClick={handleSendMessage}
-                    disabled={!state.newMessage.trim() || state.sending}
+                    disabled={!newMessage.trim() || state.sending}
                     className="w-12 h-12 rounded-2xl p-0 bg-blue-500 hover:bg-blue-600"
                   >
                     {state.sending ? (
@@ -750,16 +771,11 @@ export default function MessagesPage() {
                 <p className="text-gray-500 mb-6 max-w-md">
                   Select a conversation from the sidebar or start a new chat to begin messaging
                 </p>
-                <Button onClick={handleNewChat}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Chat
-                </Button>
               </div>
             </div>
           )}
         </div>
       </div>
-
     </AppLayout>
   );
 }

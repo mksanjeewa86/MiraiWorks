@@ -6,8 +6,10 @@ from . import (
     calendar,
     dashboard,
     direct_messages,
+    files,
     infrastructure,
     interviews,
+    messaging_ws,
     public,
     resumes,
     user_settings,
@@ -20,7 +22,9 @@ def include_routers(app: FastAPI) -> None:
     app.include_router(infrastructure.router, tags=["infrastructure"])
     app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
     app.include_router(dashboard.router, prefix="/api/dashboard", tags=["dashboard"])
-    app.include_router(direct_messages.router, prefix="/api/messages", tags=["direct-messages"])
+    app.include_router(direct_messages.router, prefix="/api/direct_messages", tags=["direct-messages"])
+    app.include_router(files.router, prefix="/api/files", tags=["files"])
+    app.include_router(messaging_ws.router, prefix="/ws", tags=["websockets"])
     app.include_router(calendar.router, prefix="/api/calendar", tags=["calendar"])
     app.include_router(interviews.router, prefix="/api/interviews", tags=["interviews"])
     app.include_router(webhooks.router, prefix="/api/webhooks", tags=["webhooks"])

@@ -26,6 +26,57 @@ router = APIRouter()
 logger = get_logger(__name__)
 
 
+async def validate_messaging_permission(db: AsyncSession, sender_id: int, recipient_id: int):
+    """Validate that sender can message recipient based on role restrictions."""
+    # Get both users with their roles
+    result = await db.execute(
+        select(User)
+        .join(User.user_roles)
+        .join(UserRole.role)
+        .where(User.id.in_([sender_id, recipient_id]))
+        .options(
+            selectinload(User.user_roles).selectinload(UserRole.role)
+        )
+    )
+    
+    users = result.scalars().all()
+    if len(users) != 2:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Sender or recipient not found"
+        )
+    
+    # Identify sender and recipient
+    sender = next(u for u in users if u.id == sender_id)
+    recipient = next(u for u in users if u.id == recipient_id)
+    
+    # Get user roles
+    sender_roles = [ur.role.name for ur in sender.user_roles]
+    recipient_roles = [ur.role.name for ur in recipient.user_roles]
+    
+    # Check messaging permissions
+    if "super_admin" in sender_roles:
+        # Super admin can only message company admins
+        if "company_admin" not in recipient_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Super admin can only message company admins"
+            )
+    elif "company_admin" in sender_roles:
+        # Company admin can only message super admins
+        if "super_admin" not in recipient_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Company admins can only message super admins"
+            )
+    # Other roles can message anyone except company admins
+    elif "company_admin" in recipient_roles:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only super admins can message company admins"
+        )
+
+
 @router.get("/conversations", response_model=ConversationListResponse)
 async def get_conversations(
     search: Optional[str] = None,
@@ -71,6 +122,10 @@ async def get_messages_with_user(
             type=msg.type,
             is_read=msg.is_read,
             reply_to_id=msg.reply_to_id,
+            file_url=msg.file_url,
+            file_name=msg.file_name,
+            file_size=msg.file_size,
+            file_type=msg.file_type,
             created_at=msg.created_at,
             read_at=msg.read_at,
         )
@@ -90,6 +145,9 @@ async def send_message(
     db: AsyncSession = Depends(get_db),
 ):
     """Send a direct message to another user."""
+    # Validate messaging permissions based on roles
+    await validate_messaging_permission(db, current_user.id, message_data.recipient_id)
+    
     message = await direct_message_service.send_message(
         db, current_user.id, message_data
     )
@@ -105,6 +163,33 @@ async def send_message(
     )
     message = result.scalar_one()
 
+    # Broadcast message via WebSocket
+    from app.routers.messaging_ws import connection_manager
+    conversation_id = f"direct_{min(current_user.id, message.recipient_id)}_{max(current_user.id, message.recipient_id)}"
+    
+    message_data_ws = {
+        "id": message.id,
+        "sender_id": message.sender_id,
+        "recipient_id": message.recipient_id,
+        "sender_name": message.sender.full_name,
+        "recipient_name": message.recipient.full_name,
+        "content": message.content,
+        "type": message.type,
+        "created_at": message.created_at.isoformat(),
+        "is_read": message.is_read,
+        "file_url": message.file_url,
+        "file_name": message.file_name,
+        "file_size": message.file_size,
+        "file_type": message.file_type,
+    }
+    
+    from app.schemas.message import WSMessage
+    
+    await connection_manager.broadcast_to_conversation(
+        conversation_id,
+        WSMessage(type="new_message", data=message_data_ws)
+    )
+
     return DirectMessageInfo(
         id=message.id,
         sender_id=message.sender_id,
@@ -117,6 +202,10 @@ async def send_message(
         type=message.type,
         is_read=message.is_read,
         reply_to_id=message.reply_to_id,
+        file_url=message.file_url,
+        file_name=message.file_name,
+        file_size=message.file_size,
+        file_type=message.file_type,
         created_at=message.created_at,
         read_at=message.read_at,
     )
@@ -187,6 +276,10 @@ async def search_messages(
             type=msg.type,
             is_read=msg.is_read,
             reply_to_id=msg.reply_to_id,
+            file_url=msg.file_url,
+            file_name=msg.file_name,
+            file_size=msg.file_size,
+            file_type=msg.file_type,
             created_at=msg.created_at,
             read_at=msg.read_at,
         )
@@ -261,13 +354,8 @@ async def get_message_participants(
         # Super admin can message all company admins
         query_stmt = query_stmt.where(Role.name == "company_admin")
     elif "company_admin" in current_user_roles:
-        # Company admin can message super admin and other company admins
-        query_stmt = query_stmt.where(
-            or_(
-                Role.name == "super_admin",
-                Role.name == "company_admin"
-            )
-        )
+        # Company admin can ONLY message super admin (not other company admins)
+        query_stmt = query_stmt.where(Role.name == "super_admin")
     # For other roles, no role-based filtering (can message anyone)
     
     # Apply search filter if provided

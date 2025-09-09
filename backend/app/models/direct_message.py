@@ -38,6 +38,10 @@ class DirectMessage(Base):
         nullable=True,
         index=True,
     )
+    file_url = Column(String(500), nullable=True)
+    file_name = Column(String(255), nullable=True)
+    file_size = Column(Integer, nullable=True)
+    file_type = Column(String(100), nullable=True)
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False, index=True
     )

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useCallback } from 'react';
 
 interface WebSocketMessage {
-  type: 'new_message' | 'conversation_updated' | 'user_online' | 'user_offline';
-  data: any;
+  type: 'new_message' | 'conversation_updated' | 'user_online' | 'user_offline' | 'typing' | 'connected' | 'pong' | 'error';
+  data: Record<string, unknown>;
 }
 
 interface UseWebSocketOptions {
@@ -27,17 +27,21 @@ export const useWebSocket = ({
   const isConnectingRef = useRef(false);
 
   const connect = useCallback(() => {
-    if (isConnectingRef.current || !token) return;
+    if (isConnectingRef.current || !token || !url) {
+      console.log('WebSocket connect skipped - isConnecting:', isConnectingRef.current, 'token:', !!token, 'url:', !!url);
+      return;
+    }
     
     isConnectingRef.current = true;
     
     try {
-      // Create WebSocket connection with token
-      const wsUrl = `${url}?token=${encodeURIComponent(token)}`;
+      // Create WebSocket connection with token (add Bearer prefix for backend auth)
+      const wsUrl = `${url}?token=${encodeURIComponent(`Bearer ${token}`)}`;
+      console.log('Attempting WebSocket connection to:', wsUrl.replace(/token=[^&]*/, 'token=***REDACTED***'));
       ws.current = new WebSocket(wsUrl);
 
       ws.current.onopen = () => {
-        console.log('WebSocket connected');
+        console.log('WebSocket connected successfully');
         isConnectingRef.current = false;
         onConnect?.();
       };
@@ -45,22 +49,36 @@ export const useWebSocket = ({
       ws.current.onmessage = (event) => {
         try {
           const message: WebSocketMessage = JSON.parse(event.data);
+          console.log('WebSocket message received:', message);
           onMessage?.(message);
         } catch (err) {
-          console.error('Failed to parse WebSocket message:', err);
+          console.error('Failed to parse WebSocket message:', err, 'Raw data:', event.data);
         }
       };
 
-      ws.current.onclose = () => {
-        console.log('WebSocket disconnected');
+      ws.current.onclose = (event) => {
+        console.log('WebSocket disconnected - Code:', event.code, 'Reason:', event.reason, 'Clean:', event.wasClean);
+        
+        // Log specific error codes for debugging
+        if (event.code === 4003) {
+          console.warn('WebSocket closed: Access denied to conversation');
+        } else if (event.code === 1006) {
+          console.warn('WebSocket closed: Connection failed (possibly authentication or network issue)');
+        } else if (event.code === 4000) {
+          console.warn('WebSocket closed: Internal server error');
+        }
+        
         isConnectingRef.current = false;
         ws.current = null;
         onDisconnect?.();
         
-        // Attempt to reconnect after 3 seconds
-        reconnectTimeoutRef.current = setTimeout(() => {
-          connect();
-        }, 3000);
+        // Only auto-reconnect on unexpected closures (not clean disconnections or access denied)
+        if (!event.wasClean && event.code !== 1000 && event.code !== 4003) {
+          console.log('Scheduling WebSocket reconnection in 3 seconds...');
+          reconnectTimeoutRef.current = setTimeout(() => {
+            connect();
+          }, 3000);
+        }
       };
 
       ws.current.onerror = (error) => {
@@ -88,7 +106,7 @@ export const useWebSocket = ({
     isConnectingRef.current = false;
   }, []);
 
-  const sendMessage = useCallback((message: any) => {
+  const sendMessage = useCallback((message: Record<string, unknown>) => {
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
       ws.current.send(JSON.stringify(message));
     } else {

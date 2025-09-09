@@ -12,7 +12,8 @@ import {
   Building2,
   X,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  User
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -81,6 +82,12 @@ const navigationItems: NavItem[] = [
     href: '/resumes',
     icon: FileText,
     roles: ['candidate']
+  },
+  {
+    name: 'Profile',
+    href: '/profile',
+    icon: User,
+    roles: ['candidate', 'recruiter', 'employer', 'company_admin', 'super_admin']
   },
   {
     name: 'Companies',

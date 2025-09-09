@@ -123,9 +123,14 @@ export interface Message {
   sender_id: number;
   recipient_id?: number; // Add recipient_id for direct messages
   content: string;
-  message_type: 'text' | 'file' | 'system';
+  type?: 'text' | 'file' | 'system';
+  message_type?: 'text' | 'file' | 'system'; // Legacy field
   attachment_id?: number;
   is_read: boolean;
+  file_url?: string;
+  file_name?: string;
+  file_size?: number;
+  file_type?: string;
   created_at: string;
   updated_at: string;
   sender?: User;
@@ -147,6 +152,10 @@ export interface DirectMessageInfo {
   type: 'text' | 'file' | 'system';
   is_read: boolean;
   reply_to_id?: number;
+  file_url?: string;
+  file_name?: string;
+  file_size?: number;
+  file_type?: string;
   created_at: string;
   read_at?: string;
 }

@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback } from 'react';
 
 interface SSEMessage {
   type: 'new_message' | 'conversation_updated';
-  data: any;
+  data: Record<string, unknown>;
 }
 
 interface UseSSEOptions {

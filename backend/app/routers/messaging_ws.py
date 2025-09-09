@@ -12,6 +12,7 @@ from fastapi import (
     WebSocketDisconnect,
     status,
 )
+from starlette.websockets import WebSocketState
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -154,8 +155,8 @@ class ConnectionManager:
 
     async def broadcast_to_conversation(
         self,
-        conversation_id: int,
-        message: WSMessage,
+        conversation_id,
+        message,
         exclude_user: Optional[int] = None,
     ):
         """Broadcast message to all conversation participants."""
@@ -221,34 +222,46 @@ connection_manager = ConnectionManager()
 
 async def get_current_user_ws(token: str, db: AsyncSession = Depends(get_db)) -> User:
     """Get current user from WebSocket token."""
-    if not token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token required"
+    try:
+        if not token:
+            logger.warning("No token provided for WebSocket")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Token required"
+            )
+
+        # Verify JWT token
+        clean_token = token.replace("Bearer ", "").replace("Bearer%20", "")
+        payload = auth_service.verify_token(clean_token, "access")
+        if payload is None:
+            logger.warning(f"Invalid token for WebSocket: {clean_token[:20]}...")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+            )
+
+        user_id = int(payload.get("sub"))
+        logger.info(f"WebSocket authentication successful for user {user_id}")
+
+        # Get user from database
+        from app.models.role import UserRole, Role
+        result = await db.execute(
+            select(User)
+            .options(selectinload(User.user_roles).selectinload(UserRole.role))
+            .where(User.id == user_id, User.is_active == True)
         )
 
-    # Verify JWT token
-    payload = auth_service.verify_token(token.replace("Bearer ", ""), "access")
-    if payload is None:
+        user = result.scalar_one_or_none()
+        if user is None:
+            logger.warning(f"User {user_id} not found in database")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
+            )
+
+        return user
+    except Exception as e:
+        logger.error(f"WebSocket authentication failed: {e}")
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e)
         )
-
-    user_id = int(payload.get("sub"))
-
-    # Get user from database
-    result = await db.execute(
-        select(User)
-        .options(selectinload(User.user_roles).selectinload("role"))
-        .where(User.id == user_id, User.is_active == True)
-    )
-
-    user = result.scalar_one_or_none()
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
-        )
-
-    return user
 
 
 @router.websocket("/conversations/{conversation_id}")
@@ -264,6 +277,7 @@ async def websocket_conversation(
         user = await get_current_user_ws(token, db)
 
         # Check conversation access
+        logger.info(f"Checking conversation access for user {user.id} to conversation {conversation_id}")
         (
             can_access,
             reason,
@@ -271,6 +285,7 @@ async def websocket_conversation(
             db, user.id, conversation_id
         )
         if not can_access:
+            logger.warning(f"WebSocket access denied for user {user.id} to conversation {conversation_id}: {reason}")
             await websocket.close(code=4003, reason=reason)
             return
 
@@ -383,6 +398,149 @@ async def websocket_conversation(
 
     finally:
         # Clean up
+        if "user" in locals():
+            await connection_manager.disconnect(user.id)
+
+
+@router.websocket("/direct/{other_user_id}")
+async def websocket_direct_message(
+    websocket: WebSocket,
+    other_user_id: int,
+    token: str = Query(...),
+    db: AsyncSession = Depends(get_db),
+):
+    """WebSocket endpoint for direct messaging with another user."""
+    try:
+        # Authenticate user
+        user = await get_current_user_ws(token, db)
+        
+        logger.info(f"Direct message WebSocket connection attempt: user {user.id} with user {other_user_id}")
+
+        # Verify the other user exists and is active
+        other_user_result = await db.execute(
+            select(User).where(User.id == other_user_id, User.is_active == True)
+        )
+        other_user = other_user_result.scalar_one_or_none()
+        if not other_user:
+            logger.warning(f"User {other_user_id} not found or inactive")
+            await websocket.close(code=4004, reason="User not found")
+            return
+
+        # For direct messaging, allow all connections (no role restrictions)
+        # Users can message anyone for now - we'll add restrictions later if needed
+        logger.info(f"Direct messaging connection established between users {user.id} and {other_user_id}")
+
+        # Connect user for direct messaging (use deterministic conversation ID)
+        conversation_id = f"direct_{min(user.id, other_user_id)}_{max(user.id, other_user_id)}"
+        await connection_manager.connect(websocket, user.id)
+        await connection_manager.join_conversation(user.id, conversation_id)
+
+        # WebSocket message loop
+        while True:
+            try:
+                # Check if connection is still active
+                if websocket.client_state == WebSocketState.DISCONNECTED:
+                    break
+                    
+                data = await websocket.receive_text()
+                message_data = json.loads(data)
+
+                message_type = message_data.get("type")
+                payload = message_data.get("data", {})
+
+                if message_type == "typing":
+                    is_typing = payload.get("is_typing", False)
+                    await connection_manager.set_typing_indicator(
+                        user.id, conversation_id, is_typing, user.full_name
+                    )
+
+                elif message_type == "message_read":
+                    message_id = payload.get("message_id")
+                    if message_id:
+                        # For direct messages, we'll implement read receipts differently
+                        logger.info(f"Message read receipt for message {message_id}")
+
+                        await connection_manager.broadcast_to_conversation(
+                            conversation_id,
+                            WSMessage(
+                                type="message_read",
+                                data={
+                                    "user_id": user.id,
+                                    "user_name": user.full_name,
+                                    "message_id": message_id,
+                                    "read_at": datetime.utcnow().isoformat(),
+                                },
+                            ),
+                            exclude_user=user.id,
+                        )
+
+                elif message_type == "ping":
+                    await connection_manager.send_to_user(
+                        user.id,
+                        WSMessage(
+                            type="pong",
+                            data={"timestamp": datetime.utcnow().isoformat()},
+                        ),
+                    )
+
+                else:
+                    await connection_manager.send_to_user(
+                        user.id,
+                        WSError(
+                            type="error",
+                            data={
+                                "error_code": "unknown_message_type",
+                                "message": f"Unknown message type: {message_type}",
+                            },
+                        ),
+                    )
+
+            except json.JSONDecodeError:
+                await connection_manager.send_to_user(
+                    user.id,
+                    WSError(
+                        type="error",
+                        data={
+                            "error_code": "invalid_json",
+                            "message": "Invalid JSON format",
+                        },
+                    ),
+                )
+
+            except WebSocketDisconnect:
+                logger.info(f"WebSocket disconnected during message processing for user {user.id}")
+                break
+                
+            except Exception as e:
+                logger.error(f"Error processing direct message WebSocket: {e}")
+                # Only try to send error if connection is still open
+                try:
+                    if websocket.client_state == WebSocketState.CONNECTED:
+                        await connection_manager.send_to_user(
+                            user.id,
+                            WSError(
+                                type="error",
+                                data={
+                                    "error_code": "processing_error",
+                                    "message": "Error processing message",
+                                },
+                            ),
+                        )
+                except:
+                    # Connection might be closed, just log and continue
+                    logger.warning(f"Could not send error message to user {user.id}, connection closed")
+
+    except WebSocketDisconnect:
+        logger.info(f"Direct message WebSocket disconnected for user {user.id if 'user' in locals() else 'unknown'}")
+
+    except Exception as e:
+        logger.error(f"Direct message WebSocket error: {e}")
+        try:
+            await websocket.close(code=4000, reason="Internal error")
+        except:
+            pass
+
+    finally:
         if "user" in locals():
             await connection_manager.disconnect(user.id)
 

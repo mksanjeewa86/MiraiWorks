@@ -6,6 +6,10 @@ from pydantic import BaseModel
 class DirectMessageBase(BaseModel):
     content: str
     type: str = "text"
+    file_url: Optional[str] = None
+    file_name: Optional[str] = None
+    file_size: Optional[int] = None
+    file_type: Optional[str] = None
 
 
 class DirectMessageCreate(DirectMessageBase):

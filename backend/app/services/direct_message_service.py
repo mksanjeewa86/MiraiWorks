@@ -45,6 +45,10 @@ class DirectMessageService:
             content=message_data.content,
             type=message_data.type,
             reply_to_id=message_data.reply_to_id,
+            file_url=message_data.file_url,
+            file_name=message_data.file_name,
+            file_size=message_data.file_size,
+            file_type=message_data.file_type,
         )
 
         db.add(message)
@@ -204,6 +208,10 @@ class DirectMessageService:
                     type=latest_message.type,
                     is_read=latest_message.is_read,
                     reply_to_id=latest_message.reply_to_id,
+                    file_url=latest_message.file_url,
+                    file_name=latest_message.file_name,
+                    file_size=latest_message.file_size,
+                    file_type=latest_message.file_type,
                     created_at=latest_message.created_at,
                     read_at=latest_message.read_at,
                 )

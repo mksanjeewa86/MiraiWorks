@@ -6,7 +6,7 @@ const API_BASE_URL = 'http://localhost:8000';
 export const messagesApi = {
   getConversations: async (token?: string): Promise<ApiResponse<Conversation[]>> => {
     const authToken = token || localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/messages/conversations`, {
+    const response = await fetch(`${API_BASE_URL}/api/direct_messages/conversations`, {
       headers: {
         'Authorization': `Bearer ${authToken}`,
         'Content-Type': 'application/json',
@@ -23,13 +23,12 @@ export const messagesApi = {
 
   markConversationAsRead: async (otherUserId: number, token?: string): Promise<ApiResponse<unknown>> => {
     const authToken = token || localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/messages/mark-read`, {
-      method: 'POST',
+    const response = await fetch(`${API_BASE_URL}/api/direct_messages/mark-conversation-read/${otherUserId}`, {
+      method: 'PUT',
       headers: {
         'Authorization': `Bearer ${authToken}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ other_user_id: otherUserId }),
     });
     
     if (!response.ok) {
@@ -42,7 +41,7 @@ export const messagesApi = {
 
   getConversation: async (otherUserId: number): Promise<ApiResponse<Conversation>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/messages/with/${otherUserId}`, {
+    const response = await fetch(`${API_BASE_URL}/api/direct_messages/with/${otherUserId}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -57,15 +56,17 @@ export const messagesApi = {
     return { data, success: true };
   },
 
-  getMessages: async (otherUserId: number, limit = 50): Promise<ApiResponse<{
+  getMessages: async (otherUserId: number, limit = 50, beforeId?: number): Promise<ApiResponse<{
     messages: Message[];
     total: number;
-    page: number;
-    totalPages: number;
+    has_more: boolean;
   }>> => {
     const token = localStorage.getItem('accessToken');
-    const url = new URL(`${API_BASE_URL}/api/messages/with/${otherUserId}`);
+    const url = new URL(`${API_BASE_URL}/api/direct_messages/with/${otherUserId}`);
     url.searchParams.set('limit', limit.toString());
+    if (beforeId) {
+      url.searchParams.set('before_id', beforeId.toString());
+    }
     
     const response = await fetch(url.toString(), {
       headers: {
@@ -79,16 +80,20 @@ export const messagesApi = {
     }
     
     const data = await response.json();
-    return { data: data.messages || [], success: true };
+    return { data, success: true };
   },
 
   sendMessage: async (recipientId: number, messageData: {
     content: string;
     type?: 'text' | 'file' | 'system';
     reply_to_id?: number;
+    file_url?: string;
+    file_name?: string;
+    file_size?: number;
+    file_type?: string;
   }): Promise<ApiResponse<Message>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/messages/send`, {
+    const response = await fetch(`${API_BASE_URL}/api/direct_messages/send`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -111,13 +116,12 @@ export const messagesApi = {
 
   markAsRead: async (otherUserId: number): Promise<ApiResponse<void>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/messages/mark-read`, {
-      method: 'POST',
+    const response = await fetch(`${API_BASE_URL}/api/direct_messages/mark-conversation-read/${otherUserId}`, {
+      method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ other_user_id: otherUserId }),
     });
     
     if (!response.ok) {
@@ -150,7 +154,7 @@ export const messagesApi = {
     messages: Message[];
   }>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/messages/search`, {
+    const response = await fetch(`${API_BASE_URL}/api/direct_messages/search`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -183,7 +187,7 @@ export const messagesApi = {
     }>;
   }>> => {
     const token = localStorage.getItem('accessToken');
-    const url = new URL(`${API_BASE_URL}/api/messages/participants`);
+    const url = new URL(`${API_BASE_URL}/api/direct_messages/participants`);
     if (query) {
       url.searchParams.set('query', query);
     }
@@ -202,5 +206,32 @@ export const messagesApi = {
     
     const data = await response.json();
     return { data: { participants: data.participants || [] }, success: true };
+  },
+
+  uploadFile: async (file: File): Promise<ApiResponse<{
+    file_url: string;
+    file_name: string;
+    file_size: number;
+    file_type: string;
+  }>> => {
+    const token = localStorage.getItem('accessToken');
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${API_BASE_URL}/api/files/upload`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return { data, success: true };
   },
 };
