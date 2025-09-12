@@ -67,24 +67,31 @@ async def upload_file(
             detail=f"File too large. Maximum size is {MAX_FILE_SIZE} bytes"
         )
     
-    # Generate unique filename
-    file_extension = file.filename.rsplit('.', 1)[1].lower()
-    unique_filename = f"{uuid.uuid4()}.{file_extension}"
-    file_path = os.path.join(UPLOAD_DIR, unique_filename)
-    
-    # Save file
+    # Use MinIO storage service
     try:
-        with open(file_path, "wb") as buffer:
-            buffer.write(file_content)
+        from app.services.storage_service import storage_service
         
-        logger.info(f"File uploaded: {file.filename} -> {unique_filename} by user {current_user.id}")
+        # Create a temporary file-like object for upload
+        file.file.seek(0)  # Reset file pointer
+        
+        # Upload to MinIO
+        s3_key, file_hash, file_size = await storage_service.upload_file(
+            file, current_user.id, "message-attachments"
+        )
+        
+        # Generate presigned URL for download
+        download_url = storage_service.get_presigned_url(s3_key)
+        
+        logger.info(f"File uploaded to MinIO: {file.filename} -> {s3_key} by user {current_user.id}")
         
         return {
-            "file_url": f"/api/files/download/{unique_filename}",
+            "file_url": download_url,
             "file_name": file.filename,
-            "file_size": len(file_content),
+            "file_size": file_size,
             "file_type": file.content_type,
-            "success": True
+            "s3_key": s3_key,
+            "success": True,
+            "minio_console": "http://localhost:9001"
         }
         
     except Exception as e:
@@ -95,52 +102,75 @@ async def upload_file(
         )
 
 
-@router.get("/download/{filename}")
+@router.get("/download/{s3_key:path}")
 async def download_file(
-    filename: str,
+    s3_key: str,
     current_user: User = Depends(get_current_active_user),
 ):
-    """Download a file by filename."""
-    
-    file_path = os.path.join(UPLOAD_DIR, filename)
-    
-    if not os.path.exists(file_path):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="File not found"
-        )
-    
-    # Get original filename if possible (would need database lookup in real app)
-    # For now, return the file with its stored name
-    return FileResponse(
-        file_path,
-        filename=filename,
-        media_type='application/octet-stream'
-    )
-
-
-@router.delete("/{filename}")
-async def delete_file(
-    filename: str,
-    current_user: User = Depends(get_current_active_user),
-):
-    """Delete a file (admin only for now)."""
-    
-    file_path = os.path.join(UPLOAD_DIR, filename)
-    
-    if not os.path.exists(file_path):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="File not found"
-        )
+    """Generate a presigned URL for downloading a file from MinIO."""
     
     try:
-        os.remove(file_path)
-        logger.info(f"File deleted: {filename} by user {current_user.id}")
-        return {"message": "File deleted successfully"}
+        from app.services.storage_service import storage_service
         
+        # Check if file exists
+        if not storage_service.file_exists(s3_key):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="File not found"
+            )
+        
+        # Generate presigned URL for download
+        download_url = storage_service.get_presigned_url(s3_key)
+        
+        return {
+            "download_url": download_url,
+            "s3_key": s3_key,
+            "expires_in": "1 hour"
+        }
+        
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Error deleting file {filename}: {str(e)}")
+        logger.error(f"Error generating download URL for {s3_key}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error generating download URL"
+        )
+
+
+@router.delete("/{s3_key:path}")
+async def delete_file(
+    s3_key: str,
+    current_user: User = Depends(get_current_active_user),
+):
+    """Delete a file from MinIO (admin only for now)."""
+    
+    try:
+        from app.services.storage_service import storage_service
+        
+        # Check if file exists
+        if not storage_service.file_exists(s3_key):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="File not found"
+            )
+        
+        # Delete from MinIO
+        success = storage_service.delete_file(s3_key)
+        
+        if success:
+            logger.info(f"File deleted from MinIO: {s3_key} by user {current_user.id}")
+            return {"message": "File deleted successfully"}
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to delete file"
+            )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting file {s3_key}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error deleting file"

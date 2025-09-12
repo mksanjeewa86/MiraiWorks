@@ -50,6 +50,17 @@ export const useWebSocket = ({
         try {
           const message: WebSocketMessage = JSON.parse(event.data);
           console.log('WebSocket message received:', message);
+          
+          // DEBUG: Extra logging for file messages
+          if (message.type === 'new_message' && message.data) {
+            console.log('New message details:', {
+              type: message.data.type,
+              file_url: message.data.file_url,
+              file_name: message.data.file_name,
+              content: message.data.content
+            });
+          }
+          
           onMessage?.(message);
         } catch (err) {
           console.error('Failed to parse WebSocket message:', err, 'Raw data:', event.data);

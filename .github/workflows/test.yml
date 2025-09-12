@@ -1,0 +1,371 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  backend-tests:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_USER: test_user
+          POSTGRES_DB: test_miraiworks
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-asyncio pytest-cov httpx
+
+    - name: Set up test database
+      env:
+        DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_miraiworks
+        TEST_DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_miraiworks
+      run: |
+        cd backend
+        # Run any database migrations or setup needed
+        # python -m alembic upgrade head
+
+    - name: Run backend tests with coverage
+      env:
+        DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_miraiworks
+        TEST_DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_miraiworks
+        ENVIRONMENT: test
+        SECRET_KEY: test_secret_key_for_ci
+        EMAIL_HOST: smtp.test.com
+        EMAIL_PORT: 587
+        EMAIL_USER: test@test.com
+        EMAIL_PASSWORD: test_password
+      run: |
+        cd backend
+        pytest tests/ -v --cov=app --cov-report=xml --cov-report=html --cov-report=term
+
+    - name: Upload backend coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./backend/coverage.xml
+        flags: backend
+        name: backend-coverage
+        fail_ci_if_error: false
+
+  frontend-tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: 'frontend-nextjs/package-lock.json'
+
+    - name: Install frontend dependencies
+      run: |
+        cd frontend-nextjs
+        npm ci
+
+    - name: Run frontend unit tests
+      run: |
+        cd frontend-nextjs
+        npm run test:ci
+
+    - name: Run frontend build test
+      run: |
+        cd frontend-nextjs
+        npm run build
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-tests]
+    
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_USER: test_user
+          POSTGRES_DB: test_miraiworks
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: 'frontend-nextjs/package-lock.json'
+
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Install frontend dependencies
+      run: |
+        cd frontend-nextjs
+        npm ci
+
+    - name: Install Playwright browsers
+      run: |
+        cd frontend-nextjs
+        npx playwright install --with-deps chromium
+
+    - name: Set up test database
+      env:
+        DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_miraiworks
+        TEST_DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_miraiworks
+      run: |
+        cd backend
+        # Set up test data for E2E tests
+        python scripts/setup_test_data.py
+
+    - name: Start backend server
+      env:
+        DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_miraiworks
+        ENVIRONMENT: test
+        SECRET_KEY: test_secret_key_for_ci
+        EMAIL_HOST: smtp.test.com
+        EMAIL_PORT: 587
+        EMAIL_USER: test@test.com
+        EMAIL_PASSWORD: test_password
+        PORT: 8000
+      run: |
+        cd backend
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+        echo $! > backend.pid
+        # Wait for backend to be ready
+        sleep 10
+
+    - name: Run E2E tests
+      env:
+        CI: true
+        BACKEND_URL: http://localhost:8000
+      run: |
+        cd frontend-nextjs
+        npx playwright test --project=chromium
+
+    - name: Upload E2E test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: playwright-report
+        path: frontend-nextjs/tests/reports/
+        retention-days: 30
+
+    - name: Stop backend server
+      if: always()
+      run: |
+        if [ -f backend/backend.pid ]; then
+          kill $(cat backend/backend.pid) || true
+        fi
+
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Run Bandit Security Scan (Python)
+      run: |
+        cd backend
+        pip install bandit
+        bandit -r app/ -f json -o bandit-report.json || true
+
+    - name: Run npm audit (Node.js)
+      run: |
+        cd frontend-nextjs
+        npm audit --audit-level=high --json > npm-audit.json || true
+
+    - name: Upload security reports
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: security-reports
+        path: |
+          backend/bandit-report.json
+          frontend-nextjs/npm-audit.json
+
+  lint-and-format:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: 'frontend-nextjs/package-lock.json'
+
+    - name: Install Python linting tools
+      run: |
+        pip install black isort flake8 mypy
+
+    - name: Run Python linting
+      run: |
+        cd backend
+        # Check formatting
+        black --check app/
+        # Check imports
+        isort --check-only app/
+        # Check code style
+        flake8 app/
+        # Type checking
+        mypy app/
+
+    - name: Install frontend dependencies
+      run: |
+        cd frontend-nextjs
+        npm ci
+
+    - name: Run frontend linting
+      run: |
+        cd frontend-nextjs
+        npm run lint
+        npm run type-check
+
+  performance-tests:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_USER: test_user
+          POSTGRES_DB: test_miraiworks
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: 'frontend-nextjs/package-lock.json'
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        cd backend
+        pip install -r requirements.txt
+        cd ../frontend-nextjs
+        npm ci
+        npm install -g lighthouse
+
+    - name: Start application
+      env:
+        DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_miraiworks
+        ENVIRONMENT: production
+        SECRET_KEY: test_secret_key_for_ci
+      run: |
+        cd backend
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+        cd ../frontend-nextjs
+        npm run build
+        npm start &
+        sleep 30
+
+    - name: Run Lighthouse CI
+      run: |
+        lighthouse http://localhost:3000 --output=json --output-path=./lighthouse-report.json --chrome-flags="--headless --no-sandbox"
+
+    - name: Upload performance report
+      uses: actions/upload-artifact@v3
+      with:
+        name: lighthouse-report
+        path: ./lighthouse-report.json
+
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-tests, e2e-tests, security-scan, lint-and-format]
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Deploy to staging
+      run: |
+        echo "Deploying to staging environment..."
+        # Add your staging deployment commands here
+        # e.g., deploy to AWS, Heroku, etc.
+
+  deploy-production:
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-tests, e2e-tests, security-scan, lint-and-format, performance-tests]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Deploy to production
+      run: |
+        echo "Deploying to production environment..."
+        # Add your production deployment commands here
+        # e.g., deploy to AWS, Heroku, etc.

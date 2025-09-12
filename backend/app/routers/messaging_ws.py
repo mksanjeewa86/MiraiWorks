@@ -160,10 +160,16 @@ class ConnectionManager:
         exclude_user: Optional[int] = None,
     ):
         """Broadcast message to all conversation participants."""
+        # DEBUG: Log broadcast attempt (reduced logging)
+        logger.debug(f"Broadcasting {message.type} to conversation {conversation_id}")
+        
         if conversation_id not in self.conversation_subscribers:
+            logger.warning(f"No subscribers found for conversation {conversation_id}")
             return
 
         subscribers = self.conversation_subscribers[conversation_id].copy()
+        logger.info(f"Broadcasting to {len(subscribers)} subscribers")
+        
         if exclude_user:
             subscribers.discard(exclude_user)
 
@@ -173,10 +179,16 @@ class ConnectionManager:
             success = await self.send_to_user(user_id, message)
             if not success:
                 failed_users.append(user_id)
+                logger.error(f"Failed to send message to user {user_id}")
 
         # Clean up failed connections
         for user_id in failed_users:
             await self.disconnect(user_id)
+            
+        if failed_users:
+            logger.warning(f"Broadcast completed. Success: {len(subscribers) - len(failed_users)}, Failed: {len(failed_users)}")
+        else:
+            logger.info(f"Successfully broadcast message to all {len(subscribers)} subscribers")
 
     async def set_typing_indicator(
         self, user_id: int, conversation_id: int, is_typing: bool, user_name: str
@@ -435,100 +447,119 @@ async def websocket_direct_message(
         await connection_manager.connect(websocket, user.id)
         await connection_manager.join_conversation(user.id, conversation_id)
 
-        # WebSocket message loop
-        while True:
-            try:
+        # WebSocket message loop - handle incoming messages asynchronously
+        try:
+            while True:
                 # Check if connection is still active
                 if websocket.client_state == WebSocketState.DISCONNECTED:
                     break
-                    
-                data = await websocket.receive_text()
-                message_data = json.loads(data)
+                
+                # Wait for incoming messages with timeout to prevent blocking forever
+                import asyncio
+                try:
+                    data = await asyncio.wait_for(websocket.receive_text(), timeout=30.0)
+                    message_data = json.loads(data)
 
-                message_type = message_data.get("type")
-                payload = message_data.get("data", {})
+                    message_type = message_data.get("type")
+                    payload = message_data.get("data", {})
 
-                if message_type == "typing":
-                    is_typing = payload.get("is_typing", False)
-                    await connection_manager.set_typing_indicator(
-                        user.id, conversation_id, is_typing, user.full_name
-                    )
-
-                elif message_type == "message_read":
-                    message_id = payload.get("message_id")
-                    if message_id:
-                        # For direct messages, we'll implement read receipts differently
-                        logger.info(f"Message read receipt for message {message_id}")
-
-                        await connection_manager.broadcast_to_conversation(
-                            conversation_id,
-                            WSMessage(
-                                type="message_read",
-                                data={
-                                    "user_id": user.id,
-                                    "user_name": user.full_name,
-                                    "message_id": message_id,
-                                    "read_at": datetime.utcnow().isoformat(),
-                                },
-                            ),
-                            exclude_user=user.id,
+                    if message_type == "typing":
+                        is_typing = payload.get("is_typing", False)
+                        await connection_manager.set_typing_indicator(
+                            user.id, conversation_id, is_typing, user.full_name
                         )
 
-                elif message_type == "ping":
-                    await connection_manager.send_to_user(
-                        user.id,
-                        WSMessage(
-                            type="pong",
-                            data={"timestamp": datetime.utcnow().isoformat()},
-                        ),
-                    )
+                    elif message_type == "message_read":
+                        message_id = payload.get("message_id")
+                        if message_id:
+                            # For direct messages, we'll implement read receipts
+                            logger.info(f"Message read receipt for message {message_id}")
+                            
+                            # Mark message as read in database
+                            from app.services.direct_message_service import direct_message_service
+                            await direct_message_service.mark_messages_as_read(
+                                db, user.id, [message_id]
+                            )
 
-                else:
-                    await connection_manager.send_to_user(
-                        user.id,
-                        WSError(
-                            type="error",
-                            data={
-                                "error_code": "unknown_message_type",
-                                "message": f"Unknown message type: {message_type}",
-                            },
-                        ),
-                    )
+                            await connection_manager.broadcast_to_conversation(
+                                conversation_id,
+                                WSMessage(
+                                    type="message_read",
+                                    data={
+                                        "user_id": user.id,
+                                        "user_name": user.full_name,
+                                        "message_id": message_id,
+                                        "read_at": datetime.utcnow().isoformat(),
+                                    },
+                                ),
+                                exclude_user=user.id,
+                            )
 
-            except json.JSONDecodeError:
-                await connection_manager.send_to_user(
-                    user.id,
-                    WSError(
-                        type="error",
-                        data={
-                            "error_code": "invalid_json",
-                            "message": "Invalid JSON format",
-                        },
-                    ),
-                )
+                    elif message_type == "ping":
+                        await connection_manager.send_to_user(
+                            user.id,
+                            WSMessage(
+                                type="pong",
+                                data={"timestamp": datetime.utcnow().isoformat()},
+                            ),
+                        )
 
-            except WebSocketDisconnect:
-                logger.info(f"WebSocket disconnected during message processing for user {user.id}")
-                break
-                
-            except Exception as e:
-                logger.error(f"Error processing direct message WebSocket: {e}")
-                # Only try to send error if connection is still open
-                try:
-                    if websocket.client_state == WebSocketState.CONNECTED:
+                    else:
                         await connection_manager.send_to_user(
                             user.id,
                             WSError(
                                 type="error",
                                 data={
-                                    "error_code": "processing_error",
-                                    "message": "Error processing message",
+                                    "error_code": "unknown_message_type",
+                                    "message": f"Unknown message type: {message_type}",
                                 },
                             ),
                         )
-                except:
-                    # Connection might be closed, just log and continue
-                    logger.warning(f"Could not send error message to user {user.id}, connection closed")
+
+                except asyncio.TimeoutError:
+                    # No message received within timeout - that's normal, continue listening
+                    # Send periodic ping to keep connection alive
+                    await connection_manager.send_to_user(
+                        user.id,
+                        WSMessage(
+                            type="ping",
+                            data={"timestamp": datetime.utcnow().isoformat()},
+                        ),
+                    )
+                    continue
+                    
+                except json.JSONDecodeError:
+                    await connection_manager.send_to_user(
+                        user.id,
+                        WSError(
+                            type="error",
+                            data={
+                                "error_code": "invalid_json",
+                                "message": "Invalid JSON format",
+                            },
+                        ),
+                    )
+                    
+        except WebSocketDisconnect:
+            logger.info(f"WebSocket disconnected during message processing for user {user.id}")
+        except Exception as e:
+            logger.error(f"Error in direct message WebSocket loop: {e}")
+            # Only try to send error if connection is still open
+            try:
+                if websocket.client_state == WebSocketState.CONNECTED:
+                    await connection_manager.send_to_user(
+                        user.id,
+                        WSError(
+                            type="error",
+                            data={
+                                "error_code": "processing_error", 
+                                "message": "Error processing message",
+                            },
+                        ),
+                    )
+            except:
+                # Connection might be closed, just log and continue
+                logger.warning(f"Could not send error message to user {user.id}, connection closed")
 
     except WebSocketDisconnect:
         logger.info(f"Direct message WebSocket disconnected for user {user.id if 'user' in locals() else 'unknown'}")

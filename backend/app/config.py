@@ -5,16 +5,16 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # Database
-    db_url: str = "mysql+asyncmy://hrms:hrms@localhost:3306/miraiworks"
+    db_url: str = "mysql+asyncmy://hrms:hrms@db:3306/miraiworks"
 
     # Redis
-    redis_url: str = "redis://localhost:6379/0"
+    redis_url: str = "redis://redis:6379/0"
 
     # S3/MinIO
-    s3_endpoint: str = "http://localhost:9000"
+    s3_endpoint: str = "http://minio:9000"
     s3_access_key: str = "minioadmin"
-    s3_secret_key: str = "minioadmin"
-    s3_bucket: str = "miraiworks"
+    s3_secret_key: str = "minioadmin123"
+    s3_bucket: str = "miraiworks-files"
 
     # ClamAV
     clamav_host: str = "localhost"

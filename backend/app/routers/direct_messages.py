@@ -20,6 +20,7 @@ from app.schemas.direct_message import (
     MessageSearchRequest,
 )
 from app.services.direct_message_service import direct_message_service
+from app.services.notification_service import notification_service
 from app.utils.logging import get_logger
 
 router = APIRouter()
@@ -183,11 +184,20 @@ async def send_message(
         "file_type": message.file_type,
     }
     
+    # DEBUG: Log WebSocket message data
+    logger.info(f"Broadcasting WebSocket message for conversation {conversation_id}")
+    logger.info(f"Message data: type={message.type}, file_url={message.file_url}, file_name={message.file_name}")
+    
     from app.schemas.message import WSMessage
     
-    await connection_manager.broadcast_to_conversation(
-        conversation_id,
-        WSMessage(type="new_message", data=message_data_ws)
+    ws_message = WSMessage(type="new_message", data=message_data_ws)
+    await connection_manager.broadcast_to_conversation(conversation_id, ws_message)
+    
+    logger.info(f"WebSocket message broadcast completed for message ID {message.id}")
+
+    # Handle notifications (email and in-app)
+    await notification_service.handle_new_message_notifications(
+        db, current_user.id, message.recipient_id, message
     )
 
     return DirectMessageInfo(

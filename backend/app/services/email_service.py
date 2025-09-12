@@ -136,6 +136,70 @@ class EmailService:
         logger.info(f"[STUB] Would send activation email to {email} with temp password")
         return True
 
+    async def send_message_notification(
+        self, 
+        recipient_email: str, 
+        recipient_name: str, 
+        sender_name: str,
+        message_content: str,
+        conversation_url: str
+    ) -> bool:
+        """Send email notification for new message."""
+        subject = f"New message from {sender_name} - MiraiWorks"
+        
+        # Truncate message content if too long
+        display_content = message_content[:100] + "..." if len(message_content) > 100 else message_content
+        
+        html_body = f"""
+        <html>
+        <head></head>
+        <body>
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <div style="background: #007bff; padding: 20px; text-align: center;">
+                    <h2 style="color: white; margin: 0;">New Message</h2>
+                </div>
+                <div style="padding: 20px;">
+                    <p>Hi {recipient_name},</p>
+                    <p>You have received a new message from <strong>{sender_name}</strong>:</p>
+                    <div style="background: #f8f9fa; padding: 15px; border-left: 4px solid #007bff; margin: 20px 0; border-radius: 4px;">
+                        <p style="margin: 0; color: #495057;">{display_content}</p>
+                    </div>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="{conversation_url}" style="background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">
+                            View Message
+                        </a>
+                    </div>
+                    <p style="color: #6c757d; font-size: 14px;">
+                        You can disable these notifications in your settings.
+                    </p>
+                </div>
+                <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+                <p style="color: #666; font-size: 12px; text-align: center;">
+                    This is an automated message from MiraiWorks. Please do not reply to this email.
+                </p>
+            </div>
+        </body>
+        </html>
+        """
+        
+        text_body = f"""
+        New Message - MiraiWorks
+        
+        Hi {recipient_name},
+        
+        You have received a new message from {sender_name}:
+        
+        {display_content}
+        
+        View the full conversation at: {conversation_url}
+        
+        You can disable these notifications in your settings.
+        
+        This is an automated message from MiraiWorks.
+        """
+        
+        return await self.send_email([recipient_email], subject, html_body, text_body)
+
 
 # Global instance
 email_service = EmailService()

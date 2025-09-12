@@ -56,7 +56,13 @@
       "Bash(timeout:*)",
       "Bash(ruff check:*)",
       "Read(//c/Users/mksan/**)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(docker ps:*)",
+      "Bash(chmod:*)",
+      "Bash(psql:*)",
+      "Bash(mysql:*)",
+      "Bash(npm test)",
+      "Bash(docker volume rm:*)"
     ],
     "deny": [],
     "ask": []

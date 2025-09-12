@@ -1,0 +1,114 @@
+version: '3.8'
+
+services:
+  # Test database
+  test-db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+      POSTGRES_DB: test_miraiworks
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend tests
+  backend-test:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.test
+    environment:
+      - DATABASE_URL=postgresql://test_user:test_password@test-db:5432/test_miraiworks
+      - TEST_DATABASE_URL=postgresql://test_user:test_password@test-db:5432/test_miraiworks
+      - ENVIRONMENT=test
+      - SECRET_KEY=test_secret_key
+      - EMAIL_HOST=smtp.test.com
+      - EMAIL_PORT=587
+      - EMAIL_USER=test@test.com
+      - EMAIL_PASSWORD=test_password
+    depends_on:
+      test-db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - backend-test-coverage:/app/coverage
+    command: >
+      sh -c "python scripts/setup_test_data.py &&
+             pytest tests/ -v --cov=app --cov-report=xml --cov-report=html --cov-report=term"
+
+  # Frontend unit tests  
+  frontend-test:
+    build:
+      context: ./frontend-nextjs
+      dockerfile: Dockerfile.test
+    volumes:
+      - ./frontend-nextjs:/app
+      - frontend-node-modules:/app/node_modules
+      - frontend-test-coverage:/app/coverage
+    command: npm run test:unit:ci
+
+  # E2E tests
+  e2e-test:
+    build:
+      context: ./frontend-nextjs
+      dockerfile: Dockerfile.e2e
+    environment:
+      - CI=true
+      - BACKEND_URL=http://backend-test-server:8000
+    depends_on:
+      - backend-test-server
+      - test-db
+    volumes:
+      - ./frontend-nextjs:/app
+      - e2e-reports:/app/tests/reports
+    command: npx playwright test --project=chromium
+
+  # Backend server for E2E tests
+  backend-test-server:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.test
+    environment:
+      - DATABASE_URL=postgresql://test_user:test_password@test-db:5432/test_miraiworks
+      - ENVIRONMENT=test
+      - SECRET_KEY=test_secret_key
+      - EMAIL_HOST=smtp.test.com
+      - EMAIL_PORT=587
+      - EMAIL_USER=test@test.com
+      - EMAIL_PASSWORD=test_password
+      - PORT=8000
+    depends_on:
+      test-db:
+        condition: service_healthy
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./backend:/app
+    command: >
+      sh -c "python scripts/setup_test_data.py &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000"
+
+  # Test results collector
+  test-results:
+    image: alpine:latest
+    volumes:
+      - backend-test-coverage:/backend-coverage
+      - frontend-test-coverage:/frontend-coverage
+      - e2e-reports:/e2e-reports
+      - ./test-results:/output
+    command: >
+      sh -c "mkdir -p /output/backend /output/frontend /output/e2e &&
+             cp -r /backend-coverage/* /output/backend/ 2>/dev/null || true &&
+             cp -r /frontend-coverage/* /output/frontend/ 2>/dev/null || true &&
+             cp -r /e2e-reports/* /output/e2e/ 2>/dev/null || true &&
+             echo 'Test results collected in ./test-results'"
+
+volumes:
+  backend-test-coverage:
+  frontend-test-coverage:
+  frontend-node-modules:
+  e2e-reports:

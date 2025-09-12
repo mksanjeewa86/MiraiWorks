@@ -1,12 +1,12 @@
 'use client';
 
-import { Bell, Settings, User, LogOut, Sun, Moon, Menu } from 'lucide-react'
-import { useState } from 'react'
+import { Settings, User, LogOut, Sun, Moon, Menu } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { useAuth } from '@/contexts/AuthContext'
 import Brand from '@/components/common/Brand'
 import SearchInput from '@/components/common/SearchInput'
+import NotificationDropdown from '@/components/notifications/NotificationDropdown'
 
 interface TopbarProps {
   onMenuClick: () => void
@@ -17,13 +17,6 @@ interface TopbarProps {
 export default function Topbar({ onMenuClick, onThemeToggle, isDark }: TopbarProps) {
   const { user, logout } = useAuth()
   const router = useRouter()
-  const [notifications] = useState([
-    { id: 1, title: 'New interview scheduled', type: 'interview', unread: true },
-    { id: 2, title: 'Application update', type: 'application', unread: true },
-    { id: 3, title: 'Message received', type: 'message', unread: false },
-  ])
-
-  const unreadCount = notifications.filter(n => n.unread).length
 
   const handleSearch = (query: string) => {
     console.log('Search:', query)
@@ -79,53 +72,7 @@ export default function Topbar({ onMenuClick, onThemeToggle, isDark }: TopbarPro
         {/* Right side */}
         <div className="flex items-center space-x-3">
           {/* Notifications */}
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger asChild>
-              <button 
-                className="relative p-2 rounded-2xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                aria-label="Notifications"
-              >
-                <Bell className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
-            </DropdownMenu.Trigger>
-            
-            <DropdownMenu.Portal>
-              <DropdownMenu.Content 
-                className="min-w-[300px] bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xl z-50 p-2"
-                sideOffset={5}
-              >
-                <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700">
-                  <h3 className="font-medium text-gray-900 dark:text-white">Notifications</h3>
-                </div>
-                
-                <div className="max-h-80 overflow-y-auto">
-                  {notifications.map((notification) => (
-                    <DropdownMenu.Item
-                      key={notification.id}
-                      className="flex items-start space-x-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl cursor-pointer"
-                    >
-                      <div className="w-2 h-2 rounded-full mt-2" style={{ backgroundColor: notification.unread ? 'var(--brand-primary)' : '#d1d5db' }} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-900 dark:text-white">{notification.title}</p>
-                        <p className="text-xs text-muted-500 mt-1">{notification.type}</p>
-                      </div>
-                    </DropdownMenu.Item>
-                  ))}
-                </div>
-
-                <div className="px-3 py-2 border-t border-gray-100 dark:border-gray-700 mt-2">
-                  <button className="text-sm font-medium text-brand-primary hover:opacity-80">
-                    View all notifications
-                  </button>
-                </div>
-              </DropdownMenu.Content>
-            </DropdownMenu.Portal>
-          </DropdownMenu.Root>
+          <NotificationDropdown />
 
           {/* Theme toggle */}
           <button

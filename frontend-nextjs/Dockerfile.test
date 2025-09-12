@@ -1,0 +1,29 @@
+FROM node:18-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy application code
+COPY . .
+
+# Install additional test dependencies
+RUN npm install --save-dev \
+    @testing-library/react \
+    @testing-library/jest-dom \
+    @testing-library/user-event
+
+# Create coverage directory
+RUN mkdir -p coverage
+
+# Set environment variables
+ENV NODE_ENV=test
+ENV CI=true
+
+# Default command (can be overridden)
+CMD ["npm", "run", "test:unit:ci"]

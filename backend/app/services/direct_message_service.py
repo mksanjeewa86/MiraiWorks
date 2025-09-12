@@ -106,7 +106,7 @@ class DirectMessageService:
         result = await db.execute(query)
         messages = result.scalars().all()
 
-        return list(reversed(messages))  # Return in chronological order
+        return list(messages)  # Return in descending order (newest first)
 
     async def get_conversations(
         self, db: AsyncSession, user_id: int, search_query: Optional[str] = None

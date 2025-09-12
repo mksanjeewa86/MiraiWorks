@@ -5,7 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.calendar_integration import CalendarEvent, CalendarIntegration
+from app.models.calendar_integration import SyncedEvent, ExternalCalendarAccount
 from app.models.user import User
 from app.services.calendar_service import GoogleCalendarService
 from app.services.microsoft_calendar_service import MicrosoftCalendarService
@@ -20,9 +20,9 @@ class TestCalendarService:
     async def mock_user(self, db_session: AsyncSession):
         user = User(
             email="test@example.com",
-            full_name="Test User",
-            password_hash="hashed_password",
-            role="recruiter",
+            first_name="Test",
+            last_name="User",
+            hashed_password="hashed_password",
             is_active=True,
         )
         db_session.add(user)
@@ -32,9 +32,10 @@ class TestCalendarService:
 
     @pytest.fixture
     async def calendar_integration(self, db_session: AsyncSession, mock_user: User):
-        integration = CalendarIntegration(
+        integration = ExternalCalendarAccount(
             user_id=mock_user.id,
             provider="google",
+            provider_account_id="test_account_id",
             email="test@example.com",
             access_token="test_access_token",
             refresh_token="test_refresh_token",

@@ -5,7 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.calendar_integration import CalendarIntegration
+from app.models.calendar_integration import ExternalCalendarAccount
 from app.models.company import Company
 from app.models.interview import Interview
 from app.models.user import User
@@ -24,9 +24,9 @@ class TestInterviewService:
         company = Company(
             name="Test Company",
             domain="test.com",
-            industry="Technology",
-            size="10-50",
-            is_active=True,
+            type="employer",
+            email="test@testcompany.com",
+            is_active="1",
         )
         db_session.add(company)
         await db_session.commit()
@@ -37,9 +37,9 @@ class TestInterviewService:
     async def candidate_user(self, db_session: AsyncSession, company):
         user = User(
             email="candidate@test.com",
-            full_name="Test Candidate",
-            password_hash="hashed_password",
-            role="candidate",
+            first_name="Test",
+            last_name="Candidate",
+            hashed_password="hashed_password",
             company_id=company.id,
             is_active=True,
         )
@@ -52,9 +52,9 @@ class TestInterviewService:
     async def recruiter_user(self, db_session: AsyncSession, company):
         user = User(
             email="recruiter@test.com",
-            full_name="Test Recruiter",
-            password_hash="hashed_password",
-            role="recruiter",
+            first_name="Test",
+            last_name="Recruiter",
+            hashed_password="hashed_password",
             company_id=company.id,
             is_active=True,
         )
@@ -68,9 +68,9 @@ class TestInterviewService:
         company = Company(
             name="Employer Company",
             domain="employer.com",
-            industry="Technology",
-            size="100-500",
-            is_active=True,
+            type="employer",
+            email="test@employercompany.com",
+            is_active="1",
         )
         db_session.add(company)
         await db_session.commit()

@@ -6,10 +6,10 @@ import AppLayout from '@/components/layout/AppLayout';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { Search, Send, Plus, Phone, Video, MoreHorizontal, Smile, Paperclip } from 'lucide-react';
+import { Search, Send, Phone, Video, MoreHorizontal, Smile, Paperclip } from 'lucide-react';
 import { messagesApi } from '@/services/api';
 import { useWebSocket } from '@/hooks/useWebSocket';
-import type { Conversation, Message } from '@/types';
+import type { Conversation, Message, DirectMessageInfo } from '@/types';
 import dynamic from 'next/dynamic';
 
 const EmojiPicker = dynamic(() => import('emoji-picker-react'), { 
@@ -34,6 +34,9 @@ interface MessagesPageState {
   }>;
   searchingContacts: boolean;
   hasMoreMessages: boolean;
+  searchResults: DirectMessageInfo[];
+  isSearching: boolean;
+  showSearchResults: boolean;
 }
 
 export default function MessagesPage() {
@@ -53,7 +56,10 @@ export default function MessagesPage() {
     activeTab: 'conversations',
     contacts: [],
     searchingContacts: false,
-    hasMoreMessages: false
+    hasMoreMessages: false,
+    searchResults: [],
+    isSearching: false,
+    showSearchResults: false
   });
 
   // Use separate state for input to prevent message list refreshes while typing
@@ -68,10 +74,15 @@ export default function MessagesPage() {
         setState(prev => ({ ...prev, loading: true, error: null }));
         const response = await messagesApi.getConversations();
         if (response.success && response.data) {
+          const conversations = response.data || [];
           setState(prev => ({
             ...prev,
-            conversations: response.data || [],
-            loading: false
+            conversations: conversations,
+            loading: false,
+            // Auto-select the first conversation (most recent) if none is selected
+            activeConversationId: prev.activeConversationId === null && conversations.length > 0 
+              ? conversations[0].other_user_id 
+              : prev.activeConversationId
           }));
         } else {
           setState(prev => ({ 
@@ -134,11 +145,21 @@ export default function MessagesPage() {
   const { isConnected, sendMessage } = useWebSocket({
     ...webSocketConfig,
     onMessage: (message) => {
+      console.log('Messages page received WebSocket message:', message);
+      
       if (message.type === 'new_message') {
+        console.log('Processing new message:', message.data);
+        console.log('Current messages count before:', state.messages.length);
+        
+        const newMessage = message.data as unknown as Message;
+        console.log('New message as Message type:', newMessage);
+        
         setState(prev => ({
           ...prev,
-          messages: [...prev.messages, message.data as unknown as Message]
+          messages: [...prev.messages, newMessage]
         }));
+        
+        console.log('Messages count after adding:', state.messages.length + 1);
         setTimeout(scrollToBottom, 100);
         refreshConversationList();
       }
@@ -326,6 +347,59 @@ export default function MessagesPage() {
     }
   };
 
+  const handleSearch = async (query: string) => {
+    setState(prev => ({ ...prev, conversationSearchQuery: query, isSearching: !!query }));
+
+    if (!query.trim()) {
+      setState(prev => ({ 
+        ...prev, 
+        searchResults: [], 
+        showSearchResults: false,
+        isSearching: false 
+      }));
+      return;
+    }
+
+    try {
+      setState(prev => ({ ...prev, isSearching: true }));
+      
+      // Search messages across all conversations
+      const response = await messagesApi.searchMessages(query);
+      if (response.success && response.data) {
+        setState(prev => ({ 
+          ...prev, 
+          searchResults: response.data?.messages || [],
+          showSearchResults: true,
+          isSearching: false
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to search messages:', error);
+      setState(prev => ({ 
+        ...prev, 
+        isSearching: false,
+        showSearchResults: false 
+      }));
+    }
+  };
+
+  const highlightText = (text: string, query: string) => {
+    if (!query.trim()) return text;
+    
+    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    const parts = text.split(regex);
+    
+    return parts.map((part, index) => 
+      regex.test(part) ? (
+        <mark key={index} className="bg-yellow-200 dark:bg-yellow-800 rounded px-1">
+          {part}
+        </mark>
+      ) : (
+        part
+      )
+    );
+  };
+
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -471,17 +545,87 @@ export default function MessagesPage() {
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
                 type="text"
-                placeholder="Search messages or senders..."
+                placeholder="Search messages, senders, or content..."
                 value={state.conversationSearchQuery}
-                onChange={(e) => setState(prev => ({ ...prev, conversationSearchQuery: e.target.value }))}
+                onChange={(e) => handleSearch(e.target.value)}
                 className="pl-10 bg-gray-50 dark:bg-gray-700 border-0 rounded-xl"
               />
             </div>
           </div>
 
-          {/* Content based on active tab */}
+          {/* Content based on active tab and search state */}
           <div className="flex-1 overflow-y-auto">
-            {state.activeTab === 'conversations' ? (
+            {state.showSearchResults ? (
+              // Search Results
+              <div>
+                <div className="p-3 border-b border-gray-200 dark:border-gray-700 bg-blue-50 dark:bg-blue-900/20">
+                  <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                    Search Results ({state.searchResults.length})
+                  </h4>
+                  <button 
+                    onClick={() => setState(prev => ({ 
+                      ...prev, 
+                      showSearchResults: false, 
+                      conversationSearchQuery: '',
+                      searchResults: []
+                    }))}
+                    className="text-xs text-blue-700 dark:text-blue-300 hover:underline"
+                  >
+                    Clear search
+                  </button>
+                </div>
+                {state.isSearching ? (
+                  <div className="flex-1 flex items-center justify-center p-8">
+                    <div className="text-center">
+                      <LoadingSpinner className="w-6 h-6 mx-auto mb-2" />
+                      <p className="text-sm text-gray-500">Searching messages...</p>
+                    </div>
+                  </div>
+                ) : state.searchResults.length > 0 ? (
+                  state.searchResults.map(message => (
+                    <div
+                      key={message.id}
+                      onClick={() => {
+                        // Navigate to conversation with this message
+                        const otherUserId = message.sender_id === user?.id ? message.recipient_id : message.sender_id;
+                        if (otherUserId) {
+                          handleConversationSelect(otherUserId);
+                          setState(prev => ({ ...prev, showSearchResults: false }));
+                        }
+                      }}
+                      className="mx-3 my-1 p-4 rounded-2xl cursor-pointer transition-all hover:bg-gray-50 dark:hover:bg-gray-700"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium ${getAvatarColor(message.sender_id === user?.id ? message.recipient_id : message.sender_id)}`}>
+                          {getInitials(message.sender_id === user?.id ? message.recipient_name : message.sender_name)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-1">
+                            <h3 className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)' }}>
+                              {message.sender_id === user?.id ? message.recipient_name : message.sender_name}
+                            </h3>
+                            <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
+                              {formatTime(message.created_at)}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                            {highlightText(message.content, state.conversationSearchQuery)}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {message.sender_id === user?.id ? 'You' : message.sender_name}: 
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-8 text-center">
+                    <div className="text-4xl mb-4">🔍</div>
+                    <p className="text-gray-500">No messages found for &quot;{state.conversationSearchQuery}&quot;</p>
+                  </div>
+                )}
+              </div>
+            ) : state.activeTab === 'conversations' ? (
               // Conversations Tab
               filteredConversations.length > 0 ? (
                 filteredConversations.map(conversation => (

@@ -1,4 +1,4 @@
-import type { ApiResponse, Conversation, Message } from '@/types';
+import type { ApiResponse, Conversation, Message, DirectMessageInfo } from '@/types';
 
 const API_BASE_URL = 'http://localhost:8000';
 
@@ -151,7 +151,7 @@ export const messagesApi = {
   },
 
   searchMessages: async (query: string, withUserId?: number): Promise<ApiResponse<{
-    messages: Message[];
+    messages: DirectMessageInfo[];
   }>> => {
     const token = localStorage.getItem('accessToken');
     const response = await fetch(`${API_BASE_URL}/api/direct_messages/search`, {

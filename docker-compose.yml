@@ -42,7 +42,7 @@ services:
 
   # MinIO Object Storage
   minio:
-    image: minio/minio:latest
+    image: minio/minio:RELEASE.2021-09-09T21-37-07Z
     container_name: miraiworks_minio
     restart: unless-stopped
     ports:
@@ -93,7 +93,7 @@ services:
       - S3_ENDPOINT=http://minio:9000
       - S3_ACCESS_KEY=minioadmin
       - S3_SECRET_KEY=minioadmin123
-      - S3_BUCKET=miraiworks
+      - S3_BUCKET=miraiworks-files
       - JWT_SECRET=your-super-secret-jwt-key-change-in-production
       - FORCE_2FA_FOR_ADMINS=false
       - SMTP_HOST=mailcatcher
