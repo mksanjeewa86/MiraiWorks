@@ -67,6 +67,24 @@ class ChangePasswordRequest(BaseModel):
         return v
 
 
+class ActivateAccountRequest(BaseModel):
+    userId: int
+    email: EmailStr
+    temporaryPassword: str
+    newPassword: str
+
+    @validator("newPassword")
+    def validate_password(cls, v):
+        if len(v) < 8:
+            raise ValueError("Password must be at least 8 characters long")
+        return v
+
+
+class ActivateAccountResponse(BaseModel):
+    message: str
+    success: bool = True
+
+
 class RoleInfo(BaseModel):
     id: int
     name: str

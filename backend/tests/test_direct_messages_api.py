@@ -181,8 +181,8 @@ class TestDirectMessagesAPI:
         }
         
         with patch('app.dependencies.get_current_active_user') as mock_auth, \
-             patch('app.routers.direct_messages.connection_manager') as mock_manager, \
-             patch('app.routers.direct_messages.notification_service') as mock_notifications:
+             patch('app.endpoints.direct_messages.connection_manager') as mock_manager, \
+             patch('app.endpoints.direct_messages.notification_service') as mock_notifications:
             
             mock_auth.return_value = test_user
             mock_manager.broadcast_to_conversation = AsyncMock()
@@ -230,8 +230,8 @@ class TestDirectMessagesAPI:
         }
         
         with patch('app.dependencies.get_current_active_user') as mock_auth, \
-             patch('app.routers.direct_messages.connection_manager') as mock_manager, \
-             patch('app.routers.direct_messages.notification_service') as mock_notifications:
+             patch('app.endpoints.direct_messages.connection_manager') as mock_manager, \
+             patch('app.endpoints.direct_messages.notification_service') as mock_notifications:
             
             mock_auth.return_value = test_user
             mock_manager.broadcast_to_conversation = AsyncMock()
@@ -607,8 +607,8 @@ class TestDirectMessagesAPI:
         headers = test_utils.get_auth_headers(test_user.id)
         
         with patch('app.dependencies.get_current_active_user') as mock_auth, \
-             patch('app.routers.direct_messages.connection_manager') as mock_manager, \
-             patch('app.routers.direct_messages.notification_service') as mock_notifications:
+             patch('app.endpoints.direct_messages.connection_manager') as mock_manager, \
+             patch('app.endpoints.direct_messages.notification_service') as mock_notifications:
             
             mock_auth.return_value = test_user
             mock_manager.broadcast_to_conversation = AsyncMock()

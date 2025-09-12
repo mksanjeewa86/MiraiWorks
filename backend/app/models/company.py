@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, Enum, Integer, String, Text
+from sqlalchemy import Boolean, Column, DateTime, Enum, Integer, String, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -11,14 +11,17 @@ class Company(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False, index=True)
-    domain = Column(String(255), nullable=True, unique=True, index=True)
     type = Column(Enum(CompanyType), nullable=False, index=True)
-    email = Column(String(255), nullable=True, index=True)
-    phone = Column(String(50), nullable=True)
+    email = Column(String(255), nullable=False, index=True)
+    phone = Column(String(50), nullable=False)
     website = Column(String(255), nullable=True)
-    address = Column(Text, nullable=True)
+    postal_code = Column(String(10), nullable=True)
+    prefecture = Column(String(50), nullable=True)
+    city = Column(String(100), nullable=True)
     description = Column(Text, nullable=True)
     is_active = Column(String(1), nullable=False, default="1", index=True)
+    is_demo = Column(Boolean, nullable=False, default=False, index=True)
+    demo_end_date = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

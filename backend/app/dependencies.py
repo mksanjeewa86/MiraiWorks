@@ -12,6 +12,7 @@ from app.database import get_db
 from app.models.role import UserRole as UserRoleModel
 from app.models.user import User
 from app.services.auth_service import auth_service
+from app.utils.constants import UserRole
 
 security = HTTPBearer()
 
@@ -148,3 +149,19 @@ async def get_client_ip(request) -> str:
         return real_ip
 
     return request.client.host if request.client else "unknown"
+
+
+async def require_super_admin(
+    current_user: User = Depends(get_current_user)
+) -> User:
+    """Require user to be a super admin."""
+    # Check if user has super_admin role
+    user_roles = [user_role.role.name for user_role in current_user.user_roles]
+    
+    if UserRole.SUPER_ADMIN not in user_roles:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Super admin access required"
+        )
+    
+    return current_user

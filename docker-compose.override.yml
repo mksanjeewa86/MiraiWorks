@@ -1,8 +1,0 @@
-services:
-  backend:
-    # Override the CMD to enable hot reloading for development
-    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "/app"]
-    environment:
-      # Add development-specific environment variables
-      - WATCHFILES_FORCE_POLLING=true
-      - LOG_LEVEL=DEBUG

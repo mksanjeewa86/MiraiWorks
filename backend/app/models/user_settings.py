@@ -30,7 +30,6 @@ class UserSettings(Base):
     message_notifications = Column(Boolean, nullable=False, default=True)
     
     # UI preferences
-    theme = Column(String(20), nullable=False, default="system")  # light, dark, system
     language = Column(String(10), nullable=False, default="en")
     timezone = Column(String(50), nullable=False, default="America/New_York")
     date_format = Column(String(20), nullable=False, default="MM/DD/YYYY")

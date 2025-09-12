@@ -186,31 +186,6 @@ class TypingIndicator(BaseModel):
     is_typing: bool
 
 
-# WebSocket message types
-class WSMessage(BaseModel):
-    type: str  # "message", "typing", "read", "user_joined", "user_left", "error"
-    data: dict[str, Any]
-    timestamp: datetime = datetime.utcnow()
-
-
-class WSMessageNew(WSMessage):
-    type: str = "message"
-    data: MessageInfo
-
-
-class WSTyping(WSMessage):
-    type: str = "typing"
-    data: dict[str, Any]  # {user_id, user_name, is_typing}
-
-
-class WSMessageRead(WSMessage):
-    type: str = "read"
-    data: dict[str, Any]  # {user_id, message_id, read_at}
-
-
-class WSError(WSMessage):
-    type: str = "error"
-    data: dict[str, Any]  # {error_code, message}
 
 
 class AttachmentScanComplete(BaseModel):

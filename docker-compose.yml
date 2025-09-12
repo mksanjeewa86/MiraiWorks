@@ -127,31 +127,31 @@ services:
     networks:
       - miraiworks-network
 
-  # Frontend (Next.js)
-  frontend:
-    build:
-      context: ./frontend-nextjs
-      dockerfile: Dockerfile
-    container_name: miraiworks_frontend
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=http://localhost:8000/api
-      - NEXT_TELEMETRY_DISABLED=1
-      - HOSTNAME=0.0.0.0
-      - PORT=3000
-    depends_on:
-      backend:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:3000"]
-      timeout: 10s
-      retries: 5
-      interval: 30s
-    networks:
-      - miraiworks-network
+  # Frontend (Next.js) - Commented out for local development
+  # frontend:
+  #   build:
+  #     context: ./frontend-nextjs
+  #     dockerfile: Dockerfile
+  #   container_name: miraiworks_frontend
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - NODE_ENV=production
+  #     - NEXT_PUBLIC_API_URL=http://localhost:8000/api
+  #     - NEXT_TELEMETRY_DISABLED=1
+  #     - HOSTNAME=0.0.0.0
+  #     - PORT=3000
+  #   depends_on:
+  #     backend:
+  #       condition: service_healthy
+  #   healthcheck:
+  #     test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:3000"]
+  #     timeout: 10s
+  #     retries: 5
+  #     interval: 30s
+  #   networks:
+  #     - miraiworks-network
 
 volumes:
   mysql_data:

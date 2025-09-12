@@ -11,8 +11,8 @@ from app.models.notification import Notification
 from app.models.user import User
 from app.models.user_settings import UserSettings
 # Import moved to avoid circular import
-# from app.routers.messaging_ws import connection_manager, is_user_online
-from app.schemas.message import WSMessage
+# from app.endpoints.messaging_ws import connection_manager, is_user_online
+# WebSocket functionality removed - using HTTP polling instead
 from app.services.email_service import email_service
 
 logger = logging.getLogger(__name__)
@@ -44,29 +44,9 @@ class NotificationService:
         await db.commit()
         await db.refresh(notification)
         
-        # Send real-time notification to user if they're online
-        try:
-            # Import here to avoid circular import
-            from app.routers.messaging_ws import connection_manager, is_user_online
-            
-            if is_user_online(user_id):
-                await connection_manager.send_to_user(
-                    user_id,
-                    WSMessage(
-                        type="notification",
-                        data={
-                            "id": notification.id,
-                            "type": notification_type,
-                            "title": title,
-                            "message": message,
-                            "payload": payload,
-                            "created_at": notification.created_at.isoformat()
-                        }
-                    )
-                )
-        except ImportError:
-            # WebSocket functionality not available (e.g., in tests)
-            logger.debug("WebSocket functionality not available for real-time notifications")
+        # Note: Real-time notifications now handled via HTTP polling
+        # WebSocket functionality was removed from the messaging system
+        logger.debug(f"Created notification {notification.id} for user {user_id}")
         
         return notification
 
@@ -93,14 +73,8 @@ class NotificationService:
             logger.error(f"Could not find sender {sender_id} or recipient {recipient_id}")
             return
 
-        # Create in-app notification if recipient is offline or not in conversation
-        try:
-            # Import here to avoid circular import
-            from app.routers.messaging_ws import is_user_online
-            recipient_online = is_user_online(recipient_id)
-        except ImportError:
-            # Assume offline if WebSocket functionality not available
-            recipient_online = False
+        # WebSocket functionality removed - assume user may need email notification
+        recipient_online = False  # Always assume offline for email notifications
         
         # Always create in-app notification for message history
         await self.create_notification(

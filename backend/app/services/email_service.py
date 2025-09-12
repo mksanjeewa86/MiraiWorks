@@ -136,6 +136,91 @@ class EmailService:
         logger.info(f"[STUB] Would send activation email to {email} with temp password")
         return True
 
+    async def send_company_activation_email(
+        self, email: str, company_name: str, temporary_password: str, user_id: int
+    ) -> bool:
+        """Send company admin activation email with login details."""
+        subject = f"Welcome to MiraiWorks - Activate your {company_name} admin account"
+        
+        activation_url = f"{settings.app_base_url}/activate/{user_id}"
+        
+        html_body = f"""
+        <html>
+        <head></head>
+        <body>
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <div style="background: #007bff; padding: 20px; text-align: center;">
+                    <h2 style="color: white; margin: 0;">Welcome to MiraiWorks</h2>
+                </div>
+                <div style="padding: 20px;">
+                    <h3>Your {company_name} admin account is ready!</h3>
+                    <p>We've created your company admin account for MiraiWorks. Please follow these steps to get started:</p>
+                    
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0;">
+                        <h4 style="margin-top: 0; color: #333;">Login Credentials:</h4>
+                        <p><strong>Email:</strong> {email}</p>
+                        <p><strong>Temporary Password:</strong> <code style="background: #e9ecef; padding: 2px 6px; border-radius: 3px;">{temporary_password}</code></p>
+                    </div>
+                    
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="{activation_url}" style="background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; margin-bottom: 10px;">
+                            Activate Account & Login
+                        </a>
+                    </div>
+                    
+                    <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                        <p style="margin: 0; color: #856404;">
+                            <strong>Important:</strong> You'll be required to change your password on first login for security reasons.
+                        </p>
+                    </div>
+                    
+                    <h4>What's next?</h4>
+                    <ul>
+                        <li>Click the activation link above</li>
+                        <li>Login with the provided credentials</li>
+                        <li>Change your password for security</li>
+                        <li>Start setting up your company profile</li>
+                    </ul>
+                    
+                    <p>If you need any help, please contact our support team.</p>
+                </div>
+                <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+                <p style="color: #666; font-size: 12px; text-align: center;">
+                    This is an automated message from MiraiWorks. Please do not reply to this email.
+                </p>
+            </div>
+        </body>
+        </html>
+        """
+        
+        text_body = f"""
+        Welcome to MiraiWorks - Activate your {company_name} admin account
+        
+        Your {company_name} admin account is ready!
+        
+        We've created your company admin account for MiraiWorks. Please follow these steps to get started:
+        
+        Login Credentials:
+        Email: {email}
+        Temporary Password: {temporary_password}
+        
+        Activation Link: {activation_url}
+        
+        IMPORTANT: You'll be required to change your password on first login for security reasons.
+        
+        What's next?
+        1. Click the activation link above
+        2. Login with the provided credentials
+        3. Change your password for security
+        4. Start setting up your company profile
+        
+        If you need any help, please contact our support team.
+        
+        This is an automated message from MiraiWorks.
+        """
+        
+        return await self.send_email([email], subject, html_body, text_body)
+
     async def send_message_notification(
         self, 
         recipient_email: str, 

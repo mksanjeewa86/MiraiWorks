@@ -11,7 +11,7 @@ from app.models.user import User
 from app.models.direct_message import DirectMessage
 from app.models.user_settings import UserSettings
 from app.services.notification_service import notification_service
-from app.routers.messaging_ws import connection_manager
+from app.endpoints.messaging_ws import connection_manager
 
 
 class TestNotificationService:
@@ -50,7 +50,7 @@ class TestNotificationService:
         assert db_notification.title == "New Message"
 
     @pytest.mark.asyncio
-    @patch('app.routers.messaging_ws.is_user_online')
+    @patch('app.endpoints.messaging_ws.is_user_online')
     @patch.object(connection_manager, 'send_to_user')
     async def test_create_notification_sends_realtime_when_online(
         self, 
@@ -84,7 +84,7 @@ class TestNotificationService:
         assert ws_message.data["title"] == "New Message"
 
     @pytest.mark.asyncio
-    @patch('app.routers.messaging_ws.is_user_online')
+    @patch('app.endpoints.messaging_ws.is_user_online')
     @patch.object(connection_manager, 'send_to_user')
     async def test_create_notification_no_realtime_when_offline(
         self, 
@@ -109,7 +109,7 @@ class TestNotificationService:
         mock_send_to_user.assert_not_called()
 
     @pytest.mark.asyncio
-    @patch('app.routers.messaging_ws.is_user_online')
+    @patch('app.endpoints.messaging_ws.is_user_online')
     @patch('app.services.email_service.email_service.send_message_notification')
     async def test_handle_new_message_notifications_email_enabled(
         self, 
@@ -148,7 +148,7 @@ class TestNotificationService:
         assert call_args[3] == "Test email notification message"
 
     @pytest.mark.asyncio
-    @patch('app.routers.messaging_ws.is_user_online')
+    @patch('app.endpoints.messaging_ws.is_user_online')
     @patch('app.services.email_service.email_service.send_message_notification')
     async def test_handle_new_message_notifications_email_disabled(
         self, 
@@ -181,7 +181,7 @@ class TestNotificationService:
         mock_send_email.assert_not_called()
 
     @pytest.mark.asyncio
-    @patch('app.routers.messaging_ws.is_user_online')
+    @patch('app.endpoints.messaging_ws.is_user_online')
     @patch('app.services.email_service.email_service.send_message_notification')
     async def test_email_debouncing(
         self, 

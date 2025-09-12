@@ -20,7 +20,7 @@ class User(Base):
     first_name = Column(String(100), nullable=False)
     last_name = Column(String(100), nullable=False)
     phone = Column(String(50), nullable=True)
-    is_active = Column(Boolean, nullable=False, default=True, index=True)
+    is_active = Column(Boolean, nullable=False, default=False, index=True)
     is_admin = Column(Boolean, nullable=False, default=False, index=True)
     require_2fa = Column(Boolean, nullable=False, default=False, index=True)
     last_login = Column(DateTime(timezone=True), nullable=True)
