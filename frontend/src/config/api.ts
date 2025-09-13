@@ -29,7 +29,7 @@ export const API_ENDPOINTS = {
   
   // User endpoints
   USER: {
-    PROFILE: '/api/user/profile',
+    PROFILE: '/api/auth/me',
     SETTINGS: '/api/user/settings',
   },
   

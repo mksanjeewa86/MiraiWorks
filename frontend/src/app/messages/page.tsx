@@ -445,6 +445,7 @@ function MessagesPageContent() {
                 <Input
                   type="text"
                   placeholder="Search messages or senders..."
+                  value=""
                   className="pl-10 bg-gray-50 dark:bg-gray-700 border-0 rounded-xl"
                   disabled
                 />
@@ -529,7 +530,7 @@ function MessagesPageContent() {
               <Input
                 type="text"
                 placeholder="Search messages, senders, or content..."
-                value={state.conversationSearchQuery || ''}
+                value={state.conversationSearchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
                 className="pl-10 bg-gray-50 dark:bg-gray-700 border-0 rounded-xl"
               />
@@ -825,7 +826,7 @@ function MessagesPageContent() {
                       ref={messageInputRef}
                       type="text"
                       placeholder="Type a message..."
-                      value={newMessage || ''}
+                      value={newMessage}
                       onChange={handleInputChange}
                       onKeyPress={handleKeyPress}
                       className="pr-20 rounded-2xl border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
