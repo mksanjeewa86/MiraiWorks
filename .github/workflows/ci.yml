@@ -69,21 +69,21 @@ jobs:
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
-        cache-dependency-path: frontend-nextjs/package-lock.json
+        cache-dependency-path: frontend/package-lock.json
 
     - name: Install dependencies
-      working-directory: ./frontend-nextjs
+      working-directory: ./frontend
       run: npm ci
 
     - name: Type checking
-      working-directory: ./frontend-nextjs
+      working-directory: ./frontend
       run: npm run typecheck || echo "TypeScript checking failed, but continuing..."
 
     - name: Linting (ESLint)
-      working-directory: ./frontend-nextjs
+      working-directory: ./frontend
       run: npm run lint || echo "ESLint failed, but continuing..."
 
     - name: Build application
-      working-directory: ./frontend-nextjs
+      working-directory: ./frontend
       run: npm run build
 
