@@ -4,7 +4,7 @@ import { API_CONFIG } from '@/config/api';
 // Global auth handler reference
 let authHandlerRef: {
   logout?: () => void;
-  refreshAuth?: () => Promise<any>;
+  refreshAuth?: () => Promise<unknown>;
 } = {};
 
 // Set auth handler (called from AuthContext)
@@ -53,7 +53,7 @@ export const makeAuthenticatedRequest = async <T>(
           
           // Retry the request with new token
           response = await makeRequest(newToken);
-        } catch (refreshError) {
+        } catch {
           // Refresh failed, force logout
           if (authHandlerRef.logout) {
             authHandlerRef.logout();

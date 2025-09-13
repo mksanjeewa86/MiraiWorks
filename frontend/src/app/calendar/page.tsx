@@ -8,7 +8,8 @@ import Button from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, Clock, MapPin, Users } from 'lucide-react';
 import { calendarApi } from "@/api/calendar";
-import type { CalendarEvent } from '@/types';
+// Calendar types will be used when calendar functionality is implemented
+// import type { CalendarEvent } from '@/types';
 import type { CalendarState } from '@/types/pages';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
