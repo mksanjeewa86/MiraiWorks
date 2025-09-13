@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { userSettingsApi } from "@/api/userSettings";
 import { UserSettings } from "@/types";
 import AppLayout from '@/components/layout/AppLayout';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -23,7 +24,7 @@ import {
 } from 'lucide-react';
 import type { SettingsState } from '@/types/pages';
 
-export default function SettingsPage() {
+function SettingsPageContent() {
   const { user } = useAuth();
   
   const [state, setState] = useState<SettingsState>({
@@ -669,5 +670,13 @@ export default function SettingsPage() {
         </div>
       </div>
     </AppLayout>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <ProtectedRoute>
+      <SettingsPageContent />
+    </ProtectedRoute>
   );
 }

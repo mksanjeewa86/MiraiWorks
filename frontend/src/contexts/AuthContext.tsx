@@ -4,6 +4,7 @@ import { createContext, useContext, useReducer, useEffect, type ReactNode } from
 import type { User, LoginCredentials, RegisterData } from '@/types';
 import type { AuthState, AuthAction, AuthContextType } from '@/types/contexts';
 import { authApi } from '@/api/auth';
+import { setAuthHandler } from '@/api/apiClient';
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -95,6 +96,52 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
+
+  // Force logout without API call (used by API interceptor)
+  const forceLogout = () => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    dispatch({ type: 'LOGOUT' });
+    
+    // Redirect to login page
+    if (typeof window !== 'undefined') {
+      window.location.href = '/auth/login';
+    }
+  };
+
+  const refreshAuth = async () => {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) {
+      throw new Error('No refresh token available');
+    }
+
+    try {
+      const response = await authApi.refreshToken(refreshToken);
+      
+      // Store new tokens
+      localStorage.setItem('accessToken', response.data!.access_token);
+      if (response.data!.refresh_token) {
+        localStorage.setItem('refreshToken', response.data!.refresh_token);
+      }
+      
+      dispatch({ type: 'AUTH_SUCCESS', payload: response.data! });
+      return response.data!;
+    } catch (error) {
+      // Refresh failed, clear auth
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      dispatch({ type: 'LOGOUT' });
+      throw error;
+    }
+  };
+
+  // Register auth handlers for API client
+  useEffect(() => {
+    setAuthHandler({
+      logout: forceLogout,
+      refreshAuth: refreshAuth
+    });
+  }, []);
 
   // Initialize auth state on mount
   useEffect(() => {
@@ -201,32 +248,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error: unknown) {
       const errorMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || '2FA verification failed';
       dispatch({ type: 'AUTH_ERROR', payload: errorMessage });
-      throw error;
-    }
-  };
-
-  const refreshAuth = async () => {
-    const refreshToken = localStorage.getItem('refreshToken');
-    if (!refreshToken) {
-      throw new Error('No refresh token available');
-    }
-
-    try {
-      const response = await authApi.refreshToken(refreshToken);
-      
-      // Store new tokens
-      localStorage.setItem('accessToken', response.data!.access_token);
-      if (response.data!.refresh_token) {
-        localStorage.setItem('refreshToken', response.data!.refresh_token);
-      }
-      
-      dispatch({ type: 'AUTH_SUCCESS', payload: response.data! });
-      return response.data!;
-    } catch (error) {
-      // Refresh failed, clear auth
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      dispatch({ type: 'LOGOUT' });
       throw error;
     }
   };

@@ -1,5 +1,8 @@
-// Base API functionality
-export * from './base';
+// Core API client
+export * from './apiClient';
+
+// API Configuration
+export * from '../config/api';
 
 // Authentication APIs
 export * from './auth';

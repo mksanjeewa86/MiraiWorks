@@ -347,28 +347,7 @@ async def send_message(
         updated_at=message.updated_at,
     )
 
-    # Broadcast message via WebSocket
-    from app.endpoints.messaging_ws import broadcast_new_message
-
-    try:
-        await broadcast_new_message(
-            conversation_id,
-            {
-                "id": message.id,
-                "type": message.type,
-                "content": message.content,
-                "sender_id": message.sender_id,
-                "sender_name": message.sender.full_name,
-                "sender_email": message.sender.email,
-                "reply_to_id": message.reply_to_id,
-                "reply_to": reply_to.model_dump() if reply_to else None,
-                "attachments": [],
-                "created_at": message.created_at.isoformat(),
-                "updated_at": message.updated_at.isoformat(),
-            },
-        )
-    except Exception as e:
-        logger.warning(f"Failed to broadcast message via WebSocket: {e}")
+    # Real-time messaging is now handled by polling on the frontend
 
     return message_info
 

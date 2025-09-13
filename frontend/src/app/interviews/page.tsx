@@ -9,9 +9,10 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { Calendar, Clock, MapPin, Video, Phone, Users, Plus, Filter } from 'lucide-react';
 import { interviewsApi } from "@/api/interviews";
 import type { Interview } from '@/types';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
 
-export default function InterviewsPage() {
+function InterviewsPageContent() {
   const [interviews, setInterviews] = useState<Interview[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -258,5 +259,13 @@ export default function InterviewsPage() {
         )}
       </div>
     </AppLayout>
+  );
+}
+
+export default function InterviewsPage() {
+  return (
+    <ProtectedRoute>
+      <InterviewsPageContent />
+    </ProtectedRoute>
   );
 }

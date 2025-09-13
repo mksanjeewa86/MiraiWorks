@@ -20,7 +20,7 @@ export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({ ch
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const { user, accessToken } = useAuth();
-  const wsRef = useRef<WebSocket | null>(null);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Show toast notification
   const showNotification = (title: string, message: string, type = 'info') => {
@@ -103,67 +103,67 @@ export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({ ch
     }
   };
 
-  // WebSocket connection for real-time notifications
+  // Polling for real-time notifications
   useEffect(() => {
     if (!user || !accessToken) {
-      if (wsRef.current) {
-        wsRef.current.close();
-        wsRef.current = null;
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
       }
       return;
     }
 
-    const connectWebSocket = () => {
-      const wsUrl = `${process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000'}/ws/status?token=${accessToken}`;
-      
+    let lastNotificationId = 0;
+
+    const pollForNotifications = async () => {
       try {
-        wsRef.current = new WebSocket(wsUrl);
-
-        wsRef.current.onopen = () => {
-          console.log('Notifications WebSocket connected');
-        };
-
-        wsRef.current.onmessage = (event) => {
-          try {
-            const message = JSON.parse(event.data);
+        // Get latest notifications
+        const response = await notificationsApi.getNotifications(10);
+        const latestNotifications = response.notifications;
+        
+        if (latestNotifications.length > 0) {
+          const newestNotificationId = latestNotifications[0].id;
+          
+          // Check if we have new notifications
+          if (lastNotificationId === 0) {
+            // First poll - just set the baseline
+            lastNotificationId = newestNotificationId;
+          } else if (newestNotificationId > lastNotificationId) {
+            // We have new notifications
+            const newNotifications = latestNotifications.filter(
+              notif => notif.id > lastNotificationId
+            );
             
-            if (message.type === 'notification') {
-              const notification = message.data;
-              
-              // Add to notifications list
-              setNotifications(prev => [notification, ...prev]);
-              
-              // Increment unread count
-              setUnreadCount(prev => prev + 1);
-              
-              // Show browser notification
-              showNotification(notification.title, notification.message);
-            }
-          } catch (error) {
-            console.error('Failed to parse WebSocket message:', error);
+            // Add new notifications to the state
+            setNotifications(prev => [...newNotifications, ...prev]);
+            
+            // Show browser notifications for new ones
+            newNotifications.forEach(notif => {
+              showNotification(notif.title, notif.message);
+            });
+            
+            // Update the baseline
+            lastNotificationId = newestNotificationId;
+            
+            // Refresh unread count
+            await refreshUnreadCount();
           }
-        };
-
-        wsRef.current.onclose = () => {
-          console.log('Notifications WebSocket disconnected');
-          // Reconnect after 3 seconds
-          setTimeout(connectWebSocket, 3000);
-        };
-
-        wsRef.current.onerror = (error) => {
-          console.error('Notifications WebSocket error:', error);
-        };
+        }
       } catch (error) {
-        console.error('Failed to connect WebSocket:', error);
+        console.error('Failed to poll for notifications:', error);
       }
     };
 
-    connectWebSocket();
+    // Initial poll
+    pollForNotifications();
+
+    // Set up polling interval (every 30 seconds)
+    pollingIntervalRef.current = setInterval(pollForNotifications, 30000);
 
     return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-        wsRef.current = null;
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
       }
     };
   }, [user, accessToken]);

@@ -10,8 +10,9 @@ import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, Clock, MapPi
 import { calendarApi } from "@/api/calendar";
 import type { CalendarEvent } from '@/types';
 import type { CalendarState } from '@/types/pages';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
-export default function CalendarPage() {
+function CalendarPageContent() {
   
   const [state, setState] = useState<CalendarState>({
     currentDate: new Date(),
@@ -356,5 +357,13 @@ export default function CalendarPage() {
         </div>
       </div>
     </AppLayout>
+  );
+}
+
+export default function CalendarPage() {
+  return (
+    <ProtectedRoute>
+      <CalendarPageContent />
+    </ProtectedRoute>
   );
 }

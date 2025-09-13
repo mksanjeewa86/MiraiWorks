@@ -1,6 +1,5 @@
 import type { ApiResponse, Job, JobApplication } from '@/types';
-
-const API_BASE_URL = 'http://localhost:8000';
+import { API_CONFIG } from '@/config/api';
 
 // Jobs API
 export const jobsApi = {
@@ -13,7 +12,7 @@ export const jobsApi = {
     limit?: number;
   }): Promise<ApiResponse<{ jobs: Job[]; total: number; page: number; totalPages: number }>> => {
     const token = localStorage.getItem('accessToken');
-    const url = new URL(`${API_BASE_URL}/api/jobs`);
+    const url = new URL(`${API_CONFIG.BASE_URL}/api/jobs`);
     
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
@@ -40,7 +39,7 @@ export const jobsApi = {
 
   getById: async (id: number): Promise<ApiResponse<Job>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/jobs/${id}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/jobs/${id}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -63,7 +62,7 @@ export const jobsApi = {
     page?: number;
     limit?: number;
   }): Promise<ApiResponse<{ jobs: Job[]; total: number; page: number; totalPages: number }>> => {
-    const url = new URL(`${API_BASE_URL}/api/public/jobs`);
+    const url = new URL(`${API_CONFIG.BASE_URL}/api/public/jobs`);
     
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
@@ -89,7 +88,7 @@ export const jobsApi = {
 
   create: async (jobData: Partial<Job>): Promise<ApiResponse<Job>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/jobs`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/jobs`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -109,7 +108,7 @@ export const jobsApi = {
 
   update: async (id: number, jobData: Partial<Job>): Promise<ApiResponse<Job>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/jobs/${id}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/jobs/${id}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -129,7 +128,7 @@ export const jobsApi = {
 
   delete: async (id: number): Promise<ApiResponse<void>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/jobs/${id}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/jobs/${id}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -150,7 +149,7 @@ export const jobsApi = {
     coverLetter?: string;
   }): Promise<ApiResponse<JobApplication>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/jobs/${jobId}/apply`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/jobs/${jobId}/apply`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -171,8 +170,8 @@ export const jobsApi = {
   getApplications: async (jobId?: number): Promise<ApiResponse<JobApplication[]>> => {
     const token = localStorage.getItem('accessToken');
     const url = jobId 
-      ? `${API_BASE_URL}/api/jobs/${jobId}/applications`
-      : `${API_BASE_URL}/api/applications`;
+      ? `${API_CONFIG.BASE_URL}/api/jobs/${jobId}/applications`
+      : `${API_CONFIG.BASE_URL}/api/applications`;
       
     const response = await fetch(url, {
       headers: {

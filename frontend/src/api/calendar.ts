@@ -1,6 +1,5 @@
 import type { ApiResponse, CalendarEvent } from '@/types';
-
-const API_BASE_URL = 'http://localhost:8000';
+import { API_CONFIG } from '@/config/api';
 
 // Calendar API
 export const calendarApi = {
@@ -10,7 +9,7 @@ export const calendarApi = {
     type?: string;
   }): Promise<ApiResponse<CalendarEvent[]>> => {
     const token = localStorage.getItem('accessToken');
-    const url = new URL(`${API_BASE_URL}/api/calendar/events`);
+    const url = new URL(`${API_CONFIG.BASE_URL}/api/calendar/events`);
     
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
@@ -37,7 +36,7 @@ export const calendarApi = {
 
   getEvent: async (id: number): Promise<ApiResponse<CalendarEvent>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/calendar/events/${id}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/calendar/events/${id}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -54,7 +53,7 @@ export const calendarApi = {
 
   createEvent: async (eventData: Partial<CalendarEvent>): Promise<ApiResponse<CalendarEvent>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/calendar/events`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/calendar/events`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -74,7 +73,7 @@ export const calendarApi = {
 
   updateEvent: async (id: number, eventData: Partial<CalendarEvent>): Promise<ApiResponse<CalendarEvent>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/calendar/events/${id}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/calendar/events/${id}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -94,7 +93,7 @@ export const calendarApi = {
 
   deleteEvent: async (id: number): Promise<ApiResponse<void>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/calendar/events/${id}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/calendar/events/${id}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -118,7 +117,7 @@ export const calendarApi = {
     }>;
   }>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/calendar/availability/${userId}?date=${date}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/calendar/availability/${userId}?date=${date}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',

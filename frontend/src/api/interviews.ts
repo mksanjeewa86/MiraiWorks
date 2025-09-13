@@ -1,12 +1,11 @@
 import type { ApiResponse, Interview } from '@/types';
-
-const API_BASE_URL = 'http://localhost:8000';
+import { API_CONFIG } from '@/config/api';
 
 // Interviews API
 export const interviewsApi = {
   getAll: async (): Promise<ApiResponse<Interview[]>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/interviews`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/interviews`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -23,7 +22,7 @@ export const interviewsApi = {
 
   getById: async (id: number): Promise<ApiResponse<Interview>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/interviews/${id}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/interviews/${id}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -40,7 +39,7 @@ export const interviewsApi = {
 
   create: async (interviewData: Partial<Interview>): Promise<ApiResponse<Interview>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/interviews`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/interviews`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -60,7 +59,7 @@ export const interviewsApi = {
 
   update: async (id: number, interviewData: Partial<Interview>): Promise<ApiResponse<Interview>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/interviews/${id}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/interviews/${id}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -80,7 +79,7 @@ export const interviewsApi = {
 
   delete: async (id: number): Promise<ApiResponse<void>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/interviews/${id}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/interviews/${id}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -98,7 +97,7 @@ export const interviewsApi = {
 
   updateStatus: async (id: number, status: string): Promise<ApiResponse<Interview>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/interviews/${id}/status`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/interviews/${id}/status`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -123,7 +122,7 @@ export const interviewsApi = {
     meetingLink?: string;
   }): Promise<ApiResponse<Interview>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/interviews/${id}/schedule`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/interviews/${id}/schedule`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,

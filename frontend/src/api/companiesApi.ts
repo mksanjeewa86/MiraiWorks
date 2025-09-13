@@ -5,8 +5,7 @@ import {
   CompanyListResponse,
   CompanyFilters
 } from '../types/company';
-
-const API_BASE_URL = 'http://localhost:8000';
+import { API_CONFIG } from '@/config/api';
 
 // Helper function to get auth token from localStorage
 const getAuthToken = (): string | null => {
@@ -23,7 +22,7 @@ const makeAuthenticatedRequest = async <T>(
 ): Promise<{ data: T }> => {
   const token = getAuthToken();
   
-  const response = await fetch(`${API_BASE_URL}${url}`, {
+  const response = await fetch(`${API_CONFIG.BASE_URL}${url}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',

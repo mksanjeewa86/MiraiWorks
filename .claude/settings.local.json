@@ -84,7 +84,13 @@
       "Bash(PYTHONPATH=. python -m uvicorn app.main:app --host 127.0.0.1 --port 8000)",
       "Bash(npm ci:*)",
       "Bash(npm start)",
-      "Bash(ruff format:*)"
+      "Bash(ruff format:*)",
+      "Bash(PYTHONPATH=. python create_admin_user.py)",
+      "Bash(PYTHONPATH=. python add_default_settings.py)",
+      "Bash(set FORCE_2FA_FOR_ADMINS=false)",
+      "Bash(set PYTHONPATH=.)",
+      "Bash(del \"C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\backend\\app\\endpoints\\meetings_ws.py\")",
+      "Bash(del \"C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\api\\base.ts\")"
     ],
     "deny": [],
     "ask": []

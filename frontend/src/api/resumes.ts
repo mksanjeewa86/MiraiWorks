@@ -1,12 +1,11 @@
 import type { ApiResponse, Resume, WorkExperience, Education, Skill } from '@/types';
-
-const API_BASE_URL = 'http://localhost:8000';
+import { API_CONFIG } from '@/config/api';
 
 // Resumes API
 export const resumesApi = {
   getAll: async (): Promise<ApiResponse<Resume[]>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/resumes`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/resumes`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -23,7 +22,7 @@ export const resumesApi = {
 
   getById: async (id: number): Promise<ApiResponse<Resume>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/resumes/${id}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/resumes/${id}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -39,7 +38,7 @@ export const resumesApi = {
   },
 
   getBySlug: async (slug: string): Promise<ApiResponse<Resume>> => {
-    const response = await fetch(`${API_BASE_URL}/api/public/resumes/${slug}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/public/resumes/${slug}`, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -55,7 +54,7 @@ export const resumesApi = {
 
   create: async (resumeData: Partial<Resume>): Promise<ApiResponse<Resume>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/resumes`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/resumes`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -75,7 +74,7 @@ export const resumesApi = {
 
   update: async (id: number, resumeData: Partial<Resume>): Promise<ApiResponse<Resume>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/resumes/${id}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/resumes/${id}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -95,7 +94,7 @@ export const resumesApi = {
 
   delete: async (id: number): Promise<ApiResponse<void>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/resumes/${id}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/resumes/${id}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -114,7 +113,7 @@ export const resumesApi = {
   // Work Experience endpoints
   addExperience: async (resumeId: number, experience: Partial<WorkExperience>): Promise<ApiResponse<WorkExperience>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/resumes/${resumeId}/experiences`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/resumes/${resumeId}/experiences`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -134,7 +133,7 @@ export const resumesApi = {
 
   updateExperience: async (experienceId: number, experience: Partial<WorkExperience>): Promise<ApiResponse<WorkExperience>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/experiences/${experienceId}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/experiences/${experienceId}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -154,7 +153,7 @@ export const resumesApi = {
 
   deleteExperience: async (experienceId: number): Promise<ApiResponse<void>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/experiences/${experienceId}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/experiences/${experienceId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -173,7 +172,7 @@ export const resumesApi = {
   // Education endpoints
   addEducation: async (resumeId: number, education: Partial<Education>): Promise<ApiResponse<Education>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/resumes/${resumeId}/education`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/resumes/${resumeId}/education`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -194,7 +193,7 @@ export const resumesApi = {
   // Skills endpoints
   addSkill: async (resumeId: number, skill: Partial<Skill>): Promise<ApiResponse<Skill>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/resumes/${resumeId}/skills`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/resumes/${resumeId}/skills`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,

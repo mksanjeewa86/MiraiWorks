@@ -9,9 +9,10 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud import company as company_crud
+from app.crud import user_settings as user_settings_crud
 from app.database import get_db
 from app.dependencies import require_super_admin
-from app.models import Company, Role, User, UserRole
+from app.models import Company, Role, User, UserRole, UserSettings
 from app.services.auth_service import auth_service
 from app.services.email_service import email_service
 from app.utils.constants import CompanyType
@@ -235,13 +236,14 @@ async def create_company(
 
     temp_password = generate_password()
 
-    # Create admin user for the company
+    # Create admin user for the company with default profile data
     hashed_password = auth_service.get_password_hash(temp_password)
     admin_user = User(
         email=company_data.email,
         hashed_password=hashed_password,
-        first_name="Admin",
-        last_name=company_data.name,
+        first_name="Company",
+        last_name="Administrator",
+        phone=company_data.phone,  # Use company phone as user's default phone
         is_active=False,  # Inactive until they activate their account
         is_admin=True,  # First user is admin
         require_2fa=True,  # All admin accounts require 2FA by default
@@ -265,6 +267,26 @@ async def create_company(
     # Assign admin role to user
     user_role = UserRole(user_id=admin_user.id, role_id=admin_role.id)
     db.add(user_role)
+
+    # Create default user settings
+    default_settings = UserSettings(
+        user_id=admin_user.id,
+        # Profile settings with defaults
+        job_title="Company Administrator",
+        bio=f"Administrator of {company_data.name}",
+        # Notification preferences (already have defaults in model)
+        email_notifications=True,
+        push_notifications=True,
+        sms_notifications=False,
+        interview_reminders=True,
+        application_updates=True,
+        message_notifications=True,
+        # UI preferences (already have defaults in model)
+        language="en",
+        timezone="America/New_York",
+        date_format="MM/DD/YYYY",
+    )
+    db.add(default_settings)
 
     # Commit all changes
     await db.commit()

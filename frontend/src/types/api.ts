@@ -25,10 +25,3 @@ export interface SelectOption {
   label: string;
   disabled?: boolean;
 }
-
-// General WebSocket message (different from messages module)
-export interface GenericWebSocketMessage {
-  type: string;
-  payload: unknown;
-  timestamp: string;
-}

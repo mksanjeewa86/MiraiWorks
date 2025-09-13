@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import WebsiteLayout from '@/components/website/WebsiteLayout';
+import AppLayout from '@/components/layout/AppLayout';
 import { jobsApi } from "@/api/jobs";
 import type { Job } from '@/types';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
-export default function JobsPage() {
+function JobsPageContent() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -80,7 +81,7 @@ export default function JobsPage() {
   };
 
   return (
-    <WebsiteLayout>
+    <AppLayout>
       {/* Hero Section */}
       <section className="py-16 bg-gradient-to-br from-blue-50 via-white to-purple-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -290,6 +291,14 @@ export default function JobsPage() {
           </div>
         </div>
       </section>
-    </WebsiteLayout>
+    </AppLayout>
+  );
+}
+
+export default function JobsPage() {
+  return (
+    <ProtectedRoute>
+      <JobsPageContent />
+    </ProtectedRoute>
   );
 }

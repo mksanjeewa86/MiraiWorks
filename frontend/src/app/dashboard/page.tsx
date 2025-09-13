@@ -7,31 +7,10 @@ import RecruiterDashboard from '@/components/dashboard/RecruiterDashboard';
 import EmployerDashboard from '@/components/dashboard/EmployerDashboard';
 import CompanyAdminDashboard from '@/components/dashboard/CompanyAdminDashboard';
 import SuperAdminDashboard from '@/components/dashboard/SuperAdminDashboard';
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
-export default function DashboardPage() {
-  const { user, isAuthenticated, isLoading } = useAuth();
-  const router = useRouter();
-  
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/auth/login');
-    }
-  }, [isAuthenticated, isLoading, router]);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="loading-skeleton w-16 h-16 rounded-full"></div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return null;
-  }
+function DashboardPageContent() {
+  const { user } = useAuth();
 
   const renderDashboard = () => {
     switch (user?.roles?.[0]?.role?.name) {
@@ -54,5 +33,13 @@ export default function DashboardPage() {
     <AppLayout>
       {renderDashboard()}
     </AppLayout>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <ProtectedRoute>
+      <DashboardPageContent />
+    </ProtectedRoute>
   );
 }

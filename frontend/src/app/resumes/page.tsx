@@ -9,8 +9,9 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { Plus, FileText, Eye, Download, Edit, Trash2, Star, Calendar, Share } from 'lucide-react';
 import { resumesApi } from "@/api/resumes";
 import type { Resume } from '@/types';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
-export default function ResumesPage() {
+function ResumesPageContent() {
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -239,5 +240,13 @@ export default function ResumesPage() {
         )}
       </div>
     </AppLayout>
+  );
+}
+
+export default function ResumesPage() {
+  return (
+    <ProtectedRoute>
+      <ResumesPageContent />
+    </ProtectedRoute>
   );
 }

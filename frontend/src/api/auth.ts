@@ -5,13 +5,12 @@ import type {
   RegisterData,
   User
 } from '@/types';
-
-const API_BASE_URL = 'http://localhost:8000';
+import { API_CONFIG } from '@/config/api';
 
 // Authentication API
 export const authApi = {
   login: async (credentials: LoginCredentials): Promise<ApiResponse<AuthResponse>> => {
-    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -29,7 +28,7 @@ export const authApi = {
   },
 
   register: async (registerData: RegisterData): Promise<ApiResponse<AuthResponse>> => {
-    const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -47,7 +46,7 @@ export const authApi = {
   },
 
   me: async (token: string): Promise<ApiResponse<User>> => {
-    const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/me`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -64,7 +63,7 @@ export const authApi = {
   },
 
   refreshToken: async (refreshToken: string): Promise<ApiResponse<AuthResponse>> => {
-    const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/refresh`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -82,7 +81,7 @@ export const authApi = {
   },
 
   verifyTwoFactor: async (data: { user_id: number; code: string }): Promise<ApiResponse<AuthResponse>> => {
-    const response = await fetch(`${API_BASE_URL}/api/auth/2fa/verify`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/2fa/verify`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -100,7 +99,7 @@ export const authApi = {
   },
 
   logout: async (token: string): Promise<void> => {
-    const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/logout`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -115,7 +114,7 @@ export const authApi = {
   },
 
   forgotPassword: async (email: string): Promise<void> => {
-    const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/forgot-password`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -130,7 +129,7 @@ export const authApi = {
   },
 
   resetPassword: async (token: string, password: string): Promise<void> => {
-    const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/reset-password`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

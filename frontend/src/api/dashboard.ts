@@ -3,14 +3,13 @@ import type {
   DashboardStats,
   ActivityItem,
 } from '@/types';
-
-const API_BASE_URL = 'http://localhost:8000';
+import { API_CONFIG } from '@/config/api';
 
 // Dashboard API
 export const dashboardApi = {
   getStats: async (token?: string): Promise<ApiResponse<DashboardStats>> => {
     const authToken = token || localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/dashboard/stats`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/dashboard/stats`, {
       headers: {
         'Authorization': `Bearer ${authToken}`,
         'Content-Type': 'application/json',
@@ -27,7 +26,7 @@ export const dashboardApi = {
   
   getRecentActivity: async (limit?: number, token?: string): Promise<ApiResponse<ActivityItem[]>> => {
     const authToken = token || localStorage.getItem('accessToken');
-    const url = new URL(`${API_BASE_URL}/api/dashboard/activity`);
+    const url = new URL(`${API_CONFIG.BASE_URL}/api/dashboard/activity`);
     if (limit) url.searchParams.set('limit', limit.toString());
     
     const response = await fetch(url.toString(), {

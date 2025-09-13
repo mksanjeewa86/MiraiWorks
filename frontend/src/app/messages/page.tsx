@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { API_CONFIG } from '@/config/api';
 import AppLayout from '@/components/layout/AppLayout';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -11,13 +12,14 @@ import { messagesApi } from "@/api/messages";
 import type { Conversation, LegacyMessage as Message } from '@/types';
 import type { MessagesPageState } from '@/types/pages';
 import dynamic from 'next/dynamic';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
 const EmojiPicker = dynamic(() => import('emoji-picker-react'), { 
   ssr: false,
   loading: () => <div>Loading...</div>
 });
 
-export default function MessagesPage() {
+function MessagesPageContent() {
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
@@ -789,7 +791,7 @@ export default function MessagesPage() {
                             </p>
                           )}
                           <a
-                            href={`http://localhost:8000${message.file_url}`}
+                            href={`${API_CONFIG.BASE_URL}${message.file_url}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className={`inline-block px-3 py-1 text-xs rounded-full border transition-colors ${
@@ -903,5 +905,13 @@ export default function MessagesPage() {
         </div>
       </div>
     </AppLayout>
+  );
+}
+
+export default function MessagesPage() {
+  return (
+    <ProtectedRoute>
+      <MessagesPageContent />
+    </ProtectedRoute>
   );
 }

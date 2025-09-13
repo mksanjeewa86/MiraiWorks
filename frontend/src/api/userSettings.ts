@@ -4,40 +4,7 @@ import {
   UserSettingsUpdate,
   UserProfileUpdate
 } from '../types/userSettings';
-
-const API_BASE_URL = 'http://localhost:8000';
-
-// Helper function to get auth token from localStorage
-const getAuthToken = (): string | null => {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('accessToken');
-  }
-  return null;
-};
-
-// Helper function to make authenticated requests
-const makeAuthenticatedRequest = async <T>(
-  url: string, 
-  options: RequestInit = {}
-): Promise<{ data: T }> => {
-  const token = getAuthToken();
-  
-  const response = await fetch(`${API_BASE_URL}${url}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-      ...options.headers,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`API request failed: ${response.status} ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  return { data };
-};
+import { makeAuthenticatedRequest } from '@/api/apiClient';
 
 export const userSettingsApi = {
   // Get current user's settings

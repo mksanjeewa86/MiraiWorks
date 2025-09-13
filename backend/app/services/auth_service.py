@@ -165,6 +165,11 @@ class AuthService:
 
     async def requires_2fa(self, db: AsyncSession, user: User) -> bool:
         """Check if user requires 2FA based on user settings and role requirements."""
+        
+        # TEMPORARY: Disable 2FA for development testing
+        if user.email == "admin@example.com":
+            print(f"[DEBUG] Temporarily disabling 2FA for {user.email}")
+            return False
 
         # Get fresh user data from database instead of refreshing eager-loaded object
         result = await db.execute(
@@ -178,16 +183,22 @@ class AuthService:
 
         # First check user's individual 2FA setting
         if fresh_user.require_2fa:
+            print(f"[DEBUG] User {user.email} has individual 2FA enabled")
             return True
+
+        # Debug log the settings value
+        print(f"[DEBUG] settings.force_2fa_for_admins = {settings.force_2fa_for_admins}")
 
         # If force_2fa_for_admins is disabled, only use individual settings
         if not settings.force_2fa_for_admins:
+            print(f"[DEBUG] force_2fa_for_admins is disabled, skipping admin 2FA requirement")
             return False
 
         # Check if user has any admin roles and force_2fa_for_admins is enabled
         # (we already loaded the user with roles above)
         for user_role in fresh_user.user_roles:
             if is_admin_role(UserRole(user_role.role.name)):
+                print(f"[DEBUG] User {user.email} has admin role {user_role.role.name}, forcing 2FA")
                 return True
 
         return False

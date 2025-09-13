@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '@/contexts/ToastContext';
-import { apiClient } from '@/api/base';
+import { makePublicRequest } from '@/api/apiClient';
 
 export default function ActivateAccountPage() {
   const router = useRouter();
@@ -45,7 +45,7 @@ export default function ActivateAccountPage() {
         return;
       }
 
-      await apiClient.request('/api/auth/activate', {
+      await makePublicRequest('/api/auth/activate', {
         method: 'POST',
         body: JSON.stringify({
           userId: parseInt(userId),

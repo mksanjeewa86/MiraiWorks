@@ -7,6 +7,7 @@ import { companiesApi } from '@/api/companiesApi';
 import { CompanyCreate, CompanyType } from '@/types/company';
 import { CompanyFormData } from '@/types/forms';
 import { useToast } from '@/contexts/ToastContext';
+import AppLayout from '@/components/layout/AppLayout';
 
 const emptyFormData: CompanyFormData = {
   name: '',
@@ -62,7 +63,8 @@ export default function AddCompanyPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <AppLayout>
+      <div className="max-w-4xl mx-auto">
       {/* Header */}
       <div className="flex items-center mb-6">
         <button
@@ -242,6 +244,7 @@ export default function AddCompanyPage() {
           </div>
         </form>
       </div>
-    </div>
+      </div>
+    </AppLayout>
   );
 }

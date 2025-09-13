@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import Brand from '@/components/common/Brand';
 import ResetPasswordForm from '@/components/auth/ResetPasswordForm';
+import { API_CONFIG } from '@/config/api';
 
 function ResetPasswordContent() {
   const router = useRouter();
@@ -32,7 +33,7 @@ function ResetPasswordContent() {
 
     try {
       // Call reset password API
-      const response = await fetch('http://localhost:8000/api/auth/reset-password', {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/reset-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

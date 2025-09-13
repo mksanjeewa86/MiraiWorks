@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/layout/AppLayout';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -26,8 +27,8 @@ import {
 } from 'lucide-react';
 import { ProfileData } from '@/types/pages';
 
-export default function ProfilePage() {
-  const { user, isAuthenticated, isLoading } = useAuth();
+function ProfilePageContent() {
+  const { user } = useAuth();
   const router = useRouter();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -36,13 +37,6 @@ export default function ProfilePage() {
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState<UserProfileUpdate>({});
   const [error, setError] = useState<string | null>(null);
-
-  // Authentication guard
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/auth/login');
-    }
-  }, [isAuthenticated, isLoading, router]);
 
   useEffect(() => {
     const loadProfileData = async () => {
@@ -246,18 +240,6 @@ export default function ProfilePage() {
         </div>
       </AppLayout>
     );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="loading-skeleton w-16 h-16 rounded-full"></div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return null;
   }
 
   return (
@@ -581,5 +563,13 @@ export default function ProfilePage() {
         </div>
       </div>
     </AppLayout>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <ProtectedRoute>
+      <ProfilePageContent />
+    </ProtectedRoute>
   );
 }

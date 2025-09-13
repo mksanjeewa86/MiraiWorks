@@ -19,6 +19,7 @@ from app.models.company import Company
 from app.models.notification import Notification
 from app.models.role import UserRole as UserRoleModel
 from app.models.user import User
+from app.models.user_settings import UserSettings
 from app.schemas.auth import (
     ActivateAccountRequest,
     ActivateAccountResponse,
@@ -556,17 +557,49 @@ async def activate_account(
             detail="Invalid temporary password",
         )
 
-    # Update user with new password and activate account
+    # Update user with new password and activate account, add default phone if missing
     hashed_password = auth_service.get_password_hash(activation_data.newPassword)
+    update_values = {
+        "hashed_password": hashed_password,
+        "is_active": True,
+        "last_login": datetime.utcnow(),
+    }
+    
+    # Add default phone number if user doesn't have one
+    if not user.phone:
+        update_values["phone"] = "+1-555-0100"  # Default placeholder phone
+    
     await db.execute(
         update(User)
         .where(User.id == user.id)
-        .values(
-            hashed_password=hashed_password,
-            is_active=True,
-            last_login=datetime.utcnow(),
-        )
+        .values(**update_values)
     )
+
+    # Check if user already has settings, if not create default ones
+    existing_settings_query = select(UserSettings).where(UserSettings.user_id == user.id)
+    existing_settings_result = await db.execute(existing_settings_query)
+    existing_settings = existing_settings_result.scalar_one_or_none()
+    
+    if not existing_settings:
+        # Create default user settings for activated user
+        default_settings = UserSettings(
+            user_id=user.id,
+            # Profile settings with defaults
+            job_title="User" if not user.is_admin else "Administrator",
+            bio=f"Welcome to {user.company.name if user.company else 'MiraiWorks'}!",
+            # Notification preferences (use model defaults)
+            email_notifications=True,
+            push_notifications=True,
+            sms_notifications=False,
+            interview_reminders=True,
+            application_updates=True,
+            message_notifications=True,
+            # UI preferences (use model defaults)
+            language="en",
+            timezone="America/New_York",
+            date_format="MM/DD/YYYY",
+        )
+        db.add(default_settings)
 
     # If this is an admin user activating, also activate their company
     if user.is_admin and user.company_id:

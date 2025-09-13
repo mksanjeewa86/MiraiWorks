@@ -204,8 +204,8 @@ class TestDirectMessagesAPI:
         assert data["type"] == "text"
         assert data["is_read"] is False
 
-        # Verify WebSocket broadcast was called
-        mock_manager.broadcast_to_conversation.assert_called_once()
+        # Note: Real-time messaging is now handled by polling on frontend
+        # No WebSocket broadcast verification needed anymore
 
         # Verify notification handler was called
         mock_notifications.handle_new_message_notifications.assert_called_once()

@@ -1,12 +1,11 @@
 import type { ApiResponse, Conversation, Message, DirectMessageInfo } from '@/types';
-
-const API_BASE_URL = 'http://localhost:8000';
+import { API_CONFIG } from '@/config/api';
 
 // Direct Messages API
 export const messagesApi = {
   getConversations: async (token?: string): Promise<ApiResponse<Conversation[]>> => {
     const authToken = token || localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/direct_messages/conversations`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/direct_messages/conversations`, {
       headers: {
         'Authorization': `Bearer ${authToken}`,
         'Content-Type': 'application/json',
@@ -23,7 +22,7 @@ export const messagesApi = {
 
   markConversationAsRead: async (otherUserId: number, token?: string): Promise<ApiResponse<unknown>> => {
     const authToken = token || localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/direct_messages/mark-conversation-read/${otherUserId}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/direct_messages/mark-conversation-read/${otherUserId}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${authToken}`,
@@ -41,7 +40,7 @@ export const messagesApi = {
 
   getConversation: async (otherUserId: number): Promise<ApiResponse<Conversation>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/direct_messages/with/${otherUserId}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/direct_messages/with/${otherUserId}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -62,7 +61,7 @@ export const messagesApi = {
     has_more: boolean;
   }>> => {
     const token = localStorage.getItem('accessToken');
-    const url = new URL(`${API_BASE_URL}/api/direct_messages/with/${otherUserId}`);
+    const url = new URL(`${API_CONFIG.BASE_URL}/api/direct_messages/with/${otherUserId}`);
     url.searchParams.set('limit', limit.toString());
     if (beforeId) {
       url.searchParams.set('before_id', beforeId.toString());
@@ -93,7 +92,7 @@ export const messagesApi = {
     file_type?: string;
   }): Promise<ApiResponse<Message>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/direct_messages/send`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/direct_messages/send`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -116,7 +115,7 @@ export const messagesApi = {
 
   markAsRead: async (otherUserId: number): Promise<ApiResponse<void>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/direct_messages/mark-conversation-read/${otherUserId}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/direct_messages/mark-conversation-read/${otherUserId}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -134,7 +133,7 @@ export const messagesApi = {
 
   deleteMessage: async (messageId: number): Promise<ApiResponse<void>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/messages/${messageId}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/messages/${messageId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -154,7 +153,7 @@ export const messagesApi = {
     messages: DirectMessageInfo[];
   }>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/api/direct_messages/search`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/direct_messages/search`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -187,7 +186,7 @@ export const messagesApi = {
     }>;
   }>> => {
     const token = localStorage.getItem('accessToken');
-    const url = new URL(`${API_BASE_URL}/api/direct_messages/participants`);
+    const url = new URL(`${API_CONFIG.BASE_URL}/api/direct_messages/participants`);
     if (query) {
       url.searchParams.set('query', query);
     }
@@ -218,7 +217,7 @@ export const messagesApi = {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await fetch(`${API_BASE_URL}/api/files/upload`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/files/upload`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,

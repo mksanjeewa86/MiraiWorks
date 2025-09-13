@@ -3,6 +3,7 @@ import { authApi } from '@/api/auth';
 import { dashboardApi } from "@/api/dashboard";
 import { messagesApi } from "@/api/messages";
 import { resumesApi } from "@/api/resumes";
+import { API_CONFIG } from '@/config/api';
 import type { TestResult, TestSuite } from '@/types/components';
 
 const ApiTestRunner: React.FC = () => {
@@ -234,7 +235,7 @@ const ApiTestRunner: React.FC = () => {
     const statsResult = await runTest(
       'Get resume statistics',
       async () => {
-        const response = await fetch(`http://localhost:8000/api/resumes/stats`, {
+        const response = await fetch(`${API_CONFIG.BASE_URL}/api/resumes/stats`, {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/json',

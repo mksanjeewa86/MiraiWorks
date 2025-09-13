@@ -291,15 +291,7 @@ def mock_notification_service():
         yield mock
 
 
-@pytest.fixture
-def mock_websocket():
-    """Mock WebSocket for testing real-time features."""
-    mock = MagicMock()
-    mock.accept = AsyncMock()
-    mock.send_text = AsyncMock()
-    mock.receive_text = AsyncMock()
-    mock.close = AsyncMock()
-    return mock
+# WebSocket functionality has been removed - now using polling
 
 
 @pytest.fixture(scope="session")
