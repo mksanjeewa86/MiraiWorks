@@ -1,6 +1,5 @@
 import {
   Company,
-  CompanyType,
   CompanyCreate,
   CompanyUpdate,
   CompanyListResponse,

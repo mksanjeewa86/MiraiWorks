@@ -3,8 +3,9 @@ from enum import Enum
 from typing import Optional
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Text
-from app.models.db_types import CompatLONGTEXT as LONGTEXT
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.models.db_types import CompatLONGTEXT as LONGTEXT
 
 from .base import Base
 

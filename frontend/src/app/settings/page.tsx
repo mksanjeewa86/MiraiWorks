@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { userSettingsApi } from "@/api/userSettings";
-import { UserSettings, UserProfile } from "@/types";
+import { UserSettings } from "@/types";
 import AppLayout from '@/components/layout/AppLayout';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';

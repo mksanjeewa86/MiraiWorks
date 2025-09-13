@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Optional
+from typing import Optional
 
 from pydantic import BaseModel, validator
 
@@ -184,8 +184,6 @@ class MessageListResponse(BaseModel):
 class TypingIndicator(BaseModel):
     conversation_id: int
     is_typing: bool
-
-
 
 
 class AttachmentScanComplete(BaseModel):

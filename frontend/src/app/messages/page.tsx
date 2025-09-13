@@ -8,7 +8,7 @@ import Input from '@/components/ui/Input';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { Search, Send, Smile, Paperclip, RefreshCw } from 'lucide-react';
 import { messagesApi } from "@/api/messages";
-import type { Conversation, LegacyMessage as Message, DirectMessageInfo } from '@/types';
+import type { Conversation, LegacyMessage as Message } from '@/types';
 import type { MessagesPageState } from '@/types/pages';
 import dynamic from 'next/dynamic';
 

@@ -1,4 +1,3 @@
-from typing import List
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,7 +21,7 @@ async def get_notifications(
     notifications = await notification_service.get_user_notifications(
         db, current_user.id, limit, unread_only
     )
-    
+
     return {
         "notifications": [
             {
@@ -52,7 +51,7 @@ async def get_unread_count(
 
 @router.put("/mark-read")
 async def mark_notifications_read(
-    notification_ids: List[int],
+    notification_ids: list[int],
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -60,7 +59,7 @@ async def mark_notifications_read(
     count = await notification_service.mark_notifications_as_read(
         db, current_user.id, notification_ids
     )
-    
+
     return {"message": f"Marked {count} notifications as read"}
 
 
@@ -74,9 +73,9 @@ async def mark_all_notifications_read(
     notifications = await notification_service.get_user_notifications(
         db, current_user.id, limit=1000, unread_only=True
     )
-    
+
     notification_ids = [n.id for n in notifications]
-    
+
     if notification_ids:
         count = await notification_service.mark_notifications_as_read(
             db, current_user.id, notification_ids

@@ -7,7 +7,7 @@ import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Button from '@/components/ui/Button';
-import type { Interview, User } from '@/types';
+import type { Interview } from '@/types';
 import type { RecruiterStats } from '@/types/dashboard';
 
 export default function RecruiterDashboard() {

@@ -11,7 +11,7 @@ from sqlalchemy.orm import selectinload
 
 from app.config import settings
 from app.models.auth import RefreshToken
-from app.models.role import Role, UserRole as UserRoleModel
+from app.models.role import UserRole as UserRoleModel
 from app.models.user import User
 from app.rbac import is_admin_role
 from app.utils.constants import UserRole
@@ -120,7 +120,9 @@ class AuthService:
         result = await db.execute(
             select(RefreshToken)
             .options(
-                selectinload(RefreshToken.user).selectinload(User.user_roles).selectinload(UserRoleModel.role)
+                selectinload(RefreshToken.user)
+                .selectinload(User.user_roles)
+                .selectinload(UserRoleModel.role)
             )
             .where(
                 RefreshToken.token_hash == token_hash,
@@ -163,7 +165,7 @@ class AuthService:
 
     async def requires_2fa(self, db: AsyncSession, user: User) -> bool:
         """Check if user requires 2FA based on user settings and role requirements."""
-        
+
         # Get fresh user data from database instead of refreshing eager-loaded object
         result = await db.execute(
             select(User)
@@ -173,11 +175,11 @@ class AuthService:
         fresh_user = result.scalar_one_or_none()
         if not fresh_user:
             return False
-        
+
         # First check user's individual 2FA setting
         if fresh_user.require_2fa:
             return True
-        
+
         # If force_2fa_for_admins is disabled, only use individual settings
         if not settings.force_2fa_for_admins:
             return False

@@ -3,6 +3,7 @@ from .attachment import Attachment
 from .audit import AuditLog
 from .auth import OauthAccount, PasswordResetRequest, RefreshToken
 from .company import Company
+from .direct_message import DirectMessage
 from .interview import Interview, InterviewProposal
 from .job import CompanyProfile, Job, JobApplication
 from .meeting import (
@@ -12,7 +13,6 @@ from .meeting import (
     MeetingTranscript,
     meeting_participants,
 )
-from .direct_message import DirectMessage
 from .notification import Notification
 from .resume import (
     Certification,

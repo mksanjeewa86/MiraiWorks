@@ -1,4 +1,5 @@
-from typing import List, Optional
+from typing import Optional
+
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,7 +17,7 @@ async def get_companies(
 ):
     """Get companies with filtering, pagination and search."""
     offset = (page - 1) * size
-    
+
     # Build query conditions
     conditions = []
     if search:
@@ -31,24 +32,24 @@ async def get_companies(
         conditions.append(Company.type == company_type)
     if is_active is not None:
         conditions.append(Company.is_active == is_active)
-    
+
     # Build query
     query = select(Company)
     if conditions:
         query = query.where(*conditions)
-    
+
     # Get total count
     count_query = select(func.count(Company.id))
     if conditions:
         count_query = count_query.where(*conditions)
-    
+
     total = (await db.execute(count_query)).scalar()
-    
+
     # Get paginated results
     query = query.offset(offset).limit(size).order_by(Company.created_at.desc())
     result = await db.execute(query)
     companies = result.scalars().all()
-    
+
     return companies, total
 
 
@@ -67,12 +68,14 @@ async def create_company(db: AsyncSession, company_data: dict) -> Company:
     return company
 
 
-async def update_company(db: AsyncSession, company: Company, update_data: dict) -> Company:
+async def update_company(
+    db: AsyncSession, company: Company, update_data: dict
+) -> Company:
     """Update company information."""
     for field, value in update_data.items():
         if value is not None:
             setattr(company, field, value)
-    
+
     await db.commit()
     await db.refresh(company)
     return company

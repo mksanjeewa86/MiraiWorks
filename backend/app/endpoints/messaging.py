@@ -349,20 +349,24 @@ async def send_message(
 
     # Broadcast message via WebSocket
     from app.endpoints.messaging_ws import broadcast_new_message
+
     try:
-        await broadcast_new_message(conversation_id, {
-            "id": message.id,
-            "type": message.type,
-            "content": message.content,
-            "sender_id": message.sender_id,
-            "sender_name": message.sender.full_name,
-            "sender_email": message.sender.email,
-            "reply_to_id": message.reply_to_id,
-            "reply_to": reply_to.model_dump() if reply_to else None,
-            "attachments": [],
-            "created_at": message.created_at.isoformat(),
-            "updated_at": message.updated_at.isoformat(),
-        })
+        await broadcast_new_message(
+            conversation_id,
+            {
+                "id": message.id,
+                "type": message.type,
+                "content": message.content,
+                "sender_id": message.sender_id,
+                "sender_name": message.sender.full_name,
+                "sender_email": message.sender.email,
+                "reply_to_id": message.reply_to_id,
+                "reply_to": reply_to.model_dump() if reply_to else None,
+                "attachments": [],
+                "created_at": message.created_at.isoformat(),
+                "updated_at": message.updated_at.isoformat(),
+            },
+        )
     except Exception as e:
         logger.warning(f"Failed to broadcast message via WebSocket: {e}")
 
@@ -522,14 +526,17 @@ async def mark_conversation_read_put(
         .limit(1)
     )
     latest_message_id = latest_message_result.scalar()
-    
+
     if not latest_message_id:
         # No messages in conversation
         return {"message": "Conversation marked as read", "messages_marked_read": 0}
-    
+
     # Mark all messages as read up to the latest message
     read_count = await messaging_service.mark_messages_as_read(
         db, conversation_id, current_user.id, latest_message_id
     )
-    
-    return {"message": "Conversation marked as read", "messages_marked_read": read_count}
+
+    return {
+        "message": "Conversation marked as read",
+        "messages_marked_read": read_count,
+    }

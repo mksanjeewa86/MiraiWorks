@@ -179,5 +179,6 @@ export interface TestSuite {
 // ====================
 
 export interface NotificationDropdownProps {
-  // Will be defined based on actual implementation
+  isOpen: boolean;
+  onToggle: () => void;
 }

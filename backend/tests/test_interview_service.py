@@ -5,7 +5,6 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.calendar_integration import ExternalCalendarAccount
 from app.models.company import Company
 from app.models.interview import Interview
 from app.models.user import User

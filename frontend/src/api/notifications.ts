@@ -1,5 +1,4 @@
 import {
-  AppNotification,
   NotificationsResponse,
   UnreadCountResponse
 } from '../types/notification';

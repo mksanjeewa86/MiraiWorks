@@ -1,4 +1,5 @@
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
+from typing import Any, Generic, Optional, TypeVar, Union
+
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -13,13 +14,13 @@ UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
 
 class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     """Base CRUD operations."""
-    
-    def __init__(self, model: Type[ModelType]):
+
+    def __init__(self, model: type[ModelType]):
         """
         CRUD object with default methods to Create, Read, Update, Delete (CRUD).
-        
+
         **Parameters**
-        
+
         * `model`: A SQLAlchemy model class
         * `schema`: A Pydantic model (schema) class
         """
@@ -32,11 +33,9 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 
     async def get_multi(
         self, db: AsyncSession, *, skip: int = 0, limit: int = 100
-    ) -> List[ModelType]:
+    ) -> list[ModelType]:
         """Get multiple objects."""
-        result = await db.execute(
-            select(self.model).offset(skip).limit(limit)
-        )
+        result = await db.execute(select(self.model).offset(skip).limit(limit))
         return result.scalars().all()
 
     async def create(self, db: AsyncSession, *, obj_in: CreateSchemaType) -> ModelType:
@@ -48,7 +47,9 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         await db.refresh(db_obj)
         return db_obj
 
-    async def create_from_dict(self, db: AsyncSession, *, obj_in: Dict[str, Any]) -> ModelType:
+    async def create_from_dict(
+        self, db: AsyncSession, *, obj_in: dict[str, Any]
+    ) -> ModelType:
         """Create new object from dictionary."""
         db_obj = self.model(**obj_in)
         db.add(db_obj)
@@ -61,7 +62,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         db: AsyncSession,
         *,
         db_obj: ModelType,
-        obj_in: Union[UpdateSchemaType, Dict[str, Any]]
+        obj_in: Union[UpdateSchemaType, dict[str, Any]],
     ) -> ModelType:
         """Update existing object."""
         obj_data = jsonable_encoder(db_obj)

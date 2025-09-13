@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '@/contexts/ToastContext';
@@ -45,7 +45,7 @@ export default function ActivateAccountPage() {
         return;
       }
 
-      const response = await apiClient.request('/api/auth/activate', {
+      await apiClient.request('/api/auth/activate', {
         method: 'POST',
         body: JSON.stringify({
           userId: parseInt(userId),

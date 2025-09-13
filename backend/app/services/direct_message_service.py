@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 
 from fastapi import HTTPException, status
 from sqlalchemy import and_, desc, func, or_, select
@@ -27,11 +27,13 @@ class DirectMessageService:
         self, db: AsyncSession, sender_id: int, message_data: DirectMessageCreate
     ) -> DirectMessage:
         """Send a direct message to another user."""
-# Direct messaging - no restrictions by default
+        # Direct messaging - no restrictions by default
 
         # Verify recipient exists and is active
         recipient = await db.execute(
-            select(User).where(User.id == message_data.recipient_id, User.is_active == True)
+            select(User).where(
+                User.id == message_data.recipient_id, User.is_active == True
+            )
         )
         if not recipient.scalar_one_or_none():
             raise HTTPException(
@@ -60,19 +62,19 @@ class DirectMessageService:
             sender_id=sender_id,
             recipient_id=message_data.recipient_id,
             message_id=message.id,
-            component="direct_message"
+            component="direct_message",
         )
 
         return message
 
     async def get_messages_with_user(
-        self, 
-        db: AsyncSession, 
-        current_user_id: int, 
-        other_user_id: int, 
+        self,
+        db: AsyncSession,
+        current_user_id: int,
+        other_user_id: int,
         limit: int = 50,
-        before_id: Optional[int] = None
-    ) -> List[DirectMessage]:
+        before_id: Optional[int] = None,
+    ) -> list[DirectMessage]:
         """Get messages between current user and another user."""
 
         query = (
@@ -110,17 +112,24 @@ class DirectMessageService:
 
     async def get_conversations(
         self, db: AsyncSession, user_id: int, search_query: Optional[str] = None
-    ) -> List[ConversationSummary]:
+    ) -> list[ConversationSummary]:
         """Get list of users the current user has exchanged messages with."""
         # Subquery to get the latest message between user and each other user
         latest_message_subquery = (
             select(
-                func.greatest(DirectMessage.sender_id, DirectMessage.recipient_id).label("user1"),
-                func.least(DirectMessage.sender_id, DirectMessage.recipient_id).label("user2"),
-                func.max(DirectMessage.created_at).label("last_activity")
+                func.greatest(
+                    DirectMessage.sender_id, DirectMessage.recipient_id
+                ).label("user1"),
+                func.least(DirectMessage.sender_id, DirectMessage.recipient_id).label(
+                    "user2"
+                ),
+                func.max(DirectMessage.created_at).label("last_activity"),
             )
             .where(
-                or_(DirectMessage.sender_id == user_id, DirectMessage.recipient_id == user_id)
+                or_(
+                    DirectMessage.sender_id == user_id,
+                    DirectMessage.recipient_id == user_id,
+                )
             )
             .group_by("user1", "user2")
             .subquery()
@@ -135,13 +144,15 @@ class DirectMessageService:
                 latest_message_subquery.c.last_activity,
             ).order_by(desc(latest_message_subquery.c.last_activity))
         )
-        
+
         for row in result.fetchall():
             other_user_id = row.user1 if row.user2 == user_id else row.user2
-            
+
             # Get other user info
             other_user_result = await db.execute(
-                select(User).options(selectinload(User.company)).where(User.id == other_user_id)
+                select(User)
+                .options(selectinload(User.company))
+                .where(User.id == other_user_id)
             )
             other_user = other_user_result.scalar_one_or_none()
             if not other_user:
@@ -151,8 +162,8 @@ class DirectMessageService:
             if search_query:
                 search_lower = search_query.lower()
                 if not (
-                    search_lower in other_user.full_name.lower() or
-                    search_lower in other_user.email.lower()
+                    search_lower in other_user.full_name.lower()
+                    or search_lower in other_user.email.lower()
                 ):
                     continue
 
@@ -161,7 +172,7 @@ class DirectMessageService:
                 select(DirectMessage)
                 .options(
                     selectinload(DirectMessage.sender),
-                    selectinload(DirectMessage.recipient)
+                    selectinload(DirectMessage.recipient),
                 )
                 .where(
                     or_(
@@ -220,7 +231,9 @@ class DirectMessageService:
                 other_user_id=other_user.id,
                 other_user_name=other_user.full_name,
                 other_user_email=other_user.email,
-                other_user_company=other_user.company.name if other_user.company else None,
+                other_user_company=other_user.company.name
+                if other_user.company
+                else None,
                 last_message=last_message_info,
                 unread_count=unread_count,
                 last_activity=row.last_activity,
@@ -231,7 +244,7 @@ class DirectMessageService:
 
     async def search_messages(
         self, db: AsyncSession, user_id: int, search_request: MessageSearchRequest
-    ) -> List[DirectMessage]:
+    ) -> list[DirectMessage]:
         """Search messages by content and sender name."""
         query = (
             select(DirectMessage)
@@ -283,7 +296,7 @@ class DirectMessageService:
         return result.scalars().all()
 
     async def mark_messages_as_read(
-        self, db: AsyncSession, user_id: int, message_ids: List[int]
+        self, db: AsyncSession, user_id: int, message_ids: list[int]
     ) -> int:
         """Mark multiple messages as read."""
         # Only mark messages where user is the recipient
@@ -307,7 +320,7 @@ class DirectMessageService:
             logger.info(
                 f"Marked {count} messages as read",
                 user_id=user_id,
-                component="direct_message"
+                component="direct_message",
             )
 
         return count
@@ -338,7 +351,7 @@ class DirectMessageService:
                 f"Marked conversation as read - {count} messages",
                 user_id=user_id,
                 other_user_id=other_user_id,
-                component="direct_message"
+                component="direct_message",
             )
 
         return count

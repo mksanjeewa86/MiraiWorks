@@ -1,4 +1,3 @@
-import logging
 import os
 from contextlib import asynccontextmanager
 
@@ -9,7 +8,7 @@ from fastapi.responses import JSONResponse
 
 from app.database import init_db
 from app.dependencies import get_redis
-from app.middleware import StructuredLoggingMiddleware, RequestContextMiddleware
+from app.middleware import RequestContextMiddleware, StructuredLoggingMiddleware
 from app.routers import include_routers
 from app.utils.logging import configure_structlog, get_logger
 
@@ -65,7 +64,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://localhost:3001",
-        "http://localhost:3002", 
+        "http://localhost:3002",
         "http://localhost:3003",
         "http://localhost:5173",
     ],  # React dev servers
@@ -88,7 +87,7 @@ async def global_exception_handler(request: Request, exc: Exception):
         url=str(request.url),
         error_type=type(exc).__name__,
         error_message=str(exc),
-        component="exception_handler"
+        component="exception_handler",
     )
     return JSONResponse(
         status_code=500,

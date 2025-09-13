@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, ReactNode } from 'react'
+import { useState, useEffect } from 'react'
 import Topbar from './Topbar'
 import Sidebar from './Sidebar'
 import type { AppLayoutProps } from '@/types/components'

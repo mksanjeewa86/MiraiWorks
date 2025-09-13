@@ -1,5 +1,5 @@
 """Middleware package."""
 
-from .logging import StructuredLoggingMiddleware, RequestContextMiddleware
+from .logging import RequestContextMiddleware, StructuredLoggingMiddleware
 
 __all__ = ["StructuredLoggingMiddleware", "RequestContextMiddleware"]

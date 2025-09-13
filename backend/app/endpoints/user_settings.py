@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database import get_db
 from app.crud import user_settings as user_settings_crud
+from app.database import get_db
 from app.dependencies import get_current_user
 from app.models import User, UserSettings
 
@@ -16,7 +16,7 @@ class UserSettingsResponse(BaseModel):
     # Profile settings
     job_title: Optional[str] = None
     bio: Optional[str] = None
-    
+
     # Notification preferences
     email_notifications: bool = True
     push_notifications: bool = True
@@ -24,12 +24,12 @@ class UserSettingsResponse(BaseModel):
     interview_reminders: bool = True
     application_updates: bool = True
     message_notifications: bool = True
-    
+
     # UI preferences
     language: str = "en"
     timezone: str = "America/New_York"
     date_format: str = "MM/DD/YYYY"
-    
+
     # Security settings (from User model)
     require_2fa: bool = False
 
@@ -41,7 +41,7 @@ class UserSettingsUpdate(BaseModel):
     # Profile settings
     job_title: Optional[str] = None
     bio: Optional[str] = None
-    
+
     # Notification preferences
     email_notifications: Optional[bool] = None
     push_notifications: Optional[bool] = None
@@ -49,12 +49,12 @@ class UserSettingsUpdate(BaseModel):
     interview_reminders: Optional[bool] = None
     application_updates: Optional[bool] = None
     message_notifications: Optional[bool] = None
-    
+
     # UI preferences
     language: Optional[str] = None
     timezone: Optional[str] = None
     date_format: Optional[str] = None
-    
+
     # Security settings (from User model)
     require_2fa: Optional[bool] = None
 
@@ -83,18 +83,17 @@ class UserProfileResponse(BaseModel):
 
 @router.get("/settings", response_model=UserSettingsResponse)
 async def get_user_settings(
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
 ):
     """Get current user's settings."""
     settings = await user_settings_crud.get_or_create_user_settings(db, current_user.id)
-    
+
     # Combine settings from UserSettings and User models
     # SMS notifications should be false if user has no phone number
     sms_notifications = settings.sms_notifications
     if not current_user.phone or not current_user.phone.strip():
         sms_notifications = False
-    
+
     return UserSettingsResponse(
         # Profile settings (from UserSettings)
         job_title=settings.job_title,
@@ -111,7 +110,7 @@ async def get_user_settings(
         timezone=settings.timezone,
         date_format=settings.date_format,
         # Security settings (from User)
-        require_2fa=current_user.require_2fa
+        require_2fa=current_user.require_2fa,
     )
 
 
@@ -119,39 +118,43 @@ async def get_user_settings(
 async def update_user_settings(
     settings_update: UserSettingsUpdate,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """Update current user's settings."""
     update_data = settings_update.model_dump(exclude_unset=True)
-    
+
     # Validate SMS notifications require a phone number
-    if 'sms_notifications' in update_data and update_data['sms_notifications']:
+    if "sms_notifications" in update_data and update_data["sms_notifications"]:
         if not current_user.phone or not current_user.phone.strip():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="SMS notifications require a phone number. Please add your phone number in your profile first."
+                detail="SMS notifications require a phone number. Please add your phone number in your profile first.",
             )
-    
+
     # Separate UserSettings fields and User fields
-    user_fields = {'require_2fa'}
+    user_fields = {"require_2fa"}
     settings_fields = {k: v for k, v in update_data.items() if k not in user_fields}
     user_field_updates = {k: v for k, v in update_data.items() if k in user_fields}
-    
+
     # Update user settings
     settings = await user_settings_crud.get_or_create_user_settings(db, current_user.id)
     if settings_fields:
-        settings = await user_settings_crud.update_user_settings(db, settings, settings_fields)
-    
+        settings = await user_settings_crud.update_user_settings(
+            db, settings, settings_fields
+        )
+
     # Update user profile fields if needed
     if user_field_updates:
-        current_user = await user_settings_crud.update_user_profile(db, current_user, user_field_updates)
-    
+        current_user = await user_settings_crud.update_user_profile(
+            db, current_user, user_field_updates
+        )
+
     # Return combined response
     # SMS notifications should be false if user has no phone number
     sms_notifications = settings.sms_notifications
     if not current_user.phone or not current_user.phone.strip():
         sms_notifications = False
-        
+
     return UserSettingsResponse(
         # Profile settings (from UserSettings)
         job_title=settings.job_title,
@@ -168,14 +171,13 @@ async def update_user_settings(
         timezone=settings.timezone,
         date_format=settings.date_format,
         # Security settings (from User)
-        require_2fa=current_user.require_2fa
+        require_2fa=current_user.require_2fa,
     )
 
 
 @router.get("/profile", response_model=UserProfileResponse)
 async def get_user_profile(
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
 ):
     """Get current user's profile information."""
     # Get user with settings
@@ -183,7 +185,7 @@ async def get_user_profile(
         select(UserSettings).where(UserSettings.user_id == current_user.id)
     )
     user_settings = result.scalar_one_or_none()
-    
+
     return {
         "id": current_user.id,
         "email": current_user.email,
@@ -200,21 +202,21 @@ async def get_user_profile(
 async def update_user_profile(
     profile_update: UserProfileUpdate,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """Update current user's profile information."""
     update_data = profile_update.model_dump(exclude_unset=True)
-    
+
     # Update user fields
     user_fields = {"first_name", "last_name", "phone"}
     for field, value in update_data.items():
         if field in user_fields and hasattr(current_user, field):
             setattr(current_user, field, value)
-    
+
     # Update settings fields (job_title, bio)
     settings_fields = {"job_title", "bio"}
     settings_data = {k: v for k, v in update_data.items() if k in settings_fields}
-    
+
     if settings_data:
         result = await db.execute(
             select(UserSettings).where(UserSettings.user_id == current_user.id)
@@ -223,19 +225,19 @@ async def update_user_profile(
         if not settings:
             settings = UserSettings(user_id=current_user.id)
             db.add(settings)
-        
+
         for field, value in settings_data.items():
             setattr(settings, field, value)
-    
+
     await db.commit()
     await db.refresh(current_user)
-    
+
     # Return updated profile
     result = await db.execute(
         select(UserSettings).where(UserSettings.user_id == current_user.id)
     )
     user_settings = result.scalar_one_or_none()
-    
+
     return {
         "id": current_user.id,
         "email": current_user.email,

@@ -64,7 +64,10 @@ class User(Base):
         "Meeting", secondary="meeting_participants", back_populates="participants"
     )
     settings = relationship(
-        "UserSettings", back_populates="user", cascade="all, delete-orphan", uselist=False
+        "UserSettings",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        uselist=False,
     )
 
     @property

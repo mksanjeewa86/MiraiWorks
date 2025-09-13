@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Optional
+
 from pydantic import BaseModel
 
 
@@ -36,6 +37,7 @@ class DirectMessageInfo(DirectMessageBase):
 
 class ConversationSummary(BaseModel):
     """Summary of messages between two users."""
+
     other_user_id: int
     other_user_name: str
     other_user_email: str

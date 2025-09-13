@@ -10,8 +10,8 @@ from app.config import settings
 from app.models.calendar_integration import CalendarIntegration
 from app.models.interview import Interview
 from app.services.calendar_service import GoogleCalendarService
-from app.services.microsoft_calendar_service import MicrosoftCalendarService
 from app.services.interview_service import InterviewService
+from app.services.microsoft_calendar_service import MicrosoftCalendarService
 
 # Initialize Celery
 celery_app = Celery(

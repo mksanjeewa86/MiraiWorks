@@ -107,7 +107,7 @@ services:
       - PYTHONPATH=/app
       - UPLOAD_DIR=/uploads
     volumes:
-      - ./backend:/app:ro
+      - ./backend:/app
       - backend_logs:/app/logs
       - uploads_data:/uploads
     depends_on:

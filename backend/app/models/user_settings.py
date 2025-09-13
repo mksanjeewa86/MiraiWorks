@@ -16,11 +16,11 @@ class UserSettings(Base):
         unique=True,
         index=True,
     )
-    
+
     # Profile settings
     job_title = Column(String(200), nullable=True)
     bio = Column(Text, nullable=True)
-    
+
     # Notification preferences
     email_notifications = Column(Boolean, nullable=False, default=True)
     push_notifications = Column(Boolean, nullable=False, default=True)
@@ -28,12 +28,12 @@ class UserSettings(Base):
     interview_reminders = Column(Boolean, nullable=False, default=True)
     application_updates = Column(Boolean, nullable=False, default=True)
     message_notifications = Column(Boolean, nullable=False, default=True)
-    
+
     # UI preferences
     language = Column(String(10), nullable=False, default="en")
     timezone = Column(String(50), nullable=False, default="America/New_York")
     date_format = Column(String(20), nullable=False, default="MM/DD/YYYY")
-    
+
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

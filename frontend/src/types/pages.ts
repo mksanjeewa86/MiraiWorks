@@ -1,4 +1,4 @@
-import type { Resume, CalendarEvent, UserProfile, UserSettings, WorkExperience, Skill, Conversation, LegacyMessage as Message, DirectMessageInfo, CompanyType } from '@/types';
+import type { Resume, CalendarEvent, UserProfile, UserSettings, Conversation, LegacyMessage as Message, DirectMessageInfo, CompanyType } from '@/types';
 
 // ====================
 // SETTINGS PAGE STATE

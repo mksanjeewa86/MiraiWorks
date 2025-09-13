@@ -5,7 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.calendar_integration import SyncedEvent, ExternalCalendarAccount
+from app.models.calendar_integration import ExternalCalendarAccount
 from app.models.user import User
 from app.services.calendar_service import GoogleCalendarService
 from app.services.microsoft_calendar_service import MicrosoftCalendarService

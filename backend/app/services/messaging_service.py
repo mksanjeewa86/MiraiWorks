@@ -70,8 +70,10 @@ class MessagingRulesService:
                 return False, "Super admin can only communicate with company admins"
 
         # Company admins cannot communicate with each other - only with super admin
-        if (UserRole.COMPANY_ADMIN.value in user1_roles and 
-            UserRole.COMPANY_ADMIN.value in user2_roles):
+        if (
+            UserRole.COMPANY_ADMIN.value in user1_roles
+            and UserRole.COMPANY_ADMIN.value in user2_roles
+        ):
             return False, "Company admins cannot communicate with each other"
 
         # Company admins can only communicate with super admin, not other users
@@ -175,7 +177,7 @@ class MessagingRulesService:
 
         if primary_role == UserRole.SUPER_ADMIN.value:
             # Super admin can only talk to company admins
-            from app.models.role import Role
+
             result = await db.execute(
                 select(User)
                 .options(selectinload(User.company))
@@ -191,7 +193,7 @@ class MessagingRulesService:
 
         elif primary_role == UserRole.COMPANY_ADMIN.value:
             # Company admin can only communicate with super admins
-            from app.models.role import Role
+
             result = await db.execute(
                 select(User)
                 .options(selectinload(User.company))
@@ -324,7 +326,7 @@ class MessagingService:
             )
             if existing_conv:
                 return existing_conv
-        
+
         # Create new conversation - use first participant as creator
         return await self.create_conversation(
             db, participant_ids[0], participant_ids[1:], title

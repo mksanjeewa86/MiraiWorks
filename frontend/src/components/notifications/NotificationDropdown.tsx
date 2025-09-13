@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Bell, CheckCheck } from 'lucide-react';
 import { useNotifications } from '@/contexts/NotificationsContext';
-import { Notification } from "../../types/notification";
+import { AppNotification } from "../../types/notification";
 
 const NotificationDropdown: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -37,7 +37,7 @@ const NotificationDropdown: React.FC = () => {
     return date.toLocaleDateString();
   };
 
-  const handleNotificationClick = async (notification: Notification) => {
+  const handleNotificationClick = async (notification: AppNotification) => {
     if (!notification.is_read) {
       await markAsRead([notification.id]);
     }

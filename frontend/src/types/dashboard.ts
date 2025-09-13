@@ -1,4 +1,27 @@
 // Dashboard Types
+export interface RecentInterview {
+  id: string;
+  title: string;
+  company_name: string;
+  scheduled_at: string;
+  status: string;
+}
+
+export interface RecentResume {
+  id: string;
+  title: string;
+  updated_at: string;
+  status: string;
+  is_public: boolean;
+}
+
+export interface TopCandidate {
+  id: string;
+  name: string;
+  email: string;
+  score: number;
+}
+
 export interface DashboardStats {
   totalUsers?: number;
   totalCompanies?: number;
@@ -34,8 +57,8 @@ export interface CandidateDashboardStats extends DashboardStats {
   interviews_scheduled: number;
   interviews_completed: number;
   resumes_created: number;
-  recent_interviews: any[];
-  recent_resumes: any[];
+  recent_interviews: RecentInterview[];
+  recent_resumes: RecentResume[];
   application_stats: {
     status: string;
     count: number;
@@ -47,8 +70,8 @@ export interface RecruiterStats extends DashboardStats {
   interviews_this_week: number;
   pending_proposals: number;
   placement_rate: number;
-  recent_interviews: any[];
-  top_candidates: any[];
+  recent_interviews: RecentInterview[];
+  top_candidates: TopCandidate[];
   interview_pipeline: {
     stage: string;
     count: number;
@@ -88,6 +111,14 @@ export interface SuperAdminStats {
   active_users: number;
   total_positions: number;
   total_applications: number;
+  platform_metrics: {
+    daily_signups: number;
+    weekly_signups: number;
+    monthly_signups: number;
+    monthly_active_users: number;
+    conversion_rate: number;
+    system_uptime: number;
+  };
   system_health: {
     database_status: 'healthy' | 'warning' | 'error';
     api_response_time: number;
@@ -98,6 +129,7 @@ export interface SuperAdminStats {
     id: string;
     level: 'info' | 'warning' | 'error';
     message: string;
+    source: string;
     timestamp: string;
   }[];
 }

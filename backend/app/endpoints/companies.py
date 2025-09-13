@@ -1,19 +1,20 @@
-from typing import List, Optional
 import secrets
 import string
 from datetime import datetime, timedelta
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database import get_db
 from app.crud import company as company_crud
-from app.dependencies import get_current_user, require_super_admin
-from app.models import Company, User, Role, UserRole
+from app.database import get_db
+from app.dependencies import require_super_admin
+from app.models import Company, Role, User, UserRole
 from app.services.auth_service import auth_service
 from app.services.email_service import email_service
-from app.utils.constants import CompanyType, UserRole as UserRoleEnum
+from app.utils.constants import CompanyType
+from app.utils.constants import UserRole as UserRoleEnum
 
 router = APIRouter()
 
@@ -69,7 +70,7 @@ class CompanyResponse(BaseModel):
 
 
 class CompanyListResponse(BaseModel):
-    companies: List[CompanyResponse]
+    companies: list[CompanyResponse]
     total: int
     page: int
     size: int
@@ -95,7 +96,7 @@ async def get_companies(
         company_type=company_type,
         is_active=is_active,
     )
-    
+
     # Convert to response format (simplified for now - can be enhanced with user/job counts later)
     company_responses = [
         CompanyResponse(
@@ -111,16 +112,19 @@ async def get_companies(
             description=company.description,
             is_active=company.is_active,
             is_demo=company.is_demo or False,
-            demo_end_date=company.demo_end_date.isoformat() if company.demo_end_date else None,
+            demo_end_date=company.demo_end_date.isoformat()
+            if company.demo_end_date
+            else None,
             user_count=0,  # TODO: Add user count from CRUD
-            job_count=0,   # TODO: Add job count from CRUD
+            job_count=0,  # TODO: Add job count from CRUD
             created_at=company.created_at.isoformat(),
             updated_at=company.updated_at.isoformat(),
-        ) for company in companies
+        )
+        for company in companies
     ]
-    
+
     pages = (total + size - 1) // size if total > 0 else 1
-    
+
     return CompanyListResponse(
         companies=company_responses,
         total=total,
@@ -142,29 +146,28 @@ async def get_company(
         select(
             Company,
             func.count(User.id).label("user_count"),
-            func.coalesce(func.count(Company.jobs), 0).label("job_count")
+            func.coalesce(func.count(Company.jobs), 0).label("job_count"),
         )
         .outerjoin(User, Company.id == User.company_id)
         .outerjoin(Company.jobs)
         .where(Company.id == company_id)
         .group_by(Company.id)
     )
-    
+
     result = await db.execute(query)
     company_data = result.first()
-    
+
     if not company_data:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Company not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Company not found"
         )
-    
+
     company, user_count, job_count = company_data
-    
+
     return CompanyResponse(
         id=company.id,
         name=company.name,
-                type=company.type,
+        type=company.type,
         email=company.email,
         phone=company.phone,
         website=company.website,
@@ -174,7 +177,9 @@ async def get_company(
         description=company.description,
         is_active=company.is_active == "1",
         is_demo=company.is_demo or False,
-        demo_end_date=company.demo_end_date.isoformat() if company.demo_end_date else None,
+        demo_end_date=company.demo_end_date.isoformat()
+        if company.demo_end_date
+        else None,
         user_count=user_count or 0,
         job_count=job_count or 0,
         created_at=company.created_at.isoformat(),
@@ -195,14 +200,14 @@ async def create_company(
     if existing_user_result.scalar_one_or_none():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User with this email already exists"
+            detail="User with this email already exists",
         )
-    
+
     # Calculate demo end date if this is a demo account
     demo_end_date = None
     if company_data.is_demo and company_data.demo_days:
         demo_end_date = datetime.utcnow() + timedelta(days=company_data.demo_days)
-    
+
     # Create company (inactive until admin activates)
     company = Company(
         name=company_data.name,
@@ -218,17 +223,17 @@ async def create_company(
         is_demo=company_data.is_demo or False,
         demo_end_date=demo_end_date,
     )
-    
+
     db.add(company)
     await db.flush()  # Get company ID without committing
-    
+
     # Generate a random temporary password
     def generate_password(length=12):
         characters = string.ascii_letters + string.digits + "!@#$%^&*"
-        return ''.join(secrets.choice(characters) for _ in range(length))
-    
+        return "".join(secrets.choice(characters) for _ in range(length))
+
     temp_password = generate_password()
-    
+
     # Create admin user for the company
     hashed_password = auth_service.get_password_hash(temp_password)
     admin_user = User(
@@ -237,49 +242,46 @@ async def create_company(
         first_name="Admin",
         last_name=company_data.name,
         is_active=False,  # Inactive until they activate their account
-        is_admin=True,    # First user is admin
-        require_2fa=True, # All admin accounts require 2FA by default
+        is_admin=True,  # First user is admin
+        require_2fa=True,  # All admin accounts require 2FA by default
         company_id=company.id,
     )
-    
+
     db.add(admin_user)
     await db.flush()  # Get user ID
-    
+
     # Get company admin role
     role_query = select(Role).where(Role.name == UserRoleEnum.COMPANY_ADMIN)
     role_result = await db.execute(role_query)
     admin_role = role_result.scalar_one_or_none()
-    
+
     if not admin_role:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Admin role not found in system"
+            detail="Admin role not found in system",
         )
-    
+
     # Assign admin role to user
-    user_role = UserRole(
-        user_id=admin_user.id,
-        role_id=admin_role.id
-    )
+    user_role = UserRole(user_id=admin_user.id, role_id=admin_role.id)
     db.add(user_role)
-    
+
     # Commit all changes
     await db.commit()
     await db.refresh(company)
     await db.refresh(admin_user)
-    
+
     # Send activation email
     try:
         await email_service.send_company_activation_email(
             email=company_data.email,
             company_name=company_data.name,
             temporary_password=temp_password,
-            user_id=admin_user.id
+            user_id=admin_user.id,
         )
     except Exception as e:
         # Log email error but don't fail the company creation
         print(f"Failed to send activation email: {e}")
-    
+
     return CompanyResponse(
         id=company.id,
         name=company.name,
@@ -293,7 +295,9 @@ async def create_company(
         description=company.description,
         is_active=company.is_active == "1",
         is_demo=company.is_demo or False,
-        demo_end_date=company.demo_end_date.isoformat() if company.demo_end_date else None,
+        demo_end_date=company.demo_end_date.isoformat()
+        if company.demo_end_date
+        else None,
         user_count=1,  # We just created the admin user
         job_count=0,
         created_at=company.created_at.isoformat(),
@@ -313,14 +317,12 @@ async def update_company(
     query = select(Company).where(Company.id == company_id)
     result = await db.execute(query)
     company = result.scalar_one_or_none()
-    
+
     if not company:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Company not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Company not found"
         )
-    
-    
+
     # Update fields
     update_data = company_data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -328,35 +330,35 @@ async def update_company(
             setattr(company, field, "1" if value else "0")
         else:
             setattr(company, field, value)
-    
+
     await db.commit()
     await db.refresh(company)
-    
+
     # Get updated company with counts
     count_query = (
         select(
             Company,
             func.count(User.id).label("user_count"),
-            func.coalesce(func.count(Company.jobs), 0).label("job_count")
+            func.coalesce(func.count(Company.jobs), 0).label("job_count"),
         )
         .outerjoin(User, Company.id == User.company_id)
         .outerjoin(Company.jobs)
         .where(Company.id == company_id)
         .group_by(Company.id)
     )
-    
+
     count_result = await db.execute(count_query)
     company_data_with_counts = count_result.first()
-    
+
     if company_data_with_counts:
         company, user_count, job_count = company_data_with_counts
     else:
         user_count = job_count = 0
-    
+
     return CompanyResponse(
         id=company.id,
         name=company.name,
-                type=company.type,
+        type=company.type,
         email=company.email,
         phone=company.phone,
         website=company.website,
@@ -366,7 +368,9 @@ async def update_company(
         description=company.description,
         is_active=company.is_active == "1",
         is_demo=company.is_demo or False,
-        demo_end_date=company.demo_end_date.isoformat() if company.demo_end_date else None,
+        demo_end_date=company.demo_end_date.isoformat()
+        if company.demo_end_date
+        else None,
         user_count=user_count or 0,
         job_count=job_count or 0,
         created_at=company.created_at.isoformat(),
@@ -385,25 +389,24 @@ async def delete_company(
     query = select(Company).where(Company.id == company_id)
     result = await db.execute(query)
     company = result.scalar_one_or_none()
-    
+
     if not company:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Company not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Company not found"
         )
-    
+
     # Check if company has users
     users_query = select(func.count(User.id)).where(User.company_id == company_id)
     users_result = await db.execute(users_query)
     user_count = users_result.scalar()
-    
+
     if user_count > 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Cannot delete company with {user_count} associated users. Please reassign or delete users first."
+            detail=f"Cannot delete company with {user_count} associated users. Please reassign or delete users first.",
         )
-    
+
     await db.delete(company)
     await db.commit()
-    
+
     return {"message": "Company deleted successfully"}

@@ -78,7 +78,13 @@
       "Bash(del \"C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend-nextjs\\src\\services\\file\\fileUpload.service.ts\")",
       "Bash(mv:*)",
       "Bash(mkdir:*)",
-      "Bash(rmdir:*)"
+      "Bash(rmdir:*)",
+      "Bash(docker system prune:*)",
+      "Bash(gh run view:*)",
+      "Bash(PYTHONPATH=. python -m uvicorn app.main:app --host 127.0.0.1 --port 8000)",
+      "Bash(npm ci:*)",
+      "Bash(npm start)",
+      "Bash(ruff format:*)"
     ],
     "deny": [],
     "ask": []

@@ -60,40 +60,60 @@ async def login(
         )
 
     # Authenticate user
-    logger.info("Attempting user authentication", email=login_data.email, component="auth")
-    
+    logger.info(
+        "Attempting user authentication", email=login_data.email, component="auth"
+    )
+
     user = await auth_service.authenticate_user(
         db, login_data.email, login_data.password
     )
     if not user:
-        logger.warning("Authentication failed", email=login_data.email, reason="invalid_credentials", component="auth")
+        logger.warning(
+            "Authentication failed",
+            email=login_data.email,
+            reason="invalid_credentials",
+            component="auth",
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password"
         )
 
     if not user.is_active:
-        logger.warning("Authentication failed", email=login_data.email, user_id=user.id, reason="account_deactivated", component="auth")
+        logger.warning(
+            "Authentication failed",
+            email=login_data.email,
+            user_id=user.id,
+            reason="account_deactivated",
+            component="auth",
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Account is deactivated"
         )
-    
-    logger.info("User authenticated successfully", email=login_data.email, user_id=user.id, component="auth")
+
+    logger.info(
+        "User authenticated successfully",
+        email=login_data.email,
+        user_id=user.id,
+        component="auth",
+    )
 
     # Debug: Check what the user object actually contains
     user_dict = {
-        'id': user.id,
-        'email': user.email,
-        'require_2fa': user.require_2fa,
-        'require_2fa_type': type(user.require_2fa),
-        'is_active': user.is_active,
-        'is_admin': user.is_admin
+        "id": user.id,
+        "email": user.email,
+        "require_2fa": user.require_2fa,
+        "require_2fa_type": type(user.require_2fa),
+        "is_active": user.is_active,
+        "is_admin": user.is_admin,
     }
     print(f"[DEBUG] User object: {user_dict}")
-    
-    # Direct check of user's 2FA field  
+
+    # Direct check of user's 2FA field
     if user.require_2fa:
-        logger.info("2FA required for user", user_id=user.id, email=user.email, component="2fa")
-        
+        logger.info(
+            "2FA required for user", user_id=user.id, email=user.email, component="2fa"
+        )
+
         # Generate and send 2FA code
         code = auth_service.generate_2fa_code()
         await store_2fa_code(user.id, code, ttl=600)  # 10 minutes
@@ -103,9 +123,9 @@ async def login(
         logger.info("2FA code sent", user_id=user.id, component="2fa")
 
         return LoginResponse(
-            access_token="", 
-            refresh_token="", 
-            require_2fa=True, 
+            access_token="",
+            refresh_token="",
+            require_2fa=True,
             expires_in=0,
             user=UserInfo(
                 id=user.id,
@@ -117,7 +137,7 @@ async def login(
                 roles=user.user_roles,
                 is_active=user.is_active,
                 last_login=user.last_login,
-            )
+            ),
         )
 
     # Check if 2FA is required (using the service method)
@@ -132,9 +152,9 @@ async def login(
         await email_service.send_2fa_code(user.email, code, user.full_name)
 
         return LoginResponse(
-            access_token="", 
-            refresh_token="", 
-            require_2fa=True, 
+            access_token="",
+            refresh_token="",
+            require_2fa=True,
             expires_in=0,
             user=UserInfo(
                 id=user.id,
@@ -146,7 +166,7 @@ async def login(
                 roles=user.user_roles,
                 is_active=user.is_active,
                 last_login=user.last_login,
-            )
+            ),
         )
 
     # Create tokens without 2FA
@@ -256,8 +276,8 @@ async def refresh_token(
 
 @router.post("/logout")
 async def logout(
-    current_user: User = Depends(get_current_active_user), 
-    db: AsyncSession = Depends(get_db)
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Logout user by revoking all refresh tokens for the user."""
     # Revoke all refresh tokens for this user
@@ -510,22 +530,21 @@ async def activate_account(
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
     # Verify email matches
     if user.email != activation_data.email:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email does not match user record"
+            detail="Email does not match user record",
         )
 
     # Verify user is inactive (waiting for activation)
     if user.is_active:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User account is already activated"
+            detail="User account is already activated",
         )
 
     # Verify temporary password
@@ -534,7 +553,7 @@ async def activate_account(
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid temporary password"
+            detail="Invalid temporary password",
         )
 
     # Update user with new password and activate account
@@ -545,22 +564,24 @@ async def activate_account(
         .values(
             hashed_password=hashed_password,
             is_active=True,
-            last_login=datetime.utcnow()
+            last_login=datetime.utcnow(),
         )
     )
-    
+
     # If this is an admin user activating, also activate their company
     if user.is_admin and user.company_id:
         await db.execute(
-            update(Company)
-            .where(Company.id == user.company_id)
-            .values(is_active="1")
+            update(Company).where(Company.id == user.company_id).values(is_active="1")
         )
 
     await db.commit()
-    logger.info("User account activated successfully", user_id=user.id, email=user.email, component="auth")
+    logger.info(
+        "User account activated successfully",
+        user_id=user.id,
+        email=user.email,
+        component="auth",
+    )
 
     return ActivateAccountResponse(
-        message="Account activated successfully",
-        success=True
+        message="Account activated successfully", success=True
     )

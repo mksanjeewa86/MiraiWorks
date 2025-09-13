@@ -16,6 +16,7 @@ from app.utils.constants import MessageType
 
 class DirectMessage(Base):
     """Direct message between two users - no conversations needed."""
+
     __tablename__ = "direct_messages"
 
     id = Column(Integer, primary_key=True, index=True)
