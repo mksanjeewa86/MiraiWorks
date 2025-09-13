@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
@@ -12,16 +12,22 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const emailRef = useRef('');
   const { login, isAuthenticated, require2FA, error, clearError } = useAuth();
   const router = useRouter();
+
+  // Update email ref whenever email changes
+  useEffect(() => {
+    emailRef.current = email;
+  }, [email]);
 
   useEffect(() => {
     if (isAuthenticated) {
       router.push('/dashboard');
     } else if (require2FA) {
-      router.push(`/auth/two-factor?email=${encodeURIComponent(email)}`);
+      router.push(`/auth/two-factor?email=${encodeURIComponent(emailRef.current)}`);
     }
-  }, [isAuthenticated, require2FA, router, email]);
+  }, [isAuthenticated, require2FA, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -31,7 +31,9 @@ async def get_companies(
     if company_type:
         conditions.append(Company.type == company_type)
     if is_active is not None:
-        conditions.append(Company.is_active == is_active)
+        # Convert boolean to string since is_active is stored as String(1) in database
+        active_value = "1" if is_active else "0"
+        conditions.append(Company.is_active == active_value)
 
     # Build query
     query = select(Company)

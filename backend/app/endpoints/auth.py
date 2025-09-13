@@ -608,6 +608,10 @@ async def activate_account(
         )
 
     await db.commit()
+    
+    # Refresh user object to get updated data
+    await db.refresh(user)
+    
     logger.info(
         "User account activated successfully",
         user_id=user.id,
@@ -615,6 +619,24 @@ async def activate_account(
         component="auth",
     )
 
+    # Generate authentication tokens for automatic login
+    tokens = await auth_service.create_login_tokens(db, user)
+
     return ActivateAccountResponse(
-        message="Account activated successfully", success=True
+        message="Account activated successfully",
+        success=True,
+        access_token=tokens["access_token"],
+        refresh_token=tokens["refresh_token"],
+        expires_in=tokens["expires_in"],
+        user=UserInfo(
+            id=user.id,
+            email=user.email,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            full_name=user.full_name,
+            company_id=user.company_id,
+            roles=user.user_roles,
+            is_active=user.is_active,
+            last_login=user.last_login,
+        ),
     )

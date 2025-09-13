@@ -20,6 +20,7 @@ class UserSettings(Base):
     # Profile settings
     job_title = Column(String(200), nullable=True)
     bio = Column(Text, nullable=True)
+    avatar_url = Column(String(500), nullable=True)
 
     # Notification preferences
     email_notifications = Column(Boolean, nullable=False, default=True)

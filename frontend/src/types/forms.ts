@@ -53,3 +53,16 @@ export interface CompanyFormData {
   city: string;
   description: string;
 }
+
+// User Form Data
+export interface UserFormData {
+  email: string;
+  first_name: string;
+  last_name: string;
+  phone: string;
+  company_id: string;
+  roles: string[];
+  is_admin: boolean;
+  require_2fa: boolean;
+  send_activation_email: boolean;
+}

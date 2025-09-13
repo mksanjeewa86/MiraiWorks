@@ -4,7 +4,27 @@ import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '@/contexts/ToastContext';
-import { makePublicRequest } from '@/api/apiClient';
+import { makePublicRequest } from '@/lib/apiClient';
+
+interface ActivationResponse {
+  message: string;
+  success: boolean;
+  access_token?: string;
+  refresh_token?: string;
+  token_type?: string;
+  expires_in?: number;
+  user?: {
+    id: number;
+    email: string;
+    first_name: string;
+    last_name: string;
+    full_name: string;
+    company_id: number;
+    roles: string[];
+    is_active: boolean;
+    last_login?: string;
+  };
+}
 
 export default function ActivateAccountPage() {
   const router = useRouter();
@@ -45,7 +65,7 @@ export default function ActivateAccountPage() {
         return;
       }
 
-      await makePublicRequest('/api/auth/activate', {
+      const response = await makePublicRequest<ActivationResponse>('/api/auth/activate', {
         method: 'POST',
         body: JSON.stringify({
           userId: parseInt(userId),
@@ -55,16 +75,23 @@ export default function ActivateAccountPage() {
         }),
       });
 
+      // Store authentication tokens if provided
+      if (response.data.access_token && response.data.refresh_token) {
+        localStorage.setItem('accessToken', response.data.access_token);
+        localStorage.setItem('refreshToken', response.data.refresh_token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+      }
+
       setActivationSuccess(true);
       showToast({
         type: 'success',
         title: 'Account activated successfully!',
-        message: 'You can now log in with your new password.',
+        message: 'You are now logged in and will be redirected to the dashboard.',
       });
 
-      // Redirect to login after 2 seconds
+      // Redirect to dashboard after 2 seconds
       setTimeout(() => {
-        router.push('/auth/login');
+        router.push('/dashboard');
       }, 2000);
 
     } catch (err) {
@@ -92,7 +119,7 @@ export default function ActivateAccountPage() {
               Account Activated!
             </h2>
             <p className="text-gray-600 dark:text-gray-400">
-              Your account has been successfully activated. You will be redirected to the login page shortly.
+              Your account has been successfully activated and you are now logged in. You will be redirected to the dashboard shortly.
             </p>
           </div>
         </div>
@@ -132,7 +159,9 @@ export default function ActivateAccountPage() {
                 required
                 value={formData.email}
                 onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
+                  formData.email ? 'border-green-300 dark:border-green-600' : 'border-gray-300 dark:border-gray-600'
+                }`}
                 placeholder="Enter your email address"
               />
             </div>
@@ -155,7 +184,7 @@ export default function ActivateAccountPage() {
                 <button
                   type="button"
                   onClick={() => togglePasswordVisibility('temporary')}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer hover:text-gray-600 dark:hover:text-gray-300 z-10"
                 >
                   {showPasswords.temporary ? (
                     <EyeOff className="h-4 w-4 text-gray-400" />
@@ -185,7 +214,7 @@ export default function ActivateAccountPage() {
                 <button
                   type="button"
                   onClick={() => togglePasswordVisibility('new')}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer hover:text-gray-600 dark:hover:text-gray-300 z-10"
                 >
                   {showPasswords.new ? (
                     <EyeOff className="h-4 w-4 text-gray-400" />
@@ -214,7 +243,7 @@ export default function ActivateAccountPage() {
                 <button
                   type="button"
                   onClick={() => togglePasswordVisibility('confirm')}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer hover:text-gray-600 dark:hover:text-gray-300 z-10"
                 >
                   {showPasswords.confirm ? (
                     <EyeOff className="h-4 w-4 text-gray-400" />
@@ -234,6 +263,12 @@ export default function ActivateAccountPage() {
             >
               {loading ? 'Activating Account...' : 'Activate Account & Set Password'}
             </button>
+            
+            {(!formData.email || !formData.temporaryPassword || !formData.newPassword || !formData.confirmPassword) && !loading && (
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 text-center">
+                Please fill in all fields to activate your account
+              </p>
+            )}
           </div>
 
           <div className="text-center">

@@ -24,6 +24,10 @@ class User(Base):
     is_admin = Column(Boolean, nullable=False, default=False, index=True)
     require_2fa = Column(Boolean, nullable=False, default=False, index=True)
     last_login = Column(DateTime(timezone=True), nullable=True)
+    # Logical deletion fields
+    is_deleted = Column(Boolean, nullable=False, default=False, index=True)
+    deleted_at = Column(DateTime(timezone=True), nullable=True)
+    deleted_by = Column(Integer, nullable=True)  # ID of user who deleted this user
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -68,6 +72,9 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
         uselist=False,
+    )
+    calendar_connections = relationship(
+        "CalendarConnection", back_populates="user", cascade="all, delete-orphan"
     )
 
     @property

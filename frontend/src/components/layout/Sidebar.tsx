@@ -82,6 +82,12 @@ const navigationItems: NavItem[] = [
     roles: ['recruiter', 'super_admin']
   },
   {
+    name: 'Users',
+    href: '/users',
+    icon: Users,
+    roles: ['super_admin', 'company_admin']
+  },
+  {
     name: 'Settings',
     href: '/settings',
     icon: Settings,

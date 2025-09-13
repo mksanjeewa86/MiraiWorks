@@ -4,7 +4,7 @@ import { createContext, useContext, useReducer, useEffect, type ReactNode } from
 import type { User, LoginCredentials, RegisterData } from '@/types';
 import type { AuthState, AuthAction, AuthContextType } from '@/types/contexts';
 import { authApi } from '@/api/auth';
-import { setAuthHandler } from '@/api/apiClient';
+import { setAuthHandler } from '@/lib/apiClient';
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 

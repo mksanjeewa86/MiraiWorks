@@ -1,0 +1,62 @@
+export interface User {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+  phone?: string;
+  is_active: boolean;
+  is_admin: boolean;
+  require_2fa: boolean;
+  last_login?: string;
+  company_id?: number;
+  company_name?: string;
+  roles: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserCreate {
+  email: string;
+  first_name: string;
+  last_name: string;
+  phone?: string;
+  company_id?: number;
+  roles: string[];
+  is_admin?: boolean;
+  require_2fa?: boolean;
+  send_activation_email?: boolean;
+}
+
+export interface UserUpdate {
+  email?: string;
+  first_name?: string;
+  last_name?: string;
+  phone?: string;
+  is_active?: boolean;
+  is_admin?: boolean;
+  require_2fa?: boolean;
+  roles?: string[];
+}
+
+export interface UserListResponse {
+  users: User[];
+  total: number;
+  page: number;
+  size: number;
+  pages: number;
+}
+
+export interface UserFilters {
+  page?: number;
+  size?: number;
+  search?: string;
+  company_id?: number;
+  is_active?: boolean;
+  is_admin?: boolean;
+  role?: string;
+}
+
+export interface PasswordResetRequest {
+  temporary_password: string;
+  message: string;
+}

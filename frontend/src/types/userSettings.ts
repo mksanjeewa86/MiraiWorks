@@ -29,6 +29,7 @@ export interface UserProfile {
   full_name: string;
   job_title?: string;
   bio?: string;
+  avatar_url?: string;
 }
 
 export interface UserSettingsUpdate {
@@ -59,4 +60,5 @@ export interface UserProfileUpdate {
   phone?: string;
   job_title?: string;
   bio?: string;
+  avatar_url?: string;
 }

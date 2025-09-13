@@ -4,7 +4,7 @@ import {
   UserSettingsUpdate,
   UserProfileUpdate
 } from '../types/userSettings';
-import { makeAuthenticatedRequest } from '@/api/apiClient';
+import { makeAuthenticatedRequest } from '@/lib/apiClient';
 import { API_ENDPOINTS } from '@/config/api';
 
 export const userSettingsApi = {

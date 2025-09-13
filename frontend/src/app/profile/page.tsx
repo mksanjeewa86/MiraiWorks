@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/layout/AppLayout';
@@ -26,6 +26,7 @@ import {
   Camera
 } from 'lucide-react';
 import { ProfileData } from '@/types/pages';
+import { makeAuthenticatedRequest } from '@/lib/apiClient';
 
 function ProfilePageContent() {
   const { user } = useAuth();
@@ -37,6 +38,9 @@ function ProfilePageContent() {
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState<UserProfileUpdate>({});
   const [error, setError] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const loadProfileData = async () => {
@@ -125,6 +129,7 @@ function ProfilePageContent() {
       };
 
         setProfile(profileData);
+        setAvatarUrl(response.data.avatar_url ?? null);
         setEditForm({
           first_name: response.data.first_name,
           last_name: response.data.last_name,
@@ -193,6 +198,94 @@ function ProfilePageContent() {
     }
     setEditing(false);
     setError(null);
+  };
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError('Please select an image file');
+      return;
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image size must be less than 5MB');
+      return;
+    }
+
+    setUploadingAvatar(true);
+    setError(null);
+
+    try {
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // Upload to files API
+      const response = await makeAuthenticatedRequest<{
+        file_url: string;
+        file_name: string;
+        file_size: number;
+        file_type: string;
+        s3_key: string;
+        success: boolean;
+      }>('/api/files/upload', {
+        method: 'POST',
+        body: formData,
+        headers: {} // Don't set Content-Type for FormData
+      });
+
+      if (response.data.success) {
+        const avatarUrl = response.data.file_url;
+        setAvatarUrl(avatarUrl);
+        
+        // Save avatar URL to backend
+        try {
+          await makeAuthenticatedRequest('/api/user/profile', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              avatar_url: avatarUrl
+            }),
+          });
+          
+          // Update profile data with new avatar
+          if (profile) {
+            const updatedProfile = {
+              ...profile,
+              personal_info: {
+                ...profile.personal_info,
+                avatar_url: avatarUrl
+              }
+            };
+            setProfile(updatedProfile);
+          }
+        } catch (err) {
+          console.error('Failed to save avatar URL:', err);
+          setError('Avatar uploaded but failed to save to profile. Please try again.');
+        }
+      }
+    } catch (err) {
+      console.error('Failed to upload avatar:', err);
+      setError('Failed to upload avatar. Please try again.');
+    } finally {
+      setUploadingAvatar(false);
+      // Clear the file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleAvatarClick = () => {
+    if (editing && fileInputRef.current) {
+      fileInputRef.current.click();
+    }
   };
 
   const getAchievementIcon = (type: string) => {
@@ -287,14 +380,34 @@ function ProfilePageContent() {
             <Card className="p-6">
               <div className="flex items-start gap-6">
                 <div className="relative">
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">
-                    {profile.personal_info.full_name.split(' ').map(n => n[0]).join('')}
-                  </div>
+                  {profile.personal_info.avatar_url || avatarUrl ? (
+                    <img
+                      src={avatarUrl || profile.personal_info.avatar_url}
+                      alt="Profile picture"
+                      className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+                    />
+                  ) : (
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">
+                      {profile.personal_info.full_name.split(' ').map(n => n[0]).join('')}
+                    </div>
+                  )}
                   {editing && (
-                    <Button size="sm" className="absolute -bottom-2 -right-2 rounded-full p-2">
+                    <Button 
+                      size="sm" 
+                      className="absolute -bottom-2 -right-2 rounded-full p-2"
+                      onClick={handleAvatarClick}
+                      disabled={uploadingAvatar}
+                    >
                       <Camera className="h-3 w-3" />
                     </Button>
                   )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                    className="hidden"
+                  />
                 </div>
                 
                 <div className="flex-1">

@@ -59,22 +59,20 @@ class StorageService:
         """Calculate SHA256 hash of file data."""
         return hashlib.sha256(file_data).hexdigest()
 
-    async def upload_file(
-        self, file: UploadFile, user_id: int, folder: str = "attachments"
+    async def upload_file_data(
+        self, file_data: bytes, filename: str, content_type: str, user_id: int, folder: str = "attachments"
     ) -> tuple[str, str, int]:
         """
-        Upload file to S3 and return (s3_key, sha256_hash, file_size).
+        Upload file data to S3 and return (s3_key, sha256_hash, file_size).
         """
         try:
-            # Read file data
-            file_data = await file.read()
             file_size = len(file_data)
 
             # Calculate hash
             file_hash = self.calculate_file_hash(file_data)
 
             # Generate S3 key
-            s3_key = self.generate_s3_key(user_id, file.filename, folder)
+            s3_key = self.generate_s3_key(user_id, filename, folder)
 
             # Upload to S3
             from io import BytesIO
@@ -84,7 +82,7 @@ class StorageService:
                 object_name=s3_key,
                 data=BytesIO(file_data),
                 length=file_size,
-                content_type=file.content_type,
+                content_type=content_type,
             )
 
             logger.info(f"Uploaded file to S3: {s3_key}")
@@ -96,6 +94,24 @@ class StorageService:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="File upload failed",
             )
+        except Exception as e:
+            logger.error(f"Upload failed: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="File upload failed",
+            )
+
+    async def upload_file(
+        self, file: UploadFile, user_id: int, folder: str = "attachments"
+    ) -> tuple[str, str, int]:
+        """
+        Upload file to S3 and return (s3_key, sha256_hash, file_size).
+        """
+        try:
+            # Read file data
+            file_data = await file.read()
+            return await self.upload_file_data(file_data, file.filename, file.content_type, user_id, folder)
+
         except Exception as e:
             logger.error(f"File upload error: {e}")
             raise HTTPException(

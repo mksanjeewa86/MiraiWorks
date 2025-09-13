@@ -17,6 +17,7 @@ class UserSettingsResponse(BaseModel):
     # Profile settings
     job_title: Optional[str] = None
     bio: Optional[str] = None
+    avatar_url: Optional[str] = None
 
     # Notification preferences
     email_notifications: bool = True
@@ -42,6 +43,7 @@ class UserSettingsUpdate(BaseModel):
     # Profile settings
     job_title: Optional[str] = None
     bio: Optional[str] = None
+    avatar_url: Optional[str] = None
 
     # Notification preferences
     email_notifications: Optional[bool] = None
@@ -66,6 +68,7 @@ class UserProfileUpdate(BaseModel):
     phone: Optional[str] = None
     job_title: Optional[str] = None
     bio: Optional[str] = None
+    avatar_url: Optional[str] = None
 
 
 class UserProfileResponse(BaseModel):
@@ -77,6 +80,7 @@ class UserProfileResponse(BaseModel):
     full_name: str
     job_title: Optional[str] = None
     bio: Optional[str] = None
+    avatar_url: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -99,6 +103,7 @@ async def get_user_settings(
         # Profile settings (from UserSettings)
         job_title=settings.job_title,
         bio=settings.bio,
+        avatar_url=settings.avatar_url,
         # Notification preferences (from UserSettings)
         email_notifications=settings.email_notifications,
         push_notifications=settings.push_notifications,
@@ -160,6 +165,7 @@ async def update_user_settings(
         # Profile settings (from UserSettings)
         job_title=settings.job_title,
         bio=settings.bio,
+        avatar_url=settings.avatar_url,
         # Notification preferences (from UserSettings)
         email_notifications=settings.email_notifications,
         push_notifications=settings.push_notifications,
@@ -196,6 +202,7 @@ async def get_user_profile(
         "full_name": current_user.full_name,
         "job_title": user_settings.job_title if user_settings else None,
         "bio": user_settings.bio if user_settings else None,
+        "avatar_url": user_settings.avatar_url if user_settings else None,
     }
 
 
@@ -214,8 +221,8 @@ async def update_user_profile(
         if field in user_fields and hasattr(current_user, field):
             setattr(current_user, field, value)
 
-    # Update settings fields (job_title, bio)
-    settings_fields = {"job_title", "bio"}
+    # Update settings fields (job_title, bio, avatar_url)
+    settings_fields = {"job_title", "bio", "avatar_url"}
     settings_data = {k: v for k, v in update_data.items() if k in settings_fields}
 
     if settings_data:
@@ -248,4 +255,5 @@ async def update_user_profile(
         "full_name": current_user.full_name,
         "job_title": user_settings.job_title if user_settings else None,
         "bio": user_settings.bio if user_settings else None,
+        "avatar_url": user_settings.avatar_url if user_settings else None,
     }

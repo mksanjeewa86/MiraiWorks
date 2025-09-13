@@ -54,14 +54,18 @@ async def upload_file(
     db: AsyncSession = Depends(get_db),
 ):
     """Upload a file and return its URL and metadata."""
+    
+    logger.info(f"Upload request received - filename: {file.filename}, content_type: {file.content_type}, user: {current_user.id}")
 
     # Validate file
     if not file.filename:
+        logger.error("No filename provided")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="No file provided"
         )
 
     if not is_allowed_file(file.filename):
+        logger.error(f"File type not allowed: {file.filename}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="File type not allowed"
         )
@@ -78,12 +82,9 @@ async def upload_file(
     try:
         from app.services.storage_service import storage_service
 
-        # Create a temporary file-like object for upload
-        file.file.seek(0)  # Reset file pointer
-
-        # Upload to MinIO
-        s3_key, file_hash, file_size = await storage_service.upload_file(
-            file, current_user.id, "message-attachments"
+        # Upload to MinIO with the already read file content
+        s3_key, file_hash, file_size = await storage_service.upload_file_data(
+            file_content, file.filename, file.content_type, current_user.id, "message-attachments"
         )
 
         # Generate presigned URL for download

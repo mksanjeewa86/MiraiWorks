@@ -22,6 +22,10 @@ class Company(Base):
     is_active = Column(String(1), nullable=False, default="1", index=True)
     is_demo = Column(Boolean, nullable=False, default=False, index=True)
     demo_end_date = Column(DateTime(timezone=True), nullable=True)
+    # Logical deletion fields
+    is_deleted = Column(Boolean, nullable=False, default=False, index=True)
+    deleted_at = Column(DateTime(timezone=True), nullable=True)
+    deleted_by = Column(Integer, nullable=True)  # ID of user who deleted this company
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

@@ -32,3 +32,6 @@ export * from './hooks';
 
 // User Settings types
 export * from './userSettings';
+
+// Calendar types
+export * from './calendar';
