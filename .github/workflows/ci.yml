@@ -30,6 +30,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt || echo "Some dependencies failed to install, continuing..."
+        pip install ruff mypy || echo "Failed to install linting tools, continuing..."
 
     - name: Code formatting check (Ruff)
       working-directory: ./backend
@@ -81,7 +82,7 @@ jobs:
 
     - name: Linting (ESLint)
       working-directory: ./frontend
-      run: npm run lint || echo "ESLint failed, but continuing..."
+      run: npm run lint . || echo "ESLint failed, but continuing..."
 
     - name: Build application
       working-directory: ./frontend

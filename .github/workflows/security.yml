@@ -55,7 +55,7 @@ jobs:
         safety check --short-report || echo "Safety check completed with warnings"
 
     - name: Install Frontend dependencies and audit
-      working-directory: ./frontend-nextjs
+      working-directory: ./frontend
       run: |
         npm ci || echo "Failed to install Node dependencies"  
         npm audit --audit-level=high || echo "npm audit completed with warnings"
