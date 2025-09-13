@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { 
-  Users, 
-  Search, 
+import {
+  Users,
+  Search,
   Plus,
-  Edit, 
+  Edit,
   Trash2,
   Mail,
   Phone,
@@ -17,17 +17,35 @@ import {
   UserCheck,
   Key,
   RefreshCw,
+  X,
+  Power,
+  PowerOff,
+  AlertTriangle,
+  CheckCircle,
+  Mail as MailIcon,
 } from 'lucide-react';
 import { usersApi } from '@/api/usersApi';
 import { User, UserFilters } from '@/types/user';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import ConfirmationModal from '@/components/ui/ConfirmationModal';
 
 function UsersPageContent() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+  const [selectedUsers, setSelectedUsers] = useState<Set<number>>(new Set());
+  const [confirmationModal, setConfirmationModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    confirmText?: string;
+    confirmButtonClass?: string;
+    icon?: React.ReactNode;
+  }>({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<UserFilters>({
     page: 1,
@@ -113,49 +131,147 @@ function UsersPageContent() {
     setFilters(prev => ({ ...prev, page }));
   };
 
-  const handleDelete = async (user: User) => {
-    if (!confirm(`Are you sure you want to delete "${user.first_name} ${user.last_name}"? This action cannot be undone.`)) {
-      return;
-    }
 
-    try {
-      await usersApi.deleteUser(user.id);
-      await loadUsers();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete user');
+  const handleSelectUser = (userId: number) => {
+    const newSelected = new Set(selectedUsers);
+    if (newSelected.has(userId)) {
+      newSelected.delete(userId);
+    } else {
+      newSelected.add(userId);
+    }
+    setSelectedUsers(newSelected);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedUsers.size === users.length) {
+      setSelectedUsers(new Set());
+    } else {
+      setSelectedUsers(new Set(users.map(user => user.id)));
     }
   };
 
-  const handleToggleActive = async (user: User) => {
-    try {
-      await usersApi.toggleStatus(user.id);
-      await loadUsers();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update user status');
-    }
+  const handleBulkDelete = async () => {
+    if (selectedUsers.size === 0) return;
+
+    setConfirmationModal({
+      isOpen: true,
+      title: 'Confirm Delete',
+      message: `Are you sure you want to delete ${selectedUsers.size} user(s)? This action cannot be undone.`,
+      confirmText: 'Delete',
+      confirmButtonClass: 'bg-red-600 hover:bg-red-700',
+      icon: <Trash2 className="h-6 w-6 text-red-500" />,
+      onConfirm: async () => {
+        try {
+          const response = await usersApi.bulkDelete(Array.from(selectedUsers));
+          if (response.data.errors.length > 0) {
+            setError(`Bulk delete completed with some errors: ${response.data.errors.join(', ')}`);
+          } else {
+            setSuccessMessage(response.data.message);
+          }
+          setSelectedUsers(new Set());
+          await loadUsers();
+        } catch (err) {
+          setError(err instanceof Error ? err.message : 'Failed to delete users');
+        }
+      }
+    });
   };
 
-  const handleResetPassword = async (user: User) => {
-    if (!confirm(`Reset password for "${user.first_name} ${user.last_name}"? A temporary password will be generated and sent via email.`)) {
-      return;
-    }
+  const handleBulkResetPassword = async () => {
+    if (selectedUsers.size === 0) return;
 
-    try {
-      const response = await usersApi.resetPassword(user.id);
-      alert(`Password reset successful! Temporary password: ${response.data.temporary_password}`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to reset password');
-    }
+    setConfirmationModal({
+      isOpen: true,
+      title: 'Reset Passwords',
+      message: `Reset passwords for ${selectedUsers.size} user(s)? Temporary passwords will be generated and sent via email.`,
+      confirmText: 'Reset Passwords',
+      confirmButtonClass: 'bg-purple-600 hover:bg-purple-700',
+      icon: <Key className="h-6 w-6 text-purple-500" />,
+      onConfirm: async () => {
+        try {
+          const response = await usersApi.bulkResetPassword(Array.from(selectedUsers));
+          if (response.data.errors.length > 0) {
+            setError(`Bulk password reset completed with some errors: ${response.data.errors.join(', ')}`);
+          } else {
+            setSuccessMessage(response.data.message);
+          }
+          setSelectedUsers(new Set());
+        } catch (err) {
+          setError(err instanceof Error ? err.message : 'Failed to reset passwords');
+        }
+      }
+    });
   };
 
-  const handleResendActivation = async (user: User) => {
-    try {
-      await usersApi.resendActivation(user.id);
-      alert('Activation email sent successfully!');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send activation email');
-    }
+  const handleBulkResendActivation = async () => {
+    if (selectedUsers.size === 0) return;
+
+    setConfirmationModal({
+      isOpen: true,
+      title: 'Resend Activation Emails',
+      message: `Send activation emails to ${selectedUsers.size} user(s)?`,
+      confirmText: 'Send Emails',
+      confirmButtonClass: 'bg-blue-600 hover:bg-blue-700',
+      icon: <MailIcon className="h-6 w-6 text-blue-500" />,
+      onConfirm: async () => {
+        try {
+          const response = await usersApi.bulkResendActivation(Array.from(selectedUsers));
+          if (response.data.errors.length > 0) {
+            setError(`Bulk activation email send completed with some errors: ${response.data.errors.join(', ')}`);
+          } else {
+            setSuccessMessage(response.data.message);
+          }
+          setSelectedUsers(new Set());
+        } catch (err) {
+          setError(err instanceof Error ? err.message : 'Failed to send activation emails');
+        }
+      }
+    });
   };
+
+  const handleBulkToggleStatus = async (activate: boolean) => {
+    if (selectedUsers.size === 0) return;
+
+    const action = activate ? 'activate' : 'deactivate';
+    const actionTitle = activate ? 'Activate Users' : 'Deactivate Users';
+
+    setConfirmationModal({
+      isOpen: true,
+      title: actionTitle,
+      message: `Are you sure you want to ${action} ${selectedUsers.size} user(s)?`,
+      confirmText: activate ? 'Activate' : 'Deactivate',
+      confirmButtonClass: activate ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700',
+      icon: activate ? <Power className="h-6 w-6 text-green-500" /> : <PowerOff className="h-6 w-6 text-red-500" />,
+      onConfirm: async () => {
+        try {
+          const response = await usersApi.bulkToggleStatus(Array.from(selectedUsers), activate);
+          if (response.data.errors.length > 0) {
+            setError(`Bulk ${action} completed with some errors: ${response.data.errors.join(', ')}`);
+          } else {
+            setSuccessMessage(response.data.message);
+          }
+          setSelectedUsers(new Set());
+          await loadUsers();
+        } catch (err) {
+          setError(err instanceof Error ? err.message : `Failed to ${action} users`);
+        }
+      }
+    });
+  };
+
+  const closeModal = () => {
+    setConfirmationModal({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+  };
+
+  // Auto-hide success message after 5 seconds
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
 
   if (loading && users.length === 0) {
     return (
@@ -171,8 +287,32 @@ function UsersPageContent() {
     <AppLayout>
       <div className="max-w-7xl mx-auto">
         {error && (
-          <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded">
-            {error}
+          <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded flex items-center justify-between">
+            <div className="flex items-center">
+              <AlertTriangle className="h-4 w-4 mr-2" />
+              {error}
+            </div>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-500 hover:text-red-700"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+
+        {successMessage && (
+          <div className="mb-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded flex items-center justify-between">
+            <div className="flex items-center">
+              <CheckCircle className="h-4 w-4 mr-2" />
+              {successMessage}
+            </div>
+            <button
+              onClick={() => setSuccessMessage(null)}
+              className="text-green-500 hover:text-green-700"
+            >
+              <X className="h-4 w-4" />
+            </button>
           </div>
         )}
 
@@ -189,6 +329,75 @@ function UsersPageContent() {
             <span>Add User</span>
           </Link>
         </div>
+
+        {selectedUsers.size > 0 && (
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <span className="text-blue-700 dark:text-blue-300 font-medium">
+                  {selectedUsers.size} user(s) selected
+                </span>
+                <button
+                  onClick={() => setSelectedUsers(new Set())}
+                  className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 text-sm"
+                >
+                  Clear selection
+                </button>
+              </div>
+              <div className="flex items-center space-x-2">
+                {(() => {
+                  const selectedUserObjects = users.filter(user => selectedUsers.has(user.id));
+                  const hasInactiveUsers = selectedUserObjects.some(user => !user.is_active);
+                  const hasActiveUsers = selectedUserObjects.some(user => user.is_active);
+
+                  return (
+                    <>
+                      {hasInactiveUsers && (
+                        <button
+                          onClick={() => handleBulkToggleStatus(true)}
+                          className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 flex items-center space-x-1"
+                        >
+                          <Power className="h-3 w-3" />
+                          <span>Activate</span>
+                        </button>
+                      )}
+                      {hasActiveUsers && (
+                        <button
+                          onClick={() => handleBulkToggleStatus(false)}
+                          className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 flex items-center space-x-1"
+                        >
+                          <PowerOff className="h-3 w-3" />
+                          <span>Deactivate</span>
+                        </button>
+                      )}
+                    </>
+                  );
+                })()}
+                <button
+                  onClick={handleBulkResetPassword}
+                  className="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700 flex items-center space-x-1"
+                >
+                  <Key className="h-3 w-3" />
+                  <span>Reset Passwords</span>
+                </button>
+                <button
+                  onClick={handleBulkResendActivation}
+                  className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 flex items-center space-x-1"
+                >
+                  <RefreshCw className="h-3 w-3" />
+                  <span>Resend Activation</span>
+                </button>
+                <button
+                  onClick={handleBulkDelete}
+                  className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 flex items-center space-x-1"
+                >
+                  <Trash2 className="h-3 w-3" />
+                  <span>Delete</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 mb-6">
           <div className="flex flex-wrap gap-4 items-center">
@@ -236,7 +445,6 @@ function UsersPageContent() {
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
               >
                 <option value="">All Roles</option>
-                <option value="super_admin">Super Admin</option>
                 <option value="company_admin">Company Admin</option>
                 <option value="recruiter">Recruiter</option>
                 <option value="job_seeker">Job Seeker</option>
@@ -264,6 +472,14 @@ function UsersPageContent() {
               <table className="w-full">
                 <thead className="bg-gray-50 dark:bg-gray-900">
                   <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-12">
+                      <input
+                        type="checkbox"
+                        checked={users.length > 0 && selectedUsers.size === users.length}
+                        onChange={handleSelectAll}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                    </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       User
                     </th>
@@ -280,13 +496,20 @@ function UsersPageContent() {
                       Status
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Actions
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {users.map((user) => (
                     <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <td className="px-6 py-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedUsers.has(user.id)}
+                          onChange={() => handleSelectUser(user.id)}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                      </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center">
                           <div className="flex-shrink-0">
@@ -350,14 +573,11 @@ function UsersPageContent() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <button
-                          onClick={() => handleToggleActive(user)}
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            user.is_active
-                              ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                              : 'bg-red-100 text-red-800 hover:bg-red-200'
-                          }`}
-                        >
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          user.is_active
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}>
                           {user.is_active ? (
                             <>
                               <UserCheck className="h-3 w-3 mr-1" />
@@ -369,38 +589,17 @@ function UsersPageContent() {
                               Inactive
                             </>
                           )}
-                        </button>
+                        </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end space-x-2">
-                          <button
-                            onClick={() => handleResetPassword(user)}
-                            className="text-purple-600 hover:text-purple-900 dark:text-purple-400 dark:hover:text-purple-300"
-                            title="Reset password"
-                          >
-                            <Key className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => handleResendActivation(user)}
-                            className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
-                            title="Resend activation email"
-                          >
-                            <RefreshCw className="h-4 w-4" />
-                          </button>
+                        <div className="flex items-center justify-end">
                           <Link
                             href={`/users/${user.id}/edit`}
-                            className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                            title="Edit user"
+                            className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 flex items-center space-x-1"
                           >
-                            <Edit className="h-4 w-4" />
+                            <Edit className="h-3 w-3" />
+                            <span>Edit</span>
                           </Link>
-                          <button
-                            onClick={() => handleDelete(user)}
-                            className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                            title="Delete user"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
                         </div>
                       </td>
                     </tr>
@@ -439,6 +638,17 @@ function UsersPageContent() {
             </div>
           )}
         </div>
+
+        <ConfirmationModal
+          isOpen={confirmationModal.isOpen}
+          onClose={closeModal}
+          onConfirm={confirmationModal.onConfirm}
+          title={confirmationModal.title}
+          message={confirmationModal.message}
+          confirmText={confirmationModal.confirmText}
+          confirmButtonClass={confirmationModal.confirmButtonClass}
+          icon={confirmationModal.icon}
+        />
       </div>
     </AppLayout>
   );

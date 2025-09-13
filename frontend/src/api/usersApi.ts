@@ -4,7 +4,8 @@ import {
   UserUpdate,
   UserListResponse,
   UserFilters,
-  PasswordResetRequest
+  PasswordResetRequest,
+  BulkUserOperation
 } from '../types/user';
 import { API_CONFIG } from '@/config/api';
 
@@ -100,5 +101,30 @@ export const usersApi = {
   toggleStatus: (userId: number) =>
     makeAuthenticatedRequest<User>(`/api/admin/users/${userId}/toggle-status`, {
       method: 'POST',
+    }),
+
+  // Bulk operations
+  bulkDelete: (userIds: number[]) =>
+    makeAuthenticatedRequest<{ message: string; deleted_count: number; errors: string[] }>('/api/admin/users/bulk/delete', {
+      method: 'POST',
+      body: JSON.stringify({ user_ids: userIds, send_email: false }),
+    }),
+
+  bulkResetPassword: (userIds: number[]) =>
+    makeAuthenticatedRequest<{ message: string; reset_count: number; errors: string[]; temporary_passwords?: Record<number, string> }>('/api/admin/users/bulk/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ user_ids: userIds, send_email: true }),
+    }),
+
+  bulkResendActivation: (userIds: number[]) =>
+    makeAuthenticatedRequest<{ message: string; sent_count: number; errors: string[] }>('/api/admin/users/bulk/resend-activation', {
+      method: 'POST',
+      body: JSON.stringify({ user_ids: userIds, send_email: true }),
+    }),
+
+  bulkToggleStatus: (userIds: number[], activate: boolean) =>
+    makeAuthenticatedRequest<{ message: string; updated_count: number; errors: string[] }>(`/api/admin/users/bulk/toggle-status?activate=${activate}`, {
+      method: 'POST',
+      body: JSON.stringify({ user_ids: userIds, send_email: false }),
     }),
 };

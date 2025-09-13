@@ -61,8 +61,7 @@ export interface UserFormData {
   last_name: string;
   phone: string;
   company_id: string;
-  roles: string[];
+  role: string; // Changed from roles array to single role
   is_admin: boolean;
   require_2fa: boolean;
-  send_activation_email: boolean;
 }

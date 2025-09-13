@@ -60,3 +60,8 @@ export interface PasswordResetRequest {
   temporary_password: string;
   message: string;
 }
+
+export interface BulkUserOperation {
+  user_ids: number[];
+  send_email?: boolean;
+}

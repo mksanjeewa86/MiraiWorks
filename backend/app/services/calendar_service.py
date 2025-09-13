@@ -48,8 +48,8 @@ class CalendarService:
 
     async def get_google_auth_url(self, user_id: int) -> str:
         """Generate Google Calendar OAuth authorization URL"""
-        if not self.google_client_id:
-            raise ValueError("Google Calendar client ID not configured")
+        if not self.google_client_id or self.google_client_id == "your-google-client-id":
+            raise ValueError("Google Calendar OAuth is not configured. Please set GOOGLE_CALENDAR_CLIENT_ID and GOOGLE_CALENDAR_CLIENT_SECRET environment variables.")
         
         state = f"{user_id}:{secrets.token_urlsafe(32)}"
         

@@ -18,18 +18,10 @@ const emptyFormData: UserFormData = {
   last_name: '',
   phone: '',
   company_id: '',
-  roles: ['job_seeker'],
+  role: 'recruiter', // Will be set based on company type
   is_admin: false,
   require_2fa: false,
-  send_activation_email: true,
 };
-
-const availableRoles = [
-  { value: 'super_admin', label: 'Super Admin' },
-  { value: 'company_admin', label: 'Company Admin' },
-  { value: 'recruiter', label: 'Recruiter' },
-  { value: 'job_seeker', label: 'Job Seeker' },
-];
 
 function AddUserPageContent() {
   const router = useRouter();
@@ -39,13 +31,39 @@ function AddUserPageContent() {
   const [error, setError] = useState<string | null>(null);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loadingCompanies, setLoadingCompanies] = useState(true);
+  const [companySearch, setCompanySearch] = useState('');
+  const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
+  const [filteredCompanies, setFilteredCompanies] = useState<Company[]>([]);
+
+  // Filter companies based on search
+  useEffect(() => {
+    if (companySearch.trim() === '') {
+      setFilteredCompanies(companies);
+    } else {
+      const filtered = companies.filter(company =>
+        company.name.toLowerCase().includes(companySearch.toLowerCase())
+      );
+      setFilteredCompanies(filtered);
+    }
+  }, [companies, companySearch]);
+
+  // Auto-set role based on selected company type
+  useEffect(() => {
+    if (formData.company_id) {
+      const selectedCompany = companies.find(c => c.id.toString() === formData.company_id);
+      if (selectedCompany) {
+        const role = selectedCompany.type === 'employer' ? 'employer' : 'recruiter';
+        setFormData(prev => ({ ...prev, role }));
+      }
+    }
+  }, [formData.company_id, companies]);
 
   // Load companies for the dropdown
   useEffect(() => {
     const loadCompanies = async () => {
       try {
         setLoadingCompanies(true);
-        const response = await companiesApi.getCompanies({ size: 1000 }); // Get all companies
+        const response = await companiesApi.getCompanies({ size: 100 }); // Get companies (max 100 per API limit)
         setCompanies(response.data.companies);
       } catch (err) {
         console.error('Failed to load companies:', err);
@@ -71,37 +89,22 @@ function AddUserPageContent() {
         last_name: formData.last_name,
         phone: formData.phone || undefined,
         company_id: formData.company_id ? parseInt(formData.company_id) : undefined,
-        roles: formData.roles,
-        is_admin: formData.is_admin,
-        require_2fa: formData.require_2fa,
-        send_activation_email: formData.send_activation_email,
+        roles: [formData.role], // Convert single role to array for API
+        is_admin: false, // Users created here are never admins
+        require_2fa: false, // Regular users don't need 2FA
       };
 
       await usersApi.createUser(userData);
       showToast({
         type: 'success',
         title: 'User created successfully!',
-        message: `${formData.first_name} ${formData.last_name} has been created. ${formData.send_activation_email ? 'An activation email will be sent to ' + formData.email + '.' : ''}`
+        message: `${formData.first_name} ${formData.last_name} has been created. An activation email has been sent to ${formData.email}.`
       });
       router.push('/users');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create user');
     } finally {
       setSubmitting(false);
-    }
-  };
-
-  const handleRoleChange = (role: string, checked: boolean) => {
-    if (checked) {
-      setFormData(prev => ({
-        ...prev,
-        roles: [...prev.roles, role]
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        roles: prev.roles.filter(r => r !== role)
-      }));
     }
   };
 
@@ -191,89 +194,97 @@ function AddUserPageContent() {
                 />
               </div>
 
-              {/* Company */}
-              <div className="md:col-span-2">
+              {/* Company - Select with Search */}
+              <div className="md:col-span-2 relative">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Company
                 </label>
-                <select
-                  value={formData.company_id}
-                  onChange={(e) => setFormData(prev => ({ ...prev, company_id: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                  disabled={loadingCompanies}
-                >
-                  <option value="">No Company (Independent User)</option>
-                  {companies.map((company) => (
-                    <option key={company.id} value={company.id.toString()}>
-                      {company.name} ({company.type})
-                    </option>
-                  ))}
-                </select>
-                {loadingCompanies && (
-                  <p className="text-sm text-gray-500 mt-1">Loading companies...</p>
+                <div className="relative">
+                  {/* Select-like button */}
+                  <button
+                    type="button"
+                    onClick={() => setShowCompanyDropdown(!showCompanyDropdown)}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-left flex items-center justify-between"
+                    disabled={loadingCompanies}
+                  >
+                    <span className={formData.company_id ? 'text-gray-900 dark:text-white' : 'text-gray-500'}>
+                      {formData.company_id
+                        ? companies.find(c => c.id.toString() === formData.company_id)?.name || 'Select a company...'
+                        : 'Select a company...'
+                      }
+                    </span>
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  {loadingCompanies && (
+                    <p className="text-sm text-gray-500 mt-1">Loading companies...</p>
+                  )}
+
+                  {/* Dropdown with search */}
+                  {showCompanyDropdown && !loadingCompanies && (
+                    <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-hidden">
+                      {/* Search input as first option */}
+                      <div className="p-2 border-b border-gray-200 dark:border-gray-600">
+                        <input
+                          type="text"
+                          value={companySearch}
+                          onChange={(e) => setCompanySearch(e.target.value)}
+                          placeholder="Search companies..."
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
+                          autoFocus
+                        />
+                      </div>
+
+                      {/* Company options */}
+                      <div className="max-h-48 overflow-y-auto">
+                        {filteredCompanies.length > 0 ? (
+                          filteredCompanies.map((company) => (
+                            <button
+                              key={company.id}
+                              type="button"
+                              onClick={() => {
+                                setFormData(prev => ({ ...prev, company_id: company.id.toString() }));
+                                setCompanySearch('');
+                                setShowCompanyDropdown(false);
+                              }}
+                              className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none"
+                            >
+                              <div className="font-medium">{company.name}</div>
+                              <div className="text-sm text-gray-500">({company.type})</div>
+                            </button>
+                          ))
+                        ) : (
+                          <div className="px-3 py-2 text-gray-500 text-sm">No companies found</div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Click outside to close dropdown */}
+                {showCompanyDropdown && (
+                  <div
+                    className="fixed inset-0 z-5"
+                    onClick={() => setShowCompanyDropdown(false)}
+                  />
                 )}
               </div>
             </div>
 
-            {/* User Roles */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                User Roles *
-              </label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {availableRoles.map((role) => (
-                  <label key={role.value} className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.roles.includes(role.value)}
-                      onChange={(e) => handleRoleChange(role.value, e.target.checked)}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">{role.label}</span>
-                  </label>
-                ))}
+            {/* User Role - Auto-determined by company type */}
+            {formData.company_id && (
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                <p className="text-sm text-blue-700 dark:text-blue-400">
+                  <strong>User Role:</strong> {formData.role === 'employer' ? 'Employer' : 'Recruiter'}
+                  <span className="text-blue-600 dark:text-blue-500">
+                    (automatically set based on company type)
+                  </span>
+                </p>
               </div>
-            </div>
+            )}
 
-            {/* Admin and Security Settings */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white">Settings</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Is Admin */}
-                <label className="flex items-center space-x-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.is_admin}
-                    onChange={(e) => setFormData(prev => ({ ...prev, is_admin: e.target.checked }))}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Admin User</span>
-                </label>
-
-                {/* Require 2FA */}
-                <label className="flex items-center space-x-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.require_2fa}
-                    onChange={(e) => setFormData(prev => ({ ...prev, require_2fa: e.target.checked }))}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Require 2FA</span>
-                </label>
-
-                {/* Send Activation Email */}
-                <label className="flex items-center space-x-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.send_activation_email}
-                    onChange={(e) => setFormData(prev => ({ ...prev, send_activation_email: e.target.checked }))}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Send Activation Email</span>
-                </label>
-              </div>
-            </div>
 
             {/* Submit Buttons */}
             <div className="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
@@ -286,7 +297,7 @@ function AddUserPageContent() {
               </button>
               <button
                 type="submit"
-                disabled={submitting || !formData.first_name || !formData.last_name || !formData.email || formData.roles.length === 0}
+                disabled={submitting || !formData.first_name || !formData.last_name || !formData.email || !formData.company_id}
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
               >
                 <Save className="h-4 w-4" />

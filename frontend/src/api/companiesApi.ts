@@ -80,4 +80,8 @@ export const companiesApi = {
     makeAuthenticatedRequest<{ message: string }>(`/api/admin/companies/${companyId}`, {
       method: 'DELETE',
     }),
+
+  // Check company admin status
+  getCompanyAdminStatus: (companyId: number) =>
+    makeAuthenticatedRequest<{ has_admin: boolean; admin_count: number }>(`/api/admin/companies/${companyId}/admin-status`),
 };

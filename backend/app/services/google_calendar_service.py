@@ -24,6 +24,18 @@ class GoogleCalendarService:
     
     def __init__(self):
         self.calendar_service = CalendarService()
+
+    async def get_auth_url(self, user_id: int, state: Optional[str] = None) -> str:
+        """Generate Google Calendar OAuth authorization URL."""
+        return await self.calendar_service.get_google_auth_url(user_id)
+
+    async def exchange_code_for_tokens(self, code: str) -> Dict[str, Any]:
+        """Exchange OAuth code for access tokens."""
+        return await self.calendar_service._exchange_google_code_for_tokens(code)
+
+    async def get_user_info(self, access_token: str) -> Dict[str, Any]:
+        """Get Google user profile information."""
+        return await self.calendar_service._get_google_profile(access_token)
         
     async def list_events(
         self, 

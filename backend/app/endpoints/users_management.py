@@ -12,6 +12,7 @@ from sqlalchemy.orm import selectinload
 from app.database import get_db
 from app.dependencies import get_current_active_user
 from app.models import Company, User, UserRole, UserSettings
+from app.models.role import Role
 from app.services.auth_service import auth_service
 from app.services.email_service import email_service
 from app.utils.constants import UserRole as UserRoleEnum
@@ -92,6 +93,11 @@ class ResendActivationRequest(BaseModel):
     user_id: int
 
 
+class BulkUserOperation(BaseModel):
+    user_ids: List[int]
+    send_email: bool = True
+
+
 @router.get("/users", response_model=UserListResponse)
 async def get_users(
     page: int = Query(1, ge=1),
@@ -151,20 +157,22 @@ async def get_users(
         selectinload(User.user_roles).selectinload(UserRole.role)
     )
     
-    if query_conditions:
-        base_query = base_query.where(and_(*query_conditions))
-    
     # Handle role filter (requires join with UserRole)
     if role:
+        # First get the role ID for the role name
+        role_id_query = select(Role.id).where(Role.name == role.value)
         role_subquery = select(UserRole.user_id).where(
-            UserRole.role_id.in_(
-                select(func.id).select_from(
-                    select(func.id).where(func.name == role.value)
-                )
-            )
+            UserRole.role_id.in_(role_id_query)
         )
         base_query = base_query.where(User.id.in_(role_subquery))
-    
+
+    # Apply all accumulated query conditions
+    if query_conditions:
+        base_query = base_query.where(and_(*query_conditions))
+
+    # Always exclude the currently logged-in user from the list (applied after all other conditions)
+    base_query = base_query.where(User.id != current_user.id)
+
     # Get total count
     count_query = select(func.count()).select_from(base_query.subquery())
     total_result = await db.execute(count_query)
@@ -262,6 +270,33 @@ async def create_user(
     temp_password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(12))
     hashed_password = auth_service.hash_password(temp_password)
     
+    # Check if user should be admin based on roles
+    is_admin_user = user_data.is_admin or False
+    admin_roles = [UserRoleEnum.COMPANY_ADMIN, UserRoleEnum.SUPER_ADMIN]
+    if any(role in admin_roles for role in user_data.roles):
+        is_admin_user = True
+
+    # Check if company already has an admin (prevent duplicate company admins)
+    if is_admin_user and user_data.company_id:
+        existing_admin_query = select(func.count(User.id)).where(
+            and_(
+                User.company_id == user_data.company_id,
+                User.is_admin == True,
+                User.is_deleted == False
+            )
+        )
+        existing_admin_result = await db.execute(existing_admin_query)
+        existing_admin_count = existing_admin_result.scalar() or 0
+
+        if existing_admin_count > 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="This company already has an admin user. Only one admin per company is allowed."
+            )
+
+    # Auto-enable 2FA for admin users
+    require_2fa = is_admin_user or user_data.require_2fa or False
+
     # Create user
     new_user = User(
         email=user_data.email,
@@ -270,8 +305,8 @@ async def create_user(
         last_name=user_data.last_name,
         phone=user_data.phone,
         company_id=user_data.company_id,
-        is_admin=user_data.is_admin or False,
-        require_2fa=user_data.require_2fa or False,
+        is_admin=is_admin_user,
+        require_2fa=require_2fa,
         is_active=False,  # User needs to activate account
     )
     
@@ -706,3 +741,269 @@ async def toggle_user_status(
     
     status_text = "activated" if user.is_active else "suspended"
     return {"message": f"User {status_text} successfully", "is_active": user.is_active}
+
+
+@router.post("/users/bulk/delete")
+async def bulk_delete_users(
+    operation: BulkUserOperation,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Bulk delete multiple users (logical deletion)."""
+
+    if not operation.user_ids:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No user IDs provided"
+        )
+
+    # Check permissions
+    if not (is_super_admin(current_user) or is_company_admin(current_user)):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions to delete users"
+        )
+
+    deleted_count = 0
+    errors = []
+
+    for user_id in operation.user_ids:
+        try:
+            # Get user
+            result = await db.execute(select(User).where(User.id == user_id))
+            user = result.scalar_one_or_none()
+
+            if not user:
+                errors.append(f"User {user_id} not found")
+                continue
+
+            # Company admin can only delete users from their company
+            if is_company_admin(current_user) and not is_super_admin(current_user):
+                if user.company_id != current_user.company_id:
+                    errors.append(f"Cannot delete user {user_id} from other company")
+                    continue
+
+            # Prevent self-deletion
+            if user_id == current_user.id:
+                errors.append(f"Cannot delete your own account")
+                continue
+
+            # Soft delete
+            user.is_deleted = True
+            user.deleted_at = datetime.utcnow()
+            user.deleted_by = current_user.id
+            user.is_active = False
+            deleted_count += 1
+
+        except Exception as e:
+            errors.append(f"Error deleting user {user_id}: {str(e)}")
+
+    await db.commit()
+
+    return {
+        "message": f"Successfully deleted {deleted_count} user(s)",
+        "deleted_count": deleted_count,
+        "errors": errors
+    }
+
+
+@router.post("/users/bulk/reset-password")
+async def bulk_reset_passwords(
+    operation: BulkUserOperation,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Bulk reset passwords for multiple users."""
+
+    if not operation.user_ids:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No user IDs provided"
+        )
+
+    # Check permissions
+    if not (is_super_admin(current_user) or is_company_admin(current_user)):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions to reset passwords"
+        )
+
+    reset_count = 0
+    errors = []
+    temp_passwords = {}
+
+    for user_id in operation.user_ids:
+        try:
+            # Get user
+            result = await db.execute(select(User).where(User.id == user_id))
+            user = result.scalar_one_or_none()
+
+            if not user:
+                errors.append(f"User {user_id} not found")
+                continue
+
+            # Company admin can only reset passwords for users in their company
+            if is_company_admin(current_user) and not is_super_admin(current_user):
+                if user.company_id != current_user.company_id:
+                    errors.append(f"Cannot reset password for user {user_id} from other company")
+                    continue
+
+            # Generate new temporary password
+            temp_password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(12))
+            hashed_password = auth_service.hash_password(temp_password)
+
+            # Update user password
+            user.hashed_password = hashed_password
+            reset_count += 1
+            temp_passwords[user_id] = temp_password
+
+            # Send email if requested
+            if operation.send_email:
+                try:
+                    await email_service.send_password_reset_email(
+                        user.email,
+                        user.first_name,
+                        temp_password
+                    )
+                except Exception as e:
+                    errors.append(f"Failed to send email to user {user_id}: {str(e)}")
+
+        except Exception as e:
+            errors.append(f"Error resetting password for user {user_id}: {str(e)}")
+
+    await db.commit()
+
+    return {
+        "message": f"Successfully reset passwords for {reset_count} user(s)",
+        "reset_count": reset_count,
+        "errors": errors,
+        "temporary_passwords": temp_passwords if not operation.send_email else None
+    }
+
+
+@router.post("/users/bulk/resend-activation")
+async def bulk_resend_activation(
+    operation: BulkUserOperation,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Bulk resend activation emails to multiple users."""
+
+    if not operation.user_ids:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No user IDs provided"
+        )
+
+    # Check permissions
+    if not (is_super_admin(current_user) or is_company_admin(current_user)):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions to resend activation emails"
+        )
+
+    sent_count = 0
+    errors = []
+
+    for user_id in operation.user_ids:
+        try:
+            # Get user
+            result = await db.execute(select(User).where(User.id == user_id))
+            user = result.scalar_one_or_none()
+
+            if not user:
+                errors.append(f"User {user_id} not found")
+                continue
+
+            # Company admin can only resend for users in their company
+            if is_company_admin(current_user) and not is_super_admin(current_user):
+                if user.company_id != current_user.company_id:
+                    errors.append(f"Cannot resend activation for user {user_id} from other company")
+                    continue
+
+            # Check if user is already active
+            if user.is_active:
+                errors.append(f"User {user_id} is already active")
+                continue
+
+            # Generate and send activation token
+            activation_token = auth_service.generate_activation_token(user.email)
+            await email_service.send_activation_email(
+                user.email,
+                user.first_name,
+                activation_token
+            )
+            sent_count += 1
+
+        except Exception as e:
+            errors.append(f"Error sending activation email to user {user_id}: {str(e)}")
+
+    return {
+        "message": f"Successfully sent activation emails to {sent_count} user(s)",
+        "sent_count": sent_count,
+        "errors": errors
+    }
+
+
+@router.post("/users/bulk/toggle-status")
+async def bulk_toggle_status(
+    operation: BulkUserOperation,
+    activate: bool = True,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Bulk toggle status for multiple users."""
+
+    if not operation.user_ids:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No user IDs provided"
+        )
+
+    # Check permissions
+    if not (is_super_admin(current_user) or is_company_admin(current_user)):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions to toggle user status"
+        )
+
+    updated_count = 0
+    errors = []
+
+    for user_id in operation.user_ids:
+        try:
+            # Get user
+            result = await db.execute(select(User).where(User.id == user_id))
+            user = result.scalar_one_or_none()
+
+            if not user:
+                errors.append(f"User {user_id} not found")
+                continue
+
+            # Company admin can only toggle users in their company
+            if is_company_admin(current_user) and not is_super_admin(current_user):
+                if user.company_id != current_user.company_id:
+                    errors.append(f"Cannot toggle status for user {user_id} from other company")
+                    continue
+
+            # Prevent self-suspension
+            if user_id == current_user.id:
+                errors.append(f"Cannot toggle your own status")
+                continue
+
+            # Update status only if different
+            if user.is_active != activate:
+                user.is_active = activate
+                updated_count += 1
+
+        except Exception as e:
+            errors.append(f"Error updating user {user_id}: {str(e)}")
+
+    await db.commit()
+
+    status_text = "activated" if activate else "suspended"
+    return {
+        "message": f"Successfully {status_text} {updated_count} user(s)",
+        "updated_count": updated_count,
+        "errors": errors
+    }

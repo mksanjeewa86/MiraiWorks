@@ -20,7 +20,7 @@ from app.schemas.calendar import (
     EventsListRequest,
     EventsListResponse,
 )
-from app.services.calendar_service import google_calendar_service
+from app.services.google_calendar_service import google_calendar_service
 from app.services.microsoft_calendar_service import microsoft_calendar_service
 
 router = APIRouter()
@@ -33,8 +33,14 @@ async def start_google_oauth(
     current_user: User = Depends(get_current_active_user), state: Optional[str] = None
 ):
     """Start Google Calendar OAuth flow."""
-    auth_url = google_calendar_service.get_auth_url(current_user.id, state)
-    return {"auth_url": auth_url}
+    try:
+        auth_url = await google_calendar_service.get_auth_url(current_user.id, state)
+        return {"auth_url": auth_url}
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(e)
+        )
 
 
 @router.get("/oauth/google/callback")

@@ -18,6 +18,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "MiraiWorks - Your Future Career Starts Here",
   description: "Connect with opportunities, build your career, and achieve your professional goals with MiraiWorks.",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({

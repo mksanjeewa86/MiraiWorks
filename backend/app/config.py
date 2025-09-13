@@ -45,6 +45,14 @@ class Settings(BaseSettings):
     ms_oauth_client_id: Optional[str] = None
     ms_oauth_client_secret: Optional[str] = None
 
+    # Calendar Integration
+    google_calendar_client_id: Optional[str] = None
+    google_calendar_client_secret: Optional[str] = None
+    google_calendar_redirect_uri: Optional[str] = None
+    outlook_calendar_client_id: Optional[str] = None
+    outlook_calendar_client_secret: Optional[str] = None
+    outlook_calendar_redirect_uri: Optional[str] = None
+
     # App
     app_base_url: str = "http://localhost:5173"
 

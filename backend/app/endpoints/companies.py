@@ -433,3 +433,35 @@ async def delete_company(
     await db.commit()
 
     return {"message": "Company deleted successfully"}
+
+
+@router.get("/companies/{company_id}/admin-status")
+async def get_company_admin_status(
+    company_id: int,
+    current_user: User = Depends(require_super_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Check if company has admin users."""
+    # Check if company exists
+    company_query = select(Company).where(Company.id == company_id)
+    company_result = await db.execute(company_query)
+    company = company_result.scalar_one_or_none()
+
+    if not company:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Company not found"
+        )
+
+    # Check for admin users in this company
+    admin_query = select(func.count(User.id)).where(
+        and_(
+            User.company_id == company_id,
+            User.is_admin == True,
+            User.is_deleted == False
+        )
+    )
+    admin_result = await db.execute(admin_query)
+    admin_count = admin_result.scalar() or 0
+
+    return {"has_admin": admin_count > 0, "admin_count": admin_count}
