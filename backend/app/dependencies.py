@@ -58,7 +58,7 @@ async def get_current_user(
             selectinload(User.company),
             selectinload(User.user_roles).selectinload(UserRoleModel.role),
         )
-        .where(User.id == user_id, User.is_active == True)
+        .where(User.id == user_id, User.is_active.is_(True))
     )
 
     user = result.scalar_one_or_none()
@@ -80,9 +80,9 @@ async def get_current_active_user(
 
 
 async def get_optional_current_user(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
     db: AsyncSession = Depends(get_db),
-) -> Optional[User]:
+) -> User | None:
     """Get current user if authenticated, otherwise None."""
     if not credentials or not credentials.credentials:
         return None

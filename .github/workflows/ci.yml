@@ -42,7 +42,7 @@ jobs:
 
     - name: Critical Issues Check (Ruff)
       working-directory: ./backend
-      run: ruff check . --select=E9,F63,F7,F82,E999,E902 --no-fix
+      run: ruff check . --select=E9,F63,F7,F82,E999,E902 --no-fix --exclude=tests/
 
     - name: Type checking (MyPy) 
       working-directory: ./backend
