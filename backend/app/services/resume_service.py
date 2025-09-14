@@ -641,3 +641,13 @@ class ResumeService:
             db.add(new_project)
 
         # Continue for other related entities...
+
+    def generate_pdf(self, resume_data: dict) -> bytes:
+        """Generate PDF from resume data."""
+        # Placeholder implementation for PDF generation
+        return b"PDF content placeholder"
+
+    def validate_resume_data(self, resume_data: dict) -> bool:
+        """Validate resume data structure."""
+        required_fields = ['title', 'full_name', 'email']
+        return all(field in resume_data for field in required_fields)

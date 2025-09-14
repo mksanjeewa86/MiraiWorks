@@ -111,7 +111,7 @@ def check_dependencies():
 
     return True
 
-def test_fixture_imports(backend_dir, env):
+def check_fixture_imports(backend_dir, env):
     """Test if fixtures can be imported correctly."""
     print("🔧 Testing fixture imports...")
 
@@ -303,7 +303,7 @@ def main():
     env, backend_dir = setup_test_environment()
 
     # Step 4: Test fixture imports
-    if not test_fixture_imports(backend_dir, env):
+    if not check_fixture_imports(backend_dir, env):
         print("❌ Fixture import test failed")
         if not args.fix_fixtures:
             print("💡 Try running with --fix-fixtures")
