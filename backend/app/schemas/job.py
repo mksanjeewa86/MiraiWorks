@@ -235,7 +235,7 @@ class CompanyProfileBase(BaseModel):
     is_public: bool = True
     seo_title: Optional[str] = Field(None, max_length=255)
     seo_description: Optional[str] = Field(None, max_length=500)
-    custom_slug: Optional[str] = Field(None, max_length=100, regex=r'^[a-zA-Z0-9-_]+$')
+    custom_slug: Optional[str] = Field(None, max_length=100, pattern=r'^[a-zA-Z0-9-_]+$')
 
 
 class CompanyProfileCreate(CompanyProfileBase):
@@ -276,8 +276,8 @@ class JobListParams(BaseModel):
     is_featured: Optional[bool] = None
     salary_min: Optional[int] = None
     salary_max: Optional[int] = None
-    sort_by: Optional[str] = Field("published_at", regex=r'^(published_at|created_at|title|salary_min|view_count)$')
-    sort_order: Optional[str] = Field("desc", regex=r'^(asc|desc)$')
+    sort_by: Optional[str] = Field("published_at", pattern=r'^(published_at|created_at|title|salary_min|view_count)$')
+    sort_order: Optional[str] = Field("desc", pattern=r'^(asc|desc)$')
     limit: int = Field(50, ge=1, le=100)
     offset: int = Field(0, ge=0)
 
@@ -294,8 +294,8 @@ class JobApplicationListParams(BaseModel):
     status: Optional[ApplicationStatus] = None
     applied_after: Optional[datetime] = None
     applied_before: Optional[datetime] = None
-    sort_by: Optional[str] = Field("applied_at", regex=r'^(applied_at|status_updated_at)$')
-    sort_order: Optional[str] = Field("desc", regex=r'^(asc|desc)$')
+    sort_by: Optional[str] = Field("applied_at", pattern=r'^(applied_at|status_updated_at)$')
+    sort_order: Optional[str] = Field("desc", pattern=r'^(asc|desc)$')
     limit: int = Field(50, ge=1, le=100)
     offset: int = Field(0, ge=0)
 

@@ -34,9 +34,13 @@ TestingSessionLocal = async_sessionmaker(
 
 
 @pytest.fixture(scope="session")
-def event_loop() -> Generator:
+def event_loop():
     """Create event loop for async tests."""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
     yield loop
     loop.close()
 
@@ -64,21 +68,21 @@ async def setup_database():
 
 
 @pytest.fixture
-async def db_session(setup_database) -> AsyncGenerator[AsyncSession, None]:
+async def db_session(setup_database):
     """Get database session for tests."""
     async with TestingSessionLocal() as session:
         yield session
 
 
 @pytest.fixture
-async def client(setup_database) -> AsyncGenerator[AsyncClient, None]:
+async def client(setup_database):
     """Get HTTP client for tests."""
-    async with AsyncClient(app=app, base_url="http://testserver") as client:
-        yield client
+    async with AsyncClient(app=app, base_url="http://testserver") as test_client:
+        yield test_client
 
 
 @pytest.fixture
-async def test_company(db_session: AsyncSession) -> Company:
+async def test_company(db_session):
     """Create test company."""
     company = Company(
         name="Test Company",
@@ -93,7 +97,7 @@ async def test_company(db_session: AsyncSession) -> Company:
 
 
 @pytest.fixture
-async def test_roles(db_session: AsyncSession) -> dict:
+async def test_roles(db_session):
     """Create test roles."""
     roles = {}
 
@@ -112,9 +116,7 @@ async def test_roles(db_session: AsyncSession) -> dict:
 
 
 @pytest.fixture
-async def test_user(
-    db_session: AsyncSession, test_company: Company, test_roles: dict
-) -> User:
+async def test_user(db_session, test_company, test_roles):
     """Create test user."""
     user = User(
         email="test@example.com",
@@ -139,9 +141,7 @@ async def test_user(
 
 
 @pytest.fixture
-async def test_admin_user(
-    db_session: AsyncSession, test_company: Company, test_roles: dict
-) -> User:
+async def test_admin_user(db_session, test_company, test_roles):
     """Create test admin user."""
     user = User(
         email="admin@example.com",
@@ -167,7 +167,7 @@ async def test_admin_user(
 
 
 @pytest.fixture
-async def test_super_admin(db_session: AsyncSession, test_roles: dict) -> User:
+async def test_super_admin(db_session, test_roles):
     """Create test super admin user."""
     user = User(
         email="superadmin@example.com",
@@ -193,7 +193,7 @@ async def test_super_admin(db_session: AsyncSession, test_roles: dict) -> User:
 
 
 @pytest.fixture
-async def auth_headers(client: AsyncClient, test_user: User) -> dict:
+async def auth_headers(client, test_user):
     """Get authentication headers for test user."""
     response = await client.post(
         "/api/auth/login",
@@ -206,7 +206,7 @@ async def auth_headers(client: AsyncClient, test_user: User) -> dict:
 
 
 @pytest.fixture
-async def admin_auth_headers(client: AsyncClient, test_admin_user: User) -> dict:
+async def admin_auth_headers(client, test_admin_user):
     """Get authentication headers for admin user."""
     response = await client.post(
         "/api/auth/login",
@@ -219,7 +219,7 @@ async def admin_auth_headers(client: AsyncClient, test_admin_user: User) -> dict
 
 
 @pytest.fixture
-async def super_admin_auth_headers(client: AsyncClient, test_super_admin: User) -> dict:
+async def super_admin_auth_headers(client, test_super_admin):
     """Get authentication headers for super admin user."""
     response = await client.post(
         "/api/auth/login",
