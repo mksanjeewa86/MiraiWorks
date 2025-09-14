@@ -112,7 +112,8 @@
       "Bash(del \"C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\test_toggle.py\")",
       "Bash(set PYTHONPATH=%cd%)",
       "Bash(xargs ls:*)",
-      "Bash(set ENVIRONMENT=test)"
+      "Bash(set ENVIRONMENT=test)",
+      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_auth.py::test_login_success -v)"
     ],
     "deny": [],
     "ask": []
