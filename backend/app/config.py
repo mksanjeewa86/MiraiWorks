@@ -4,6 +4,9 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    # Environment
+    environment: str = "development"
+
     # Database
     db_url: str = "mysql+asyncmy://hrms:hrms@db:3306/miraiworks"
 
