@@ -1,32 +1,35 @@
 import type { NextConfig } from "next";
 import path from "path";
 
+const isCI = process.env.CI === 'true' || process.env.GITHUB_ACTIONS === 'true';
+
 const nextConfig: NextConfig = {
   output: 'standalone',
   poweredByHeader: false,
-  // Turbopack configuration for development and modern environments
-  turbopack: {
-    resolveAlias: {
-      '@': './src',
-      '@/*': './src/*',
+  // Only use Turbopack in non-CI environments
+  ...(isCI ? {} : {
+    turbopack: {
+      resolveAlias: {
+        '@': './src',
+        '@/*': './src/*',
+      }
     }
-  },
-  // Webpack configuration as fallback for production builds
+  }),
+  // Simplified webpack configuration for CI
   webpack: (config, { dev, isServer, dir }) => {
-    // Use dir parameter or process.cwd() for more reliable path resolution
+    if (isCI) {
+      // Minimal configuration for CI - let Next.js handle aliasing via tsconfig
+      return config;
+    }
+
+    // Full configuration for development
     const projectRoot = dir || process.cwd();
     const srcPath = path.resolve(projectRoot, 'src');
 
-    // Add alias configuration
     config.resolve.alias = {
       ...config.resolve.alias,
       '@': srcPath,
     };
-
-    // Ensure proper resolution of @/ imports
-    if (!config.resolve.fallback) {
-      config.resolve.fallback = {};
-    }
 
     return config;
   },
