@@ -1,9 +1,13 @@
 import asyncio
+import os
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
+
+# Set environment to test before importing settings
+os.environ["ENVIRONMENT"] = "test"
 
 from app.database import Base, get_db
 from app.main import app
