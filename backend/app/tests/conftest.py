@@ -1,5 +1,6 @@
 import asyncio
 import pytest
+import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
@@ -51,9 +52,9 @@ def event_loop():
     loop.close()
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest_asyncio.fixture(scope="function", autouse=True)
 async def setup_database():
-    """Set up test database for the session."""
+    """Set up test database for each test function."""
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield
@@ -61,21 +62,21 @@ async def setup_database():
         await conn.run_sync(Base.metadata.drop_all)
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def db_session():
     """Get database session for tests."""
     async with TestingSessionLocal() as session:
         yield session
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client():
     """Get HTTP client for tests."""
     async with AsyncClient(app=app, base_url="http://testserver") as test_client:
         yield test_client
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_roles(db_session):
     """Create test roles."""
     roles = {}
@@ -93,13 +94,14 @@ async def test_roles(db_session):
     return roles
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_company(db_session):
     """Create test company."""
     company = Company(
         name="Test Company",
         type=CompanyType.RECRUITER,
         email="test@company.com",
+        phone="123-456-7890",
         is_active="1",
     )
     db_session.add(company)
@@ -108,7 +110,7 @@ async def test_company(db_session):
     return company
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_user(db_session, test_company, test_roles):
     """Create test user."""
     user = User(
@@ -133,7 +135,7 @@ async def test_user(db_session, test_company, test_roles):
     return user
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_admin_user(db_session, test_company, test_roles):
     """Create test admin user."""
     user = User(
@@ -159,7 +161,7 @@ async def test_admin_user(db_session, test_company, test_roles):
     return user
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_super_admin(db_session, test_roles):
     """Create test super admin user."""
     user = User(
@@ -185,7 +187,7 @@ async def test_super_admin(db_session, test_roles):
     return user
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def auth_headers(client, test_user):
     """Get authentication headers for test user."""
     response = await client.post(
@@ -197,7 +199,7 @@ async def auth_headers(client, test_user):
     return {"Authorization": f"Bearer {token_data['access_token']}"}
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def admin_auth_headers(client, test_admin_user):
     """Get authentication headers for admin user."""
     response = await client.post(
@@ -209,7 +211,7 @@ async def admin_auth_headers(client, test_admin_user):
     return {"Authorization": f"Bearer {token_data['access_token']}"}
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def super_admin_auth_headers(client, test_super_admin):
     """Get authentication headers for super admin user."""
     response = await client.post(

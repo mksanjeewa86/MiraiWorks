@@ -110,7 +110,8 @@
       "Bash(cmd /c:*)",
       "Bash(docker:*)",
       "Bash(del \"C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\test_toggle.py\")",
-      "Bash(set PYTHONPATH=%cd%)"
+      "Bash(set PYTHONPATH=%cd%)",
+      "Bash(xargs ls:*)"
     ],
     "deny": [],
     "ask": []
