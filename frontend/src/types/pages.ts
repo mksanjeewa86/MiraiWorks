@@ -5,7 +5,7 @@ import type { Resume, CalendarEvent, UserProfile, UserSettings, Conversation, Le
 // ====================
 
 export interface SettingsState {
-  activeSection: 'account' | 'security' | 'notifications' | 'preferences';
+  activeSection: 'account' | 'security' | 'notifications' | 'preferences' | 'calendar';
   loading: boolean;
   autoSaving: boolean;
   passwordSaving: boolean;

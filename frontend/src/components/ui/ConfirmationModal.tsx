@@ -5,7 +5,7 @@ interface ConfirmationModalProps {
   onClose: () => void;
   onConfirm: () => void;
   title: string;
-  message: string;
+  message: string | React.ReactNode;
   confirmText?: string;
   cancelText?: string;
   confirmButtonClass?: string;
@@ -52,9 +52,9 @@ export default function ConfirmationModal({
 
         {/* Content */}
         <div className="px-6 pb-4">
-          <p className="text-gray-600 dark:text-gray-300">
+          <div className="text-gray-600 dark:text-gray-300">
             {message}
-          </p>
+          </div>
         </div>
 
         {/* Actions */}

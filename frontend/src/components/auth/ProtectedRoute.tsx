@@ -11,8 +11,8 @@ interface ProtectedRouteProps {
   redirectTo?: string;
 }
 
-export default function ProtectedRoute({ 
-  children, 
+export default function ProtectedRoute({
+  children,
   fallback,
   redirectTo = '/auth/login'
 }: ProtectedRouteProps) {
@@ -20,14 +20,15 @@ export default function ProtectedRoute({
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading) {
-      if (!isAuthenticated || !user) {
-        // Clear any stale data and redirect to login
+    if (!isLoading && !isAuthenticated && typeof window !== 'undefined') {
+      const currentPath = window.location.pathname;
+      // Only redirect if not already on the redirect page and not authenticated
+      if (currentPath !== redirectTo) {
+        console.log(`ProtectedRoute: Redirecting from ${currentPath} to ${redirectTo}`);
         router.push(redirectTo);
-        return;
       }
     }
-  }, [isAuthenticated, isLoading, user, router, redirectTo]);
+  }, [isAuthenticated, isLoading, router, redirectTo]);
 
   // Show loading while auth is being determined
   if (isLoading) {

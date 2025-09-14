@@ -17,13 +17,12 @@ import {
   Shield, 
   Bell, 
   User, 
-  Eye, 
+  Eye,
   EyeOff,
   Smartphone,
   Mail,
   Globe,
   Calendar,
-  Plus,
   Trash2,
   RefreshCw,
   AlertCircle,
@@ -299,7 +298,7 @@ function SettingsPageContent() {
     }
   };
 
-  const handleUpdateConnection = async (connectionId: number, updates: any) => {
+  const handleUpdateConnection = async (connectionId: number, updates: Record<string, unknown>) => {
     try {
       setCalendarState(prev => ({ ...prev, error: null }));
       await calendarApi.updateConnection(connectionId, updates);
@@ -420,7 +419,7 @@ function SettingsPageContent() {
           Bio
         </label>
         <textarea
-          className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800"
+          className="w-full p-3 pr-8 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800"
           style={{ color: 'var(--text-primary)' }}
           rows={4}
           value={state.profile?.bio || ''}
@@ -646,7 +645,7 @@ function SettingsPageContent() {
             <select
               value={state.settings?.language || 'en'}
               onChange={(e) => updatePreferences('language', e.target.value)}
-              className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800"
+              className="w-full p-3 pr-8 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800"
               style={{ color: 'var(--text-primary)' }}
             >
               <option value="en">English</option>
@@ -664,7 +663,7 @@ function SettingsPageContent() {
             <select
               value={state.settings?.timezone || 'America/New_York'}
               onChange={(e) => updatePreferences('timezone', e.target.value)}
-              className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800"
+              className="w-full p-3 pr-8 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800"
               style={{ color: 'var(--text-primary)' }}
             >
               <option value="America/New_York">Eastern Time (ET)</option>
@@ -684,7 +683,7 @@ function SettingsPageContent() {
           <select
             value={state.settings?.date_format || 'MM/DD/YYYY'}
             onChange={(e) => updatePreferences('date_format', e.target.value)}
-            className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800"
+            className="w-full p-3 pr-8 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800"
             style={{ color: 'var(--text-primary)' }}
           >
             <option value="MM/DD/YYYY">MM/DD/YYYY</option>

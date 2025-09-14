@@ -11,7 +11,7 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 const initialState: AuthState = {
   user: null,
   isAuthenticated: false,
-  isLoading: true,
+  isLoading: false, // Set to false initially to prevent immediate redirects
   error: null,
   accessToken: null,
   refreshToken: null,
@@ -145,40 +145,66 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Initialize auth state on mount
   useEffect(() => {
-    const initAuth = async () => {
-      const token = localStorage.getItem('accessToken');
-      const refreshToken = localStorage.getItem('refreshToken');
+    let isInitialized = false;
 
-      if (token && refreshToken) {
-        try {
-          // Verify token and get user data
-          const response = await authApi.me(token);
-          dispatch({
-            type: 'AUTH_SUCCESS',
-            payload: {
-              user: response.data!,
-              access_token: token,
-              refresh_token: refreshToken,
-              expires_in: 3600, // Will be updated on refresh
-            },
-          });
-        } catch {
-          // Token might be expired, try to refresh
+    const initAuth = async () => {
+      // Prevent multiple initializations
+      if (isInitialized) return;
+      isInitialized = true;
+
+      // Set loading to true when starting authentication check
+      dispatch({ type: 'SET_LOADING', payload: true });
+
+      try {
+        const token = localStorage.getItem('accessToken');
+        const refreshToken = localStorage.getItem('refreshToken');
+
+        if (token && refreshToken) {
           try {
-            await refreshAuth();
-          } catch {
-            // Both tokens invalid, clear auth
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('refreshToken');
-            dispatch({ type: 'LOGOUT' });
+            // Verify token and get user data
+            const response = await authApi.me(token);
+            dispatch({
+              type: 'AUTH_SUCCESS',
+              payload: {
+                user: response.data!,
+                access_token: token,
+                refresh_token: refreshToken,
+                expires_in: 3600, // Will be updated on refresh
+              },
+            });
+          } catch (error) {
+            console.log('Token verification failed, trying refresh:', error);
+            // Token might be expired, try to refresh
+            try {
+              await refreshAuth();
+            } catch (refreshError) {
+              console.log('Token refresh failed, clearing auth:', refreshError);
+              // Both tokens invalid, clear auth completely
+              localStorage.removeItem('accessToken');
+              localStorage.removeItem('refreshToken');
+              dispatch({ type: 'LOGOUT' });
+            }
           }
+        } else {
+          // No tokens found, ensure clean state
+          console.log('No tokens found, setting logged out state');
+          dispatch({ type: 'LOGOUT' });
         }
-      } else {
-        dispatch({ type: 'SET_LOADING', payload: false });
+      } catch (error) {
+        // Any unexpected error, clear auth
+        console.error('Auth initialization error:', error);
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        dispatch({ type: 'LOGOUT' });
       }
     };
 
-    initAuth();
+    // Add a small delay to prevent rapid re-initialization
+    const timeoutId = setTimeout(initAuth, 100);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   const login = async (credentials: LoginCredentials) => {

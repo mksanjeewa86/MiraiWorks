@@ -100,13 +100,40 @@ function UsersPageContent() {
     setSearchTerm(e.target.value);
   };
 
-  const handleActiveFilter = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleStatusFilter = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
-    setFilters(prev => ({ 
-      ...prev, 
-      is_active: value === '' ? undefined : value === 'true',
-      page: 1 
-    }));
+    setFilters(prev => {
+      const newFilters = { ...prev, page: 1 };
+
+      // Reset all status filters first
+      delete newFilters.is_active;
+      delete newFilters.is_suspended;
+      delete newFilters.require_2fa;
+
+      // Set appropriate filter based on selection
+      if (value === 'active') {
+        // Show only active users who are not suspended
+        newFilters.is_active = true;
+        newFilters.is_suspended = false;
+      } else if (value === 'inactive') {
+        // Show only inactive users who are not suspended
+        newFilters.is_active = false;
+        newFilters.is_suspended = false;
+      } else if (value === 'suspended') {
+        // Show all suspended users (regardless of active/inactive status)
+        newFilters.is_suspended = true;
+      } else if (value === '2fa_active') {
+        // Show only active, non-suspended users with 2FA enabled
+        newFilters.require_2fa = true;
+        newFilters.is_active = true;
+        newFilters.is_suspended = false;
+      }
+
+      // Store the status filter for UI state
+      newFilters.status_filter = value || undefined;
+
+      return newFilters;
+    });
   };
 
   const handleAdminFilter = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -153,17 +180,35 @@ function UsersPageContent() {
   const handleBulkDelete = async () => {
     if (selectedUsers.size === 0) return;
 
+    const selectedUserObjects = users.filter(user => selectedUsers.has(user.id));
+
+    const message = (
+      <div>
+        <p className="mb-3">
+          Are you sure you want to delete the following {selectedUsers.size} user(s)? This action cannot be undone.
+        </p>
+        <ul className="list-none space-y-2 max-h-48 overflow-y-auto bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 p-4 rounded-lg">
+          {selectedUserObjects.map((user, index) => (
+            <li key={user.id} className="flex items-center space-x-2 text-sm">
+              <span className="w-2 h-2 bg-red-400 rounded-full flex-shrink-0"></span>
+              <span className="text-red-700 dark:text-red-300">{user.email}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+
     setConfirmationModal({
       isOpen: true,
       title: 'Confirm Delete',
-      message: `Are you sure you want to delete ${selectedUsers.size} user(s)? This action cannot be undone.`,
+      message,
       confirmText: 'Delete',
       confirmButtonClass: 'bg-red-600 hover:bg-red-700',
       icon: <Trash2 className="h-6 w-6 text-red-500" />,
       onConfirm: async () => {
         try {
           const response = await usersApi.bulkDelete(Array.from(selectedUsers));
-          if (response.data.errors.length > 0) {
+          if (response.data.errors && response.data.errors.length > 0) {
             setError(`Bulk delete completed with some errors: ${response.data.errors.join(', ')}`);
           } else {
             setSuccessMessage(response.data.message);
@@ -171,6 +216,7 @@ function UsersPageContent() {
           setSelectedUsers(new Set());
           await loadUsers();
         } catch (err) {
+          console.error('Bulk delete error:', err);
           setError(err instanceof Error ? err.message : 'Failed to delete users');
         }
       }
@@ -180,23 +226,42 @@ function UsersPageContent() {
   const handleBulkResetPassword = async () => {
     if (selectedUsers.size === 0) return;
 
+    const selectedUserObjects = users.filter(user => selectedUsers.has(user.id));
+
+    const message = (
+      <div>
+        <p className="mb-3">
+          Reset passwords for the following {selectedUsers.size} user(s)? Temporary passwords will be generated and sent via email.
+        </p>
+        <ul className="list-none space-y-2 max-h-48 overflow-y-auto bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 p-4 rounded-lg">
+          {selectedUserObjects.map((user, index) => (
+            <li key={user.id} className="flex items-center space-x-2 text-sm">
+              <span className="w-2 h-2 bg-purple-400 rounded-full flex-shrink-0"></span>
+              <span className="text-purple-700 dark:text-purple-300">{user.email}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+
     setConfirmationModal({
       isOpen: true,
       title: 'Reset Passwords',
-      message: `Reset passwords for ${selectedUsers.size} user(s)? Temporary passwords will be generated and sent via email.`,
+      message,
       confirmText: 'Reset Passwords',
       confirmButtonClass: 'bg-purple-600 hover:bg-purple-700',
       icon: <Key className="h-6 w-6 text-purple-500" />,
       onConfirm: async () => {
         try {
           const response = await usersApi.bulkResetPassword(Array.from(selectedUsers));
-          if (response.data.errors.length > 0) {
+          if (response.data.errors && response.data.errors.length > 0) {
             setError(`Bulk password reset completed with some errors: ${response.data.errors.join(', ')}`);
           } else {
             setSuccessMessage(response.data.message);
           }
           setSelectedUsers(new Set());
         } catch (err) {
+          console.error('Bulk reset password error:', err);
           setError(err instanceof Error ? err.message : 'Failed to reset passwords');
         }
       }
@@ -206,54 +271,147 @@ function UsersPageContent() {
   const handleBulkResendActivation = async () => {
     if (selectedUsers.size === 0) return;
 
+    const selectedUserObjects = users.filter(user => selectedUsers.has(user.id));
+
+    const message = (
+      <div>
+        <p className="mb-3">
+          Send activation emails to the following {selectedUsers.size} user(s)?
+        </p>
+        <ul className="list-none space-y-2 max-h-48 overflow-y-auto bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 p-4 rounded-lg">
+          {selectedUserObjects.map((user, index) => (
+            <li key={user.id} className="flex items-center space-x-2 text-sm">
+              <span className="w-2 h-2 bg-blue-400 rounded-full flex-shrink-0"></span>
+              <span className="text-blue-700 dark:text-blue-300">{user.email}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+
     setConfirmationModal({
       isOpen: true,
       title: 'Resend Activation Emails',
-      message: `Send activation emails to ${selectedUsers.size} user(s)?`,
+      message,
       confirmText: 'Send Emails',
       confirmButtonClass: 'bg-blue-600 hover:bg-blue-700',
       icon: <MailIcon className="h-6 w-6 text-blue-500" />,
       onConfirm: async () => {
         try {
           const response = await usersApi.bulkResendActivation(Array.from(selectedUsers));
-          if (response.data.errors.length > 0) {
+          if (response.data.errors && response.data.errors.length > 0) {
             setError(`Bulk activation email send completed with some errors: ${response.data.errors.join(', ')}`);
           } else {
             setSuccessMessage(response.data.message);
           }
           setSelectedUsers(new Set());
         } catch (err) {
+          console.error('Bulk resend activation error:', err);
           setError(err instanceof Error ? err.message : 'Failed to send activation emails');
         }
       }
     });
   };
 
-  const handleBulkToggleStatus = async (activate: boolean) => {
+  const handleBulkSuspend = async () => {
     if (selectedUsers.size === 0) return;
 
-    const action = activate ? 'activate' : 'deactivate';
-    const actionTitle = activate ? 'Activate Users' : 'Deactivate Users';
+    const selectedUserObjects = users.filter(user => selectedUsers.has(user.id));
+    const targetUsers = selectedUserObjects.filter(user => !user.is_suspended);
+
+    if (targetUsers.length === 0) {
+      setError('No active users selected to suspend.');
+      return;
+    }
+
+    const message = (
+      <div>
+        <p className="mb-3">
+          Are you sure you want to suspend the following {targetUsers.length} user(s)? They will not be able to login until unsuspended.
+        </p>
+        <ul className="list-none space-y-2 max-h-48 overflow-y-auto p-4 rounded-lg bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20">
+          {targetUsers.map((user, index) => (
+            <li key={user.id} className="flex items-center space-x-2 text-sm">
+              <span className="w-2 h-2 bg-red-400 rounded-full flex-shrink-0"></span>
+              <span className="text-red-700 dark:text-red-300">{user.email}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
 
     setConfirmationModal({
       isOpen: true,
-      title: actionTitle,
-      message: `Are you sure you want to ${action} ${selectedUsers.size} user(s)?`,
-      confirmText: activate ? 'Activate' : 'Deactivate',
-      confirmButtonClass: activate ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700',
-      icon: activate ? <Power className="h-6 w-6 text-green-500" /> : <PowerOff className="h-6 w-6 text-red-500" />,
+      title: 'Suspend Users',
+      message,
+      confirmText: 'Suspend',
+      confirmButtonClass: 'bg-red-600 hover:bg-red-700',
+      icon: <PowerOff className="h-6 w-6 text-red-500" />,
       onConfirm: async () => {
         try {
-          const response = await usersApi.bulkToggleStatus(Array.from(selectedUsers), activate);
-          if (response.data.errors.length > 0) {
-            setError(`Bulk ${action} completed with some errors: ${response.data.errors.join(', ')}`);
+          const response = await usersApi.bulkSuspend(Array.from(selectedUsers));
+          if (response.data.errors && response.data.errors.length > 0) {
+            setError(`Bulk suspend completed with some errors: ${response.data.errors.join(', ')}`);
           } else {
             setSuccessMessage(response.data.message);
           }
           setSelectedUsers(new Set());
           await loadUsers();
         } catch (err) {
-          setError(err instanceof Error ? err.message : `Failed to ${action} users`);
+          console.error('Bulk suspend error:', err);
+          setError(err instanceof Error ? err.message : 'Failed to suspend users');
+        }
+      }
+    });
+  };
+
+  const handleBulkUnsuspend = async () => {
+    if (selectedUsers.size === 0) return;
+
+    const selectedUserObjects = users.filter(user => selectedUsers.has(user.id));
+    const targetUsers = selectedUserObjects.filter(user => user.is_suspended);
+
+    if (targetUsers.length === 0) {
+      setError('No suspended users selected to unsuspend.');
+      return;
+    }
+
+    const message = (
+      <div>
+        <p className="mb-3">
+          Are you sure you want to unsuspend the following {targetUsers.length} user(s)? They will be able to login again.
+        </p>
+        <ul className="list-none space-y-2 max-h-48 overflow-y-auto p-4 rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20">
+          {targetUsers.map((user, index) => (
+            <li key={user.id} className="flex items-center space-x-2 text-sm">
+              <span className="w-2 h-2 bg-green-400 rounded-full flex-shrink-0"></span>
+              <span className="text-green-700 dark:text-green-300">{user.email}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+
+    setConfirmationModal({
+      isOpen: true,
+      title: 'Unsuspend Users',
+      message,
+      confirmText: 'Unsuspend',
+      confirmButtonClass: 'bg-green-600 hover:bg-green-700',
+      icon: <Power className="h-6 w-6 text-green-500" />,
+      onConfirm: async () => {
+        try {
+          const response = await usersApi.bulkUnsuspend(Array.from(selectedUsers));
+          if (response.data.errors && response.data.errors.length > 0) {
+            setError(`Bulk unsuspend completed with some errors: ${response.data.errors.join(', ')}`);
+          } else {
+            setSuccessMessage(response.data.message);
+          }
+          setSelectedUsers(new Set());
+          await loadUsers();
+        } catch (err) {
+          console.error('Bulk unsuspend error:', err);
+          setError(err instanceof Error ? err.message : 'Failed to unsuspend users');
         }
       }
     });
@@ -347,27 +505,27 @@ function UsersPageContent() {
               <div className="flex items-center space-x-2">
                 {(() => {
                   const selectedUserObjects = users.filter(user => selectedUsers.has(user.id));
-                  const hasInactiveUsers = selectedUserObjects.some(user => !user.is_active);
-                  const hasActiveUsers = selectedUserObjects.some(user => user.is_active);
+                  const hasSuspendedUsers = selectedUserObjects.some(user => user.is_suspended);
+                  const hasActiveUsers = selectedUserObjects.some(user => !user.is_suspended);
 
                   return (
                     <>
-                      {hasInactiveUsers && (
+                      {hasSuspendedUsers && (
                         <button
-                          onClick={() => handleBulkToggleStatus(true)}
+                          onClick={handleBulkUnsuspend}
                           className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 flex items-center space-x-1"
                         >
                           <Power className="h-3 w-3" />
-                          <span>Activate</span>
+                          <span>Unsuspend</span>
                         </button>
                       )}
                       {hasActiveUsers && (
                         <button
-                          onClick={() => handleBulkToggleStatus(false)}
+                          onClick={handleBulkSuspend}
                           className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 flex items-center space-x-1"
                         >
                           <PowerOff className="h-3 w-3" />
-                          <span>Deactivate</span>
+                          <span>Suspend</span>
                         </button>
                       )}
                     </>
@@ -414,15 +572,17 @@ function UsersPageContent() {
               </div>
             </div>
 
-            <div className="min-w-32">
+            <div className="min-w-40">
               <select
-                value={filters.is_active === undefined ? '' : filters.is_active.toString()}
-                onChange={handleActiveFilter}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                value={filters.status_filter || ''}
+                onChange={handleStatusFilter}
+                className="w-full px-3 py-2 pr-8 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
               >
                 <option value="">All Status</option>
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="suspended">Suspended</option>
+                <option value="2fa_active">2FA Active</option>
               </select>
             </div>
 
@@ -430,7 +590,7 @@ function UsersPageContent() {
               <select
                 value={filters.is_admin === undefined ? '' : filters.is_admin.toString()}
                 onChange={handleAdminFilter}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 pr-8 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
               >
                 <option value="">All Users</option>
                 <option value="true">Admins</option>
@@ -442,12 +602,13 @@ function UsersPageContent() {
               <select
                 value={filters.role || ''}
                 onChange={handleRoleFilter}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 pr-8 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
               >
                 <option value="">All Roles</option>
                 <option value="company_admin">Company Admin</option>
                 <option value="recruiter">Recruiter</option>
-                <option value="job_seeker">Job Seeker</option>
+                <option value="employer">Employer</option>
+                <option value="candidate">Candidate</option>
               </select>
             </div>
           </div>
@@ -501,12 +662,21 @@ function UsersPageContent() {
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {users.map((user) => (
-                    <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <tr
+                      key={user.id}
+                      className={`cursor-pointer transition-colors ${
+                        selectedUsers.has(user.id)
+                          ? 'bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30'
+                          : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+                      }`}
+                      onClick={() => handleSelectUser(user.id)}
+                    >
                       <td className="px-6 py-4">
                         <input
                           type="checkbox"
                           checked={selectedUsers.has(user.id)}
                           onChange={() => handleSelectUser(user.id)}
+                          onClick={(e) => e.stopPropagation()}
                           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         />
                       </td>
@@ -564,35 +734,52 @@ function UsersPageContent() {
                               {role.replace('_', ' ')}
                             </span>
                           ))}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-wrap gap-1">
+                          {user.is_suspended ? (
+                            <>
+                              {!user.is_active && (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300">
+                                  <UserX className="h-3 w-3 mr-1" />
+                                  Inactive
+                                </span>
+                              )}
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-300">
+                                <PowerOff className="h-3 w-3 mr-1" />
+                                Suspended
+                              </span>
+                            </>
+                          ) : (
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              user.is_active
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {user.is_active ? (
+                                <>
+                                  <UserCheck className="h-3 w-3 mr-1" />
+                                  Active
+                                </>
+                              ) : (
+                                <>
+                                  <UserX className="h-3 w-3 mr-1" />
+                                  Inactive
+                                </>
+                              )}
+                            </span>
+                          )}
                           {user.require_2fa && (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
                               <ShieldCheck className="h-3 w-3 mr-1" />
                               2FA
                             </span>
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          user.is_active
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {user.is_active ? (
-                            <>
-                              <UserCheck className="h-3 w-3 mr-1" />
-                              Active
-                            </>
-                          ) : (
-                            <>
-                              <UserX className="h-3 w-3 mr-1" />
-                              Inactive
-                            </>
-                          )}
-                        </span>
-                      </td>
                       <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end">
+                        <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
                           <Link
                             href={`/users/${user.id}/edit`}
                             className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 flex items-center space-x-1"

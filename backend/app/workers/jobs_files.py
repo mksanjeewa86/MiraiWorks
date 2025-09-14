@@ -110,7 +110,8 @@ async def _cleanup_attachments_async() -> int:
     from sqlalchemy import delete, select
 
     from app.models.attachment import Attachment
-    from app.services.storage_service import storage_service
+    from app.services.storage_service import get_storage_service
+    storage_service = get_storage_service()
 
     cleaned_count = 0
 

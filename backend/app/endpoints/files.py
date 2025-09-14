@@ -80,7 +80,8 @@ async def upload_file(
 
     # Use MinIO storage service
     try:
-        from app.services.storage_service import storage_service
+        from app.services.storage_service import get_storage_service
+        storage_service = get_storage_service()
 
         # Upload to MinIO with the already read file content
         s3_key, file_hash, file_size = await storage_service.upload_file_data(
@@ -120,7 +121,8 @@ async def download_file(
     """Generate a presigned URL for downloading a file from MinIO."""
 
     try:
-        from app.services.storage_service import storage_service
+        from app.services.storage_service import get_storage_service
+        storage_service = get_storage_service()
 
         # Check if file exists
         if not storage_service.file_exists(s3_key):
@@ -151,7 +153,8 @@ async def delete_file(
     """Delete a file from MinIO (admin only for now)."""
 
     try:
-        from app.services.storage_service import storage_service
+        from app.services.storage_service import get_storage_service
+        storage_service = get_storage_service()
 
         # Check if file exists
         if not storage_service.file_exists(s3_key):

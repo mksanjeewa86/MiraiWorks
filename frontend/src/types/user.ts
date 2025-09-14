@@ -13,6 +13,9 @@ export interface User {
   roles: string[];
   created_at: string;
   updated_at: string;
+  is_suspended: boolean;
+  suspended_at?: string;
+  suspended_by?: number;
 }
 
 export interface UserCreate {
@@ -53,7 +56,10 @@ export interface UserFilters {
   company_id?: number;
   is_active?: boolean;
   is_admin?: boolean;
+  is_suspended?: boolean;
+  require_2fa?: boolean;
   role?: string;
+  status_filter?: string;
 }
 
 export interface PasswordResetRequest {

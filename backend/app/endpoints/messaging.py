@@ -29,7 +29,7 @@ from app.schemas.message import (
 )
 from app.services.antivirus_service import antivirus_service
 from app.services.messaging_service import messaging_service
-from app.services.storage_service import storage_service
+from app.services.get_storage_service() import get_get_storage_service()
 from app.utils.constants import VirusStatus
 
 router = APIRouter()
@@ -224,7 +224,7 @@ async def get_conversation_messages(
             download_url = None
             if att.is_available and att.virus_status == VirusStatus.CLEAN.value:
                 try:
-                    download_url = storage_service.get_presigned_url(att.s3_key)
+                    download_url = get_storage_service().get_presigned_url(att.s3_key)
                 except Exception as e:
                     logger.error(
                         f"Failed to generate download URL for attachment {att.id}: {e}"
@@ -382,7 +382,7 @@ async def create_file_upload(
         )
 
     # Generate S3 key
-    s3_key = storage_service.generate_s3_key(
+    s3_key = get_storage_service().generate_s3_key(
         current_user.id, file_request.filename, "chat-attachments"
     )
 
@@ -391,7 +391,7 @@ async def create_file_upload(
         owner_id=current_user.id,
         original_filename=file_request.filename,
         s3_key=s3_key,
-        s3_bucket=storage_service.bucket,
+        s3_bucket=get_storage_service().bucket,
         mime_type=file_request.mime_type,
         file_size=file_request.file_size,
         sha256_hash="",  # Will be updated after upload
@@ -404,7 +404,7 @@ async def create_file_upload(
     await db.refresh(attachment)
 
     # Generate presigned upload URL
-    upload_data = storage_service.get_presigned_upload_url(s3_key)
+    upload_data = get_storage_service().get_presigned_upload_url(s3_key)
 
     return FileUploadResponse(
         upload_url=upload_data["upload_url"],

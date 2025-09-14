@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import Any, Optional
 
 from app.models.resume import Resume
-from app.services.storage_service import StorageService
+from app.services.storage_service import get_storage_service
 from app.services.template_service import TemplateService
 
 logger = logging.getLogger(__name__)
@@ -15,7 +15,7 @@ class PDFService:
 
     def __init__(self):
         self.template_service = TemplateService()
-        self.storage_service = StorageService()
+        # Storage service will be lazily loaded when needed
 
     async def generate_pdf(
         self,
@@ -42,12 +42,12 @@ class PDFService:
 
             # Upload to storage
             filename = f"resume_{resume.id}_{uuid.uuid4().hex[:8]}.pdf"
-            file_path = await self.storage_service.upload_file(
+            file_path = await get_storage_service().upload_file(
                 pdf_data, filename, "resumes/pdfs", content_type="application/pdf"
             )
 
             # Generate temporary download URL
-            download_url = await self.storage_service.generate_presigned_url(
+            download_url = await get_storage_service().generate_presigned_url(
                 file_path,
                 expires_in=3600,  # 1 hour
             )
@@ -261,7 +261,7 @@ class PDFService:
                 return None
 
             # Download PDF from storage
-            pdf_data = await self.storage_service.download_file(resume.pdf_file_path)
+            pdf_data = await get_storage_service().download_file(resume.pdf_file_path)
 
             # Convert first page to image
             preview_data = await self._pdf_to_image(pdf_data)
@@ -271,14 +271,14 @@ class PDFService:
                 preview_filename = (
                     f"resume_preview_{resume.id}_{uuid.uuid4().hex[:8]}.png"
                 )
-                preview_path = await self.storage_service.upload_file(
+                preview_path = await get_storage_service().upload_file(
                     preview_data,
                     preview_filename,
                     "resumes/previews",
                     content_type="image/png",
                 )
 
-                return await self.storage_service.generate_presigned_url(preview_path)
+                return await get_storage_service().generate_presigned_url(preview_path)
 
             return None
 

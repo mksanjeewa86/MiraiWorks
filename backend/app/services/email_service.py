@@ -5,6 +5,7 @@ from email.mime.text import MIMEText
 from typing import Optional
 
 from app.config import settings
+from app.services.email_template_service import email_template_service
 
 logger = logging.getLogger(__name__)
 
@@ -65,43 +66,26 @@ class EmailService:
         """Send 2FA verification code via email."""
         subject = "Your MiraiWorks Verification Code"
 
-        html_body = f"""
-        <html>
-        <head></head>
-        <body>
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #333;">Your Verification Code</h2>
-                <p>Hi {user_name},</p>
-                <p>Your two-factor authentication verification code is:</p>
-                <div style="background: #f5f5f5; padding: 20px; text-align: center; margin: 20px 0; border-radius: 5px;">
-                    <h1 style="color: #007bff; letter-spacing: 5px; margin: 0;">{code}</h1>
-                </div>
-                <p>This code will expire in 10 minutes.</p>
-                <p>If you didn't request this code, please ignore this email.</p>
-                <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-                <p style="color: #666; font-size: 12px;">
-                    This is an automated message from MiraiWorks. Please do not reply to this email.
-                </p>
-            </div>
-        </body>
-        </html>
-        """
+        # Prepare template context
+        context = {
+            "user_name": user_name,
+            "code": code,
+        }
 
-        text_body = f"""
-        Your MiraiWorks Verification Code
-
-        Hi {user_name},
-
-        Your two-factor authentication verification code is: {code}
-
-        This code will expire in 10 minutes.
-
-        If you didn't request this code, please ignore this email.
-
-        This is an automated message from MiraiWorks.
-        """
-
-        return await self.send_email([email], subject, html_body, text_body)
+        try:
+            html_body, text_body = email_template_service.render_email_template(
+                "auth/2fa_code", context, subject, "Your Verification Code"
+            )
+            return await self.send_email([email], subject, html_body, text_body)
+        except Exception as e:
+            logger.error(f"Failed to render 2FA email template: {e}")
+            # Fallback to a simple message if template fails
+            return await self.send_email(
+                [email],
+                subject,
+                f"<p>Hi {user_name}, your 2FA code is: <strong>{code}</strong></p>",
+                f"Hi {user_name}, your 2FA code is: {code}"
+            )
 
     async def send_password_reset(
         self, email: str, reset_token: str, user_name: str
@@ -146,82 +130,68 @@ class EmailService:
 
         activation_url = f"{settings.app_base_url}/activate/{user_id}"
 
-        html_body = f"""
-        <html>
-        <head></head>
-        <body>
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <div style="background: #007bff; padding: 20px; text-align: center;">
-                    <h2 style="color: white; margin: 0;">Welcome to MiraiWorks</h2>
-                </div>
-                <div style="padding: 20px;">
-                    <h3>Your {company_name} admin account is ready!</h3>
-                    <p>We've created your company admin account for MiraiWorks. Please follow these steps to get started:</p>
+        # Prepare template context
+        context = {
+            "company_name": company_name,
+            "email": email,
+            "temporary_password": temporary_password,
+            "activation_url": activation_url,
+        }
 
-                    <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0;">
-                        <h4 style="margin-top: 0; color: #333;">Login Credentials:</h4>
-                        <p><strong>Email:</strong> {email}</p>
-                        <p><strong>Temporary Password:</strong> <code style="background: #e9ecef; padding: 2px 6px; border-radius: 3px;">{temporary_password}</code></p>
-                    </div>
+        try:
+            html_body, text_body = email_template_service.render_email_template(
+                "admin/company_activation", context, subject, "Welcome to MiraiWorks"
+            )
+            return await self.send_email([email], subject, html_body, text_body)
+        except Exception as e:
+            logger.error(f"Failed to render company activation email template: {e}")
+            # Fallback to a simple message if template fails
+            return await self.send_email(
+                [email],
+                subject,
+                f"<p>Hi, your {company_name} admin account is ready. Please activate at: {activation_url}</p>",
+                f"Hi, your {company_name} admin account is ready. Please activate at: {activation_url}"
+            )
 
-                    <div style="text-align: center; margin: 30px 0;">
-                        <a href="{activation_url}" style="background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; margin-bottom: 10px;">
-                            Activate Account & Login
-                        </a>
-                    </div>
+    async def send_activation_email(
+        self,
+        email: str,
+        first_name: str,
+        activation_token: str,
+        temporary_password: Optional[str] = None,
+        user_id: Optional[int] = None,
+    ) -> bool:
+        """Send account activation email with activation link and optional temporary password."""
+        subject = "Activate your MiraiWorks Account"
 
-                    <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 20px 0;">
-                        <p style="margin: 0; color: #856404;">
-                            <strong>Important:</strong> You'll be required to change your password on first login for security reasons.
-                        </p>
-                    </div>
+        # Use user_id if provided, otherwise fall back to token-based URL
+        if user_id:
+            activation_url = f"{self.app_base_url}/activate/{user_id}"
+        else:
+            activation_url = f"{self.app_base_url}/activate?token={activation_token}"
 
-                    <h4>What's next?</h4>
-                    <ul>
-                        <li>Click the activation link above</li>
-                        <li>Login with the provided credentials</li>
-                        <li>Change your password for security</li>
-                        <li>Start setting up your company profile</li>
-                    </ul>
+        # Prepare template context
+        context = {
+            "first_name": first_name,
+            "email": email,
+            "temporary_password": temporary_password or "Not provided",
+            "activation_url": activation_url,
+        }
 
-                    <p>If you need any help, please contact our support team.</p>
-                </div>
-                <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-                <p style="color: #666; font-size: 12px; text-align: center;">
-                    This is an automated message from MiraiWorks. Please do not reply to this email.
-                </p>
-            </div>
-        </body>
-        </html>
-        """
-
-        text_body = f"""
-        Welcome to MiraiWorks - Activate your {company_name} admin account
-
-        Your {company_name} admin account is ready!
-
-        We've created your company admin account for MiraiWorks. Please follow these steps to get started:
-
-        Login Credentials:
-        Email: {email}
-        Temporary Password: {temporary_password}
-
-        Activation Link: {activation_url}
-
-        IMPORTANT: You'll be required to change your password on first login for security reasons.
-
-        What's next?
-        1. Click the activation link above
-        2. Login with the provided credentials
-        3. Change your password for security
-        4. Start setting up your company profile
-
-        If you need any help, please contact our support team.
-
-        This is an automated message from MiraiWorks.
-        """
-
-        return await self.send_email([email], subject, html_body, text_body)
+        try:
+            html_body, text_body = email_template_service.render_email_template(
+                "auth/activation", context, subject, "Welcome to MiraiWorks"
+            )
+            return await self.send_email([email], subject, html_body, text_body)
+        except Exception as e:
+            logger.error(f"Failed to render activation email template: {e}")
+            # Fallback to a simple message if template fails
+            return await self.send_email(
+                [email],
+                subject,
+                f"<p>Hi {first_name}, please activate your account at: {activation_url}</p>",
+                f"Hi {first_name}, please activate your account at: {activation_url}"
+            )
 
     async def send_message_notification(
         self,
@@ -241,55 +211,28 @@ class EmailService:
             else message_content
         )
 
-        html_body = f"""
-        <html>
-        <head></head>
-        <body>
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <div style="background: #007bff; padding: 20px; text-align: center;">
-                    <h2 style="color: white; margin: 0;">New Message</h2>
-                </div>
-                <div style="padding: 20px;">
-                    <p>Hi {recipient_name},</p>
-                    <p>You have received a new message from <strong>{sender_name}</strong>:</p>
-                    <div style="background: #f8f9fa; padding: 15px; border-left: 4px solid #007bff; margin: 20px 0; border-radius: 4px;">
-                        <p style="margin: 0; color: #495057;">{display_content}</p>
-                    </div>
-                    <div style="text-align: center; margin: 30px 0;">
-                        <a href="{conversation_url}" style="background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">
-                            View Message
-                        </a>
-                    </div>
-                    <p style="color: #6c757d; font-size: 14px;">
-                        You can disable these notifications in your settings.
-                    </p>
-                </div>
-                <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-                <p style="color: #666; font-size: 12px; text-align: center;">
-                    This is an automated message from MiraiWorks. Please do not reply to this email.
-                </p>
-            </div>
-        </body>
-        </html>
-        """
+        # Prepare template context
+        context = {
+            "recipient_name": recipient_name,
+            "sender_name": sender_name,
+            "message_content": display_content,
+            "conversation_url": conversation_url,
+        }
 
-        text_body = f"""
-        New Message - MiraiWorks
-
-        Hi {recipient_name},
-
-        You have received a new message from {sender_name}:
-
-        {display_content}
-
-        View the full conversation at: {conversation_url}
-
-        You can disable these notifications in your settings.
-
-        This is an automated message from MiraiWorks.
-        """
-
-        return await self.send_email([recipient_email], subject, html_body, text_body)
+        try:
+            html_body, text_body = email_template_service.render_email_template(
+                "notifications/message_notification", context, subject, "New Message"
+            )
+            return await self.send_email([recipient_email], subject, html_body, text_body)
+        except Exception as e:
+            logger.error(f"Failed to render message notification email template: {e}")
+            # Fallback to a simple message if template fails
+            return await self.send_email(
+                [recipient_email],
+                subject,
+                f"<p>Hi {recipient_name}, you have a new message from {sender_name}: {display_content}</p>",
+                f"Hi {recipient_name}, you have a new message from {sender_name}: {display_content}"
+            )
 
 
 # Global instance

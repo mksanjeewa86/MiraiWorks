@@ -4,8 +4,7 @@ import {
   UserUpdate,
   UserListResponse,
   UserFilters,
-  PasswordResetRequest,
-  BulkUserOperation
+  PasswordResetRequest
 } from '../types/user';
 import { API_CONFIG } from '@/config/api';
 
@@ -53,6 +52,8 @@ export const usersApi = {
     if (filters.company_id) params.append('company_id', filters.company_id.toString());
     if (filters.is_active !== undefined) params.append('is_active', filters.is_active.toString());
     if (filters.is_admin !== undefined) params.append('is_admin', filters.is_admin.toString());
+    if (filters.is_suspended !== undefined) params.append('is_suspended', filters.is_suspended.toString());
+    if (filters.require_2fa !== undefined) params.append('require_2fa', filters.require_2fa.toString());
     if (filters.role) params.append('role', filters.role);
     
     const queryString = params.toString();
@@ -97,9 +98,15 @@ export const usersApi = {
       method: 'POST',
     }),
 
-  // Toggle user status (suspend/activate)
-  toggleStatus: (userId: number) =>
-    makeAuthenticatedRequest<User>(`/api/admin/users/${userId}/toggle-status`, {
+  // Suspend user
+  suspendUser: (userId: number) =>
+    makeAuthenticatedRequest<{ message: string; is_suspended: boolean }>(`/api/admin/users/${userId}/suspend`, {
+      method: 'POST',
+    }),
+
+  // Unsuspend user
+  unsuspendUser: (userId: number) =>
+    makeAuthenticatedRequest<{ message: string; is_suspended: boolean }>(`/api/admin/users/${userId}/unsuspend`, {
       method: 'POST',
     }),
 
@@ -122,8 +129,14 @@ export const usersApi = {
       body: JSON.stringify({ user_ids: userIds, send_email: true }),
     }),
 
-  bulkToggleStatus: (userIds: number[], activate: boolean) =>
-    makeAuthenticatedRequest<{ message: string; updated_count: number; errors: string[] }>(`/api/admin/users/bulk/toggle-status?activate=${activate}`, {
+  bulkSuspend: (userIds: number[]) =>
+    makeAuthenticatedRequest<{ message: string; suspended_count: number; errors: string[] }>('/api/admin/users/bulk/suspend', {
+      method: 'POST',
+      body: JSON.stringify({ user_ids: userIds, send_email: false }),
+    }),
+
+  bulkUnsuspend: (userIds: number[]) =>
+    makeAuthenticatedRequest<{ message: string; unsuspended_count: number; errors: string[] }>('/api/admin/users/bulk/unsuspend', {
       method: 'POST',
       body: JSON.stringify({ user_ids: userIds, send_email: false }),
     }),

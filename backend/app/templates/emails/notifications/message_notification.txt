@@ -1,0 +1,13 @@
+New Message - MiraiWorks
+
+Hi {{ recipient_name }},
+
+You have received a new message from {{ sender_name }}:
+
+{{ message_content }}
+
+View the full conversation at: {{ conversation_url }}
+
+You can disable these notifications in your settings.
+
+This is an automated message from MiraiWorks.

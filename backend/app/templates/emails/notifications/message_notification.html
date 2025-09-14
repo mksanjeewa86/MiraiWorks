@@ -1,0 +1,15 @@
+<h2>New Message</h2>
+<p>Hi {{ recipient_name }},</p>
+<p>You have received a new message from <strong>{{ sender_name }}</strong>:</p>
+
+<div style="background: #f8f9fa; padding: 15px; border-left: 4px solid #007bff; margin: 20px 0; border-radius: 4px;">
+    <p style="margin: 0; color: #495057;">{{ message_content }}</p>
+</div>
+
+<div class="button-center">
+    <a href="{{ conversation_url }}" class="button">View Message</a>
+</div>
+
+<p style="color: #6c757d; font-size: 14px;">
+    You can disable these notifications in your settings.
+</p>

@@ -1,0 +1,23 @@
+Welcome to MiraiWorks - Activate your {{ company_name }} admin account
+
+Your {{ company_name }} admin account is ready!
+
+We've created your company admin account for MiraiWorks. Please follow these steps to get started:
+
+Login Credentials:
+Email: {{ email }}
+Temporary Password: {{ temporary_password }}
+
+Activation Link: {{ activation_url }}
+
+IMPORTANT: You'll be required to change your password on first login for security reasons.
+
+What's next?
+1. Click the activation link above
+2. Login with the provided credentials
+3. Change your password for security
+4. Start setting up your company profile
+
+If you need any help, please contact our support team.
+
+This is an automated message from MiraiWorks.

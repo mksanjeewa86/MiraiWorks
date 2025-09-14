@@ -54,7 +54,7 @@ class Settings(BaseSettings):
     outlook_calendar_redirect_uri: Optional[str] = None
 
     # App
-    app_base_url: str = "http://localhost:5173"
+    app_base_url: str = "http://localhost:3001"
 
     model_config = {"env_file": ".env", "case_sensitive": False}
 

@@ -1,0 +1,28 @@
+<h3>Your {{ company_name }} admin account is ready!</h3>
+<p>We've created your company admin account for MiraiWorks. Please follow these steps to get started:</p>
+
+<div class="credentials-box">
+    <h4>Login Credentials:</h4>
+    <p><strong>Email:</strong> {{ email }}</p>
+    <p><strong>Temporary Password:</strong> <code>{{ temporary_password }}</code></p>
+</div>
+
+<div class="button-center">
+    <a href="{{ activation_url }}" class="button">Activate Account & Login</a>
+</div>
+
+<div class="warning-box">
+    <p><strong>Important:</strong> You'll be required to change your password on first login for security reasons.</p>
+</div>
+
+<div class="steps">
+    <h4>What's next?</h4>
+    <ul>
+        <li>Click the activation link above</li>
+        <li>Login with the provided credentials</li>
+        <li>Change your password for security</li>
+        <li>Start setting up your company profile</li>
+    </ul>
+</div>
+
+<p>If you need any help, please contact our support team.</p>

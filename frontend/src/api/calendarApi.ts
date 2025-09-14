@@ -2,7 +2,6 @@ import {
   CalendarConnection,
   CalendarConnectionUpdate,
   CalendarConnectionResponse,
-  CalendarListResponse,
   CalendarAuthResponse,
 } from '@/types/calendar';
 import { API_CONFIG } from '@/config/api';
@@ -80,7 +79,7 @@ export const calendarApi = {
 
   // Manually sync calendar
   syncCalendar: (connectionId: number) =>
-    makeAuthenticatedRequest<{ message: string; result: any }>(`/api/calendar/accounts/${connectionId}/sync`, {
+    makeAuthenticatedRequest<{ message: string; result: unknown }>(`/api/calendar/accounts/${connectionId}/sync`, {
       method: 'POST',
     }),
 };

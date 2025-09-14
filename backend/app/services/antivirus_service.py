@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.models.attachment import Attachment
-from app.services.storage_service import storage_service
+from app.services.get_storage_service() import get_get_storage_service()
 from app.utils.constants import VirusStatus
 
 logger = logging.getLogger(__name__)
@@ -45,7 +45,7 @@ class AntivirusService:
         """Download file data from S3."""
         try:
             # Get presigned URL and download
-            url = storage_service.get_presigned_url(s3_key)
+            url = get_storage_service().get_presigned_url(s3_key)
 
             import httpx
 

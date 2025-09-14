@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ subject }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: #007bff;
+            padding: 20px;
+            text-align: center;
+        }
+        .header h1 {
+            color: white;
+            margin: 0;
+            font-size: 24px;
+        }
+        .content {
+            padding: 20px;
+        }
+        .credentials-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .credentials-box h4 {
+            margin-top: 0;
+            color: #333;
+        }
+        .credentials-box code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        .button {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .button-center {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .warning-box p {
+            margin: 0;
+            color: #856404;
+        }
+        .footer {
+            border-top: 1px solid #eee;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+        }
+        .steps {
+            margin: 20px 0;
+        }
+        .steps h4 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .steps ul {
+            padding-left: 20px;
+        }
+        .steps li {
+            margin-bottom: 8px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{{ header_title }}</h1>
+        </div>
+
+        <div class="content">
+            {{ content }}
+        </div>
+
+        <div class="footer">
+            <p>This is an automated message from MiraiWorks. Please do not reply to this email.</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -206,5 +206,16 @@ class StorageService:
             return False
 
 
-# Global instance
-storage_service = StorageService()
+# Global instance (lazy loaded)
+_storage_service = None
+
+def get_storage_service() -> StorageService:
+    """Get storage service instance (lazy loaded)"""
+    global _storage_service
+    if _storage_service is None:
+        _storage_service = StorageService()
+    return _storage_service
+
+# For backward compatibility
+def storage_service() -> StorageService:
+    return get_storage_service()

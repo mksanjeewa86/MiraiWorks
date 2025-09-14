@@ -147,11 +147,19 @@ class AuthService:
                 selectinload(User.company),
                 selectinload(User.user_roles).selectinload(UserRoleModel.role),
             )
-            .where(User.email == email, User.is_active == True)
+            .where(
+                User.email == email,
+                User.is_active == True,
+                User.is_deleted == False
+            )
         )
 
         user = result.scalar_one_or_none()
         if not user or not user.hashed_password:
+            return None
+
+        # Check if user is suspended
+        if user.is_suspended:
             return None
 
         if not self.verify_password(password, user.hashed_password):
@@ -162,6 +170,21 @@ class AuthService:
     def generate_2fa_code(self) -> str:
         """Generate a 6-digit 2FA code."""
         return str(secrets.randbelow(900000) + 100000)
+
+    def generate_activation_token(self, email: str) -> str:
+        """Generate an activation token for user email verification."""
+        data = {
+            "sub": email,
+            "type": "activation"
+        }
+        # Activation tokens expire in 24 hours
+        expire_delta = timedelta(hours=24)
+        to_encode = data.copy()
+        expire = datetime.utcnow() + expire_delta
+        to_encode.update({"exp": expire})
+
+        encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
+        return encoded_jwt
 
     async def requires_2fa(self, db: AsyncSession, user: User) -> bool:
         """Check if user requires 2FA based on user settings and role requirements."""

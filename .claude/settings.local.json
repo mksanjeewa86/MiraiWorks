@@ -106,7 +106,10 @@
       "Bash(PYTHONPATH=. python -m uvicorn app.main:app --host 127.0.0.1 --port 8001)",
       "Bash(cmd.exe:*)",
       "Bash(PYTHONPATH=. python:*)",
-      "Bash(docker build:*)"
+      "Bash(docker build:*)",
+      "Bash(cmd /c:*)",
+      "Bash(docker:*)",
+      "Bash(del \"C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\test_toggle.py\")"
     ],
     "deny": [],
     "ask": []

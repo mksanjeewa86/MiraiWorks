@@ -167,7 +167,7 @@ export default function ContactPage() {
                       name="type"
                       value={formData.type}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 pr-8 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="general">General Inquiry</option>
                       <option value="support">Technical Support</option>

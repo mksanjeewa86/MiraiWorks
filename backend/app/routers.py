@@ -8,6 +8,7 @@ from app.endpoints import (
     companies,
     dashboard,
     direct_messages,
+    email_preview,
     files,
     infrastructure,
     interviews,
@@ -41,3 +42,8 @@ def include_routers(app: FastAPI) -> None:
     app.include_router(companies.router, prefix="/api/admin", tags=["companies"])
     app.include_router(users_management.router, prefix="/api/admin", tags=["users-management"])
     app.include_router(public.router, prefix="/api/public", tags=["public"])
+
+    # Development tools (only include in development)
+    import os
+    if os.getenv("ENVIRONMENT", "development").lower() in ["development", "local"]:
+        app.include_router(email_preview.router, tags=["Email Preview"])
