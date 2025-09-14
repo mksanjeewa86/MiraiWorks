@@ -19,7 +19,7 @@ class TestUsersManagement:
     @pytest.mark.asyncio
     async def test_get_users_success(self, client: AsyncClient, admin_auth_headers: dict):
         """Test successful retrieval of user list."""
-        response = await client.get("/api/users", headers=admin_auth_headers)
+        response = await client.get("/api/admin/users", headers=admin_auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -66,7 +66,7 @@ class TestUsersManagement:
         }
 
         response = await client.post(
-            "/api/users",
+            "/api/admin/users",
             json=user_data,
             headers=admin_auth_headers
         )
@@ -184,25 +184,25 @@ class TestUsersManagement:
     @pytest.mark.asyncio
     async def test_get_users_unauthorized(self, client: AsyncClient):
         """Test user list access without authentication."""
-        response = await client.get("/api/users")
+        response = await client.get("/api/admin/users")
         assert response.status_code == 401
 
     @pytest.mark.asyncio
     async def test_get_users_forbidden_regular_user(self, client: AsyncClient, auth_headers: dict):
         """Test user list access with regular user (should be forbidden)."""
-        response = await client.get("/api/users", headers=auth_headers)
+        response = await client.get("/api/admin/users", headers=auth_headers)
         assert response.status_code == 403
 
     @pytest.mark.asyncio
     async def test_create_user_unauthorized(self, client: AsyncClient):
         """Test user creation without authentication."""
-        response = await client.post("/api/users", json={})
+        response = await client.post("/api/admin/users", json={})
         assert response.status_code == 401
 
     @pytest.mark.asyncio
     async def test_create_user_forbidden_regular_user(self, client: AsyncClient, auth_headers: dict):
         """Test user creation with regular user permissions."""
-        response = await client.post("/api/users", json={}, headers=auth_headers)
+        response = await client.post("/api/admin/users", json={}, headers=auth_headers)
         assert response.status_code == 403
 
     @pytest.mark.asyncio
@@ -230,7 +230,7 @@ class TestUsersManagement:
         }
 
         response = await client.post(
-            "/api/users",
+            "/api/admin/users",
             json=user_data,
             headers=admin_auth_headers
         )
@@ -245,7 +245,7 @@ class TestUsersManagement:
         user_data = {"email": "test@example.com"}  # Missing other required fields
 
         response = await client.post(
-            "/api/users",
+            "/api/admin/users",
             json=user_data,
             headers=admin_auth_headers
         )
@@ -265,7 +265,7 @@ class TestUsersManagement:
         }
 
         response = await client.post(
-            "/api/users",
+            "/api/admin/users",
             json=user_data,
             headers=admin_auth_headers
         )
@@ -494,7 +494,7 @@ class TestUsersManagement:
         }
 
         response = await client.post(
-            "/api/users",
+            "/api/admin/users",
             json=user_data,
             headers=admin_auth_headers
         )

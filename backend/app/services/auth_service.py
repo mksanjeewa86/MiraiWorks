@@ -51,9 +51,18 @@ class AuthService:
         encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
         return encoded_jwt
 
-    def create_refresh_token(self) -> str:
-        """Create a random refresh token."""
-        return secrets.token_urlsafe(32)
+    def create_refresh_token(self, data: Optional[dict[str, Any]] = None) -> str:
+        """Create a JWT refresh token or random token."""
+        if data is not None:
+            # Create JWT refresh token with data
+            to_encode = data.copy()
+            expire = datetime.utcnow() + timedelta(days=self.refresh_token_expire_days)
+            to_encode.update({"exp": expire, "type": "refresh"})
+            encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
+            return encoded_jwt
+        else:
+            # Create random refresh token for storage
+            return secrets.token_urlsafe(32)
 
     def hash_token(self, token: str) -> str:
         """Hash a token for secure storage."""
@@ -70,6 +79,10 @@ class AuthService:
             return payload
         except JWTError:
             return None
+
+    def decode_token(self, token: str, token_type: str = "access") -> Optional[dict[str, Any]]:
+        """Alias for verify_token for backward compatibility."""
+        return self.verify_token(token, token_type)
 
     async def store_refresh_token(
         self, db: AsyncSession, user_id: int, token: str

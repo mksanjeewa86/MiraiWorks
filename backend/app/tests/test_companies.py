@@ -18,7 +18,7 @@ class TestCompanies:
     @pytest.mark.asyncio
     async def test_get_companies_success(self, client: AsyncClient, super_admin_auth_headers: dict):
         """Test successful retrieval of companies list."""
-        response = await client.get("/api/companies", headers=super_admin_auth_headers)
+        response = await client.get("/api/admin/companies", headers=super_admin_auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -81,7 +81,7 @@ class TestCompanies:
         }
 
         response = await client.post(
-            "/api/companies",
+            "/api/admin/companies",
             json=company_data,
             headers=super_admin_auth_headers
         )
@@ -135,39 +135,39 @@ class TestCompanies:
     @pytest.mark.asyncio
     async def test_get_companies_unauthorized(self, client: AsyncClient):
         """Test companies list access without authentication."""
-        response = await client.get("/api/companies")
+        response = await client.get("/api/admin/companies")
         assert response.status_code == 401
 
     @pytest.mark.asyncio
     async def test_get_companies_forbidden_regular_user(self, client: AsyncClient, auth_headers: dict):
         """Test companies list access with regular user (should be forbidden)."""
-        response = await client.get("/api/companies", headers=auth_headers)
+        response = await client.get("/api/admin/companies", headers=auth_headers)
         assert response.status_code == 403
 
     @pytest.mark.asyncio
     async def test_get_companies_forbidden_company_admin(self, client: AsyncClient, admin_auth_headers: dict):
         """Test companies list access with company admin (should be forbidden)."""
-        response = await client.get("/api/companies", headers=admin_auth_headers)
+        response = await client.get("/api/admin/companies", headers=admin_auth_headers)
         assert response.status_code == 403
 
     @pytest.mark.asyncio
     async def test_create_company_unauthorized(self, client: AsyncClient):
         """Test company creation without authentication."""
-        response = await client.post("/api/companies", json={})
+        response = await client.post("/api/admin/companies", json={})
         assert response.status_code == 401
 
     @pytest.mark.asyncio
     async def test_create_company_forbidden_regular_user(self, client: AsyncClient, auth_headers: dict):
         """Test company creation with regular user permissions."""
         company_data = {"name": "Test Company", "email": "test@example.com"}
-        response = await client.post("/api/companies", json=company_data, headers=auth_headers)
+        response = await client.post("/api/admin/companies", json=company_data, headers=auth_headers)
         assert response.status_code == 403
 
     @pytest.mark.asyncio
     async def test_create_company_forbidden_company_admin(self, client: AsyncClient, admin_auth_headers: dict):
         """Test company creation with company admin permissions."""
         company_data = {"name": "Test Company", "email": "test@example.com"}
-        response = await client.post("/api/companies", json=company_data, headers=admin_auth_headers)
+        response = await client.post("/api/admin/companies", json=company_data, headers=admin_auth_headers)
         assert response.status_code == 403
 
     @pytest.mark.asyncio
@@ -200,7 +200,7 @@ class TestCompanies:
         }
 
         response = await client.post(
-            "/api/companies",
+            "/api/admin/companies",
             json=company_data,
             headers=super_admin_auth_headers
         )
@@ -215,7 +215,7 @@ class TestCompanies:
         company_data = {"name": "Test Company"}  # Missing email and type
 
         response = await client.post(
-            "/api/companies",
+            "/api/admin/companies",
             json=company_data,
             headers=super_admin_auth_headers
         )
@@ -234,7 +234,7 @@ class TestCompanies:
         }
 
         response = await client.post(
-            "/api/companies",
+            "/api/admin/companies",
             json=company_data,
             headers=super_admin_auth_headers
         )
@@ -252,7 +252,7 @@ class TestCompanies:
         }
 
         response = await client.post(
-            "/api/companies",
+            "/api/admin/companies",
             json=company_data,
             headers=super_admin_auth_headers
         )
@@ -364,7 +364,7 @@ class TestCompanies:
         }
 
         response = await client.post(
-            "/api/companies",
+            "/api/admin/companies",
             json=company_data,
             headers=super_admin_auth_headers
         )
@@ -396,7 +396,7 @@ class TestCompanies:
         }
 
         response = await client.post(
-            "/api/companies",
+            "/api/admin/companies",
             json=company_data,
             headers=super_admin_auth_headers
         )
@@ -458,7 +458,7 @@ class TestCompanies:
             }
 
             response = await client.post(
-                "/api/companies",
+                "/api/admin/companies",
                 json=company_data,
                 headers=super_admin_auth_headers
             )
