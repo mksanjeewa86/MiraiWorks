@@ -6,7 +6,9 @@
       "Bash(/dev/null)",
       "Bash(then echo \"NOT IN GIT: $file\")",
       "Bash(fi)",
-      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/ --verbose --tb=short)"
+      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/ --verbose --tb=short)",
+      "Bash(git restore:*)",
+      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/ --tb=short -q)"
     ],
     "deny": [],
     "ask": []
