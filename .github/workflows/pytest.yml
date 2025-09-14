@@ -180,14 +180,14 @@ jobs:
         echo "" >> $GITHUB_STEP_SUMMARY
         if [ -f backend/coverage.xml ]; then
           coverage_percent=$(python -c "
-          import xml.etree.ElementTree as ET
-          try:
-              tree = ET.parse('backend/coverage.xml')
-              root = tree.getroot()
-              coverage = root.attrib.get('line-rate', '0')
-              print(f'{float(coverage)*100:.1f}%')
-          except:
-              print('Unknown')
+import xml.etree.ElementTree as ET
+try:
+    tree = ET.parse('backend/coverage.xml')
+    root = tree.getroot()
+    coverage = root.attrib.get('line-rate', '0')
+    print(f'{float(coverage)*100:.1f}%')
+except:
+    print('Unknown')
           ")
           echo "📊 **Code Coverage**: $coverage_percent" >> $GITHUB_STEP_SUMMARY
         fi
