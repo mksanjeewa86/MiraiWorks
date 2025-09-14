@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.models.attachment import Attachment
-from app.services.get_storage_service() import get_get_storage_service()
+from app.services.storage_service import get_storage_service
 from app.utils.constants import VirusStatus
 
 logger = logging.getLogger(__name__)
