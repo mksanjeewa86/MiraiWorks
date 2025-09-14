@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 from app.utils.constants import CompanyType
 
@@ -8,8 +8,8 @@ class CompanyBase(BaseModel):
     """Base company schema with common fields."""
     name: str
     type: CompanyType
-    email: str
-    phone: Optional[str] = None
+    email: EmailStr
+    phone: str
     website: Optional[str] = None
     postal_code: Optional[str] = None
     prefecture: Optional[str] = None
@@ -27,7 +27,7 @@ class CompanyUpdate(BaseModel):
     """Schema for updating a company."""
     name: Optional[str] = None
     type: Optional[CompanyType] = None
-    email: Optional[str] = None
+    email: Optional[EmailStr] = None
     phone: Optional[str] = None
     website: Optional[str] = None
     postal_code: Optional[str] = None
@@ -63,5 +63,6 @@ class CompanyListResponse(BaseModel):
 
 class CompanyAdminStatus(BaseModel):
     """Schema for company admin status."""
-    has_admin: bool
+    company_id: int
+    has_active_admin: bool
     admin_count: int

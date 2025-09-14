@@ -90,7 +90,7 @@ async def get_company(
     db: AsyncSession = Depends(get_db),
 ):
     """Get a specific company by ID."""
-    company_data = await company_crud.get_with_counts(db, company_id)
+    company_data = await company_crud.company.get_with_counts(db, company_id)
 
     if not company_data:
         raise HTTPException(
@@ -122,13 +122,23 @@ async def get_company(
     )
 
 
-@router.post("/companies", response_model=CompanyResponse)
+@router.post("/companies", response_model=CompanyResponse, status_code=status.HTTP_201_CREATED)
 async def create_company(
     company_data: CompanyCreate,
     current_user: User = Depends(require_super_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """Create a new company and associated admin user."""
+    # Check for duplicate company email
+    existing_company_query = select(Company).where(Company.email == company_data.email)
+    existing_company_result = await db.execute(existing_company_query)
+    if existing_company_result.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Company with this email already exists",
+        )
+
+    # Check for duplicate user email (for the admin user that will be created)
     existing_user_query = select(User).where(User.email == company_data.email)
     existing_user_result = await db.execute(existing_user_query)
     if existing_user_result.scalar_one_or_none():
@@ -254,19 +264,30 @@ async def update_company(
     db: AsyncSession = Depends(get_db),
 ):
     """Update a company."""
-    company = await company_crud.get(db, company_id)
+    company = await company_crud.company.get(db, company_id)
     if not company:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Company not found"
         )
 
     update_data = company_data.model_dump(exclude_unset=True)
+
+    # Check for duplicate email if email is being updated
+    if "email" in update_data and update_data["email"] != company.email:
+        existing_company_query = select(Company).where(Company.email == update_data["email"])
+        existing_company_result = await db.execute(existing_company_query)
+        if existing_company_result.scalar_one_or_none():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Company with this email already exists",
+            )
+
     if "is_active" in update_data:
         update_data["is_active"] = "1" if update_data["is_active"] else "0"
 
-    company = await company_crud.update(db, db_obj=company, obj_in=update_data)
+    company = await company_crud.company.update(db, db_obj=company, obj_in=update_data)
 
-    company_data_with_counts = await company_crud.get_with_counts(db, company_id)
+    company_data_with_counts = await company_crud.company.get_with_counts(db, company_id)
     if company_data_with_counts:
         company, user_count, job_count = company_data_with_counts
     else:
@@ -302,7 +323,7 @@ async def delete_company(
     db: AsyncSession = Depends(get_db),
 ):
     """Delete a company."""
-    company = await company_crud.get(db, company_id)
+    company = await company_crud.company.get(db, company_id)
     if not company:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Company not found"
@@ -318,7 +339,7 @@ async def delete_company(
             detail=f"Cannot delete company with {user_count} associated users. Please reassign or delete users first.",
         )
 
-    await company_crud.remove(db, id=company_id)
+    await company_crud.company.remove(db, id=company_id)
     return {"message": "Company deleted successfully"}
 
 
@@ -329,12 +350,16 @@ async def get_company_admin_status(
     db: AsyncSession = Depends(get_db),
 ):
     """Check if company has admin users."""
-    company = await company_crud.get(db, company_id)
+    company = await company_crud.company.get(db, company_id)
     if not company:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Company not found"
         )
 
-    admin_count = await company_crud.get_admin_count(db, company_id)
-    return CompanyAdminStatus(has_admin=admin_count > 0, admin_count=admin_count)
+    admin_count = await company_crud.company.get_admin_count(db, company_id)
+    return CompanyAdminStatus(
+        company_id=company_id,
+        has_active_admin=admin_count > 0,
+        admin_count=admin_count
+    )

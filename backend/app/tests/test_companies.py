@@ -76,6 +76,7 @@ class TestCompanies:
             "name": "New Test Company",
             "email": "newcompany@example.com",
             "type": "employer",
+            "phone": "+1-555-123-4567",
             "description": "A test company for testing purposes",
             "website": "https://newcompany.example.com"
         }
@@ -196,7 +197,8 @@ class TestCompanies:
         company_data = {
             "name": "Test Company",
             "email": "invalid-email",
-            "type": "employer"
+            "type": "employer",
+            "phone": "+1-555-123-4567"
         }
 
         response = await client.post(
@@ -230,7 +232,8 @@ class TestCompanies:
         company_data = {
             "name": "Duplicate Company",
             "email": test_company.email,  # Duplicate email
-            "type": "employer"
+            "type": "employer",
+            "phone": "+1-555-123-4567"
         }
 
         response = await client.post(
@@ -322,6 +325,7 @@ class TestCompanies:
         temp_company = Company(
             name="To Delete Company",
             email="todelete@example.com",
+            phone="555-123-4567",
             type=CompanyType.EMPLOYER,
             is_active="1"
         )
@@ -339,7 +343,7 @@ class TestCompanies:
         assert "deleted" in data["message"].lower()
 
     @pytest.mark.asyncio
-    async def test_delete_company_with_users_forbidden(self, client: AsyncClient, super_admin_auth_headers: dict, test_company: Company):
+    async def test_delete_company_with_users_forbidden(self, client: AsyncClient, super_admin_auth_headers: dict, test_company: Company, test_user: User):
         """Test that company with users cannot be deleted."""
         response = await client.delete(
             f"/api/admin/companies/{test_company.id}",
@@ -358,6 +362,7 @@ class TestCompanies:
             "name": "Company with Admin",
             "email": "companywithmin@example.com",
             "type": "employer",
+            "phone": "+1-555-123-4567",
             "admin_first_name": "Admin",
             "admin_last_name": "User",
             "admin_email": "admin@companywithmin.com"
@@ -392,7 +397,8 @@ class TestCompanies:
         company_data = {
             "name": "A" * 300,  # Very long name
             "email": "longname@example.com",
-            "type": "employer"
+            "type": "employer",
+            "phone": "+1-555-123-4567"
         }
 
         response = await client.post(
@@ -408,12 +414,13 @@ class TestCompanies:
             assert any("name" in str(error).lower() for error in error_detail)
 
     @pytest.mark.asyncio
-    async def test_update_company_to_duplicate_email(self, client: AsyncClient, super_admin_auth_headers: dict, db_session: AsyncSession):
+    async def test_update_company_to_duplicate_email(self, client: AsyncClient, super_admin_auth_headers: dict, test_company: Company, db_session: AsyncSession):
         """Test updating company to have duplicate email."""
         # Create another company
         another_company = Company(
             name="Another Company",
             email="another@example.com",
+            phone="+1-555-987-6543",
             type=CompanyType.EMPLOYER,
             is_active="1"
         )
@@ -421,11 +428,11 @@ class TestCompanies:
         await db_session.commit()
         await db_session.refresh(another_company)
 
-        # Try to update first company to have same email
+        # Try to update test_company to have same email as another_company
         update_data = {"email": another_company.email}
 
         response = await client.put(
-            f"/api/admin/companies/{another_company.id}",
+            f"/api/admin/companies/{test_company.id}",
             json=update_data,
             headers=super_admin_auth_headers
         )
@@ -454,7 +461,8 @@ class TestCompanies:
             company_data = {
                 "name": f"Test Company {i}",
                 "email": f"test{i}@example.com",
-                "type": company_type
+                "type": company_type,
+                "phone": f"+1-555-123-456{i}"
             }
 
             response = await client.post(

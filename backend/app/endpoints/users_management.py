@@ -113,7 +113,7 @@ async def get_users(
     )
 
 
-@router.post("/users", response_model=UserInfo)
+@router.post("/users", response_model=UserInfo, status_code=status.HTTP_201_CREATED)
 async def create_user(
     user_data: UserCreate,
     current_user: User = Depends(get_current_active_user),
@@ -288,7 +288,7 @@ async def bulk_delete_users(
             errors.append(f"Cannot delete your own account")
             continue
 
-        user = await user_crud.get(db, user_id)
+        user = await user_crud.user.get(db, user_id)
         if not user:
             errors.append(f"User {user_id} not found")
             continue
@@ -300,7 +300,7 @@ async def bulk_delete_users(
 
         valid_user_ids.append(user_id)
 
-    deleted_count, delete_errors = await user_crud.bulk_delete(db, valid_user_ids, current_user.id)
+    deleted_count, delete_errors = await user_crud.user.bulk_delete(db, valid_user_ids, current_user.id)
     errors.extend(delete_errors)
 
     return {
@@ -483,7 +483,7 @@ async def bulk_suspend_users(
             errors.append(f"Cannot suspend your own account")
             continue
 
-        user = await user_crud.get(db, user_id)
+        user = await user_crud.user.get(db, user_id)
         if not user:
             errors.append(f"User {user_id} not found")
             continue
@@ -495,7 +495,7 @@ async def bulk_suspend_users(
 
         valid_user_ids.append(user_id)
 
-    suspended_count, suspend_errors = await user_crud.bulk_suspend(db, valid_user_ids, current_user.id)
+    suspended_count, suspend_errors = await user_crud.user.bulk_suspend(db, valid_user_ids, current_user.id)
     errors.extend(suspend_errors)
 
     return {
@@ -530,7 +530,7 @@ async def bulk_unsuspend_users(
     valid_user_ids = []
 
     for user_id in operation.user_ids:
-        user = await user_crud.get(db, user_id)
+        user = await user_crud.user.get(db, user_id)
         if not user:
             errors.append(f"User {user_id} not found")
             continue
@@ -542,7 +542,7 @@ async def bulk_unsuspend_users(
 
         valid_user_ids.append(user_id)
 
-    unsuspended_count, unsuspend_errors = await user_crud.bulk_unsuspend(db, valid_user_ids)
+    unsuspended_count, unsuspend_errors = await user_crud.user.bulk_unsuspend(db, valid_user_ids)
     errors.extend(unsuspend_errors)
 
     return {
@@ -560,7 +560,7 @@ async def get_user(
 ):
     """Get specific user details."""
 
-    user = await user_crud.get_with_company_and_roles(db, user_id)
+    user = await user_crud.user.get_with_company_and_roles(db, user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -716,7 +716,7 @@ async def delete_user(
 ):
     """Soft delete a user (logical deletion)."""
 
-    user = await user_crud.get(db, user_id)
+    user = await user_crud.user.get(db, user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -742,7 +742,7 @@ async def delete_user(
             detail="Cannot delete your own account"
         )
 
-    await user_crud.soft_delete(db, user_id, current_user.id)
+    await user_crud.user.soft_delete(db, user_id, current_user.id)
     return {"message": "User deleted successfully"}
 
 
@@ -878,7 +878,7 @@ async def suspend_user(
 ):
     """Suspend a user."""
 
-    user = await user_crud.get(db, user_id)
+    user = await user_crud.user.get(db, user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -910,7 +910,7 @@ async def suspend_user(
             detail="User is already suspended"
         )
 
-    await user_crud.suspend_user(db, user_id, current_user.id)
+    await user_crud.user.suspend_user(db, user_id, current_user.id)
     return {"message": "User suspended successfully", "is_suspended": True}
 
 
@@ -922,7 +922,7 @@ async def unsuspend_user(
 ):
     """Unsuspend a user."""
 
-    user = await user_crud.get(db, user_id)
+    user = await user_crud.user.get(db, user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -948,5 +948,5 @@ async def unsuspend_user(
             detail="User is not suspended"
         )
 
-    await user_crud.unsuspend_user(db, user_id)
+    await user_crud.user.unsuspend_user(db, user_id)
     return {"message": "User unsuspended successfully", "is_suspended": False}

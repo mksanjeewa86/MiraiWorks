@@ -90,7 +90,7 @@ class TestUsersManagement:
     async def test_get_users_with_pagination(self, client: AsyncClient, admin_auth_headers: dict):
         """Test user list with pagination parameters."""
         response = await client.get(
-            "/api/users?page=1&size=10",
+            "/api/admin/users?page=1&size=10",
             headers=admin_auth_headers
         )
 
@@ -103,7 +103,7 @@ class TestUsersManagement:
     async def test_get_users_with_search(self, client: AsyncClient, admin_auth_headers: dict):
         """Test user list with search filter."""
         response = await client.get(
-            "/api/users?search=test",
+            "/api/admin/users?search=test",
             headers=admin_auth_headers
         )
 
@@ -139,7 +139,7 @@ class TestUsersManagement:
     async def test_get_user_by_id_success(self, client: AsyncClient, admin_auth_headers: dict, test_user: User):
         """Test successful retrieval of specific user."""
         response = await client.get(
-            f"/api/users/{test_user.id}",
+            f"/api/admin/users/{test_user.id}",
             headers=admin_auth_headers
         )
 
@@ -157,7 +157,7 @@ class TestUsersManagement:
         }
 
         response = await client.put(
-            f"/api/users/{test_user.id}",
+            f"/api/admin/users/{test_user.id}",
             json=update_data,
             headers=admin_auth_headers
         )
@@ -173,7 +173,7 @@ class TestUsersManagement:
         suspend_data = {"reason": "Test suspension"}
 
         response = await client.post(
-            f"/api/users/{test_user.id}/suspend",
+            f"/api/admin/users/{test_user.id}/suspend",
             json=suspend_data,
             headers=admin_auth_headers
         )
@@ -190,7 +190,7 @@ class TestUsersManagement:
         await db_session.commit()
 
         response = await client.post(
-            f"/api/users/{test_user.id}/unsuspend",
+            f"/api/admin/users/{test_user.id}/unsuspend",
             headers=admin_auth_headers
         )
 
@@ -202,7 +202,11 @@ class TestUsersManagement:
     async def test_reset_password_success(self, client: AsyncClient, admin_auth_headers: dict, test_user: User):
         """Test successful password reset."""
         response = await client.post(
-            f"/api/users/{test_user.id}/reset-password",
+            f"/api/admin/users/{test_user.id}/reset-password",
+            json={
+                "user_id": test_user.id,
+                "send_email": True
+            },
             headers=admin_auth_headers
         )
 
@@ -228,7 +232,7 @@ class TestUsersManagement:
         await db_session.refresh(inactive_user)
 
         response = await client.post(
-            f"/api/users/{inactive_user.id}/resend-activation",
+            f"/api/admin/users/{inactive_user.id}/resend-activation",
             headers=admin_auth_headers
         )
 
@@ -265,13 +269,13 @@ class TestUsersManagement:
     @pytest.mark.asyncio
     async def test_delete_user_unauthorized(self, client: AsyncClient, test_user: User):
         """Test user deletion without authentication."""
-        response = await client.delete(f"/api/users/{test_user.id}")
+        response = await client.delete(f"/api/admin/users/{test_user.id}")
         assert response.status_code == 401
 
     @pytest.mark.asyncio
     async def test_suspend_user_unauthorized(self, client: AsyncClient, test_user: User):
         """Test user suspension without authentication."""
-        response = await client.post(f"/api/users/{test_user.id}/suspend", json={})
+        response = await client.post(f"/api/admin/users/{test_user.id}/suspend", json={})
         assert response.status_code == 401
 
     # ===== INPUT VALIDATION TESTS =====
@@ -336,7 +340,7 @@ class TestUsersManagement:
         update_data = {"email": "invalid-email"}
 
         response = await client.put(
-            f"/api/users/{test_user.id}",
+            f"/api/admin/users/{test_user.id}",
             json=update_data,
             headers=admin_auth_headers
         )
@@ -347,7 +351,7 @@ class TestUsersManagement:
     async def test_get_users_invalid_pagination(self, client: AsyncClient, admin_auth_headers: dict):
         """Test user list with invalid pagination parameters."""
         response = await client.get(
-            "/api/users?page=-1&size=0",
+            "/api/admin/users?page=-1&size=0",
             headers=admin_auth_headers
         )
 
@@ -358,7 +362,7 @@ class TestUsersManagement:
     @pytest.mark.asyncio
     async def test_get_user_not_found(self, client: AsyncClient, admin_auth_headers: dict):
         """Test retrieving non-existent user."""
-        response = await client.get("/api/users/99999", headers=admin_auth_headers)
+        response = await client.get("/api/admin/users/99999", headers=admin_auth_headers)
         assert response.status_code == 404
         assert "not found" in response.json()["detail"].lower()
 
@@ -366,7 +370,7 @@ class TestUsersManagement:
     async def test_update_user_not_found(self, client: AsyncClient, admin_auth_headers: dict):
         """Test updating non-existent user."""
         response = await client.put(
-            "/api/users/99999",
+            "/api/admin/users/99999",
             json={"first_name": "Test"},
             headers=admin_auth_headers
         )
@@ -375,14 +379,14 @@ class TestUsersManagement:
     @pytest.mark.asyncio
     async def test_delete_user_not_found(self, client: AsyncClient, admin_auth_headers: dict):
         """Test deleting non-existent user."""
-        response = await client.delete("/api/users/99999", headers=admin_auth_headers)
+        response = await client.delete("/api/admin/users/99999", headers=admin_auth_headers)
         assert response.status_code == 404
 
     @pytest.mark.asyncio
     async def test_suspend_user_not_found(self, client: AsyncClient, admin_auth_headers: dict):
         """Test suspending non-existent user."""
         response = await client.post(
-            "/api/users/99999/suspend",
+            "/api/admin/users/99999/suspend",
             json={"reason": "test"},
             headers=admin_auth_headers
         )
@@ -399,7 +403,7 @@ class TestUsersManagement:
         }
 
         response = await client.post(
-            "/api/users/bulk/suspend",
+            "/api/admin/users/bulk/suspend",
             json=bulk_data,
             headers=admin_auth_headers
         )
@@ -418,7 +422,7 @@ class TestUsersManagement:
         bulk_data = {"user_ids": [test_user.id]}
 
         response = await client.post(
-            "/api/users/bulk/unsuspend",
+            "/api/admin/users/bulk/unsuspend",
             json=bulk_data,
             headers=admin_auth_headers
         )
@@ -433,7 +437,7 @@ class TestUsersManagement:
         bulk_data = {"user_ids": [test_user.id]}
 
         response = await client.post(
-            "/api/users/bulk/reset-password",
+            "/api/admin/users/bulk/reset-password",
             json=bulk_data,
             headers=admin_auth_headers
         )
@@ -461,7 +465,7 @@ class TestUsersManagement:
         bulk_data = {"user_ids": [temp_user.id]}
 
         response = await client.post(
-            "/api/users/bulk/delete",
+            "/api/admin/users/bulk/delete",
             json=bulk_data,
             headers=admin_auth_headers
         )
@@ -478,10 +482,10 @@ class TestUsersManagement:
         bulk_data = {"user_ids": [1]}
 
         endpoints = [
-            "/api/users/bulk/suspend",
-            "/api/users/bulk/unsuspend",
-            "/api/users/bulk/delete",
-            "/api/users/bulk/reset-password"
+            "/api/admin/users/bulk/suspend",
+            "/api/admin/users/bulk/unsuspend",
+            "/api/admin/users/bulk/delete",
+            "/api/admin/users/bulk/reset-password"
         ]
 
         for endpoint in endpoints:
@@ -494,7 +498,7 @@ class TestUsersManagement:
         bulk_data = {"user_ids": []}
 
         response = await client.post(
-            "/api/users/bulk/suspend",
+            "/api/admin/users/bulk/suspend",
             json=bulk_data,
             headers=admin_auth_headers
         )
@@ -507,7 +511,7 @@ class TestUsersManagement:
         bulk_data = {"user_ids": [99999]}
 
         response = await client.post(
-            "/api/users/bulk/suspend",
+            "/api/admin/users/bulk/suspend",
             json=bulk_data,
             headers=admin_auth_headers
         )
@@ -521,7 +525,7 @@ class TestUsersManagement:
     async def test_delete_self_forbidden(self, client: AsyncClient, admin_auth_headers: dict, test_admin_user: User):
         """Test that admin cannot delete themselves."""
         response = await client.delete(
-            f"/api/users/{test_admin_user.id}",
+            f"/api/admin/users/{test_admin_user.id}",
             headers=admin_auth_headers
         )
 
@@ -532,7 +536,7 @@ class TestUsersManagement:
     async def test_suspend_self_forbidden(self, client: AsyncClient, admin_auth_headers: dict, test_admin_user: User):
         """Test that admin cannot suspend themselves."""
         response = await client.post(
-            f"/api/users/{test_admin_user.id}/suspend",
+            f"/api/admin/users/{test_admin_user.id}/suspend",
             json={"reason": "test"},
             headers=admin_auth_headers
         )
@@ -563,7 +567,7 @@ class TestUsersManagement:
     async def test_get_users_with_all_filters(self, client: AsyncClient, admin_auth_headers: dict):
         """Test user list with all possible filters applied."""
         response = await client.get(
-            "/api/users?page=1&size=5&search=test&is_active=true&is_admin=false&role=candidate",
+            "/api/admin/users?page=1&size=5&search=test&is_active=true&is_admin=false&role=candidate",
             headers=admin_auth_headers
         )
 

@@ -66,6 +66,7 @@ class TestAuthService:
         mock_decode.return_value = {
             "sub": "test@example.com",
             "exp": datetime.utcnow() + timedelta(hours=1),
+            "type": "access",
         }
 
         result = auth_service.decode_token("valid_token")
