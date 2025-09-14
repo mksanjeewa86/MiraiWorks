@@ -9,10 +9,6 @@ from sqlalchemy.orm import Session
 from app.models.interview import Interview
 from app.models.meeting import (
     Meeting,
-    MeetingStatus,
-    MeetingType,
-    ParticipantRole,
-    ParticipantStatus,
     meeting_participants,
 )
 from app.models.user import User
@@ -20,10 +16,15 @@ from app.schemas.meeting import (
     MeetingCreate,
     MeetingListParams,
     MeetingParticipantCreate,
+    MeetingStatus,
+    MeetingType,
     MeetingUpdate,
+    ParticipantRole,
+    ParticipantStatus,
 )
 from app.services.audit_service import log_action
-from app.utils.permissions import has_permission, validate_company_access
+from app.rbac import has_permission
+from app.utils.permissions import check_company_access
 
 
 class MeetingService:
@@ -358,7 +359,11 @@ class MeetingService:
                 )
 
             # Validate company access
-            validate_company_access(current_user, user.company_id)
+            if not check_company_access(current_user, user.company_id):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=f"Access denied: insufficient company permissions for user {participant_data.user_id}",
+                )
 
             participant_users.append(user)
             user_roles[user.id] = self._get_user_primary_role(user)

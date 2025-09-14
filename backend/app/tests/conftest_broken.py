@@ -1,5 +1,6 @@
 import asyncio
 import pytest
+import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
@@ -45,15 +46,15 @@ app.dependency_overrides[get_db] = override_get_db
 
 @pytest.fixture(scope="session")
 def event_loop():
-    """Create an instance of the default event loop for the test session."""
+    """Create event loop for the test session."""
     loop = asyncio.new_event_loop()
     yield loop
     loop.close()
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 async def setup_database():
-    """Set up test database for the session."""
+    """Set up test database."""
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield
@@ -62,35 +63,17 @@ async def setup_database():
 
 
 @pytest.fixture
-async def db_session():
+async def db_session(setup_database):
     """Get database session for tests."""
     async with TestingSessionLocal() as session:
         yield session
 
 
 @pytest.fixture
-async def client():
+async def client(setup_database):
     """Get HTTP client for tests."""
     async with AsyncClient(app=app, base_url="http://testserver") as test_client:
         yield test_client
-
-
-@pytest.fixture
-async def test_roles(db_session):
-    """Create test roles."""
-    roles = {}
-    for role_name in UserRoleEnum:
-        role = Role(name=role_name.value, description=f"Test {role_name.value} role")
-        db_session.add(role)
-        roles[role_name.value] = role
-
-    await db_session.commit()
-
-    # Refresh all roles
-    for role in roles.values():
-        await db_session.refresh(role)
-
-    return roles
 
 
 @pytest.fixture
@@ -106,6 +89,25 @@ async def test_company(db_session):
     await db_session.commit()
     await db_session.refresh(company)
     return company
+
+
+@pytest.fixture
+async def test_roles(db_session):
+    """Create test roles."""
+    roles = {}
+
+    for role_name in UserRoleEnum:
+        role = Role(name=role_name.value, description=f"Test {role_name.value} role")
+        db_session.add(role)
+        roles[role_name.value] = role
+
+    await db_session.commit()
+
+    # Refresh all roles
+    for role in roles.values():
+        await db_session.refresh(role)
+
+    return roles
 
 
 @pytest.fixture
@@ -194,6 +196,7 @@ async def auth_headers(client, test_user):
     )
     assert response.status_code == 200
     token_data = response.json()
+
     return {"Authorization": f"Bearer {token_data['access_token']}"}
 
 
@@ -206,6 +209,7 @@ async def admin_auth_headers(client, test_admin_user):
     )
     assert response.status_code == 200
     token_data = response.json()
+
     return {"Authorization": f"Bearer {token_data['access_token']}"}
 
 
@@ -218,4 +222,5 @@ async def super_admin_auth_headers(client, test_super_admin):
     )
     assert response.status_code == 200
     token_data = response.json()
+
     return {"Authorization": f"Bearer {token_data['access_token']}"}

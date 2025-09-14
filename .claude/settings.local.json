@@ -109,7 +109,8 @@
       "Bash(docker build:*)",
       "Bash(cmd /c:*)",
       "Bash(docker:*)",
-      "Bash(del \"C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\test_toggle.py\")"
+      "Bash(del \"C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\test_toggle.py\")",
+      "Bash(set PYTHONPATH=%cd%)"
     ],
     "deny": [],
     "ask": []
