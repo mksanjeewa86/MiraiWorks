@@ -38,7 +38,7 @@ function UsersPageContent() {
   const [confirmationModal, setConfirmationModal] = useState<{
     isOpen: boolean;
     title: string;
-    message: string;
+    message: string | React.ReactNode;
     onConfirm: () => void;
     confirmText?: string;
     confirmButtonClass?: string;
