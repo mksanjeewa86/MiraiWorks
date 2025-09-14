@@ -4,7 +4,12 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   poweredByHeader: false,
   experimental: {
-    // Enable experimental features if needed
+    // Disable turbopack for now due to alias resolution issues
+    turbo: {
+      resolveAlias: {
+        '@/*': './src/*',
+      }
+    }
   }
 };
 
