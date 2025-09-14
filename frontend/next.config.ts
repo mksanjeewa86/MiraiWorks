@@ -7,16 +7,27 @@ const nextConfig: NextConfig = {
   // Turbopack configuration for development and modern environments
   turbopack: {
     resolveAlias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': './src',
       '@/*': './src/*',
     }
   },
   // Webpack configuration as fallback for production builds
-  webpack: (config) => {
+  webpack: (config, { dev, isServer, dir }) => {
+    // Use dir parameter or process.cwd() for more reliable path resolution
+    const projectRoot = dir || process.cwd();
+    const srcPath = path.resolve(projectRoot, 'src');
+
+    // Add alias configuration
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@': path.resolve(__dirname, './src'),
+      '@': srcPath,
     };
+
+    // Ensure proper resolution of @/ imports
+    if (!config.resolve.fallback) {
+      config.resolve.fallback = {};
+    }
+
     return config;
   },
 };
