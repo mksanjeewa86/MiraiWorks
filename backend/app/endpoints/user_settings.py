@@ -1,7 +1,6 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,81 +8,16 @@ from app.crud import user_settings as user_settings_crud
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.models import User, UserSettings
+from app.schemas.user_settings import (
+    UserProfileResponse,
+    UserProfileUpdate,
+    UserSettingsResponse,
+    UserSettingsUpdate,
+)
 
 router = APIRouter()
 
 
-class UserSettingsResponse(BaseModel):
-    # Profile settings
-    job_title: Optional[str] = None
-    bio: Optional[str] = None
-    avatar_url: Optional[str] = None
-
-    # Notification preferences
-    email_notifications: bool = True
-    push_notifications: bool = True
-    sms_notifications: bool = False
-    interview_reminders: bool = True
-    application_updates: bool = True
-    message_notifications: bool = True
-
-    # UI preferences
-    language: str = "en"
-    timezone: str = "America/New_York"
-    date_format: str = "MM/DD/YYYY"
-
-    # Security settings (from User model)
-    require_2fa: bool = False
-
-    class Config:
-        from_attributes = True
-
-
-class UserSettingsUpdate(BaseModel):
-    # Profile settings
-    job_title: Optional[str] = None
-    bio: Optional[str] = None
-    avatar_url: Optional[str] = None
-
-    # Notification preferences
-    email_notifications: Optional[bool] = None
-    push_notifications: Optional[bool] = None
-    sms_notifications: Optional[bool] = None
-    interview_reminders: Optional[bool] = None
-    application_updates: Optional[bool] = None
-    message_notifications: Optional[bool] = None
-
-    # UI preferences
-    language: Optional[str] = None
-    timezone: Optional[str] = None
-    date_format: Optional[str] = None
-
-    # Security settings (from User model)
-    require_2fa: Optional[bool] = None
-
-
-class UserProfileUpdate(BaseModel):
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    phone: Optional[str] = None
-    job_title: Optional[str] = None
-    bio: Optional[str] = None
-    avatar_url: Optional[str] = None
-
-
-class UserProfileResponse(BaseModel):
-    id: int
-    email: str
-    first_name: str
-    last_name: str
-    phone: Optional[str] = None
-    full_name: str
-    job_title: Optional[str] = None
-    bio: Optional[str] = None
-    avatar_url: Optional[str] = None
-
-    class Config:
-        from_attributes = True
 
 
 @router.get("/settings", response_model=UserSettingsResponse)
@@ -187,23 +121,19 @@ async def get_user_profile(
     current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
 ):
     """Get current user's profile information."""
-    # Get user with settings
-    result = await db.execute(
-        select(UserSettings).where(UserSettings.user_id == current_user.id)
-    )
-    user_settings = result.scalar_one_or_none()
+    user_settings = await user_settings_crud.get_user_settings_by_user_id(db, current_user.id)
 
-    return {
-        "id": current_user.id,
-        "email": current_user.email,
-        "first_name": current_user.first_name,
-        "last_name": current_user.last_name,
-        "phone": current_user.phone,
-        "full_name": current_user.full_name,
-        "job_title": user_settings.job_title if user_settings else None,
-        "bio": user_settings.bio if user_settings else None,
-        "avatar_url": user_settings.avatar_url if user_settings else None,
-    }
+    return UserProfileResponse(
+        id=current_user.id,
+        email=current_user.email,
+        first_name=current_user.first_name,
+        last_name=current_user.last_name,
+        phone=current_user.phone,
+        full_name=current_user.full_name,
+        job_title=user_settings.job_title if user_settings else None,
+        bio=user_settings.bio if user_settings else None,
+        avatar_url=user_settings.avatar_url if user_settings else None,
+    )
 
 
 @router.put("/profile", response_model=UserProfileResponse)
@@ -215,45 +145,33 @@ async def update_user_profile(
     """Update current user's profile information."""
     update_data = profile_update.model_dump(exclude_unset=True)
 
-    # Update user fields
+    # Separate user fields and settings fields
     user_fields = {"first_name", "last_name", "phone"}
-    for field, value in update_data.items():
-        if field in user_fields and hasattr(current_user, field):
-            setattr(current_user, field, value)
-
-    # Update settings fields (job_title, bio, avatar_url)
     settings_fields = {"job_title", "bio", "avatar_url"}
+
+    user_data = {k: v for k, v in update_data.items() if k in user_fields}
     settings_data = {k: v for k, v in update_data.items() if k in settings_fields}
 
+    # Update user fields if any
+    if user_data:
+        current_user = await user_settings_crud.update_user_profile(db, current_user, user_data)
+
+    # Update settings fields if any
+    user_settings = None
     if settings_data:
-        result = await db.execute(
-            select(UserSettings).where(UserSettings.user_id == current_user.id)
-        )
-        settings = result.scalar_one_or_none()
-        if not settings:
-            settings = UserSettings(user_id=current_user.id)
-            db.add(settings)
+        user_settings = await user_settings_crud.get_or_create_user_settings(db, current_user.id)
+        user_settings = await user_settings_crud.update_user_settings(db, user_settings, settings_data)
+    else:
+        user_settings = await user_settings_crud.get_user_settings_by_user_id(db, current_user.id)
 
-        for field, value in settings_data.items():
-            setattr(settings, field, value)
-
-    await db.commit()
-    await db.refresh(current_user)
-
-    # Return updated profile
-    result = await db.execute(
-        select(UserSettings).where(UserSettings.user_id == current_user.id)
+    return UserProfileResponse(
+        id=current_user.id,
+        email=current_user.email,
+        first_name=current_user.first_name,
+        last_name=current_user.last_name,
+        phone=current_user.phone,
+        full_name=current_user.full_name,
+        job_title=user_settings.job_title if user_settings else None,
+        bio=user_settings.bio if user_settings else None,
+        avatar_url=user_settings.avatar_url if user_settings else None,
     )
-    user_settings = result.scalar_one_or_none()
-
-    return {
-        "id": current_user.id,
-        "email": current_user.email,
-        "first_name": current_user.first_name,
-        "last_name": current_user.last_name,
-        "phone": current_user.phone,
-        "full_name": current_user.full_name,
-        "job_title": user_settings.job_title if user_settings else None,
-        "bio": user_settings.bio if user_settings else None,
-        "avatar_url": user_settings.avatar_url if user_settings else None,
-    }

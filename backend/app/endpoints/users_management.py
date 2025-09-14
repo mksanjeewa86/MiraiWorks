@@ -4,15 +4,24 @@ from datetime import datetime
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel
 from sqlalchemy import and_, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.crud import user as user_crud
 from app.database import get_db
 from app.dependencies import get_current_active_user
 from app.models import Company, User, UserRole, UserSettings
 from app.models.role import Role
+from app.schemas.user import (
+    BulkUserOperation,
+    PasswordResetRequest,
+    ResendActivationRequest,
+    UserCreate,
+    UserInfo,
+    UserListResponse,
+    UserUpdate,
+)
 from app.services.auth_service import auth_service
 from app.services.email_service import email_service
 from app.utils.constants import UserRole as UserRoleEnum
@@ -21,86 +30,6 @@ from app.utils.permissions import is_company_admin, is_super_admin
 router = APIRouter()
 
 
-class UserCreate(BaseModel):
-    email: str
-    first_name: str
-    last_name: str
-    phone: Optional[str] = None
-    company_id: Optional[int] = None
-    roles: List[UserRoleEnum] = []
-    is_admin: Optional[bool] = False
-    require_2fa: Optional[bool] = False
-
-
-class UserUpdate(BaseModel):
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    phone: Optional[str] = None
-    is_active: Optional[bool] = None
-    is_admin: Optional[bool] = None
-    require_2fa: Optional[bool] = None
-    company_id: Optional[int] = None
-    roles: Optional[List[UserRoleEnum]] = None
-
-
-class UserFilters(BaseModel):
-    page: int = 1
-    size: int = 20
-    search: Optional[str] = None
-    company_id: Optional[int] = None
-    is_active: Optional[bool] = None
-    is_admin: Optional[bool] = None
-    is_suspended: Optional[bool] = None
-    require_2fa: Optional[bool] = None
-    role: Optional[UserRoleEnum] = None
-
-
-class UserInfo(BaseModel):
-    id: int
-    email: str
-    first_name: str
-    last_name: str
-    full_name: str
-    phone: Optional[str] = None
-    is_active: bool
-    is_admin: bool
-    require_2fa: bool
-    last_login: Optional[datetime] = None
-    created_at: datetime
-    updated_at: datetime
-    company_id: Optional[int] = None
-    company_name: Optional[str] = None
-    roles: List[str] = []
-    is_deleted: bool = False
-    deleted_at: Optional[datetime] = None
-    is_suspended: bool = False
-    suspended_at: Optional[datetime] = None
-    suspended_by: Optional[int] = None
-
-    class Config:
-        from_attributes = True
-
-
-class UserListResponse(BaseModel):
-    users: List[UserInfo]
-    total: int
-    pages: int
-    page: int
-    size: int
-
-
-class PasswordResetRequest(BaseModel):
-    user_id: int
-    send_email: bool = True
-
-
-class ResendActivationRequest(BaseModel):
-    user_id: int
-
-
-class BulkUserOperation(BaseModel):
-    user_ids: List[int]
-    send_email: bool = True
 
 
 @router.get("/users", response_model=UserListResponse)
@@ -120,83 +49,31 @@ async def get_users(
 ):
     """Get paginated list of users with filters."""
 
-    # Build query conditions based on user permissions
-    query_conditions = []
-
-    # Super admin can see all users, company admin can only see their company users
-    if is_super_admin(current_user):
-        # Super admin can filter by company or see all
-        if company_id is not None:
-            query_conditions.append(User.company_id == company_id)
-    elif is_company_admin(current_user):
-        # Company admin can only see users from their company
-        query_conditions.append(User.company_id == current_user.company_id)
-    else:
+    # Check permissions
+    if not (is_super_admin(current_user) or is_company_admin(current_user)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions to view users"
         )
 
-    # Handle logical deletion
-    if not include_deleted:
-        query_conditions.append(User.is_deleted == False)
+    # Determine company filter based on permissions
+    if is_company_admin(current_user) and not is_super_admin(current_user):
+        company_id = current_user.company_id
 
-    # Apply filters
-    if search:
-        search_term = f"%{search}%"
-        query_conditions.append(
-            or_(
-                User.first_name.ilike(search_term),
-                User.last_name.ilike(search_term),
-                User.email.ilike(search_term),
-            )
-        )
-
-    if is_active is not None:
-        query_conditions.append(User.is_active == is_active)
-
-    if is_admin is not None:
-        query_conditions.append(User.is_admin == is_admin)
-
-    if is_suspended is not None:
-        query_conditions.append(User.is_suspended == is_suspended)
-
-    if require_2fa is not None:
-        query_conditions.append(User.require_2fa == require_2fa)
-
-    # Build base query
-    base_query = select(User).options(
-        selectinload(User.company),
-        selectinload(User.user_roles).selectinload(UserRole.role)
+    users, total = await user_crud.get_users_paginated(
+        db=db,
+        page=page,
+        size=size,
+        search=search,
+        company_id=company_id,
+        is_active=is_active,
+        is_admin=is_admin,
+        is_suspended=is_suspended,
+        require_2fa=require_2fa,
+        role=role,
+        include_deleted=include_deleted,
+        current_user_id=current_user.id,
     )
-
-    # Handle role filter (requires join with UserRole)
-    if role:
-        # First get the role ID for the role name
-        role_id_query = select(Role.id).where(Role.name == role.value)
-        role_subquery = select(UserRole.user_id).where(
-            UserRole.role_id.in_(role_id_query)
-        )
-        base_query = base_query.where(User.id.in_(role_subquery))
-
-    # Apply all accumulated query conditions
-    if query_conditions:
-        base_query = base_query.where(and_(*query_conditions))
-
-    # Always exclude the currently logged-in user from the list (applied after all other conditions)
-    base_query = base_query.where(User.id != current_user.id)
-
-    # Get total count
-    count_query = select(func.count()).select_from(base_query.subquery())
-    total_result = await db.execute(count_query)
-    total = total_result.scalar()
-
-    # Apply pagination
-    offset = (page - 1) * size
-    users_query = base_query.offset(offset).limit(size).order_by(User.created_at.desc())
-
-    result = await db.execute(users_query)
-    users = result.scalars().all()
 
     # Format response
     user_list = []
@@ -227,7 +104,6 @@ async def get_users(
         user_list.append(user_info)
 
     pages = (total + size - 1) // size
-
     return UserListResponse(
         users=user_list,
         total=total,
@@ -397,48 +273,35 @@ async def bulk_delete_users(
             detail="No user IDs provided"
         )
 
-    # Check permissions
     if not (is_super_admin(current_user) or is_company_admin(current_user)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions to delete users"
         )
 
-    deleted_count = 0
+    # Validate user permissions for each user
     errors = []
+    valid_user_ids = []
 
     for user_id in operation.user_ids:
-        try:
-            # Get user
-            result = await db.execute(select(User).where(User.id == user_id))
-            user = result.scalar_one_or_none()
+        if user_id == current_user.id:
+            errors.append(f"Cannot delete your own account")
+            continue
 
-            if not user:
-                errors.append(f"User {user_id} not found")
+        user = await user_crud.get(db, user_id)
+        if not user:
+            errors.append(f"User {user_id} not found")
+            continue
+
+        if is_company_admin(current_user) and not is_super_admin(current_user):
+            if user.company_id != current_user.company_id:
+                errors.append(f"Cannot delete user {user_id} from other company")
                 continue
 
-            # Company admin can only delete users from their company
-            if is_company_admin(current_user) and not is_super_admin(current_user):
-                if user.company_id != current_user.company_id:
-                    errors.append(f"Cannot delete user {user_id} from other company")
-                    continue
+        valid_user_ids.append(user_id)
 
-            # Prevent self-deletion
-            if user_id == current_user.id:
-                errors.append(f"Cannot delete your own account")
-                continue
-
-            # Soft delete
-            user.is_deleted = True
-            user.deleted_at = datetime.utcnow()
-            user.deleted_by = current_user.id
-            user.is_active = False
-            deleted_count += 1
-
-        except Exception as e:
-            errors.append(f"Error deleting user {user_id}: {str(e)}")
-
-    await db.commit()
+    deleted_count, delete_errors = await user_crud.bulk_delete(db, valid_user_ids, current_user.id)
+    errors.extend(delete_errors)
 
     return {
         "message": f"Successfully deleted {deleted_count} user(s)",
@@ -605,48 +468,35 @@ async def bulk_suspend_users(
             detail="No user IDs provided"
         )
 
-    # Check permissions - only super admin and company admin can suspend users
     if not (is_super_admin(current_user) or is_company_admin(current_user)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions to suspend users"
         )
 
-    suspended_count = 0
+    # Validate user permissions
     errors = []
+    valid_user_ids = []
 
     for user_id in operation.user_ids:
-        try:
-            # Get user
-            result = await db.execute(select(User).where(User.id == user_id))
-            user = result.scalar_one_or_none()
+        if user_id == current_user.id:
+            errors.append(f"Cannot suspend your own account")
+            continue
 
-            if not user:
-                errors.append(f"User {user_id} not found")
+        user = await user_crud.get(db, user_id)
+        if not user:
+            errors.append(f"User {user_id} not found")
+            continue
+
+        if is_company_admin(current_user) and not is_super_admin(current_user):
+            if user.company_id != current_user.company_id:
+                errors.append(f"Cannot suspend user {user_id} from other company")
                 continue
 
-            # Company admin can only suspend users in their company
-            if is_company_admin(current_user) and not is_super_admin(current_user):
-                if user.company_id != current_user.company_id:
-                    errors.append(f"Cannot suspend user {user_id} from other company")
-                    continue
+        valid_user_ids.append(user_id)
 
-            # Prevent self-suspension
-            if user_id == current_user.id:
-                errors.append(f"Cannot suspend your own account")
-                continue
-
-            # Suspend user only if not already suspended
-            if not user.is_suspended:
-                user.is_suspended = True
-                user.suspended_at = datetime.utcnow()
-                user.suspended_by = current_user.id
-                suspended_count += 1
-
-        except Exception as e:
-            errors.append(f"Error suspending user {user_id}: {str(e)}")
-
-    await db.commit()
+    suspended_count, suspend_errors = await user_crud.bulk_suspend(db, valid_user_ids, current_user.id)
+    errors.extend(suspend_errors)
 
     return {
         "message": f"Successfully suspended {suspended_count} user(s)",
@@ -669,43 +519,31 @@ async def bulk_unsuspend_users(
             detail="No user IDs provided"
         )
 
-    # Check permissions - only super admin and company admin can unsuspend users
     if not (is_super_admin(current_user) or is_company_admin(current_user)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions to unsuspend users"
         )
 
-    unsuspended_count = 0
+    # Validate user permissions
     errors = []
+    valid_user_ids = []
 
     for user_id in operation.user_ids:
-        try:
-            # Get user
-            result = await db.execute(select(User).where(User.id == user_id))
-            user = result.scalar_one_or_none()
+        user = await user_crud.get(db, user_id)
+        if not user:
+            errors.append(f"User {user_id} not found")
+            continue
 
-            if not user:
-                errors.append(f"User {user_id} not found")
+        if is_company_admin(current_user) and not is_super_admin(current_user):
+            if user.company_id != current_user.company_id:
+                errors.append(f"Cannot unsuspend user {user_id} from other company")
                 continue
 
-            # Company admin can only unsuspend users in their company
-            if is_company_admin(current_user) and not is_super_admin(current_user):
-                if user.company_id != current_user.company_id:
-                    errors.append(f"Cannot unsuspend user {user_id} from other company")
-                    continue
+        valid_user_ids.append(user_id)
 
-            # Unsuspend user only if currently suspended
-            if user.is_suspended:
-                user.is_suspended = False
-                user.suspended_at = None
-                user.suspended_by = None
-                unsuspended_count += 1
-
-        except Exception as e:
-            errors.append(f"Error unsuspending user {user_id}: {str(e)}")
-
-    await db.commit()
+    unsuspended_count, unsuspend_errors = await user_crud.bulk_unsuspend(db, valid_user_ids)
+    errors.extend(unsuspend_errors)
 
     return {
         "message": f"Successfully unsuspended {unsuspended_count} user(s)",
@@ -722,15 +560,7 @@ async def get_user(
 ):
     """Get specific user details."""
 
-    # Get user with relationships
-    result = await db.execute(
-        select(User).options(
-            selectinload(User.company),
-            selectinload(User.user_roles).selectinload(UserRole.role)
-        ).where(User.id == user_id)
-    )
-    user = result.scalar_one_or_none()
-
+    user = await user_crud.get_with_company_and_roles(db, user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -745,7 +575,6 @@ async def get_user(
                 detail="Not enough permissions to view this user"
             )
 
-    # Company admin can only view users from their company
     if is_company_admin(current_user) and not is_super_admin(current_user):
         if user.company_id != current_user.company_id:
             raise HTTPException(
@@ -753,9 +582,7 @@ async def get_user(
                 detail="Cannot view users from other companies"
             )
 
-    # Format response
     user_roles = [role.role.name for role in user.user_roles]
-
     return UserInfo(
         id=user.id,
         email=user.email,
@@ -889,24 +716,19 @@ async def delete_user(
 ):
     """Soft delete a user (logical deletion)."""
 
-    # Get user
-    result = await db.execute(select(User).where(User.id == user_id))
-    user = result.scalar_one_or_none()
-
+    user = await user_crud.get(db, user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
 
-    # Check permissions
     if not (is_super_admin(current_user) or is_company_admin(current_user)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions to delete users"
         )
 
-    # Company admin can only delete users from their company
     if is_company_admin(current_user) and not is_super_admin(current_user):
         if user.company_id != current_user.company_id:
             raise HTTPException(
@@ -914,21 +736,13 @@ async def delete_user(
                 detail="Cannot delete users from other companies"
             )
 
-    # Prevent self-deletion
     if user_id == current_user.id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Cannot delete your own account"
         )
 
-    # Soft delete (logical deletion)
-    user.is_deleted = True
-    user.deleted_at = datetime.utcnow()
-    user.deleted_by = current_user.id
-    user.is_active = False  # Also deactivate
-
-    await db.commit()
-
+    await user_crud.soft_delete(db, user_id, current_user.id)
     return {"message": "User deleted successfully"}
 
 
@@ -1064,24 +878,19 @@ async def suspend_user(
 ):
     """Suspend a user."""
 
-    # Get user
-    result = await db.execute(select(User).where(User.id == user_id))
-    user = result.scalar_one_or_none()
-
+    user = await user_crud.get(db, user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
 
-    # Check permissions - only super admin and company admin can suspend users
     if not (is_super_admin(current_user) or is_company_admin(current_user)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions to suspend users"
         )
 
-    # Company admin can only suspend users in their company
     if is_company_admin(current_user) and not is_super_admin(current_user):
         if user.company_id != current_user.company_id:
             raise HTTPException(
@@ -1089,27 +898,20 @@ async def suspend_user(
                 detail="Cannot suspend users from other companies"
             )
 
-    # Prevent self-suspension
     if user_id == current_user.id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Cannot suspend your own account"
         )
 
-    # Check if user is already suspended
     if user.is_suspended:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User is already suspended"
         )
 
-    # Suspend user
-    user.is_suspended = True
-    user.suspended_at = datetime.utcnow()
-    user.suspended_by = current_user.id
-    await db.commit()
-
-    return {"message": "User suspended successfully", "is_suspended": user.is_suspended}
+    await user_crud.suspend_user(db, user_id, current_user.id)
+    return {"message": "User suspended successfully", "is_suspended": True}
 
 
 @router.post("/users/{user_id}/unsuspend")
@@ -1120,24 +922,19 @@ async def unsuspend_user(
 ):
     """Unsuspend a user."""
 
-    # Get user
-    result = await db.execute(select(User).where(User.id == user_id))
-    user = result.scalar_one_or_none()
-
+    user = await user_crud.get(db, user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
 
-    # Check permissions - only super admin and company admin can unsuspend users
     if not (is_super_admin(current_user) or is_company_admin(current_user)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions to unsuspend users"
         )
 
-    # Company admin can only unsuspend users in their company
     if is_company_admin(current_user) and not is_super_admin(current_user):
         if user.company_id != current_user.company_id:
             raise HTTPException(
@@ -1145,17 +942,11 @@ async def unsuspend_user(
                 detail="Cannot unsuspend users from other companies"
             )
 
-    # Check if user is not suspended
     if not user.is_suspended:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User is not suspended"
         )
 
-    # Unsuspend user
-    user.is_suspended = False
-    user.suspended_at = None
-    user.suspended_by = None
-    await db.commit()
-
-    return {"message": "User unsuspended successfully", "is_suspended": user.is_suspended}
+    await user_crud.unsuspend_user(db, user_id)
+    return {"message": "User unsuspended successfully", "is_suspended": False}

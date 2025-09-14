@@ -1,10 +1,49 @@
 from typing import Optional
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Company
+from app.crud.base import CRUDBase
+from app.models import Company, User
+from app.schemas.company import CompanyCreate, CompanyUpdate
 from app.utils.constants import CompanyType
+
+
+class CRUDCompany(CRUDBase[Company, CompanyCreate, CompanyUpdate]):
+    """Company CRUD operations."""
+
+    async def get_with_counts(self, db: AsyncSession, company_id: int):
+        """Get company with user and job counts."""
+        query = (
+            select(
+                Company,
+                func.count(User.id).label("user_count"),
+                func.coalesce(func.count(Company.jobs), 0).label("job_count"),
+            )
+            .outerjoin(User, Company.id == User.company_id)
+            .outerjoin(Company.jobs)
+            .where(Company.id == company_id)
+            .group_by(Company.id)
+        )
+        result = await db.execute(query)
+        return result.first()
+
+    async def get_by_email(self, db: AsyncSession, email: str) -> Optional[Company]:
+        """Get company by email."""
+        result = await db.execute(select(Company).where(Company.email == email))
+        return result.scalar_one_or_none()
+
+    async def get_admin_count(self, db: AsyncSession, company_id: int) -> int:
+        """Get count of admin users for a company."""
+        admin_query = select(func.count(User.id)).where(
+            and_(
+                User.company_id == company_id,
+                User.is_admin == True,
+                User.is_deleted == False
+            )
+        )
+        result = await db.execute(admin_query)
+        return result.scalar() or 0
 
 
 async def get_companies(
@@ -94,3 +133,7 @@ async def get_company_by_email(db: AsyncSession, email: str) -> Optional[Company
     """Get company by email."""
     result = await db.execute(select(Company).where(Company.email == email))
     return result.scalar_one_or_none()
+
+
+# Create the CRUD instance
+company = CRUDCompany(Company)

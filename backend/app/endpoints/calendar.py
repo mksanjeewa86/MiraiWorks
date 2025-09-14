@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.crud.calendar_integration import calendar_integration
 from app.database import get_db
 from app.dependencies import get_current_active_user
 from app.models.calendar_integration import ExternalCalendarAccount
@@ -66,10 +67,7 @@ async def google_oauth_callback(
     user_id = int(state) if state and state.isdigit() else None
     if not user_id:
         # Try to find user by email
-        user_result = await db.execute(
-            select(User).where(User.email == user_info["email"])
-        )
-        user = user_result.scalar_one_or_none()
+        user = await calendar_integration.get_user_by_email(db, user_info["email"])
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
@@ -77,58 +75,49 @@ async def google_oauth_callback(
         user_id = user.id
 
     # Check if calendar account already exists
-    existing_account = await db.execute(
-        select(ExternalCalendarAccount).where(
-            and_(
-                ExternalCalendarAccount.user_id == user_id,
-                ExternalCalendarAccount.provider == "google",
-                ExternalCalendarAccount.provider_account_id == user_info["id"],
-            )
-        )
+    account = await calendar_integration.get_by_user_and_provider_account(
+        db, user_id, "google", user_info["id"]
     )
 
-    account = existing_account.scalar_one_or_none()
+    token_expires_at = datetime.utcnow() + timedelta(
+        seconds=tokens.get("expires_in", 3600)
+    )
 
     if account:
         # Update existing account
-        account.access_token = tokens["access_token"]
-        account.refresh_token = tokens.get("refresh_token", account.refresh_token)
-        account.token_expires_at = datetime.utcnow() + timedelta(
-            seconds=tokens.get("expires_in", 3600)
+        account = await calendar_integration.update_account_tokens(
+            db,
+            account,
+            tokens["access_token"],
+            tokens.get("refresh_token"),
+            token_expires_at,
+            user_info["email"],
+            user_info.get("name"),
         )
-        account.is_active = True
-        account.sync_enabled = True
-        account.email = user_info["email"]
-        account.display_name = user_info.get("name")
     else:
         # Create new account
-        account = ExternalCalendarAccount(
-            user_id=user_id,
-            provider="google",
-            provider_account_id=user_info["id"],
-            email=user_info["email"],
-            display_name=user_info.get("name"),
-            access_token=tokens["access_token"],
-            refresh_token=tokens.get("refresh_token"),
-            token_expires_at=datetime.utcnow()
-            + timedelta(seconds=tokens.get("expires_in", 3600)),
-            is_active=True,
-            sync_enabled=True,
+        account = await calendar_integration.create_calendar_account(
+            db,
+            user_id,
+            "google",
+            user_info["id"],
+            user_info["email"],
+            user_info.get("name"),
+            tokens["access_token"],
+            tokens.get("refresh_token"),
+            token_expires_at,
         )
-        db.add(account)
-
-    await db.commit()
-    await db.refresh(account)
 
     # Set up webhook
     try:
         webhook_data = await google_calendar_service.create_webhook_watch(account)
         if webhook_data:
-            account.webhook_id = webhook_data.get("id")
-            account.webhook_expires_at = datetime.fromtimestamp(
+            webhook_expires_at = datetime.fromtimestamp(
                 webhook_data.get("expiration", 0) / 1000
             )
-            await db.commit()
+            account = await calendar_integration.update_webhook_info(
+                db, account, webhook_data.get("id"), webhook_expires_at
+            )
     except Exception as e:
         logger.warning(f"Failed to set up Google Calendar webhook: {e}")
 
@@ -170,12 +159,8 @@ async def microsoft_oauth_callback(
     user_id = int(state) if state and state.isdigit() else None
     if not user_id:
         # Try to find user by email
-        user_result = await db.execute(
-            select(User).where(
-                User.email == user_info["mail"] or user_info["userPrincipalName"]
-            )
-        )
-        user = user_result.scalar_one_or_none()
+        user_email = user_info.get("mail") or user_info.get("userPrincipalName")
+        user = await calendar_integration.get_user_by_email(db, user_email)
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
@@ -183,48 +168,40 @@ async def microsoft_oauth_callback(
         user_id = user.id
 
     # Check if calendar account already exists
-    existing_account = await db.execute(
-        select(ExternalCalendarAccount).where(
-            and_(
-                ExternalCalendarAccount.user_id == user_id,
-                ExternalCalendarAccount.provider == "microsoft",
-                ExternalCalendarAccount.provider_account_id == user_info["id"],
-            )
-        )
+    account = await calendar_integration.get_by_user_and_provider_account(
+        db, user_id, "microsoft", user_info["id"]
     )
 
-    account = existing_account.scalar_one_or_none()
+    token_expires_at = datetime.utcnow() + timedelta(
+        seconds=tokens.get("expires_in", 3600)
+    )
+    user_email = user_info.get("mail", user_info.get("userPrincipalName"))
+    display_name = user_info.get("displayName")
 
     if account:
         # Update existing account
-        account.access_token = tokens["access_token"]
-        account.refresh_token = tokens.get("refresh_token", account.refresh_token)
-        account.token_expires_at = datetime.utcnow() + timedelta(
-            seconds=tokens.get("expires_in", 3600)
+        account = await calendar_integration.update_account_tokens(
+            db,
+            account,
+            tokens["access_token"],
+            tokens.get("refresh_token"),
+            token_expires_at,
+            user_email,
+            display_name,
         )
-        account.is_active = True
-        account.sync_enabled = True
-        account.email = user_info.get("mail", user_info.get("userPrincipalName"))
-        account.display_name = user_info.get("displayName")
     else:
         # Create new account
-        account = ExternalCalendarAccount(
-            user_id=user_id,
-            provider="microsoft",
-            provider_account_id=user_info["id"],
-            email=user_info.get("mail", user_info.get("userPrincipalName")),
-            display_name=user_info.get("displayName"),
-            access_token=tokens["access_token"],
-            refresh_token=tokens.get("refresh_token"),
-            token_expires_at=datetime.utcnow()
-            + timedelta(seconds=tokens.get("expires_in", 3600)),
-            is_active=True,
-            sync_enabled=True,
+        account = await calendar_integration.create_calendar_account(
+            db,
+            user_id,
+            "microsoft",
+            user_info["id"],
+            user_email,
+            display_name,
+            tokens["access_token"],
+            tokens.get("refresh_token"),
+            token_expires_at,
         )
-        db.add(account)
-
-    await db.commit()
-    await db.refresh(account)
 
     # Set up webhook
     try:
@@ -232,11 +209,12 @@ async def microsoft_oauth_callback(
             await microsoft_calendar_service.create_webhook_subscription(account)
         )
         if subscription_data:
-            account.webhook_id = subscription_data.get("id")
-            account.webhook_expires_at = datetime.fromisoformat(
+            webhook_expires_at = datetime.fromisoformat(
                 subscription_data.get("expirationDateTime").replace("Z", "+00:00")
             )
-            await db.commit()
+            account = await calendar_integration.update_webhook_info(
+                db, account, subscription_data.get("id"), webhook_expires_at
+            )
     except Exception as e:
         logger.warning(f"Failed to set up Microsoft Calendar webhook: {e}")
 
@@ -253,16 +231,9 @@ async def get_calendar_accounts(
     db: AsyncSession = Depends(get_db),
 ):
     """Get user's connected calendar accounts."""
-    result = await db.execute(
-        select(ExternalCalendarAccount)
-        .where(
-            ExternalCalendarAccount.user_id == current_user.id,
-            ExternalCalendarAccount.is_active == True,
-        )
-        .order_by(ExternalCalendarAccount.created_at)
+    accounts = await calendar_integration.get_active_accounts_by_user(
+        db, current_user.id
     )
-
-    accounts = result.scalars().all()
     return [
         CalendarAccountInfo(
             id=account.id,
@@ -288,28 +259,16 @@ async def disconnect_calendar_account(
 ):
     """Disconnect a calendar account."""
     # Get account
-    result = await db.execute(
-        select(ExternalCalendarAccount).where(
-            and_(
-                ExternalCalendarAccount.id == account_id,
-                ExternalCalendarAccount.user_id == current_user.id,
-            )
-        )
+    account = await calendar_integration.get_user_account_by_id(
+        db, account_id, current_user.id
     )
-
-    account = result.scalar_one_or_none()
     if not account:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Calendar account not found"
         )
 
     # Deactivate account
-    account.is_active = False
-    account.sync_enabled = False
-
-    # Clean up webhook (optional - let it expire naturally)
-
-    await db.commit()
+    await calendar_integration.deactivate_account(db, account)
 
     return {"message": "Calendar account disconnected successfully"}
 
@@ -323,17 +282,9 @@ async def sync_calendar_account(
 ):
     """Manually trigger calendar sync."""
     # Get account
-    result = await db.execute(
-        select(ExternalCalendarAccount).where(
-            and_(
-                ExternalCalendarAccount.id == account_id,
-                ExternalCalendarAccount.user_id == current_user.id,
-                ExternalCalendarAccount.is_active == True,
-            )
-        )
+    account = await calendar_integration.get_active_user_account_by_id(
+        db, account_id, current_user.id
     )
-
-    account = result.scalar_one_or_none()
     if not account:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Calendar account not found"
@@ -360,8 +311,7 @@ async def sync_calendar_account(
             )
 
         # Update last sync time
-        account.last_sync_at = datetime.utcnow()
-        await db.commit()
+        await calendar_integration.update_last_sync(db, account, datetime.utcnow())
 
         return CalendarSyncResponse(success=True, synced_events=len(events), errors=[])
 
@@ -377,16 +327,9 @@ async def get_calendars(
     db: AsyncSession = Depends(get_db),
 ):
     """Get available calendars for user's accounts."""
-    query = select(ExternalCalendarAccount).where(
-        ExternalCalendarAccount.user_id == current_user.id,
-        ExternalCalendarAccount.is_active == True,
+    accounts = await calendar_integration.get_filtered_accounts_by_user(
+        db, current_user.id, account_id
     )
-
-    if account_id:
-        query = query.where(ExternalCalendarAccount.id == account_id)
-
-    result = await db.execute(query)
-    accounts = result.scalars().all()
 
     all_calendars = []
 
@@ -434,14 +377,9 @@ async def get_events(
 ):
     """Get calendar events."""
     # Get user's calendar accounts
-    accounts_result = await db.execute(
-        select(ExternalCalendarAccount).where(
-            ExternalCalendarAccount.user_id == current_user.id,
-            ExternalCalendarAccount.is_active == True,
-            ExternalCalendarAccount.sync_enabled == True,
-        )
+    accounts = await calendar_integration.get_sync_enabled_accounts_by_user(
+        db, current_user.id
     )
-    accounts = accounts_result.scalars().all()
 
     all_events = []
 

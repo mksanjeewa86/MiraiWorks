@@ -6,6 +6,7 @@ from sqlalchemy import desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.crud.messaging import messaging
 from app.database import get_db
 from app.dependencies import check_rate_limit, get_client_ip, get_current_active_user
 from app.models.attachment import Attachment
@@ -29,7 +30,7 @@ from app.schemas.message import (
 )
 from app.services.antivirus_service import antivirus_service
 from app.services.messaging_service import messaging_service
-from app.services.get_storage_service() import get_get_storage_service()
+from app.services.storage_service import get_storage_service
 from app.utils.constants import VirusStatus
 
 router = APIRouter()
@@ -43,40 +44,9 @@ async def get_conversations(
     db: AsyncSession = Depends(get_db),
 ):
     """Get user's conversations with pagination."""
-    # Base query for conversations user participates in
-    query = (
-        select(Conversation)
-        .options(
-            selectinload(Conversation.participants).selectinload(User.company),
-            selectinload(Conversation.messages).selectinload(Message.sender),
-            selectinload(Conversation.messages).selectinload(Message.attachments),
-        )
-        .join(Conversation.participants)
-        .where(User.id == current_user.id, Conversation.is_active == True)
-        .order_by(desc(Conversation.updated_at))
+    conversations, total = await messaging.get_conversations_with_pagination(
+        db, current_user.id, request.search, request.limit, request.offset
     )
-
-    # Apply search filter
-    if request.search:
-        # Search in conversation title or participant names
-        search_term = f"%{request.search}%"
-        query = query.where(
-            or_(
-                Conversation.title.ilike(search_term),
-                Conversation.participants.any(User.first_name.ilike(search_term)),
-                Conversation.participants.any(User.last_name.ilike(search_term)),
-                Conversation.participants.any(User.email.ilike(search_term)),
-            )
-        )
-
-    # Count total
-    count_result = await db.execute(select(func.count()).select_from(query.subquery()))
-    total = count_result.scalar()
-
-    # Apply pagination
-    paginated_query = query.offset(request.offset).limit(request.limit)
-    result = await db.execute(paginated_query)
-    conversations = result.unique().scalars().all()
 
     # Convert to response format
     conversation_infos = []
@@ -113,14 +83,9 @@ async def get_conversations(
             )
 
         # Get unread count
-        unread_result = await db.execute(
-            select(func.count(Message.id)).where(
-                Message.conversation_id == conv.id,
-                Message.sender_id != current_user.id,
-                ~Message.message_reads.any(MessageRead.user_id == current_user.id),
-            )
+        unread_count = await messaging.get_unread_count_for_conversation(
+            db, conv.id, current_user.id
         )
-        unread_count = unread_result.scalar()
 
         conversation_infos.append(
             ConversationInfo(
@@ -164,12 +129,7 @@ async def create_conversation(
     )
 
     # Load with relationships for response
-    result = await db.execute(
-        select(Conversation)
-        .options(selectinload(Conversation.participants))
-        .where(Conversation.id == conversation.id)
-    )
-    conversation = result.scalar_one()
+    conversation = await messaging.get_conversation_with_relationships(db, conversation.id)
 
     return ConversationInfo(
         id=conversation.id,
@@ -207,13 +167,9 @@ async def get_conversation_messages(
 
     # Get read status for messages
     message_ids = [m.id for m in messages]
-    read_result = await db.execute(
-        select(MessageRead.message_id).where(
-            MessageRead.user_id == current_user.id,
-            MessageRead.message_id.in_(message_ids),
-        )
+    read_message_ids = await messaging.get_message_read_status(
+        db, message_ids, current_user.id
     )
-    read_message_ids = set(read_result.scalars().all())
 
     # Convert to response format
     message_infos = []
@@ -306,16 +262,7 @@ async def send_message(
     )
 
     # Load with relationships
-    result = await db.execute(
-        select(Message)
-        .options(
-            selectinload(Message.sender),
-            selectinload(Message.reply_to).selectinload(Message.sender),
-            selectinload(Message.attachments),
-        )
-        .where(Message.id == message.id)
-    )
-    message = result.scalar_one()
+    message = await messaging.get_message_with_relationships(db, message.id)
 
     # Convert to response
     reply_to = None
@@ -498,13 +445,9 @@ async def mark_conversation_read_put(
 ):
     """Mark conversation as read (PUT method for frontend compatibility)."""
     # Get the latest message ID in the conversation to mark all messages as read
-    latest_message_result = await db.execute(
-        select(Message.id)
-        .where(Message.conversation_id == conversation_id)
-        .order_by(desc(Message.id))
-        .limit(1)
+    latest_message_id = await messaging.get_latest_message_id_in_conversation(
+        db, conversation_id
     )
-    latest_message_id = latest_message_result.scalar()
 
     if not latest_message_id:
         # No messages in conversation

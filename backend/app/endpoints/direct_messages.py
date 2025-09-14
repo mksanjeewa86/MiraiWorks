@@ -5,6 +5,7 @@ from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.crud.direct_messages import direct_message
 from app.database import get_db
 from app.dependencies import get_current_active_user
 from app.models.direct_message import DirectMessage
@@ -31,15 +32,7 @@ async def validate_messaging_permission(
 ):
     """Validate that sender can message recipient based on role restrictions."""
     # Get both users with their roles
-    result = await db.execute(
-        select(User)
-        .join(User.user_roles)
-        .join(UserRole.role)
-        .where(User.id.in_([sender_id, recipient_id]))
-        .options(selectinload(User.user_roles).selectinload(UserRole.role))
-    )
-
-    users = result.scalars().all()
+    users = await direct_message.get_users_with_roles(db, [sender_id, recipient_id])
     if len(users) != 2:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -152,15 +145,7 @@ async def send_message(
     )
 
     # Load with relationships for response
-    result = await db.execute(
-        select(DirectMessage)
-        .options(
-            selectinload(DirectMessage.sender),
-            selectinload(DirectMessage.recipient),
-        )
-        .where(DirectMessage.id == message.id)
-    )
-    message = result.scalar_one()
+    message = await direct_message.get_message_with_relationships(db, message.id)
 
     # Handle notifications (email and in-app)
     await notification_service.handle_new_message_notifications(
@@ -195,45 +180,9 @@ async def search_messages(
     db: AsyncSession = Depends(get_db),
 ):
     """Search messages by content and sender name."""
-    messages = await direct_message_service.search_messages(
+    messages, total = await direct_message.search_messages_with_count(
         db, current_user.id, search_request
     )
-
-    # Get total count for same search
-    count_query = select(func.count(DirectMessage.id)).where(
-        or_(
-            and_(
-                DirectMessage.sender_id == current_user.id,
-                DirectMessage.is_deleted_by_sender == False,
-            ),
-            and_(
-                DirectMessage.recipient_id == current_user.id,
-                DirectMessage.is_deleted_by_recipient == False,
-            ),
-        )
-    )
-
-    if search_request.query:
-        search_term = f"%{search_request.query}%"
-        count_query = count_query.join(DirectMessage.sender).where(
-            or_(
-                DirectMessage.content.ilike(search_term),
-                User.first_name.ilike(search_term),
-                User.last_name.ilike(search_term),
-                User.email.ilike(search_term),
-            )
-        )
-
-    if search_request.with_user_id:
-        count_query = count_query.where(
-            or_(
-                DirectMessage.sender_id == search_request.with_user_id,
-                DirectMessage.recipient_id == search_request.with_user_id,
-            )
-        )
-
-    total_result = await db.execute(count_query)
-    total = total_result.scalar()
 
     # Convert to response format
     message_infos = []
@@ -302,46 +251,13 @@ async def get_message_participants(
     db: AsyncSession = Depends(get_db),
 ):
     """Get list of users current user can send messages to."""
-
     # Get current user's roles to determine filtering logic
     current_user_roles = [user_role.role.name for user_role in current_user.user_roles]
 
-    # Build base query
-    query_stmt = (
-        select(User)
-        .join(User.user_roles)
-        .join(UserRole.role)
-        .where(User.is_active == True, User.id != current_user.id)
-        .options(
-            selectinload(User.company),
-            selectinload(User.user_roles).selectinload(UserRole.role),
-        )
-        .order_by(User.first_name, User.last_name)
-        .limit(limit)
+    # Get users using CRUD method
+    users = await direct_message.get_message_participants(
+        db, current_user.id, current_user_roles, query, limit
     )
-
-    # Apply role-based filtering
-    if "super_admin" in current_user_roles:
-        # Super admin can message all company admins
-        query_stmt = query_stmt.where(Role.name == "company_admin")
-    elif "company_admin" in current_user_roles:
-        # Company admin can ONLY message super admin (not other company admins)
-        query_stmt = query_stmt.where(Role.name == "super_admin")
-    # For other roles, no role-based filtering (can message anyone)
-
-    # Apply search filter if provided
-    if query:
-        search_term = f"%{query}%"
-        query_stmt = query_stmt.where(
-            or_(
-                User.first_name.ilike(search_term),
-                User.last_name.ilike(search_term),
-                User.email.ilike(search_term),
-            )
-        )
-
-    result = await db.execute(query_stmt)
-    users = result.scalars().all()
 
     # Format response
     participants = []

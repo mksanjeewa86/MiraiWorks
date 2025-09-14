@@ -1,15 +1,9 @@
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from enum import Enum
-import enum
 
 from app.database import Base
-
-
-class CalendarProvider(str, enum.Enum):
-    GOOGLE = "google"
-    OUTLOOK = "outlook"
+from app.schemas.calendar_connection import CalendarProvider
 
 
 class CalendarConnection(Base):
@@ -24,7 +18,7 @@ class CalendarConnection(Base):
     )
 
     # Provider information
-    provider = Column(String(20), nullable=False)  # 'google' or 'outlook'
+    provider = Column(String(20), nullable=False)  # CalendarProvider enum
     provider_account_id = Column(String(255), nullable=False)  # External account ID
     provider_email = Column(String(255), nullable=False)  # Email associated with the provider account
     

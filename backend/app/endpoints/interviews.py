@@ -7,6 +7,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.crud import interview as interview_crud
 from app.database import get_db
 from app.dependencies import get_current_active_user
 from app.models.interview import Interview, InterviewProposal
@@ -76,24 +77,14 @@ async def get_interviews(
         offset=request.offset,
     )
 
-    # Get total count
-    count_query = select(func.count(Interview.id)).where(
-        or_(
-            Interview.candidate_id == current_user.id,
-            Interview.recruiter_id == current_user.id,
-            Interview.created_by == current_user.id,
-        )
+    # Get total count using CRUD
+    total = await interview_crud.get_user_interviews_count(
+        db=db,
+        user_id=current_user.id,
+        status_filter=request.status,
+        start_date=request.start_date,
+        end_date=request.end_date,
     )
-
-    if request.status:
-        count_query = count_query.where(Interview.status == request.status)
-    if request.start_date:
-        count_query = count_query.where(Interview.scheduled_start >= request.start_date)
-    if request.end_date:
-        count_query = count_query.where(Interview.scheduled_start <= request.end_date)
-
-    total_result = await db.execute(count_query)
-    total = total_result.scalar()
 
     # Format response
     formatted_interviews = []
@@ -115,20 +106,7 @@ async def get_interview(
     db: AsyncSession = Depends(get_db),
 ):
     """Get interview by ID."""
-    result = await db.execute(
-        select(Interview)
-        .options(
-            selectinload(Interview.candidate),
-            selectinload(Interview.recruiter),
-            selectinload(Interview.employer_company),
-            selectinload(Interview.recruiter_company),
-            selectinload(Interview.proposals).selectinload(InterviewProposal.proposer),
-            selectinload(Interview.proposals).selectinload(InterviewProposal.responder),
-        )
-        .where(Interview.id == interview_id)
-    )
-
-    interview = result.scalar_one_or_none()
+    interview = await interview_crud.get_with_relationships(db, interview_id)
     if not interview:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Interview not found"
@@ -152,17 +130,7 @@ async def update_interview(
     db: AsyncSession = Depends(get_db),
 ):
     """Update interview details."""
-    result = await db.execute(
-        select(Interview)
-        .options(
-            selectinload(Interview.candidate),
-            selectinload(Interview.recruiter),
-            selectinload(Interview.employer_company),
-        )
-        .where(Interview.id == interview_id)
-    )
-
-    interview = result.scalar_one_or_none()
+    interview = await interview_crud.get_with_relationships(db, interview_id)
     if not interview:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Interview not found"
@@ -288,89 +256,8 @@ async def get_interview_stats(
     db: AsyncSession = Depends(get_db),
 ):
     """Get interview statistics for the current user."""
-    # Base query for user's interviews
-    base_query = select(Interview).where(
-        or_(
-            Interview.candidate_id == current_user.id,
-            Interview.recruiter_id == current_user.id,
-            Interview.created_by == current_user.id,
-        )
-    )
-
-    # Total interviews
-    total_result = await db.execute(
-        select(func.count()).select_from(base_query.subquery())
-    )
-    total_interviews = total_result.scalar()
-
-    # By status
-    status_result = await db.execute(
-        select(Interview.status, func.count(Interview.id))
-        .where(
-            or_(
-                Interview.candidate_id == current_user.id,
-                Interview.recruiter_id == current_user.id,
-                Interview.created_by == current_user.id,
-            )
-        )
-        .group_by(Interview.status)
-    )
-    by_status = {status: count for status, count in status_result.all()}
-
-    # By type
-    type_result = await db.execute(
-        select(Interview.interview_type, func.count(Interview.id))
-        .where(
-            or_(
-                Interview.candidate_id == current_user.id,
-                Interview.recruiter_id == current_user.id,
-                Interview.created_by == current_user.id,
-            )
-        )
-        .group_by(Interview.interview_type)
-    )
-    by_type = {itype: count for itype, count in type_result.all()}
-
-    # Upcoming interviews
-    upcoming_result = await db.execute(
-        select(func.count(Interview.id)).where(
-            or_(
-                Interview.candidate_id == current_user.id,
-                Interview.recruiter_id == current_user.id,
-                Interview.created_by == current_user.id,
-            ),
-            Interview.scheduled_start > datetime.utcnow(),
-            Interview.status.in_(
-                [InterviewStatus.CONFIRMED.value, InterviewStatus.IN_PROGRESS.value]
-            ),
-        )
-    )
-    upcoming_count = upcoming_result.scalar()
-
-    # Completed interviews
-    completed_count = by_status.get(InterviewStatus.COMPLETED.value, 0)
-
-    # Average duration
-    duration_result = await db.execute(
-        select(func.avg(Interview.duration_minutes)).where(
-            or_(
-                Interview.candidate_id == current_user.id,
-                Interview.recruiter_id == current_user.id,
-                Interview.created_by == current_user.id,
-            ),
-            Interview.duration_minutes.is_not(None),
-        )
-    )
-    average_duration = duration_result.scalar()
-
-    return InterviewStats(
-        total_interviews=total_interviews,
-        by_status=by_status,
-        by_type=by_type,
-        upcoming_count=upcoming_count,
-        completed_count=completed_count,
-        average_duration_minutes=float(average_duration) if average_duration else None,
-    )
+    stats = await interview_crud.get_detailed_interview_stats(db, current_user.id)
+    return InterviewStats(**stats)
 
 
 @router.get("/calendar/events", response_model=list[InterviewCalendarEvent])
@@ -382,33 +269,9 @@ async def get_interview_calendar_events(
     db: AsyncSession = Depends(get_db),
 ):
     """Get interview events in calendar format."""
-    query = (
-        select(Interview)
-        .options(selectinload(Interview.candidate), selectinload(Interview.recruiter))
-        .where(
-            or_(
-                Interview.candidate_id == current_user.id,
-                Interview.recruiter_id == current_user.id,
-                Interview.created_by == current_user.id,
-            ),
-            Interview.scheduled_start.is_not(None),
-            Interview.status.in_(
-                [
-                    InterviewStatus.CONFIRMED.value,
-                    InterviewStatus.IN_PROGRESS.value,
-                    InterviewStatus.COMPLETED.value,
-                ]
-            ),
-        )
+    interviews = await interview_crud.get_calendar_events(
+        db, current_user.id, start_date, end_date
     )
-
-    if start_date:
-        query = query.where(Interview.scheduled_start >= start_date)
-    if end_date:
-        query = query.where(Interview.scheduled_start <= end_date)
-
-    result = await db.execute(query)
-    interviews = result.scalars().all()
 
     calendar_events = []
     for interview in interviews:
@@ -441,15 +304,7 @@ async def get_calendar_integration_status(
     db: AsyncSession = Depends(get_db),
 ):
     """Get calendar integration status for the current user."""
-    from app.models.calendar_integration import ExternalCalendarAccount
-
-    result = await db.execute(
-        select(ExternalCalendarAccount).where(
-            ExternalCalendarAccount.user_id == current_user.id,
-            ExternalCalendarAccount.is_active == True,
-        )
-    )
-    accounts = result.scalars().all()
+    accounts = await interview_crud.get_calendar_accounts_by_user(db, current_user.id)
 
     google_account = next((acc for acc in accounts if acc.provider == "google"), None)
     microsoft_account = next(
@@ -484,14 +339,9 @@ async def _format_interview_response(
 ) -> InterviewInfo:
     """Format interview for API response."""
     # Get active proposals count
-    active_proposals_result = await db.execute(
-        select(func.count(InterviewProposal.id)).where(
-            InterviewProposal.interview_id == interview.id,
-            InterviewProposal.status == "pending",
-            InterviewProposal.expires_at > datetime.utcnow(),
-        )
+    active_proposal_count = await interview_crud.get_active_proposals_count(
+        db, interview.id
     )
-    active_proposal_count = active_proposals_result.scalar()
 
     # Format proposals
     formatted_proposals = []

@@ -1,6 +1,21 @@
-from pydantic import BaseModel, EmailStr
-from typing import Optional, List
 from datetime import datetime
+from enum import Enum
+from typing import List, Optional
+
+from pydantic import BaseModel, EmailStr
+
+
+# Enums
+class CalendarProvider(str, Enum):
+    GOOGLE = "google"
+    OUTLOOK = "outlook"
+
+
+class CalendarConnectionStatus(str, Enum):
+    CONNECTED = "connected"
+    DISABLED = "disabled"
+    EXPIRED = "expired"
+    ERROR = "error"
 
 
 class CalendarConnectionBase(BaseModel):

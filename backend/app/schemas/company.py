@@ -1,0 +1,67 @@
+from typing import Optional
+from pydantic import BaseModel
+
+from app.utils.constants import CompanyType
+
+
+class CompanyBase(BaseModel):
+    """Base company schema with common fields."""
+    name: str
+    type: CompanyType
+    email: str
+    phone: Optional[str] = None
+    website: Optional[str] = None
+    postal_code: Optional[str] = None
+    prefecture: Optional[str] = None
+    city: Optional[str] = None
+    description: Optional[str] = None
+
+
+class CompanyCreate(CompanyBase):
+    """Schema for creating a new company."""
+    is_demo: Optional[bool] = False
+    demo_days: Optional[int] = 30  # Default 30 days demo period
+
+
+class CompanyUpdate(BaseModel):
+    """Schema for updating a company."""
+    name: Optional[str] = None
+    type: Optional[CompanyType] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    website: Optional[str] = None
+    postal_code: Optional[str] = None
+    prefecture: Optional[str] = None
+    city: Optional[str] = None
+    description: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
+class CompanyResponse(CompanyBase):
+    """Schema for company response."""
+    id: int
+    is_active: bool
+    is_demo: bool
+    demo_end_date: Optional[str]
+    user_count: int
+    job_count: int
+    created_at: str
+    updated_at: str
+
+    class Config:
+        from_attributes = True
+
+
+class CompanyListResponse(BaseModel):
+    """Schema for paginated company list response."""
+    companies: list[CompanyResponse]
+    total: int
+    page: int
+    size: int
+    pages: int
+
+
+class CompanyAdminStatus(BaseModel):
+    """Schema for company admin status."""
+    has_admin: bool
+    admin_count: int

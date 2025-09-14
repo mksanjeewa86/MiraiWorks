@@ -1,65 +1,13 @@
 from datetime import datetime
-from enum import Enum
 from typing import Optional
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.db_types import CompatLONGTEXT as LONGTEXT
+from app.schemas.job import ApplicationStatus, JobStatus, JobType, ExperienceLevel, RemoteType, SalaryType
 
 from .base import Base
-
-
-class JobStatus(str, Enum):
-    DRAFT = "draft"
-    PUBLISHED = "published"
-    PAUSED = "paused"
-    CLOSED = "closed"
-    ARCHIVED = "archived"
-
-
-class JobType(str, Enum):
-    FULL_TIME = "full_time"
-    PART_TIME = "part_time"
-    CONTRACT = "contract"
-    TEMPORARY = "temporary"
-    INTERNSHIP = "internship"
-    FREELANCE = "freelance"
-
-
-class ExperienceLevel(str, Enum):
-    ENTRY_LEVEL = "entry_level"
-    MID_LEVEL = "mid_level"
-    SENIOR_LEVEL = "senior_level"
-    EXECUTIVE = "executive"
-    INTERNSHIP = "internship"
-
-
-class RemoteType(str, Enum):
-    ON_SITE = "on_site"
-    REMOTE = "remote"
-    HYBRID = "hybrid"
-
-
-class SalaryType(str, Enum):
-    HOURLY = "hourly"
-    DAILY = "daily"
-    MONTHLY = "monthly"
-    ANNUAL = "annual"
-    PROJECT = "project"
-
-
-class ApplicationStatus(str, Enum):
-    APPLIED = "applied"
-    UNDER_REVIEW = "under_review"
-    PHONE_SCREEN = "phone_screen"
-    INTERVIEW = "interview"
-    TECHNICAL_TEST = "technical_test"
-    FINAL_INTERVIEW = "final_interview"
-    OFFER_SENT = "offer_sent"
-    HIRED = "hired"
-    REJECTED = "rejected"
-    WITHDRAWN = "withdrawn"
 
 
 class Job(Base):
@@ -95,13 +43,13 @@ class Job(Base):
 
     # Job details
     job_type: Mapped[str] = mapped_column(
-        String(50), nullable=False, default=JobType.FULL_TIME, index=True
+        String(50), nullable=False, default="full_time", index=True
     )
     experience_level: Mapped[str] = mapped_column(
-        String(50), nullable=False, default=ExperienceLevel.MID_LEVEL, index=True
+        String(50), nullable=False, default="mid_level", index=True
     )
     remote_type: Mapped[str] = mapped_column(
-        String(50), nullable=False, default=RemoteType.ON_SITE, index=True
+        String(50), nullable=False, default="on_site", index=True
     )
 
     # Requirements and skills
@@ -121,7 +69,7 @@ class Job(Base):
         Integer, nullable=True
     )  # In cents
     salary_type: Mapped[Optional[str]] = mapped_column(
-        String(20), nullable=True, default=SalaryType.ANNUAL
+        String(20), nullable=True, default="annual"
     )
     salary_currency: Mapped[str] = mapped_column(
         String(3), nullable=False, default="USD"
@@ -145,7 +93,7 @@ class Job(Base):
 
     # Status and visibility
     status: Mapped[str] = mapped_column(
-        String(20), nullable=False, default=JobStatus.DRAFT, index=True
+        String(20), nullable=False, default="draft", index=True
     )
     is_featured: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, index=True
@@ -201,7 +149,7 @@ class Job(Base):
         """Check if job is currently active and accepting applications"""
         now = datetime.utcnow()
         return (
-            self.status == JobStatus.PUBLISHED
+            self.status == "published"
             and (self.application_deadline is None or self.application_deadline > now)
             and (self.expires_at is None or self.expires_at > now)
         )
@@ -270,7 +218,7 @@ class JobApplication(Base):
 
     # Status tracking
     status: Mapped[str] = mapped_column(
-        String(50), nullable=False, default=ApplicationStatus.APPLIED, index=True
+        String(50), nullable=False, default="applied", index=True
     )
     status_updated_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=datetime.utcnow
@@ -321,9 +269,9 @@ class JobApplication(Base):
     def is_active(self) -> bool:
         """Check if application is still in active consideration"""
         return self.status not in [
-            ApplicationStatus.REJECTED,
-            ApplicationStatus.WITHDRAWN,
-            ApplicationStatus.HIRED,
+            "rejected",
+            "withdrawn",
+            "hired",
         ]
 
     @property

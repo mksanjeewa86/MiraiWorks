@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, EmailStr, validator
 
@@ -7,20 +7,14 @@ from app.utils.constants import UserRole
 
 
 class UserCreate(BaseModel):
-    email: EmailStr
+    email: str
     first_name: str
     last_name: str
     phone: Optional[str] = None
     company_id: Optional[int] = None
-    roles: list[UserRole]
-    is_admin: bool = False
-    require_2fa: bool = False
-
-    @validator("first_name", "last_name")
-    def validate_names(cls, v):
-        if not v or len(v.strip()) < 2:
-            raise ValueError("Names must be at least 2 characters long")
-        return v.strip()
+    roles: List[UserRole] = []
+    is_admin: Optional[bool] = False
+    require_2fa: Optional[bool] = False
 
 
 class UserUpdate(BaseModel):
@@ -30,12 +24,8 @@ class UserUpdate(BaseModel):
     is_active: Optional[bool] = None
     is_admin: Optional[bool] = None
     require_2fa: Optional[bool] = None
-
-    @validator("first_name", "last_name")
-    def validate_names(cls, v):
-        if v is not None and (not v or len(v.strip()) < 2):
-            raise ValueError("Names must be at least 2 characters long")
-        return v.strip() if v else v
+    company_id: Optional[int] = None
+    roles: Optional[List[UserRole]] = None
 
 
 class UserResponse(BaseModel):
@@ -78,6 +68,58 @@ class BulkUserImportResponse(BaseModel):
     failed_users: int
     errors: list[str]
     created_user_ids: list[int]
+
+
+class UserFilters(BaseModel):
+    page: int = 1
+    size: int = 20
+    search: Optional[str] = None
+    company_id: Optional[int] = None
+    is_active: Optional[bool] = None
+    is_admin: Optional[bool] = None
+    is_suspended: Optional[bool] = None
+    require_2fa: Optional[bool] = None
+    role: Optional[UserRole] = None
+
+
+class UserInfo(BaseModel):
+    id: int
+    email: str
+    first_name: str
+    last_name: str
+    full_name: str
+    phone: Optional[str] = None
+    is_active: bool
+    is_admin: bool
+    require_2fa: bool
+    last_login: Optional[datetime] = None
+    created_at: datetime
+    updated_at: datetime
+    company_id: Optional[int] = None
+    company_name: Optional[str] = None
+    roles: List[str] = []
+    is_deleted: bool = False
+    deleted_at: Optional[datetime] = None
+    is_suspended: bool = False
+    suspended_at: Optional[datetime] = None
+    suspended_by: Optional[int] = None
+
+    class Config:
+        from_attributes = True
+
+
+class PasswordResetRequest(BaseModel):
+    user_id: int
+    send_email: bool = True
+
+
+class ResendActivationRequest(BaseModel):
+    user_id: int
+
+
+class BulkUserOperation(BaseModel):
+    user_ids: List[int]
+    send_email: bool = True
 
 
 class UserHoldRequest(BaseModel):

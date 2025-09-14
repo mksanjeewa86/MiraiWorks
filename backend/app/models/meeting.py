@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from enum import Enum
 from typing import Optional
 
 from sqlalchemy import (
@@ -17,43 +16,9 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.db_types import CompatLONGTEXT as LONGTEXT
+from app.schemas.meeting import MeetingStatus, ParticipantStatus, RecordingStatus
 
 from .base import Base
-
-
-class MeetingType(str, Enum):
-    CASUAL = "casual"  # Candidate ↔ Recruiter (1:1 interviews)
-    MAIN = "main"  # Candidate ↔ Employer (recruiter as optional observer/organizer)
-
-
-class MeetingStatus(str, Enum):
-    SCHEDULED = "scheduled"
-    STARTING = "starting"
-    IN_PROGRESS = "in_progress"
-    COMPLETED = "completed"
-    CANCELLED = "cancelled"
-    FAILED = "failed"
-
-
-class ParticipantRole(str, Enum):
-    HOST = "host"  # Meeting organizer
-    PARTICIPANT = "participant"  # Regular participant
-    OBSERVER = "observer"  # View-only (e.g., recruiter in main interviews)
-
-
-class ParticipantStatus(str, Enum):
-    INVITED = "invited"
-    JOINED = "joined"
-    LEFT = "left"
-    DISCONNECTED = "disconnected"
-
-
-class RecordingStatus(str, Enum):
-    NOT_STARTED = "not_started"
-    RECORDING = "recording"
-    PROCESSING = "processing"
-    COMPLETED = "completed"
-    FAILED = "failed"
 
 
 # Association table for meeting participants
@@ -71,7 +36,7 @@ meeting_participants = Table(
         "user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     ),
     Column("role", String(20), nullable=False),  # ParticipantRole
-    Column("status", String(20), nullable=False, default=ParticipantStatus.INVITED),
+    Column("status", String(20), nullable=False, default="invited"),
     Column("joined_at", DateTime, nullable=True),
     Column("left_at", DateTime, nullable=True),
     Column("can_record", Boolean, nullable=False, default=False),
@@ -105,7 +70,7 @@ class Meeting(Base):
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     meeting_type: Mapped[str] = mapped_column(String(20), nullable=False)  # MeetingType
     status: Mapped[str] = mapped_column(
-        String(20), nullable=False, default=MeetingStatus.SCHEDULED
+        String(20), nullable=False, default="scheduled"
     )
 
     # Scheduling
@@ -125,7 +90,7 @@ class Meeting(Base):
         Boolean, nullable=False, default=False
     )
     recording_status: Mapped[str] = mapped_column(
-        String(20), nullable=False, default=RecordingStatus.NOT_STARTED
+        String(20), nullable=False, default="not_started"
     )
     recording_consent_required: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=True
@@ -189,7 +154,7 @@ class Meeting(Base):
     @property
     def is_active(self) -> bool:
         """Check if meeting is currently active"""
-        return self.status in [MeetingStatus.STARTING, MeetingStatus.IN_PROGRESS]
+        return self.status in ["starting", "in_progress"]
 
     @property
     def can_join(self) -> bool:
@@ -199,9 +164,9 @@ class Meeting(Base):
         start_window = self.scheduled_start - timedelta(minutes=15)
         end_window = self.scheduled_start + timedelta(hours=2)
         return start_window <= now <= end_window and self.status in [
-            MeetingStatus.SCHEDULED,
-            MeetingStatus.STARTING,
-            MeetingStatus.IN_PROGRESS,
+            "scheduled",
+            "starting",
+            "in_progress",
         ]
 
 
@@ -225,7 +190,7 @@ class MeetingRecording(Base):
 
     # Processing status
     status: Mapped[str] = mapped_column(
-        String(20), nullable=False, default=RecordingStatus.PROCESSING
+        String(20), nullable=False, default="processing"
     )
     processing_started_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime, nullable=True
