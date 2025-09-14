@@ -1,5 +1,5 @@
 // Core API client
-export * from '../lib/apiClient';
+export * from './apiClient';
 
 // API Configuration
 export * from '../config/api';

@@ -26,7 +26,7 @@ import {
   Camera
 } from 'lucide-react';
 import { ProfileData } from '@/types/pages';
-import { makeAuthenticatedRequest } from '@/lib/apiClient';
+import { makeAuthenticatedRequest } from '@/api/apiClient';
 
 function ProfilePageContent() {
   const { user } = useAuth();

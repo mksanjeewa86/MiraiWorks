@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_auth.py::test_login_invalid_password app/tests/test_auth.py::test_refresh_token app/tests/test_auth.py::test_logout -v)"
+      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_auth.py::test_login_invalid_password app/tests/test_auth.py::test_refresh_token app/tests/test_auth.py::test_logout -v)",
+      "Bash(do if ! git ls-files --error-unmatch \"$file\")",
+      "Bash(/dev/null)",
+      "Bash(then echo \"NOT IN GIT: $file\")",
+      "Bash(fi)",
+      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/ --verbose --tb=short)"
     ],
     "deny": [],
     "ask": []
