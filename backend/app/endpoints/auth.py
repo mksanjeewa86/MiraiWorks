@@ -109,8 +109,9 @@ async def login(
     }
     print(f"[DEBUG] User object: {user_dict}")
 
-    # Direct check of user's 2FA field
-    if user.require_2fa:
+    # Check if 2FA is required (either individual setting or role-based requirement)
+    requires_2fa = await auth_service.requires_2fa(db, user)
+    if requires_2fa:
         logger.info(
             "2FA required for user", user_id=user.id, email=user.email, component="2fa"
         )
@@ -123,12 +124,11 @@ async def login(
         await email_service.send_2fa_code(user.email, code, user.full_name)
         logger.info("2FA code sent", user_id=user.id, component="2fa")
 
-        return LoginResponse(
-            access_token="",
-            refresh_token="",
-            require_2fa=True,
-            expires_in=0,
-            user=UserInfo(
+        # Determine if this is individual user 2FA or admin role-based 2FA
+        user_data = None
+        if user.require_2fa:
+            # Individual user 2FA - include user data in response
+            user_data = UserInfo(
                 id=user.id,
                 email=user.email,
                 first_name=user.first_name,
@@ -138,36 +138,14 @@ async def login(
                 roles=user.user_roles,
                 is_active=user.is_active,
                 last_login=user.last_login,
-            ),
-        )
-
-    # Check if 2FA is required (using the service method)
-    requires_2fa = await auth_service.requires_2fa(db, user)
-
-    if requires_2fa:
-        # Generate and send 2FA code
-        code = auth_service.generate_2fa_code()
-        await store_2fa_code(user.id, code, ttl=600)  # 10 minutes
-
-        # Send 2FA code via email
-        await email_service.send_2fa_code(user.email, code, user.full_name)
+            )
 
         return LoginResponse(
             access_token="",
             refresh_token="",
             require_2fa=True,
             expires_in=0,
-            user=UserInfo(
-                id=user.id,
-                email=user.email,
-                first_name=user.first_name,
-                last_name=user.last_name,
-                full_name=user.full_name,
-                company_id=user.company_id,
-                roles=user.user_roles,
-                is_active=user.is_active,
-                last_login=user.last_login,
-            ),
+            user=user_data,
         )
 
     # Create tokens without 2FA
@@ -277,12 +255,24 @@ async def refresh_token(
 
 @router.post("/logout")
 async def logout(
-    current_user: User = Depends(get_current_active_user),
+    logout_data: RefreshTokenRequest | None = None,
     db: AsyncSession = Depends(get_db),
 ):
-    """Logout user by revoking all refresh tokens for the user."""
-    # Revoke all refresh tokens for this user
-    await auth_service.revoke_user_tokens(db, current_user.id)
+    """Logout user by revoking refresh token."""
+    # Check if request body is provided
+    if not logout_data or not logout_data.refresh_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh token required for logout"
+        )
+
+    # Find user by refresh token and revoke it
+    user = await auth_service.verify_refresh_token(db, logout_data.refresh_token)
+    if user:
+        # Revoke all refresh tokens for this user
+        await auth_service.revoke_user_tokens(db, user.id)
+
+    # Always return success to prevent token enumeration
     return {"message": "Logged out successfully"}
 
 
@@ -324,7 +314,7 @@ async def request_password_reset(
         admin_result = await db.execute(
             select(User)
             .join(User.user_roles)
-            .join("role")
+            .join(UserRoleModel.role)
             .where(
                 User.company_id == user.company_id,
                 User.is_active == True,
@@ -337,7 +327,7 @@ async def request_password_reset(
         admin_result = await db.execute(
             select(User)
             .join(User.user_roles)
-            .join("role")
+            .join(UserRoleModel.role)
             .where(User.is_active == True, User.is_admin == True)
         )
         company_admins = admin_result.scalars().all()

@@ -162,7 +162,6 @@ class AuthService:
             )
             .where(
                 User.email == email,
-                User.is_active == True,
                 User.is_deleted == False
             )
         )
@@ -201,11 +200,6 @@ class AuthService:
 
     async def requires_2fa(self, db: AsyncSession, user: User) -> bool:
         """Check if user requires 2FA based on user settings and role requirements."""
-        
-        # TEMPORARY: Disable 2FA for development testing
-        if user.email == "admin@example.com":
-            print(f"[DEBUG] Temporarily disabling 2FA for {user.email}")
-            return False
 
         # Get fresh user data from database instead of refreshing eager-loaded object
         result = await db.execute(

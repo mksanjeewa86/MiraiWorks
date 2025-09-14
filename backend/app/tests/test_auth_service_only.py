@@ -64,6 +64,7 @@ class TestAuthService:
         mock_decode.return_value = {
             "sub": "test@example.com",
             "exp": datetime.utcnow() + timedelta(hours=1),
+            "type": "access",
         }
 
         result = auth_service.decode_token("valid_token")
@@ -122,6 +123,7 @@ class TestAuthService:
                 "user_id": 123,
                 "role": "user",
                 "exp": datetime.utcnow() + timedelta(hours=1),
+                "type": "access",
             }
 
             decoded = auth_service.decode_token(token)

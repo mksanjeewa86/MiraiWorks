@@ -32,7 +32,7 @@ class TestCompanies:
     async def test_get_companies_with_pagination(self, client: AsyncClient, super_admin_auth_headers: dict):
         """Test companies list with pagination parameters."""
         response = await client.get(
-            "/api/companies?page=1&size=10",
+            "/api/admin/companies?page=1&size=10",
             headers=super_admin_auth_headers
         )
 
@@ -45,7 +45,7 @@ class TestCompanies:
     async def test_get_companies_with_filters(self, client: AsyncClient, super_admin_auth_headers: dict):
         """Test companies list with various filters."""
         response = await client.get(
-            "/api/companies?search=test&type=recruiter&is_active=true",
+            "/api/admin/companies?search=test&type=recruiter&is_active=true",
             headers=super_admin_auth_headers
         )
 
@@ -57,7 +57,7 @@ class TestCompanies:
     async def test_get_company_by_id_success(self, client: AsyncClient, super_admin_auth_headers: dict, test_company: Company):
         """Test successful retrieval of specific company."""
         response = await client.get(
-            f"/api/companies/{test_company.id}",
+            f"/api/admin/companies/{test_company.id}",
             headers=super_admin_auth_headers
         )
 
@@ -103,7 +103,7 @@ class TestCompanies:
         }
 
         response = await client.put(
-            f"/api/companies/{test_company.id}",
+            f"/api/admin/companies/{test_company.id}",
             json=update_data,
             headers=super_admin_auth_headers
         )
@@ -118,7 +118,7 @@ class TestCompanies:
     async def test_get_company_admin_status(self, client: AsyncClient, super_admin_auth_headers: dict, test_company: Company):
         """Test retrieval of company admin status."""
         response = await client.get(
-            f"/api/companies/{test_company.id}/admin-status",
+            f"/api/admin/companies/{test_company.id}/admin-status",
             headers=super_admin_auth_headers
         )
 
@@ -173,19 +173,19 @@ class TestCompanies:
     @pytest.mark.asyncio
     async def test_update_company_unauthorized(self, client: AsyncClient, test_company: Company):
         """Test company update without authentication."""
-        response = await client.put(f"/api/companies/{test_company.id}", json={})
+        response = await client.put(f"/api/admin/companies/{test_company.id}", json={})
         assert response.status_code == 401
 
     @pytest.mark.asyncio
     async def test_delete_company_unauthorized(self, client: AsyncClient, test_company: Company):
         """Test company deletion without authentication."""
-        response = await client.delete(f"/api/companies/{test_company.id}")
+        response = await client.delete(f"/api/admin/companies/{test_company.id}")
         assert response.status_code == 401
 
     @pytest.mark.asyncio
     async def test_delete_company_forbidden_non_super_admin(self, client: AsyncClient, admin_auth_headers: dict, test_company: Company):
         """Test company deletion with non-super-admin permissions."""
-        response = await client.delete(f"/api/companies/{test_company.id}", headers=admin_auth_headers)
+        response = await client.delete(f"/api/admin/companies/{test_company.id}", headers=admin_auth_headers)
         assert response.status_code == 403
 
     # ===== INPUT VALIDATION TESTS =====
@@ -265,7 +265,7 @@ class TestCompanies:
         update_data = {"email": "invalid-email"}
 
         response = await client.put(
-            f"/api/companies/{test_company.id}",
+            f"/api/admin/companies/{test_company.id}",
             json=update_data,
             headers=super_admin_auth_headers
         )
@@ -276,7 +276,7 @@ class TestCompanies:
     async def test_get_companies_invalid_pagination(self, client: AsyncClient, super_admin_auth_headers: dict):
         """Test companies list with invalid pagination parameters."""
         response = await client.get(
-            "/api/companies?page=-1&size=0",
+            "/api/admin/companies?page=-1&size=0",
             headers=super_admin_auth_headers
         )
 
@@ -287,7 +287,7 @@ class TestCompanies:
     @pytest.mark.asyncio
     async def test_get_company_not_found(self, client: AsyncClient, super_admin_auth_headers: dict):
         """Test retrieving non-existent company."""
-        response = await client.get("/api/companies/99999", headers=super_admin_auth_headers)
+        response = await client.get("/api/admin/companies/99999", headers=super_admin_auth_headers)
         assert response.status_code == 404
         assert "not found" in response.json()["detail"].lower()
 
@@ -295,7 +295,7 @@ class TestCompanies:
     async def test_update_company_not_found(self, client: AsyncClient, super_admin_auth_headers: dict):
         """Test updating non-existent company."""
         response = await client.put(
-            "/api/companies/99999",
+            "/api/admin/companies/99999",
             json={"name": "Test"},
             headers=super_admin_auth_headers
         )
@@ -304,13 +304,13 @@ class TestCompanies:
     @pytest.mark.asyncio
     async def test_delete_company_not_found(self, client: AsyncClient, super_admin_auth_headers: dict):
         """Test deleting non-existent company."""
-        response = await client.delete("/api/companies/99999", headers=super_admin_auth_headers)
+        response = await client.delete("/api/admin/companies/99999", headers=super_admin_auth_headers)
         assert response.status_code == 404
 
     @pytest.mark.asyncio
     async def test_get_admin_status_not_found(self, client: AsyncClient, super_admin_auth_headers: dict):
         """Test getting admin status for non-existent company."""
-        response = await client.get("/api/companies/99999/admin-status", headers=super_admin_auth_headers)
+        response = await client.get("/api/admin/companies/99999/admin-status", headers=super_admin_auth_headers)
         assert response.status_code == 404
 
     # ===== BUSINESS LOGIC TESTS =====
@@ -330,7 +330,7 @@ class TestCompanies:
         await db_session.refresh(temp_company)
 
         response = await client.delete(
-            f"/api/companies/{temp_company.id}",
+            f"/api/admin/companies/{temp_company.id}",
             headers=super_admin_auth_headers
         )
 
@@ -342,7 +342,7 @@ class TestCompanies:
     async def test_delete_company_with_users_forbidden(self, client: AsyncClient, super_admin_auth_headers: dict, test_company: Company):
         """Test that company with users cannot be deleted."""
         response = await client.delete(
-            f"/api/companies/{test_company.id}",
+            f"/api/admin/companies/{test_company.id}",
             headers=super_admin_auth_headers
         )
 
@@ -375,7 +375,7 @@ class TestCompanies:
 
             # Check if admin user was created
             admin_status_response = await client.get(
-                f"/api/companies/{company_id}/admin-status",
+                f"/api/admin/companies/{company_id}/admin-status",
                 headers=super_admin_auth_headers
             )
 
@@ -425,7 +425,7 @@ class TestCompanies:
         update_data = {"email": another_company.email}
 
         response = await client.put(
-            f"/api/companies/{another_company.id}",
+            f"/api/admin/companies/{another_company.id}",
             json=update_data,
             headers=super_admin_auth_headers
         )
@@ -437,7 +437,7 @@ class TestCompanies:
     async def test_get_companies_with_complex_search(self, client: AsyncClient, super_admin_auth_headers: dict):
         """Test companies search with complex search terms."""
         response = await client.get(
-            "/api/companies?search=test company&type=recruiter&is_active=true&has_users=true",
+            "/api/admin/companies?search=test company&type=recruiter&is_active=true&has_users=true",
             headers=super_admin_auth_headers
         )
 

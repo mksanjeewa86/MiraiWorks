@@ -17,9 +17,52 @@ class TestUsersManagement:
     # ===== SUCCESS SCENARIOS =====
 
     @pytest.mark.asyncio
-    async def test_get_users_success(self, client: AsyncClient, admin_auth_headers: dict):
+    async def test_get_users_success(self, client: AsyncClient, db_session: AsyncSession, test_roles: dict):
         """Test successful retrieval of user list."""
-        response = await client.get("/api/admin/users", headers=admin_auth_headers)
+        # Create super admin user directly in test
+        from app.models import User, UserRole
+        from app.services.auth_service import auth_service
+        from app.utils.constants import UserRole as UserRoleEnum
+
+        user = User(
+            email='testadmin@example.com',
+            first_name='Test',
+            last_name='Admin',
+            company_id=None,
+            hashed_password=auth_service.get_password_hash('testpass123'),
+            is_active=True,
+            is_admin=True,
+        )
+        db_session.add(user)
+        await db_session.commit()
+        await db_session.refresh(user)
+
+        # Assign super admin role
+        user_role = UserRole(user_id=user.id, role_id=test_roles[UserRoleEnum.SUPER_ADMIN.value].id)
+        db_session.add(user_role)
+        await db_session.commit()
+
+        # Login and get auth headers
+        response = await client.post(
+            "/api/auth/login",
+            json={"email": user.email, "password": "testpass123"},
+        )
+        assert response.status_code == 200
+        token_data = response.json()
+
+        # Handle 2FA if required
+        if token_data.get("require_2fa"):
+            verify_response = await client.post(
+                "/api/auth/2fa/verify",
+                json={"user_id": user.id, "code": "123456"}
+            )
+            assert verify_response.status_code == 200
+            token_data = verify_response.json()
+
+        headers = {"Authorization": f"Bearer {token_data['access_token']}"}
+
+        # Now test the actual endpoint
+        response = await client.get("/api/admin/users", headers=headers)
 
         assert response.status_code == 200
         data = response.json()

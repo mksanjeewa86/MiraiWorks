@@ -11,9 +11,8 @@ os.environ["ENVIRONMENT"] = "test"
 
 from app.database import Base, get_db
 from app.main import app
-from app.models.company import Company
-from app.models.role import Role, UserRole
-from app.models.user import User
+# Import all models to ensure they are registered with SQLAlchemy
+from app.models import Company, Role, User, UserRole
 from app.services.auth_service import auth_service
 from app.utils.constants import CompanyType
 from app.utils.constants import UserRole as UserRoleEnum
@@ -212,6 +211,20 @@ async def admin_auth_headers(client, test_admin_user):
     )
     assert response.status_code == 200
     token_data = response.json()
+
+    # Check if 2FA is required
+    if token_data.get("require_2fa"):
+        # Complete 2FA flow with a test code
+        verify_response = await client.post(
+            "/api/auth/2fa/verify",
+            json={
+                "user_id": test_admin_user.id,
+                "code": "123456"  # Mock 2FA code for tests
+            }
+        )
+        assert verify_response.status_code == 200
+        token_data = verify_response.json()
+
     return {"Authorization": f"Bearer {token_data['access_token']}"}
 
 
@@ -224,4 +237,18 @@ async def super_admin_auth_headers(client, test_super_admin):
     )
     assert response.status_code == 200
     token_data = response.json()
+
+    # Check if 2FA is required
+    if token_data.get("require_2fa"):
+        # Complete 2FA flow with a test code
+        verify_response = await client.post(
+            "/api/auth/2fa/verify",
+            json={
+                "user_id": test_super_admin.id,
+                "code": "123456"  # Mock 2FA code for tests
+            }
+        )
+        assert verify_response.status_code == 200
+        token_data = verify_response.json()
+
     return {"Authorization": f"Bearer {token_data['access_token']}"}
