@@ -60,8 +60,7 @@ async def get_users(
     if is_company_admin(current_user) and not is_super_admin(current_user):
         company_id = current_user.company_id
 
-    # Temporary simplified implementation for debugging
-    users, total = await user_crud.get_users_paginated(
+    users, total = await user_crud.user.get_users_paginated(
         db=db,
         page=page,
         size=size,
@@ -76,52 +75,33 @@ async def get_users(
         current_user_id=current_user.id,
     )
 
-    # Simplified response to avoid relationship loading issues
+    # Format response
     user_list = []
     for user in users:
-        try:
-            # Safely get roles
-            user_roles = []
-            if hasattr(user, 'user_roles') and user.user_roles:
-                try:
-                    user_roles = [role.role.name for role in user.user_roles]
-                except Exception:
-                    user_roles = []
-
-            # Safely get company name
-            company_name = None
-            if hasattr(user, 'company') and user.company:
-                try:
-                    company_name = user.company.name
-                except Exception:
-                    company_name = None
-
-            user_info = UserInfo(
-                id=user.id,
-                email=user.email,
-                first_name=user.first_name,
-                last_name=user.last_name,
-                full_name=user.full_name,
-                phone=user.phone,
-                is_active=user.is_active,
-                is_admin=user.is_admin,
-                require_2fa=user.require_2fa,
-                last_login=user.last_login,
-                created_at=user.created_at,
-                updated_at=user.updated_at,
-                company_id=user.company_id,
-                company_name=company_name,
-                roles=user_roles,
-                is_deleted=getattr(user, 'is_deleted', False),
-                deleted_at=getattr(user, 'deleted_at', None),
-                is_suspended=getattr(user, 'is_suspended', False),
-                suspended_at=getattr(user, 'suspended_at', None),
-                suspended_by=getattr(user, 'suspended_by', None),
-            )
-            user_list.append(user_info)
-        except Exception as e:
-            print(f"Error processing user {user.id}: {e}")
-            continue
+        user_roles = [role.role.name for role in user.user_roles]
+        user_info = UserInfo(
+            id=user.id,
+            email=user.email,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            full_name=user.full_name,
+            phone=user.phone,
+            is_active=user.is_active,
+            is_admin=user.is_admin,
+            require_2fa=user.require_2fa,
+            last_login=user.last_login,
+            created_at=user.created_at,
+            updated_at=user.updated_at,
+            company_id=user.company_id,
+            company_name=user.company.name if user.company else None,
+            roles=user_roles,
+            is_deleted=getattr(user, 'is_deleted', False),
+            deleted_at=getattr(user, 'deleted_at', None),
+            is_suspended=getattr(user, 'is_suspended', False),
+            suspended_at=getattr(user, 'suspended_at', None),
+            suspended_by=getattr(user, 'suspended_by', None),
+        )
+        user_list.append(user_info)
 
     pages = (total + size - 1) // size
     return UserListResponse(
@@ -129,7 +109,7 @@ async def get_users(
         total=total,
         pages=pages,
         page=page,
-        size=size,
+        per_page=size,
     )
 
 

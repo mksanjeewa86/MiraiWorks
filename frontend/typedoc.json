@@ -1,0 +1,15 @@
+{
+  "entryPoints": ["src"],
+  "out": "docs/frontend",
+  "exclude": ["**/*.test.ts", "**/*.spec.ts"],
+  "theme": "default",
+  "name": "MiraiWorks Frontend",
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeExternals": true,
+  "hideGenerator": true,
+  "categorizeByGroup": true,
+  "categoryOrder": ["Components", "Hooks", "Utils", "Types", "*"],
+  "searchInComments": true,
+  "readme": "none"
+}

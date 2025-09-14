@@ -19,57 +19,71 @@ class TestUsersManagement:
     @pytest.mark.asyncio
     async def test_get_users_success(self, client: AsyncClient, db_session: AsyncSession, test_roles: dict):
         """Test successful retrieval of user list."""
-        # Create super admin user directly in test
+        # Create super admin user directly without complex fixtures
         from app.models import User, UserRole
         from app.services.auth_service import auth_service
         from app.utils.constants import UserRole as UserRoleEnum
 
-        user = User(
-            email='testadmin@example.com',
-            first_name='Test',
+        super_admin = User(
+            email='super@test.com',
+            first_name='Super',
             last_name='Admin',
             company_id=None,
             hashed_password=auth_service.get_password_hash('testpass123'),
             is_active=True,
             is_admin=True,
         )
-        db_session.add(user)
+        db_session.add(super_admin)
         await db_session.commit()
-        await db_session.refresh(user)
+        await db_session.refresh(super_admin)
 
         # Assign super admin role
-        user_role = UserRole(user_id=user.id, role_id=test_roles[UserRoleEnum.SUPER_ADMIN.value].id)
+        user_role = UserRole(user_id=super_admin.id, role_id=test_roles[UserRoleEnum.SUPER_ADMIN.value].id)
         db_session.add(user_role)
         await db_session.commit()
 
-        # Login and get auth headers
-        response = await client.post(
-            "/api/auth/login",
-            json={"email": user.email, "password": "testpass123"},
-        )
-        assert response.status_code == 200
-        token_data = response.json()
+        # Bypass 2FA by setting require_2fa=False explicitly
+        super_admin.require_2fa = False
+        await db_session.commit()
 
-        # Handle 2FA if required
+        # Login to get token
+        login_response = await client.post(
+            "/api/auth/login",
+            json={"email": "super@test.com", "password": "testpass123"},
+        )
+
+        print(f"Login response: {login_response.status_code} - {login_response.text}")
+        assert login_response.status_code == 200
+        token_data = login_response.json()
+
+        # If 2FA is required despite our setting, handle it
         if token_data.get("require_2fa"):
+            print("2FA required, completing 2FA flow...")
             verify_response = await client.post(
                 "/api/auth/2fa/verify",
-                json={"user_id": user.id, "code": "123456"}
+                json={"user_id": super_admin.id, "code": "123456"}
             )
+            print(f"2FA response: {verify_response.status_code} - {verify_response.text}")
             assert verify_response.status_code == 200
             token_data = verify_response.json()
 
-        headers = {"Authorization": f"Bearer {token_data['access_token']}"}
+        print(f"Token data: {token_data}")
 
-        # Now test the actual endpoint
+        # Create headers
+        print(f"Access token: {token_data['access_token'][:50]}...")
+        headers = {"Authorization": f"Bearer {token_data['access_token']}"}
+        print(f"Headers: {headers}")
+
+        # Test the actual endpoint
         response = await client.get("/api/admin/users", headers=headers)
 
+        print(f"Users endpoint response: {response.status_code} - {response.text[:200]}")
         assert response.status_code == 200
         data = response.json()
         assert "users" in data
         assert "total" in data
         assert "page" in data
-        assert "size" in data
+        assert "per_page" in data
         assert isinstance(data["users"], list)
 
     @pytest.mark.asyncio

@@ -113,17 +113,27 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
     """Middleware to add user context to logs when available."""
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
-        # Try to extract user info from JWT token if available
-        auth_header = request.headers.get("authorization")
-        if auth_header and auth_header.startswith("Bearer "):
-            try:
-                # This would require importing and using your JWT decode function
-                # For now, just bind that we have an authenticated request
-                bind_request_context(authenticated=True)
-            except Exception:
-                # Invalid token, ignore
+        try:
+            # Try to extract user info from JWT token if available
+            auth_header = request.headers.get("authorization")
+            if auth_header and auth_header.startswith("Bearer "):
+                try:
+                    # This would require importing and using your JWT decode function
+                    # For now, just bind that we have an authenticated request
+                    bind_request_context(authenticated=True)
+                except Exception:
+                    # Invalid token, ignore
+                    bind_request_context(authenticated=False)
+            else:
                 bind_request_context(authenticated=False)
-        else:
-            bind_request_context(authenticated=False)
 
-        return await call_next(request)
+            return await call_next(request)
+        except Exception as e:
+            # Log error and re-raise
+            logger.error(
+                "Request context middleware error",
+                error_type=type(e).__name__,
+                error_message=str(e),
+                component="middleware_error",
+            )
+            raise
