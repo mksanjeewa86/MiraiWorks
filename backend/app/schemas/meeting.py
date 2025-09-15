@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class MeetingType(str, Enum):
@@ -60,6 +60,8 @@ class MeetingParticipantUpdate(BaseModel):
 
 
 class MeetingParticipantResponse(MeetingParticipantBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     meeting_id: int
     status: ParticipantStatus
@@ -70,9 +72,6 @@ class MeetingParticipantResponse(MeetingParticipantBase):
 
     # User details (populated from relationship)
     user: Optional[dict] = None  # Will be populated with user data
-
-    class Config:
-        from_attributes = True
 
 
 # Base meeting schemas
@@ -88,13 +87,15 @@ class MeetingBase(BaseModel):
     auto_summary: bool = False
     access_code: Optional[str] = Field(None, min_length=4, max_length=50)
 
-    @validator("scheduled_end")
-    def end_after_start(cls, v, values):
-        if "scheduled_start" in values and v <= values["scheduled_start"]:
+    @field_validator("scheduled_end")
+    @classmethod
+    def end_after_start(cls, v, info):
+        if info.data.get("scheduled_start") and v <= info.data.get("scheduled_start"):
             raise ValueError("scheduled_end must be after scheduled_start")
         return v
 
-    @validator("scheduled_start")
+    @field_validator("scheduled_start")
+    @classmethod
     def not_in_past(cls, v):
         if v <= datetime.utcnow():
             raise ValueError("scheduled_start must be in the future")
@@ -103,14 +104,15 @@ class MeetingBase(BaseModel):
 
 class MeetingCreate(MeetingBase):
     interview_id: Optional[int] = None
-    participants: list[MeetingParticipantCreate] = Field(..., min_items=1)
+    participants: list[MeetingParticipantCreate] = Field(..., min_length=1)
 
-    @validator("participants")
-    def validate_participants_by_type(cls, v, values):
-        if "meeting_type" not in values:
+    @field_validator("participants")
+    @classmethod
+    def validate_participants_by_type(cls, v, info):
+        meeting_type = info.data.get("meeting_type")
+        if not meeting_type:
             return v
 
-        meeting_type = values["meeting_type"]
         roles = [p.role for p in v]
 
         # Must have at least one host
@@ -144,19 +146,18 @@ class MeetingUpdate(BaseModel):
     auto_summary: Optional[bool] = None
     access_code: Optional[str] = Field(None, min_length=4, max_length=50)
 
-    @validator("scheduled_end")
-    def end_after_start(cls, v, values):
-        if (
-            "scheduled_start" in values
-            and v
-            and values["scheduled_start"]
-            and v <= values["scheduled_start"]
-        ):
+    @field_validator("scheduled_end")
+    @classmethod
+    def end_after_start(cls, v, info):
+        scheduled_start = info.data.get("scheduled_start")
+        if scheduled_start and v and v <= scheduled_start:
             raise ValueError("scheduled_end must be after scheduled_start")
         return v
 
 
 class MeetingResponse(MeetingBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     interview_id: Optional[int] = None
     status: MeetingStatus
@@ -179,9 +180,6 @@ class MeetingResponse(MeetingBase):
     recordings: list["MeetingRecordingResponse"] = []
     transcripts: list["MeetingTranscriptResponse"] = []
     summaries: list["MeetingSummaryResponse"] = []
-
-    class Config:
-        from_attributes = True
 
 
 # Recording schemas
@@ -208,6 +206,8 @@ class MeetingRecordingUpdate(BaseModel):
 
 
 class MeetingRecordingResponse(MeetingRecordingBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     meeting_id: int
     storage_path: str
@@ -221,9 +221,6 @@ class MeetingRecordingResponse(MeetingRecordingBase):
 
     # Access URL (generated dynamically)
     download_url: Optional[str] = None
-
-    class Config:
-        from_attributes = True
 
 
 # Transcript schemas
@@ -256,6 +253,8 @@ class MeetingTranscriptUpdate(BaseModel):
 
 
 class MeetingTranscriptResponse(MeetingTranscriptBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     meeting_id: int
     recording_id: Optional[int] = None
@@ -263,9 +262,6 @@ class MeetingTranscriptResponse(MeetingTranscriptBase):
     processing_error: Optional[str] = None
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 # Summary schemas
@@ -301,6 +297,8 @@ class MeetingSummaryUpdate(BaseModel):
 
 
 class MeetingSummaryResponse(MeetingSummaryBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     meeting_id: int
     transcript_id: Optional[int] = None
@@ -310,9 +308,6 @@ class MeetingSummaryResponse(MeetingSummaryBase):
     reviewed_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 # WebRTC signaling schemas

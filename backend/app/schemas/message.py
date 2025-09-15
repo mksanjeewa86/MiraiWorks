@@ -1,23 +1,24 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, ConfigDict, field_validator
 
 from app.utils.constants import MessageType
 
 
 class ConversationParticipant(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     email: str
     full_name: str
     company_name: Optional[str]
     is_online: bool = False
 
-    class Config:
-        from_attributes = True
-
 
 class AttachmentInfo(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     original_filename: str
     mime_type: str
@@ -30,11 +31,10 @@ class AttachmentInfo(BaseModel):
     download_url: Optional[str] = None  # Presigned URL for download
     created_at: datetime
 
-    class Config:
-        from_attributes = True
-
 
 class MessageInfo(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     type: str
     content: Optional[str]
@@ -50,11 +50,10 @@ class MessageInfo(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
-
 
 class ConversationInfo(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     title: Optional[str]
     type: str
@@ -65,15 +64,13 @@ class ConversationInfo(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
-
 
 class ConversationCreate(BaseModel):
     participant_ids: list[int]
     title: Optional[str] = None
 
-    @validator("participant_ids")
+    @field_validator("participant_ids")
+    @classmethod
     def validate_participants(cls, v):
         if not v:
             raise ValueError("At least one participant is required")
@@ -87,7 +84,8 @@ class MessageCreate(BaseModel):
     type: MessageType = MessageType.TEXT
     reply_to_id: Optional[int] = None
 
-    @validator("content")
+    @field_validator("content")
+    @classmethod
     def validate_content(cls, v):
         if not v or not v.strip():
             raise ValueError("Message content cannot be empty")
@@ -99,7 +97,8 @@ class MessageCreate(BaseModel):
 class MessageUpdate(BaseModel):
     content: str
 
-    @validator("content")
+    @field_validator("content")
+    @classmethod
     def validate_content(cls, v):
         if not v or not v.strip():
             raise ValueError("Message content cannot be empty")
@@ -113,7 +112,8 @@ class FileUploadRequest(BaseModel):
     mime_type: str
     file_size: int
 
-    @validator("filename")
+    @field_validator("filename")
+    @classmethod
     def validate_filename(cls, v):
         if not v or not v.strip():
             raise ValueError("Filename is required")
@@ -125,7 +125,8 @@ class FileUploadRequest(BaseModel):
             raise ValueError("Filename contains invalid characters")
         return v.strip()
 
-    @validator("file_size")
+    @field_validator("file_size")
+    @classmethod
     def validate_file_size(cls, v):
         max_size = 100 * 1024 * 1024  # 100MB
         if v > max_size:
@@ -147,7 +148,8 @@ class ConversationListRequest(BaseModel):
     limit: int = 20
     offset: int = 0
 
-    @validator("limit")
+    @field_validator("limit")
+    @classmethod
     def validate_limit(cls, v):
         if v > 100:
             raise ValueError("Limit cannot exceed 100")
@@ -158,7 +160,8 @@ class MessageListRequest(BaseModel):
     limit: int = 50
     before_id: Optional[int] = None
 
-    @validator("limit")
+    @field_validator("limit")
+    @classmethod
     def validate_limit(cls, v):
         if v > 100:
             raise ValueError("Limit cannot exceed 100")

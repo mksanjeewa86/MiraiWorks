@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 # Enums
@@ -92,9 +92,10 @@ class JobSalaryInfo(BaseModel):
     salary_currency: str = Field("USD", max_length=3)
     show_salary: bool = False
 
-    @validator('salary_max')
-    def salary_max_greater_than_min(cls, v, values):
-        if 'salary_min' in values and values['salary_min'] and v and v <= values['salary_min']:
+    @field_validator('salary_max')
+    @classmethod
+    def salary_max_greater_than_min(cls, v, info):
+        if info.data.get('salary_min') and v and v <= info.data['salary_min']:
             raise ValueError('salary_max must be greater than salary_min')
         return v
 
@@ -158,8 +159,7 @@ class JobInfo(JobBase, JobSalaryInfo):
     company_name: Optional[str] = None
     company_logo_url: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Job Application Schemas
@@ -204,8 +204,7 @@ class JobApplicationInfo(JobApplicationBase):
     candidate_name: Optional[str] = None
     candidate_email: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Company Profile Schemas
@@ -258,8 +257,7 @@ class CompanyProfileInfo(CompanyProfileBase):
     # Company info
     company_name: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # List and Filter Schemas

@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class JobStatus(str, Enum):
@@ -120,6 +120,8 @@ class CompanyProfileUpdate(BaseModel):
 
 
 class CompanyProfileResponse(CompanyProfileBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     company_id: int
     is_public: bool
@@ -128,21 +130,17 @@ class CompanyProfileResponse(CompanyProfileBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
-
 
 # Public Company Schema
 class PublicCompany(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     name: str
     domain: Optional[str] = None
     website: Optional[str] = None
     description: Optional[str] = None
     profile: Optional[CompanyProfileResponse] = None
-
-    class Config:
-        from_attributes = True
 
 
 # Job Schemas
@@ -171,18 +169,17 @@ class JobBase(BaseModel):
     external_apply_url: Optional[str] = None
     application_questions: Optional[list[dict[str, Any]]] = None
 
-    @validator("salary_max")
-    def salary_max_greater_than_min(cls, v, values):
-        if (
-            v is not None
-            and "salary_min" in values
-            and values["salary_min"] is not None
-        ):
-            if v <= values["salary_min"]:
+    @field_validator("salary_max")
+    @classmethod
+    def salary_max_greater_than_min(cls, v, info):
+        salary_min = info.data.get("salary_min")
+        if v is not None and salary_min is not None:
+            if v <= salary_min:
                 raise ValueError("salary_max must be greater than salary_min")
         return v
 
-    @validator("application_deadline")
+    @field_validator("application_deadline")
+    @classmethod
     def deadline_in_future(cls, v):
         if v is not None and v <= datetime.utcnow():
             raise ValueError("application_deadline must be in the future")
@@ -223,6 +220,8 @@ class JobUpdate(BaseModel):
 
 
 class JobResponse(JobBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     slug: str
     company_id: int
@@ -245,12 +244,10 @@ class JobResponse(JobBase):
     # Company information (populated from relationship)
     company: Optional[PublicCompany] = None
 
-    class Config:
-        from_attributes = True
-
 
 class JobSummary(BaseModel):
     """Lightweight job summary for listings"""
+    model_config = ConfigDict(from_attributes=True)
 
     id: int
     title: str
@@ -268,9 +265,6 @@ class JobSummary(BaseModel):
     is_urgent: bool
     published_at: Optional[datetime] = None
     days_since_published: Optional[int] = None
-
-    class Config:
-        from_attributes = True
 
 
 # Job Application Schemas
@@ -292,6 +286,8 @@ class JobApplicationUpdate(BaseModel):
 
 
 class JobApplicationResponse(JobApplicationBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     job_id: int
     candidate_id: int
@@ -308,9 +304,6 @@ class JobApplicationResponse(JobApplicationBase):
     # Related data (populated when needed)
     job: Optional[JobResponse] = None
     candidate: Optional[dict[str, Any]] = None  # Limited candidate info
-
-    class Config:
-        from_attributes = True
 
 
 # Search and filtering schemas

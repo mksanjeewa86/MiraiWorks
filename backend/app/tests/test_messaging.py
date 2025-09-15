@@ -19,6 +19,7 @@ async def recruiter_company(db_session: AsyncSession) -> Company:
         name="Test Recruiter Inc",
         type=CompanyType.RECRUITER,
         email="contact@recruiter.com",
+        phone="+1-555-0123",
         is_active="1",
     )
     db_session.add(company)
@@ -34,6 +35,7 @@ async def employer_company(db_session: AsyncSession) -> Company:
         name="Test Employer Corp",
         type=CompanyType.EMPLOYER,
         email="contact@employer.com",
+        phone="+1-555-0456",
         is_active="1",
     )
     db_session.add(company)

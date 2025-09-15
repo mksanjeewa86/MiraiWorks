@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr, validator
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 
 
 class LoginRequest(BaseModel):
@@ -49,7 +49,8 @@ class PasswordResetApproveRequest(BaseModel):
     request_id: int
     new_password: str
 
-    @validator("new_password")
+    @field_validator("new_password")
+    @classmethod
     def validate_password(cls, v):
         if len(v) < 8:
             raise ValueError("Password must be at least 8 characters long")
@@ -60,7 +61,8 @@ class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str
 
-    @validator("new_password")
+    @field_validator("new_password")
+    @classmethod
     def validate_password(cls, v):
         if len(v) < 8:
             raise ValueError("Password must be at least 8 characters long")
@@ -73,7 +75,8 @@ class ActivateAccountRequest(BaseModel):
     temporaryPassword: str
     newPassword: str
 
-    @validator("newPassword")
+    @field_validator("newPassword")
+    @classmethod
     def validate_password(cls, v):
         if len(v) < 8:
             raise ValueError("Password must be at least 8 characters long")
@@ -91,26 +94,26 @@ class ActivateAccountResponse(BaseModel):
 
 
 class RoleInfo(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     name: str
     description: Optional[str] = None
 
-    class Config:
-        from_attributes = True
-
 
 class UserRoleInfo(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     user_id: int
     role_id: int
     created_at: datetime
     role: RoleInfo
 
-    class Config:
-        from_attributes = True
-
 
 class UserInfo(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     email: str
     first_name: str
@@ -121,11 +124,10 @@ class UserInfo(BaseModel):
     is_active: bool
     last_login: Optional[datetime]
 
-    class Config:
-        from_attributes = True
-
 
 class PasswordResetRequestInfo(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     user_id: int
     user_email: str
@@ -134,9 +136,6 @@ class PasswordResetRequestInfo(BaseModel):
     approved_by: Optional[int]
     approved_at: Optional[datetime]
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 # Update forward references

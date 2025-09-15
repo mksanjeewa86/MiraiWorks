@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.utils.constants import ResumeStatus, ResumeVisibility, SectionType
 
@@ -30,13 +30,15 @@ class ResumeBase(BaseModel):
     font_family: Optional[str] = Field("Inter", max_length=50)
     custom_css: Optional[str] = None
 
-    @validator("email")
+    @field_validator("email")
+    @classmethod
     def validate_email(cls, v):
         if v and "@" not in v:
             raise ValueError("Invalid email format")
         return v
 
-    @validator("website", "linkedin_url", "github_url")
+    @field_validator("website", "linkedin_url", "github_url")
+    @classmethod
     def validate_urls(cls, v):
         if v and not (v.startswith("http://") or v.startswith("https://")):
             return f"https://{v}"
@@ -82,15 +84,18 @@ class WorkExperienceBase(BaseModel):
     technologies: Optional[list[str]] = []
     display_order: Optional[int] = 0
 
-    @validator("end_date")
-    def validate_end_date(cls, v, values):
-        if v and "start_date" in values and v <= values["start_date"]:
+    @field_validator("end_date")
+    @classmethod
+    def validate_end_date(cls, v, info):
+        start_date = info.data.get("start_date")
+        if v and start_date and v <= start_date:
             raise ValueError("End date must be after start date")
         return v
 
-    @validator("is_current")
-    def validate_current_job(cls, v, values):
-        if v and values.get("end_date"):
+    @field_validator("is_current")
+    @classmethod
+    def validate_current_job(cls, v, info):
+        if v and info.data.get("end_date"):
             raise ValueError("Current job cannot have end date")
         return v
 
@@ -115,14 +120,13 @@ class WorkExperienceUpdate(BaseModel):
 
 
 class WorkExperienceInfo(WorkExperienceBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     resume_id: int
     is_visible: bool
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 # Education schemas
@@ -140,9 +144,11 @@ class EducationBase(BaseModel):
     courses: Optional[list[str]] = []
     display_order: Optional[int] = 0
 
-    @validator("end_date")
-    def validate_end_date(cls, v, values):
-        if v and "start_date" in values and v <= values["start_date"]:
+    @field_validator("end_date")
+    @classmethod
+    def validate_end_date(cls, v, info):
+        start_date = info.data.get("start_date")
+        if v and start_date and v <= start_date:
             raise ValueError("End date must be after start date")
         return v
 
@@ -168,14 +174,13 @@ class EducationUpdate(BaseModel):
 
 
 class EducationInfo(EducationBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     resume_id: int
     is_visible: bool
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 # Skill schemas
@@ -201,13 +206,12 @@ class SkillUpdate(BaseModel):
 
 
 class SkillInfo(SkillBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     resume_id: int
     is_visible: bool
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 # Project schemas
@@ -224,14 +228,11 @@ class ProjectBase(BaseModel):
     role: Optional[str] = Field(None, max_length=100)
     display_order: Optional[int] = 0
 
-    @validator("end_date")
-    def validate_end_date(cls, v, values):
-        if (
-            v
-            and "start_date" in values
-            and values["start_date"]
-            and v <= values["start_date"]
-        ):
+    @field_validator("end_date")
+    @classmethod
+    def validate_end_date(cls, v, info):
+        start_date = info.data.get("start_date")
+        if v and start_date and v <= start_date:
             raise ValueError("End date must be after start date")
         return v
 
@@ -256,14 +257,13 @@ class ProjectUpdate(BaseModel):
 
 
 class ProjectInfo(ProjectBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     resume_id: int
     is_visible: bool
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 # Certification schemas
@@ -278,9 +278,11 @@ class CertificationBase(BaseModel):
     description: Optional[str] = None
     display_order: Optional[int] = 0
 
-    @validator("expiration_date")
-    def validate_expiration_date(cls, v, values):
-        if v and "issue_date" in values and v <= values["issue_date"]:
+    @field_validator("expiration_date")
+    @classmethod
+    def validate_expiration_date(cls, v, info):
+        issue_date = info.data.get("issue_date")
+        if v and issue_date and v <= issue_date:
             raise ValueError("Expiration date must be after issue date")
         return v
 
@@ -303,13 +305,12 @@ class CertificationUpdate(BaseModel):
 
 
 class CertificationInfo(CertificationBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     resume_id: int
     is_visible: bool
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 # Language schemas
@@ -331,13 +332,12 @@ class LanguageUpdate(BaseModel):
 
 
 class LanguageInfo(LanguageBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     resume_id: int
     is_visible: bool
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 # Reference schemas
@@ -350,7 +350,8 @@ class ReferenceBase(BaseModel):
     relationship: Optional[str] = Field(None, max_length=100)
     display_order: Optional[int] = 0
 
-    @validator("email")
+    @field_validator("email")
+    @classmethod
     def validate_email(cls, v):
         if v and "@" not in v:
             raise ValueError("Invalid email format")
@@ -373,14 +374,13 @@ class ReferenceUpdate(BaseModel):
 
 
 class ReferenceInfo(ReferenceBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     resume_id: int
     is_visible: bool
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 # Section schemas
@@ -406,17 +406,18 @@ class SectionUpdate(BaseModel):
 
 
 class SectionInfo(SectionBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     resume_id: int
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
-
 
 # Main resume response schema
 class ResumeInfo(ResumeBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     user_id: int
     status: ResumeStatus
@@ -440,9 +441,6 @@ class ResumeInfo(ResumeBase):
     languages: list[LanguageInfo] = []
     references: list[ReferenceInfo] = []
 
-    class Config:
-        from_attributes = True
-
 
 # List response schemas
 class ResumeListRequest(BaseModel):
@@ -459,6 +457,8 @@ class ResumeListResponse(BaseModel):
 
 # Template schemas
 class ResumeTemplateInfo(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     name: str
     display_name: str
@@ -469,9 +469,6 @@ class ResumeTemplateInfo(BaseModel):
     is_premium: bool
     usage_count: int
     preview_image_url: Optional[str]
-
-    class Config:
-        from_attributes = True
 
 
 # Share schemas
@@ -513,7 +510,7 @@ class BulkResumeAction(BaseModel):
     action: str = Field(
         ..., pattern="^(delete|archive|publish|make_private|make_public)$"
     )
-    resume_ids: list[int] = Field(..., min_items=1)
+    resume_ids: list[int] = Field(..., min_length=1)
 
 
 class BulkActionResult(BaseModel):

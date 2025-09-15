@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any, Optional
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, ConfigDict, field_validator
 
 from app.utils.constants import InterviewStatus
 
@@ -15,13 +15,15 @@ class InterviewCreate(BaseModel):
     position_title: Optional[str] = None
     interview_type: str = "video"  # video, phone, in_person
 
-    @validator("title")
+    @field_validator("title")
+    @classmethod
     def validate_title(cls, v):
         if not v or not v.strip():
             raise ValueError("Title is required")
         return v.strip()
 
-    @validator("interview_type")
+    @field_validator("interview_type")
+    @classmethod
     def validate_interview_type(cls, v):
         allowed_types = ["video", "phone", "in_person"]
         if v not in allowed_types:
@@ -40,7 +42,8 @@ class InterviewUpdate(BaseModel):
     meeting_url: Optional[str] = None
     notes: Optional[str] = None
 
-    @validator("title")
+    @field_validator("title")
+    @classmethod
     def validate_title(cls, v):
         if v is not None and (not v or not v.strip()):
             raise ValueError("Title cannot be empty")
@@ -54,13 +57,15 @@ class ProposalCreate(BaseModel):
     location: Optional[str] = None
     notes: Optional[str] = None
 
-    @validator("end_datetime")
-    def validate_end_after_start(cls, v, values):
-        if "start_datetime" in values and v <= values["start_datetime"]:
+    @field_validator("end_datetime")
+    @classmethod
+    def validate_end_after_start(cls, v, info):
+        if info.data.get("start_datetime") and v <= info.data.get("start_datetime"):
             raise ValueError("End datetime must be after start datetime")
         return v
 
-    @validator("timezone")
+    @field_validator("timezone")
+    @classmethod
     def validate_timezone(cls, v):
         # Basic timezone validation - could be enhanced with pytz
         if not v:
@@ -72,7 +77,8 @@ class ProposalResponse(BaseModel):
     response: str  # "accepted" or "declined"
     notes: Optional[str] = None
 
-    @validator("response")
+    @field_validator("response")
+    @classmethod
     def validate_response(cls, v):
         if v not in ["accepted", "declined"]:
             raise ValueError('Response must be "accepted" or "declined"')
@@ -80,6 +86,8 @@ class ProposalResponse(BaseModel):
 
 
 class ProposalInfo(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     interview_id: int
     proposed_by: int
@@ -98,9 +106,6 @@ class ProposalInfo(BaseModel):
     expires_at: Optional[datetime]
     created_at: datetime
 
-    class Config:
-        from_attributes = True
-
 
 class ParticipantInfo(BaseModel):
     id: int
@@ -111,6 +116,8 @@ class ParticipantInfo(BaseModel):
 
 
 class InterviewInfo(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     title: str
     description: Optional[str]
@@ -148,14 +155,12 @@ class InterviewInfo(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
-
 
 class InterviewCancel(BaseModel):
     reason: Optional[str] = None
 
-    @validator("reason")
+    @field_validator("reason")
+    @classmethod
     def validate_reason(cls, v):
         if v and len(v) > 1000:
             raise ValueError("Cancellation reason cannot exceed 1000 characters")
@@ -167,9 +172,10 @@ class InterviewReschedule(BaseModel):
     new_end: datetime
     reason: Optional[str] = None
 
-    @validator("new_end")
-    def validate_end_after_start(cls, v, values):
-        if "new_start" in values and v <= values["new_start"]:
+    @field_validator("new_end")
+    @classmethod
+    def validate_end_after_start(cls, v, info):
+        if info.data.get("new_start") and v <= info.data.get("new_start"):
             raise ValueError("End datetime must be after start datetime")
         return v
 
@@ -184,7 +190,8 @@ class InterviewsListRequest(BaseModel):
     limit: int = 50
     offset: int = 0
 
-    @validator("status")
+    @field_validator("status")
+    @classmethod
     def validate_status(cls, v):
         if v and v not in [status.value for status in InterviewStatus]:
             raise ValueError(
@@ -192,7 +199,8 @@ class InterviewsListRequest(BaseModel):
             )
         return v
 
-    @validator("limit")
+    @field_validator("limit")
+    @classmethod
     def validate_limit(cls, v):
         if v > 100:
             raise ValueError("Limit cannot exceed 100")
@@ -215,6 +223,8 @@ class InterviewStats(BaseModel):
 
 
 class InterviewCalendarEvent(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     interview_id: int
     title: str
     start: datetime
@@ -223,9 +233,6 @@ class InterviewCalendarEvent(BaseModel):
     participants: list[str]  # Email addresses
     location: Optional[str]
     meeting_url: Optional[str]
-
-    class Config:
-        from_attributes = True
 
 
 class CalendarIntegrationStatus(BaseModel):
@@ -243,7 +250,8 @@ class InterviewAvailabilityRequest(BaseModel):
     preferred_times: list[dict[str, Any]] = []  # Flexible time preferences
     timezone: str = "UTC"
 
-    @validator("participant_emails")
+    @field_validator("participant_emails")
+    @classmethod
     def validate_emails(cls, v):
         if not v:
             raise ValueError("At least one participant email is required")

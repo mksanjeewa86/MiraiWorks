@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class DirectMessageBase(BaseModel):
@@ -31,8 +31,7 @@ class DirectMessageInfo(DirectMessageBase):
     created_at: datetime
     read_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ConversationSummary(BaseModel):
@@ -46,8 +45,7 @@ class ConversationSummary(BaseModel):
     unread_count: int
     last_activity: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class MessageSearchRequest(BaseModel):

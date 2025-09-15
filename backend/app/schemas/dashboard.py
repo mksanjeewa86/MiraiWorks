@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class DashboardStats(BaseModel):
@@ -21,5 +21,4 @@ class ActivityItem(BaseModel):
     user_id: Optional[int] = None
     metadata: Optional[dict[str, Any]] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

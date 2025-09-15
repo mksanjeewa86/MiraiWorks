@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, EmailStr, validator
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 
 from app.utils.constants import UserRole
 
@@ -29,6 +29,8 @@ class UserUpdate(BaseModel):
 
 
 class UserResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     email: str
     first_name: str
@@ -44,9 +46,6 @@ class UserResponse(BaseModel):
     last_login: Optional[datetime]
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 class UserListResponse(BaseModel):
@@ -83,6 +82,8 @@ class UserFilters(BaseModel):
 
 
 class UserInfo(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     email: str
     first_name: str
@@ -103,9 +104,6 @@ class UserInfo(BaseModel):
     is_suspended: bool = False
     suspended_at: Optional[datetime] = None
     suspended_by: Optional[int] = None
-
-    class Config:
-        from_attributes = True
 
 
 class PasswordResetRequest(BaseModel):
@@ -136,7 +134,8 @@ class UserSearchRequest(BaseModel):
     page: int = 1
     per_page: int = 20
 
-    @validator("per_page")
+    @field_validator("per_page")
+    @classmethod
     def validate_per_page(cls, v):
         if v > 100:
             raise ValueError("per_page cannot exceed 100")

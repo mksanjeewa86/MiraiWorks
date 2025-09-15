@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class UserSettingsResponse(BaseModel):
@@ -24,8 +24,7 @@ class UserSettingsResponse(BaseModel):
     # Security settings (from User model)
     require_2fa: bool = False
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserSettingsUpdate(BaseModel):
@@ -71,5 +70,4 @@ class UserProfileResponse(BaseModel):
     bio: Optional[str] = None
     avatar_url: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
