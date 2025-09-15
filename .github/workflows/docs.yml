@@ -27,6 +27,9 @@ jobs:
           pip install sphinx sphinx-rtd-theme mkdocs mkdocs-material
 
       - name: Install Node.js dependencies
+        env:
+          CI: true
+          HUSKY: 0
         run: |
           cd frontend
           npm install
