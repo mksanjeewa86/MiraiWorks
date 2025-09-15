@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 import pytest
+import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,7 +13,7 @@ from app.services.messaging_service import messaging_service
 from app.utils.constants import CompanyType, UserRole, VirusStatus
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def recruiter_company(db_session: AsyncSession) -> Company:
     """Create recruiter company."""
     company = Company(
@@ -28,7 +29,7 @@ async def recruiter_company(db_session: AsyncSession) -> Company:
     return company
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def employer_company(db_session: AsyncSession) -> Company:
     """Create employer company."""
     company = Company(
@@ -44,7 +45,7 @@ async def employer_company(db_session: AsyncSession) -> Company:
     return company
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def candidate_user(db_session: AsyncSession, test_roles: dict) -> User:
     """Create candidate user."""
     user = User(
@@ -68,7 +69,7 @@ async def candidate_user(db_session: AsyncSession, test_roles: dict) -> User:
     return user
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def recruiter_user(
     db_session: AsyncSession, recruiter_company: Company, test_roles: dict
 ) -> User:
@@ -95,7 +96,7 @@ async def recruiter_user(
     return user
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def employer_user(
     db_session: AsyncSession, employer_company: Company, test_roles: dict
 ) -> User:
