@@ -26,7 +26,8 @@
       "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_messaging.py::TestMessagingAPI::test_search_participants -v --asyncio-mode=auto --tb=short)",
       "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_messaging.py::TestMessagingAPI::test_search_participants -v --asyncio-mode=auto)",
       "Bash(git config:*)",
-      "Bash(npm run prepare:*)"
+      "Bash(npm run prepare:*)",
+      "Bash(gh run list:*)"
     ],
     "deny": [],
     "ask": []
