@@ -298,44 +298,31 @@ For private repositories, documentation is available as CI artifacts:
 2. Download the `documentation-site` artifact
 3. Extract and open `index.html` for offline viewing
 
-## 🤝 **Contributing**
+## 🔧 **Development Standards**
 
-We follow strict development standards to maintain code quality:
+This private repository follows strict development standards for code quality:
 
-### **Development Process**
-1. **Fork & Clone**: Fork the repository and clone locally
-2. **Branch**: Create a feature branch (`feature/amazing-feature`)
-3. **Follow Guidelines**: Adhere to patterns in [CLAUDE.md](CLAUDE.md)
-4. **Test First**: Write tests before implementation (TDD)
-5. **Quality Gates**: All checks must pass
-
-### **Required Before PR**
+### **Quality Assurance Checklist**
 ```bash
-# Backend quality checks
+# Before committing - Backend quality checks
 cd backend
 ruff check .                    # Linting must pass
 mypy app/ --ignore-missing-imports  # Type checking must pass
 PYTHONPATH=. python -m pytest app/tests/ --cov=app --cov-fail-under=55  # Tests must pass
 
-# Frontend quality checks
+# Before committing - Frontend quality checks
 cd frontend
 npm run typecheck               # TypeScript must compile
 npm run lint                    # ESLint must pass
 npm run build                   # Build must succeed
 ```
 
-### **Code Standards**
-- ✅ **100% test coverage** for new endpoints
-- ✅ **Follow architecture patterns** defined in CLAUDE.md
-- ✅ **Type safety**: Full TypeScript/Python type hints
-- ✅ **Documentation**: Update docs for new features
-- ✅ **Security**: Follow security best practices
-
-### **Review Process**
-1. All CI checks must pass (automated)
-2. Code review by maintainers
-3. Test coverage verification
-4. Architecture compliance check
+### **Development Standards**
+- ✅ **100% test coverage** for new endpoints (as per CLAUDE.md)
+- ✅ **Follow architecture patterns** defined in [CLAUDE.md](CLAUDE.md)
+- ✅ **Type safety**: Full TypeScript/Python type hints required
+- ✅ **Documentation**: Auto-generated from code comments
+- ✅ **Security**: JWT authentication, RBAC, data validation
 
 ## 🛡️ **Security & Production Readiness**
 
@@ -383,8 +370,6 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 ---
 
 ### **Quick Links**
-- 🐛 [Report Issues](../../issues)
 - 🚀 [View CI/CD Status](../../actions)
-- 📚 [Browse Documentation](../../releases)
-- 💬 [Discussions](../../discussions)
-- 🔄 [Pull Requests](../../pulls)
+- 📊 [Code Coverage Reports](../../actions/workflows/ci.yml)
+- 📚 [Download Documentation](../../actions/workflows/docs.yml)
