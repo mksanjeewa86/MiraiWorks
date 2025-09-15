@@ -99,11 +99,77 @@ jobs:
         run: |
           mkdocs build || echo "Project docs generation failed, continuing..."
 
+      - name: Create integrated documentation site
+        run: |
+          # Create integrated documentation structure
+          mkdir -p site/api site/frontend-docs site/backend-docs
+
+          # Copy API documentation
+          if [ -f backend/openapi.json ]; then
+            cp backend/openapi.json site/api/
+            echo "✅ OpenAPI spec copied to site/api/"
+          fi
+
+          # Copy frontend docs
+          if [ -d frontend/docs ]; then
+            cp -r frontend/docs/* site/frontend-docs/ 2>/dev/null || echo "No frontend docs to copy"
+          fi
+
+          # Copy backend docs
+          if [ -d backend/docs/build ]; then
+            cp -r backend/docs/build/* site/backend-docs/ 2>/dev/null || echo "No backend docs to copy"
+          fi
+
+          # Create navigation index
+          cat > site/documentation-index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <title>MiraiWorks Documentation</title>
+              <style>
+                  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; }
+                  .nav-card { border: 1px solid #e1e5e9; border-radius: 8px; padding: 20px; margin: 15px 0; }
+                  .nav-card h3 { margin-top: 0; color: #6C63FF; }
+                  a { color: #6C63FF; text-decoration: none; }
+                  a:hover { text-decoration: underline; }
+              </style>
+          </head>
+          <body>
+              <h1>🚀 MiraiWorks Documentation Hub</h1>
+              <div class="nav-card">
+                  <h3>📚 Project Documentation</h3>
+                  <p>Complete project guides, architecture, and development workflow</p>
+                  <a href="index.html">→ Browse Project Docs</a>
+              </div>
+              <div class="nav-card">
+                  <h3>🔌 API Documentation</h3>
+                  <p>Interactive API documentation and OpenAPI specification</p>
+                  <a href="api/openapi.json">→ OpenAPI Specification</a><br>
+                  <small>Import into Swagger Editor, Postman, or Insomnia</small>
+              </div>
+              <div class="nav-card">
+                  <h3>⚡ Frontend Documentation</h3>
+                  <p>Component documentation and TypeScript definitions</p>
+                  <a href="frontend-docs/index.html">→ Frontend Docs</a>
+              </div>
+              <div class="nav-card">
+                  <h3>🏗️ Backend Documentation</h3>
+                  <p>Code documentation and API implementation details</p>
+                  <a href="backend-docs/index.html">→ Backend Docs</a>
+              </div>
+              <hr>
+              <p><small>Generated automatically by CI/CD</small></p>
+          </body>
+          </html>
+          EOF
+
+          echo "✅ Integrated documentation site created"
+
       - name: Upload documentation artifact
         if: github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
-          name: documentation-site
+          name: complete-documentation-site
           path: ./site
           retention-days: 90
 
