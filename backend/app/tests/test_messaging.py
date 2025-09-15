@@ -125,6 +125,7 @@ async def employer_user(
 class TestMessagingRules:
     """Test messaging business rules enforcement."""
 
+    @pytest.mark.asyncio
     async def test_candidate_can_message_recruiter(
         self, db_session: AsyncSession, candidate_user: User, recruiter_user: User
     ):
@@ -135,6 +136,7 @@ class TestMessagingRules:
         assert can_comm is True
         assert "Allowed communication" in reason
 
+    @pytest.mark.asyncio
     async def test_recruiter_can_message_employer(
         self, db_session: AsyncSession, recruiter_user: User, employer_user: User
     ):
@@ -145,6 +147,7 @@ class TestMessagingRules:
         assert can_comm is True
         assert "Allowed communication" in reason
 
+    @pytest.mark.asyncio
     async def test_candidate_cannot_message_employer(
         self, db_session: AsyncSession, candidate_user: User, employer_user: User
     ):
@@ -156,6 +159,7 @@ class TestMessagingRules:
         assert "not allowed" in reason.lower()
         assert "recruiter" in reason.lower()
 
+    @pytest.mark.asyncio
     async def test_super_admin_can_message_anyone(
         self, db_session: AsyncSession, test_super_admin: User, candidate_user: User
     ):
@@ -170,6 +174,7 @@ class TestMessagingRules:
 class TestMessagingAPI:
     """Test messaging REST API endpoints."""
 
+    @pytest.mark.asyncio
     async def test_create_conversation_success(
         self, client: AsyncClient, candidate_user: User, recruiter_user: User
     ):
@@ -196,6 +201,7 @@ class TestMessagingAPI:
         assert len(data["participants"]) == 1
         assert data["participants"][0]["id"] == recruiter_user.id
 
+    @pytest.mark.asyncio
     async def test_create_conversation_forbidden(
         self, client: AsyncClient, candidate_user: User, employer_user: User
     ):
@@ -218,6 +224,7 @@ class TestMessagingAPI:
         assert response.status_code == 403
         assert "not allowed" in response.json()["detail"].lower()
 
+    @pytest.mark.asyncio
     async def test_send_message_success(
         self,
         client: AsyncClient,
@@ -251,6 +258,7 @@ class TestMessagingAPI:
         assert data["content"] == "Hello from candidate!"
         assert data["sender_id"] == candidate_user.id
 
+    @pytest.mark.asyncio
     async def test_get_conversations(
         self,
         client: AsyncClient,
@@ -289,6 +297,7 @@ class TestMessagingAPI:
         assert conv["title"] == "Test Chat"
         assert conv["last_message"]["content"] == "Test message"
 
+    @pytest.mark.asyncio
     async def test_get_conversation_messages(
         self,
         client: AsyncClient,
@@ -331,6 +340,7 @@ class TestMessagingAPI:
         assert messages[0]["content"] == "First message"
         assert messages[1]["content"] == "Second message"
 
+    @pytest.mark.asyncio
     async def test_file_upload_presign(
         self,
         client: AsyncClient,
@@ -378,6 +388,7 @@ class TestMessagingAPI:
         assert "attachment_id" in data
         assert data["s3_key"] == "test/key"
 
+    @pytest.mark.asyncio
     async def test_search_participants(
         self, client: AsyncClient, candidate_user: User, recruiter_user: User
     ):
@@ -403,6 +414,7 @@ class TestMessagingAPI:
         recruiter_found = any(p["id"] == recruiter_user.id for p in participants)
         assert recruiter_found
 
+    @pytest.mark.asyncio
     async def test_mark_messages_read(
         self,
         client: AsyncClient,
@@ -444,6 +456,7 @@ class TestMessagingAPI:
 class TestMessagingService:
     """Test messaging service business logic."""
 
+    @pytest.mark.asyncio
     async def test_create_conversation_service(
         self, db_session: AsyncSession, candidate_user: User, recruiter_user: User
     ):
@@ -457,6 +470,7 @@ class TestMessagingService:
         assert conversation.type == "direct"
         assert len(conversation.participants) == 2
 
+    @pytest.mark.asyncio
     async def test_send_message_service(
         self, db_session: AsyncSession, candidate_user: User, recruiter_user: User
     ):
@@ -474,6 +488,7 @@ class TestMessagingService:
         assert message.sender_id == candidate_user.id
         assert message.conversation_id == conversation.id
 
+    @pytest.mark.asyncio
     async def test_get_conversation_messages_service(
         self, db_session: AsyncSession, candidate_user: User, recruiter_user: User
     ):
@@ -499,6 +514,7 @@ class TestMessagingService:
         assert messages[0].content == "First"
         assert messages[1].content == "Second"
 
+    @pytest.mark.asyncio
     async def test_mark_messages_read_service(
         self, db_session: AsyncSession, candidate_user: User, recruiter_user: User
     ):
@@ -518,6 +534,7 @@ class TestMessagingService:
 
         assert read_count == 1
 
+    @pytest.mark.asyncio
     async def test_conversation_access_control(
         self,
         db_session: AsyncSession,
@@ -562,6 +579,7 @@ class TestMessagingService:
 class TestFileUploads:
     """Test file upload and virus scanning."""
 
+    @pytest.mark.asyncio
     @patch("app.services.antivirus_service.antivirus_service.scan_attachment")
     async def test_attachment_virus_scanning(self, mock_scan, db_session: AsyncSession):
         """Test attachment virus scanning."""
