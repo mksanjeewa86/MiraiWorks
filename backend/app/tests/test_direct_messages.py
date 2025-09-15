@@ -9,7 +9,7 @@ from app.models.direct_message import DirectMessage
 from app.models.role import Role, UserRole
 from app.models.user import User
 from app.services.auth_service import auth_service
-from app.utils.constants import MessageType
+from app.utils.constants import MessageType, UserRole as UserRoleEnum
 
 
 class TestDirectMessages:
@@ -78,7 +78,7 @@ class TestDirectMessages:
         return user
 
     @pytest_asyncio.fixture
-    async def other_user(self, db_session: AsyncSession, test_company: Company):
+    async def other_user(self, db_session: AsyncSession, test_company: Company, test_roles: dict):
         """Create another regular user for testing."""
         user = User(
             email="other@test.com",
@@ -91,6 +91,14 @@ class TestDirectMessages:
         db_session.add(user)
         await db_session.commit()
         await db_session.refresh(user)
+
+        # Assign recruiter role
+        user_role = UserRole(
+            user_id=user.id, role_id=test_roles[UserRoleEnum.RECRUITER.value].id
+        )
+        db_session.add(user_role)
+        await db_session.commit()
+
         return user
 
     @pytest.mark.asyncio

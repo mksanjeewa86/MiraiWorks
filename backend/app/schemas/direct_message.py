@@ -1,11 +1,11 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class DirectMessageBase(BaseModel):
-    content: str
+    content: str = Field(..., min_length=1, description="Message content cannot be empty")
     type: str = "text"
     file_url: Optional[str] = None
     file_name: Optional[str] = None

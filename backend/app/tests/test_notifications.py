@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.notification import Notification
 from app.models.user import User
+from app.models.company import Company
 from app.services.notification_service import notification_service
 
 

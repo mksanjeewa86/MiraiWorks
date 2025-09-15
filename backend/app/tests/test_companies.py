@@ -671,7 +671,7 @@ class TestCompanies:
             assert company["is_deleted"] is False
 
     @pytest.mark.asyncio
-    async def test_get_companies_include_deleted_true(self, client: AsyncClient, super_admin_auth_headers: dict, db_session: AsyncSession):
+    async def test_get_companies_include_deleted_true(self, client: AsyncClient, super_admin_auth_headers: dict, test_company: "Company", db_session: AsyncSession):
         """Test including deleted companies in results."""
         # Create and delete a company
         deleted_company = Company(
