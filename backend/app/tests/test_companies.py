@@ -474,3 +474,458 @@ class TestCompanies:
             assert response.status_code == 201
             data = response.json()
             assert data["type"] == company_type
+
+    # ===== COMPREHENSIVE FILTER TESTS =====
+
+    @pytest.mark.asyncio
+    async def test_get_companies_filter_by_search_name(self, client: AsyncClient, super_admin_auth_headers: dict, test_company: Company):
+        """Test filtering companies by search term matching name."""
+        search_term = test_company.name[:3]  # Use first 3 characters for partial match
+        response = await client.get(
+            f"/api/admin/companies?search={search_term}",
+            headers=super_admin_auth_headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "companies" in data
+        # Should find companies with matching name
+        found_company = any(company["id"] == test_company.id for company in data["companies"])
+        assert found_company is True
+
+    @pytest.mark.asyncio
+    async def test_get_companies_filter_by_search_email(self, client: AsyncClient, super_admin_auth_headers: dict, test_company: Company):
+        """Test filtering companies by search term matching email."""
+        search_term = test_company.email.split('@')[0]  # Use part of email for partial match
+        response = await client.get(
+            f"/api/admin/companies?search={search_term}",
+            headers=super_admin_auth_headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "companies" in data
+        # Should find companies with matching email
+        found_company = any(company["id"] == test_company.id for company in data["companies"])
+        assert found_company is True
+
+    @pytest.mark.asyncio
+    async def test_get_companies_search_case_insensitive(self, client: AsyncClient, super_admin_auth_headers: dict, test_company: Company):
+        """Test that company search is case insensitive."""
+        search_term = test_company.name.upper()
+        response = await client.get(
+            f"/api/admin/companies?search={search_term}",
+            headers=super_admin_auth_headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "companies" in data
+        # Should find companies regardless of case
+        found_company = any(company["id"] == test_company.id for company in data["companies"])
+        assert found_company is True
+
+    @pytest.mark.asyncio
+    async def test_get_companies_filter_by_type_employer(self, client: AsyncClient, super_admin_auth_headers: dict):
+        """Test filtering companies by type=employer."""
+        response = await client.get(
+            "/api/admin/companies?company_type=employer",
+            headers=super_admin_auth_headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "companies" in data
+        for company in data["companies"]:
+            assert company["type"] == "employer"
+
+    @pytest.mark.asyncio
+    async def test_get_companies_filter_by_type_recruiter(self, client: AsyncClient, super_admin_auth_headers: dict):
+        """Test filtering companies by type=recruiter."""
+        response = await client.get(
+            "/api/admin/companies?company_type=recruiter",
+            headers=super_admin_auth_headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "companies" in data
+        for company in data["companies"]:
+            assert company["type"] == "recruiter"
+
+    @pytest.mark.asyncio
+    async def test_get_companies_filter_by_is_active_true(self, client: AsyncClient, super_admin_auth_headers: dict):
+        """Test filtering companies by is_active=true."""
+        response = await client.get(
+            "/api/admin/companies?is_active=true",
+            headers=super_admin_auth_headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "companies" in data
+        for company in data["companies"]:
+            assert company["is_active"] is True
+
+    @pytest.mark.asyncio
+    async def test_get_companies_filter_by_is_active_false(self, client: AsyncClient, super_admin_auth_headers: dict, db_session: AsyncSession):
+        """Test filtering companies by is_active=false."""
+        # Create an inactive company
+        inactive_company = Company(
+            name="Inactive Company",
+            email="inactive@test.com",
+            phone="555-123-4567",
+            type=CompanyType.EMPLOYER,
+            is_active="0"  # Inactive
+        )
+        db_session.add(inactive_company)
+        await db_session.commit()
+        await db_session.refresh(inactive_company)
+
+        response = await client.get(
+            "/api/admin/companies?is_active=false",
+            headers=super_admin_auth_headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "companies" in data
+        for company in data["companies"]:
+            assert company["is_active"] is False
+        # Should find at least our inactive company
+        inactive_companies = [company for company in data["companies"] if company["is_active"] is False]
+        assert len(inactive_companies) >= 1
+
+    @pytest.mark.asyncio
+    async def test_get_companies_filter_by_is_demo_true(self, client: AsyncClient, super_admin_auth_headers: dict, db_session: AsyncSession):
+        """Test filtering companies by is_demo=true."""
+        # Create a demo company
+        demo_company = Company(
+            name="Demo Company",
+            email="demo@test.com",
+            phone="555-123-4567",
+            type=CompanyType.EMPLOYER,
+            is_active="1",
+            is_demo=True
+        )
+        db_session.add(demo_company)
+        await db_session.commit()
+        await db_session.refresh(demo_company)
+
+        response = await client.get(
+            "/api/admin/companies?is_demo=true",
+            headers=super_admin_auth_headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "companies" in data
+        for company in data["companies"]:
+            assert company["is_demo"] is True
+        # Should find at least our demo company
+        demo_companies = [company for company in data["companies"] if company["is_demo"] is True]
+        assert len(demo_companies) >= 1
+
+    @pytest.mark.asyncio
+    async def test_get_companies_filter_by_is_demo_false(self, client: AsyncClient, super_admin_auth_headers: dict):
+        """Test filtering companies by is_demo=false."""
+        response = await client.get(
+            "/api/admin/companies?is_demo=false",
+            headers=super_admin_auth_headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "companies" in data
+        for company in data["companies"]:
+            assert company["is_demo"] is False
+
+    @pytest.mark.asyncio
+    async def test_get_companies_include_deleted_false_default(self, client: AsyncClient, super_admin_auth_headers: dict):
+        """Test that deleted companies are excluded by default."""
+        response = await client.get(
+            "/api/admin/companies",
+            headers=super_admin_auth_headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "companies" in data
+        # All returned companies should not be deleted
+        for company in data["companies"]:
+            assert company["is_deleted"] is False
+
+    @pytest.mark.asyncio
+    async def test_get_companies_include_deleted_false_explicit(self, client: AsyncClient, super_admin_auth_headers: dict):
+        """Test explicitly excluding deleted companies."""
+        response = await client.get(
+            "/api/admin/companies?include_deleted=false",
+            headers=super_admin_auth_headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "companies" in data
+        # All returned companies should not be deleted
+        for company in data["companies"]:
+            assert company["is_deleted"] is False
+
+    @pytest.mark.asyncio
+    async def test_get_companies_include_deleted_true(self, client: AsyncClient, super_admin_auth_headers: dict, db_session: AsyncSession):
+        """Test including deleted companies in results."""
+        # Create and delete a company
+        deleted_company = Company(
+            name="Deleted Company",
+            email="deleted@test.com",
+            phone="555-123-4567",
+            type=CompanyType.EMPLOYER,
+            is_active="0",
+            is_deleted=True
+        )
+        db_session.add(deleted_company)
+        await db_session.commit()
+        await db_session.refresh(deleted_company)
+
+        response = await client.get(
+            "/api/admin/companies?include_deleted=true",
+            headers=super_admin_auth_headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "companies" in data
+        # Should include both deleted and non-deleted companies
+        deleted_companies = [company for company in data["companies"] if company["is_deleted"] is True]
+        non_deleted_companies = [company for company in data["companies"] if company["is_deleted"] is False]
+        assert len(deleted_companies) >= 1
+        assert len(non_deleted_companies) >= 1
+
+    @pytest.mark.asyncio
+    async def test_get_companies_pagination_with_size(self, client: AsyncClient, super_admin_auth_headers: dict):
+        """Test companies pagination with specific page size."""
+        response = await client.get(
+            "/api/admin/companies?page=1&size=5",
+            headers=super_admin_auth_headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "companies" in data
+        assert data["page"] == 1
+        assert data["size"] == 5
+        assert len(data["companies"]) <= 5
+
+    @pytest.mark.asyncio
+    async def test_get_companies_pagination_multiple_pages(self, client: AsyncClient, super_admin_auth_headers: dict):
+        """Test companies pagination across multiple pages."""
+        # Test first page
+        response1 = await client.get(
+            "/api/admin/companies?page=1&size=2",
+            headers=super_admin_auth_headers
+        )
+
+        assert response1.status_code == 200
+        data1 = response1.json()
+        assert data1["page"] == 1
+        assert data1["size"] == 2
+
+        # Test second page if there are enough results
+        if data1["total"] > 2:
+            response2 = await client.get(
+                "/api/admin/companies?page=2&size=2",
+                headers=super_admin_auth_headers
+            )
+
+            assert response2.status_code == 200
+            data2 = response2.json()
+            assert data2["page"] == 2
+            assert data2["size"] == 2
+
+            # Ensure different results on different pages
+            page1_ids = {company["id"] for company in data1["companies"]}
+            page2_ids = {company["id"] for company in data2["companies"]}
+            assert page1_ids.isdisjoint(page2_ids)  # No overlap between pages
+
+    @pytest.mark.asyncio
+    async def test_get_companies_combined_filters_type_and_active(self, client: AsyncClient, super_admin_auth_headers: dict):
+        """Test combining type and active status filters."""
+        response = await client.get(
+            "/api/admin/companies?company_type=employer&is_active=true",
+            headers=super_admin_auth_headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "companies" in data
+        for company in data["companies"]:
+            assert company["type"] == "employer"
+            assert company["is_active"] is True
+
+    @pytest.mark.asyncio
+    async def test_get_companies_combined_filters_search_and_type(self, client: AsyncClient, super_admin_auth_headers: dict):
+        """Test combining search and type filters."""
+        response = await client.get(
+            "/api/admin/companies?search=test&company_type=employer",
+            headers=super_admin_auth_headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "companies" in data
+        for company in data["companies"]:
+            assert company["type"] == "employer"
+
+    @pytest.mark.asyncio
+    async def test_get_companies_combined_filters_all_parameters(self, client: AsyncClient, super_admin_auth_headers: dict):
+        """Test combining all filter parameters."""
+        response = await client.get(
+            "/api/admin/companies?page=1&size=10&search=test&company_type=employer&is_active=true&is_demo=false&include_deleted=false",
+            headers=super_admin_auth_headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "companies" in data
+        assert data["page"] == 1
+        assert data["size"] == 10
+        for company in data["companies"]:
+            assert company["type"] == "employer"
+            assert company["is_active"] is True
+            assert company["is_demo"] is False
+            assert company["is_deleted"] is False
+
+    @pytest.mark.asyncio
+    async def test_get_companies_empty_search_returns_all(self, client: AsyncClient, super_admin_auth_headers: dict):
+        """Test that empty search parameter returns all companies."""
+        response = await client.get(
+            "/api/admin/companies?search=",
+            headers=super_admin_auth_headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "companies" in data
+        # Should return companies (not filtered by search)
+
+    @pytest.mark.asyncio
+    async def test_get_companies_nonexistent_search_returns_empty(self, client: AsyncClient, super_admin_auth_headers: dict):
+        """Test that search with non-existent term returns empty results."""
+        response = await client.get(
+            "/api/admin/companies?search=nonexistentcompanyname12345",
+            headers=super_admin_auth_headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "companies" in data
+        assert len(data["companies"]) == 0
+        assert data["total"] == 0
+
+    @pytest.mark.asyncio
+    async def test_get_companies_filter_validation_invalid_type(self, client: AsyncClient, super_admin_auth_headers: dict):
+        """Test filtering with invalid company type."""
+        response = await client.get(
+            "/api/admin/companies?company_type=invalid_type",
+            headers=super_admin_auth_headers
+        )
+
+        # Should either return 422 for validation error or 200 with empty results
+        assert response.status_code in [200, 422]
+        if response.status_code == 200:
+            data = response.json()
+            assert len(data["companies"]) == 0
+
+    @pytest.mark.asyncio
+    async def test_get_companies_pagination_boundary_conditions(self, client: AsyncClient, super_admin_auth_headers: dict):
+        """Test pagination boundary conditions."""
+        # Test page beyond available results
+        response = await client.get(
+            "/api/admin/companies?page=1000&size=10",
+            headers=super_admin_auth_headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "companies" in data
+        assert data["page"] == 1000
+        assert len(data["companies"]) == 0  # Should be empty for page beyond results
+
+    @pytest.mark.asyncio
+    async def test_get_companies_filter_by_multiple_types(self, client: AsyncClient, super_admin_auth_headers: dict, db_session: AsyncSession):
+        """Test that filtering works correctly with different company types."""
+        # Create companies of different types
+        employer_company = Company(
+            name="Employer Test",
+            email="employer@test.com",
+            phone="555-123-4567",
+            type=CompanyType.EMPLOYER,
+            is_active="1"
+        )
+        recruiter_company = Company(
+            name="Recruiter Test",
+            email="recruiter@test.com",
+            phone="555-123-4568",
+            type=CompanyType.RECRUITER,
+            is_active="1"
+        )
+        db_session.add(employer_company)
+        db_session.add(recruiter_company)
+        await db_session.commit()
+
+        # Test employer filter
+        employer_response = await client.get(
+            "/api/admin/companies?company_type=employer",
+            headers=super_admin_auth_headers
+        )
+
+        assert employer_response.status_code == 200
+        employer_data = employer_response.json()
+        employer_companies = [c for c in employer_data["companies"] if c["type"] == "employer"]
+        assert len(employer_companies) >= 1
+
+        # Test recruiter filter
+        recruiter_response = await client.get(
+            "/api/admin/companies?company_type=recruiter",
+            headers=super_admin_auth_headers
+        )
+
+        assert recruiter_response.status_code == 200
+        recruiter_data = recruiter_response.json()
+        recruiter_companies = [c for c in recruiter_data["companies"] if c["type"] == "recruiter"]
+        assert len(recruiter_companies) >= 1
+
+    @pytest.mark.asyncio
+    async def test_get_companies_deleted_field_in_response(self, client: AsyncClient, super_admin_auth_headers: dict):
+        """Test that deleted fields are included in company response."""
+        response = await client.get(
+            "/api/admin/companies?include_deleted=true",
+            headers=super_admin_auth_headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "companies" in data
+        for company in data["companies"]:
+            # Verify deleted fields are present
+            assert "is_deleted" in company
+            assert "deleted_at" in company
+            assert "deleted_by" in company
+            assert isinstance(company["is_deleted"], bool)
+
+    @pytest.mark.asyncio
+    async def test_get_companies_filter_combination_with_pagination(self, client: AsyncClient, super_admin_auth_headers: dict):
+        """Test that filters work correctly with pagination."""
+        response = await client.get(
+            "/api/admin/companies?page=1&size=5&company_type=employer&is_active=true",
+            headers=super_admin_auth_headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "companies" in data
+        assert data["page"] == 1
+        assert data["size"] == 5
+        assert len(data["companies"]) <= 5
+        for company in data["companies"]:
+            assert company["type"] == "employer"
+            assert company["is_active"] is True

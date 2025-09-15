@@ -37,7 +37,9 @@
       "Bash(findstr:*)",
       "Bash(taskkill:*)",
       "Bash(alembic revision:*)",
-      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/ -v --tb=short)"
+      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/ -v --tb=short)",
+      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_companies.py::TestCompanies::test_get_companies_include_deleted_false_default -v --tb=short)",
+      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_users_management.py::TestUsersManagement::test_get_users_include_deleted_false_default -v --tb=short)"
     ],
     "deny": [],
     "ask": []
