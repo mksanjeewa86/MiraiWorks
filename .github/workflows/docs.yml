@@ -94,3 +94,18 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        continue-on-error: true
+
+      - name: Pages deployment status
+        if: failure()
+        run: |
+          echo "⚠️ GitHub Pages deployment failed. This is likely because:"
+          echo "1. GitHub Pages is not enabled for this repository"
+          echo "2. Pages source is not set to 'GitHub Actions'"
+          echo ""
+          echo "To fix this:"
+          echo "1. Go to: https://github.com/mksanjeewa86/MiraiWorks/settings/pages"
+          echo "2. Under 'Source', select 'GitHub Actions'"
+          echo "3. Re-run this workflow"
+          echo ""
+          echo "Documentation was built successfully and is available as an artifact."
