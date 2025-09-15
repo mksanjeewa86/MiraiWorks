@@ -53,7 +53,6 @@ function UsersPageContent() {
     search: '',
     company_id: undefined,
     is_active: undefined,
-    is_admin: undefined,
     role: undefined,
   });
 
@@ -102,48 +101,17 @@ function UsersPageContent() {
 
   const handleStatusFilter = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
-    setFilters(prev => {
-      const newFilters = { ...prev, page: 1 };
-
-      // Reset all status filters first
-      delete newFilters.is_active;
-      delete newFilters.is_suspended;
-      delete newFilters.require_2fa;
-
-      // Set appropriate filter based on selection
-      if (value === 'active') {
-        // Show only active users who are not suspended
-        newFilters.is_active = true;
-        newFilters.is_suspended = false;
-      } else if (value === 'inactive') {
-        // Show only inactive users who are not suspended
-        newFilters.is_active = false;
-        newFilters.is_suspended = false;
-      } else if (value === 'suspended') {
-        // Show all suspended users (regardless of active/inactive status)
-        newFilters.is_suspended = true;
-      } else if (value === '2fa_active') {
-        // Show only active, non-suspended users with 2FA enabled
-        newFilters.require_2fa = true;
-        newFilters.is_active = true;
-        newFilters.is_suspended = false;
-      }
-
-      // Store the status filter for UI state
-      newFilters.status_filter = value || undefined;
-
-      return newFilters;
-    });
-  };
-
-  const handleAdminFilter = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    setFilters(prev => ({ 
-      ...prev, 
-      is_admin: value === '' ? undefined : value === 'true',
-      page: 1 
+    setFilters(prev => ({
+      ...prev,
+      page: 1,
+      // Reset all status-related filters
+      is_active: value === 'active' ? true : value === 'inactive' ? false : undefined,
+      is_suspended: value === 'suspended' ? true : value === 'active' || value === 'inactive' || value === '2fa_active' ? false : undefined,
+      require_2fa: value === '2fa_active' ? true : undefined,
+      status_filter: value || undefined,
     }));
   };
+
 
   const handleRoleFilter = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
@@ -586,18 +554,6 @@ function UsersPageContent() {
               </select>
             </div>
 
-            <div className="min-w-32">
-              <select
-                value={filters.is_admin === undefined ? '' : filters.is_admin.toString()}
-                onChange={handleAdminFilter}
-                className="w-full px-3 py-2 pr-8 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              >
-                <option value="">All Users</option>
-                <option value="true">Admins</option>
-                <option value="false">Regular Users</option>
-              </select>
-            </div>
-
             <div className="min-w-40">
               <select
                 value={filters.role || ''}
@@ -610,6 +566,25 @@ function UsersPageContent() {
                 <option value="employer">Employer</option>
                 <option value="candidate">Candidate</option>
               </select>
+            </div>
+
+            <div className="min-w-40">
+              <div className="flex items-center">
+                <input
+                  id="include_deleted"
+                  type="checkbox"
+                  checked={filters.include_deleted || false}
+                  onChange={(e) => setFilters(prev => ({
+                    ...prev,
+                    include_deleted: e.target.checked,
+                    page: 1
+                  }))}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="include_deleted" className="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Include deleted users
+                </label>
+              </div>
             </div>
           </div>
         </div>
@@ -738,7 +713,12 @@ function UsersPageContent() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex flex-wrap gap-1">
-                          {user.is_suspended ? (
+                          {user.is_deleted ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300">
+                              <UserX className="h-3 w-3 mr-1" />
+                              Deleted
+                            </span>
+                          ) : user.is_suspended ? (
                             <>
                               {!user.is_active && (
                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300">
@@ -770,7 +750,7 @@ function UsersPageContent() {
                               )}
                             </span>
                           )}
-                          {user.require_2fa && (
+                          {user.require_2fa && !user.is_deleted && (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
                               <ShieldCheck className="h-3 w-3 mr-1" />
                               2FA

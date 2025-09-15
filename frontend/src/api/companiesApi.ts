@@ -50,6 +50,8 @@ export const companiesApi = {
     if (filters.search) params.append('search', filters.search);
     if (filters.company_type) params.append('company_type', filters.company_type);
     if (filters.is_active !== undefined) params.append('is_active', filters.is_active.toString());
+    if (filters.is_demo !== undefined) params.append('is_demo', filters.is_demo.toString());
+    if (filters.include_deleted !== undefined) params.append('include_deleted', filters.include_deleted.toString());
     
     const queryString = params.toString();
     const url = `/api/admin/companies${queryString ? `?${queryString}` : ''}`;

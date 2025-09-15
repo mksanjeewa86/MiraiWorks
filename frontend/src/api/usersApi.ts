@@ -55,6 +55,7 @@ export const usersApi = {
     if (filters.is_suspended !== undefined) params.append('is_suspended', filters.is_suspended.toString());
     if (filters.require_2fa !== undefined) params.append('require_2fa', filters.require_2fa.toString());
     if (filters.role) params.append('role', filters.role);
+    if (filters.include_deleted !== undefined) params.append('include_deleted', filters.include_deleted.toString());
     
     const queryString = params.toString();
     const url = `/api/admin/users${queryString ? `?${queryString}` : ''}`;

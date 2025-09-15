@@ -35,6 +35,10 @@ class CompanyUpdate(BaseModel):
     city: Optional[str] = None
     description: Optional[str] = None
     is_active: Optional[bool] = None
+    is_demo: Optional[bool] = None
+    demo_end_date: Optional[str] = None
+    demo_features: Optional[str] = None
+    demo_notes: Optional[str] = None
 
 
 class CompanyResponse(CompanyBase):
@@ -43,8 +47,13 @@ class CompanyResponse(CompanyBase):
     is_active: bool
     is_demo: bool
     demo_end_date: Optional[str]
+    demo_features: Optional[str] = None
+    demo_notes: Optional[str] = None
     user_count: int
     job_count: int
+    is_deleted: bool
+    deleted_at: Optional[str] = None
+    deleted_by: Optional[int] = None
     created_at: str
     updated_at: str
 

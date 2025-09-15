@@ -52,6 +52,10 @@ export interface CompanyFormData {
   prefecture: string;
   city: string;
   description: string;
+  is_demo: boolean;
+  demo_end_date: string;
+  demo_features: string;
+  demo_notes: string;
 }
 
 // User Form Data

@@ -14,6 +14,13 @@ export interface Company {
   is_active: boolean;
   user_count: number;
   job_count: number;
+  is_demo: boolean;
+  demo_end_date?: string;
+  demo_features?: string;
+  demo_notes?: string;
+  is_deleted: boolean;
+  deleted_at?: string;
+  deleted_by?: number;
   created_at: string;
   updated_at: string;
 }
@@ -28,6 +35,10 @@ export interface CompanyCreate {
   prefecture?: string;
   city?: string;
   description?: string;
+  is_demo?: boolean;
+  demo_end_date?: string;
+  demo_features?: string;
+  demo_notes?: string;
 }
 
 export interface CompanyUpdate {
@@ -41,6 +52,10 @@ export interface CompanyUpdate {
   city?: string;
   description?: string;
   is_active?: boolean;
+  is_demo?: boolean;
+  demo_end_date?: string;
+  demo_features?: string;
+  demo_notes?: string;
 }
 
 export interface CompanyListResponse {
@@ -57,6 +72,8 @@ export interface CompanyFilters {
   search?: string;
   company_type?: CompanyType;
   is_active?: boolean;
+  is_demo?: boolean;
+  include_deleted?: boolean;
 }
 
 // Job and Application Types

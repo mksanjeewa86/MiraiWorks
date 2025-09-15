@@ -53,12 +53,19 @@ async def get_companies(
     search: Optional[str] = None,
     company_type: Optional[CompanyType] = None,
     is_active: Optional[bool] = None,
+    is_demo: Optional[bool] = None,
+    include_deleted: bool = False,
 ):
     """Get companies with filtering, pagination and search."""
     offset = (page - 1) * size
 
     # Build query conditions
     conditions = []
+
+    # Handle logical deletion
+    if not include_deleted:
+        conditions.append(Company.is_deleted == False)
+
     if search:
         search_term = f"%{search}%"
         conditions.append(
@@ -73,6 +80,8 @@ async def get_companies(
         # Convert boolean to string since is_active is stored as String(1) in database
         active_value = "1" if is_active else "0"
         conditions.append(Company.is_active == active_value)
+    if is_demo is not None:
+        conditions.append(Company.is_demo == is_demo)
 
     # Build query
     query = select(Company)

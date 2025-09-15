@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.crud import dashboard as dashboard_crud
+from app.crud.dashboard import dashboard
 from app.database import get_db
 from app.dependencies import get_current_active_user
 from app.models.user import User
@@ -18,7 +18,7 @@ async def get_dashboard_stats(
     db: AsyncSession = Depends(get_db),
 ):
     """Get dashboard statistics."""
-    stats = await dashboard_crud.get_stats(db)
+    stats = await dashboard.get_stats(db)
     return DashboardStats(**stats)
 
 
@@ -32,8 +32,8 @@ async def get_recent_activity(
     recent_activities = []
 
     # Get recent users and interviews
-    recent_users = await dashboard_crud.get_recent_users(db, limit // 2)
-    recent_interviews = await dashboard_crud.get_recent_interviews(db, limit // 2)
+    recent_users = await dashboard.get_recent_users(db, limit // 2)
+    recent_interviews = await dashboard.get_recent_interviews(db, limit // 2)
 
     # Convert users to activity items
     for user in recent_users:

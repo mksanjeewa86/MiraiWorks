@@ -16,6 +16,9 @@ export interface User {
   is_suspended: boolean;
   suspended_at?: string;
   suspended_by?: number;
+  is_deleted: boolean;
+  deleted_at?: string;
+  deleted_by?: number;
 }
 
 export interface UserCreate {
@@ -60,6 +63,7 @@ export interface UserFilters {
   require_2fa?: boolean;
   role?: string;
   status_filter?: string;
+  include_deleted?: boolean;
 }
 
 export interface PasswordResetRequest {

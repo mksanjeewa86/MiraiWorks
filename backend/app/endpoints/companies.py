@@ -36,6 +36,8 @@ async def get_companies(
     search: Optional[str] = Query(None),
     company_type: Optional[CompanyType] = Query(None),
     is_active: Optional[bool] = Query(None),
+    is_demo: Optional[bool] = Query(None),
+    include_deleted: bool = Query(False),
 ):
     """Get companies with filtering, pagination and search."""
     companies, total = await company_crud.get_companies(
@@ -45,6 +47,8 @@ async def get_companies(
         search=search,
         company_type=company_type,
         is_active=is_active,
+        is_demo=is_demo,
+        include_deleted=include_deleted,
     )
 
     company_responses = [
@@ -64,8 +68,15 @@ async def get_companies(
             demo_end_date=company.demo_end_date.isoformat()
             if company.demo_end_date
             else None,
+            demo_features=company.demo_features,
+            demo_notes=company.demo_notes,
             user_count=0,
             job_count=0,
+            is_deleted=company.is_deleted,
+            deleted_at=company.deleted_at.isoformat()
+            if company.deleted_at
+            else None,
+            deleted_by=company.deleted_by,
             created_at=company.created_at.isoformat(),
             updated_at=company.updated_at.isoformat(),
         )
@@ -115,8 +126,15 @@ async def get_company(
         demo_end_date=company.demo_end_date.isoformat()
         if company.demo_end_date
         else None,
+        demo_features=company.demo_features,
+        demo_notes=company.demo_notes,
         user_count=user_count or 0,
         job_count=job_count or 0,
+        is_deleted=company.is_deleted,
+        deleted_at=company.deleted_at.isoformat()
+        if company.deleted_at
+        else None,
+        deleted_by=company.deleted_by,
         created_at=company.created_at.isoformat(),
         updated_at=company.updated_at.isoformat(),
     )
@@ -309,8 +327,15 @@ async def update_company(
         demo_end_date=company.demo_end_date.isoformat()
         if company.demo_end_date
         else None,
+        demo_features=company.demo_features,
+        demo_notes=company.demo_notes,
         user_count=user_count or 0,
         job_count=job_count or 0,
+        is_deleted=company.is_deleted,
+        deleted_at=company.deleted_at.isoformat()
+        if company.deleted_at
+        else None,
+        deleted_by=company.deleted_by,
         created_at=company.created_at.isoformat(),
         updated_at=company.updated_at.isoformat(),
     )
