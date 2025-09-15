@@ -11,7 +11,21 @@
       "Bash(npm install:*)",
       "Bash(npm audit:*)",
       "Bash(npm run typecheck:*)",
-      "Bash(npm run lint)"
+      "Bash(npm run lint)",
+      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_messaging.py::TestMessagingService::test_create_conversation_service -v --asyncio-mode=auto)",
+      "Bash(npm run build:*)",
+      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_messaging.py --collect-only)",
+      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_messaging.py::TestMessagingService -v --asyncio-mode=auto)",
+      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_messaging.py::TestMessagingService::test_get_conversation_messages_service -v --asyncio-mode=auto)",
+      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_messaging.py::TestMessagingAPI::test_create_conversation_success -v --asyncio-mode=auto)",
+      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_messaging.py::TestMessagingAPI::test_send_message_success -v --asyncio-mode=auto)",
+      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_messaging.py::TestMessagingRules::test_super_admin_can_message_anyone -v --asyncio-mode=auto)",
+      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_messaging.py -v --asyncio-mode=auto --tb=line)",
+      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_messaging.py::TestMessagingAPI::test_file_upload_presign -v --asyncio-mode=auto --tb=short)",
+      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_messaging.py::TestMessagingAPI::test_file_upload_presign -v --asyncio-mode=auto)",
+      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_messaging.py::TestMessagingAPI::test_search_participants -v --asyncio-mode=auto --tb=short)",
+      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_messaging.py::TestMessagingAPI::test_search_participants -v --asyncio-mode=auto)",
+      "Bash(git config:*)"
     ],
     "deny": [],
     "ask": []

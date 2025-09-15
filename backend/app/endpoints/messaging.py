@@ -128,8 +128,7 @@ async def create_conversation(
         db, current_user.id, conversation_data.participant_ids, conversation_data.title
     )
 
-    # Load with relationships for response
-    conversation = await messaging.get_conversation_with_relationships(db, conversation.id)
+    # Conversation already has participants loaded from service
 
     return ConversationInfo(
         id=conversation.id,

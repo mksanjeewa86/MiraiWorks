@@ -12,6 +12,7 @@ from app.endpoints import (
     files,
     infrastructure,
     interviews,
+    messaging,
     notifications,
     public,
     resumes,
@@ -29,6 +30,7 @@ def include_routers(app: FastAPI) -> None:
     app.include_router(
         direct_messages.router, prefix="/api/direct_messages", tags=["direct-messages"]
     )
+    app.include_router(messaging.router, prefix="/api/messaging", tags=["messaging"])
     app.include_router(
         notifications.router, prefix="/api/notifications", tags=["notifications"]
     )

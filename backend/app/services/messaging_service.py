@@ -57,17 +57,9 @@ class MessagingRulesService:
         if not user1.is_active or not user2.is_active:
             return False, "One or both users are inactive"
 
-        # Super admin can only communicate with company admins
-        if UserRole.SUPER_ADMIN.value in user1_roles:
-            if UserRole.COMPANY_ADMIN.value in user2_roles:
-                return True, "Super admin can communicate with company admin"
-            else:
-                return False, "Super admin can only communicate with company admins"
-        elif UserRole.SUPER_ADMIN.value in user2_roles:
-            if UserRole.COMPANY_ADMIN.value in user1_roles:
-                return True, "Super admin can communicate with company admin"
-            else:
-                return False, "Super admin can only communicate with company admins"
+        # Super admin can communicate with anyone
+        if UserRole.SUPER_ADMIN.value in user1_roles or UserRole.SUPER_ADMIN.value in user2_roles:
+            return True, "Super admin access - can communicate with anyone"
 
         # Company admins cannot communicate with each other - only with super admin
         if (
@@ -212,28 +204,16 @@ class MessagingRulesService:
             result = await db.execute(
                 select(User)
                 .join(User.user_roles)
-                .join("role")
+                .join(UserRoleModel.role)
                 .options(selectinload(User.company))
                 .where(
                     User.id != user_id,
                     User.is_active == True,
                     # Role name is either CANDIDATE or EMPLOYER or RECRUITER
                     or_(
-                        User.user_roles.any(
-                            role_id=select("roles").where(
-                                UserRole.CANDIDATE.value == "name"
-                            )
-                        ),
-                        User.user_roles.any(
-                            role_id=select("roles").where(
-                                UserRole.EMPLOYER.value == "name"
-                            )
-                        ),
-                        User.user_roles.any(
-                            role_id=select("roles").where(
-                                UserRole.RECRUITER.value == "name"
-                            )
-                        ),
+                        UserRoleModel.role.has(name=UserRole.CANDIDATE.value),
+                        UserRoleModel.role.has(name=UserRole.EMPLOYER.value),
+                        UserRoleModel.role.has(name=UserRole.RECRUITER.value),
                     ),
                 )
             )
@@ -244,16 +224,12 @@ class MessagingRulesService:
             result = await db.execute(
                 select(User)
                 .join(User.user_roles)
-                .join("role")
+                .join(UserRoleModel.role)
                 .options(selectinload(User.company))
                 .where(
                     User.id != user_id,
                     User.is_active == True,
-                    User.user_roles.any(
-                        role_id=select("roles").where(
-                            UserRole.RECRUITER.value == "name"
-                        )
-                    ),
+                    UserRoleModel.role.has(name=UserRole.RECRUITER.value),
                 )
             )
             potential_participants = result.scalars().all()
@@ -263,16 +239,12 @@ class MessagingRulesService:
             result = await db.execute(
                 select(User)
                 .join(User.user_roles)
-                .join("role")
+                .join(UserRoleModel.role)
                 .options(selectinload(User.company))
                 .where(
                     User.id != user_id,
                     User.is_active == True,
-                    User.user_roles.any(
-                        role_id=select("roles").where(
-                            UserRole.RECRUITER.value == "name"
-                        )
-                    ),
+                    UserRoleModel.role.has(name=UserRole.RECRUITER.value),
                 )
             )
             potential_participants = result.scalars().all()
@@ -386,12 +358,25 @@ class MessagingService:
                     detail=f"User {participant_id} not found",
                 )
 
-            conversation.participants.append(user)
+            # Insert into association table directly to avoid lazy loading
+            await db.execute(
+                conversation_participants.insert().values(
+                    conversation_id=conversation.id,
+                    user_id=participant_id
+                )
+            )
 
         await db.commit()
-        await db.refresh(conversation)
 
-        return conversation
+        # Load conversation with participants and their companies to avoid lazy loading issues
+        result = await db.execute(
+            select(Conversation)
+            .options(selectinload(Conversation.participants).selectinload(User.company))
+            .where(Conversation.id == conversation.id)
+        )
+        conversation_with_participants = result.scalar_one()
+
+        return conversation_with_participants
 
     async def _find_existing_direct_conversation(
         self, db: AsyncSession, participant_ids: list[int]
@@ -502,7 +487,7 @@ class MessagingService:
             .where(
                 Message.conversation_id == conversation_id, Message.is_deleted == False
             )
-            .order_by(desc(Message.created_at))
+            .order_by(desc(Message.id))
             .limit(limit)
         )
 

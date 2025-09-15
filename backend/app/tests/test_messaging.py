@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 import pytest_asyncio
@@ -9,6 +9,7 @@ from app.models.attachment import Attachment
 from app.models.company import Company
 from app.models.role import UserRole as UserRoleModel
 from app.models.user import User
+from app.services.auth_service import auth_service
 from app.services.messaging_service import messaging_service
 from app.utils.constants import CompanyType, UserRole, VirusStatus
 
@@ -52,7 +53,7 @@ async def candidate_user(db_session: AsyncSession, test_roles: dict) -> User:
         email="candidate@example.com",
         first_name="John",
         last_name="Candidate",
-        hashed_password="hashed_password",
+        hashed_password=auth_service.get_password_hash("testpassword123"),
         is_active=True,
     )
     db_session.add(user)
@@ -79,7 +80,7 @@ async def recruiter_user(
         first_name="Jane",
         last_name="Recruiter",
         company_id=recruiter_company.id,
-        hashed_password="hashed_password",
+        hashed_password=auth_service.get_password_hash("testpassword123"),
         is_active=True,
     )
     db_session.add(user)
@@ -106,7 +107,7 @@ async def employer_user(
         first_name="Bob",
         last_name="Employer",
         company_id=employer_company.id,
-        hashed_password="hashed_password",
+        hashed_password=auth_service.get_password_hash("testpassword123"),
         is_active=True,
     )
     db_session.add(user)
@@ -364,14 +365,16 @@ class TestMessagingAPI:
         headers = {"Authorization": f"Bearer {token}"}
 
         # Request file upload
-        with patch(
-            "app.services.storage_service.storage_service.get_presigned_upload_url"
-        ) as mock_presign:
-            mock_presign.return_value = {
+        with patch("app.services.storage_service.StorageService") as mock_storage_class:
+            mock_storage = Mock()
+            mock_storage.generate_s3_key.return_value = "test/key"
+            mock_storage.bucket = "test-bucket"
+            mock_storage.get_presigned_upload_url.return_value = {
                 "upload_url": "http://minio:9000/test-upload-url",
                 "s3_key": "test/key",
                 "expires_at": "2024-01-01T00:00:00Z",
             }
+            mock_storage_class.return_value = mock_storage
 
             response = await client.post(
                 f"/api/messaging/conversations/{conversation.id}/attachments/presign",
