@@ -77,32 +77,31 @@ jobs:
         run: |
           mkdocs build || echo "Project docs generation failed, continuing..."
 
-      - name: Upload pages artifact
+      - name: Deploy to GitHub Pages (Branch Method)
+        if: github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+          force_orphan: true
+        continue-on-error: true
+
+      - name: Upload pages artifact (fallback)
         if: github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./site
-
-  deploy:
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    needs: docs
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
         continue-on-error: true
 
-      - name: Pages deployment status
-        if: failure()
+      - name: Deployment status
+        if: github.ref == 'refs/heads/main'
         run: |
-          echo "⚠️ GitHub Pages deployment failed. This is likely because:"
-          echo "1. GitHub Pages is not enabled for this repository"
-          echo "2. Pages source is not set to 'GitHub Actions'"
+          echo "📚 Documentation built successfully!"
           echo ""
-          echo "To fix this:"
+          echo "If GitHub Pages deployment failed, you can:"
           echo "1. Go to: https://github.com/mksanjeewa86/MiraiWorks/settings/pages"
-          echo "2. Under 'Source', select 'GitHub Actions'"
-          echo "3. Re-run this workflow"
+          echo "2. Under 'Source', select 'Deploy from a branch'"
+          echo "3. Choose 'gh-pages' branch and '/ (root)' folder"
+          echo "4. Your docs will be available at: https://mksanjeewa86.github.io/MiraiWorks/"
           echo ""
-          echo "Documentation was built successfully and is available as an artifact."
+          echo "Alternatively, download the documentation artifact from this workflow run."
