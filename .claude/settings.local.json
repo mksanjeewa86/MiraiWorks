@@ -1,25 +1,17 @@
 {
   "permissions": {
     "allow": [
-      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_users_management.py::TestUsersManagement::test_update_user_success app/tests/test_users_management.py::TestUsersManagement::test_suspend_user_success app/tests/test_users_management.py::TestUsersManagement::test_get_users_with_pagination -v --tb=line)",
-      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_companies.py::TestCompanies::test_create_company_success -v)",
-      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_companies.py -v)",
-      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_companies.py::TestCompanies::test_update_company_to_duplicate_email -v)",
-      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_companies.py --tb=line -q)",
-      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_services.py::TestAuthService::test_decode_token_success -v)",
-      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_services.py --tb=line -q)",
-      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_users_management.py::TestUsersManagement::test_create_user_success -v)",
-      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_users_management.py::TestUsersManagement::test_reset_password_success -v)",
-      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_users_management.py::TestUsersManagement::test_create_user_forbidden_regular_user app/tests/test_users_management.py::TestUsersManagement::test_create_user_invalid_email app/tests/test_users_management.py::TestUsersManagement::test_update_user_invalid_data -v --tb=line)",
-      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_users_management.py::TestUsersManagement::test_get_users_with_pagination -v)",
-      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_users_management.py::TestUsersManagement::test_get_users_with_pagination app/tests/test_users_management.py::TestUsersManagement::test_get_users_with_all_filters -v --tb=line)",
-      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_users_management.py::TestUsersManagement::test_bulk_operations_empty_user_ids -v)",
-      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_users_management.py::TestUsersManagement::test_create_user_with_nonexistent_company -v --tb=line)",
-      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_users_management.py::TestUsersManagement::test_create_user_with_nonexistent_company -v)",
-      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_services.py::TestServiceConfiguration::test_services_have_required_methods -v)",
-      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest scripts/test_local.py::test_fixture_imports -v)",
-      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_users_management.py::TestUsersManagement::test_get_users_with_pagination app/tests/test_users_management.py::TestUsersManagement::test_create_user_forbidden_regular_user app/tests/test_users_management.py::TestUsersManagement::test_create_user_invalid_email app/tests/test_users_management.py::TestUsersManagement::test_update_user_invalid_data app/tests/test_users_management.py::TestUsersManagement::test_bulk_operations_empty_user_ids app/tests/test_users_management.py::TestUsersManagement::test_create_user_with_nonexistent_company app/tests/test_users_management.py::TestUsersManagement::test_get_users_with_all_filters app/tests/test_services.py::TestServiceConfiguration::test_services_have_required_methods -v --tb=line)",
-      "Bash(git add:*)"
+      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_companies.py::TestCompanies::test_create_company_success -v --tb=short)",
+      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_auth.py -v --tb=short -q)",
+      "Bash(PYTHONPATH=. python -c \"\nfrom app.schemas import auth, job, company, user, resume, meeting, interview, calendar, message\nprint(''✅ All schema imports successful!'')\n\")",
+      "Bash(PYTHONPATH=. python -c \"\nfrom app.schemas import auth, job, company, user, resume, meeting, interview, calendar, message\nprint(''All schema imports successful!'')\n\")",
+      "Bash(PYTHONPATH=. python -c \"import app.tests.test_messaging; print(''Import successful!'')\")",
+      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_messaging.py::TestMessagingRules -v --asyncio-mode=auto)",
+      "Bash(npm ls:*)",
+      "Bash(npm install:*)",
+      "Bash(npm audit:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npm run lint)"
     ],
     "deny": [],
     "ask": []
