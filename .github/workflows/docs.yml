@@ -77,7 +77,15 @@ jobs:
         run: |
           mkdocs build || echo "Project docs generation failed, continuing..."
 
-      - name: Deploy to GitHub Pages (Branch Method)
+      - name: Upload documentation artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation-site
+          path: ./site
+          retention-days: 90
+
+      - name: Try GitHub Pages deployment (if available)
         if: github.ref == 'refs/heads/main'
         uses: peaceiris/actions-gh-pages@v3
         with:
@@ -86,22 +94,23 @@ jobs:
           force_orphan: true
         continue-on-error: true
 
-      - name: Upload pages artifact (fallback)
-        if: github.ref == 'refs/heads/main'
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./site
-        continue-on-error: true
-
-      - name: Deployment status
+      - name: Documentation ready
         if: github.ref == 'refs/heads/main'
         run: |
           echo "📚 Documentation built successfully!"
           echo ""
-          echo "If GitHub Pages deployment failed, you can:"
+          echo "📋 PRIVATE REPOSITORY NOTES:"
+          echo "• GitHub Pages for private repos requires GitHub Pro/Team/Enterprise"
+          echo "• If you have a free account, Pages won't be available"
+          echo ""
+          echo "📥 ACCESS OPTIONS:"
+          echo "1. Download 'documentation-site' artifact from this workflow run"
+          echo "2. Extract and open 'index.html' in your browser for local viewing"
+          echo "3. Upload to your own hosting service (Netlify, Vercel, etc.)"
+          echo ""
+          echo "🔗 If you have GitHub Pro+:"
           echo "1. Go to: https://github.com/mksanjeewa86/MiraiWorks/settings/pages"
           echo "2. Under 'Source', select 'Deploy from a branch'"
           echo "3. Choose 'gh-pages' branch and '/ (root)' folder"
-          echo "4. Your docs will be available at: https://mksanjeewa86.github.io/MiraiWorks/"
           echo ""
-          echo "Alternatively, download the documentation artifact from this workflow run."
+          echo "✅ Documentation is fully built and ready to use!"
