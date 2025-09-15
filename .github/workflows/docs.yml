@@ -25,6 +25,8 @@ jobs:
       - name: Install Python dependencies
         run: |
           pip install sphinx sphinx-rtd-theme mkdocs mkdocs-material
+          # Install backend dependencies for OpenAPI generation
+          pip install -r backend/requirements.txt || echo "Some backend dependencies failed, continuing..."
 
       - name: Install Node.js dependencies
         env:
