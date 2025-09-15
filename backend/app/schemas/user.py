@@ -1,9 +1,12 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 
 from app.utils.constants import UserRole
+
+if TYPE_CHECKING:
+    pass
 
 
 class UserCreate(BaseModel):
@@ -49,7 +52,7 @@ class UserResponse(BaseModel):
 
 
 class UserListResponse(BaseModel):
-    users: list[UserResponse]
+    users: List["UserInfo"]
     total: int
     page: int
     per_page: int

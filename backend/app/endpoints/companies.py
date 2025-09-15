@@ -267,8 +267,15 @@ async def create_company(
         demo_end_date=company.demo_end_date.isoformat()
         if company.demo_end_date
         else None,
+        demo_features=company.demo_features,
+        demo_notes=company.demo_notes,
         user_count=1,
         job_count=0,
+        is_deleted=company.is_deleted,
+        deleted_at=company.deleted_at.isoformat()
+        if company.deleted_at
+        else None,
+        deleted_by=company.deleted_by,
         created_at=company.created_at.isoformat(),
         updated_at=company.updated_at.isoformat(),
     )

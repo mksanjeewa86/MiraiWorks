@@ -114,15 +114,20 @@ class DirectMessageService:
         self, db: AsyncSession, user_id: int, search_query: Optional[str] = None
     ) -> list[ConversationSummary]:
         """Get list of users the current user has exchanged messages with."""
+        # SQLite-compatible approach: use CASE statements instead of greatest/least
+        from sqlalchemy import case
+
         # Subquery to get the latest message between user and each other user
         latest_message_subquery = (
             select(
-                func.greatest(
-                    DirectMessage.sender_id, DirectMessage.recipient_id
+                case(
+                    (DirectMessage.sender_id > DirectMessage.recipient_id, DirectMessage.sender_id),
+                    else_=DirectMessage.recipient_id
                 ).label("user1"),
-                func.least(DirectMessage.sender_id, DirectMessage.recipient_id).label(
-                    "user2"
-                ),
+                case(
+                    (DirectMessage.sender_id < DirectMessage.recipient_id, DirectMessage.sender_id),
+                    else_=DirectMessage.recipient_id
+                ).label("user2"),
                 func.max(DirectMessage.created_at).label("last_activity"),
             )
             .where(

@@ -56,14 +56,12 @@ async def get_recent_activity(
                 id=f"interview_{interview.id}",
                 type="interview",
                 title="Interview Scheduled",
-                description=f"Interview scheduled for {interview.scheduled_at.strftime('%Y-%m-%d %H:%M')}",
+                description=f"Interview scheduled for {interview.scheduled_start.strftime('%Y-%m-%d %H:%M') if interview.scheduled_start else 'TBD'}",
                 timestamp=interview.created_at,
                 user_id=interview.candidate_id,
                 metadata={
                     "interview_id": interview.id,
-                    "interview_status": interview.status.value
-                    if interview.status
-                    else None,
+                    "interview_status": interview.status,
                 },
             )
         )

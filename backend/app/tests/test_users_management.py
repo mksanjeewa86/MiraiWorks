@@ -845,6 +845,18 @@ class TestUsersManagement:
     @pytest.mark.asyncio
     async def test_get_users_include_deleted_true(self, client: AsyncClient, admin_auth_headers: dict, db_session: AsyncSession, test_company: Company):
         """Test including deleted users in results."""
+        # Create a non-deleted user to ensure we have one
+        active_user = User(
+            email="active@test.com",
+            first_name="Active",
+            last_name="User",
+            company_id=test_company.id,
+            hashed_password=auth_service.get_password_hash("temp123"),
+            is_active=True,
+            is_deleted=False
+        )
+        db_session.add(active_user)
+
         # Create and delete a user
         deleted_user = User(
             email="deleted@test.com",
@@ -857,6 +869,7 @@ class TestUsersManagement:
         )
         db_session.add(deleted_user)
         await db_session.commit()
+        await db_session.refresh(active_user)
         await db_session.refresh(deleted_user)
 
         response = await client.get(

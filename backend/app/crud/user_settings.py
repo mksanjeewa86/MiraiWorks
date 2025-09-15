@@ -55,3 +55,9 @@ async def update_user_profile(db: AsyncSession, user: User, profile_data: dict) 
     await db.commit()
     await db.refresh(user)
     return user
+
+
+# Alias for backward compatibility
+async def get_user_settings_by_user_id(db: AsyncSession, user_id: int) -> Optional[UserSettings]:
+    """Get user settings by user ID (alias for get_user_settings)."""
+    return await get_user_settings(db, user_id)
