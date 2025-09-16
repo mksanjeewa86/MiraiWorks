@@ -114,16 +114,20 @@ export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({ ch
     }
 
     let lastNotificationId = 0;
+    let consecutiveErrors = 0;
 
     const pollForNotifications = async () => {
       try {
         // Get latest notifications
         const response = await notificationsApi.getNotifications(10);
         const latestNotifications = response.notifications;
-        
+
+        // Reset error counter on successful request
+        consecutiveErrors = 0;
+
         if (latestNotifications.length > 0) {
           const newestNotificationId = latestNotifications[0].id;
-          
+
           // Check if we have new notifications
           if (lastNotificationId === 0) {
             // First poll - just set the baseline
@@ -133,24 +137,35 @@ export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({ ch
             const newNotifications = latestNotifications.filter(
               notif => notif.id > lastNotificationId
             );
-            
+
             // Add new notifications to the state
             setNotifications(prev => [...newNotifications, ...prev]);
-            
+
             // Show browser notifications for new ones
             newNotifications.forEach(notif => {
               showNotification(notif.title, notif.message);
             });
-            
+
             // Update the baseline
             lastNotificationId = newestNotificationId;
-            
+
             // Refresh unread count
             await refreshUnreadCount();
           }
         }
-      } catch (error) {
+      } catch (error: unknown) {
+        consecutiveErrors++;
         console.error('Failed to poll for notifications:', error);
+
+        // If we get too many consecutive errors, stop polling
+        // The apiClient should handle auth errors automatically
+        if (consecutiveErrors >= 3) {
+          console.warn('Too many consecutive polling errors, stopping notifications polling');
+          if (pollingIntervalRef.current) {
+            clearInterval(pollingIntervalRef.current);
+            pollingIntervalRef.current = null;
+          }
+        }
       }
     };
 

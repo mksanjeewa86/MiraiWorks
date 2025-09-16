@@ -1,11 +1,12 @@
 import type { ApiResponse, Conversation, Message, DirectMessageInfo } from '@/types';
 import { API_CONFIG } from '@/config/api';
+import { apiClient } from './apiClient';
 
 // Direct Messages API
 export const messagesApi = {
   getConversations: async (token?: string): Promise<ApiResponse<Conversation[]>> => {
     const authToken = token || localStorage.getItem('accessToken');
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/direct_messages/conversations`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/direct-messages/conversations`, {
       headers: {
         'Authorization': `Bearer ${authToken}`,
         'Content-Type': 'application/json',
@@ -22,7 +23,7 @@ export const messagesApi = {
 
   markConversationAsRead: async (otherUserId: number, token?: string): Promise<ApiResponse<unknown>> => {
     const authToken = token || localStorage.getItem('accessToken');
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/direct_messages/mark-conversation-read/${otherUserId}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/direct-messages/mark-conversation-read/${otherUserId}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${authToken}`,
@@ -40,7 +41,7 @@ export const messagesApi = {
 
   getConversation: async (otherUserId: number): Promise<ApiResponse<Conversation>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/direct_messages/with/${otherUserId}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/direct-messages/with/${otherUserId}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -61,7 +62,7 @@ export const messagesApi = {
     has_more: boolean;
   }>> => {
     const token = localStorage.getItem('accessToken');
-    const url = new URL(`${API_CONFIG.BASE_URL}/api/direct_messages/with/${otherUserId}`);
+    const url = new URL(`${API_CONFIG.BASE_URL}/api/direct-messages/with/${otherUserId}`);
     url.searchParams.set('limit', limit.toString());
     if (beforeId) {
       url.searchParams.set('before_id', beforeId.toString());
@@ -92,30 +93,39 @@ export const messagesApi = {
     file_type?: string;
   }): Promise<ApiResponse<Message>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/direct_messages/send`, {
+
+    const requestBody = {
+      recipient_id: recipientId,
+      content: messageData.content,
+      type: messageData.type || 'text',
+      reply_to_id: messageData.reply_to_id,
+      file_url: messageData.file_url,
+      file_name: messageData.file_name,
+      file_size: messageData.file_size,
+      file_type: messageData.file_type,
+    };
+
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/direct-messages/send`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        recipient_id: recipientId,
-        ...messageData,
-      }),
+      body: JSON.stringify(requestBody),
     });
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
-    
+
     const data = await response.json();
     return { data, success: true };
   },
 
   markAsRead: async (otherUserId: number): Promise<ApiResponse<void>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/direct_messages/mark-conversation-read/${otherUserId}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/direct-messages/mark-conversation-read/${otherUserId}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -153,7 +163,7 @@ export const messagesApi = {
     messages: DirectMessageInfo[];
   }>> => {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/direct_messages/search`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/direct-messages/search`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -185,26 +195,21 @@ export const messagesApi = {
       is_online?: boolean;
     }>;
   }>> => {
-    const token = localStorage.getItem('accessToken');
-    const url = new URL(`${API_CONFIG.BASE_URL}/api/direct_messages/participants`);
-    if (query) {
-      url.searchParams.set('query', query);
+    try {
+      const url = `/api/direct-messages/participants${query ? `?query=${encodeURIComponent(query)}` : ''}`;
+      const response = await apiClient.get(url);
+      const responseData = response.data as { participants?: Array<{
+        id: number;
+        email: string;
+        full_name: string;
+        company_name?: string;
+        is_online?: boolean;
+      }> } | null;
+      return { data: { participants: responseData?.participants || [] }, success: true };
+    } catch (error) {
+      console.error('Error in searchParticipants:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to load participants');
     }
-    
-    const response = await fetch(url.toString(), {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return { data: { participants: data.participants || [] }, success: true };
   },
 
   uploadFile: async (file: File): Promise<ApiResponse<{

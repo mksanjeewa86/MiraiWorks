@@ -9,6 +9,7 @@ import Input from '@/components/ui/Input';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { Search, Send, Smile, Paperclip, RefreshCw } from 'lucide-react';
 import { messagesApi } from "@/api/messages";
+import { usersApi } from "@/api/usersApi";
 import type { Conversation, LegacyMessage as Message } from '@/types';
 import type { MessagesPageState } from '@/types/pages';
 import dynamic from 'next/dynamic';
@@ -40,7 +41,9 @@ function MessagesPageContent() {
     hasMoreMessages: false,
     searchResults: [],
     isSearching: false,
-    showSearchResults: false
+    showSearchResults: false,
+    showProfileModal: false,
+    selectedContactProfile: null
   });
 
   // Use separate state for input to prevent message list refreshes while typing
@@ -156,7 +159,14 @@ function MessagesPageContent() {
           }
         }
       } catch (error) {
-        console.error('Failed to poll messages:', error);
+        // Check for authentication errors and handle them gracefully
+        if (error instanceof Error && (error.message.includes('401') || error.message.includes('Unauthorized'))) {
+          setState(prev => ({
+            ...prev,
+            error: 'Session expired. Please refresh the page to continue.',
+            loading: false
+          }));
+        }
       }
     };
 
@@ -181,18 +191,32 @@ function MessagesPageContent() {
     try {
       const response = await messagesApi.getConversations();
       if (response.success && response.data) {
-        setState(prev => ({
-          ...prev,
-          conversations: response.data || []
-        }));
+        const serverConversations = response.data || [];
+
+        setState(prev => {
+          // Preserve any temporary conversations that might not be on server yet
+          const tempConversations = prev.conversations.filter(conv =>
+            !serverConversations.some(serverConv => serverConv.other_user_id === conv.other_user_id)
+          );
+
+          // Merge server conversations with temporary ones
+          const mergedConversations = [...serverConversations, ...tempConversations];
+
+          return {
+            ...prev,
+            conversations: mergedConversations
+          };
+        });
       }
     } catch (error) {
-      console.error('Failed to refresh conversations:', error);
+      // Silently handle refresh errors
     }
   };
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !state.activeConversationId || state.sending) return;
+    if (!newMessage.trim() || !state.activeConversationId || state.sending) {
+      return;
+    }
 
     const messageContent = newMessage.trim();
     
@@ -211,16 +235,34 @@ function MessagesPageContent() {
           ...prev,
           messages: [...prev.messages, response.data as unknown as Message]
         }));
-        
+
         // Scroll to bottom after sending
         setTimeout(scrollToBottom, 100);
-        
+
         // Refresh conversation list to update last message
         refreshConversationList();
       }
     } catch (error) {
-      console.error('Failed to send message:', error);
       setNewMessage(messageContent); // Restore message on error
+
+      // Show user-friendly error message
+      const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
+      let friendlyMessage = errorMessage;
+
+      if (errorMessage.includes('Super admin can only message company admins')) {
+        friendlyMessage = 'As a super admin, you can only send messages to company administrators.';
+      } else if (errorMessage.includes('Recipient not found')) {
+        friendlyMessage = 'The selected contact is no longer available. Please try selecting a different contact.';
+      } else if (errorMessage.includes('not found')) {
+        friendlyMessage = 'Contact not found. Please refresh the page and try again.';
+      } else if (errorMessage.includes('temporarily unavailable') || errorMessage.includes('not yet implemented')) {
+        friendlyMessage = 'Message sending is temporarily unavailable. This feature is currently being developed.';
+      }
+
+      setState(prev => ({
+        ...prev,
+        error: friendlyMessage
+      }));
     } finally {
       setState(prev => ({ ...prev, sending: false }));
     }
@@ -264,7 +306,6 @@ function MessagesPageContent() {
         refreshConversationList();
       }
     } catch (error) {
-      console.error('File upload failed:', error);
       setState(prev => ({
         ...prev,
         error: 'Failed to upload file. Please try again.'
@@ -286,46 +327,251 @@ function MessagesPageContent() {
     setNewMessage(value);
   };
 
+  const handleFileDownload = async (fileUrl: string, fileName?: string) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        setState(prev => ({
+          ...prev,
+          error: 'Please log in to download files'
+        }));
+        return;
+      }
+
+      const response = await fetch(`${API_CONFIG.BASE_URL}${fileUrl}?download=true`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Download failed: ${response.status}`);
+      }
+
+      // Create blob from response
+      const blob = await response.blob();
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName || 'download';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+    } catch (error) {
+      console.error('Download error:', error);
+      setState(prev => ({
+        ...prev,
+        error: 'Failed to download file. Please try again.'
+      }));
+    }
+  };
+
+  // Profile modal handlers
+  const handleContactProfileView = (contact: { id: number; email: string; full_name: string; company_name?: string }) => {
+    setState(prev => ({
+      ...prev,
+      selectedContactProfile: contact,
+      showProfileModal: true
+    }));
+  };
+
+  const handleCloseProfileModal = () => {
+    setState(prev => ({
+      ...prev,
+      showProfileModal: false,
+      selectedContactProfile: null
+    }));
+  };
+
   const handleConversationSelect = async (userId: number, fromContact = false) => {
-    setState(prev => ({ 
-      ...prev, 
-      activeConversationId: userId, 
+    // Debug: Log the selected contact details
+    if (fromContact) {
+      const contactExists = state.contacts.find(c => c.id === userId);
+      if (!contactExists) {
+        setState(prev => ({
+          ...prev,
+          error: 'This contact is not available for messaging. Please select a different contact.'
+        }));
+        return;
+      }
+    }
+
+    // If selecting from contacts, create a temporary conversation entry if it doesn't exist
+    if (fromContact) {
+      const existingConversation = state.conversations.find(c => c.other_user_id === userId);
+      if (!existingConversation) {
+        // Find contact info to create temporary conversation entry
+        const contactInfo = state.contacts.find(c => c.id === userId);
+        if (contactInfo) {
+          const tempConversation: Conversation = {
+            other_user_id: userId,
+            other_user_name: contactInfo.full_name,
+            other_user_email: contactInfo.email,
+            other_user_company: contactInfo.company_name,
+            unread_count: 0,
+            last_message: undefined,
+            last_activity: new Date().toISOString()
+          };
+
+          setState(prev => ({
+            ...prev,
+            conversations: [tempConversation, ...prev.conversations]
+          }));
+        }
+      }
+    }
+
+    // Set the active conversation and switch tabs if needed
+    setState(prev => ({
+      ...prev,
+      activeConversationId: userId,
       messages: [],
+      loading: true,
+      error: null,
       // If selecting from contacts, switch to conversations tab
       activeTab: fromContact ? 'conversations' : prev.activeTab
     }));
 
-    // Fetch messages for the selected conversation
-    await fetchMessages();
+    // Fetch messages for the selected conversation using the userId directly
+    try {
+      const response = await messagesApi.getMessages(userId, 50);
+      if (response.success && response.data) {
+        setState(prev => ({
+          ...prev,
+          messages: (response.data?.messages || []) as unknown as Message[],
+          hasMoreMessages: response.data?.has_more || false,
+          loading: false
+        }));
+        setTimeout(scrollToBottom, 100);
+      }
+    } catch (error) {
+      setState(prev => ({
+        ...prev,
+        error: 'Failed to load messages',
+        loading: false
+      }));
+    }
 
     // Focus message input when selecting a conversation, especially from contacts
     if (fromContact) {
       // Small delay to ensure the tab switch and render is complete
       setTimeout(() => {
         messageInputRef.current?.focus();
-      }, 100);
-      
-      // Refresh conversations to show the new conversation if it wasn't there before
-      refreshConversationList();
+      }, 200);
+
+      // Refresh conversations to show the updated conversation list
+      // Delay this more to allow the temporary conversation to be established
+      setTimeout(() => {
+        refreshConversationList();
+      }, 2000);
     }
   };
 
   const handleTabSwitch = async (tab: 'conversations' | 'contacts') => {
     setState(prev => ({ ...prev, activeTab: tab }));
-    
+
     if (tab === 'contacts' && state.contacts.length === 0) {
       try {
-        setState(prev => ({ ...prev, searchingContacts: true }));
-        const response = await messagesApi.searchParticipants();
-        if (response.success && response.data) {
-          setState(prev => ({
-            ...prev,
-            contacts: response.data?.participants || [],
-            searchingContacts: false
-          }));
+        setState(prev => ({ ...prev, searchingContacts: true, error: null }));
+
+        let participants: Array<{
+          id: number;
+          email: string;
+          full_name: string;
+          company_name?: string;
+          is_online?: boolean;
+        }> = [];
+
+        // First try the regular participants endpoint
+        try {
+          const response = await messagesApi.searchParticipants();
+
+          if (response.success && response.data) {
+            participants = response.data?.participants || [];
+
+            // Filter participants for super admin (same logic as users API)
+            if (user?.roles?.some(role => role.role.name === 'super_admin') || user?.id === 7) {
+              participants = participants.filter(p => {
+                // For now, show participants with company_name (indicating they're company users)
+                return p.company_name && p.company_name.trim() !== '';
+              });
+            }
+          }
+        } catch (participantsError) {
+          // Silently continue to fallback
         }
-      } catch {
-        setState(prev => ({ ...prev, searchingContacts: false }));
+
+        // If no participants found, try users API as fallback (especially for admin users)
+        if (participants.length === 0) {
+          try {
+            // Try multiple user queries to find any users
+            let usersResponse = await usersApi.getUsers({
+              is_active: true,
+              size: 100
+            });
+
+            // Query 2: If no active users, try all users (non-deleted)
+            if (!usersResponse.data?.users?.length) {
+              usersResponse = await usersApi.getUsers({
+                size: 100,
+                include_deleted: false
+              });
+            }
+
+            // Query 3: If still nothing, try absolutely everything
+            if (!usersResponse.data?.users?.length) {
+              usersResponse = await usersApi.getUsers({
+                size: 100
+              });
+            }
+
+            if (usersResponse.data?.users?.length) {
+              // Convert users to participant format and exclude current user
+              let filteredUsers = usersResponse.data.users.filter(u => u.id !== user?.id);
+
+              // For super admin, only show company admins (users who can receive messages)
+              // Check multiple ways to identify super admin
+              const isSuperAdmin = user?.roles?.some(role => role.role.name === 'super_admin') || user?.id === 7 ||
+                                  (user && !user.company_id && user.is_admin); // Super admin typically has no company_id but is admin
+
+              if (isSuperAdmin) {
+                filteredUsers = filteredUsers.filter(u => {
+                  const isCompanyAdmin = u.roles.includes('company_admin') || u.roles.includes('admin') || (u.is_admin === true && u.company_id);
+                  return isCompanyAdmin;
+                });
+              }
+
+              participants = filteredUsers.map(u => ({
+                id: u.id,
+                email: u.email,
+                full_name: `${u.first_name} ${u.last_name}`,
+                company_name: u.company_name || '', // Use company_name field
+                is_online: false
+              }));
+            }
+          } catch (usersError) {
+            throw usersError;
+          }
+        }
+
+
+        setState(prev => ({
+          ...prev,
+          contacts: participants,
+          searchingContacts: false
+        }));
+
+      } catch (error) {
+        setState(prev => ({
+          ...prev,
+          searchingContacts: false,
+          error: error instanceof Error ? error.message : 'Failed to load contacts'
+        }));
       }
     }
   };
@@ -357,7 +603,6 @@ function MessagesPageContent() {
         }));
       }
     } catch (error) {
-      console.error('Failed to search messages:', error);
       setState(prev => ({ 
         ...prev, 
         isSearching: false,
@@ -418,6 +663,19 @@ function MessagesPageContent() {
   );
 
   const activeConversation = state.conversations.find(c => c.other_user_id === state.activeConversationId);
+
+  // Create a fallback conversation if we have an active ID but no conversation found
+  // This prevents the conversation from disappearing when switching from contacts
+  const displayConversation = activeConversation || (state.activeConversationId ? {
+    other_user_id: state.activeConversationId,
+    other_user_name: state.contacts.find(c => c.id === state.activeConversationId)?.full_name || 'User',
+    other_user_email: state.contacts.find(c => c.id === state.activeConversationId)?.email || '',
+    other_user_company: state.contacts.find(c => c.id === state.activeConversationId)?.company_name,
+    unread_count: 0,
+    last_message: undefined,
+    last_activity: new Date().toISOString()
+  } as Conversation : null);
+
 
   if (state.loading) {
     return (
@@ -577,10 +835,10 @@ function MessagesPageContent() {
                           setState(prev => ({ ...prev, showSearchResults: false }));
                         }
                       }}
-                      className="mx-3 my-1 p-4 rounded-2xl cursor-pointer transition-all hover:bg-gray-50 dark:hover:bg-gray-700"
+                      className="p-3 cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
                     >
                       <div className="flex items-start gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium ${getAvatarColor(message.sender_id === user?.id ? message.recipient_id : message.sender_id)}`}>
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm ${getAvatarColor(message.sender_id === user?.id ? message.recipient_id : message.sender_id)}`}>
                           {getInitials(message.sender_id === user?.id ? message.recipient_name : message.sender_name)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -616,14 +874,14 @@ function MessagesPageContent() {
                   <div
                     key={conversation.other_user_id}
                     onClick={() => handleConversationSelect(conversation.other_user_id)}
-                    className={`mx-3 my-1 p-4 rounded-2xl cursor-pointer transition-all hover:bg-gray-50 dark:hover:bg-gray-700 ${
-                      state.activeConversationId === conversation.other_user_id 
-                        ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800' 
+                    className={`p-3 cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                      state.activeConversationId === conversation.other_user_id
+                        ? 'bg-blue-50 dark:bg-blue-900/20'
                         : ''
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-medium ${getAvatarColor(conversation.other_user_id)}`}>
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm ${getAvatarColor(conversation.other_user_id)}`}>
                         {getInitials(conversation.other_user_name || '')}
                       </div>
                       
@@ -683,19 +941,34 @@ function MessagesPageContent() {
                     <p className="text-gray-500">Loading contacts...</p>
                   </div>
                 </div>
+              ) : state.error ? (
+                <div className="p-8 text-center">
+                  <div className="text-4xl mb-4">⚠️</div>
+                  <p className="text-red-600 dark:text-red-400 mb-2">Error loading contacts</p>
+                  <p className="text-sm text-gray-500 mb-4">{state.error}</p>
+                  <Button
+                    onClick={() => handleTabSwitch('contacts')}
+                    size="sm"
+                    className="bg-blue-500 hover:bg-blue-600 text-white"
+                  >
+                    Try Again
+                  </Button>
+                </div>
               ) : state.contacts.length > 0 ? (
                 state.contacts.map(contact => (
                   <div
                     key={contact.id}
-                    onClick={() => handleConversationSelect(contact.id, true)}
-                    className="mx-3 my-1 p-4 rounded-2xl cursor-pointer transition-all hover:bg-gray-50 dark:hover:bg-gray-700 group relative"
+                    className="p-3 cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-medium ${getAvatarColor(contact.id)}`}>
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm ${getAvatarColor(contact.id)}`}>
                         {getInitials(contact.full_name)}
                       </div>
-                      
-                      <div className="flex-1 min-w-0">
+
+                      <div
+                        className="flex-1 min-w-0 cursor-pointer"
+                        onClick={() => handleContactProfileView(contact)}
+                      >
                         <h3 className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)' }}>
                           {contact.full_name}
                         </h3>
@@ -708,19 +981,6 @@ function MessagesPageContent() {
                           </p>
                         )}
                       </div>
-
-                      {/* Send Message Button - Shows on hover */}
-                      <Button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleConversationSelect(contact.id, true);
-                        }}
-                        size="sm"
-                        title="Send message"
-                        className="opacity-0 group-hover:opacity-100 transition-all duration-200 bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg shadow-sm hover:shadow-md transform hover:scale-105"
-                      >
-                        <Send className="h-4 w-4" />
-                      </Button>
                     </div>
                   </div>
                 ))
@@ -736,22 +996,22 @@ function MessagesPageContent() {
 
         {/* Messages Area */}
         <div className="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900">
-          {state.activeConversationId && activeConversation ? (
+          {state.activeConversationId && displayConversation ? (
             <>
               {/* Chat Header with refresh button */}
               <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium ${getAvatarColor(activeConversation.other_user_id)}`}>
-                      {getInitials(activeConversation.other_user_name || '')}
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium ${getAvatarColor(displayConversation.other_user_id)}`}>
+                      {getInitials(displayConversation.other_user_name || '')}
                     </div>
-                    
+
                     <div>
                       <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>
-                        {activeConversation.other_user_name}
+                        {displayConversation.other_user_name}
                       </h3>
                       <p className="text-sm text-gray-500">
-                        {activeConversation.other_user_email}
+                        {displayConversation.other_user_email}
                       </p>
                     </div>
                   </div>
@@ -770,7 +1030,15 @@ function MessagesPageContent() {
 
               {/* Messages */}
               <div className="flex-1 overflow-y-auto p-6">
-                {state.messages.map(message => (
+                {state.loading ? (
+                  <div className="flex-1 flex items-center justify-center">
+                    <div className="text-center">
+                      <LoadingSpinner className="w-8 h-8 mx-auto mb-4" />
+                      <p className="text-gray-500">Loading messages...</p>
+                    </div>
+                  </div>
+                ) : state.messages.length > 0 ? (
+                  state.messages.map(message => (
                   <div
                     key={message.id}
                     className={`flex mb-4 ${message.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
@@ -791,10 +1059,8 @@ function MessagesPageContent() {
                               {(message.file_size / (1024 * 1024)).toFixed(2)} MB
                             </p>
                           )}
-                          <a
-                            href={`${API_CONFIG.BASE_URL}${message.file_url}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <button
+                            onClick={() => message.file_url && handleFileDownload(message.file_url, message.file_name)}
                             className={`inline-block px-3 py-1 text-xs rounded-full border transition-colors ${
                               message.sender_id === user?.id
                                 ? 'border-white/30 hover:bg-white/20 text-white'
@@ -802,7 +1068,7 @@ function MessagesPageContent() {
                             }`}
                           >
                             Download
-                          </a>
+                          </button>
                         </div>
                       ) : (
                         <p className="text-sm">{message.content}</p>
@@ -814,12 +1080,36 @@ function MessagesPageContent() {
                       </p>
                     </div>
                   </div>
-                ))}
+                  ))
+                ) : (
+                  <div className="flex-1 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="text-6xl mb-4">💬</div>
+                      <p className="text-gray-500">Start your conversation!</p>
+                      <p className="text-sm text-gray-400 mt-2">Send a message to begin chatting</p>
+                    </div>
+                  </div>
+                )}
                 <div ref={messagesEndRef} />
               </div>
 
               {/* Message Input */}
               <div className="p-6 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+                {/* Error Display */}
+                {state.error && (
+                  <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg">
+                    <div className="flex justify-between items-start">
+                      <span>{state.error}</span>
+                      <button
+                        onClick={() => setState(prev => ({ ...prev, error: null }))}
+                        className="text-red-500 hover:text-red-700 ml-2"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex gap-4 items-end">
                   <div className="flex-1 relative">
                     <Input
@@ -876,10 +1166,16 @@ function MessagesPageContent() {
                       </div>
                     )}
                   </div>
-                  <Button 
-                    onClick={handleSendMessage}
+                  <Button
+                    onClick={() => {
+                      handleSendMessage();
+                    }}
                     disabled={!newMessage.trim() || state.sending}
-                    className="w-12 h-12 rounded-2xl p-0 bg-blue-500 hover:bg-blue-600"
+                    className={`w-12 h-12 rounded-2xl p-0 ${
+                      !newMessage.trim() || state.sending
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-blue-500 hover:bg-blue-600'
+                    }`}
                   >
                     {state.sending ? (
                       <LoadingSpinner className="w-4 h-4" />
@@ -905,6 +1201,77 @@ function MessagesPageContent() {
           )}
         </div>
       </div>
+
+      {/* Contact Profile Modal */}
+      {state.showProfileModal && state.selectedContactProfile && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Contact Profile
+              </h3>
+              <button
+                onClick={handleCloseProfileModal}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Profile Content */}
+            <div className="space-y-4">
+              {/* Avatar and Name */}
+              <div className="flex items-center space-x-4">
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center text-white text-lg font-medium ${getAvatarColor(state.selectedContactProfile.id)}`}>
+                  {getInitials(state.selectedContactProfile.full_name)}
+                </div>
+                <div>
+                  <h4 className="text-xl font-semibold text-gray-900 dark:text-white">
+                    {state.selectedContactProfile.full_name}
+                  </h4>
+                  <p className="text-gray-500 dark:text-gray-400">
+                    {state.selectedContactProfile.email}
+                  </p>
+                </div>
+              </div>
+
+              {/* Company Info */}
+              {state.selectedContactProfile.company_name && (
+                <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Company</p>
+                  <p className="font-medium text-gray-900 dark:text-white">
+                    {state.selectedContactProfile.company_name}
+                  </p>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex space-x-3 pt-4">
+                <Button
+                  onClick={() => {
+                    handleConversationSelect(state.selectedContactProfile!.id, true);
+                    handleCloseProfileModal();
+                  }}
+                  leftIcon={<Send className="h-4 w-4" />}
+                  className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
+                >
+                  Send Message
+                </Button>
+                <Button
+                  onClick={handleCloseProfileModal}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </AppLayout>
   );
 }

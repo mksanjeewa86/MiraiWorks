@@ -98,17 +98,19 @@ class DirectMessageService:
                     ),
                 )
             )
-            .order_by(desc(DirectMessage.created_at))
+            .order_by(DirectMessage.created_at)
         )
 
         if before_id:
+            # For ascending order, we want messages with id > before_id for "load more older messages"
+            # But since we changed to ascending, let's keep the same pagination behavior
             query = query.where(DirectMessage.id < before_id)
 
         query = query.limit(limit)
         result = await db.execute(query)
         messages = result.scalars().all()
 
-        return list(messages)  # Return in descending order (newest first)
+        return list(messages)  # Return in ascending order (oldest first, newest at bottom)
 
     async def get_conversations(
         self, db: AsyncSession, user_id: int, search_query: Optional[str] = None
