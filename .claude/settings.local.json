@@ -12,7 +12,20 @@
       "Bash(PYTHONPATH=. python -c \"\nfrom app.main import app\nprint(''Available routes:'')\nfor route in app.routes:\n    if hasattr(route, ''path'') and hasattr(route, ''methods''):\n        print(f''{route.methods} {route.path}'')\n\")",
       "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_direct_messages.py::TestDirectMessages::test_send_message_with_file app/tests/test_direct_messages.py::TestDirectMessages::test_message_with_reply_to app/tests/test_direct_messages.py::TestDirectMessages::test_message_validation_empty_content -v --tb=short)",
       "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_direct_messages.py::TestDirectMessages::test_message_validation_empty_content -v --tb=short)",
-      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_companies.py::TestCompanies::test_get_companies_include_deleted_true app/tests/test_direct_messages.py::TestDirectMessages::test_send_message_success app/tests/test_direct_messages.py::TestDirectMessages::test_send_message_with_file app/tests/test_direct_messages.py::TestDirectMessages::test_message_with_reply_to app/tests/test_direct_messages.py::TestDirectMessages::test_message_validation_empty_content -v)"
+      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_companies.py::TestCompanies::test_get_companies_include_deleted_true app/tests/test_direct_messages.py::TestDirectMessages::test_send_message_success app/tests/test_direct_messages.py::TestDirectMessages::test_send_message_with_file app/tests/test_direct_messages.py::TestDirectMessages::test_message_with_reply_to app/tests/test_direct_messages.py::TestDirectMessages::test_message_validation_empty_content -v)",
+      "Bash(python:*)",
+      "Bash(curl:*)",
+      "Bash(npm run build:*)",
+      "Bash(pip install:*)",
+      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_direct_messages.py -v)",
+      "Bash(sed:*)",
+      "Bash(find:*)",
+      "Bash(PYTHONPATH=. python:*)",
+      "Bash(cat:*)",
+      "Bash(npx tsc:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []

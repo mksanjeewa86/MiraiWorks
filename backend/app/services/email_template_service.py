@@ -1,13 +1,30 @@
 import os
 from pathlib import Path
 from typing import Dict, Any, Tuple
-from string import Template
+
+try:
+    from jinja2 import Environment, FileSystemLoader, select_autoescape
+    JINJA2_AVAILABLE = True
+except ImportError:
+    JINJA2_AVAILABLE = False
+    import re
 
 
 class EmailTemplateService:
     def __init__(self):
         self.template_dir = Path(__file__).parent.parent / "templates" / "emails"
         self.base_template_path = self.template_dir / "base.html"
+
+        if JINJA2_AVAILABLE:
+            # Use Jinja2 for proper template rendering
+            # Disable autoescape for email templates since they contain HTML content
+            self.jinja_env = Environment(
+                loader=FileSystemLoader(str(self.template_dir)),
+                autoescape=False
+            )
+        else:
+            # Fallback to regex replacement if Jinja2 not available
+            self.jinja_env = None
 
     def _load_template(self, template_path: str, format_type: str = "html") -> str:
         """Load a template file from the templates directory.
@@ -33,12 +50,25 @@ class EmailTemplateService:
             return file.read()
 
     def _render_template(self, template_content: str, context: Dict[str, Any]) -> str:
-        """Render a template with the given context using string templating."""
-        template = Template(template_content)
-        try:
-            return template.substitute(context)
-        except KeyError as e:
-            raise ValueError(f"Missing template variable: {e}")
+        """Render a template with the given context."""
+        if JINJA2_AVAILABLE:
+            # Use Jinja2 for proper template rendering
+            template = self.jinja_env.from_string(template_content)
+            try:
+                return template.render(context)
+            except Exception as e:
+                raise ValueError(f"Template rendering error: {e}")
+        else:
+            # Fallback: Simple regex replacement for {{ variable }} patterns
+            try:
+                result = template_content
+                for key, value in context.items():
+                    # Replace {{ key }} with value
+                    pattern = r'\{\{\s*' + re.escape(key) + r'\s*\}\}'
+                    result = re.sub(pattern, str(value), result)
+                return result
+            except Exception as e:
+                raise ValueError(f"Template rendering error: {e}")
 
     def render_email_template(
         self,
@@ -60,22 +90,43 @@ class EmailTemplateService:
             Tuple of (html_content, text_content)
         """
         try:
-            # Load and render the content template (HTML)
-            html_content_template = self._load_template(template_path, "html")
-            rendered_content = self._render_template(html_content_template, context)
+            if JINJA2_AVAILABLE:
+                # Use Jinja2 for proper template rendering with inheritance
+                # Load the content template
+                content_template = self.jinja_env.get_template(f"{template_path}.html")
+                rendered_content = content_template.render(context)
 
-            # Load base template and wrap the content
-            base_template = self._load_base_template()
-            base_context = {
-                "subject": subject,
-                "header_title": header_title,
-                "content": rendered_content
-            }
-            html_body = self._render_template(base_template, base_context)
+                # Load the base template
+                base_template = self.jinja_env.get_template("base.html")
+                base_context = {
+                    "subject": subject,
+                    "header_title": header_title,
+                    "content": rendered_content
+                }
+                html_body = base_template.render(base_context)
 
-            # Load and render the text template
-            text_template = self._load_template(template_path, "txt")
-            text_body = self._render_template(text_template, context)
+                # Load and render the text template
+                text_template = self.jinja_env.get_template(f"{template_path}.txt")
+                text_body = text_template.render(context)
+
+            else:
+                # Fallback method for systems without Jinja2
+                # Load and render the content template (HTML)
+                html_content_template = self._load_template(template_path, "html")
+                rendered_content = self._render_template(html_content_template, context)
+
+                # Load base template and wrap the content
+                base_template = self._load_base_template()
+                base_context = {
+                    "subject": subject,
+                    "header_title": header_title,
+                    "content": rendered_content
+                }
+                html_body = self._render_template(base_template, base_context)
+
+                # Load and render the text template
+                text_template = self._load_template(template_path, "txt")
+                text_body = self._render_template(text_template, context)
 
             return html_body, text_body
 

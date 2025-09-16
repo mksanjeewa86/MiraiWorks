@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Save, Calendar, Settings } from 'lucide-react';
+import { ArrowLeft, Save, Calendar, Settings, Trash2, UserX } from 'lucide-react';
 import { companiesApi } from '@/api/companiesApi';
 import { Company, CompanyType, CompanyUpdate } from '@/types/company';
 import { CompanyFormData } from '@/types/forms';
@@ -33,6 +33,8 @@ function EditCompanyContent() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDeactivateModal, setShowDeactivateModal] = useState(false);
 
   const companyId = params?.id as string;
 
@@ -56,7 +58,7 @@ function EditCompanyContent() {
           city: companyData.city || '',
           description: companyData.description || '',
           is_demo: companyData.is_demo || false,
-          demo_end_date: companyData.demo_end_date || '',
+          demo_end_date: companyData.demo_end_date ? companyData.demo_end_date.split('T')[0] : '',
           demo_features: companyData.demo_features || '',
           demo_notes: companyData.demo_notes || '',
         });
@@ -107,6 +109,45 @@ function EditCompanyContent() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleDeactivate = async () => {
+    if (!company) return;
+
+    try {
+      setSubmitting(true);
+      // Assuming there's a deactivate endpoint
+      await companiesApi.updateCompany(company.id, { is_active: false });
+      showToast({
+        type: 'success',
+        title: 'Company deactivated',
+        message: `${company.name} has been deactivated.`
+      });
+      router.push('/companies');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to deactivate company');
+      setSubmitting(false);
+    }
+    setShowDeactivateModal(false);
+  };
+
+  const handleDelete = async () => {
+    if (!company) return;
+
+    try {
+      setSubmitting(true);
+      await companiesApi.deleteCompany(company.id);
+      showToast({
+        type: 'success',
+        title: 'Company deleted',
+        message: `${company.name} has been permanently deleted.`
+      });
+      router.push('/companies');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete company');
+      setSubmitting(false);
+    }
+    setShowDeleteModal(false);
   };
 
   if (loading) {
@@ -188,10 +229,11 @@ function EditCompanyContent() {
                   type="email"
                   required
                   value={formData.email}
-                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  disabled
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
                   placeholder="contact@company.com"
                 />
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Email cannot be changed</p>
               </div>
 
               {/* Type */}
@@ -249,9 +291,16 @@ function EditCompanyContent() {
                 <input
                   type="text"
                   value={formData.postal_code}
-                  onChange={(e) => setFormData(prev => ({ ...prev, postal_code: e.target.value }))}
+                  onChange={(e) => {
+                    let value = e.target.value.replace(/[^0-9]/g, '');
+                    if (value.length > 3) {
+                      value = value.slice(0, 3) + '-' + value.slice(3, 7);
+                    }
+                    setFormData(prev => ({ ...prev, postal_code: value }));
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   placeholder="123-4567"
+                  maxLength={8}
                 />
               </div>
 
@@ -260,13 +309,60 @@ function EditCompanyContent() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   都道府県 (Prefecture)
                 </label>
-                <input
-                  type="text"
+                <select
                   value={formData.prefecture}
                   onChange={(e) => setFormData(prev => ({ ...prev, prefecture: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                  placeholder="東京都"
-                />
+                  className="w-full px-3 py-2 pr-8 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="">Select Prefecture</option>
+                  <option value="北海道">北海道 (Hokkaido)</option>
+                  <option value="青森県">青森県 (Aomori)</option>
+                  <option value="岩手県">岩手県 (Iwate)</option>
+                  <option value="宮城県">宮城県 (Miyagi)</option>
+                  <option value="秋田県">秋田県 (Akita)</option>
+                  <option value="山形県">山形県 (Yamagata)</option>
+                  <option value="福島県">福島県 (Fukushima)</option>
+                  <option value="茨城県">茨城県 (Ibaraki)</option>
+                  <option value="栃木県">栃木県 (Tochigi)</option>
+                  <option value="群馬県">群馬県 (Gunma)</option>
+                  <option value="埼玉県">埼玉県 (Saitama)</option>
+                  <option value="千葉県">千葉県 (Chiba)</option>
+                  <option value="東京都">東京都 (Tokyo)</option>
+                  <option value="神奈川県">神奈川県 (Kanagawa)</option>
+                  <option value="新潟県">新潟県 (Niigata)</option>
+                  <option value="富山県">富山県 (Toyama)</option>
+                  <option value="石川県">石川県 (Ishikawa)</option>
+                  <option value="福井県">福井県 (Fukui)</option>
+                  <option value="山梨県">山梨県 (Yamanashi)</option>
+                  <option value="長野県">長野県 (Nagano)</option>
+                  <option value="岐阜県">岐阜県 (Gifu)</option>
+                  <option value="静岡県">静岡県 (Shizuoka)</option>
+                  <option value="愛知県">愛知県 (Aichi)</option>
+                  <option value="三重県">三重県 (Mie)</option>
+                  <option value="滋賀県">滋賀県 (Shiga)</option>
+                  <option value="京都府">京都府 (Kyoto)</option>
+                  <option value="大阪府">大阪府 (Osaka)</option>
+                  <option value="兵庫県">兵庫県 (Hyogo)</option>
+                  <option value="奈良県">奈良県 (Nara)</option>
+                  <option value="和歌山県">和歌山県 (Wakayama)</option>
+                  <option value="鳥取県">鳥取県 (Tottori)</option>
+                  <option value="島根県">島根県 (Shimane)</option>
+                  <option value="岡山県">岡山県 (Okayama)</option>
+                  <option value="広島県">広島県 (Hiroshima)</option>
+                  <option value="山口県">山口県 (Yamaguchi)</option>
+                  <option value="徳島県">徳島県 (Tokushima)</option>
+                  <option value="香川県">香川県 (Kagawa)</option>
+                  <option value="愛媛県">愛媛県 (Ehime)</option>
+                  <option value="高知県">高知県 (Kochi)</option>
+                  <option value="福岡県">福岡県 (Fukuoka)</option>
+                  <option value="佐賀県">佐賀県 (Saga)</option>
+                  <option value="長崎県">長崎県 (Nagasaki)</option>
+                  <option value="熊本県">熊本県 (Kumamoto)</option>
+                  <option value="大分県">大分県 (Oita)</option>
+                  <option value="宮崎県">宮崎県 (Miyazaki)</option>
+                  <option value="鹿児島県">鹿児島県 (Kagoshima)</option>
+                  <option value="沖縄県">沖縄県 (Okinawa)</option>
+                </select>
               </div>
 
               {/* City */}
@@ -375,26 +471,117 @@ function EditCompanyContent() {
               )}
             </div>
 
-            {/* Submit Buttons */}
-            <div className="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
-              <button
-                type="button"
-                onClick={() => router.back()}
-                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={submitting || !formData.name || !formData.email}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-              >
-                <Save className="h-4 w-4" />
-                <span>{submitting ? 'Updating...' : 'Update Company'}</span>
-              </button>
+            {/* Action Buttons */}
+            <div className="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
+              {/* Danger Actions */}
+              <div className="flex space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setShowDeactivateModal(true)}
+                  className="px-4 py-2 text-sm font-medium text-orange-700 dark:text-orange-300 bg-orange-50 dark:bg-orange-900/20 border border-orange-300 dark:border-orange-600 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/30 flex items-center space-x-2"
+                >
+                  <UserX className="h-4 w-4" />
+                  <span>Deactivate</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteModal(true)}
+                  className="px-4 py-2 text-sm font-medium text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-600 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 flex items-center space-x-2"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span>Delete</span>
+                </button>
+              </div>
+
+              {/* Main Actions */}
+              <div className="flex space-x-3">
+                <button
+                  type="button"
+                  onClick={() => router.back()}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting || !formData.name || !formData.email}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                >
+                  <Save className="h-4 w-4" />
+                  <span>{submitting ? 'Updating...' : 'Update Company'}</span>
+                </button>
+              </div>
             </div>
           </form>
         </div>
+
+        {/* Delete Modal */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
+              <div className="flex items-center mb-4">
+                <Trash2 className="h-6 w-6 text-red-500 mr-3" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                  Delete Company
+                </h3>
+              </div>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                Are you sure you want to permanently delete <strong>{company?.name}</strong>?
+                This action cannot be undone and will remove all associated data.
+              </p>
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  disabled={submitting}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={submitting}
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submitting ? 'Deleting...' : 'Delete Company'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Deactivate Modal */}
+        {showDeactivateModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
+              <div className="flex items-center mb-4">
+                <UserX className="h-6 w-6 text-orange-500 mr-3" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                  Deactivate Company
+                </h3>
+              </div>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                Are you sure you want to deactivate <strong>{company?.name}</strong>?
+                The company will no longer be able to access the system but data will be preserved.
+              </p>
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowDeactivateModal(false)}
+                  disabled={submitting}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeactivate}
+                  disabled={submitting}
+                  className="px-4 py-2 text-sm font-medium text-white bg-orange-600 border border-transparent rounded-lg hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submitting ? 'Deactivating...' : 'Deactivate Company'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </AppLayout>
   );

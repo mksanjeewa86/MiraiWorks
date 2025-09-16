@@ -494,12 +494,11 @@ function SettingsPageContent() {
           </div>
           
           <div className="flex justify-end">
-            <Button 
+            <Button
               onClick={handlePasswordSave}
               disabled={state.passwordSaving || !state.security.current_password || !state.security.new_password || !state.security.confirm_password}
-              className="flex items-center gap-2"
+              leftIcon={state.passwordSaving ? <LoadingSpinner className="w-4 h-4" /> : <Save className="h-4 w-4" />}
             >
-              {state.passwordSaving ? <LoadingSpinner className="w-4 h-4" /> : <Save className="h-4 w-4" />}
               {state.passwordSaving ? 'Changing Password...' : 'Change Password'}
             </Button>
           </div>

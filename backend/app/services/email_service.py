@@ -26,20 +26,42 @@ class EmailService:
     ) -> bool:
         """Send an email via SMTP."""
         try:
-            # Create message
-            msg = MIMEMultipart("alternative")
-            msg["Subject"] = subject
-            msg["From"] = f"{settings.from_name} <{settings.from_email}>"
-            msg["To"] = ", ".join(to_emails)
+            # Log what we're about to send for debugging
+            logger.info(f"Sending email to {to_emails}")
+            logger.info(f"Subject: {subject}")
+            logger.info(f"HTML body length: {len(html_body)}")
+            logger.info(f"Text body provided: {text_body is not None}")
 
-            # Add text part
+            # Create message with proper structure
             if text_body:
-                text_part = MIMEText(text_body, "plain")
+                # Send multipart alternative (HTML + text)
+                msg = MIMEMultipart("alternative")
+                msg["Subject"] = subject
+                msg["From"] = f"{settings.from_name} <{settings.from_email}>"
+                msg["To"] = ", ".join(to_emails)
+
+                # Set proper headers
+                msg["MIME-Version"] = "1.0"
+                msg["Content-Type"] = "multipart/alternative"
+
+                # Add text part first (fallback)
+                text_part = MIMEText(text_body, "plain", "utf-8")
                 msg.attach(text_part)
 
-            # Add HTML part
-            html_part = MIMEText(html_body, "html")
-            msg.attach(html_part)
+                # Add HTML part second (preferred)
+                html_part = MIMEText(html_body, "html", "utf-8")
+                msg.attach(html_part)
+
+                logger.info("Created multipart/alternative email")
+            else:
+                # Send HTML only
+                msg = MIMEText(html_body, "html", "utf-8")
+                msg["Subject"] = subject
+                msg["From"] = f"{settings.from_name} <{settings.from_email}>"
+                msg["To"] = ", ".join(to_emails)
+                msg["MIME-Version"] = "1.0"
+
+                logger.info("Created HTML-only email")
 
             # Send email
             with smtplib.SMTP(settings.smtp_host, settings.smtp_port) as server:

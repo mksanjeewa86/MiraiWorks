@@ -43,6 +43,13 @@ export interface MessagesPageState {
   searchResults: DirectMessageInfo[];
   isSearching: boolean;
   showSearchResults: boolean;
+  showProfileModal: boolean;
+  selectedContactProfile: {
+    id: number;
+    email: string;
+    full_name: string;
+    company_name?: string;
+  } | null;
 }
 
 // ====================

@@ -356,12 +356,11 @@ function ProfilePageContent() {
                 Cancel
               </Button>
             )}
-            <Button 
-              className="flex items-center gap-2"
+            <Button
+              leftIcon={<Edit className="h-4 w-4" />}
               onClick={editing ? handleSaveProfile : () => setEditing(true)}
               disabled={saving}
             >
-              <Edit className="h-4 w-4" />
               {saving ? 'Saving...' : editing ? 'Save Profile' : 'Edit Profile'}
             </Button>
           </div>

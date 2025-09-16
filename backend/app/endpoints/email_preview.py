@@ -4,6 +4,8 @@ from typing import Optional
 
 from app.services.email_preview_service import email_preview_service
 
+# Force reload after template service fixes
+
 router = APIRouter(prefix="/api/dev/email-preview", tags=["Email Preview"])
 
 
@@ -183,6 +185,7 @@ async def preview_template(
 ):
     """Preview a specific email template."""
     try:
+        # Get preview with updated template service
         preview = email_preview_service.preview_email(name)
 
         if format.lower() == "text":

@@ -1,0 +1,11 @@
+Your MiraiWorks Verification Code
+
+Hi John Doe,
+
+Your two-factor authentication verification code is: 123456
+
+This code will expire in 10 minutes.
+
+If you didn't request this code, please ignore this email.
+
+This is an automated message from MiraiWorks.

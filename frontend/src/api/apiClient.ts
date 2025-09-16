@@ -133,3 +133,39 @@ export const makePublicRequest = async <T>(
   const data = await response.json();
   return { data };
 };
+
+// Standard HTTP methods
+export const apiClient = {
+  get: <T>(url: string) => makeAuthenticatedRequest<T>(url, { method: 'GET' }),
+
+  post: <T>(url: string, data?: unknown) =>
+    makeAuthenticatedRequest<T>(url, {
+      method: 'POST',
+      body: data ? JSON.stringify(data) : undefined
+    }),
+
+  put: <T>(url: string, data?: unknown) =>
+    makeAuthenticatedRequest<T>(url, {
+      method: 'PUT',
+      body: data ? JSON.stringify(data) : undefined
+    }),
+
+  patch: <T>(url: string, data?: unknown) =>
+    makeAuthenticatedRequest<T>(url, {
+      method: 'PATCH',
+      body: data ? JSON.stringify(data) : undefined
+    }),
+
+  delete: <T>(url: string) => makeAuthenticatedRequest<T>(url, { method: 'DELETE' }),
+};
+
+// Public client for non-authenticated requests
+export const publicApiClient = {
+  get: <T>(url: string) => makePublicRequest<T>(url, { method: 'GET' }),
+
+  post: <T>(url: string, data?: unknown) =>
+    makePublicRequest<T>(url, {
+      method: 'POST',
+      body: data ? JSON.stringify(data) : undefined
+    }),
+};
