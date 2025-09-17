@@ -88,28 +88,48 @@ async def check_file_access_permission(
         # Normalize the file path to match against the stored file_url
         # The s3_key from URL might be URL encoded, so we need to handle this
         import urllib.parse
+        from sqlalchemy import or_
 
-        # If the file_path looks like a URL path, use it directly
+        # Create search patterns to handle different scenarios
+        patterns_to_try = []
+
+        # Pattern 1: If file_path looks like a URL path, use it directly
         if file_path.startswith("/api/files/download/"):
-            search_pattern = file_path
+            patterns_to_try.append(file_path)
+            # Also try without the /api/files/download/ prefix
+            path_only = file_path.replace("/api/files/download/", "")
+            patterns_to_try.append(path_only)
         else:
-            # For local file paths, create the expected URL pattern
+            # Pattern 2: Create the expected URL pattern from file path
+            expected_url = f"/api/files/download/{file_path}"
+            patterns_to_try.append(expected_url)
+            # Also try the path only
+            patterns_to_try.append(file_path)
+
+        # Pattern 3: Always include filename-only matching as fallback
+        filename = os.path.basename(file_path)
+        patterns_to_try.append(filename)
+
+        # Build OR conditions for pattern matching
+        file_conditions = []
+        for pattern in patterns_to_try:
+            # Exact match
+            file_conditions.append(DirectMessage.file_url == pattern)
+            # LIKE match (contains the pattern)
+            file_conditions.append(DirectMessage.file_url.like(f"%{pattern}%"))
+
+            # URL decoded version if different
             try:
-                from pathlib import Path
-                from app.services.local_storage_service import get_local_storage_service
-                storage_service = get_local_storage_service()
-                # Try to recreate the download URL that would be generated
-                search_pattern = storage_service.get_download_url(file_path)
+                decoded = urllib.parse.unquote(pattern)
+                if decoded != pattern:
+                    file_conditions.append(DirectMessage.file_url.like(f"%{decoded}%"))
             except:
-                # Fallback: use filename matching
-                search_pattern = f"%{os.path.basename(file_path)}%"
+                pass
 
         # Check if this file is attached to any message where user is sender or recipient
         message_result = await db.execute(
             select(DirectMessage).where(
-                (DirectMessage.file_url.like(f"%{urllib.parse.unquote(search_pattern)}%") |
-                 DirectMessage.file_url.like(f"%{search_pattern}%") |
-                 DirectMessage.file_url.like(f"%{os.path.basename(file_path)}%")) &
+                or_(*file_conditions) &
                 (
                     (DirectMessage.sender_id == user_id) |
                     (DirectMessage.recipient_id == user_id)
@@ -265,8 +285,13 @@ async def download_file(
 
         storage_service = get_local_storage_service()
 
+        # Resolve the full path to the file
+        # s3_key comes in as: "message-attachments/8/2025/09/file.pdf"
+        # We need to make it: "uploads/message-attachments/8/2025/09/file.pdf"
+        full_file_path = storage_service.base_path / s3_key
+
         # Check if file exists
-        if storage_service.file_exists(s3_key):
+        if full_file_path.exists():
             # Determine media type and disposition based on file extension
             filename = os.path.basename(s3_key)
             file_ext = filename.lower().split('.')[-1] if '.' in filename else ''
@@ -291,7 +316,7 @@ async def download_file(
                 headers = {"Content-Disposition": f"inline; filename={filename}"}
 
             return FileResponse(
-                path=s3_key,
+                path=str(full_file_path),
                 filename=filename,
                 media_type=media_type,
                 headers=headers

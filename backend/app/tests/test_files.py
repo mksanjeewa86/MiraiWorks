@@ -619,11 +619,9 @@ class TestFiles:
                 headers=sender_headers
             )
 
-            # Due to Mock object iteration issues in the permission check,
-            # the test returns 403. This test verified that our permission
-            # system integration works - actual functionality is tested
-            # in the direct message tests
-            assert response.status_code == 403
+            # Permission check passes (user has access), but file doesn't exist on disk
+            # This confirms the permission system is working correctly
+            assert response.status_code == 404
 
     @pytest.mark.asyncio
     async def test_file_download_permission_check(
@@ -671,13 +669,138 @@ class TestFiles:
                 headers=recipient_headers
             )
 
-            # Due to Mock object iteration issues in the permission check,
-            # the test returns 403. This test verified that our permission
-            # system integration works - actual functionality is tested
-            # in the direct message tests
-            assert response.status_code == 403
+            # Permission check passes (user has access), but file doesn't exist on disk
+            # This confirms the permission system is working correctly
+            assert response.status_code == 404
 
     def _create_test_token(self, user_id: int) -> str:
         """Helper method to create test JWT token."""
         from app.services.auth_service import auth_service
         return auth_service.create_access_token(data={"sub": str(user_id)})
+
+    @pytest.mark.asyncio
+    async def test_file_download_permission_between_different_users(
+        self,
+        client: AsyncClient,
+        db_session,
+        test_user,
+        test_admin_user
+    ):
+        """Debug test: Check file download permission between sender and recipient."""
+
+        print("\n=== DEBUG: Testing File Download Between Users ===")
+
+        # Login as sender (test_user)
+        sender_response = await client.post("/api/auth/login", json={
+            "email": test_user.email,
+            "password": "testpassword123"
+        })
+        assert sender_response.status_code == 200
+        sender_token = sender_response.json()["access_token"]
+        sender_headers = {"Authorization": f"Bearer {sender_token}"}
+
+        print(f"[OK] Sender logged in: {test_user.email} (ID: {test_user.id})")
+
+        # Login as recipient (test_admin_user)
+        recipient_response = await client.post("/api/auth/login", json={
+            "email": test_admin_user.email,
+            "password": "adminpassword123"
+        })
+        assert recipient_response.status_code == 200
+        recipient_token = recipient_response.json()["access_token"]
+        recipient_headers = {"Authorization": f"Bearer {recipient_token}"}
+
+        print(f"[OK] Recipient logged in: {test_admin_user.email} (ID: {test_admin_user.id})")
+
+        # Upload a file as sender
+        import io
+        test_file_content = b"This is a test file for permission testing"
+        files = {"file": ("permission-test.txt", io.BytesIO(test_file_content), "text/plain")}
+
+        upload_response = await client.post(
+            "/api/files/upload",
+            files=files,
+            headers=sender_headers
+        )
+        assert upload_response.status_code == 200
+        upload_data = upload_response.json()
+
+        print(f"[OK] File uploaded: {upload_data['file_name']}")
+        print(f"  File URL: {upload_data['file_url']}")
+        print(f"  S3 Key: {upload_data['s3_key']}")
+
+        # Send a message with the file from sender to recipient
+        message_response = await client.post("/api/direct-messages/send", json={
+            "recipient_id": test_admin_user.id,
+            "content": f"File: {upload_data['file_name']}",
+            "type": "file",
+            "file_url": upload_data["file_url"],
+            "file_name": upload_data["file_name"],
+            "file_size": upload_data["file_size"],
+            "file_type": upload_data["file_type"]
+        }, headers=sender_headers)
+
+        assert message_response.status_code == 200
+        message_data = message_response.json()
+
+        print(f"[OK] File message sent (Message ID: {message_data['id']})")
+
+        # Extract download path from file URL
+        file_url = upload_data["file_url"]
+        download_path = file_url.replace("/api/files/download/", "")
+
+        print(f"\n=== Testing Download Permissions ===")
+        print(f"Download path: {download_path}")
+
+        # Test 1: Sender should be able to download
+        print("\n--- Test 1: Sender Download ---")
+        sender_download = await client.get(f"/api/files/download/{download_path}", headers=sender_headers)
+        print(f"Sender download status: {sender_download.status_code}")
+        if sender_download.status_code != 200:
+            print(f"Sender download failed: {sender_download.json()}")
+
+        # Test 2: Recipient should be able to download
+        print("\n--- Test 2: Recipient Download ---")
+        recipient_download = await client.get(f"/api/files/download/{download_path}", headers=recipient_headers)
+        print(f"Recipient download status: {recipient_download.status_code}")
+        if recipient_download.status_code != 200:
+            print(f"Recipient download failed: {recipient_download.json()}")
+
+            # Debug: Check what messages exist for this user
+            from sqlalchemy import select
+            from app.models.direct_message import DirectMessage
+
+            result = await db_session.execute(
+                select(DirectMessage).where(
+                    (DirectMessage.sender_id == test_admin_user.id) |
+                    (DirectMessage.recipient_id == test_admin_user.id)
+                )
+            )
+            user_messages = result.scalars().all()
+            print(f"DEBUG: Found {len(user_messages)} messages for recipient:")
+            for msg in user_messages:
+                print(f"  - Message ID: {msg.id}, Type: {msg.type}, File URL: {msg.file_url}")
+                print(f"    Sender: {msg.sender_id}, Recipient: {msg.recipient_id}")
+
+            # Check permission function directly
+            from app.endpoints.files import check_file_access_permission
+            permission_result = await check_file_access_permission(db_session, test_admin_user.id, download_path)
+            print(f"DEBUG: Direct permission check result: {permission_result}")
+
+            # Let's also check what the search pattern looks like
+            print(f"DEBUG: Testing permission check patterns:")
+            print(f"  - Original download_path: {download_path}")
+            print(f"  - File URL: {file_url}")
+
+            # Check if message exists with this file URL
+            result = await db_session.execute(
+                select(DirectMessage).where(DirectMessage.file_url == file_url)
+            )
+            exact_match = result.scalar_one_or_none()
+            print(f"  - Exact file_url match: {exact_match is not None}")
+
+            if exact_match:
+                print(f"    Message sender: {exact_match.sender_id}, recipient: {exact_match.recipient_id}")
+
+        else:
+            print("[OK] Recipient can download successfully!")
