@@ -7,7 +7,7 @@ import AppLayout from '@/components/layout/AppLayout';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { Search, Send, Smile, Paperclip, RefreshCw } from 'lucide-react';
+import { Search, Send, Smile, Paperclip, RefreshCw, X } from 'lucide-react';
 import { messagesApi } from "@/api/messages";
 import { usersApi } from "@/api/usersApi";
 import type { Conversation, LegacyMessage as Message } from '@/types';
@@ -50,6 +50,13 @@ function MessagesPageContent() {
   const [newMessage, setNewMessage] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
+  const [attachedFiles, setAttachedFiles] = useState<Array<{
+    id: string;
+    file_url: string;
+    file_name: string;
+    file_size: number;
+    file_type: string;
+  }>>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -214,26 +221,60 @@ function MessagesPageContent() {
   };
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !state.activeConversationId || state.sending) {
+    if ((!newMessage.trim() && attachedFiles.length === 0) || !state.activeConversationId || state.sending) {
       return;
     }
 
-    const messageContent = newMessage.trim();
-    
-    // Clear input immediately for better UX
+    // Store original values for error restoration
+    const originalText = newMessage.trim();
+    const filesToSend = [...attachedFiles];
+
+    // Clear input and files immediately for better UX
     setNewMessage('');
+    setAttachedFiles([]);
     setState(prev => ({ ...prev, sending: true }));
 
     try {
-      const response = await messagesApi.sendMessage(state.activeConversationId, {
-        content: messageContent,
-        type: 'text'
-      });
-      if (response.success && response.data) {
-        // Add message to local state immediately
+      const messagesToSend = [];
+
+      // If there's text, send text message first
+      if (originalText) {
+        const textContent = filesToSend.length > 0
+          ? `${originalText}\n📁 ${filesToSend.length} file(s) attached`
+          : originalText;
+
+        messagesToSend.push({
+          content: textContent,
+          type: 'text' as const
+        });
+      }
+
+      // Send each file as a separate message
+      for (const file of filesToSend) {
+        messagesToSend.push({
+          content: `📎 ${file.file_name}`,
+          type: 'file' as const,
+          file_url: file.file_url,
+          file_name: file.file_name,
+          file_size: file.file_size,
+          file_type: file.file_type
+        });
+      }
+
+      // Send all messages
+      const responses: Message[] = [];
+      for (const messageData of messagesToSend) {
+        const response = await messagesApi.sendMessage(state.activeConversationId, messageData);
+        if (response.success && response.data) {
+          responses.push(response.data as unknown as Message);
+        }
+      }
+
+      if (responses.length > 0) {
+        // Add all messages to local state
         setState(prev => ({
           ...prev,
-          messages: [...prev.messages, response.data as unknown as Message]
+          messages: [...prev.messages, ...responses]
         }));
 
         // Scroll to bottom after sending
@@ -243,7 +284,8 @@ function MessagesPageContent() {
         refreshConversationList();
       }
     } catch (error) {
-      setNewMessage(messageContent); // Restore message on error
+      setNewMessage(originalText); // Restore original text on error
+      setAttachedFiles(filesToSend); // Restore files on error
 
       // Show user-friendly error message
       const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
@@ -276,39 +318,55 @@ function MessagesPageContent() {
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !state.activeConversationId || uploadingFile) return;
+    const files = event.target.files;
+    if (!files || files.length === 0 || uploadingFile) return;
+
+    // Check if adding these files would exceed the limit
+    const selectedFiles = Array.from(files);
+    if (attachedFiles.length + selectedFiles.length > 5) {
+      setState(prev => ({
+        ...prev,
+        error: `You can only attach up to 5 files. Currently have ${attachedFiles.length} file(s).`
+      }));
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      return;
+    }
 
     setUploadingFile(true);
     try {
-      // First upload the file to the server
-      const uploadResponse = await messagesApi.uploadFile(file);
-      if (!uploadResponse.success || !uploadResponse.data) {
-        throw new Error('File upload failed');
+      const uploadedFiles: Array<{
+        id: string;
+        file_url: string;
+        file_name: string;
+        file_size: number;
+        file_type: string;
+      }> = [];
+
+      // Upload each file
+      for (const file of selectedFiles) {
+        const uploadResponse = await messagesApi.uploadFile(file);
+        if (!uploadResponse.success || !uploadResponse.data) {
+          throw new Error(`Failed to upload ${file.name}`);
+        }
+
+        uploadedFiles.push({
+          id: Date.now().toString() + Math.random().toString(), // Simple unique ID
+          file_url: uploadResponse.data.file_url,
+          file_name: uploadResponse.data.file_name,
+          file_size: uploadResponse.data.file_size,
+          file_type: uploadResponse.data.file_type
+        });
       }
 
-      // Then send a message with the file information
-      const response = await messagesApi.sendMessage(state.activeConversationId, {
-        content: `📎 ${uploadResponse.data.file_name}`,
-        type: 'file',
-        file_url: uploadResponse.data.file_url,
-        file_name: uploadResponse.data.file_name,
-        file_size: uploadResponse.data.file_size,
-        file_type: uploadResponse.data.file_type
-      });
+      // Add to existing files
+      setAttachedFiles(prev => [...prev, ...uploadedFiles]);
 
-      if (response.success && response.data) {
-        setState(prev => ({
-          ...prev,
-          messages: [...prev.messages, response.data as unknown as Message]
-        }));
-        setTimeout(scrollToBottom, 100);
-        refreshConversationList();
-      }
     } catch (error) {
       setState(prev => ({
         ...prev,
-        error: 'Failed to upload file. Please try again.'
+        error: 'Failed to upload one or more files. Please try again.'
       }));
     } finally {
       setUploadingFile(false);
@@ -320,6 +378,17 @@ function MessagesPageContent() {
 
   const handleAttachmentClick = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleRemoveAttachment = (fileId: string) => {
+    setAttachedFiles(prev => prev.filter(file => file.id !== fileId));
+  };
+
+  const handleRemoveAllAttachments = () => {
+    setAttachedFiles([]);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1110,6 +1179,46 @@ function MessagesPageContent() {
                   </div>
                 )}
 
+                {/* File Attachments Preview */}
+                {attachedFiles.length > 0 && (
+                  <div className="mb-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                        {attachedFiles.length} file(s) attached
+                      </span>
+                      <button
+                        onClick={handleRemoveAllAttachments}
+                        className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                        title="Remove all attachments"
+                      >
+                        Remove all
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {attachedFiles.map((file) => (
+                        <div key={file.id} className="flex items-center justify-between bg-white dark:bg-blue-800/50 rounded p-2">
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <Paperclip className="h-3 w-3 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                            <span className="text-xs font-medium text-blue-900 dark:text-blue-100 truncate">
+                              {file.file_name}
+                            </span>
+                            <span className="text-xs text-blue-600 dark:text-blue-400 flex-shrink-0">
+                              ({(file.file_size / (1024 * 1024)).toFixed(2)} MB)
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => handleRemoveAttachment(file.id)}
+                            className="p-1 hover:bg-blue-100 dark:hover:bg-blue-700 rounded-full transition-colors ml-2"
+                            title="Remove this file"
+                          >
+                            <X className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex gap-4 items-end">
                   <div className="flex-1 relative">
                     <Input
@@ -1149,6 +1258,7 @@ function MessagesPageContent() {
                       onChange={handleFileUpload}
                       className="hidden"
                       accept="image/*,audio/*,video/*,.pdf,.doc,.docx,.txt"
+                      multiple
                       value=""
                     />
 
@@ -1170,9 +1280,9 @@ function MessagesPageContent() {
                     onClick={() => {
                       handleSendMessage();
                     }}
-                    disabled={!newMessage.trim() || state.sending}
+                    disabled={(!newMessage.trim() && attachedFiles.length === 0) || state.sending}
                     className={`w-12 h-12 rounded-2xl p-0 ${
-                      !newMessage.trim() || state.sending
+                      (!newMessage.trim() && attachedFiles.length === 0) || state.sending
                         ? 'bg-gray-400 cursor-not-allowed'
                         : 'bg-blue-500 hover:bg-blue-600'
                     }`}

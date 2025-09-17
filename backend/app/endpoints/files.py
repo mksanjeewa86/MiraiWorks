@@ -85,17 +85,31 @@ async def check_file_access_permission(
             if user_role.role.name == "super_admin":
                 return True
 
-        # Extract the download URL path from file_path to match against file_url
-        # The file_path might be a local path, but we need to check against the URL in messages
-        file_url_suffix = file_path
-        if "message-attachments" in file_path:
-            # Extract the URL part after /api/files/download/
-            file_url_suffix = file_path
+        # Normalize the file path to match against the stored file_url
+        # The s3_key from URL might be URL encoded, so we need to handle this
+        import urllib.parse
+
+        # If the file_path looks like a URL path, use it directly
+        if file_path.startswith("/api/files/download/"):
+            search_pattern = file_path
+        else:
+            # For local file paths, create the expected URL pattern
+            try:
+                from pathlib import Path
+                from app.services.local_storage_service import get_local_storage_service
+                storage_service = get_local_storage_service()
+                # Try to recreate the download URL that would be generated
+                search_pattern = storage_service.get_download_url(file_path)
+            except:
+                # Fallback: use filename matching
+                search_pattern = f"%{os.path.basename(file_path)}%"
 
         # Check if this file is attached to any message where user is sender or recipient
         message_result = await db.execute(
             select(DirectMessage).where(
-                (DirectMessage.file_url.like(f"%{os.path.basename(file_path)}%")) &
+                (DirectMessage.file_url.like(f"%{urllib.parse.unquote(search_pattern)}%") |
+                 DirectMessage.file_url.like(f"%{search_pattern}%") |
+                 DirectMessage.file_url.like(f"%{os.path.basename(file_path)}%")) &
                 (
                     (DirectMessage.sender_id == user_id) |
                     (DirectMessage.recipient_id == user_id)
