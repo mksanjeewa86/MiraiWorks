@@ -340,12 +340,7 @@ function ProfilePageContent() {
       <div className="p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>Profile</h1>
-            <p className="mt-1" style={{ color: 'var(--text-secondary)' }}>
-              Manage your professional profile and settings
-            </p>
-          </div>
+          <div></div>
           <div className="flex gap-2">
             {editing && (
               <Button 

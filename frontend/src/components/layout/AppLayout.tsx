@@ -1,14 +1,25 @@
 'use client';
 
 import { useState, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 import Topbar from './Topbar'
 import Sidebar from './Sidebar'
+import { getPageInfo } from '@/utils/pageInfo'
 import type { AppLayoutProps } from '@/types/components'
 
-export default function AppLayout({ children }: AppLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+export default function AppLayout({ children, pageTitle, pageDescription }: AppLayoutProps) {
+  const pathname = usePathname()
+  const [sidebarOpen, setSidebarOpen] = useState(true) // Start with true for desktop
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    // Initialize from localStorage immediately
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('sidebarCollapsed')
+      return saved === 'true'
+    }
+    return false
+  })
   const [isMobile, setIsMobile] = useState(false)
+
 
   // Check for mobile screen size
   useEffect(() => {
@@ -30,8 +41,6 @@ export default function AppLayout({ children }: AppLayoutProps) {
     } else {
       // Restore desktop sidebar state
       setSidebarOpen(true) // Always open on desktop
-      const savedCollapsed = localStorage.getItem('sidebarCollapsed')
-      setSidebarCollapsed(savedCollapsed === 'true')
     }
   }, [isMobile])
 
@@ -51,14 +60,20 @@ export default function AppLayout({ children }: AppLayoutProps) {
     const newCollapsed = !sidebarCollapsed
     setSidebarCollapsed(newCollapsed)
     localStorage.setItem('sidebarCollapsed', newCollapsed.toString())
+
+    // Dispatch custom event to notify topbar
+    window.dispatchEvent(new Event('sidebarStateChanged'))
   }
 
 
+  // Get page information from pathname, allow props to override
+  const pathPageInfo = getPageInfo(pathname)
+  const finalPageTitle = pageTitle || pathPageInfo.title
+  const finalPageDescription = pageDescription || pathPageInfo.description
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <Topbar 
-        onMenuClick={handleMenuClick}
-      />
+      <Topbar pageTitle={finalPageTitle} pageDescription={finalPageDescription} />
       
       <div className="flex">
         <Sidebar
@@ -70,10 +85,10 @@ export default function AppLayout({ children }: AppLayoutProps) {
         />
         
         <main className={`
-          flex-1 min-h-[calc(100vh-4rem)] transition-all duration-300
+          flex-1 min-h-screen transition-all duration-300
           ${!isMobile && !sidebarCollapsed ? 'lg:ml-64' : !isMobile && sidebarCollapsed ? 'lg:ml-16' : 'ml-0'}
         `}>
-          <div className="p-6">
+          <div className="px-6 pb-6">
             {children}
           </div>
         </main>

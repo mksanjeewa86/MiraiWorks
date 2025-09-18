@@ -752,11 +752,6 @@ function MessagesPageContent() {
         <div className="h-[calc(100vh-4rem)] flex bg-white dark:bg-gray-900">
           <div className="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
             <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Chats</h1>
-                </div>
-              </div>
               
               <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 mb-4">
                 <button className="flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm">
@@ -822,11 +817,6 @@ function MessagesPageContent() {
         <div className="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
           {/* Header */}
           <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Chats</h1>
-              </div>
-            </div>
             
             {/* Tab Navigation */}
             <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 mb-4">

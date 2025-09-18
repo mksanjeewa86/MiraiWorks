@@ -84,6 +84,8 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 // App Layout Types
 export interface AppLayoutProps {
   children: ReactNode;
+  pageTitle?: string;
+  pageDescription?: string;
 }
 
 // Sidebar Component Types
@@ -100,11 +102,15 @@ export interface NavItem {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   roles: string[];
+  color: string;
+  lightColor: string;
 }
 
 // Topbar Component Types
 export interface TopbarProps {
-  onMenuClick: () => void;
+  onMenuClick?: () => void;
+  pageTitle?: string;
+  pageDescription?: string;
 }
 
 // ====================

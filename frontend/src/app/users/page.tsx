@@ -443,10 +443,7 @@ function UsersPageContent() {
         )}
 
         <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Users</h1>
-            <p className="text-gray-600 dark:text-gray-400">Manage users in the system</p>
-          </div>
+          <div></div>
           <Link
             href="/users/add"
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2"

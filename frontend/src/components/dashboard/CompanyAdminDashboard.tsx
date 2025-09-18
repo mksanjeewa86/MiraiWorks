@@ -80,12 +80,6 @@ export default function CompanyAdminDashboard() {
 
   return (
     <div className="p-6">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>Company Admin Dashboard</h1>
-        <p className="mt-1" style={{ color: 'var(--text-secondary)' }}>Welcome back, {user?.full_name}! Manage your company operations.</p>
-      </div>
-
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <Card className="p-6">

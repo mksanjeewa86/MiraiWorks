@@ -230,10 +230,7 @@ function CompaniesPageContent() {
         )}
 
         <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Companies</h1>
-            <p className="text-gray-600 dark:text-gray-400">Manage companies in the system</p>
-          </div>
+          <div></div>
           <Link
             href="/companies/add"
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2"

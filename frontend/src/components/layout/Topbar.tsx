@@ -2,21 +2,39 @@
 
 import { Settings, User, LogOut, Menu } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { useAuth } from '@/contexts/AuthContext'
 import Brand from '@/components/common/Brand'
-import SearchInput from '@/components/common/SearchInput'
 import NotificationDropdown from '@/components/notifications/NotificationDropdown'
 import type { TopbarProps } from '@/types/components'
 
-export default function Topbar({ onMenuClick }: TopbarProps) {
+export default function Topbar({ pageTitle, pageDescription }: TopbarProps = {}) {
   const { user, logout } = useAuth()
   const router = useRouter()
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
-  const handleSearch = (query: string) => {
-    console.log('Search:', query)
-    // TODO: Implement global search
-  }
+  // Listen for sidebar state from localStorage
+  useEffect(() => {
+    const checkSidebarState = () => {
+      const saved = localStorage.getItem('sidebarCollapsed')
+      setSidebarCollapsed(saved === 'true')
+    }
+
+    checkSidebarState()
+
+    // Listen for storage changes
+    window.addEventListener('storage', checkSidebarState)
+
+    // Custom event for immediate updates
+    window.addEventListener('sidebarStateChanged', checkSidebarState)
+
+    return () => {
+      window.removeEventListener('storage', checkSidebarState)
+      window.removeEventListener('sidebarStateChanged', checkSidebarState)
+    }
+  }, [])
+
 
   const getUserDisplayName = () => {
     if (!user) return 'User'
@@ -39,30 +57,24 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b" style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}>
-      <div className="flex items-center justify-between px-4 py-3">
-        {/* Left side */}
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={onMenuClick}
-            className="p-2 rounded-2xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            aria-label="Toggle menu"
-            data-testid="menu-toggle-button"
-          >
-            <Menu className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-          </button>
-          
-          <Brand className="hidden sm:flex" />
-          <Brand className="sm:hidden" showText={false} />
+    <header className="sticky top-0 z-40 w-full border-b" style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}>
+      <div className={`flex items-center justify-between py-3 px-4 transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'}`}>
+        {/* Left side - Page Info */}
+        <div className="flex flex-col">
+          {pageTitle && (
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+              {pageTitle}
+            </h1>
+          )}
+          {pageDescription && (
+            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+              {pageDescription}
+            </p>
+          )}
         </div>
 
-        {/* Center - Search */}
-        <div className="flex-1 max-w-md mx-4">
-          <SearchInput 
-            placeholder="Search everything..." 
-            onSearch={handleSearch}
-          />
-        </div>
+        {/* Center - Empty space */}
+        <div className="flex-1"></div>
 
         {/* Right side */}
         <div className="flex items-center space-x-3">
