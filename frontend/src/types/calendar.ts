@@ -38,3 +38,16 @@ export interface CalendarAuthResponse {
 }
 
 export type CalendarProvider = 'google' | 'outlook';
+
+// Calendar Event Input type for creating/updating events
+export interface CalendarEventInput {
+  title: string;
+  description?: string;
+  location?: string;
+  startDatetime: string;
+  endDatetime: string;
+  timezone?: string;
+  isAllDay?: boolean;
+  attendees?: string[];
+  status?: string;
+}

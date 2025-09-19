@@ -1,4 +1,4 @@
-// Re-export all types from organized files
+﻿// Re-export all types from organized files
 
 // Authentication & User types
 export * from './auth';
@@ -35,3 +35,7 @@ export * from './userSettings';
 
 // Calendar types
 export * from './calendar';
+
+// Todo types
+export * from './todo';
+

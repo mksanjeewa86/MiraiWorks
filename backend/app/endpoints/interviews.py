@@ -5,7 +5,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.crud import interview as interview_crud
+from app.crud.interview import interview as interview_crud
 from app.database import get_db
 from app.dependencies import get_current_active_user
 from app.models.interview import Interview, InterviewProposal

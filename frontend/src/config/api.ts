@@ -68,7 +68,13 @@ export const API_ENDPOINTS = {
     BASE: '/api/notifications',
     BY_ID: (id: string) => `/api/notifications/${id}`,
   },
-  
+
+  // Todo endpoints
+  TODOS: {
+    BASE: '/api/todos',
+    BY_ID: (id: number | string) => `/api/todos/${id}`,
+  },
+
   // Calendar endpoints
   CALENDAR: {
     BASE: '/api/calendar',

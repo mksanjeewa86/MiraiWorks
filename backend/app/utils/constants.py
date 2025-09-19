@@ -1,4 +1,4 @@
-from enum import Enum
+﻿from enum import Enum
 
 
 class UserRole(str, Enum):
@@ -67,6 +67,12 @@ class NotificationType(str, Enum):
     INTERVIEW_CANCELLED = "interview_cancelled"
     MESSAGE_RECEIVED = "message_received"
     SYSTEM_NOTIFICATION = "system_notification"
+
+class TodoStatus(str, Enum):
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    EXPIRED = "expired"
 
 
 class VirusStatus(str, Enum):

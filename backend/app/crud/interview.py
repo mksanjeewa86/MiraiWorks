@@ -22,7 +22,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
                 selectinload(Interview.candidate),
                 selectinload(Interview.recruiter),
                 selectinload(Interview.employer_company),
-                selectinload(Interview.created_by_user),
+                selectinload(Interview.creator),
                 selectinload(Interview.proposals),
             )
             .where(Interview.id == interview_id)
@@ -46,7 +46,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
                 selectinload(Interview.candidate),
                 selectinload(Interview.recruiter),
                 selectinload(Interview.employer_company),
-                selectinload(Interview.created_by_user),
+                selectinload(Interview.creator),
                 selectinload(Interview.proposals),
             )
             .where(
@@ -294,7 +294,7 @@ class CRUDInterviewProposal(CRUDBase[InterviewProposal, dict, dict]):
         """Get proposals for a specific interview."""
         result = await db.execute(
             select(InterviewProposal)
-            .options(selectinload(InterviewProposal.created_by_user))
+            .options(selectinload(InterviewProposal.proposer))
             .where(InterviewProposal.interview_id == interview_id)
             .order_by(InterviewProposal.created_at.desc())
         )
@@ -307,7 +307,7 @@ class CRUDInterviewProposal(CRUDBase[InterviewProposal, dict, dict]):
             .options(
                 selectinload(InterviewProposal.interview).selectinload(Interview.candidate),
                 selectinload(InterviewProposal.interview).selectinload(Interview.recruiter),
-                selectinload(InterviewProposal.created_by_user),
+                selectinload(InterviewProposal.proposer),
             )
             .join(Interview)
             .where(
@@ -337,3 +337,4 @@ class CRUDInterviewProposal(CRUDBase[InterviewProposal, dict, dict]):
 # Create the CRUD instances
 interview = CRUDInterview(Interview)
 interview_proposal = CRUDInterviewProposal(InterviewProposal)
+

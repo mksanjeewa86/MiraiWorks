@@ -1,10 +1,11 @@
-'use client';
+﻿'use client';
 
 import {
   LayoutDashboard,
   Briefcase,
   MessageSquare,
   Calendar,
+  CheckSquare,
   Video,
   FileText,
   Settings,
@@ -68,6 +69,14 @@ const navigationItems: NavItem[] = [
     roles: ['candidate', 'recruiter', 'employer', 'company_admin'],
     color: 'bg-red-600',
     lightColor: 'bg-red-500'
+  },
+  {
+    name: 'Todos',
+    href: '/todos',
+    icon: CheckSquare,
+    roles: ['candidate', 'recruiter', 'employer', 'company_admin', 'super_admin'],
+    color: 'bg-lime-600',
+    lightColor: 'bg-lime-500'
   },
   {
     name: 'Interviews',

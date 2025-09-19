@@ -1,35 +1,36 @@
 import type { NextConfig } from "next";
-import path from "path";
-
-const isCI = process.env.CI === 'true' || process.env.GITHUB_ACTIONS === 'true';
 
 const nextConfig: NextConfig = {
-  output: 'standalone',
   poweredByHeader: false,
-  // Only use Turbopack in non-CI environments
-  ...(isCI ? {} : {
-    turbopack: {
-      resolveAlias: {
-        '@': './src',
-        '@/*': './src/*',
-      }
+  experimental: {
+    optimizePackageImports: [
+      'lucide-react',
+      '@headlessui/react'
+    ]
+  },
+  webpack: (config, { dev }) => {
+    if (dev) {
+      // Improve chunk splitting for development
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          chunks: 'all',
+          cacheGroups: {
+            default: {
+              minChunks: 2,
+              priority: -20,
+              reuseExistingChunk: true,
+            },
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              priority: -10,
+              chunks: 'all',
+            },
+          },
+        },
+      };
     }
-  }),
-  // Simplified webpack configuration for CI
-  webpack: (config, { dev, isServer, dir }) => {
-    if (isCI) {
-      // Minimal configuration for CI - let Next.js handle aliasing via tsconfig
-      return config;
-    }
-
-    // Full configuration for development
-    const projectRoot = dir || process.cwd();
-    const srcPath = path.resolve(projectRoot, 'src');
-
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      '@': srcPath,
-    };
 
     return config;
   },

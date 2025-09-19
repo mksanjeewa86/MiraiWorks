@@ -1,9 +1,10 @@
-import type { ApiResponse, Interview } from '@/types';
+import type { ApiResponse, InterviewsListResponse } from '@/types';
+import type { Interview } from '@/types/interview';
 import { API_CONFIG } from '@/config/api';
 
 // Interviews API
 export const interviewsApi = {
-  getAll: async (): Promise<ApiResponse<Interview[]>> => {
+  getAll: async (): Promise<ApiResponse<InterviewsListResponse<Interview>>> => {
     const token = localStorage.getItem('accessToken');
     const response = await fetch(`${API_CONFIG.BASE_URL}/api/interviews`, {
       headers: {

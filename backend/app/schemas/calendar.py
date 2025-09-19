@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any, Optional
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class CalendarAccountCreate(BaseModel):
@@ -43,11 +43,13 @@ class EventCreate(BaseModel):
     title: str
     description: Optional[str] = None
     location: Optional[str] = None
-    start_datetime: datetime
-    end_datetime: datetime
+    start_datetime: datetime = Field(alias="startDatetime")
+    end_datetime: datetime = Field(alias="endDatetime")
     timezone: str = "UTC"
-    is_all_day: bool = False
-    attendees: list[str] = []  # Email addresses
+    is_all_day: bool = Field(default=False, alias="isAllDay")
+    attendees: list[str] = Field(default_factory=list)  # Email addresses
+
+    model_config = ConfigDict(populate_by_name=True)
 
     @field_validator("title")
     @classmethod
@@ -59,7 +61,7 @@ class EventCreate(BaseModel):
     @field_validator("end_datetime")
     @classmethod
     def validate_end_after_start(cls, v, info):
-        start_datetime = info.data.get("start_datetime")
+        start_datetime = info.data.get("start_datetime") or info.data.get("startDatetime")
         if start_datetime and v <= start_datetime:
             raise ValueError("End datetime must be after start datetime")
         return v
@@ -83,22 +85,22 @@ class EventUpdate(BaseModel):
 
 
 class EventInfo(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
     id: str
     title: str
     description: Optional[str]
     location: Optional[str]
-    start_datetime: datetime
-    end_datetime: datetime
+    start_datetime: datetime = Field(alias="startDatetime")
+    end_datetime: datetime = Field(alias="endDatetime")
     timezone: Optional[str]
-    is_all_day: bool
-    is_recurring: bool
-    organizer_email: Optional[str]
+    is_all_day: bool = Field(alias="isAllDay")
+    is_recurring: bool = Field(alias="isRecurring")
+    organizer_email: Optional[str] = Field(alias="organizerEmail")
     attendees: list[str]
     status: Optional[str]
-    created_at: datetime
-    updated_at: datetime
+    created_at: datetime = Field(alias="createdAt")
+    updated_at: datetime = Field(alias="updatedAt")
 
 
 class CalendarSyncRequest(BaseModel):

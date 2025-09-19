@@ -1,4 +1,4 @@
-# Import all models to ensure they are registered with SQLAlchemy
+﻿# Import all models to ensure they are registered with SQLAlchemy
 from .attachment import Attachment
 from .audit import AuditLog
 from .auth import OauthAccount, PasswordResetRequest, RefreshToken
@@ -26,6 +26,7 @@ from .resume import (
 )
 from .role import Role, UserRole
 from .user import User
+from .todo import Todo
 from .user_settings import UserSettings
 
 __all__ = [
@@ -59,4 +60,5 @@ __all__ = [
     "JobApplication",
     "CompanyProfile",
     "UserSettings",
+    "Todo",
 ]

@@ -1,5 +1,5 @@
-import type { ApiResponse, CalendarEvent } from '@/types';
-import { API_CONFIG } from '@/config/api';
+import type { ApiResponse, CalendarEvent, CalendarEventInput } from '@/types';
+import { API_CONFIG, buildApiUrl, API_ENDPOINTS } from '@/config/api';
 
 // Calendar API
 export const calendarApi = {
@@ -92,6 +92,10 @@ export const calendarApi = {
   },
 
   deleteEvent: async (id: number): Promise<ApiResponse<void>> => {
+    if (!Number.isFinite(id)) {
+      throw new Error('Invalid calendar event identifier');
+    }
+
     const token = localStorage.getItem('accessToken');
     const response = await fetch(`${API_CONFIG.BASE_URL}/api/calendar/events/${id}`, {
       method: 'DELETE',
@@ -100,12 +104,12 @@ export const calendarApi = {
         'Content-Type': 'application/json',
       },
     });
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
-    
+
     return { data: undefined, success: true };
   },
 
@@ -131,4 +135,83 @@ export const calendarApi = {
     const data = await response.json();
     return { data, success: true };
   },
+};
+
+// Function-based API for compatibility with tests
+export const createCalendarEvent = async (eventData: CalendarEventInput): Promise<ApiResponse<CalendarEvent>> => {
+  const response = await fetch(buildApiUrl(API_ENDPOINTS.CALENDAR.EVENTS), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(eventData),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return { data, success: true };
+};
+
+export const getCalendarEvents = async (startDate?: string, endDate?: string): Promise<ApiResponse<{ events: CalendarEvent[], has_more: boolean }>> => {
+  const url = new URL(buildApiUrl(API_ENDPOINTS.CALENDAR.EVENTS));
+
+  if (startDate) {
+    url.searchParams.set('startDate', startDate);
+  }
+  if (endDate) {
+    url.searchParams.set('endDate', endDate);
+  }
+
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return { data, success: true };
+};
+
+export const updateCalendarEvent = async (eventId: string, eventData: CalendarEventInput): Promise<ApiResponse<CalendarEvent>> => {
+  const response = await fetch(`${buildApiUrl(API_ENDPOINTS.CALENDAR.EVENTS)}/${eventId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(eventData),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return { data, success: true };
+};
+
+export const deleteCalendarEvent = async (eventId: string): Promise<ApiResponse<{ message: string }>> => {
+  const response = await fetch(`${buildApiUrl(API_ENDPOINTS.CALENDAR.EVENTS)}/${eventId}`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return { data, success: true };
 };

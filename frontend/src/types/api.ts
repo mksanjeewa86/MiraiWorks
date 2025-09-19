@@ -14,6 +14,19 @@ export interface PaginatedResponse<T> {
   hasMore: boolean;
 }
 
+// Specific backend response types that match actual API schemas
+export interface EventsListResponse<T = any> {
+  events: T[];
+  next_sync_token?: string;
+  has_more: boolean;
+}
+
+export interface InterviewsListResponse<T = any> {
+  interviews: T[];
+  total: number;
+  has_more: boolean;
+}
+
 // Form Types
 export interface FormError {
   field: string;
