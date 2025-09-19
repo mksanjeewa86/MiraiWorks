@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
+from app.utils.constants import CompanyType
 
 
 class LoginRequest(BaseModel):
@@ -111,6 +112,15 @@ class UserRoleInfo(BaseModel):
     role: RoleInfo
 
 
+class CompanyInfo(BaseModel):
+    """Simplified company info for user responses."""
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    type: CompanyType
+
+
 class UserInfo(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -120,6 +130,7 @@ class UserInfo(BaseModel):
     last_name: str
     full_name: str
     company_id: Optional[int]
+    company: Optional[CompanyInfo] = None
     roles: list[UserRoleInfo]
     is_active: bool
     last_login: Optional[datetime]

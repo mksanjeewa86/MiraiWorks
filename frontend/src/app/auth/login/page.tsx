@@ -12,6 +12,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [redirected, setRedirected] = useState(false);
   const emailRef = useRef('');
   const { login, isAuthenticated, require2FA, error, clearError } = useAuth();
   const router = useRouter();
@@ -22,18 +23,23 @@ export default function LoginPage() {
   }, [email]);
 
   useEffect(() => {
+    // Prevent multiple redirects
+    if (redirected) return;
+
     if (isAuthenticated && typeof window !== 'undefined') {
       const currentPath = window.location.pathname;
       // Only redirect if not already on dashboard and authenticated
       if (currentPath !== '/dashboard') {
         console.log(`LoginPage: User authenticated, redirecting from ${currentPath} to /dashboard`);
+        setRedirected(true);
         router.push('/dashboard');
       }
     } else if (require2FA) {
       console.log('LoginPage: 2FA required, redirecting to two-factor page');
+      setRedirected(true);
       router.push(`/auth/two-factor?email=${encodeURIComponent(emailRef.current)}`);
     }
-  }, [isAuthenticated, require2FA, router]);
+  }, [isAuthenticated, require2FA, router, redirected]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -135,6 +135,7 @@ async def login(
                 last_name=user.last_name,
                 full_name=user.full_name,
                 company_id=user.company_id,
+                company=user.company,
                 roles=user.user_roles,
                 is_active=user.is_active,
                 last_login=user.last_login,
@@ -164,6 +165,7 @@ async def login(
             last_name=user.last_name,
             full_name=user.full_name,
             company_id=user.company_id,
+            company=user.company,
             roles=user.user_roles,
             is_active=user.is_active,
             last_login=user.last_login,
@@ -213,6 +215,7 @@ async def verify_2fa(
             last_name=user.last_name,
             full_name=user.full_name,
             company_id=user.company_id,
+            company=user.company,
             roles=user.user_roles,
             is_active=user.is_active,
             last_login=user.last_login,
@@ -444,18 +447,34 @@ async def change_password(
 
 
 @router.get("/me", response_model=UserInfo)
-async def get_current_user_info(current_user: User = Depends(get_current_active_user)):
+async def get_current_user_info(
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
     """Get current user information."""
+    # Fetch user with company relationship
+    result = await db.execute(
+        select(User)
+        .options(
+            selectinload(User.company),
+            selectinload(User.user_roles).selectinload(UserRoleModel.role),
+        )
+        .where(User.id == current_user.id)
+    )
+
+    user_with_company = result.scalar_one()
+
     return UserInfo(
-        id=current_user.id,
-        email=current_user.email,
-        first_name=current_user.first_name,
-        last_name=current_user.last_name,
-        full_name=current_user.full_name,
-        company_id=current_user.company_id,
-        roles=current_user.user_roles,
-        is_active=current_user.is_active,
-        last_login=current_user.last_login,
+        id=user_with_company.id,
+        email=user_with_company.email,
+        first_name=user_with_company.first_name,
+        last_name=user_with_company.last_name,
+        full_name=user_with_company.full_name,
+        company_id=user_with_company.company_id,
+        company=user_with_company.company,
+        roles=user_with_company.user_roles,
+        is_active=user_with_company.is_active,
+        last_login=user_with_company.last_login,
     )
 
 
@@ -625,6 +644,7 @@ async def activate_account(
             last_name=user.last_name,
             full_name=user.full_name,
             company_id=user.company_id,
+            company=user.company,
             roles=user.user_roles,
             is_active=user.is_active,
             last_login=user.last_login,

@@ -137,6 +137,36 @@ async def create_user(
             )
         user_data.company_id = current_user.company_id
 
+        # Company admin role restrictions
+        forbidden_roles = [UserRoleEnum.SUPER_ADMIN]
+        for role in user_data.roles:
+            if role in forbidden_roles:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=f"Company admins cannot assign {role.value} role"
+                )
+
+        # Limit company_admin role assignment to prevent privilege escalation
+        company_admin_roles = [role for role in user_data.roles if role == UserRoleEnum.COMPANY_ADMIN]
+        if len(company_admin_roles) > 0:
+            # Check if current user is the only company admin
+            existing_admin_query = select(func.count(User.id)).where(
+                and_(
+                    User.company_id == current_user.company_id,
+                    User.is_admin == True,
+                    User.is_deleted == False,
+                    User.id != current_user.id  # Exclude current user
+                )
+            )
+            existing_admin_result = await db.execute(existing_admin_query)
+            other_admin_count = existing_admin_result.scalar() or 0
+
+            if other_admin_count == 0:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Cannot create another company admin. You are the only company admin."
+                )
+
     # Check if user already exists
     existing_user = await db.execute(
         select(User).where(User.email == user_data.email)
@@ -644,6 +674,23 @@ async def update_user(
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Cannot update users from other companies"
+            )
+
+        # Company admin role restrictions for updates
+        if user_data.roles is not None:
+            forbidden_roles = [UserRoleEnum.SUPER_ADMIN]
+            for role in user_data.roles:
+                if role in forbidden_roles:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail=f"Company admins cannot assign {role.value} role"
+                    )
+
+        # Prevent company_id changes by company admins
+        if user_data.company_id is not None and user_data.company_id != current_user.company_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Company admins cannot move users to other companies"
             )
 
     # Update user fields

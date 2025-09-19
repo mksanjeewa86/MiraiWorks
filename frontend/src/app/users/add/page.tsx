@@ -9,6 +9,7 @@ import { UserCreate } from '@/types/user';
 import { Company } from '@/types/company';
 import { UserFormData } from '@/types/forms';
 import { useToast } from '@/contexts/ToastContext';
+import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
@@ -18,7 +19,7 @@ const emptyFormData: UserFormData = {
   last_name: '',
   phone: '',
   company_id: '',
-  role: 'recruiter', // Will be set based on company type
+  role: '', // Will be set based on company type
   is_admin: false,
   require_2fa: false,
 };
@@ -26,6 +27,7 @@ const emptyFormData: UserFormData = {
 function AddUserPageContent() {
   const router = useRouter();
   const { showToast } = useToast();
+  const { user } = useAuth();
   const [formData, setFormData] = useState<UserFormData>(emptyFormData);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,6 +36,12 @@ function AddUserPageContent() {
   const [companySearch, setCompanySearch] = useState('');
   const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
   const [filteredCompanies, setFilteredCompanies] = useState<Company[]>([]);
+
+  // Get user's role
+  const userRole = user?.roles?.[0]?.role?.name;
+  const isCompanyAdmin = userRole === 'company_admin';
+  const isSuperAdmin = userRole === 'super_admin';
+
 
   // Filter companies based on search
   useEffect(() => {
@@ -47,33 +55,88 @@ function AddUserPageContent() {
     }
   }, [companies, companySearch]);
 
-  // Auto-set role based on selected company type
+  // Get available roles based on user permissions
+  const getAvailableRoles = () => {
+    if (isSuperAdmin) {
+      return [
+        { value: 'candidate', label: 'Candidate' },
+        { value: 'recruiter', label: 'Recruiter' },
+        { value: 'employer', label: 'Employer' },
+        { value: 'company_admin', label: 'Company Admin' },
+        { value: 'super_admin', label: 'Super Admin' }
+      ];
+    } else if (isCompanyAdmin) {
+      return [
+        { value: 'candidate', label: 'Candidate' },
+        { value: 'recruiter', label: 'Recruiter' },
+        { value: 'employer', label: 'Employer' },
+        { value: 'company_admin', label: 'Company Admin' }
+      ];
+    } else {
+      return [
+        { value: 'candidate', label: 'Candidate' },
+        { value: 'recruiter', label: 'Recruiter' },
+        { value: 'employer', label: 'Employer' }
+      ];
+    }
+  };
+
+  // Auto-set company and role for company admins
   useEffect(() => {
-    if (formData.company_id) {
+    if (user && isCompanyAdmin && user.company) {
+      // Always set company and role for company admins on initial load
+      setFormData(prev => ({
+        ...prev,
+        company_id: user.company.id.toString(),
+        role: user.company.type === 'employer' ? 'employer' : 'recruiter'
+      }));
+    }
+  }, [user, isCompanyAdmin]);
+
+  // Auto-set default role based on selected company type (for super admins)
+  useEffect(() => {
+    if (isSuperAdmin && formData.company_id && !formData.role) {
       const selectedCompany = companies.find(c => c.id.toString() === formData.company_id);
       if (selectedCompany) {
         const role = selectedCompany.type === 'employer' ? 'employer' : 'recruiter';
         setFormData(prev => ({ ...prev, role }));
       }
     }
-  }, [formData.company_id, companies]);
+  }, [formData.company_id, companies, isSuperAdmin]);
 
   // Load companies for the dropdown
   useEffect(() => {
     const loadCompanies = async () => {
       try {
         setLoadingCompanies(true);
-        const response = await companiesApi.getCompanies({ size: 100 }); // Get companies (max 100 per API limit)
-        setCompanies(response.data.companies);
+
+        if (isCompanyAdmin && user?.company) {
+          // Company admin can only see their own company
+          setCompanies([user.company]);
+        } else if (isSuperAdmin) {
+          // Super admin can see all companies
+          const response = await companiesApi.getCompanies({ size: 100 });
+          setCompanies(response.data.companies);
+        } else {
+          // Other roles - no company selection needed
+          setCompanies([]);
+        }
       } catch (err) {
         console.error('Failed to load companies:', err);
+        // If API fails and user is company admin, fallback to their company
+        if (isCompanyAdmin && user?.company) {
+          setCompanies([user.company]);
+        }
       } finally {
         setLoadingCompanies(false);
       }
     };
-    
-    loadCompanies();
-  }, []);
+
+    // Only load companies if user data is available
+    if (user) {
+      loadCompanies();
+    }
+  }, [user, isCompanyAdmin, isSuperAdmin]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -194,7 +257,8 @@ function AddUserPageContent() {
                 />
               </div>
 
-              {/* Company - Select with Search */}
+              {/* Company - Select with Search (Only for Super Admin) */}
+              {isSuperAdmin && (
               <div className="md:col-span-2 relative">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Company
@@ -271,19 +335,46 @@ function AddUserPageContent() {
                   />
                 )}
               </div>
+              )}
             </div>
 
-            {/* User Role - Auto-determined by company type */}
-            {formData.company_id && (
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-                <p className="text-sm text-blue-700 dark:text-blue-400">
-                  <strong>User Role:</strong> {formData.role === 'employer' ? 'Employer' : 'Recruiter'}
-                  <span className="text-blue-600 dark:text-blue-500">
-                    (automatically set based on company type)
-                  </span>
+            {/* Company Info for Company Admin */}
+            {isCompanyAdmin && user?.company && (
+              <div className="md:col-span-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Creating user for: <strong className="text-gray-900 dark:text-white">{user.company.name}</strong>
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                  New users will be assigned the {user.company.type === 'employer' ? 'employer' : 'recruiter'} role
                 </p>
               </div>
             )}
+
+            {/* User Role Selection (Only for Super Admin) */}
+            {isSuperAdmin && formData.company_id && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  User Role <span className="text-red-500">*</span>
+                </label>
+                <select
+                  required
+                  value={formData.role}
+                  onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value as any }))}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="">Select a role...</option>
+                  {getAvailableRoles().map(role => (
+                    <option key={role.value} value={role.value}>
+                      {role.label}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Role determines the user's permissions and access level
+                </p>
+              </div>
+            )}
+
 
 
             {/* Submit Buttons */}
@@ -297,7 +388,7 @@ function AddUserPageContent() {
               </button>
               <button
                 type="submit"
-                disabled={submitting || !formData.first_name || !formData.last_name || !formData.email || !formData.company_id}
+                disabled={submitting || !formData.first_name || !formData.last_name || !formData.email || !formData.company_id || !formData.role}
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
               >
                 <Save className="h-4 w-4" />

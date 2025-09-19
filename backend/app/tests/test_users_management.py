@@ -6,7 +6,7 @@ from sqlalchemy import select
 
 from app.models.user import User
 from app.models.company import Company
-from app.models.role import Role
+from app.models.role import Role, UserRole
 from app.schemas.user import UserCreate, UserUpdate
 from app.services.auth_service import auth_service
 
@@ -516,6 +516,392 @@ class TestUsersManagement:
 
         # Should handle gracefully, either 404 or partial success
         assert response.status_code in [200, 404, 400]
+
+    # ===== COMPANY ADMIN PERMISSION TESTS =====
+
+    @pytest.mark.asyncio
+    async def test_company_admin_cannot_assign_super_admin_role(self, client: AsyncClient, db_session: AsyncSession, test_company: Company, test_roles: dict):
+        """Test that company admin cannot assign super_admin role."""
+        # Create company admin
+        from app.models import User, UserRole
+        from app.utils.constants import UserRole as UserRoleEnum
+
+        company_admin = User(
+            email='companyadmin@test.com',
+            first_name='Company',
+            last_name='Admin',
+            company_id=test_company.id,
+            hashed_password=auth_service.get_password_hash('testpass123'),
+            is_active=True,
+            is_admin=True,
+        )
+        db_session.add(company_admin)
+        await db_session.commit()
+        await db_session.refresh(company_admin)
+
+        # Add company_admin role using test_roles fixture
+        user_role = UserRole(user_id=company_admin.id, role_id=test_roles[UserRoleEnum.COMPANY_ADMIN.value].id)
+        db_session.add(user_role)
+        await db_session.commit()
+
+        # Bypass 2FA by setting require_2fa=False explicitly
+        company_admin.require_2fa = False
+        await db_session.commit()
+
+        # Login as company admin
+        login_response = await client.post(
+            "/api/auth/login",
+            json={"email": "companyadmin@test.com", "password": "testpass123"},
+        )
+        assert login_response.status_code == 200
+        token_data = login_response.json()
+
+        # If 2FA is required despite our setting, handle it
+        if token_data.get("require_2fa"):
+            verify_response = await client.post(
+                "/api/auth/2fa/verify",
+                json={"user_id": company_admin.id, "code": "123456"}
+            )
+            assert verify_response.status_code == 200
+            token_data = verify_response.json()
+
+        headers = {"Authorization": f"Bearer {token_data['access_token']}"}
+
+        # Try to create user with super_admin role
+        user_data = {
+            "email": "newuser@example.com",
+            "first_name": "New",
+            "last_name": "User",
+            "company_id": test_company.id,
+            "roles": ["super_admin"]
+        }
+
+        response = await client.post(
+            "/api/admin/users",
+            json=user_data,
+            headers=headers
+        )
+
+        assert response.status_code == 403
+        assert "super_admin" in response.json()["detail"].lower()
+
+    @pytest.mark.asyncio
+    async def test_company_admin_cannot_create_user_for_other_company(self, client: AsyncClient, db_session: AsyncSession, test_company: Company, test_roles: dict):
+        """Test that company admin cannot create users for other companies."""
+        # Create company admin
+        from app.models import User, UserRole
+
+        company_admin = User(
+            email='companyadmin@test.com',
+            first_name='Company',
+            last_name='Admin',
+            company_id=test_company.id,
+            hashed_password=auth_service.get_password_hash('testpass123'),
+            is_active=True,
+            is_admin=True,
+        )
+        db_session.add(company_admin)
+        await db_session.commit()
+        await db_session.refresh(company_admin)
+
+        # Add company_admin role using test_roles fixture
+        from app.utils.constants import UserRole as UserRoleEnum
+        user_role = UserRole(user_id=company_admin.id, role_id=test_roles[UserRoleEnum.COMPANY_ADMIN.value].id)
+        db_session.add(user_role)
+        await db_session.commit()
+
+        # Bypass 2FA by setting require_2fa=False explicitly
+        company_admin.require_2fa = False
+        await db_session.commit()
+
+        # Create another company
+        other_company = Company(
+            name="Other Company",
+            email="contact@other.com",
+            phone="090-1234-5678",
+            type="recruiter"
+        )
+        db_session.add(other_company)
+        await db_session.commit()
+        await db_session.refresh(other_company)
+
+        # Login as company admin
+        login_response = await client.post(
+            "/api/auth/login",
+            json={"email": "companyadmin@test.com", "password": "testpass123"},
+        )
+        assert login_response.status_code == 200
+        token_data = login_response.json()
+
+        # If 2FA is required despite our setting, handle it
+        if token_data.get("require_2fa"):
+            verify_response = await client.post(
+                "/api/auth/2fa/verify",
+                json={"user_id": company_admin.id, "code": "123456"}
+            )
+            assert verify_response.status_code == 200
+            token_data = verify_response.json()
+
+        headers = {"Authorization": f"Bearer {token_data['access_token']}"}
+
+        # Try to create user for other company
+        user_data = {
+            "email": "newuser@example.com",
+            "first_name": "New",
+            "last_name": "User",
+            "company_id": other_company.id,
+            "roles": ["recruiter"]
+        }
+
+        response = await client.post(
+            "/api/admin/users",
+            json=user_data,
+            headers=headers
+        )
+
+        assert response.status_code == 403
+        assert "other companies" in response.json()["detail"].lower()
+
+    @pytest.mark.asyncio
+    async def test_company_admin_cannot_update_user_from_other_company(self, client: AsyncClient, db_session: AsyncSession, test_company: Company, test_roles: dict):
+        """Test that company admin cannot update users from other companies."""
+        # Create company admin
+        from app.models import User, UserRole
+
+        company_admin = User(
+            email='companyadmin@test.com',
+            first_name='Company',
+            last_name='Admin',
+            company_id=test_company.id,
+            hashed_password=auth_service.get_password_hash('testpass123'),
+            is_active=True,
+            is_admin=True,
+        )
+        db_session.add(company_admin)
+        await db_session.commit()
+        await db_session.refresh(company_admin)
+
+        # Add company_admin role using test_roles fixture
+        from app.utils.constants import UserRole as UserRoleEnum
+        user_role = UserRole(user_id=company_admin.id, role_id=test_roles[UserRoleEnum.COMPANY_ADMIN.value].id)
+        db_session.add(user_role)
+        await db_session.commit()
+
+        # Bypass 2FA by setting require_2fa=False explicitly
+        company_admin.require_2fa = False
+        await db_session.commit()
+
+        # Create another company
+        other_company = Company(
+            name="Other Company",
+            email="contact@other.com",
+            phone="090-1234-5678",
+            type="recruiter"
+        )
+        db_session.add(other_company)
+
+        # Create user in other company
+        other_user = User(
+            email='otheruser@test.com',
+            first_name='Other',
+            last_name='User',
+            company_id=other_company.id,
+            hashed_password=auth_service.get_password_hash('testpass123'),
+            is_active=True,
+        )
+        db_session.add(other_user)
+        await db_session.commit()
+        await db_session.refresh(company_admin)
+        await db_session.refresh(other_user)
+
+        # Login as company admin
+        login_response = await client.post(
+            "/api/auth/login",
+            json={"email": "companyadmin@test.com", "password": "testpass123"},
+        )
+        assert login_response.status_code == 200
+        token_data = login_response.json()
+
+        # If 2FA is required despite our setting, handle it
+        if token_data.get("require_2fa"):
+            verify_response = await client.post(
+                "/api/auth/2fa/verify",
+                json={"user_id": company_admin.id, "code": "123456"}
+            )
+            assert verify_response.status_code == 200
+            token_data = verify_response.json()
+
+        headers = {"Authorization": f"Bearer {token_data['access_token']}"}
+
+        # Try to update user from other company
+        update_data = {"first_name": "Updated"}
+
+        response = await client.put(
+            f"/api/admin/users/{other_user.id}",
+            json=update_data,
+            headers=headers
+        )
+
+        assert response.status_code == 403
+        assert "other companies" in response.json()["detail"].lower()
+
+    @pytest.mark.asyncio
+    async def test_company_admin_cannot_assign_super_admin_in_update(self, client: AsyncClient, db_session: AsyncSession, test_company: Company, test_roles: dict):
+        """Test that company admin cannot assign super_admin role in updates."""
+        # Create company admin
+        from app.models import User, UserRole
+
+        company_admin = User(
+            email='companyadmin@test.com',
+            first_name='Company',
+            last_name='Admin',
+            company_id=test_company.id,
+            hashed_password=auth_service.get_password_hash('testpass123'),
+            is_active=True,
+            is_admin=True,
+        )
+        db_session.add(company_admin)
+        await db_session.commit()
+        await db_session.refresh(company_admin)
+
+        # Add company_admin role using test_roles fixture
+        from app.utils.constants import UserRole as UserRoleEnum
+        user_role = UserRole(user_id=company_admin.id, role_id=test_roles[UserRoleEnum.COMPANY_ADMIN.value].id)
+        db_session.add(user_role)
+        await db_session.commit()
+
+        # Bypass 2FA by setting require_2fa=False explicitly
+        company_admin.require_2fa = False
+        await db_session.commit()
+
+        # Create regular user in same company
+        regular_user = User(
+            email='regular@test.com',
+            first_name='Regular',
+            last_name='User',
+            company_id=test_company.id,
+            hashed_password=auth_service.get_password_hash('testpass123'),
+            is_active=True,
+        )
+        db_session.add(regular_user)
+        await db_session.commit()
+        await db_session.refresh(company_admin)
+        await db_session.refresh(regular_user)
+
+        # Login as company admin
+        login_response = await client.post(
+            "/api/auth/login",
+            json={"email": "companyadmin@test.com", "password": "testpass123"},
+        )
+        assert login_response.status_code == 200
+        token_data = login_response.json()
+
+        # If 2FA is required despite our setting, handle it
+        if token_data.get("require_2fa"):
+            verify_response = await client.post(
+                "/api/auth/2fa/verify",
+                json={"user_id": company_admin.id, "code": "123456"}
+            )
+            assert verify_response.status_code == 200
+            token_data = verify_response.json()
+
+        headers = {"Authorization": f"Bearer {token_data['access_token']}"}
+
+        # Try to update user with super_admin role
+        update_data = {"roles": ["super_admin"]}
+
+        response = await client.put(
+            f"/api/admin/users/{regular_user.id}",
+            json=update_data,
+            headers=headers
+        )
+
+        assert response.status_code == 403
+        assert "super_admin" in response.json()["detail"].lower()
+
+    @pytest.mark.asyncio
+    async def test_company_admin_cannot_move_user_to_other_company(self, client: AsyncClient, db_session: AsyncSession, test_company: Company, test_roles: dict):
+        """Test that company admin cannot move users to other companies."""
+        # Create company admin
+        from app.models import User, UserRole
+
+        company_admin = User(
+            email='companyadmin@test.com',
+            first_name='Company',
+            last_name='Admin',
+            company_id=test_company.id,
+            hashed_password=auth_service.get_password_hash('testpass123'),
+            is_active=True,
+            is_admin=True,
+        )
+        db_session.add(company_admin)
+        await db_session.commit()
+        await db_session.refresh(company_admin)
+
+        # Add company_admin role using test_roles fixture
+        from app.utils.constants import UserRole as UserRoleEnum
+        user_role = UserRole(user_id=company_admin.id, role_id=test_roles[UserRoleEnum.COMPANY_ADMIN.value].id)
+        db_session.add(user_role)
+        await db_session.commit()
+
+        # Bypass 2FA by setting require_2fa=False explicitly
+        company_admin.require_2fa = False
+        await db_session.commit()
+
+        # Create other company
+        other_company = Company(
+            name="Other Company",
+            email="contact@other.com",
+            phone="090-1234-5678",
+            type="recruiter"
+        )
+        db_session.add(other_company)
+
+        # Create regular user in same company
+        regular_user = User(
+            email='regular@test.com',
+            first_name='Regular',
+            last_name='User',
+            company_id=test_company.id,
+            hashed_password=auth_service.get_password_hash('testpass123'),
+            is_active=True,
+        )
+        db_session.add(regular_user)
+        await db_session.commit()
+        await db_session.refresh(company_admin)
+        await db_session.refresh(other_company)
+        await db_session.refresh(regular_user)
+
+        # Login as company admin
+        login_response = await client.post(
+            "/api/auth/login",
+            json={"email": "companyadmin@test.com", "password": "testpass123"},
+        )
+        assert login_response.status_code == 200
+        token_data = login_response.json()
+
+        # If 2FA is required despite our setting, handle it
+        if token_data.get("require_2fa"):
+            verify_response = await client.post(
+                "/api/auth/2fa/verify",
+                json={"user_id": company_admin.id, "code": "123456"}
+            )
+            assert verify_response.status_code == 200
+            token_data = verify_response.json()
+
+        headers = {"Authorization": f"Bearer {token_data['access_token']}"}
+
+        # Try to move user to other company
+        update_data = {"company_id": other_company.id}
+
+        response = await client.put(
+            f"/api/admin/users/{regular_user.id}",
+            json=update_data,
+            headers=headers
+        )
+
+        assert response.status_code == 403
+        assert "other companies" in response.json()["detail"].lower()
 
     # ===== EDGE CASES =====
 
