@@ -1,1 +1,0 @@
-Hello! This is a test file attachment.\n\nThis file demonstrates:\n- File upload to messaging\n- File attachment in messages\n- File download by recipients
