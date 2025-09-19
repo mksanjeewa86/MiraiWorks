@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 End-to-End Test for Company Admin User Creation Flow
 
@@ -10,14 +9,9 @@ This test validates the complete user creation workflow:
 """
 
 import pytest
-import sys
-import os
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-
-# Add the app directory to Python path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'app'))
 
 from app.models.user import User
 from app.models.company import Company
@@ -25,15 +19,12 @@ from app.models.role import Role, UserRole
 from app.services.auth_service import auth_service
 from app.utils.constants import UserRole as UserRoleEnum
 
-# Import the fixtures
-from app.tests.conftest import client, db_session
-
 
 @pytest.mark.asyncio
 async def test_company_admin_user_creation_e2e_flow(client: AsyncClient, db_session: AsyncSession):
     """Test the complete end-to-end user creation flow for a company admin."""
 
-    print("\n🧪 Starting End-to-End Company Admin User Creation Test")
+    print("\n[TEST] Starting End-to-End Company Admin User Creation Test")
     print("=" * 70)
 
     # Step 1: Create test company
@@ -46,7 +37,7 @@ async def test_company_admin_user_creation_e2e_flow(client: AsyncClient, db_sess
     db_session.add(test_company)
     await db_session.commit()
     await db_session.refresh(test_company)
-    print(f"✅ Created test company: {test_company.name} (ID: {test_company.id})")
+    print(f"[OK] Created test company: {test_company.name} (ID: {test_company.id})")
 
     # Step 2: Create company admin user
     company_admin = User(
@@ -62,7 +53,7 @@ async def test_company_admin_user_creation_e2e_flow(client: AsyncClient, db_sess
     db_session.add(company_admin)
     await db_session.commit()
     await db_session.refresh(company_admin)
-    print(f"✅ Created company admin: {company_admin.email} (ID: {company_admin.id})")
+    print(f"[OK] Created company admin: {company_admin.email} (ID: {company_admin.id})")
 
     # Step 3: Assign company_admin role
     role_result = await db_session.execute(
@@ -82,10 +73,10 @@ async def test_company_admin_user_creation_e2e_flow(client: AsyncClient, db_sess
     user_role = UserRole(user_id=company_admin.id, role_id=company_admin_role.id)
     db_session.add(user_role)
     await db_session.commit()
-    print(f"✅ Assigned company_admin role")
+    print(f"[OK] Assigned company_admin role")
 
     # Step 4: Authenticate company admin
-    print("\n🔐 Testing Authentication...")
+    print("\n[AUTH] Testing Authentication...")
     login_response = await client.post(
         "/api/auth/login",
         json={"email": "e2e.admin@test.com", "password": "testpass123"},
@@ -103,10 +94,10 @@ async def test_company_admin_user_creation_e2e_flow(client: AsyncClient, db_sess
         token_data = verify_response.json()
 
     headers = {"Authorization": f"Bearer {token_data['access_token']}"}
-    print("✅ Authentication successful")
+    print("[OK] Authentication successful")
 
     # Step 5: Simulate frontend form data (company admin scenario)
-    print("\n📝 Testing Frontend Form Logic...")
+    print("\n[FORM] Testing Frontend Form Logic...")
 
     # Simulate what happens when company admin loads the form
     frontend_form_data = {
@@ -138,7 +129,7 @@ async def test_company_admin_user_creation_e2e_flow(client: AsyncClient, db_sess
         bool(frontend_form_data["role"])
     )
     assert not is_form_valid_empty, "Form should be invalid when required fields are empty"
-    print("✅ Form correctly disabled when required fields empty")
+    print("[OK] Form correctly disabled when required fields empty")
 
     # Simulate user filling in the form
     frontend_form_data["first_name"] = "John"
@@ -154,17 +145,42 @@ async def test_company_admin_user_creation_e2e_flow(client: AsyncClient, db_sess
         bool(frontend_form_data["role"])
     )
     assert is_form_valid_filled, "Form should be valid when all required fields are filled"
-    print("✅ Form correctly enabled when all required fields filled")
+    print("[OK] Form correctly enabled when all required fields filled")
 
     # Step 6: Test backend API with frontend data
-    print("\n🌐 Testing Backend API...")
+    print("\n[API] Testing Backend API...")
+
+    # Ensure the required role exists in the database
+    role_mapping = {
+        "employer": UserRoleEnum.EMPLOYER,
+        "recruiter": UserRoleEnum.RECRUITER,
+        "company_admin": UserRoleEnum.COMPANY_ADMIN,
+        "candidate": UserRoleEnum.CANDIDATE
+    }
+
+    required_role_enum = role_mapping[frontend_form_data["role"]]
+
+    # Check if role exists, create if needed
+    role_check = await db_session.execute(
+        select(Role).where(Role.name == required_role_enum)
+    )
+    existing_role = role_check.scalar_one_or_none()
+
+    if not existing_role:
+        new_role = Role(
+            name=required_role_enum,
+            description=f"{required_role_enum.value.title()} Role"
+        )
+        db_session.add(new_role)
+        await db_session.commit()
+        print(f"[OK] Created missing role: {required_role_enum.value}")
 
     backend_user_data = {
         "email": frontend_form_data["email"],
         "first_name": frontend_form_data["first_name"],
         "last_name": frontend_form_data["last_name"],
         "company_id": int(frontend_form_data["company_id"]),
-        "roles": [frontend_form_data["role"]]
+        "roles": [required_role_enum.value]  # Send enum value
     }
 
     create_response = await client.post(
@@ -175,10 +191,10 @@ async def test_company_admin_user_creation_e2e_flow(client: AsyncClient, db_sess
 
     assert create_response.status_code == 201
     created_user = create_response.json()
-    print(f"✅ Successfully created user via API: {created_user['email']} (ID: {created_user['id']})")
+    print(f"[OK] Successfully created user via API: {created_user['email']} (ID: {created_user['id']})")
 
     # Step 7: Verify in database
-    print("\n💾 Verifying Database...")
+    print("\n[DB] Verifying Database...")
 
     db_user = await db_session.execute(
         select(User).where(User.email == frontend_form_data["email"])
@@ -188,7 +204,7 @@ async def test_company_admin_user_creation_e2e_flow(client: AsyncClient, db_sess
     assert db_user_obj.first_name == frontend_form_data["first_name"]
     assert db_user_obj.last_name == frontend_form_data["last_name"]
     assert db_user_obj.company_id == test_company.id
-    print(f"✅ User correctly stored in database")
+    print(f"[OK] User correctly stored in database")
 
     # Verify role assignment
     user_roles = await db_session.execute(
@@ -196,10 +212,10 @@ async def test_company_admin_user_creation_e2e_flow(client: AsyncClient, db_sess
     )
     role_assignments = user_roles.scalars().all()
     assert len(role_assignments) > 0
-    print(f"✅ User role correctly assigned")
+    print(f"[OK] User role correctly assigned")
 
     # Step 8: Test permission restrictions
-    print("\n🚫 Testing Permission Restrictions...")
+    print("\n[RESTRICT] Testing Permission Restrictions...")
 
     # Try to create user with super_admin role (should fail)
     invalid_user_data = {
@@ -219,7 +235,7 @@ async def test_company_admin_user_creation_e2e_flow(client: AsyncClient, db_sess
     assert forbidden_response.status_code == 403
     error_detail = forbidden_response.json()["detail"]
     assert "super_admin" in error_detail.lower()
-    print(f"✅ Correctly blocked super_admin role assignment")
+    print(f"[OK] Correctly blocked super_admin role assignment")
 
     # Try to create user for different company (should fail)
     other_company = Company(
@@ -249,19 +265,19 @@ async def test_company_admin_user_creation_e2e_flow(client: AsyncClient, db_sess
     assert other_company_response.status_code == 403
     error_detail = other_company_response.json()["detail"]
     assert "other companies" in error_detail.lower()
-    print(f"✅ Correctly blocked cross-company user creation")
+    print(f"[OK] Correctly blocked cross-company user creation")
 
     print("\n" + "=" * 70)
-    print("🎉 End-to-End Test PASSED!")
-    print("📋 Test Summary:")
-    print("   ✅ Company admin authentication")
-    print("   ✅ Frontend form validation logic")
-    print("   ✅ Auto-setting of company and role")
-    print("   ✅ Backend API user creation")
-    print("   ✅ Database persistence")
-    print("   ✅ Permission restrictions")
-    print("   ✅ Cross-company protection")
-    print("\n💡 The create user button should work correctly when:")
+    print("[PASSED] End-to-End Test PASSED!")
+    print("[SUMMARY] Test Summary:")
+    print("   [OK] Company admin authentication")
+    print("   [OK] Frontend form validation logic")
+    print("   [OK] Auto-setting of company and role")
+    print("   [OK] Backend API user creation")
+    print("   [OK] Database persistence")
+    print("   [OK] Permission restrictions")
+    print("   [OK] Cross-company protection")
+    print("\n[INFO] The create user button should work correctly when:")
     print("   1. User fills in first_name, last_name, email")
     print("   2. company_id and role are auto-set by useEffect")
     print("   3. All validation checks pass")

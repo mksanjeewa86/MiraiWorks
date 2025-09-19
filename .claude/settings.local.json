@@ -1,14 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(PYTHONPATH=./backend ENVIRONMENT=test python simple_test.py)",
-      "Bash(PYTHONPATH=./backend ENVIRONMENT=test python backend/simple_test.py)",
-      "Bash(PYTHONPATH=./backend ENVIRONMENT=test python -m pytest backend/app/tests/test_auth.py -k \"me\" -v --tb=short)",
-      "Bash(PYTHONPATH=./backend ENVIRONMENT=test python -m pytest backend/app/tests/test_auth.py -k \"current_user\" -v --tb=short)",
-      "Bash(PYTHONPATH=./backend ENVIRONMENT=test python -m pytest backend/app/tests/test_users_management.py::TestUsersManagement::test_create_user_success -v --tb=short)",
-      "Bash(PYTHONPATH=./backend ENVIRONMENT=test python test_company_endpoint.py)",
-      "Bash(PYTHONPATH=./backend ENVIRONMENT=test python -m pytest backend/app/tests/test_auth.py::test_get_current_user -v -s)",
-      "Bash(PYTHONPATH=./backend ENVIRONMENT=test python -m pytest backend/app/tests/test_users_management.py::TestUsersManagement::test_company_admin_cannot_create_user_for_other_company -v --tb=short)"
+      "Bash(PYTHONPATH=./backend ENVIRONMENT=test python -m pytest backend/app/tests/test_e2e_user_creation.py -v --tb=short)"
     ],
     "deny": [],
     "ask": []

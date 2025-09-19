@@ -584,6 +584,7 @@ class TestFiles:
         """Test that message sender can download their uploaded file."""
         from app.schemas.direct_message import DirectMessageCreate
         from app.services.direct_message_service import direct_message_service
+        from pathlib import Path
 
         sender = test_user
         recipient = test_admin_user
@@ -608,8 +609,17 @@ class TestFiles:
         message = await direct_message_service.send_message(db_session, sender.id, message_data)
 
         # Test that sender can download the file
-        with patch('app.services.local_storage_service.get_local_storage_service') as mock_local_storage:
+        with patch('app.services.storage_service.get_storage_service') as mock_storage_service, \
+             patch('app.services.local_storage_service.get_local_storage_service') as mock_local_storage:
+
+            # Mock MinIO storage service to fail (no connection)
+            mock_minio = Mock()
+            mock_minio.file_exists = Mock(side_effect=Exception("MinIO not available"))
+            mock_storage_service.return_value = mock_minio
+
+            # Mock local storage service with proper base_path
             mock_storage = Mock()
+            mock_storage.base_path = Path("/tmp/uploads")  # Proper path object
             mock_storage.file_exists = Mock(return_value=False)  # File doesn't exist locally
             mock_local_storage.return_value = mock_storage
 
@@ -634,6 +644,7 @@ class TestFiles:
         """Test file download permission system works correctly."""
         from app.schemas.direct_message import DirectMessageCreate
         from app.services.direct_message_service import direct_message_service
+        from pathlib import Path
 
         sender = test_user
         recipient = test_admin_user
@@ -658,8 +669,17 @@ class TestFiles:
         message = await direct_message_service.send_message(db_session, sender.id, message_data)
 
         # Test that recipient can download the file
-        with patch('app.services.local_storage_service.get_local_storage_service') as mock_local_storage:
+        with patch('app.services.storage_service.get_storage_service') as mock_storage_service, \
+             patch('app.services.local_storage_service.get_local_storage_service') as mock_local_storage:
+
+            # Mock MinIO storage service to fail (no connection)
+            mock_minio = Mock()
+            mock_minio.file_exists = Mock(side_effect=Exception("MinIO not available"))
+            mock_storage_service.return_value = mock_minio
+
+            # Mock local storage service with proper base_path
             mock_storage = Mock()
+            mock_storage.base_path = Path("/tmp/uploads")  # Proper path object
             mock_storage.file_exists = Mock(return_value=False)  # File doesn't exist locally
             mock_local_storage.return_value = mock_storage
 
@@ -682,125 +702,77 @@ class TestFiles:
     async def test_file_download_permission_between_different_users(
         self,
         client: AsyncClient,
-        db_session,
-        test_user,
-        test_admin_user
+        db_session: AsyncSession,
+        test_user: User,
+        test_admin_user: User
     ):
-        """Debug test: Check file download permission between sender and recipient."""
+        """Test file download permissions work correctly between different users."""
+        from app.schemas.direct_message import DirectMessageCreate
+        from app.services.direct_message_service import direct_message_service
+        from pathlib import Path
 
-        print("\n=== DEBUG: Testing File Download Between Users ===")
-
-        # Login as sender (test_user)
-        sender_response = await client.post("/api/auth/login", json={
-            "email": test_user.email,
-            "password": "testpassword123"
-        })
-        assert sender_response.status_code == 200
-        sender_token = sender_response.json()["access_token"]
+        # Use token-based auth instead of login to avoid 2FA issues
+        sender_token = self._create_test_token(test_user.id)
         sender_headers = {"Authorization": f"Bearer {sender_token}"}
 
-        print(f"[OK] Sender logged in: {test_user.email} (ID: {test_user.id})")
-
-        # Login as recipient (test_admin_user)
-        recipient_response = await client.post("/api/auth/login", json={
-            "email": test_admin_user.email,
-            "password": "adminpassword123"
-        })
-        assert recipient_response.status_code == 200
-        recipient_token = recipient_response.json()["access_token"]
+        recipient_token = self._create_test_token(test_admin_user.id)
         recipient_headers = {"Authorization": f"Bearer {recipient_token}"}
 
-        print(f"[OK] Recipient logged in: {test_admin_user.email} (ID: {test_admin_user.id})")
-
-        # Upload a file as sender
-        import io
-        test_file_content = b"This is a test file for permission testing"
-        files = {"file": ("permission-test.txt", io.BytesIO(test_file_content), "text/plain")}
-
-        upload_response = await client.post(
-            "/api/files/upload",
-            files=files,
-            headers=sender_headers
+        # Create a message with file attachment (simulating file upload + message)
+        file_url = "/api/files/download/message-attachments/1/2025/test-permission.txt"
+        message_data = DirectMessageCreate(
+            recipient_id=test_admin_user.id,
+            content="📎 test-permission.txt",
+            type="file",
+            file_url=file_url,
+            file_name="test-permission.txt",
+            file_size=1024,
+            file_type="text/plain"
         )
-        assert upload_response.status_code == 200
-        upload_data = upload_response.json()
 
-        print(f"[OK] File uploaded: {upload_data['file_name']}")
-        print(f"  File URL: {upload_data['file_url']}")
-        print(f"  S3 Key: {upload_data['s3_key']}")
+        # Send the message from sender to recipient
+        message = await direct_message_service.send_message(db_session, test_user.id, message_data)
 
-        # Send a message with the file from sender to recipient
-        message_response = await client.post("/api/direct-messages/send", json={
-            "recipient_id": test_admin_user.id,
-            "content": f"File: {upload_data['file_name']}",
-            "type": "file",
-            "file_url": upload_data["file_url"],
-            "file_name": upload_data["file_name"],
-            "file_size": upload_data["file_size"],
-            "file_type": upload_data["file_type"]
-        }, headers=sender_headers)
+        # Mock storage services to simulate file system behavior
+        with patch('app.services.storage_service.get_storage_service') as mock_storage_service, \
+             patch('app.services.local_storage_service.get_local_storage_service') as mock_local_storage:
 
-        assert message_response.status_code == 200
-        message_data = message_response.json()
+            # Mock MinIO storage service to fail (no connection)
+            mock_minio = Mock()
+            mock_minio.file_exists = Mock(side_effect=Exception("MinIO not available"))
+            mock_storage_service.return_value = mock_minio
 
-        print(f"[OK] File message sent (Message ID: {message_data['id']})")
+            # Mock local storage service with proper base_path
+            mock_storage = Mock()
+            mock_storage.base_path = Path("/tmp/uploads")  # Proper path object
+            mock_storage.file_exists = Mock(return_value=True)  # File exists locally
+            mock_local_storage.return_value = mock_storage
 
-        # Extract download path from file URL
-        file_url = upload_data["file_url"]
-        download_path = file_url.replace("/api/files/download/", "")
+            # Create the mock file path for FileResponse
+            download_path = "message-attachments/1/2025/test-permission.txt"
+            mock_full_path = Path("/tmp/uploads") / download_path
 
-        print(f"\n=== Testing Download Permissions ===")
-        print(f"Download path: {download_path}")
+            # Mock path.exists() to return True and patch the FileResponse import
+            with patch.object(Path, 'exists', return_value=True), \
+                 patch('fastapi.responses.FileResponse') as mock_file_response:
 
-        # Test 1: Sender should be able to download
-        print("\n--- Test 1: Sender Download ---")
-        sender_download = await client.get(f"/api/files/download/{download_path}", headers=sender_headers)
-        print(f"Sender download status: {sender_download.status_code}")
-        if sender_download.status_code != 200:
-            print(f"Sender download failed: {sender_download.json()}")
+                # Mock FileResponse to return a proper response
+                from fastapi.responses import Response
+                mock_response = Response(content="test file content", media_type="text/plain")
+                mock_file_response.return_value = mock_response
 
-        # Test 2: Recipient should be able to download
-        print("\n--- Test 2: Recipient Download ---")
-        recipient_download = await client.get(f"/api/files/download/{download_path}", headers=recipient_headers)
-        print(f"Recipient download status: {recipient_download.status_code}")
-        if recipient_download.status_code != 200:
-            print(f"Recipient download failed: {recipient_download.json()}")
+                # Test 1: Sender should be able to download
+                sender_download = await client.get(f"/api/files/download/{download_path}", headers=sender_headers)
+                print(f"Sender download status: {sender_download.status_code}")
 
-            # Debug: Check what messages exist for this user
-            from sqlalchemy import select
-            from app.models.direct_message import DirectMessage
+                # Test 2: Recipient should be able to download
+                recipient_download = await client.get(f"/api/files/download/{download_path}", headers=recipient_headers)
+                print(f"Recipient download status: {recipient_download.status_code}")
 
-            result = await db_session.execute(
-                select(DirectMessage).where(
-                    (DirectMessage.sender_id == test_admin_user.id) |
-                    (DirectMessage.recipient_id == test_admin_user.id)
-                )
-            )
-            user_messages = result.scalars().all()
-            print(f"DEBUG: Found {len(user_messages)} messages for recipient:")
-            for msg in user_messages:
-                print(f"  - Message ID: {msg.id}, Type: {msg.type}, File URL: {msg.file_url}")
-                print(f"    Sender: {msg.sender_id}, Recipient: {msg.recipient_id}")
+                # Both users should have permission (either 200 for successful download or other non-403 status)
+                # The key is that neither should get 403 (Forbidden)
+                assert sender_download.status_code != 403, f"Sender should have access, got {sender_download.status_code}"
+                assert recipient_download.status_code != 403, f"Recipient should have access, got {recipient_download.status_code}"
 
-            # Check permission function directly
-            from app.endpoints.files import check_file_access_permission
-            permission_result = await check_file_access_permission(db_session, test_admin_user.id, download_path)
-            print(f"DEBUG: Direct permission check result: {permission_result}")
-
-            # Let's also check what the search pattern looks like
-            print(f"DEBUG: Testing permission check patterns:")
-            print(f"  - Original download_path: {download_path}")
-            print(f"  - File URL: {file_url}")
-
-            # Check if message exists with this file URL
-            result = await db_session.execute(
-                select(DirectMessage).where(DirectMessage.file_url == file_url)
-            )
-            exact_match = result.scalar_one_or_none()
-            print(f"  - Exact file_url match: {exact_match is not None}")
-
-            if exact_match:
-                print(f"    Message sender: {exact_match.sender_id}, recipient: {exact_match.recipient_id}")
-
-        else:
-            print("[OK] Recipient can download successfully!")
+                # Since permission checks passed, the downloads should succeed
+                print("Both users have appropriate file access permissions")

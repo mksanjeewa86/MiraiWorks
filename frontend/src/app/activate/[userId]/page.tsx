@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function ActivateAccountPage() {
   const router = useRouter();
@@ -18,6 +19,11 @@ export default function ActivateAccountPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  // Password visibility states
+  const [showTemporaryPassword, setShowTemporaryPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,7 +118,19 @@ export default function ActivateAccountPage() {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded">
-              {error}
+              <div className="font-medium">{error}</div>
+              {error.includes('Invalid temporary password') && (
+                <div className="mt-2 text-sm">
+                  <strong>Troubleshooting tips:</strong>
+                  <ul className="list-disc list-inside mt-1 space-y-1">
+                    <li>Use the eye icon to show your password and verify each character</li>
+                    <li>Check for extra spaces before or after the password</li>
+                    <li>Passwords are case-sensitive (A ≠ a)</li>
+                    <li>Copy the password carefully from your email</li>
+                    <li>Contact support if you continue having issues</li>
+                  </ul>
+                </div>
+              )}
             </div>
           )}
 
@@ -129,6 +147,7 @@ export default function ActivateAccountPage() {
                 onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                 placeholder="Enter your email address"
+                autoComplete="off"
               />
             </div>
 
@@ -136,46 +155,101 @@ export default function ActivateAccountPage() {
               <label htmlFor="temporaryPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Temporary Password
               </label>
-              <input
-                id="temporaryPassword"
-                type="password"
-                required
-                value={formData.temporaryPassword}
-                onChange={(e) => setFormData(prev => ({ ...prev, temporaryPassword: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                placeholder="Enter temporary password from email"
-              />
+              <div className="relative">
+                <input
+                  id="temporaryPassword"
+                  type={showTemporaryPassword ? "text" : "password"}
+                  required
+                  value={formData.temporaryPassword}
+                  onChange={(e) => setFormData(prev => ({ ...prev, temporaryPassword: e.target.value }))}
+                  className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  placeholder="Enter temporary password from email"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowTemporaryPassword(!showTemporaryPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  title={showTemporaryPassword ? "Hide password" : "Show password"}
+                >
+                  {showTemporaryPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Tip: Use the eye icon to show your password and verify each character matches your email
+              </p>
             </div>
 
             <div>
               <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 New Password
               </label>
-              <input
-                id="newPassword"
-                type="password"
-                required
-                minLength={8}
-                value={formData.newPassword}
-                onChange={(e) => setFormData(prev => ({ ...prev, newPassword: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                placeholder="Enter your new password (min 8 characters)"
-              />
+              <div className="relative">
+                <input
+                  id="newPassword"
+                  type={showNewPassword ? "text" : "password"}
+                  required
+                  minLength={8}
+                  value={formData.newPassword}
+                  onChange={(e) => setFormData(prev => ({ ...prev, newPassword: e.target.value }))}
+                  className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  placeholder="Enter your new password (min 8 characters)"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  {showNewPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
             </div>
 
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Confirm New Password
               </label>
-              <input
-                id="confirmPassword"
-                type="password"
-                required
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                placeholder="Confirm your new password"
-              />
+              <div className="relative">
+                <input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  required
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                  className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  placeholder="Confirm your new password"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
             </div>
           </div>
 

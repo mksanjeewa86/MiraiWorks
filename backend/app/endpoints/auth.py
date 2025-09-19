@@ -558,9 +558,30 @@ async def activate_account(
         )
 
     # Verify temporary password
-    if not user.hashed_password or not auth_service.verify_password(
+    if not user.hashed_password:
+        logger.error(
+            "Account activation failed - no hashed password set",
+            user_id=user.id,
+            email=user.email,
+            component="auth"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Account not properly configured. Please contact administrator.",
+        )
+
+    password_valid = auth_service.verify_password(
         activation_data.temporaryPassword, user.hashed_password
-    ):
+    )
+
+    if not password_valid:
+        logger.warning(
+            "Account activation failed - invalid temporary password",
+            user_id=user.id,
+            email=user.email,
+            password_length=len(activation_data.temporaryPassword),
+            component="auth"
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid temporary password",
