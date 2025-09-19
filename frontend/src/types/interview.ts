@@ -81,8 +81,11 @@ export interface CalendarEvent {
   isAllDay: boolean;
   isRecurring: boolean;
   organizerEmail?: string;
+  organizerName?: string;
+  meetingUrl?: string;
   attendees: string[];
   status?: string;
+  type?: string;
   createdAt: string;
   updatedAt: string;
 }

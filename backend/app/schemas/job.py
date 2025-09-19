@@ -102,6 +102,7 @@ class JobSalaryInfo(BaseModel):
 
 class JobCreate(JobBase, JobSalaryInfo):
     company_id: int
+    posted_by: Optional[int] = None
 
 
 class JobUpdate(BaseModel):
@@ -153,7 +154,6 @@ class JobInfo(JobBase, JobSalaryInfo):
     is_active: bool = False
     days_since_published: Optional[int] = None
     salary_range_display: Optional[str] = None
-    can_apply: bool = False
 
     # Company info (from relationship)
     company_name: Optional[str] = None

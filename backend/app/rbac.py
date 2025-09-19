@@ -56,6 +56,7 @@ ROLE_PERMISSIONS: dict[UserRole, set[str]] = {
         "companies.update",
         "messages.read",
         "messages.delete",
+        "interviews.create",  # Added missing permission
         "interviews.read",
         "interviews.update",
         "interviews.cancel",

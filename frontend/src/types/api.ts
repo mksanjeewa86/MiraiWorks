@@ -15,13 +15,13 @@ export interface PaginatedResponse<T> {
 }
 
 // Specific backend response types that match actual API schemas
-export interface EventsListResponse<T = any> {
+export interface EventsListResponse<T = unknown> {
   events: T[];
   next_sync_token?: string;
   has_more: boolean;
 }
 
-export interface InterviewsListResponse<T = any> {
+export interface InterviewsListResponse<T = unknown> {
   interviews: T[];
   total: number;
   has_more: boolean;

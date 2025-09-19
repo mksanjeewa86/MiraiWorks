@@ -62,12 +62,13 @@ function CalendarPageContent() {
             allEvents = [...calendarResponse.data];
           } else if (calendarResponse.data && typeof calendarResponse.data === 'object') {
             // Handle object response with nested data
-            if (Array.isArray(calendarResponse.data.items)) {
-              allEvents = [...calendarResponse.data.items];
-            } else if (Array.isArray(calendarResponse.data.events)) {
-              allEvents = [...calendarResponse.data.events];
-            } else if (Array.isArray(calendarResponse.data.data)) {
-              allEvents = [...calendarResponse.data.data];
+            const dataObj = calendarResponse.data as any;
+            if (Array.isArray(dataObj.items)) {
+              allEvents = [...dataObj.items];
+            } else if (Array.isArray(dataObj.events)) {
+              allEvents = [...dataObj.events];
+            } else if (Array.isArray(dataObj.data)) {
+              allEvents = [...dataObj.data];
             } else {
               console.warn('Calendar API returned unexpected format:', calendarResponse);
               allEvents = [];
@@ -88,7 +89,7 @@ function CalendarPageContent() {
       try {
         // Load interview events as well
         const interviewResponse = await interviewsApi.getAll();
-        let interviews: any[] = [];
+        let interviews: Interview[] = [];
 
         // Robust response format handling for interviews
         if (interviewResponse?.data) {
@@ -96,12 +97,13 @@ function CalendarPageContent() {
             interviews = interviewResponse.data;
           } else if (interviewResponse.data && typeof interviewResponse.data === 'object') {
             // Handle object response with nested data
-            if (Array.isArray(interviewResponse.data.items)) {
-              interviews = interviewResponse.data.items;
-            } else if (Array.isArray(interviewResponse.data.interviews)) {
-              interviews = interviewResponse.data.interviews;
-            } else if (Array.isArray(interviewResponse.data.data)) {
-              interviews = interviewResponse.data.data;
+            const dataObj = interviewResponse.data as any;
+            if (Array.isArray(dataObj.items)) {
+              interviews = dataObj.items;
+            } else if (Array.isArray(dataObj.interviews)) {
+              interviews = dataObj.interviews;
+            } else if (Array.isArray(dataObj.data)) {
+              interviews = dataObj.data;
             } else {
               console.warn('Interviews API returned unexpected format:', interviewResponse);
               interviews = [];

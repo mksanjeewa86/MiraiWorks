@@ -7,6 +7,7 @@ from sqlalchemy.orm import selectinload
 
 from app.crud.base import CRUDBase
 from app.models.interview import Interview, InterviewProposal
+from app.models.user import User
 from app.schemas.interview import InterviewCreate, InterviewUpdate
 from app.utils.constants import InterviewStatus
 
@@ -19,8 +20,8 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
         result = await db.execute(
             select(Interview)
             .options(
-                selectinload(Interview.candidate),
-                selectinload(Interview.recruiter),
+                selectinload(Interview.candidate).selectinload(User.company),
+                selectinload(Interview.recruiter).selectinload(User.company),
                 selectinload(Interview.employer_company),
                 selectinload(Interview.creator),
                 selectinload(Interview.proposals),

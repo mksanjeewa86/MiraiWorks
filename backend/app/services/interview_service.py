@@ -60,7 +60,7 @@ class InterviewService:
             description=description,
             position_title=position_title,
             interview_type=interview_type,
-            status=InterviewStatus.PROPOSED.value,
+            status=InterviewStatus.PENDING_SCHEDULE.value,
             created_by=created_by,
         )
 
@@ -383,10 +383,10 @@ class InterviewService:
             )
 
         recruiter_roles = [ur.role.name for ur in recruiter.user_roles]
-        if UserRole.RECRUITER.value not in recruiter_roles:
+        if not (UserRole.RECRUITER.value in recruiter_roles or UserRole.COMPANY_ADMIN.value in recruiter_roles):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Specified user is not a recruiter",
+                detail="Specified user is not a recruiter or company admin",
             )
 
         # Validate employer company exists

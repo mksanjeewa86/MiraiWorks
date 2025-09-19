@@ -33,7 +33,7 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-@router.post("/", response_model=InterviewInfo)
+@router.post("/", response_model=InterviewInfo, status_code=status.HTTP_201_CREATED)
 @requires_permission("interviews.create")
 async def create_interview(
     interview_data: InterviewCreate,
@@ -53,7 +53,10 @@ async def create_interview(
         created_by=current_user.id,
     )
 
-    return await _format_interview_response(db, interview)
+    # Get interview with relationships for proper response formatting
+    interview_with_relationships = await interview_crud.get_with_relationships(db, interview.id)
+
+    return await _format_interview_response(db, interview_with_relationships)
 
 
 @router.get("/", response_model=InterviewsListResponse)
