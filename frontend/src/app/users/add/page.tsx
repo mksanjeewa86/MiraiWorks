@@ -359,7 +359,7 @@ function AddUserPageContent() {
                 <select
                   required
                   value={formData.role}
-                  onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value as any }))}
+                  onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                 >
                   <option value="">Select a role...</option>
@@ -370,7 +370,7 @@ function AddUserPageContent() {
                   ))}
                 </select>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Role determines the user's permissions and access level
+                  Role determines the user&apos;s permissions and access level
                 </p>
               </div>
             )}
