@@ -1,5 +1,6 @@
 from typing import Optional
 
+from pydantic import Field
 from pydantic_settings import BaseSettings
 
 
@@ -8,16 +9,16 @@ class Settings(BaseSettings):
     environment: str = "development"
 
     # Database
-    db_url: str = "mysql+asyncmy://hrms:hrms@db:3306/miraiworks"
+    db_url: str = Field(default="mysql+asyncmy://changeme:changeme@localhost:3306/miraiworks")
 
     # Redis
-    redis_url: str = "redis://redis:6379/0"
+    redis_url: str = Field(default="redis://localhost:6379/0")
 
     # S3/MinIO
-    s3_endpoint: str = "http://minio:9000"
-    s3_access_key: str = "minioadmin"
-    s3_secret_key: str = "minioadmin123"
-    s3_bucket: str = "miraiworks-files"
+    s3_endpoint: str = Field(default="http://localhost:9000")
+    s3_access_key: str = Field(default="changeme")
+    s3_secret_key: str = Field(default="changeme")
+    s3_bucket: str = Field(default="miraiworks-files")
 
     # ClamAV
     clamav_host: str = "localhost"
@@ -35,7 +36,7 @@ class Settings(BaseSettings):
     smtp_from: str = "noreply@miraiworks.com"  # Keep for backward compatibility
 
     # JWT
-    jwt_secret: str = "development-secret-change-in-production"
+    jwt_secret: str = Field(default="changeme")
     jwt_access_ttl_min: int = 15
     jwt_refresh_ttl_days: int = 30
 
@@ -57,7 +58,7 @@ class Settings(BaseSettings):
     outlook_calendar_redirect_uri: Optional[str] = None
 
     # App
-    app_base_url: str = "http://localhost:3001"
+    app_base_url: str = Field(default="http://localhost:3001")
 
     model_config = {"env_file": ".env", "case_sensitive": False}
 

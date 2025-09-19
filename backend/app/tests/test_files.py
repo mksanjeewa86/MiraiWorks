@@ -333,7 +333,7 @@ class TestFiles:
         self,
         mock_get_storage_service,
         client: AsyncClient,
-        auth_headers: dict
+        super_admin_auth_headers: dict
     ):
         """Test successful file deletion."""
         # Mock storage service
@@ -346,7 +346,7 @@ class TestFiles:
 
         response = await client.delete(
             f"/api/files/{test_s3_key}",
-            headers=auth_headers
+            headers=super_admin_auth_headers
         )
 
         assert response.status_code == 200
@@ -371,7 +371,7 @@ class TestFiles:
         self,
         mock_get_storage_service,
         client: AsyncClient,
-        auth_headers: dict
+        super_admin_auth_headers: dict
     ):
         """Test file deletion with non-existent file fails."""
         # Mock storage service to return file not found
@@ -381,7 +381,7 @@ class TestFiles:
 
         response = await client.delete(
             "/api/files/nonexistent_key",
-            headers=auth_headers
+            headers=super_admin_auth_headers
         )
 
         assert response.status_code == 404
@@ -394,7 +394,7 @@ class TestFiles:
         self,
         mock_get_storage_service,
         client: AsyncClient,
-        auth_headers: dict
+        super_admin_auth_headers: dict
     ):
         """Test file deletion when storage service deletion fails."""
         # Mock storage service
@@ -405,7 +405,7 @@ class TestFiles:
 
         response = await client.delete(
             "/api/files/test_key",
-            headers=auth_headers
+            headers=super_admin_auth_headers
         )
 
         assert response.status_code == 500
@@ -418,7 +418,7 @@ class TestFiles:
         self,
         mock_get_storage_service,
         client: AsyncClient,
-        auth_headers: dict
+        super_admin_auth_headers: dict
     ):
         """Test file deletion with storage service error."""
         # Mock storage service to raise exception
@@ -428,7 +428,7 @@ class TestFiles:
 
         response = await client.delete(
             "/api/files/test_key",
-            headers=auth_headers
+            headers=super_admin_auth_headers
         )
 
         assert response.status_code == 500

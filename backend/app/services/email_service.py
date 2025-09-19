@@ -113,7 +113,7 @@ class EmailService:
         self, email: str, reset_token: str, user_name: str
     ) -> bool:
         """Send password reset link via email."""
-        logger.info(f"[STUB] Would send password reset token {reset_token} to {email}")
+        logger.info("[STUB] Password reset email triggered for %s", email)
         return True
 
     async def send_interview_notification(

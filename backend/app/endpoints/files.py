@@ -1,4 +1,5 @@
 import os
+from pathlib import Path, PurePosixPath
 from typing import Optional
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
@@ -12,6 +13,7 @@ from app.models.direct_message import DirectMessage
 from app.models.role import UserRole
 from app.models.user import User
 from app.utils.logging import get_logger
+from app.utils.permissions import is_super_admin
 
 router = APIRouter()
 logger = get_logger(__name__)
@@ -53,6 +55,41 @@ except OSError as e:
     # Use /tmp as fallback for Docker containers
     UPLOAD_DIR = "/tmp/uploads"
     os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+
+
+
+def _normalize_storage_key(raw_key: str) -> str:
+    """Validate and normalize inbound storage keys."""
+    key = raw_key.strip().replace('\\', '/')
+    if not key:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid file key'
+        )
+    if key.startswith('/'):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid file key'
+        )
+
+    posix_path = PurePosixPath(key)
+    if any(part == '..' for part in posix_path.parts):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid file key'
+        )
+
+    return str(posix_path)
+
+
+def _resolve_local_path(base_path: Path, key: str) -> Path:
+    """Resolve file key against base path and block path traversal."""
+    base = Path(base_path).resolve()
+    candidate = (base / Path(key)).resolve()
+    if not candidate.is_relative_to(base):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='You do not have permission to access this file',
+        )
+    return candidate
 
 
 def is_allowed_file(filename: str) -> bool:
@@ -253,16 +290,19 @@ async def download_file(
 ):
     """Download a file from storage (MinIO or local) with permission check."""
 
+    # Validate and normalise the requested key
+    safe_key = _normalize_storage_key(s3_key)
+
     # Check if user has permission to access this file
-    has_permission = await check_file_access_permission(db, current_user.id, s3_key)
+    has_permission = await check_file_access_permission(db, current_user.id, safe_key)
     if not has_permission:
-        logger.warning(f"User {current_user.id} denied access to file {s3_key}")
+        logger.warning(f"User {current_user.id} denied access to file {safe_key}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to access this file"
         )
 
-    logger.info(f"User {current_user.id} granted access to file {s3_key}")
+    logger.info(f"User {current_user.id} granted access to file {safe_key}")
 
     # Try MinIO first
     try:
@@ -270,10 +310,10 @@ async def download_file(
         storage_service = get_storage_service()
 
         # Check if file exists
-        if storage_service.file_exists(s3_key):
+        if storage_service.file_exists(safe_key):
             # Generate presigned URL for download
-            download_url = storage_service.get_presigned_url(s3_key)
-            return {"download_url": download_url, "s3_key": s3_key, "expires_in": "1 hour"}
+            download_url = storage_service.get_presigned_url(safe_key)
+            return {"download_url": download_url, "s3_key": safe_key, "expires_in": "1 hour"}
 
     except Exception as e:
         logger.warning(f"MinIO download failed, trying local storage: {str(e)}")
@@ -288,12 +328,12 @@ async def download_file(
         # Resolve the full path to the file
         # s3_key comes in as: "message-attachments/8/2025/09/file.pdf"
         # We need to make it: "uploads/message-attachments/8/2025/09/file.pdf"
-        full_file_path = storage_service.base_path / s3_key
+        full_file_path = _resolve_local_path(storage_service.base_path, safe_key)
 
         # Check if file exists
         if full_file_path.exists():
             # Determine media type and disposition based on file extension
-            filename = os.path.basename(s3_key)
+            filename = os.path.basename(safe_key)
             file_ext = filename.lower().split('.')[-1] if '.' in filename else ''
 
             # Set appropriate media type
@@ -330,11 +370,12 @@ async def download_file(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error downloading file {s3_key}: {str(e)}")
+        logger.error(f"Error downloading file {safe_key}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error downloading file",
         )
+
 
 
 @router.delete("/{s3_key:path}")
@@ -342,35 +383,66 @@ async def delete_file(
     s3_key: str,
     current_user: User = Depends(get_current_active_user),
 ):
-    """Delete a file from MinIO (admin only for now)."""
+    """Delete a file from storage (super admin only)."""
+
+    safe_key = _normalize_storage_key(s3_key)
+
+    if not is_super_admin(current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Super admin privileges required to delete files',
+        )
 
     try:
         from app.services.storage_service import get_storage_service
+
         storage_service = get_storage_service()
 
-        # Check if file exists
-        if not storage_service.file_exists(s3_key):
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
-            )
+        if storage_service.file_exists(safe_key):
+            success = storage_service.delete_file(safe_key)
 
-        # Delete from MinIO
-        success = storage_service.delete_file(s3_key)
+            if success:
+                logger.info(
+                    f"File deleted from MinIO: {safe_key} by user {current_user.id}"
+                )
+                return {"message": "File deleted successfully"}
 
-        if success:
-            logger.info(f"File deleted from MinIO: {s3_key} by user {current_user.id}")
-            return {"message": "File deleted successfully"}
-        else:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to delete file",
+                detail='Failed to delete file',
             )
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error deleting file {s3_key}: {str(e)}")
+        logger.error(f"Error deleting file {safe_key}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error deleting file",
+            detail='Error deleting file',
         )
+
+    # Fall back to local storage deletion
+    try:
+        from app.services.local_storage_service import get_local_storage_service
+
+        local_storage = get_local_storage_service()
+        local_path = _resolve_local_path(local_storage.base_path, safe_key)
+        if local_path.exists():
+            local_path.unlink()
+            logger.info(
+                f"File deleted from local storage: {safe_key} by user {current_user.id}"
+            )
+            return {"message": "File deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting local file {safe_key}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail='Error deleting file',
+        )
+
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail='File not found',
+    )

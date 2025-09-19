@@ -213,22 +213,16 @@ class AuthService:
 
         # First check user's individual 2FA setting
         if fresh_user.require_2fa:
-            print(f"[DEBUG] User {user.email} has individual 2FA enabled")
             return True
-
-        # Debug log the settings value
-        print(f"[DEBUG] settings.force_2fa_for_admins = {settings.force_2fa_for_admins}")
 
         # If force_2fa_for_admins is disabled, only use individual settings
         if not settings.force_2fa_for_admins:
-            print(f"[DEBUG] force_2fa_for_admins is disabled, skipping admin 2FA requirement")
             return False
 
         # Check if user has any admin roles and force_2fa_for_admins is enabled
         # (we already loaded the user with roles above)
         for user_role in fresh_user.user_roles:
             if is_admin_role(UserRole(user_role.role.name)):
-                print(f"[DEBUG] User {user.email} has admin role {user_role.role.name}, forcing 2FA")
                 return True
 
         return False

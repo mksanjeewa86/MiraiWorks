@@ -98,17 +98,6 @@ async def login(
         component="auth",
     )
 
-    # Debug: Check what the user object actually contains
-    user_dict = {
-        "id": user.id,
-        "email": user.email,
-        "require_2fa": user.require_2fa,
-        "require_2fa_type": type(user.require_2fa),
-        "is_active": user.is_active,
-        "is_admin": user.is_admin,
-    }
-    print(f"[DEBUG] User object: {user_dict}")
-
     # Check if 2FA is required (either individual setting or role-based requirement)
     requires_2fa = await auth_service.requires_2fa(db, user)
     if requires_2fa:
