@@ -1,38 +1,38 @@
 =============== short test summary info =============== 
-FIXED app/tests/test_candidate_workflows.py::test_candidate_application_workflow
-FIXED app/tests/test_candidate_workflows.py::test_candidate_pipeline_management
-FIXED app/tests/test_interviews.py::TestInterviewCreation::test_create_interview_success   
-FIXED app/tests/test_interviews.py::TestInterviewCreation::test_create_interview_missing_required_fields
-FIXED app/tests/test_interviews.py::TestInterviewCreation::test_create_interview_empty_title
-FIXED app/tests/test_interviews.py::TestInterviewCreation::test_create_interview_invalid_type
-FAILED app/tests/test_interviews.py::TestInterviewCreation::test_create_interview_unauthorized - NameError: name 'client' is not defined
-FIXED app/tests/test_interviews.py::TestInterviewCreation::test_create_interview_insufficient_permissions - (NameError fixed, now 401 auth issue)
+✅ FIXED app/tests/test_candidate_workflows.py::test_candidate_application_workflow
+✅ FIXED app/tests/test_candidate_workflows.py::test_candidate_pipeline_management
+✅ FIXED app/tests/test_interviews.py::TestInterviewCreation::test_create_interview_success   
+✅ FIXED app/tests/test_interviews.py::TestInterviewCreation::test_create_interview_missing_required_fields
+✅ FIXED app/tests/test_interviews.py::TestInterviewCreation::test_create_interview_empty_title
+✅ FIXED app/tests/test_interviews.py::TestInterviewCreation::test_create_interview_invalid_type
+✅ FIXED app/tests/test_interviews.py::TestInterviewCreation::test_create_interview_unauthorized
+✅ FIXED app/tests/test_interviews.py::TestInterviewCreation::test_create_interview_insufficient_permissions
 FAILED app/tests/test_interviews.py::TestInterviewRetrieval::test_get_interviews_success - NameError: name 'client' is not defined
 FAILED app/tests/test_interviews.py::TestInterviewRetrieval::test_get_interviews_with_filters - NameError: name 'client' is not defined
-FAILED app/tests/test_interviews.py::TestInterviewRetrieval::test_get_interviews_invalid_status_filter - NameError: name 'client' is not defined
-FAILED app/tests/test_interviews.py::TestInterviewRetrieval::test_get_interviews_unauthorized - NameError: name 'client' is not defined
+✅ FIXED app/tests/test_interviews.py::TestInterviewRetrieval::test_get_interviews_invalid_status_filter
+✅ FIXED app/tests/test_interviews.py::TestInterviewRetrieval::test_get_interviews_unauthorized
 FAILED app/tests/test_interviews.py::TestInterviewRetrieval::test_get_single_interview_success - AttributeError: <app.services.interview_service.Int...
 FAILED app/tests/test_interviews.py::TestInterviewRetrieval::test_get_single_interview_not_found - AttributeError: <app.services.interview_service.Int...
 FAILED app/tests/test_interviews.py::TestInterviewUpdate::test_update_interview_success - AttributeError: <app.services.interview_service.Int...
-FAILED app/tests/test_interviews.py::TestInterviewUpdate::test_update_interview_empty_title - NameError: name 'client' is not defined
+✅ FIXED app/tests/test_interviews.py::TestInterviewUpdate::test_update_interview_empty_title
 FAILED app/tests/test_interviews.py::TestInterviewUpdate::test_update_interview_not_found - AttributeError: <app.services.interview_service.Int...
-FAILED app/tests/test_interviews.py::TestInterviewUpdate::test_update_interview_unauthorized - NameError: name 'client' is not defined
+✅ FIXED app/tests/test_interviews.py::TestInterviewUpdate::test_update_interview_unauthorized
 FAILED app/tests/test_interviews.py::TestInterviewProposals::test_create_proposal_success - AttributeError: <app.services.interview_service.Int...
-FAILED app/tests/test_interviews.py::TestInterviewProposals::test_create_proposal_invalid_time_range - NameError: name 'client' is not defined
+✅ FIXED app/tests/test_interviews.py::TestInterviewProposals::test_create_proposal_invalid_time_range
 FAILED app/tests/test_interviews.py::TestInterviewProposals::test_respond_to_proposal_accept - NameError: name 'client' is not defined
-FAILED app/tests/test_interviews.py::TestInterviewProposals::test_respond_to_proposal_invalid_response - NameError: name 'client' is not defined
+✅ FIXED app/tests/test_interviews.py::TestInterviewProposals::test_respond_to_proposal_invalid_response
 FAILED app/tests/test_interviews.py::TestInterviewWorkflow::test_cancel_interview_success - NameError: name 'client' is not defined
-FAILED app/tests/test_interviews.py::TestInterviewWorkflow::test_cancel_interview_excessive_reason_length - NameError: name 'client' is not defined
+✅ FIXED app/tests/test_interviews.py::TestInterviewWorkflow::test_cancel_interview_excessive_reason_length
 FAILED app/tests/test_interviews.py::TestInterviewWorkflow::test_reschedule_interview_success - NameError: name 'client' is not defined
-FAILED app/tests/test_interviews.py::TestInterviewWorkflow::test_reschedule_interview_invalid_time_range - NameError: name 'client' is not defined
+✅ FIXED app/tests/test_interviews.py::TestInterviewWorkflow::test_reschedule_interview_invalid_time_range
 FAILED app/tests/test_interviews.py::TestInterviewStats::test_get_interview_stats_success - AttributeError: <app.services.interview_service.Int...
-FAILED app/tests/test_interviews.py::TestInterviewStats::test_get_interview_stats_unauthorized - NameError: name 'client' is not defined
-FAILED app/tests/test_interviews.py::TestInterviewCalendarIntegration::test_get_calendar_events_success - AttributeError: <app.services.interview_service.Int...        
+✅ FIXED app/tests/test_interviews.py::TestInterviewStats::test_get_interview_stats_unauthorized
+FAILED app/tests/test_interviews.py::TestInterviewCalendarIntegration::test_get_calendar_events_success - AttributeError: <app.services.interview_service.Int...
 FAILED app/tests/test_interviews.py::TestInterviewCalendarIntegration::test_get_calendar_integration_status_success - AttributeError: <app.services.interview_service.Int...
 FAILED app/tests/test_interviews.py::TestInterviewEdgeCases::test_create_interview_with_all_optional_fields - NameError: name 'client' is not defined
-FAILED app/tests/test_interviews.py::TestInterviewEdgeCases::test_get_interviews_with_pagination_boundary - NameError: name 'client' is not defined
-FAILED app/tests/test_interviews.py::TestInterviewEdgeCases::test_get_interviews_exceed_limit_boundary - NameError: name 'client' is not defined
-FAILED app/tests/test_interviews.py::TestInterviewEdgeCases::test_proposal_with_past_datetime - NameError: name 'client' is not defined
+✅ FIXED app/tests/test_interviews.py::TestInterviewEdgeCases::test_get_interviews_with_pagination_boundary
+✅ FIXED app/tests/test_interviews.py::TestInterviewEdgeCases::test_get_interviews_exceed_limit_boundary
+✅ FIXED app/tests/test_interviews.py::TestInterviewEdgeCases::test_proposal_with_past_datetime
 FAILED app/tests/test_interviews_comprehensive.py::TestInterviewEndpoints::test_create_interview_success - assert 403 == 201
 FAILED app/tests/test_interviews_comprehensive.py::TestInterviewEndpoints::test_get_interviews_success - pydantic_core._pydantic_core.ValidationError: 44 va...
 FAILED app/tests/test_interviews_comprehensive.py::TestInterviewEndpoints::test_get_single_interview_success - AttributeError: <app.services.interview_service.Int...   

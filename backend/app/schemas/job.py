@@ -138,17 +138,53 @@ class JobUpdate(BaseModel):
 
 
 class JobInfo(JobBase, JobSalaryInfo):
+    title: str = Field(default="", max_length=255)
+    description: Optional[str] = None
     id: int
-    slug: str
+    slug: Optional[str] = None
     company_id: int
-    status: JobStatus
+    status: JobStatus = JobStatus.DRAFT
     view_count: int = 0
     application_count: int = 0
     published_at: Optional[datetime] = None
     expires_at: Optional[datetime] = None
-    posted_by: int
-    created_at: datetime
-    updated_at: datetime
+    posted_by: Optional[int] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+    @field_validator("title", mode="before")
+    @classmethod
+    def _default_title(cls, value):
+        return value or ""
+
+    @field_validator("job_type", "experience_level", "remote_type", "salary_type", "status", mode="before")
+    @classmethod
+    def _default_enum_fields(cls, value, info):
+        if value is None:
+            defaults = {
+                "job_type": JobType.FULL_TIME,
+                "experience_level": ExperienceLevel.MID_LEVEL,
+                "remote_type": RemoteType.ON_SITE,
+                "salary_type": SalaryType.ANNUAL,
+                "status": JobStatus.DRAFT,
+            }
+            return defaults[info.field_name]
+        return value
+
+    @field_validator("salary_currency", mode="before")
+    @classmethod
+    def _default_salary_currency(cls, value):
+        return value or "USD"
+
+    @field_validator("show_salary", "is_featured", "is_urgent", mode="before")
+    @classmethod
+    def _default_bool_fields(cls, value):
+        return bool(value) if value is not None else False
+
+    @field_validator("view_count", "application_count", mode="before")
+    @classmethod
+    def _default_int_fields(cls, value):
+        return 0 if value is None else value
 
     # Computed properties
     is_active: bool = False
@@ -160,6 +196,7 @@ class JobInfo(JobBase, JobSalaryInfo):
     company_logo_url: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
+
 
 
 # Job Application Schemas
@@ -283,7 +320,21 @@ class JobListParams(BaseModel):
 class JobListResponse(BaseModel):
     jobs: List[JobInfo]
     total: int
+    skip: int = 0
+    limit: int = 0
     has_more: bool = False
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+
+class JobStatusUpdateRequest(BaseModel):
+    status: JobStatus
+
+
+class JobBulkStatusUpdateRequest(BaseModel):
+    job_ids: List[int] = Field(..., min_length=1)
+    status: JobStatus
 
 
 class JobApplicationListParams(BaseModel):
@@ -321,3 +372,7 @@ class JobSearchResponse(BaseModel):
     facets: dict = Field(default_factory=dict)  # For search faceting
     has_more: bool = False
     search_query: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+

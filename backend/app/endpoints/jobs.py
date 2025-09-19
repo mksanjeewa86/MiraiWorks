@@ -11,11 +11,14 @@ from app.models.job import Job
 from app.crud.job import job as job_crud
 from app.models.user import User
 from app.schemas.job import (
+    JobBulkStatusUpdateRequest,
     JobCreate,
     JobInfo,
-    JobUpdate,
     JobListResponse,
-    JobStatsResponse
+    JobSearchResponse,
+    JobStatusUpdateRequest,
+    JobStatsResponse,
+    JobUpdate,
 )
 
 router = APIRouter()
@@ -90,15 +93,18 @@ async def list_jobs(
             limit=limit
         )
 
+    has_more = len(jobs) == limit
+
     return JobListResponse(
         jobs=jobs,
         total=len(jobs),
         skip=skip,
-        limit=limit
+        limit=limit,
+        has_more=has_more,
     )
 
 
-@router.get("/search", response_model=List[JobInfo])
+@router.get("/search", response_model=JobSearchResponse)
 async def search_jobs(
     *,
     db: AsyncSession = Depends(get_db),
@@ -126,7 +132,14 @@ async def search_jobs(
         search=query
     )
 
-    return jobs
+    has_more = len(jobs) == limit
+
+    return JobSearchResponse(
+        jobs=jobs,
+        total=len(jobs),
+        has_more=has_more,
+        search_query=query,
+    )
 
 
 @router.get("/popular", response_model=List[JobInfo])
@@ -292,10 +305,89 @@ async def update_job(
                 detail="Can only update jobs for your own company"
             )
 
+    if job_in.salary_min is not None and job_in.salary_max is not None:
+        if job_in.salary_max <= job_in.salary_min:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="salary_max must be greater than salary_min"
+            )
+
     job = await job_crud.update(db=db, db_obj=job, obj_in=job_in)
     return job
 
 
+
+
+@router.patch("/bulk/status", response_model=List[JobInfo])
+async def bulk_update_job_status(
+    *,
+    db: AsyncSession = Depends(get_db),
+    payload: JobBulkStatusUpdateRequest,
+    current_user: User = Depends(get_current_active_user)
+) -> Any:
+    """Bulk update job statuses."""
+    if not current_user.is_admin and not current_user.company_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions to update job postings"
+        )
+
+    new_status = payload.status.value if hasattr(payload.status, "value") else payload.status
+    jobs = await job_crud.bulk_update_status(
+        db=db,
+        job_ids=payload.job_ids,
+        status=new_status
+    )
+
+    if not jobs:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Jobs not found"
+        )
+
+    if not current_user.is_admin:
+        unauthorized = [
+            job for job in jobs
+            if getattr(job, "company_id", None) != current_user.company_id
+        ]
+        if unauthorized:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Can only update jobs for your own company"
+            )
+
+    return jobs
+
+
+@router.patch("/{job_id}/status", response_model=JobInfo)
+async def update_job_status(
+    *,
+    db: AsyncSession = Depends(get_db),
+    job_id: int,
+    status_in: JobStatusUpdateRequest,
+    current_user: User = Depends(get_current_active_user)
+) -> Any:
+    """Update the status of an existing job posting."""
+    job = await job_crud.get(db=db, id=job_id)
+    if not job:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Job not found"
+        )
+
+    if not current_user.is_admin and current_user.company_id != job.company_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Can only update jobs for your own company"
+        )
+
+    new_status = status_in.status.value if hasattr(status_in.status, "value") else status_in.status
+    updated_job = await job_crud.update(
+        db=db,
+        db_obj=job,
+        obj_in={"status": new_status}
+    )
+    return updated_job
 
 
 @router.delete("/{job_id}", status_code=status.HTTP_204_NO_CONTENT)

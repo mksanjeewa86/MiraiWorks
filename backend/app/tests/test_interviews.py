@@ -241,7 +241,8 @@ class TestInterviewCreation:
         error_detail = response.json()["detail"]
         assert any("interview_type" in str(error).lower() for error in error_detail)
 
-    def test_create_interview_unauthorized(self):
+    @pytest.mark.asyncio
+    async def test_create_interview_unauthorized(self, client: AsyncClient):
         """Test interview creation without authentication."""
         interview_data = {
             "candidate_id": 1,
@@ -250,11 +251,71 @@ class TestInterviewCreation:
             "title": "Test Interview"
         }
 
-        response = client.post("/api/interviews/", json=interview_data)
+        response = await client.post("/api/interviews/", json=interview_data)
         assert response.status_code == 401
 
-    def test_create_interview_insufficient_permissions(self, client: AsyncClient, auth_headers_no_perms):
+    @pytest.mark.asyncio
+    async def test_create_interview_insufficient_permissions(self, client: AsyncClient, db_session: AsyncSession):
         """Test interview creation with insufficient permissions."""
+        # Create a user with no interview permissions
+        from app.models.user import User
+        from app.models.company import Company
+        from app.models.role import Role, UserRole
+        from app.services.auth_service import auth_service
+        from app.utils.constants import UserRole as UserRoleEnum
+        from sqlalchemy import select
+
+        # Create candidate company and user without permissions
+        candidate_company = Company(
+            name="No Perms Company",
+            email="noperms@test.com",
+            phone="03-0000-0000",
+            type="employer"
+        )
+        db_session.add(candidate_company)
+        await db_session.commit()
+        await db_session.refresh(candidate_company)
+
+        # Create or get candidate role (no interview create permissions)
+        candidate_role_result = await db_session.execute(
+            select(Role).where(Role.name == UserRoleEnum.CANDIDATE.value)
+        )
+        candidate_role = candidate_role_result.scalar_one_or_none()
+        if not candidate_role:
+            candidate_role = Role(name=UserRoleEnum.CANDIDATE.value, description="Candidate role")
+            db_session.add(candidate_role)
+            await db_session.commit()
+            await db_session.refresh(candidate_role)
+
+        no_perms_user = User(
+            email='noperms@test.com',
+            first_name='No',
+            last_name='Permissions',
+            company_id=candidate_company.id,
+            hashed_password=auth_service.get_password_hash('testpass123'),
+            is_active=True,
+            is_admin=False,
+            require_2fa=False,
+        )
+        db_session.add(no_perms_user)
+        await db_session.commit()
+        await db_session.refresh(no_perms_user)
+
+        # Assign candidate role (no create permissions)
+        user_role = UserRole(user_id=no_perms_user.id, role_id=candidate_role.id)
+        db_session.add(user_role)
+        await db_session.commit()
+
+        # Login to get token
+        login_response = await client.post(
+            "/api/auth/login",
+            json={"email": "noperms@test.com", "password": "testpass123"},
+        )
+        assert login_response.status_code == 200
+        login_data = login_response.json()
+        token = login_data['access_token']
+        auth_headers_no_perms = {"Authorization": f"Bearer {token}"}
+
         interview_data = {
             "candidate_id": 1,
             "recruiter_id": 2,
@@ -262,7 +323,7 @@ class TestInterviewCreation:
             "title": "Test Interview"
         }
 
-        response = client.post(
+        response = await client.post(
             "/api/interviews/",
             json=interview_data,
             headers=auth_headers_no_perms
@@ -272,6 +333,68 @@ class TestInterviewCreation:
 
 class TestInterviewRetrieval:
     """Test interview retrieval endpoints."""
+
+    async def get_auth_headers(self, client, db_session):
+        """Get authentication headers for a user with interview permissions."""
+        from app.models.user import User
+        from app.models.company import Company
+        from app.models.role import Role, UserRole
+        from app.services.auth_service import auth_service
+        from app.utils.constants import UserRole as UserRoleEnum
+        from sqlalchemy import select
+
+        # Create test company
+        company = Company(
+            name="Test Retrieval Company",
+            email="retrieval@test.com",
+            phone="03-1234-5678",
+            type="employer"
+        )
+        db_session.add(company)
+        await db_session.commit()
+        await db_session.refresh(company)
+
+        # Create or get recruiter role
+        recruiter_role_result = await db_session.execute(
+            select(Role).where(Role.name == UserRoleEnum.RECRUITER.value)
+        )
+        recruiter_role = recruiter_role_result.scalar_one_or_none()
+        if not recruiter_role:
+            recruiter_role = Role(name=UserRoleEnum.RECRUITER.value, description="Recruiter role")
+            db_session.add(recruiter_role)
+            await db_session.commit()
+            await db_session.refresh(recruiter_role)
+
+        # Create test user with interview permissions
+        user = User(
+            email='retrieval.test@test.com',
+            first_name='Retrieval',
+            last_name='Tester',
+            company_id=company.id,
+            hashed_password=auth_service.get_password_hash('testpass123'),
+            is_active=True,
+            is_admin=True,
+            require_2fa=False,
+        )
+        db_session.add(user)
+        await db_session.commit()
+        await db_session.refresh(user)
+
+        # Assign recruiter role
+        user_role = UserRole(user_id=user.id, role_id=recruiter_role.id)
+        db_session.add(user_role)
+        await db_session.commit()
+
+        # Login to get real token
+        login_response = await client.post(
+            "/api/auth/login",
+            json={"email": "retrieval.test@test.com", "password": "testpass123"},
+        )
+        assert login_response.status_code == 200
+        login_data = login_response.json()
+
+        token = login_data['access_token']
+        return {"Authorization": f"Bearer {token}"}
 
     def test_get_interviews_success(self, auth_headers, mock_db_session):
         """Test successful retrieval of interviews list."""
@@ -327,19 +450,24 @@ class TestInterviewRetrieval:
             assert data["total"] == 0
             assert len(data["interviews"]) == 0
 
-    def test_get_interviews_invalid_status_filter(self, auth_headers):
+    @pytest.mark.asyncio
+    async def test_get_interviews_invalid_status_filter(self, client: AsyncClient, db_session: AsyncSession):
         """Test interviews retrieval with invalid status filter."""
+        # Get auth headers
+        auth_headers = await self.get_auth_headers(client, db_session)
+
         params = {"status": "invalid_status"}
 
-        response = client.get("/api/interviews/", params=params, headers=auth_headers)
+        response = await client.get("/api/interviews/", params=params, headers=auth_headers)
 
         assert response.status_code == 422
         error_detail = response.json()["detail"]
         assert any("status" in str(error).lower() for error in error_detail)
 
-    def test_get_interviews_unauthorized(self):
+    @pytest.mark.asyncio
+    async def test_get_interviews_unauthorized(self, client: AsyncClient):
         """Test interviews retrieval without authentication."""
-        response = client.get("/api/interviews/")
+        response = await client.get("/api/interviews/")
         assert response.status_code == 401
 
     def test_get_single_interview_success(self, auth_headers, mock_db_session):
@@ -378,6 +506,77 @@ class TestInterviewRetrieval:
 class TestInterviewUpdate:
     """Test interview update endpoint."""
 
+    async def get_auth_headers(self, client, db_session):
+        """Get authentication headers for a user with interview permissions."""
+        from app.models.user import User
+        from app.models.company import Company
+        from app.models.role import Role, UserRoleAssignment, Permission, RolePermission
+        from app.utils.constants import UserRole
+        from sqlalchemy import select
+
+        # Create test company and user with proper permissions
+        company = Company(name="Test Interview Update Company", email="update@test.com", phone="03-1234-5678", type="employer")
+        db_session.add(company)
+        await db_session.commit()
+        await db_session.refresh(company)
+
+        user = User(
+            email='interview.update@test.com',
+            full_name='Interview Update User',
+            password_hash='$2b$12$test',
+            company_id=company.id,
+            is_active=True,
+            role=UserRole.HR_MANAGER
+        )
+        db_session.add(user)
+        await db_session.commit()
+        await db_session.refresh(user)
+
+        # Create required role and permissions
+        role = Role(name="interview_update_role", description="Role with interview update permissions")
+        db_session.add(role)
+        await db_session.commit()
+        await db_session.refresh(role)
+
+        permissions = ["interviews.update", "interviews.read", "interviews.cancel"]
+        for perm_name in permissions:
+            permission = Permission(name=perm_name, description=f"Permission to {perm_name}")
+            db_session.add(permission)
+
+        await db_session.commit()
+
+        # Add permissions to role
+        for perm_name in permissions:
+            permission = await db_session.execute(select(Permission).where(Permission.name == perm_name))
+            permission = permission.scalar_one()
+            role_permission = RolePermission(role_id=role.id, permission_id=permission.id)
+            db_session.add(role_permission)
+
+        # Assign role to user
+        user_role = UserRoleAssignment(user_id=user.id, role_id=role.id)
+        db_session.add(user_role)
+        await db_session.commit()
+
+        # Login to get real token
+        login_response = await client.post("/api/auth/login", json={
+            "email": "interview.update@test.com",
+            "password": "testpass123"
+        })
+        login_data = login_response.json()
+
+        # Handle 2FA if required
+        if login_data.get("require_2fa"):
+            verify_response = await client.post(
+                "/api/auth/2fa/verify",
+                json={"user_id": user.id, "code": "123456"}
+            )
+            verify_data = verify_response.json()
+            token = verify_data['access_token']
+        else:
+            token = login_data['access_token']
+
+        return {"Authorization": f"Bearer {token}"}
+
     def test_update_interview_success(self, auth_headers, mock_db_session):
         """Test successful interview update."""
         interview_id = 1
@@ -408,12 +607,16 @@ class TestInterviewUpdate:
             assert data["title"] == update_data["title"]
             assert data["description"] == update_data["description"]
 
-    def test_update_interview_empty_title(self, auth_headers):
+    @pytest.mark.asyncio
+    async def test_update_interview_empty_title(self, client: AsyncClient, db_session: AsyncSession):
         """Test interview update with empty title."""
+        # Get auth headers
+        auth_headers = await self.get_auth_headers(client, db_session)
+
         interview_id = 1
         update_data = {"title": ""}
 
-        response = client.patch(
+        response = await client.patch(
             f"/api/interviews/{interview_id}",
             json=update_data,
             headers=auth_headers
@@ -439,17 +642,89 @@ class TestInterviewUpdate:
 
             assert response.status_code == 404
 
-    def test_update_interview_unauthorized(self):
+    @pytest.mark.asyncio
+    async def test_update_interview_unauthorized(self, client: AsyncClient):
         """Test interview update without authentication."""
         interview_id = 1
         update_data = {"title": "Updated Title"}
 
-        response = client.patch(f"/api/interviews/{interview_id}", json=update_data)
+        response = await client.patch(f"/api/interviews/{interview_id}", json=update_data)
         assert response.status_code == 401
 
 
 class TestInterviewProposals:
     """Test interview proposal endpoints."""
+
+    async def get_auth_headers(self, client, db_session):
+        """Get authentication headers for a user with interview permissions."""
+        from app.models.user import User
+        from app.models.company import Company
+        from app.models.role import Role, UserRoleAssignment, Permission, RolePermission
+        from app.utils.constants import UserRole
+        from sqlalchemy import select
+
+        # Create test company and user with proper permissions
+        company = Company(name="Test Interview Proposals Company", email="proposals@test.com", phone="03-1234-5678", type="employer")
+        db_session.add(company)
+        await db_session.commit()
+        await db_session.refresh(company)
+
+        user = User(
+            email='interview.proposals@test.com',
+            full_name='Interview Proposals User',
+            password_hash='$2b$12$test',
+            company_id=company.id,
+            is_active=True,
+            role=UserRole.HR_MANAGER
+        )
+        db_session.add(user)
+        await db_session.commit()
+        await db_session.refresh(user)
+
+        # Create required role and permissions
+        role = Role(name="interview_proposals_role", description="Role with interview proposal permissions")
+        db_session.add(role)
+        await db_session.commit()
+        await db_session.refresh(role)
+
+        permissions = ["interviews.propose", "interviews.accept", "interviews.read"]
+        for perm_name in permissions:
+            permission = Permission(name=perm_name, description=f"Permission to {perm_name}")
+            db_session.add(permission)
+
+        await db_session.commit()
+
+        # Add permissions to role
+        for perm_name in permissions:
+            permission = await db_session.execute(select(Permission).where(Permission.name == perm_name))
+            permission = permission.scalar_one()
+            role_permission = RolePermission(role_id=role.id, permission_id=permission.id)
+            db_session.add(role_permission)
+
+        # Assign role to user
+        user_role = UserRoleAssignment(user_id=user.id, role_id=role.id)
+        db_session.add(user_role)
+        await db_session.commit()
+
+        # Login to get real token
+        login_response = await client.post("/api/auth/login", json={
+            "email": "interview.proposals@test.com",
+            "password": "testpass123"
+        })
+        login_data = login_response.json()
+
+        # Handle 2FA if required
+        if login_data.get("require_2fa"):
+            verify_response = await client.post(
+                "/api/auth/2fa/verify",
+                json={"user_id": user.id, "code": "123456"}
+            )
+            verify_data = verify_response.json()
+            token = verify_data['access_token']
+        else:
+            token = login_data['access_token']
+
+        return {"Authorization": f"Bearer {token}"}
 
     def test_create_proposal_success(self, auth_headers, mock_db_session):
         """Test successful proposal creation."""
@@ -483,8 +758,12 @@ class TestInterviewProposals:
             assert data["interview_id"] == interview_id
             assert data["status"] == "pending"
 
-    def test_create_proposal_invalid_time_range(self, auth_headers):
+    @pytest.mark.asyncio
+    async def test_create_proposal_invalid_time_range(self, client: AsyncClient, db_session: AsyncSession):
         """Test proposal creation with end time before start time."""
+        # Get auth headers
+        auth_headers = await self.get_auth_headers(client, db_session)
+
         interview_id = 1
         proposal_data = {
             "start_datetime": "2025-09-25T11:00:00Z",
@@ -492,7 +771,7 @@ class TestInterviewProposals:
             "timezone": "UTC"
         }
 
-        response = client.post(
+        response = await client.post(
             f"/api/interviews/{interview_id}/proposals",
             json=proposal_data,
             headers=auth_headers
@@ -531,13 +810,17 @@ class TestInterviewProposals:
             assert data["status"] == "accepted"
             assert data["response_notes"] == response_data["notes"]
 
-    def test_respond_to_proposal_invalid_response(self, auth_headers):
+    @pytest.mark.asyncio
+    async def test_respond_to_proposal_invalid_response(self, client: AsyncClient, db_session: AsyncSession):
         """Test responding to proposal with invalid response."""
+        # Get auth headers
+        auth_headers = await self.get_auth_headers(client, db_session)
+
         interview_id = 1
         proposal_id = 1
         response_data = {"response": "maybe"}  # Invalid response
 
-        response = client.post(
+        response = await client.post(
             f"/api/interviews/{interview_id}/proposals/{proposal_id}/respond",
             json=response_data,
             headers=auth_headers
@@ -550,6 +833,77 @@ class TestInterviewProposals:
 
 class TestInterviewWorkflow:
     """Test interview workflow operations (cancel, reschedule)."""
+
+    async def get_auth_headers(self, client, db_session):
+        """Get authentication headers for a user with interview permissions."""
+        from app.models.user import User
+        from app.models.company import Company
+        from app.models.role import Role, UserRoleAssignment, Permission, RolePermission
+        from app.utils.constants import UserRole
+        from sqlalchemy import select
+
+        # Create test company and user with proper permissions
+        company = Company(name="Test Interview Workflow Company", email="workflow@test.com", phone="03-1234-5678", type="employer")
+        db_session.add(company)
+        await db_session.commit()
+        await db_session.refresh(company)
+
+        user = User(
+            email='interview.workflow@test.com',
+            full_name='Interview Workflow User',
+            password_hash='$2b$12$test',
+            company_id=company.id,
+            is_active=True,
+            role=UserRole.HR_MANAGER
+        )
+        db_session.add(user)
+        await db_session.commit()
+        await db_session.refresh(user)
+
+        # Create required role and permissions
+        role = Role(name="interview_workflow_role", description="Role with interview workflow permissions")
+        db_session.add(role)
+        await db_session.commit()
+        await db_session.refresh(role)
+
+        permissions = ["interviews.cancel", "interviews.update", "interviews.read"]
+        for perm_name in permissions:
+            permission = Permission(name=perm_name, description=f"Permission to {perm_name}")
+            db_session.add(permission)
+
+        await db_session.commit()
+
+        # Add permissions to role
+        for perm_name in permissions:
+            permission = await db_session.execute(select(Permission).where(Permission.name == perm_name))
+            permission = permission.scalar_one()
+            role_permission = RolePermission(role_id=role.id, permission_id=permission.id)
+            db_session.add(role_permission)
+
+        # Assign role to user
+        user_role = UserRoleAssignment(user_id=user.id, role_id=role.id)
+        db_session.add(user_role)
+        await db_session.commit()
+
+        # Login to get real token
+        login_response = await client.post("/api/auth/login", json={
+            "email": "interview.workflow@test.com",
+            "password": "testpass123"
+        })
+        login_data = login_response.json()
+
+        # Handle 2FA if required
+        if login_data.get("require_2fa"):
+            verify_response = await client.post(
+                "/api/auth/2fa/verify",
+                json={"user_id": user.id, "code": "123456"}
+            )
+            verify_data = verify_response.json()
+            token = verify_data['access_token']
+        else:
+            token = login_data['access_token']
+
+        return {"Authorization": f"Bearer {token}"}
 
     def test_cancel_interview_success(self, auth_headers, mock_db_session):
         """Test successful interview cancellation."""
@@ -578,14 +932,18 @@ class TestInterviewWorkflow:
             assert data["status"] == InterviewStatus.CANCELLED.value
             assert data["cancellation_reason"] == cancel_data["reason"]
 
-    def test_cancel_interview_excessive_reason_length(self, auth_headers):
+    @pytest.mark.asyncio
+    async def test_cancel_interview_excessive_reason_length(self, client: AsyncClient, db_session: AsyncSession):
         """Test interview cancellation with excessive reason length."""
+        # Get auth headers
+        auth_headers = await self.get_auth_headers(client, db_session)
+
         interview_id = 1
         cancel_data = {
             "reason": "x" * 1001  # Exceeds 1000 character limit
         }
 
-        response = client.post(
+        response = await client.post(
             f"/api/interviews/{interview_id}/cancel",
             json=cancel_data,
             headers=auth_headers
@@ -623,15 +981,19 @@ class TestInterviewWorkflow:
             data = response.json()
             assert data["status"] == InterviewStatus.SCHEDULED.value
 
-    def test_reschedule_interview_invalid_time_range(self, auth_headers):
+    @pytest.mark.asyncio
+    async def test_reschedule_interview_invalid_time_range(self, client: AsyncClient, db_session: AsyncSession):
         """Test interview rescheduling with invalid time range."""
+        # Get auth headers
+        auth_headers = await self.get_auth_headers(client, db_session)
+
         interview_id = 1
         reschedule_data = {
             "new_start": "2025-09-26T15:00:00Z",
             "new_end": "2025-09-26T14:00:00Z",  # End before start
         }
 
-        response = client.post(
+        response = await client.post(
             f"/api/interviews/{interview_id}/reschedule",
             json=reschedule_data,
             headers=auth_headers
@@ -676,9 +1038,10 @@ class TestInterviewStats:
             assert "by_type" in data
             assert data["upcoming_count"] == 8
 
-    def test_get_interview_stats_unauthorized(self):
+    @pytest.mark.asyncio
+    async def test_get_interview_stats_unauthorized(self, client: AsyncClient):
         """Test interview stats retrieval without authentication."""
-        response = client.get("/api/interviews/stats/summary")
+        response = await client.get("/api/interviews/stats/summary")
         assert response.status_code == 401
 
 
@@ -747,6 +1110,77 @@ class TestInterviewCalendarIntegration:
 class TestInterviewEdgeCases:
     """Test interview endpoint edge cases and boundary conditions."""
 
+    async def get_auth_headers(self, client, db_session):
+        """Get authentication headers for a user with interview permissions."""
+        from app.models.user import User
+        from app.models.company import Company
+        from app.models.role import Role, UserRoleAssignment, Permission, RolePermission
+        from app.utils.constants import UserRole
+        from sqlalchemy import select
+
+        # Create test company and user with proper permissions
+        company = Company(name="Test Interview Edge Cases Company", email="edge@test.com", phone="03-1234-5678", type="employer")
+        db_session.add(company)
+        await db_session.commit()
+        await db_session.refresh(company)
+
+        user = User(
+            email='interview.edge@test.com',
+            full_name='Interview Edge Cases User',
+            password_hash='$2b$12$test',
+            company_id=company.id,
+            is_active=True,
+            role=UserRole.HR_MANAGER
+        )
+        db_session.add(user)
+        await db_session.commit()
+        await db_session.refresh(user)
+
+        # Create required role and permissions
+        role = Role(name="interview_edge_role", description="Role with interview edge case permissions")
+        db_session.add(role)
+        await db_session.commit()
+        await db_session.refresh(role)
+
+        permissions = ["interviews.create", "interviews.read", "interviews.propose"]
+        for perm_name in permissions:
+            permission = Permission(name=perm_name, description=f"Permission to {perm_name}")
+            db_session.add(permission)
+
+        await db_session.commit()
+
+        # Add permissions to role
+        for perm_name in permissions:
+            permission = await db_session.execute(select(Permission).where(Permission.name == perm_name))
+            permission = permission.scalar_one()
+            role_permission = RolePermission(role_id=role.id, permission_id=permission.id)
+            db_session.add(role_permission)
+
+        # Assign role to user
+        user_role = UserRoleAssignment(user_id=user.id, role_id=role.id)
+        db_session.add(user_role)
+        await db_session.commit()
+
+        # Login to get real token
+        login_response = await client.post("/api/auth/login", json={
+            "email": "interview.edge@test.com",
+            "password": "testpass123"
+        })
+        login_data = login_response.json()
+
+        # Handle 2FA if required
+        if login_data.get("require_2fa"):
+            verify_response = await client.post(
+                "/api/auth/2fa/verify",
+                json={"user_id": user.id, "code": "123456"}
+            )
+            verify_data = verify_response.json()
+            token = verify_data['access_token']
+        else:
+            token = login_data['access_token']
+
+        return {"Authorization": f"Bearer {token}"}
+
     def test_create_interview_with_all_optional_fields(self, auth_headers, mock_db_session):
         """Test interview creation with all optional fields provided."""
         interview_data = {
@@ -774,8 +1208,12 @@ class TestInterviewEdgeCases:
             assert data["description"] == interview_data["description"]
             assert data["position_title"] == interview_data["position_title"]
 
-    def test_get_interviews_with_pagination_boundary(self, auth_headers, mock_db_session):
+    @pytest.mark.asyncio
+    async def test_get_interviews_with_pagination_boundary(self, client: AsyncClient, db_session: AsyncSession):
         """Test interviews retrieval at pagination boundaries."""
+        # Get auth headers
+        auth_headers = await self.get_auth_headers(client, db_session)
+
         params = {
             "limit": 100,  # Maximum allowed limit
             "offset": 0
@@ -787,22 +1225,30 @@ class TestInterviewEdgeCases:
             mock_get.return_value = []
             mock_count.return_value = 0
 
-            response = client.get("/api/interviews/", params=params, headers=auth_headers)
+            response = await client.get("/api/interviews/", params=params, headers=auth_headers)
 
             assert response.status_code == 200
 
-    def test_get_interviews_exceed_limit_boundary(self, auth_headers):
+    @pytest.mark.asyncio
+    async def test_get_interviews_exceed_limit_boundary(self, client: AsyncClient, db_session: AsyncSession):
         """Test interviews retrieval with limit exceeding maximum."""
+        # Get auth headers
+        auth_headers = await self.get_auth_headers(client, db_session)
+
         params = {"limit": 101}  # Exceeds maximum of 100
 
-        response = client.get("/api/interviews/", params=params, headers=auth_headers)
+        response = await client.get("/api/interviews/", params=params, headers=auth_headers)
 
         assert response.status_code == 422
         error_detail = response.json()["detail"]
         assert any("limit cannot exceed 100" in str(error).lower() for error in error_detail)
 
-    def test_proposal_with_past_datetime(self, auth_headers):
+    @pytest.mark.asyncio
+    async def test_proposal_with_past_datetime(self, client: AsyncClient, db_session: AsyncSession):
         """Test proposal creation with past datetime."""
+        # Get auth headers
+        auth_headers = await self.get_auth_headers(client, db_session)
+
         interview_id = 1
         past_time = datetime.utcnow() - timedelta(days=1)
         proposal_data = {
@@ -813,7 +1259,7 @@ class TestInterviewEdgeCases:
 
         # Note: This might be valid depending on business rules
         # Adjust test based on actual validation requirements
-        response = client.post(
+        response = await client.post(
             f"/api/interviews/{interview_id}/proposals",
             json=proposal_data,
             headers=auth_headers

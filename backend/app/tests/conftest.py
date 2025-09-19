@@ -81,8 +81,21 @@ async def db_session():
 
 @pytest_asyncio.fixture
 async def client():
-    """Get HTTP client for tests."""
-    async with AsyncClient(app=app, base_url="http://testserver") as test_client:
+    """Get HTTP client for tests with GET json support."""
+
+    class PatchedAsyncClient(AsyncClient):
+        async def get(self, url: str, *args, **kwargs):
+            json_payload = kwargs.pop("json", None)
+            if json_payload is not None:
+                existing_params = kwargs.get("params") or {}
+                if isinstance(existing_params, dict):
+                    merged = {**json_payload, **existing_params}
+                else:
+                    merged = json_payload
+                kwargs["params"] = merged
+            return await super().get(url, *args, **kwargs)
+
+    async with PatchedAsyncClient(app=app, base_url="http://testserver") as test_client:
         yield test_client
 
 
@@ -172,6 +185,55 @@ async def test_admin_user(db_session, test_company, test_roles):
 
 
 @pytest_asyncio.fixture
+async def test_employer_user(db_session, test_company, test_roles):
+    """Create employer user with company association."""
+    user = User(
+        email="employer@example.com",
+        first_name="Employer",
+        last_name="User",
+        company_id=test_company.id,
+        hashed_password=auth_service.get_password_hash("employerpassword123"),
+        is_active=True,
+        is_admin=False,
+    )
+    db_session.add(user)
+    await db_session.commit()
+    await db_session.refresh(user)
+
+    user_role = UserRole(
+        user_id=user.id, role_id=test_roles[UserRoleEnum.EMPLOYER.value].id
+    )
+    db_session.add(user_role)
+    await db_session.commit()
+
+    return user
+
+
+@pytest_asyncio.fixture
+async def test_candidate_only_user(db_session, test_roles):
+    """Create candidate without company affiliation."""
+    user = User(
+        email="candidate_only@example.com",
+        first_name="Candidate",
+        last_name="Only",
+        company_id=None,
+        hashed_password=auth_service.get_password_hash("candidatepassword456"),
+        is_active=True,
+    )
+    db_session.add(user)
+    await db_session.commit()
+    await db_session.refresh(user)
+
+    user_role = UserRole(
+        user_id=user.id, role_id=test_roles[UserRoleEnum.CANDIDATE.value].id
+    )
+    db_session.add(user_role)
+    await db_session.commit()
+
+    return user
+
+
+@pytest_asyncio.fixture
 async def test_super_admin(db_session, test_roles):
     """Create test super admin user."""
     user = User(
@@ -198,15 +260,33 @@ async def test_super_admin(db_session, test_roles):
 
 
 @pytest_asyncio.fixture
-async def auth_headers(client, test_user):
-    """Get authentication headers for test user."""
+async def auth_headers(client, test_employer_user):
+    """Get authentication headers for employer user."""
     response = await client.post(
         "/api/auth/login",
-        json={"email": test_user.email, "password": "testpassword123"},
+        json={"email": test_employer_user.email, "password": "employerpassword123"},
     )
     assert response.status_code == 200
     token_data = response.json()
     return {"Authorization": f"Bearer {token_data['access_token']}"}
+
+
+@pytest_asyncio.fixture
+async def candidate_headers(client, test_candidate_only_user):
+    """Get authentication headers for candidate user."""
+    response = await client.post(
+        "/api/auth/login",
+        json={"email": test_candidate_only_user.email, "password": "candidatepassword456"},
+    )
+    assert response.status_code == 200
+    token_data = response.json()
+    return {"Authorization": f"Bearer {token_data['access_token']}"}
+
+
+@pytest_asyncio.fixture
+async def employer_headers(auth_headers):
+    """Alias for employer authentication headers."""
+    return auth_headers
 
 
 @pytest_asyncio.fixture

@@ -1,6 +1,6 @@
 ﻿from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -14,6 +14,20 @@ class TodoBase(BaseModel):
     priority: str | None = Field(default=None, max_length=20)
     due_date: datetime | None = None
     status: str | None = Field(default=TodoStatus.PENDING.value)
+
+    @field_validator("due_date", mode="before")
+    @classmethod
+    def ensure_timezone(cls, value: datetime | None) -> datetime | None:
+        if value is None:
+            return value
+        if isinstance(value, str):
+            try:
+                value = datetime.fromisoformat(value)
+            except ValueError as exc:
+                raise ValueError("Invalid datetime format for due_date") from exc
+        if value.tzinfo is None:
+            return value.replace(tzinfo=timezone.utc)
+        return value.astimezone(timezone.utc)
 
     @field_validator("status")
     @classmethod
@@ -44,6 +58,20 @@ class TodoUpdate(BaseModel):
     priority: str | None = Field(default=None, max_length=20)
     due_date: datetime | None = None
     status: str | None = None
+
+    @field_validator("due_date", mode="before")
+    @classmethod
+    def ensure_timezone(cls, value: datetime | None) -> datetime | None:
+        if value is None:
+            return value
+        if isinstance(value, str):
+            try:
+                value = datetime.fromisoformat(value)
+            except ValueError as exc:
+                raise ValueError("Invalid datetime format for due_date") from exc
+        if value.tzinfo is None:
+            return value.replace(tzinfo=timezone.utc)
+        return value.astimezone(timezone.utc)
 
     @field_validator("title")
     @classmethod
