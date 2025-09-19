@@ -1,5 +1,12 @@
 import asyncio
 import os
+import sys
+from pathlib import Path
+
+BACKEND_DIR = Path(__file__).resolve().parents[2]
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
+
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
@@ -12,7 +19,7 @@ os.environ["ENVIRONMENT"] = "test"
 from app.database import Base, get_db
 from app.main import app
 # Import all models to ensure they are registered with SQLAlchemy
-from app.models import Company, Role, User, UserRole
+from app.models import *  # Import all models
 from app.services.auth_service import auth_service
 from app.utils.constants import CompanyType
 from app.utils.constants import UserRole as UserRoleEnum

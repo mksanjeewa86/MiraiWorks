@@ -1,0 +1,1654 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.19">
+    
+    
+      
+        <title>Users Management API - MiraiWorks Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.7e37652d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#users-management-api" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="MiraiWorks Documentation" class="md-header__button md-logo" aria-label="MiraiWorks Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            MiraiWorks Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Users Management API
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="MiraiWorks Documentation" class="md-nav__button md-logo" aria-label="MiraiWorks Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    MiraiWorks Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ARCHITECTURE_RECOMMENDATIONS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Architecture
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CODE_REVIEW_GUIDELINES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Code Review
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../PERFORMANCE_RECOMMENDATIONS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Performance
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../SECURITY_RECOMMENDATIONS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Security
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../WORKFLOW_RECOMMENDATIONS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Workflow
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../RECOMMENDATIONS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Recommendations
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      Authentication
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#permission-levels" class="md-nav__link">
+    <span class="md-ellipsis">
+      Permission Levels
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Permission Levels">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#super-admin" class="md-nav__link">
+    <span class="md-ellipsis">
+      Super Admin
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#company-admin" class="md-nav__link">
+    <span class="md-ellipsis">
+      Company Admin
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#regular-users" class="md-nav__link">
+    <span class="md-ellipsis">
+      Regular Users
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#endpoints" class="md-nav__link">
+    <span class="md-ellipsis">
+      Endpoints
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Endpoints">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#create-user" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create User
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Create User">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#permission-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Permission Requirements
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#request-body" class="md-nav__link">
+    <span class="md-ellipsis">
+      Request Body
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#company-admin-restrictions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Company Admin Restrictions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#response" class="md-nav__link">
+    <span class="md-ellipsis">
+      Response
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#error-responses" class="md-nav__link">
+    <span class="md-ellipsis">
+      Error Responses
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-users" class="md-nav__link">
+    <span class="md-ellipsis">
+      Get Users
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Get Users">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#permission-requirements_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Permission Requirements
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#query-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Query Parameters
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#company-admin-filtering" class="md-nav__link">
+    <span class="md-ellipsis">
+      Company Admin Filtering
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#response_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Response
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-user-by-id" class="md-nav__link">
+    <span class="md-ellipsis">
+      Get User by ID
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Get User by ID">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#permission-requirements_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Permission Requirements
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#response_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Response
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update-user" class="md-nav__link">
+    <span class="md-ellipsis">
+      Update User
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Update User">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#permission-requirements_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Permission Requirements
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#request-body_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Request Body
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#company-admin-restrictions_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Company Admin Restrictions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#response_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Response
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete-user" class="md-nav__link">
+    <span class="md-ellipsis">
+      Delete User
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Delete User">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#permission-requirements_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Permission Requirements
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#response_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Response
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#restrictions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Restrictions
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#suspend-user" class="md-nav__link">
+    <span class="md-ellipsis">
+      Suspend User
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Suspend User">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#permission-requirements_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      Permission Requirements
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#response_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      Response
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unsuspend-user" class="md-nav__link">
+    <span class="md-ellipsis">
+      Unsuspend User
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Unsuspend User">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#permission-requirements_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      Permission Requirements
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#response_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      Response
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reset-password" class="md-nav__link">
+    <span class="md-ellipsis">
+      Reset Password
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Reset Password">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#request-body_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Request Body
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#permission-requirements_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      Permission Requirements
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#response_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      Response
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resend-activation-email" class="md-nav__link">
+    <span class="md-ellipsis">
+      Resend Activation Email
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Resend Activation Email">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#permission-requirements_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      Permission Requirements
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#response_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      Response
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bulk-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Bulk Operations
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Bulk Operations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#bulk-suspend" class="md-nav__link">
+    <span class="md-ellipsis">
+      Bulk Suspend
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Bulk Suspend">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#request-body_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Request Body
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#response_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      Response
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bulk-unsuspend" class="md-nav__link">
+    <span class="md-ellipsis">
+      Bulk Unsuspend
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Bulk Unsuspend">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#request-body_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Request Body
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bulk-delete" class="md-nav__link">
+    <span class="md-ellipsis">
+      Bulk Delete
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Bulk Delete">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#request-body_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      Request Body
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bulk-password-reset" class="md-nav__link">
+    <span class="md-ellipsis">
+      Bulk Password Reset
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Bulk Password Reset">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#request-body_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      Request Body
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#response_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      Response
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bulk-resend-activation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Bulk Resend Activation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Bulk Resend Activation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#request-body_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      Request Body
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      Error Handling
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Error Handling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#common-error-codes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Common Error Codes
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#error-response-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      Error Response Format
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#role-based-access-control-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      Role-Based Access Control Summary
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Security Considerations
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      Examples
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-user-as-company-admin" class="md-nav__link">
+    <span class="md-ellipsis">
+      Creating a User as Company Admin
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filtering-users-by-role" class="md-nav__link">
+    <span class="md-ellipsis">
+      Filtering Users by Role
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bulk-password-reset_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Bulk Password Reset
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="users-management-api">Users Management API<a class="headerlink" href="#users-management-api" title="Permanent link">&para;</a></h1>
+<p>The Users Management API provides endpoints for managing user accounts, roles, and permissions within the MiraiWorks platform.</p>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>This API allows administrators to:
+- Create, read, update, and delete user accounts
+- Manage user roles and permissions
+- Handle user suspension and activation
+- Reset passwords and resend activation emails
+- Perform bulk operations on multiple users</p>
+<h2 id="authentication">Authentication<a class="headerlink" href="#authentication" title="Permanent link">&para;</a></h2>
+<p>All endpoints require authentication using a Bearer token in the Authorization header:</p>
+<div class="highlight"><pre><span></span><code>Authorization: Bearer &lt;access_token&gt;
+</code></pre></div>
+<h2 id="permission-levels">Permission Levels<a class="headerlink" href="#permission-levels" title="Permanent link">&para;</a></h2>
+<h3 id="super-admin">Super Admin<a class="headerlink" href="#super-admin" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Full access to all user management operations</li>
+<li>Can manage users across all companies</li>
+<li>Can assign any role including <code>super_admin</code></li>
+<li>Can create and manage company admin accounts</li>
+</ul>
+<h3 id="company-admin">Company Admin<a class="headerlink" href="#company-admin" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Can manage users within their own company only</li>
+<li>Cannot assign <code>super_admin</code> role</li>
+<li>Cannot create users for other companies</li>
+<li>Cannot move users between companies</li>
+<li>Can assign roles: <code>candidate</code>, <code>recruiter</code>, <code>employer</code>, <code>company_admin</code></li>
+</ul>
+<h3 id="regular-users">Regular Users<a class="headerlink" href="#regular-users" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Cannot access user management endpoints</li>
+<li>Can only view/update their own profile</li>
+</ul>
+<h2 id="endpoints">Endpoints<a class="headerlink" href="#endpoints" title="Permanent link">&para;</a></h2>
+<h3 id="create-user">Create User<a class="headerlink" href="#create-user" title="Permanent link">&para;</a></h3>
+<p><strong>POST</strong> <code>/api/admin/users</code></p>
+<p>Creates a new user account.</p>
+<h4 id="permission-requirements">Permission Requirements<a class="headerlink" href="#permission-requirements" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Super Admin</strong>: Can create users for any company with any role</li>
+<li><strong>Company Admin</strong>: Can only create users for their own company, limited role assignments</li>
+</ul>
+<h4 id="request-body">Request Body<a class="headerlink" href="#request-body" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;email&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;first_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;last_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;phone&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string (optional)&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;company_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;integer (optional for super admin, auto-set for company admin)&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;roles&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;candidate&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;recruiter&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;employer&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;company_admin&quot;</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;is_admin&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;boolean (optional)&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;require_2fa&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;boolean (optional)&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
+<h4 id="company-admin-restrictions">Company Admin Restrictions<a class="headerlink" href="#company-admin-restrictions" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>company_id</code> is automatically set to the admin's company</li>
+<li>Cannot assign <code>super_admin</code> role</li>
+<li>Cannot specify a different <code>company_id</code></li>
+</ul>
+<h4 id="response">Response<a class="headerlink" href="#response" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">123</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;email&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;user@example.com&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;first_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;John&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;last_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Doe&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;full_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;John Doe&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;phone&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;+1-555-0123&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;company_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;company_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Example Corp&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;roles&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;recruiter&quot;</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;is_active&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;is_admin&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;require_2fa&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;created_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;updated_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2024-01-01T00:00:00Z&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
+<h4 id="error-responses">Error Responses<a class="headerlink" href="#error-responses" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>400 Bad Request</code>: Invalid input data or duplicate email</li>
+<li><code>403 Forbidden</code>: Insufficient permissions or role assignment restrictions</li>
+<li><code>404 Not Found</code>: Specified company does not exist</li>
+</ul>
+<h3 id="get-users">Get Users<a class="headerlink" href="#get-users" title="Permanent link">&para;</a></h3>
+<p><strong>GET</strong> <code>/api/admin/users</code></p>
+<p>Retrieves a paginated list of users with optional filtering.</p>
+<h4 id="permission-requirements_1">Permission Requirements<a class="headerlink" href="#permission-requirements_1" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Super Admin</strong>: Can view all users</li>
+<li><strong>Company Admin</strong>: Can only view users from their own company</li>
+</ul>
+<h4 id="query-parameters">Query Parameters<a class="headerlink" href="#query-parameters" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>page</code></td>
+<td>integer</td>
+<td>Page number (≥1)</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>size</code></td>
+<td>integer</td>
+<td>Page size (1-100)</td>
+<td>20</td>
+</tr>
+<tr>
+<td><code>search</code></td>
+<td>string</td>
+<td>Search by name or email</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>company_id</code></td>
+<td>integer</td>
+<td>Filter by company</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>is_active</code></td>
+<td>boolean</td>
+<td>Filter by active status</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>is_admin</code></td>
+<td>boolean</td>
+<td>Filter by admin status</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>is_suspended</code></td>
+<td>boolean</td>
+<td>Filter by suspension status</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>require_2fa</code></td>
+<td>boolean</td>
+<td>Filter by 2FA requirement</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>role</code></td>
+<td>string</td>
+<td>Filter by role</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>include_deleted</code></td>
+<td>boolean</td>
+<td>Include deleted users</td>
+<td>false</td>
+</tr>
+</tbody>
+</table>
+<h4 id="company-admin-filtering">Company Admin Filtering<a class="headerlink" href="#company-admin-filtering" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>company_id</code> parameter is automatically set to admin's company</li>
+<li>Cannot view users from other companies</li>
+</ul>
+<h4 id="response_1">Response<a class="headerlink" href="#response_1" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;users&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">123</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;email&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;user@example.com&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;first_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;John&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;last_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Doe&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;full_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;John Doe&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;phone&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;+1-555-0123&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;company_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;company_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Example Corp&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;roles&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;recruiter&quot;</span><span class="p">],</span>
+<span class="w">      </span><span class="nt">&quot;is_active&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;is_admin&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;require_2fa&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;last_login&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2024-01-01T12:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;created_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;updated_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;is_deleted&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;is_suspended&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;total&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">150</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;pages&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;page&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;per_page&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">20</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3 id="get-user-by-id">Get User by ID<a class="headerlink" href="#get-user-by-id" title="Permanent link">&para;</a></h3>
+<p><strong>GET</strong> <code>/api/admin/users/{user_id}</code></p>
+<p>Retrieves details for a specific user.</p>
+<h4 id="permission-requirements_2">Permission Requirements<a class="headerlink" href="#permission-requirements_2" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Super Admin</strong>: Can view any user</li>
+<li><strong>Company Admin</strong>: Can only view users from their own company</li>
+<li><strong>Regular User</strong>: Can only view their own profile</li>
+</ul>
+<h4 id="response_2">Response<a class="headerlink" href="#response_2" title="Permanent link">&para;</a></h4>
+<p>Same as user object in the list response.</p>
+<h3 id="update-user">Update User<a class="headerlink" href="#update-user" title="Permanent link">&para;</a></h3>
+<p><strong>PUT</strong> <code>/api/admin/users/{user_id}</code></p>
+<p>Updates an existing user account.</p>
+<h4 id="permission-requirements_3">Permission Requirements<a class="headerlink" href="#permission-requirements_3" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Super Admin</strong>: Can update any user</li>
+<li><strong>Company Admin</strong>: Can only update users from their own company with restrictions</li>
+</ul>
+<h4 id="request-body_1">Request Body<a class="headerlink" href="#request-body_1" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;first_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string (optional)&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;last_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string (optional)&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;phone&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string (optional)&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;is_active&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;boolean (optional)&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;is_admin&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;boolean (optional)&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;require_2fa&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;boolean (optional)&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;company_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;integer (optional)&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;roles&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;role1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;role2&quot;</span><span class="p">]</span><span class="w"> </span><span class="c1">// optional</span>
+<span class="p">}</span>
+</code></pre></div>
+<h4 id="company-admin-restrictions_1">Company Admin Restrictions<a class="headerlink" href="#company-admin-restrictions_1" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Cannot assign <code>super_admin</code> role</li>
+<li>Cannot change <code>company_id</code> to a different company</li>
+<li>Cannot update users from other companies</li>
+</ul>
+<h4 id="response_3">Response<a class="headerlink" href="#response_3" title="Permanent link">&para;</a></h4>
+<p>Same as user object in the create response.</p>
+<h3 id="delete-user">Delete User<a class="headerlink" href="#delete-user" title="Permanent link">&para;</a></h3>
+<p><strong>DELETE</strong> <code>/api/admin/users/{user_id}</code></p>
+<p>Soft deletes a user account (logical deletion).</p>
+<h4 id="permission-requirements_4">Permission Requirements<a class="headerlink" href="#permission-requirements_4" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Super Admin</strong>: Can delete any user except themselves</li>
+<li><strong>Company Admin</strong>: Can delete users from their own company except themselves</li>
+</ul>
+<h4 id="response_4">Response<a class="headerlink" href="#response_4" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;User deleted successfully&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
+<h4 id="restrictions">Restrictions<a class="headerlink" href="#restrictions" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Users cannot delete their own account</li>
+<li>Company admins cannot delete users from other companies</li>
+</ul>
+<h3 id="suspend-user">Suspend User<a class="headerlink" href="#suspend-user" title="Permanent link">&para;</a></h3>
+<p><strong>POST</strong> <code>/api/admin/users/{user_id}/suspend</code></p>
+<p>Suspends a user account, preventing login.</p>
+<h4 id="permission-requirements_5">Permission Requirements<a class="headerlink" href="#permission-requirements_5" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Super Admin</strong>: Can suspend any user except themselves</li>
+<li><strong>Company Admin</strong>: Can suspend users from their own company except themselves</li>
+</ul>
+<h4 id="response_5">Response<a class="headerlink" href="#response_5" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;User suspended successfully&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;is_suspended&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3 id="unsuspend-user">Unsuspend User<a class="headerlink" href="#unsuspend-user" title="Permanent link">&para;</a></h3>
+<p><strong>POST</strong> <code>/api/admin/users/{user_id}/unsuspend</code></p>
+<p>Reactivates a suspended user account.</p>
+<h4 id="permission-requirements_6">Permission Requirements<a class="headerlink" href="#permission-requirements_6" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Super Admin</strong>: Can unsuspend any user</li>
+<li><strong>Company Admin</strong>: Can unsuspend users from their own company</li>
+</ul>
+<h4 id="response_6">Response<a class="headerlink" href="#response_6" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;User unsuspended successfully&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;is_suspended&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3 id="reset-password">Reset Password<a class="headerlink" href="#reset-password" title="Permanent link">&para;</a></h3>
+<p><strong>POST</strong> <code>/api/admin/users/{user_id}/reset-password</code></p>
+<p>Resets a user's password and optionally sends an email.</p>
+<h4 id="request-body_2">Request Body<a class="headerlink" href="#request-body_2" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;send_email&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+</code></pre></div>
+<h4 id="permission-requirements_7">Permission Requirements<a class="headerlink" href="#permission-requirements_7" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Super Admin</strong>: Can reset password for any user</li>
+<li><strong>Company Admin</strong>: Can reset passwords for users in their own company</li>
+</ul>
+<h4 id="response_7">Response<a class="headerlink" href="#response_7" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Password reset successfully&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;temporary_password&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;abc123def456&quot;</span><span class="w"> </span><span class="c1">// Only included if send_email is false</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3 id="resend-activation-email">Resend Activation Email<a class="headerlink" href="#resend-activation-email" title="Permanent link">&para;</a></h3>
+<p><strong>POST</strong> <code>/api/admin/users/{user_id}/resend-activation</code></p>
+<p>Resends activation email to an inactive user.</p>
+<h4 id="permission-requirements_8">Permission Requirements<a class="headerlink" href="#permission-requirements_8" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Super Admin</strong>: Can resend activation for any user</li>
+<li><strong>Company Admin</strong>: Can resend activation for users in their own company</li>
+</ul>
+<h4 id="response_8">Response<a class="headerlink" href="#response_8" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Activation email sent successfully&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
+<h2 id="bulk-operations">Bulk Operations<a class="headerlink" href="#bulk-operations" title="Permanent link">&para;</a></h2>
+<h3 id="bulk-suspend">Bulk Suspend<a class="headerlink" href="#bulk-suspend" title="Permanent link">&para;</a></h3>
+<p><strong>POST</strong> <code>/api/admin/users/bulk/suspend</code></p>
+<p>Suspends multiple users at once.</p>
+<h4 id="request-body_3">Request Body<a class="headerlink" href="#request-body_3" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;user_ids&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;reason&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Policy violation&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
+<h4 id="response_9">Response<a class="headerlink" href="#response_9" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Successfully suspended 3 user(s)&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;suspended_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;errors&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Cannot suspend user 1 from other company&quot;</span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3 id="bulk-unsuspend">Bulk Unsuspend<a class="headerlink" href="#bulk-unsuspend" title="Permanent link">&para;</a></h3>
+<p><strong>POST</strong> <code>/api/admin/users/bulk/unsuspend</code></p>
+<p>Unsuspends multiple users at once.</p>
+<h4 id="request-body_4">Request Body<a class="headerlink" href="#request-body_4" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;user_ids&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3 id="bulk-delete">Bulk Delete<a class="headerlink" href="#bulk-delete" title="Permanent link">&para;</a></h3>
+<p><strong>POST</strong> <code>/api/admin/users/bulk/delete</code></p>
+<p>Soft deletes multiple users at once.</p>
+<h4 id="request-body_5">Request Body<a class="headerlink" href="#request-body_5" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;user_ids&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3 id="bulk-password-reset">Bulk Password Reset<a class="headerlink" href="#bulk-password-reset" title="Permanent link">&para;</a></h3>
+<p><strong>POST</strong> <code>/api/admin/users/bulk/reset-password</code></p>
+<p>Resets passwords for multiple users at once.</p>
+<h4 id="request-body_6">Request Body<a class="headerlink" href="#request-body_6" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;user_ids&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;send_email&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+</code></pre></div>
+<h4 id="response_10">Response<a class="headerlink" href="#response_10" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Successfully reset passwords for 3 user(s)&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;reset_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;errors&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span>
+<span class="w">  </span><span class="nt">&quot;temporary_passwords&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;1&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;abc123&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;2&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;def456&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;3&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ghi789&quot;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3 id="bulk-resend-activation">Bulk Resend Activation<a class="headerlink" href="#bulk-resend-activation" title="Permanent link">&para;</a></h3>
+<p><strong>POST</strong> <code>/api/admin/users/bulk/resend-activation</code></p>
+<p>Resends activation emails to multiple inactive users.</p>
+<h4 id="request-body_7">Request Body<a class="headerlink" href="#request-body_7" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;user_ids&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<h2 id="error-handling">Error Handling<a class="headerlink" href="#error-handling" title="Permanent link">&para;</a></h2>
+<h3 id="common-error-codes">Common Error Codes<a class="headerlink" href="#common-error-codes" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>400 Bad Request</code>: Invalid input data, validation errors</li>
+<li><code>401 Unauthorized</code>: Missing or invalid authentication token</li>
+<li><code>403 Forbidden</code>: Insufficient permissions for the requested operation</li>
+<li><code>404 Not Found</code>: User or resource not found</li>
+<li><code>422 Unprocessable Entity</code>: Request validation failed</li>
+</ul>
+<h3 id="error-response-format">Error Response Format<a class="headerlink" href="#error-response-format" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;detail&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Error description&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>For validation errors:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;detail&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;loc&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;field_name&quot;</span><span class="p">],</span>
+<span class="w">      </span><span class="nt">&quot;msg&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Field is required&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;missing&quot;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<h2 id="role-based-access-control-summary">Role-Based Access Control Summary<a class="headerlink" href="#role-based-access-control-summary" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Operation</th>
+<th>Super Admin</th>
+<th>Company Admin</th>
+<th>Regular User</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Create user</td>
+<td>✅ Any company</td>
+<td>✅ Own company only</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>View users</td>
+<td>✅ All users</td>
+<td>✅ Own company only</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Update user</td>
+<td>✅ Any user</td>
+<td>✅ Own company only</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Delete user</td>
+<td>✅ Any user (not self)</td>
+<td>✅ Own company only (not self)</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Assign super_admin role</td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Move users between companies</td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Bulk operations</td>
+<td>✅ Any users</td>
+<td>✅ Own company only</td>
+<td>❌</td>
+</tr>
+</tbody>
+</table>
+<h2 id="security-considerations">Security Considerations<a class="headerlink" href="#security-considerations" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Company Isolation</strong>: Company admins can only access users within their own company</li>
+<li><strong>Role Restrictions</strong>: Company admins cannot assign super_admin roles</li>
+<li><strong>Self-Protection</strong>: Users cannot delete or suspend their own accounts</li>
+<li><strong>Audit Trail</strong>: All user operations are logged for compliance</li>
+<li><strong>Password Security</strong>: Temporary passwords are securely generated and can be sent via email</li>
+<li><strong>2FA Enforcement</strong>: Admin users automatically require 2FA for enhanced security</li>
+</ol>
+<h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
+<h3 id="creating-a-user-as-company-admin">Creating a User as Company Admin<a class="headerlink" href="#creating-a-user-as-company-admin" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span><span class="s2">&quot;https://api.miraiworks.com/api/admin/users&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Authorization: Bearer YOUR_TOKEN&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-d<span class="w"> </span><span class="s1">&#39;{</span>
+<span class="s1">    &quot;email&quot;: &quot;newuser@example.com&quot;,</span>
+<span class="s1">    &quot;first_name&quot;: &quot;Jane&quot;,</span>
+<span class="s1">    &quot;last_name&quot;: &quot;Smith&quot;,</span>
+<span class="s1">    &quot;phone&quot;: &quot;+1-555-0199&quot;,</span>
+<span class="s1">    &quot;roles&quot;: [&quot;recruiter&quot;]</span>
+<span class="s1">  }&#39;</span>
+</code></pre></div>
+<h3 id="filtering-users-by-role">Filtering Users by Role<a class="headerlink" href="#filtering-users-by-role" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-X<span class="w"> </span>GET<span class="w"> </span><span class="s2">&quot;https://api.miraiworks.com/api/admin/users?role=recruiter&amp;is_active=true&amp;page=1&amp;size=10&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Authorization: Bearer YOUR_TOKEN&quot;</span>
+</code></pre></div>
+<h3 id="bulk-password-reset_1">Bulk Password Reset<a class="headerlink" href="#bulk-password-reset_1" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span><span class="s2">&quot;https://api.miraiworks.com/api/admin/users/bulk/reset-password&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Authorization: Bearer YOUR_TOKEN&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-d<span class="w"> </span><span class="s1">&#39;{</span>
+<span class="s1">    &quot;user_ids&quot;: [123, 456, 789],</span>
+<span class="s1">    &quot;send_email&quot;: true</span>
+<span class="s1">  }&#39;</span>
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/yourorg/miraiworks" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand"], "search": "../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.92b07e13.min.js"></script>
+      
+    
+  </body>
+</html>

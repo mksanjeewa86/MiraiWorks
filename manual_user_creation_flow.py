@@ -14,13 +14,13 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'backend'))
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from backend.app.main import app
-from backend.app.database import get_db
-from backend.app.models.user import User
-from backend.app.models.company import Company
-from backend.app.models.role import Role, UserRole
-from backend.app.services.auth_service import auth_service
-from backend.app.utils.constants import UserRole as UserRoleEnum
+from app.main import app
+from app.database import get_db
+from app.models.user import User
+from app.models.company import Company
+from app.models.role import Role, UserRole
+from app.services.auth_service import auth_service
+from app.utils.constants import UserRole as UserRoleEnum
 
 
 async def test_company_admin_user_creation():
@@ -45,7 +45,7 @@ async def test_company_admin_user_creation():
                 db_session.add(test_company)
                 await db_session.commit()
                 await db_session.refresh(test_company)
-                print(f"✅ Created test company: {test_company.name} (ID: {test_company.id})")
+                print(f"✁ECreated test company: {test_company.name} (ID: {test_company.id})")
 
                 # Create company admin user
                 company_admin = User(
@@ -61,7 +61,7 @@ async def test_company_admin_user_creation():
                 db_session.add(company_admin)
                 await db_session.commit()
                 await db_session.refresh(company_admin)
-                print(f"✅ Created company admin: {company_admin.email} (ID: {company_admin.id})")
+                print(f"✁ECreated company admin: {company_admin.email} (ID: {company_admin.id})")
 
                 # Create and assign company_admin role
                 # First, find the company_admin role
@@ -79,13 +79,13 @@ async def test_company_admin_user_creation():
                     db_session.add(company_admin_role)
                     await db_session.commit()
                     await db_session.refresh(company_admin_role)
-                    print(f"✅ Created company_admin role (ID: {company_admin_role.id})")
+                    print(f"✁ECreated company_admin role (ID: {company_admin_role.id})")
 
                 # Assign role to user
                 user_role = UserRole(user_id=company_admin.id, role_id=company_admin_role.id)
                 db_session.add(user_role)
                 await db_session.commit()
-                print(f"✅ Assigned company_admin role to user")
+                print(f"✁EAssigned company_admin role to user")
 
                 print("\n🔐 Step 2: Testing authentication...")
 
@@ -97,7 +97,7 @@ async def test_company_admin_user_creation():
                 print(f"📊 Login response: {login_response.status_code}")
 
                 if login_response.status_code != 200:
-                    print(f"❌ Login failed: {login_response.text}")
+                    print(f"❁ELogin failed: {login_response.text}")
                     return False
 
                 token_data = login_response.json()
@@ -110,13 +110,13 @@ async def test_company_admin_user_creation():
                         json={"user_id": company_admin.id, "code": "123456"}
                     )
                     if verify_response.status_code != 200:
-                        print(f"❌ 2FA verification failed: {verify_response.text}")
+                        print(f"❁E2FA verification failed: {verify_response.text}")
                         return False
                     token_data = verify_response.json()
-                    print("✅ 2FA verification successful")
+                    print("✁E2FA verification successful")
 
                 headers = {"Authorization": f"Bearer {token_data['access_token']}"}
-                print("✅ Authentication successful")
+                print("✁EAuthentication successful")
 
                 print("\n👤 Step 3: Testing user creation (valid scenario)...")
 
@@ -139,12 +139,12 @@ async def test_company_admin_user_creation():
 
                 if create_response.status_code == 201:
                     user_info = create_response.json()
-                    print(f"✅ Successfully created user: {user_info['email']} (ID: {user_info['id']})")
+                    print(f"✁ESuccessfully created user: {user_info['email']} (ID: {user_info['id']})")
                     print(f"   - Name: {user_info['first_name']} {user_info['last_name']}")
                     print(f"   - Company: {user_info['company_name']}")
                     print(f"   - Roles: {user_info['roles']}")
                 else:
-                    print(f"❌ User creation failed: {create_response.text}")
+                    print(f"❁EUser creation failed: {create_response.text}")
                     return False
 
                 print("\n🚫 Step 4: Testing permission restrictions...")
@@ -168,9 +168,9 @@ async def test_company_admin_user_creation():
 
                 if forbidden_response.status_code == 403:
                     error_detail = forbidden_response.json()["detail"]
-                    print(f"✅ Correctly blocked super_admin role assignment: {error_detail}")
+                    print(f"✁ECorrectly blocked super_admin role assignment: {error_detail}")
                 else:
-                    print(f"❌ Should have blocked super_admin role assignment")
+                    print(f"❁EShould have blocked super_admin role assignment")
                     print(f"   Response: {forbidden_response.status_code} - {forbidden_response.text}")
                     return False
 
@@ -203,7 +203,7 @@ async def test_company_admin_user_creation():
                 print(f"   - Form valid: {is_form_valid}")
 
                 if is_form_valid:
-                    print("✅ Frontend form validation logic is working correctly")
+                    print("✁EFrontend form validation logic is working correctly")
 
                     # Test actual submission with this data
                     frontend_user_data = {
@@ -223,27 +223,27 @@ async def test_company_admin_user_creation():
                     print(f"📊 Frontend simulation response: {frontend_response.status_code}")
 
                     if frontend_response.status_code == 201:
-                        print("✅ Frontend-to-backend flow working correctly")
+                        print("✁EFrontend-to-backend flow working correctly")
                     else:
-                        print(f"❌ Frontend-to-backend flow failed: {frontend_response.text}")
+                        print(f"❁EFrontend-to-backend flow failed: {frontend_response.text}")
                         return False
                 else:
-                    print("❌ Frontend form validation logic has issues")
+                    print("❁EFrontend form validation logic has issues")
                     return False
 
                 print("\n" + "=" * 60)
                 print("🎉 All tests passed! The user creation flow is working correctly.")
                 print("📋 Summary:")
-                print("   ✅ Company admin authentication works")
-                print("   ✅ Valid user creation works")
-                print("   ✅ Permission restrictions work")
-                print("   ✅ Frontend form validation logic works")
-                print("   ✅ Frontend-to-backend integration works")
+                print("   ✁ECompany admin authentication works")
+                print("   ✁EValid user creation works")
+                print("   ✁EPermission restrictions work")
+                print("   ✁EFrontend form validation logic works")
+                print("   ✁EFrontend-to-backend integration works")
 
                 return True
 
             except Exception as e:
-                print(f"❌ Test failed with error: {e}")
+                print(f"❁ETest failed with error: {e}")
                 import traceback
                 traceback.print_exc()
                 return False
@@ -264,5 +264,5 @@ if __name__ == "__main__":
         print("   3. Component re-rendering problems")
         sys.exit(0)
     else:
-        print("\n❌ Tests failed. Please check the backend implementation.")
+        print("\n❁ETests failed. Please check the backend implementation.")
         sys.exit(1)
