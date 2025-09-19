@@ -8,6 +8,9 @@ build/
 develop-eggs/
 dist/
 downloads/
+
+# Claude Code settings
+.claude/settings.local.json
 eggs/
 .eggs/
 # Python lib directories (not frontend)
