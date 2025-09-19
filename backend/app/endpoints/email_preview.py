@@ -1,6 +1,5 @@
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import HTMLResponse
-from typing import Optional
 
 from app.services.email_preview_service import email_preview_service
 

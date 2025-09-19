@@ -3,9 +3,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.crud import interview as interview_crud
 from app.database import get_db
@@ -29,7 +27,6 @@ from app.schemas.interview import (
     ProposalResponse,
 )
 from app.services.interview_service import interview_service
-from app.utils.constants import InterviewStatus
 from app.utils.permissions import is_company_admin, is_super_admin, requires_permission
 
 router = APIRouter()

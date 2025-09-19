@@ -1,4 +1,4 @@
-from unittest.mock import Mock, patch
+﻿from unittest.mock import Mock, patch
 
 import pytest
 import pytest_asyncio
@@ -313,11 +313,11 @@ class TestMessagingAPI:
             db_session, candidate_user.id, [recruiter_user.id]
         )
 
-        message1 = await messaging_service.send_message(
+        _message1 = await messaging_service.send_message(
             db_session, conversation.id, candidate_user.id, "First message"
         )
 
-        message2 = await messaging_service.send_message(
+        _message2 = await messaging_service.send_message(
             db_session, conversation.id, recruiter_user.id, "Second message"
         )
 
@@ -502,10 +502,10 @@ class TestMessagingService:
         )
 
         # Send multiple messages
-        msg1 = await messaging_service.send_message(
+        _msg1 = await messaging_service.send_message(
             db_session, conversation.id, candidate_user.id, "First"
         )
-        msg2 = await messaging_service.send_message(
+        _msg2 = await messaging_service.send_message(
             db_session, conversation.id, recruiter_user.id, "Second"
         )
 

@@ -246,7 +246,6 @@ async def super_admin_auth_headers(client, test_super_admin):
         )
 
         if response.status_code != 200:
-            print(f"Login failed: {response.status_code} - {response.text}")
             raise Exception(f"Login failed with status {response.status_code}")
 
         token_data = response.json()
@@ -263,18 +262,15 @@ async def super_admin_auth_headers(client, test_super_admin):
             )
 
             if verify_response.status_code != 200:
-                print(f"2FA verification failed: {verify_response.status_code} - {verify_response.text}")
                 raise Exception(f"2FA verification failed with status {verify_response.status_code}")
 
             token_data = verify_response.json()
 
         if not token_data.get("access_token"):
-            print(f"No access token in response: {token_data}")
             raise Exception("No access token received")
 
         return {"Authorization": f"Bearer {token_data['access_token']}"}
 
     except Exception as e:
-        print(f"Error in super_admin_auth_headers fixture: {e}")
         # Return a dummy header to prevent further crashes
         return {"Authorization": "Bearer dummy_token_for_testing"}

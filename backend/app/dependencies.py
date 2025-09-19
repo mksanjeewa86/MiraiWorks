@@ -1,4 +1,3 @@
-from typing import Optional
 
 import redis.asyncio as redis
 from fastapi import Depends, HTTPException, status

@@ -2,12 +2,9 @@ import pytest
 
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
 from app.models.user import User
 from app.models.company import Company
-from app.models.role import Role, UserRole
-from app.schemas.user import UserCreate, UserUpdate
 from app.services.auth_service import auth_service
 
 
@@ -52,32 +49,25 @@ class TestUsersManagement:
             json={"email": "super@test.com", "password": "testpass123"},
         )
 
-        print(f"Login response: {login_response.status_code} - {login_response.text}")
         assert login_response.status_code == 200
         token_data = login_response.json()
 
         # If 2FA is required despite our setting, handle it
         if token_data.get("require_2fa"):
-            print("2FA required, completing 2FA flow...")
             verify_response = await client.post(
                 "/api/auth/2fa/verify",
                 json={"user_id": super_admin.id, "code": "123456"}
             )
-            print(f"2FA response: {verify_response.status_code} - {verify_response.text}")
             assert verify_response.status_code == 200
             token_data = verify_response.json()
 
-        print(f"Token data: {token_data}")
 
         # Create headers
-        print(f"Access token: {token_data['access_token'][:50]}...")
         headers = {"Authorization": f"Bearer {token_data['access_token']}"}
-        print(f"Headers: {headers}")
 
         # Test the actual endpoint
         response = await client.get("/api/admin/users", headers=headers)
 
-        print(f"Users endpoint response: {response.status_code} - {response.text[:200]}")
         assert response.status_code == 200
         data = response.json()
         assert "users" in data

@@ -4,11 +4,10 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import and_, func, select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud import company as company_crud
-from app.crud import user_settings as user_settings_crud
 from app.database import get_db
 from app.dependencies import require_super_admin
 from app.models import Company, Role, User, UserRole, UserSettings
@@ -249,7 +248,8 @@ async def create_company(
             user_id=admin_user.id,
         )
     except Exception as e:
-        print(f"Failed to send activation email: {e}")
+        logger.error(f"Error creating admin user for company {company.id}: {e}")
+        # Continue with company creation even if admin user creation fails
 
     return CompanyResponse(
         id=company.id,

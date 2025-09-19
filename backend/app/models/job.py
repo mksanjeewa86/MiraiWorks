@@ -5,7 +5,6 @@ from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Te
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.db_types import CompatLONGTEXT as LONGTEXT
-from app.schemas.job import ApplicationStatus, JobStatus, JobType, ExperienceLevel, RemoteType, SalaryType
 
 from .base import Base
 

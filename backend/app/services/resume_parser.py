@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 import re
 from typing import Any
 
@@ -276,7 +276,7 @@ class ResumeParser:
 
         if exp_section:
             # Split by common patterns that indicate new job entries
-            job_patterns = [
+            _job_patterns = [
                 r"\n(?=[A-Z][^a-z\n]*(?:at|@|\|)[^a-z\n]*[A-Z])",  # Title at Company
                 r"\n(?=\d{4}\s*[-–]\s*\d{4})",  # Date ranges
                 r"\n(?=\w+\s+\d{4})",  # Month Year

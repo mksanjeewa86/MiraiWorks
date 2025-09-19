@@ -8,7 +8,6 @@ from sqlalchemy import select
 from app.models.auth import PasswordResetRequest
 from app.models.user import User
 from app.models.user_settings import UserSettings
-from app.models.notification import Notification
 from app.services.auth_service import auth_service
 
 

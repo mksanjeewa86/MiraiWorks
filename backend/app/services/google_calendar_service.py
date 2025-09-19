@@ -6,7 +6,7 @@ delegating actual functionality to the CalendarService class.
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, Optional
 
 from app.services.calendar_service import CalendarService

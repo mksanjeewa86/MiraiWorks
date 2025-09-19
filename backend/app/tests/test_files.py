@@ -1,4 +1,4 @@
-import io
+﻿import io
 import pytest
 from unittest.mock import AsyncMock, Mock, patch
 from httpx import AsyncClient
@@ -606,7 +606,7 @@ class TestFiles:
         )
 
         # Send the message
-        message = await direct_message_service.send_message(db_session, sender.id, message_data)
+        await direct_message_service.send_message(db_session, sender.id, message_data)
 
         # Test that sender can download the file
         with patch('app.services.storage_service.get_storage_service') as mock_storage_service, \
@@ -666,7 +666,7 @@ class TestFiles:
         )
 
         # Send the message
-        message = await direct_message_service.send_message(db_session, sender.id, message_data)
+        await direct_message_service.send_message(db_session, sender.id, message_data)
 
         # Test that recipient can download the file
         with patch('app.services.storage_service.get_storage_service') as mock_storage_service, \
@@ -731,7 +731,7 @@ class TestFiles:
         )
 
         # Send the message from sender to recipient
-        message = await direct_message_service.send_message(db_session, test_user.id, message_data)
+        await direct_message_service.send_message(db_session, test_user.id, message_data)
 
         # Mock storage services to simulate file system behavior
         with patch('app.services.storage_service.get_storage_service') as mock_storage_service, \
@@ -750,7 +750,7 @@ class TestFiles:
 
             # Create the mock file path for FileResponse
             download_path = "message-attachments/1/2025/test-permission.txt"
-            mock_full_path = Path("/tmp/uploads") / download_path
+            _mock_full_path = Path("/tmp/uploads") / download_path
 
             # Mock path.exists() to return True and patch the FileResponse import
             with patch.object(Path, 'exists', return_value=True), \
@@ -763,11 +763,9 @@ class TestFiles:
 
                 # Test 1: Sender should be able to download
                 sender_download = await client.get(f"/api/files/download/{download_path}", headers=sender_headers)
-                print(f"Sender download status: {sender_download.status_code}")
 
                 # Test 2: Recipient should be able to download
                 recipient_download = await client.get(f"/api/files/download/{download_path}", headers=recipient_headers)
-                print(f"Recipient download status: {recipient_download.status_code}")
 
                 # Both users should have permission (either 200 for successful download or other non-403 status)
                 # The key is that neither should get 403 (Forbidden)
@@ -775,4 +773,3 @@ class TestFiles:
                 assert recipient_download.status_code != 403, f"Recipient should have access, got {recipient_download.status_code}"
 
                 # Since permission checks passed, the downloads should succeed
-                print("Both users have appropriate file access permissions")

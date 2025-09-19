@@ -23,7 +23,6 @@ logger = get_logger(__name__)
 async def test_endpoint():
     """Simple test endpoint to verify routing works."""
     import sys
-    print("DEBUG: Test endpoint called", file=sys.stderr, flush=True)
     return {"message": "File endpoints are working", "test": True}
 
 # Configuration
@@ -195,7 +194,6 @@ async def upload_file(
     """Upload a file and return its URL and metadata."""
 
     import sys
-    print(f"DEBUG: Upload request received - filename: {file.filename}, user: {current_user.id}", file=sys.stderr, flush=True)
     logger.info(f"Upload request received - filename: {file.filename}, content_type: {file.content_type}, user: {current_user.id}")
 
     # Validate file
@@ -205,7 +203,6 @@ async def upload_file(
             status_code=status.HTTP_400_BAD_REQUEST, detail="No file provided"
         )
 
-    print(f"DEBUG: File validation passed: {file.filename}")
     logger.info(f"File validation passed: {file.filename}")
 
     if not is_allowed_file(file.filename):
@@ -214,12 +211,10 @@ async def upload_file(
             status_code=status.HTTP_400_BAD_REQUEST, detail="File type not allowed"
         )
 
-    print(f"DEBUG: File type allowed: {file.filename}")
     logger.info(f"File type allowed: {file.filename}")
 
     # Check file size
     file_content = await file.read()
-    print(f"DEBUG: File content read: {len(file_content)} bytes")
     logger.info(f"File content read: {len(file_content)} bytes")
 
     if len(file_content) > MAX_FILE_SIZE:
@@ -228,30 +223,22 @@ async def upload_file(
             detail=f"File too large. Maximum size is {MAX_FILE_SIZE} bytes",
         )
 
-    print("DEBUG: Starting storage attempts...")
 
     # Try local storage directly (skip MinIO for now)
-    print("DEBUG: Trying local storage...")
 
     try:
         from app.services.local_storage_service import get_local_storage_service
-        print("DEBUG: Local storage service imported")
 
         storage_service = get_local_storage_service()
-        print("DEBUG: Local storage service instance created")
 
         # Upload with local storage
-        print(f"DEBUG: About to upload file_content: {len(file_content)} bytes")
         file_path, file_hash, file_size = await storage_service.upload_file_data(
             file_content, file.filename, file.content_type, current_user.id, "message-attachments"
         )
-        print(f"DEBUG: Upload completed: {file_path}")
 
         # Generate download URL
         download_url = storage_service.get_download_url(file_path)
-        print(f"DEBUG: Download URL generated: {download_url}")
 
-        print(f"DEBUG: Local storage success: {file_path}")
         logger.info(
             f"File uploaded to local storage: {file.filename} -> {file_path} by user {current_user.id}"
         )
@@ -265,11 +252,9 @@ async def upload_file(
             "success": True,
             "storage_type": "local",
         }
-        print(f"DEBUG: Returning response: {response_data}")
         return response_data
 
     except Exception as e:
-        print(f"DEBUG: Local storage failed with exception: {e}")
         import traceback
         traceback.print_exc()
         logger.error(f"Error saving file {file.filename} to local storage: {str(e)}")

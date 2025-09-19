@@ -1,10 +1,9 @@
 import secrets
 import string
-from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import and_, func, or_, select, update
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -16,7 +15,6 @@ from app.models.role import Role
 from app.schemas.user import (
     BulkUserOperation,
     PasswordResetRequest,
-    ResendActivationRequest,
     UserCreate,
     UserInfo,
     UserListResponse,
@@ -265,7 +263,7 @@ async def create_user(
         )
     except Exception as e:
         # Log error but don't fail the user creation
-        print(f"Failed to send activation email: {e}")
+        logger.error(f"Error sending activation email to {new_user.email}: {e}")
 
     # Return user info
     await db.refresh(new_user)
@@ -845,7 +843,7 @@ async def reset_user_password(
             )
         except Exception as e:
             # Log error but don't fail the operation
-            print(f"Failed to send password reset email: {e}")
+            logger.error(f"Error sending password reset email: {e}")
 
     return {
         "message": "Password reset successfully",

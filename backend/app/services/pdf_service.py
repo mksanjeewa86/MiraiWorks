@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 import uuid
 from datetime import datetime, timedelta
 from typing import Any, Optional
@@ -363,7 +363,6 @@ class PDFService:
     async def cleanup_old_pdfs(self, older_than_days: int = 30) -> int:
         """Clean up old generated PDFs to save storage space."""
         try:
-            cutoff_date = datetime.utcnow() - timedelta(days=older_than_days)
 
             # This would query for resumes with old PDF files and clean them up
             # Implementation depends on your cleanup strategy

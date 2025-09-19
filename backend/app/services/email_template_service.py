@@ -1,9 +1,8 @@
-import os
-from pathlib import Path
+﻿from pathlib import Path
 from typing import Dict, Any, Tuple
 
 try:
-    from jinja2 import Environment, FileSystemLoader, select_autoescape
+    from jinja2 import Environment, FileSystemLoader
     JINJA2_AVAILABLE = True
 except ImportError:
     JINJA2_AVAILABLE = False

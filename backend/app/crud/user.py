@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.crud.base import CRUDBase
-from app.models import Company, User, UserRole
+from app.models import User, UserRole
 from app.models.role import Role
 from app.schemas.user import UserCreate, UserUpdate
 from app.utils.constants import UserRole as UserRoleEnum

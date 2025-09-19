@@ -1,15 +1,13 @@
 import os
-import uuid
 import secrets
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Any
+from typing import Dict, Any
 import aiohttp
 import structlog
 from sqlalchemy.orm import Session
 from urllib.parse import urlencode
 
 from app.models.calendar_connection import CalendarConnection
-from app.models.user import User
 
 logger = structlog.get_logger()
 

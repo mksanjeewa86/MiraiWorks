@@ -21,7 +21,16 @@
       "Bash(npm install:*)",
       "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_auth.py::test_login_success -v -s)",
       "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_auth.py::test_login_success app/tests/test_auth.py::test_login_invalid_email app/tests/test_auth.py::test_login_invalid_password -v --tb=short)",
-      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_companies.py::TestCompanies::test_get_companies_success -v --tb=short)"
+      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_companies.py::TestCompanies::test_get_companies_success -v --tb=short)",
+      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_files.py::TestFiles::test_delete_file_success app/tests/test_files.py::TestFiles::test_file_download_permission_sender_access -v --tb=short)",
+      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_auth.py app/tests/test_companies.py app/tests/test_files.py app/tests/test_users_management.py app/tests/test_direct_messages.py -v --tb=short --maxfail=10)",
+      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_activation_comprehensive.py::TestAccountActivation::test_activation_success_flow -v --tb=short)",
+      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest test_e2e_user_creation.py -v --tb=short)",
+      "Bash(PYTHONPATH=. ENVIRONMENT=test python -m pytest app/tests/test_e2e_user_creation.py -v --tb=short)",
+      "Bash(PYTHONPATH=./backend ENVIRONMENT=test python -m pytest backend/app/tests/ --tb=short --maxfail=5)",
+      "Bash(PYTHONPATH=./backend ENVIRONMENT=test python -m pytest backend/app/tests/test_auth.py backend/app/tests/test_files.py backend/app/tests/test_companies.py -v --tb=short)",
+      "Bash(PYTHONPATH=./backend python -m py_compile backend/app/endpoints/users_management.py)",
+      "Bash(PYTHONPATH=./backend ENVIRONMENT=test python -m pytest backend/app/tests/test_e2e_user_creation.py backend/app/tests/test_auth.py::test_login_success backend/app/tests/test_files.py::TestFiles::test_upload_file_success -v --tb=short)"
     ],
     "deny": [],
     "ask": []

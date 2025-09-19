@@ -7,7 +7,6 @@ from sqlalchemy.orm import selectinload
 
 from app.crud.base import CRUDBase
 from app.models.interview import Interview, InterviewProposal
-from app.models.user import User
 from app.schemas.interview import InterviewCreate, InterviewUpdate
 from app.utils.constants import InterviewStatus
 

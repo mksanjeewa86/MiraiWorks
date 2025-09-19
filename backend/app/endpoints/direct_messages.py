@@ -1,15 +1,11 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.crud.direct_messages import direct_message
 from app.database import get_db
 from app.dependencies import get_current_active_user
-from app.models.direct_message import DirectMessage
-from app.models.role import Role, UserRole
 from app.models.user import User
 from app.schemas.direct_message import (
     ConversationListResponse,

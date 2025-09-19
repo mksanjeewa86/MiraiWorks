@@ -3,13 +3,11 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.calendar_integration import calendar_integration
 from app.database import get_db
 from app.dependencies import get_current_active_user
-from app.models.calendar_integration import ExternalCalendarAccount
 from app.models.user import User
 from app.schemas.calendar import (
     CalendarAccountInfo,

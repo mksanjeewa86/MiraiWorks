@@ -2,15 +2,12 @@ import logging
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from sqlalchemy import desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.crud.messaging import messaging
 from app.database import get_db
 from app.dependencies import check_rate_limit, get_client_ip, get_current_active_user
 from app.models.attachment import Attachment
-from app.models.message import Conversation, Message, MessageRead
 from app.models.user import User
 from app.schemas.message import (
     AttachmentInfo,

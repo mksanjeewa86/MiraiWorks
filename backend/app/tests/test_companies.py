@@ -2,12 +2,10 @@ import pytest
 
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
 from app.models.company import Company
 from app.models.user import User
 from app.utils.constants import CompanyType
-from app.services.auth_service import auth_service
 
 
 class TestCompanies:

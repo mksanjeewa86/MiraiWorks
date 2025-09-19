@@ -144,14 +144,7 @@ class StorageService:
         """Get presigned URL for direct upload."""
         try:
             # Generate presigned POST URL
-            policy = {
-                "expiration": (datetime.utcnow() + expires).isoformat() + "Z",
-                "conditions": [
-                    {"bucket": self.bucket},
-                    {"key": s3_key},
-                    ["content-length-range", 1, 100 * 1024 * 1024],  # 1 byte to 100MB
-                ],
-            }
+
 
             url = self.client.presigned_url(
                 method="PUT",

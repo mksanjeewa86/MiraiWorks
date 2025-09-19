@@ -7,7 +7,6 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from datetime import datetime, timedelta
 
 from app.models.user import User
 from app.models.company import Company

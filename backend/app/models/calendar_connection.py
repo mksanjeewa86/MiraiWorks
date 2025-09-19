@@ -3,7 +3,6 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from app.database import Base
-from app.schemas.calendar_connection import CalendarProvider
 
 
 class CalendarConnection(Base):

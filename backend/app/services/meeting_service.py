@@ -1,4 +1,4 @@
-import secrets
+﻿import secrets
 from datetime import datetime
 from typing import Any, Optional
 
@@ -55,7 +55,7 @@ class MeetingService:
                 )
 
         # Validate participants
-        participant_users = self._validate_and_get_participants(
+        self._validate_and_get_participants(
             meeting_data.participants,
             meeting_data.meeting_type,
             current_user,
