@@ -1,8 +1,9 @@
 ﻿'use client';
-
 import { useState, useEffect } from 'react';
+import type { ChangeEvent, FormEvent, CSSProperties } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import { PREFECTURES } from '@/utils/prefectures';
 import {
   BriefcaseBusiness,
   Search,
@@ -20,10 +21,12 @@ import {
   Calendar,
   TrendingUp,
   Briefcase,
-  Globe
+  Globe,
+  X
 } from 'lucide-react';
 
 // Types
+
 interface Position {
   id: number;
   title: string;
@@ -46,6 +49,64 @@ interface Position {
   urgent: boolean;
 }
 
+interface NewPositionFormData {
+  title: string;
+  department: string;
+  location: string;
+  type: Position['type'];
+  level: Position['level'];
+  salaryMin: string;
+  salaryMax: string;
+  status: Position['status'];
+  postedDate: string;
+  deadline: string;
+  description: string;
+  requirements: string;
+  benefits: string;
+  remote: boolean;
+  urgent: boolean;
+}
+
+const formatDateInput = (date: Date) => date.toISOString().split('T')[0];
+
+const getDefaultFormData = (): NewPositionFormData => {
+  const today = new Date();
+  const defaultDeadline = new Date(today);
+  defaultDeadline.setDate(defaultDeadline.getDate() + 30);
+
+  return {
+    title: '',
+    department: '',
+    location: '',
+    type: 'full-time',
+    level: 'entry',
+    salaryMin: '',
+    salaryMax: '',
+    status: 'draft',
+    postedDate: formatDateInput(today),
+    deadline: formatDateInput(defaultDeadline),
+    description: '',
+    requirements: '',
+    benefits: '',
+    remote: false,
+    urgent: false,
+  };
+};
+
+const PREFECTURE_LOCATION_OPTIONS = PREFECTURES.map(prefecture => ({
+  label: prefecture.nameEn,
+  value: `${prefecture.nameEn}, Japan`,
+}));
+
+const LOCATION_OPTIONS = [
+  ...PREFECTURE_LOCATION_OPTIONS,
+  { label: 'Remote', value: 'Remote' },
+];
+
+const FILTER_LOCATION_OPTIONS = [
+  { label: 'All Locations', value: 'all' },
+  ...LOCATION_OPTIONS,
+];
 // Mock data
 const mockPositions: Position[] = [
   {
@@ -153,10 +214,11 @@ const mockPositions: Position[] = [
     remote: false,
     urgent: false
   }
+
 ];
 
 function PositionsPageContent() {
-  const [positions] = useState<Position[]>(mockPositions);
+  const [positions, setPositions] = useState<Position[]>(mockPositions);
   const [filteredPositions, setFilteredPositions] = useState<Position[]>(mockPositions);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -167,6 +229,7 @@ function PositionsPageContent() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [isNewPositionOpen, setIsNewPositionOpen] = useState(false);
 
   // Apply filters and search
   useEffect(() => {
@@ -177,13 +240,13 @@ function PositionsPageContent() {
       const matchesStatus = statusFilter === 'all' || position.status === statusFilter;
       const matchesType = typeFilter === 'all' || position.type === typeFilter;
       const matchesLevel = levelFilter === 'all' || position.level === levelFilter;
-      const matchesLocation = locationFilter === 'all' ||
-                            position.location.toLowerCase().includes(locationFilter.toLowerCase()) ||
-                            (locationFilter === 'remote' && position.remote);
-
+      const matchesLocation =
+        locationFilter === 'all' ||
+        (locationFilter.toLowerCase() === 'remote'
+          ? position.remote
+          : position.location === locationFilter);
       return matchesSearch && matchesStatus && matchesType && matchesLevel && matchesLocation;
     });
-
     // Sort
     filtered.sort((a, b) => {
       let aValue, bValue;
@@ -207,24 +270,20 @@ function PositionsPageContent() {
         default:
           return 0;
       }
-
       if (sortOrder === 'asc') {
         return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
       } else {
         return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
       }
     });
-
     setFilteredPositions(filtered);
     setCurrentPage(1);
   }, [positions, searchTerm, statusFilter, typeFilter, levelFilter, locationFilter, sortBy, sortOrder]);
-
   // Pagination
   const totalPages = Math.ceil(filteredPositions.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentPositions = filteredPositions.slice(startIndex, endIndex);
-
   // Statistics
   const stats = {
     total: positions.length,
@@ -232,7 +291,42 @@ function PositionsPageContent() {
     applications: positions.reduce((sum, p) => sum + p.applications, 0),
     avgViews: Math.round(positions.reduce((sum, p) => sum + p.views, 0) / positions.length) || 0
   };
-
+  const handleCreatePosition = (formData: NewPositionFormData) => {
+    const parseMultiline = (value: string) => (
+      value
+        .split('\n')
+        .map(item => item.trim())
+        .filter(Boolean)
+    );
+    const salaryMin = Number(formData.salaryMin);
+    const salaryMax = Number(formData.salaryMax);
+    const nextId = positions.reduce((maxId, position) => Math.max(maxId, position.id), 0) + 1;
+    const companyName = positions[0]?.company ?? 'Not specified';
+    const newPosition: Position = {
+      id: nextId,
+      title: formData.title.trim(),
+      company: companyName,
+      department: formData.department.trim(),
+      location: formData.location,
+      type: formData.type,
+      level: formData.level,
+      salaryMin,
+      salaryMax,
+      status: formData.status,
+      applications: 0,
+      views: 0,
+      postedDate: formData.postedDate,
+      deadline: formData.deadline,
+      description: formData.description.trim(),
+      requirements: parseMultiline(formData.requirements),
+      benefits: parseMultiline(formData.benefits),
+      remote: formData.remote,
+      urgent: formData.urgent,
+    };
+    setPositions(prev => [newPosition, ...prev]);
+    setIsNewPositionOpen(false);
+    setCurrentPage(1);
+  };
   // Helper functions
   const getStatusBadge = (status: Position['status']) => {
     const styles = {
@@ -244,7 +338,6 @@ function PositionsPageContent() {
     };
     return styles[status];
   };
-
   const getTypeBadge = (type: Position['type']) => {
     const styles = {
       'full-time': 'bg-blue-50 text-blue-700 border-blue-200',
@@ -254,7 +347,6 @@ function PositionsPageContent() {
     };
     return styles[type];
   };
-
   const getLevelBadge = (level: Position['level']) => {
     const styles = {
       'entry': 'bg-green-50 text-green-700 border-green-200',
@@ -264,11 +356,9 @@ function PositionsPageContent() {
     };
     return styles[level];
   };
-
   const formatSalary = (min: number, max: number) => {
     return `¥${(min / 1000000).toFixed(1)}M - ¥${(max / 1000000).toFixed(1)}M`;
   };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -276,7 +366,6 @@ function PositionsPageContent() {
       day: 'numeric'
     });
   };
-
   const handleSort = (field: typeof sortBy) => {
     if (sortBy === field) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
@@ -285,7 +374,6 @@ function PositionsPageContent() {
       setSortOrder('desc');
     }
   };
-
   const clearFilters = () => {
     setSearchTerm('');
     setStatusFilter('all');
@@ -293,9 +381,13 @@ function PositionsPageContent() {
     setLevelFilter('all');
     setLocationFilter('all');
   };
-
   return (
     <AppLayout>
+      <NewPositionModal
+        isOpen={isNewPositionOpen}
+        onClose={() => setIsNewPositionOpen(false)}
+        onSubmit={handleCreatePosition}
+      />
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -311,14 +403,17 @@ function PositionsPageContent() {
               <Download className="h-4 w-4" />
               Export
             </button>
-            <button className="flex items-center gap-2 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-opacity"
-                    style={{ backgroundColor: 'var(--brand-primary)' }}>
+            <button
+              type="button"
+              onClick={() => setIsNewPositionOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-opacity"
+              style={{ backgroundColor: 'var(--brand-primary)' }}
+            >
               <Plus className="h-4 w-4" />
               New Position
             </button>
           </div>
         </div>
-
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="bg-white p-6 rounded-lg border border-gray-200">
@@ -332,7 +427,6 @@ function PositionsPageContent() {
               </div>
             </div>
           </div>
-
           <div className="bg-white p-6 rounded-lg border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
@@ -344,7 +438,6 @@ function PositionsPageContent() {
               </div>
             </div>
           </div>
-
           <div className="bg-white p-6 rounded-lg border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
@@ -356,7 +449,6 @@ function PositionsPageContent() {
               </div>
             </div>
           </div>
-
           <div className="bg-white p-6 rounded-lg border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
@@ -369,7 +461,6 @@ function PositionsPageContent() {
             </div>
           </div>
         </div>
-
         {/* Filters and Search */}
         <div className="bg-white p-6 rounded-lg border border-gray-200">
           <div className="flex flex-col lg:flex-row gap-4">
@@ -383,18 +474,17 @@ function PositionsPageContent() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
-                  style={{ '--tw-ring-color': 'var(--brand-primary)' } as React.CSSProperties}
+                  style={{ '--tw-ring-color': 'var(--brand-primary)' } as CSSProperties}
                 />
               </div>
             </div>
-
             {/* Filters */}
             <div className="flex flex-wrap gap-3">
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
-                style={{ '--tw-ring-color': 'var(--brand-primary)' } as React.CSSProperties}
+                style={{ '--tw-ring-color': 'var(--brand-primary)' } as CSSProperties}
               >
                 <option value="all">All Status</option>
                 <option value="draft">Draft</option>
@@ -403,12 +493,11 @@ function PositionsPageContent() {
                 <option value="closed">Closed</option>
                 <option value="filled">Filled</option>
               </select>
-
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
-                style={{ '--tw-ring-color': 'var(--brand-primary)' } as React.CSSProperties}
+                style={{ '--tw-ring-color': 'var(--brand-primary)' } as CSSProperties}
               >
                 <option value="all">All Types</option>
                 <option value="full-time">Full-time</option>
@@ -416,12 +505,11 @@ function PositionsPageContent() {
                 <option value="contract">Contract</option>
                 <option value="internship">Internship</option>
               </select>
-
               <select
                 value={levelFilter}
                 onChange={(e) => setLevelFilter(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
-                style={{ '--tw-ring-color': 'var(--brand-primary)' } as React.CSSProperties}
+                style={{ '--tw-ring-color': 'var(--brand-primary)' } as CSSProperties}
               >
                 <option value="all">All Levels</option>
                 <option value="entry">Entry</option>
@@ -429,20 +517,18 @@ function PositionsPageContent() {
                 <option value="senior">Senior</option>
                 <option value="executive">Executive</option>
               </select>
-
               <select
                 value={locationFilter}
                 onChange={(e) => setLocationFilter(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
-                style={{ '--tw-ring-color': 'var(--brand-primary)' } as React.CSSProperties}
+                style={{ '--tw-ring-color': 'var(--brand-primary)' } as CSSProperties}
               >
-                <option value="all">All Locations</option>
-                <option value="tokyo">Tokyo</option>
-                <option value="osaka">Osaka</option>
-                <option value="nagoya">Nagoya</option>
-                <option value="remote">Remote</option>
+                {FILTER_LOCATION_OPTIONS.map(({ label, value }) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
               </select>
-
               <button
                 onClick={clearFilters}
                 className="px-3 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
@@ -452,7 +538,6 @@ function PositionsPageContent() {
             </div>
           </div>
         </div>
-
         {/* Positions Table */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
@@ -618,7 +703,6 @@ function PositionsPageContent() {
               </tbody>
             </table>
           </div>
-
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="px-6 py-3 border-t border-gray-200">
@@ -652,6 +736,324 @@ function PositionsPageContent() {
       </div>
     </AppLayout>
   );
+
+}
+
+interface NewPositionModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (data: NewPositionFormData) => void;
+
+}
+
+function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) {
+  const [formData, setFormData] = useState<NewPositionFormData>(getDefaultFormData());
+  const [formError, setFormError] = useState<string | null>(null);
+  useEffect(() => {
+    if (isOpen) {
+      setFormData(getDefaultFormData());
+      setFormError(null);
+    }
+  }, [isOpen]);
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+  if (!isOpen) return null;
+  const handleInputChange = (event: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = event.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+  const handleCheckboxChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = event.target;
+    setFormData(prev => ({ ...prev, [name]: checked }));
+  };
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!formData.title.trim() || !formData.department.trim() || !formData.location) {
+      setFormError('Please select a location and complete the required fields.');
+      return;
+    }
+    const salaryMin = Number(formData.salaryMin);
+    const salaryMax = Number(formData.salaryMax);
+    if (Number.isNaN(salaryMin) || Number.isNaN(salaryMax)) {
+      setFormError('Salary fields must be valid numbers.');
+      return;
+    }
+    if (salaryMin > salaryMax) {
+      setFormError('Minimum salary cannot be greater than maximum salary.');
+      return;
+    }
+    setFormError(null);
+    onSubmit(formData);
+  };
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-8"
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="new-position-modal-title"
+        tabIndex={-1}
+        className="w-full max-w-3xl rounded-xl bg-white shadow-xl max-h-[calc(100vh-4rem)] overflow-y-auto"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+          <div>
+            <h2 id="new-position-modal-title" className="text-lg font-semibold text-gray-900">Create New Position</h2>
+            <p className="text-sm text-gray-500">Add a new job posting to your positions list.</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full p-1 text-gray-400 transition-colors hover:text-gray-600"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-5 px-6 py-5">
+          {formError && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-600">
+              {formError}
+            </div>
+          )}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="title">
+                Title <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="title"
+                name="title"
+                value={formData.title}
+                onChange={handleInputChange}
+                placeholder="e.g. Senior Software Engineer"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="department">
+                Department <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="department"
+                name="department"
+                value={formData.department}
+                onChange={handleInputChange}
+                placeholder="e.g. Engineering"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="location">
+                Location <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="location"
+                name="location"
+                value={formData.location}
+                onChange={handleInputChange}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
+              >
+                <option value="" disabled>Select location</option>
+                {LOCATION_OPTIONS.map(({ label, value }) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="type">Type</label>
+              <select
+                id="type"
+                name="type"
+                value={formData.type}
+                onChange={handleInputChange}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
+              >
+                <option value="full-time">Full-time</option>
+                <option value="part-time">Part-time</option>
+                <option value="contract">Contract</option>
+                <option value="internship">Internship</option>
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="level">Level</label>
+              <select
+                id="level"
+                name="level"
+                value={formData.level}
+                onChange={handleInputChange}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
+              >
+                <option value="entry">Entry</option>
+                <option value="mid">Mid</option>
+                <option value="senior">Senior</option>
+                <option value="executive">Executive</option>
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="status">Status</label>
+              <select
+                id="status"
+                name="status"
+                value={formData.status}
+                onChange={handleInputChange}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
+              >
+                <option value="draft">Draft</option>
+                <option value="published">Published</option>
+                <option value="paused">Paused</option>
+                <option value="closed">Closed</option>
+                <option value="filled">Filled</option>
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="postedDate">Posted Date</label>
+              <input
+                id="postedDate"
+                name="postedDate"
+                type="date"
+                value={formData.postedDate}
+                onChange={handleInputChange}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="deadline">Application Deadline</label>
+              <input
+                id="deadline"
+                name="deadline"
+                type="date"
+                value={formData.deadline}
+                onChange={handleInputChange}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="salaryMin">Salary Min (¥)</label>
+              <input
+                id="salaryMin"
+                name="salaryMin"
+                type="number"
+                min="0"
+                step="100000"
+                value={formData.salaryMin}
+                onChange={handleInputChange}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="salaryMax">Salary Max (¥)</label>
+              <input
+                id="salaryMax"
+                name="salaryMax"
+                type="number"
+                min="0"
+                step="100000"
+                value={formData.salaryMax}
+                onChange={handleInputChange}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="md:col-span-2">
+              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="description">Position Description</label>
+              <textarea
+                id="description"
+                name="description"
+                rows={4}
+                value={formData.description}
+                onChange={handleInputChange}
+                placeholder="Outline the responsibilities and expectations for this role."
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
+              ></textarea>
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="requirements">Requirements</label>
+              <textarea
+                id="requirements"
+                name="requirements"
+                rows={4}
+                value={formData.requirements}
+                onChange={handleInputChange}
+                placeholder="List each requirement on a new line."
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
+              ></textarea>
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="benefits">Benefits</label>
+              <textarea
+                id="benefits"
+                name="benefits"
+                rows={4}
+                value={formData.benefits}
+                onChange={handleInputChange}
+                placeholder="List each benefit on a new line."
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
+              ></textarea>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-6">
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+              <input
+                type="checkbox"
+                name="remote"
+                checked={formData.remote}
+                onChange={handleCheckboxChange}
+                className="h-4 w-4 rounded border-gray-300 text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]"
+              />
+              Remote friendly role
+            </label>
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+              <input
+                type="checkbox"
+                name="urgent"
+                checked={formData.urgent}
+                onChange={handleCheckboxChange}
+                className="h-4 w-4 rounded border-gray-300 text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]"
+              />
+              Mark as urgent
+            </label>
+          </div>
+          <div className="flex justify-end gap-3 border-t border-gray-200 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors"
+              style={{ backgroundColor: 'var(--brand-primary)' }}
+            >
+              Create Position
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+
 }
 
 export default function PositionsPage() {
@@ -660,4 +1062,5 @@ export default function PositionsPage() {
       <PositionsPageContent />
     </ProtectedRoute>
   );
+
 }
