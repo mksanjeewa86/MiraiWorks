@@ -120,7 +120,9 @@ class TestResumeService:
         mock_pdf_builder.assert_called_once_with(resume_data)
         mock_builder_instance.generate_pdf.assert_called_once()
 
-    @pytest.mark.skip(reason="validate_resume_data method not implemented in ResumeService")
+    @pytest.mark.skip(
+        reason="validate_resume_data method not implemented in ResumeService"
+    )
     def test_validate_resume_data_valid(self):
         """Test resume data validation with valid data."""
         valid_data = {
@@ -152,7 +154,9 @@ class TestResumeService:
         # Should not raise an exception
         self.resume_service.validate_resume_data(valid_data)
 
-    @pytest.mark.skip(reason="validate_resume_data method not implemented in ResumeService")
+    @pytest.mark.skip(
+        reason="validate_resume_data method not implemented in ResumeService"
+    )
     def test_validate_resume_data_missing_required(self):
         """Test resume data validation with missing required fields."""
         invalid_data = {

@@ -247,6 +247,7 @@ class JobResponse(JobBase):
 
 class JobSummary(BaseModel):
     """Lightweight job summary for listings"""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: int

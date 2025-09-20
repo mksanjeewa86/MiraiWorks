@@ -1,4 +1,3 @@
-
 """Integration tests covering recruitment scenarios around jobs and interviews."""
 
 import pytest
@@ -109,7 +108,12 @@ async def test_interview_created_for_job_candidate(
         )
     )
     if result.scalar_one_or_none() is None:
-        db_session.add(UserRole(user_id=test_employer_user.id, role_id=test_roles[UserRoleEnum.RECRUITER.value].id))
+        db_session.add(
+            UserRole(
+                user_id=test_employer_user.id,
+                role_id=test_roles[UserRoleEnum.RECRUITER.value].id,
+            )
+        )
         await db_session.commit()
     interview = await interview_service.create_interview(
         db=db_session,

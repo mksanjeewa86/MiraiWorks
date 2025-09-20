@@ -16,9 +16,7 @@ async def _login(client: AsyncClient, email: str, password: str):
 
 
 @pytest.mark.asyncio
-async def test_login_success_returns_tokens(
-    client: AsyncClient, test_user: User
-):
+async def test_login_success_returns_tokens(client: AsyncClient, test_user: User):
     response = await _login(client, test_user.email, "testpassword123")
 
     assert response.status_code == 200
@@ -38,9 +36,7 @@ async def test_login_rejects_invalid_credentials(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_refresh_token_cycle(
-    client: AsyncClient, test_user: User
-):
+async def test_refresh_token_cycle(client: AsyncClient, test_user: User):
     login_response = await _login(client, test_user.email, "testpassword123")
     refresh_token = login_response.json()["refresh_token"]
 

@@ -32,24 +32,32 @@ async def get_calendar_connections(
         connections = await calendar_connection_crud.get_by_user(db, current_user.id)
 
         return CalendarListResponse(
-            connections=[CalendarConnectionPublic.from_orm(conn) for conn in connections]
+            connections=[
+                CalendarConnectionPublic.from_orm(conn) for conn in connections
+            ]
         )
     except Exception as e:
-        logger.error("Failed to get calendar connections", error=str(e), user_id=current_user.id)
+        logger.error(
+            "Failed to get calendar connections", error=str(e), user_id=current_user.id
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve calendar connections",
         )
 
 
-@router.get("/calendar-connections/{connection_id}", response_model=CalendarConnectionPublic)
+@router.get(
+    "/calendar-connections/{connection_id}", response_model=CalendarConnectionPublic
+)
 async def get_calendar_connection(
     connection_id: int,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Get a specific calendar connection"""
-    connection = await calendar_connection_crud.get_by_user_and_id(db, current_user.id, connection_id)
+    connection = await calendar_connection_crud.get_by_user_and_id(
+        db, current_user.id, connection_id
+    )
 
     if not connection:
         raise HTTPException(
@@ -60,7 +68,9 @@ async def get_calendar_connection(
     return CalendarConnectionPublic.from_orm(connection)
 
 
-@router.put("/calendar-connections/{connection_id}", response_model=CalendarConnectionResponse)
+@router.put(
+    "/calendar-connections/{connection_id}", response_model=CalendarConnectionResponse
+)
 async def update_calendar_connection(
     connection_id: int,
     connection_update: CalendarConnectionUpdate,
@@ -69,7 +79,9 @@ async def update_calendar_connection(
 ):
     """Update calendar connection settings"""
     try:
-        connection = await calendar_connection_crud.get_by_user_and_id(db, current_user.id, connection_id)
+        connection = await calendar_connection_crud.get_by_user_and_id(
+            db, current_user.id, connection_id
+        )
 
         if not connection:
             raise HTTPException(
@@ -77,16 +89,27 @@ async def update_calendar_connection(
                 detail="Calendar connection not found",
             )
 
-        connection = await calendar_connection_crud.update(db, db_obj=connection, obj_in=connection_update)
+        connection = await calendar_connection_crud.update(
+            db, db_obj=connection, obj_in=connection_update
+        )
 
-        logger.info("Calendar connection updated", connection_id=connection_id, user_id=current_user.id)
+        logger.info(
+            "Calendar connection updated",
+            connection_id=connection_id,
+            user_id=current_user.id,
+        )
 
         return CalendarConnectionResponse(
             message="Calendar connection updated successfully",
-            connection=CalendarConnectionPublic.from_orm(connection)
+            connection=CalendarConnectionPublic.from_orm(connection),
         )
     except Exception as e:
-        logger.error("Failed to update calendar connection", error=str(e), connection_id=connection_id, user_id=current_user.id)
+        logger.error(
+            "Failed to update calendar connection",
+            error=str(e),
+            connection_id=connection_id,
+            user_id=current_user.id,
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update calendar connection",
@@ -101,7 +124,9 @@ async def delete_calendar_connection(
 ):
     """Delete a calendar connection"""
     try:
-        connection = await calendar_connection_crud.get_by_user_and_id(db, current_user.id, connection_id)
+        connection = await calendar_connection_crud.get_by_user_and_id(
+            db, current_user.id, connection_id
+        )
 
         if not connection:
             raise HTTPException(
@@ -113,15 +138,28 @@ async def delete_calendar_connection(
         try:
             await calendar_service.revoke_tokens(connection)
         except Exception as e:
-            logger.warning("Failed to revoke tokens during deletion", error=str(e), connection_id=connection_id)
+            logger.warning(
+                "Failed to revoke tokens during deletion",
+                error=str(e),
+                connection_id=connection_id,
+            )
 
         await calendar_connection_crud.remove(db, id=connection_id)
 
-        logger.info("Calendar connection deleted", connection_id=connection_id, user_id=current_user.id)
+        logger.info(
+            "Calendar connection deleted",
+            connection_id=connection_id,
+            user_id=current_user.id,
+        )
 
         return {"message": "Calendar connection deleted successfully"}
     except Exception as e:
-        logger.error("Failed to delete calendar connection", error=str(e), connection_id=connection_id, user_id=current_user.id)
+        logger.error(
+            "Failed to delete calendar connection",
+            error=str(e),
+            connection_id=connection_id,
+            user_id=current_user.id,
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete calendar connection",
@@ -137,14 +175,19 @@ async def get_google_auth_url(
         auth_url = await calendar_service.get_google_auth_url(current_user.id)
         return {"auth_url": auth_url}
     except Exception as e:
-        logger.error("Failed to generate Google auth URL", error=str(e), user_id=current_user.id)
+        logger.error(
+            "Failed to generate Google auth URL", error=str(e), user_id=current_user.id
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to generate authorization URL",
         )
 
 
-@router.post("/calendar-connections/auth/google/callback", response_model=CalendarConnectionResponse)
+@router.post(
+    "/calendar-connections/auth/google/callback",
+    response_model=CalendarConnectionResponse,
+)
 async def google_auth_callback(
     auth_data: GoogleCalendarAuth,
     current_user: User = Depends(get_current_user),
@@ -156,14 +199,22 @@ async def google_auth_callback(
             auth_data.code, current_user.id, db
         )
 
-        logger.info("Google calendar connection created", connection_id=connection.id, user_id=current_user.id)
+        logger.info(
+            "Google calendar connection created",
+            connection_id=connection.id,
+            user_id=current_user.id,
+        )
 
         return CalendarConnectionResponse(
             message="Google Calendar connected successfully",
-            connection=CalendarConnectionPublic.from_orm(connection)
+            connection=CalendarConnectionPublic.from_orm(connection),
         )
     except Exception as e:
-        logger.error("Failed to create Google calendar connection", error=str(e), user_id=current_user.id)
+        logger.error(
+            "Failed to create Google calendar connection",
+            error=str(e),
+            user_id=current_user.id,
+        )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Failed to connect Google Calendar",
@@ -179,14 +230,19 @@ async def get_outlook_auth_url(
         auth_url = await calendar_service.get_outlook_auth_url(current_user.id)
         return {"auth_url": auth_url}
     except Exception as e:
-        logger.error("Failed to generate Outlook auth URL", error=str(e), user_id=current_user.id)
+        logger.error(
+            "Failed to generate Outlook auth URL", error=str(e), user_id=current_user.id
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to generate authorization URL",
         )
 
 
-@router.post("/calendar-connections/auth/outlook/callback", response_model=CalendarConnectionResponse)
+@router.post(
+    "/calendar-connections/auth/outlook/callback",
+    response_model=CalendarConnectionResponse,
+)
 async def outlook_auth_callback(
     auth_data: OutlookCalendarAuth,
     current_user: User = Depends(get_current_user),
@@ -198,14 +254,22 @@ async def outlook_auth_callback(
             auth_data.code, current_user.id, db
         )
 
-        logger.info("Outlook calendar connection created", connection_id=connection.id, user_id=current_user.id)
+        logger.info(
+            "Outlook calendar connection created",
+            connection_id=connection.id,
+            user_id=current_user.id,
+        )
 
         return CalendarConnectionResponse(
             message="Outlook Calendar connected successfully",
-            connection=CalendarConnectionPublic.from_orm(connection)
+            connection=CalendarConnectionPublic.from_orm(connection),
         )
     except Exception as e:
-        logger.error("Failed to create Outlook calendar connection", error=str(e), user_id=current_user.id)
+        logger.error(
+            "Failed to create Outlook calendar connection",
+            error=str(e),
+            user_id=current_user.id,
+        )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Failed to connect Outlook Calendar",
@@ -220,7 +284,9 @@ async def sync_calendar_connection(
 ):
     """Manually trigger calendar sync"""
     try:
-        connection = await calendar_connection_crud.get_by_user_and_id(db, current_user.id, connection_id)
+        connection = await calendar_connection_crud.get_by_user_and_id(
+            db, current_user.id, connection_id
+        )
 
         if not connection:
             raise HTTPException(
@@ -237,11 +303,20 @@ async def sync_calendar_connection(
         # Trigger sync
         sync_result = await calendar_service.sync_calendar(connection, db)
 
-        logger.info("Calendar sync triggered", connection_id=connection_id, user_id=current_user.id)
+        logger.info(
+            "Calendar sync triggered",
+            connection_id=connection_id,
+            user_id=current_user.id,
+        )
 
         return {"message": "Calendar sync initiated", "result": sync_result}
     except Exception as e:
-        logger.error("Failed to sync calendar", error=str(e), connection_id=connection_id, user_id=current_user.id)
+        logger.error(
+            "Failed to sync calendar",
+            error=str(e),
+            connection_id=connection_id,
+            user_id=current_user.id,
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to sync calendar",

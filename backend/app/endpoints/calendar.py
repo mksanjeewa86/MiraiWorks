@@ -39,8 +39,7 @@ async def start_google_oauth(
         return {"auth_url": auth_url}
     except ValueError as e:
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=str(e)
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(e)
         )
 
 
@@ -379,7 +378,9 @@ async def get_events(
     # db: AsyncSession = Depends(get_db),
 ):
     """Get calendar events."""
-    logger.info(f"GET /api/calendar/events - startDate: {startDate}, endDate: {endDate}")
+    logger.info(
+        f"GET /api/calendar/events - startDate: {startDate}, endDate: {endDate}"
+    )
 
     # Return stored events from memory
     # In a real implementation, this would fetch from database with date filtering
@@ -561,6 +562,7 @@ async def microsoft_calendar_webhook(
 # In-memory storage for testing
 events_storage = []
 
+
 # Basic Calendar Event CRUD Endpoints
 @router.post("/events", response_model=EventInfo, status_code=201)
 async def create_event(
@@ -611,10 +613,7 @@ async def get_event(
     """Get a specific calendar event."""
     # For now, return a mock event
     # In a real implementation, this would fetch from database
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail="Event not found"
-    )
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
 
 
 @router.put("/events/{event_id}", response_model=EventInfo)
@@ -634,15 +633,27 @@ async def update_event(
             updated_event = EventInfo(
                 id=event_id,
                 title=event_data.title if event_data.title is not None else event.title,
-                description=event_data.description if event_data.description is not None else event.description,
-                location=event_data.location if event_data.location is not None else event.location,
-                start_datetime=event_data.start_datetime if event_data.start_datetime is not None else event.start_datetime,
-                end_datetime=event_data.end_datetime if event_data.end_datetime is not None else event.end_datetime,
-                timezone=event_data.timezone if event_data.timezone is not None else event.timezone,
+                description=event_data.description
+                if event_data.description is not None
+                else event.description,
+                location=event_data.location
+                if event_data.location is not None
+                else event.location,
+                start_datetime=event_data.start_datetime
+                if event_data.start_datetime is not None
+                else event.start_datetime,
+                end_datetime=event_data.end_datetime
+                if event_data.end_datetime is not None
+                else event.end_datetime,
+                timezone=event_data.timezone
+                if event_data.timezone is not None
+                else event.timezone,
                 is_all_day=event.is_all_day,
                 is_recurring=event.is_recurring,
                 organizer_email=event.organizer_email,
-                attendees=event_data.attendees if event_data.attendees is not None else event.attendees,
+                attendees=event_data.attendees
+                if event_data.attendees is not None
+                else event.attendees,
                 status=event.status,
                 created_at=event.created_at,
                 updated_at=dt.utcnow(),
@@ -652,10 +663,7 @@ async def update_event(
             return updated_event
 
     # If not found, raise 404
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail="Event not found"
-    )
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
 
 
 @router.delete("/events/{event_id}")

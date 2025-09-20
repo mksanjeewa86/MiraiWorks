@@ -90,7 +90,7 @@ class JobBase(BaseModel):
     @classmethod
     def normalize_job_type(cls, value):
         if isinstance(value, str):
-            normalized = value.replace('-', '_').lower()
+            normalized = value.replace("-", "_").lower()
             try:
                 return JobType(normalized)
             except ValueError:
@@ -101,7 +101,7 @@ class JobBase(BaseModel):
     @classmethod
     def normalize_experience_level(cls, value):
         if isinstance(value, str):
-            normalized = value.replace('-', '_').lower()
+            normalized = value.replace("-", "_").lower()
             try:
                 return ExperienceLevel(normalized)
             except ValueError:
@@ -112,12 +112,13 @@ class JobBase(BaseModel):
     @classmethod
     def normalize_remote_type(cls, value):
         if isinstance(value, str):
-            normalized = value.replace('-', '_').lower()
+            normalized = value.replace("-", "_").lower()
             try:
                 return RemoteType(normalized)
             except ValueError:
                 return value
         return value
+
 
 class JobSalaryInfo(BaseModel):
     salary_min: Optional[int] = Field(None, gt=0)  # In cents
@@ -126,11 +127,11 @@ class JobSalaryInfo(BaseModel):
     salary_currency: str = Field("USD", max_length=3)
     show_salary: bool = False
 
-    @field_validator('salary_max')
+    @field_validator("salary_max")
     @classmethod
     def salary_max_greater_than_min(cls, v, info):
-        if info.data.get('salary_min') and v and v <= info.data['salary_min']:
-            raise ValueError('salary_max must be greater than salary_min')
+        if info.data.get("salary_min") and v and v <= info.data["salary_min"]:
+            raise ValueError("salary_max must be greater than salary_min")
         return v
 
 
@@ -171,11 +172,12 @@ class JobUpdate(BaseModel):
     seo_title: Optional[str] = Field(None, max_length=255)
     seo_description: Optional[str] = Field(None, max_length=500)
     social_image_url: Optional[str] = Field(None, max_length=1000)
+
     @field_validator("job_type", mode="before")
     @classmethod
     def normalize_job_type_update(cls, value):
         if isinstance(value, str):
-            normalized = value.replace('-', '_').lower()
+            normalized = value.replace("-", "_").lower()
             try:
                 return JobType(normalized)
             except ValueError:
@@ -186,7 +188,7 @@ class JobUpdate(BaseModel):
     @classmethod
     def normalize_experience_level_update(cls, value):
         if isinstance(value, str):
-            normalized = value.replace('-', '_').lower()
+            normalized = value.replace("-", "_").lower()
             try:
                 return ExperienceLevel(normalized)
             except ValueError:
@@ -197,13 +199,12 @@ class JobUpdate(BaseModel):
     @classmethod
     def normalize_remote_type_update(cls, value):
         if isinstance(value, str):
-            normalized = value.replace('-', '_').lower()
+            normalized = value.replace("-", "_").lower()
             try:
                 return RemoteType(normalized)
             except ValueError:
                 return value
         return value
-
 
 
 class JobInfo(JobBase, JobSalaryInfo):
@@ -226,7 +227,14 @@ class JobInfo(JobBase, JobSalaryInfo):
     def _default_title(cls, value):
         return value or ""
 
-    @field_validator("job_type", "experience_level", "remote_type", "salary_type", "status", mode="before")
+    @field_validator(
+        "job_type",
+        "experience_level",
+        "remote_type",
+        "salary_type",
+        "status",
+        mode="before",
+    )
     @classmethod
     def _default_enum_fields(cls, value, info):
         if value is None:
@@ -265,7 +273,6 @@ class JobInfo(JobBase, JobSalaryInfo):
     company_logo_url: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
-
 
 
 # Job Application Schemas
@@ -340,7 +347,9 @@ class CompanyProfileBase(BaseModel):
     is_public: bool = True
     seo_title: Optional[str] = Field(None, max_length=255)
     seo_description: Optional[str] = Field(None, max_length=500)
-    custom_slug: Optional[str] = Field(None, max_length=100, pattern=r'^[a-zA-Z0-9-_]+$')
+    custom_slug: Optional[str] = Field(
+        None, max_length=100, pattern=r"^[a-zA-Z0-9-_]+$"
+    )
 
 
 class CompanyProfileCreate(CompanyProfileBase):
@@ -380,8 +389,11 @@ class JobListParams(BaseModel):
     is_featured: Optional[bool] = None
     salary_min: Optional[int] = None
     salary_max: Optional[int] = None
-    sort_by: Optional[str] = Field("published_at", pattern=r'^(published_at|created_at|title|salary_min|view_count)$')
-    sort_order: Optional[str] = Field("desc", pattern=r'^(asc|desc)$')
+    sort_by: Optional[str] = Field(
+        "published_at",
+        pattern=r"^(published_at|created_at|title|salary_min|view_count)$",
+    )
+    sort_order: Optional[str] = Field("desc", pattern=r"^(asc|desc)$")
     limit: int = Field(50, ge=1, le=100)
     offset: int = Field(0, ge=0)
 
@@ -394,7 +406,6 @@ class JobListResponse(BaseModel):
     has_more: bool = False
 
     model_config = ConfigDict(from_attributes=True)
-
 
 
 class JobStatusUpdateRequest(BaseModel):
@@ -412,8 +423,10 @@ class JobApplicationListParams(BaseModel):
     status: Optional[ApplicationStatus] = None
     applied_after: Optional[datetime] = None
     applied_before: Optional[datetime] = None
-    sort_by: Optional[str] = Field("applied_at", pattern=r'^(applied_at|status_updated_at)$')
-    sort_order: Optional[str] = Field("desc", pattern=r'^(asc|desc)$')
+    sort_by: Optional[str] = Field(
+        "applied_at", pattern=r"^(applied_at|status_updated_at)$"
+    )
+    sort_order: Optional[str] = Field("desc", pattern=r"^(asc|desc)$")
     limit: int = Field(50, ge=1, le=100)
     offset: int = Field(0, ge=0)
 
@@ -443,5 +456,3 @@ class JobSearchResponse(BaseModel):
     search_query: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
-
-

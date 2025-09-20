@@ -7,11 +7,13 @@ Specifically for the raw HTML display issue
 import asyncio
 import sys
 import os
-sys.path.insert(0, os.path.abspath('.'))
+
+sys.path.insert(0, os.path.abspath("."))
 
 from app.services.email_service import email_service
 from app.services.email_preview_service import email_preview_service
 from app.config import settings
+
 
 async def main():
     """Run final diagnosis for HTML email rendering issue."""
@@ -28,19 +30,19 @@ async def main():
         print("\n" + "-" * 30)
         print("HTML CONTENT (what should render as formatted):")
         print("-" * 30)
-        print(preview['html_body'])
+        print(preview["html_body"])
 
         print("\n" + "-" * 30)
         print("TEXT CONTENT (fallback):")
         print("-" * 30)
-        print(preview['text_body'])
+        print(preview["text_body"])
 
         # Save for manual inspection
         with open("actual_email_html.html", "w", encoding="utf-8") as f:
-            f.write(preview['html_body'])
+            f.write(preview["html_body"])
 
         with open("actual_email_text.txt", "w", encoding="utf-8") as f:
-            f.write(preview['text_body'])
+            f.write(preview["text_body"])
 
         print("\nFiles saved:")
         print("- actual_email_html.html (open this in browser)")
@@ -49,7 +51,8 @@ async def main():
         print("\n" + "=" * 50)
         print("DIAGNOSIS SUMMARY")
         print("=" * 50)
-        print("""
+        print(
+            """
 ISSUE: You're seeing raw HTML like this in your email:
 <h2>Your Verification Code</h2>
 <p>Hi Company Administrator,</p>
@@ -88,12 +91,15 @@ SOLUTIONS:
 The backend is generating the emails correctly. The issue is that
 your email client is choosing to display the HTML source code
 instead of rendering it as formatted content.
-""")
+"""
+        )
 
     except Exception as e:
         print(f"ERROR in template generation: {e}")
         import traceback
+
         traceback.print_exc()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

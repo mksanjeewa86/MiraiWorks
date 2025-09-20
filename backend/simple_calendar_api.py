@@ -11,6 +11,7 @@ from typing import Optional, List
 import uuid
 import uvicorn
 
+
 # Simple schemas
 class EventCreate(BaseModel):
     title: str
@@ -29,6 +30,7 @@ class EventCreate(BaseModel):
 
     class Config:
         populate_by_name = True
+
 
 class EventInfo(BaseModel):
     id: str
@@ -49,9 +51,11 @@ class EventInfo(BaseModel):
     class Config:
         populate_by_name = True
 
+
 class EventsListResponse(BaseModel):
     events: List[EventInfo]
     has_more: bool = False
+
 
 # Create FastAPI app
 app = FastAPI(title="Simple Calendar API")
@@ -68,14 +72,17 @@ app.add_middleware(
 # In-memory storage for events
 events_storage = []
 
+
 @app.get("/")
 async def root():
     return {"message": "Simple Calendar API Server"}
+
 
 @app.get("/api/calendar/events", response_model=EventsListResponse)
 async def get_events(startDate: Optional[str] = None, endDate: Optional[str] = None):
     """Get calendar events."""
     return EventsListResponse(events=events_storage, has_more=False)
+
 
 @app.post("/api/calendar/events", response_model=EventInfo)
 async def create_event(event_data: EventCreate):
@@ -109,6 +116,7 @@ async def create_event(event_data: EventCreate):
     print(f"Created event: {event_info}")
     return event_info
 
+
 @app.put("/api/calendar/events/{event_id}", response_model=EventInfo)
 async def update_event(event_id: str, event_data: EventCreate):
     """Update a calendar event."""
@@ -138,12 +146,14 @@ async def update_event(event_id: str, event_data: EventCreate):
     # If not found, create new
     return await create_event(event_data)
 
+
 @app.delete("/api/calendar/events/{event_id}")
 async def delete_event(event_id: str):
     """Delete a calendar event."""
     global events_storage
     events_storage = [event for event in events_storage if event.id != event_id]
     return {"message": "Event deleted successfully"}
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

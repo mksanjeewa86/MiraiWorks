@@ -34,7 +34,12 @@ logger = logging.getLogger(__name__)
 
 
 @router.post("", response_model=InterviewInfo, status_code=status.HTTP_201_CREATED)
-@router.post("/", response_model=InterviewInfo, status_code=status.HTTP_201_CREATED, include_in_schema=False)
+@router.post(
+    "/",
+    response_model=InterviewInfo,
+    status_code=status.HTTP_201_CREATED,
+    include_in_schema=False,
+)
 @requires_permission("interviews.create")
 async def create_interview(
     interview_data: InterviewCreate,
@@ -50,9 +55,7 @@ async def create_interview(
         )
 
     recruiter_id = (
-        interview_data.recruiter_id
-        or interview_data.interviewer_id
-        or current_user.id
+        interview_data.recruiter_id or interview_data.interviewer_id or current_user.id
     )
 
     interview = await interview_service.create_interview(
@@ -74,7 +77,9 @@ async def create_interview(
         notes=interview_data.notes,
     )
 
-    interview_with_relationships = await interview_crud.get_with_relationships(db, interview.id)
+    interview_with_relationships = await interview_crud.get_with_relationships(
+        db, interview.id
+    )
 
     return await _format_interview_response(db, interview_with_relationships)
 

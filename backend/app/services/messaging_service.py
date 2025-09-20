@@ -58,7 +58,10 @@ class MessagingRulesService:
             return False, "One or both users are inactive"
 
         # Super admin can communicate with anyone
-        if UserRole.SUPER_ADMIN.value in user1_roles or UserRole.SUPER_ADMIN.value in user2_roles:
+        if (
+            UserRole.SUPER_ADMIN.value in user1_roles
+            or UserRole.SUPER_ADMIN.value in user2_roles
+        ):
             return True, "Super admin access - can communicate with anyone"
 
         # Company admins cannot communicate with each other - only with super admin
@@ -361,8 +364,7 @@ class MessagingService:
             # Insert into association table directly to avoid lazy loading
             await db.execute(
                 conversation_participants.insert().values(
-                    conversation_id=conversation.id,
-                    user_id=participant_id
+                    conversation_id=conversation.id, user_id=participant_id
                 )
             )
 

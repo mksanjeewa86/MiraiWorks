@@ -9,7 +9,7 @@ import EventModal from '@/components/calendar/EventModal';
 import { Grid, List, Clock, Menu, Plus } from 'lucide-react';
 import { calendarApi } from '@/api/calendar';
 import { interviewsApi } from '@/api/interviews';
-import type { CalendarEvent } from '@/types/interview';
+import type { CalendarEvent, Interview } from '@/types/interview';
 
 function CalendarPageContent() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -62,7 +62,7 @@ function CalendarPageContent() {
             allEvents = [...calendarResponse.data];
           } else if (calendarResponse.data && typeof calendarResponse.data === 'object') {
             // Handle object response with nested data
-            const dataObj = calendarResponse.data as any;
+            const dataObj = calendarResponse.data as unknown as Record<string, unknown>;
             if (Array.isArray(dataObj.items)) {
               allEvents = [...dataObj.items];
             } else if (Array.isArray(dataObj.events)) {
@@ -97,7 +97,7 @@ function CalendarPageContent() {
             interviews = interviewResponse.data;
           } else if (interviewResponse.data && typeof interviewResponse.data === 'object') {
             // Handle object response with nested data
-            const dataObj = interviewResponse.data as any;
+            const dataObj = interviewResponse.data as unknown as Record<string, unknown>;
             if (Array.isArray(dataObj.items)) {
               interviews = dataObj.items;
             } else if (Array.isArray(dataObj.interviews)) {
@@ -126,8 +126,8 @@ function CalendarPageContent() {
               title: `Interview: ${interview.position_title || interview.title || 'Untitled Interview'}`,
               description: interview.description || '',
               location: interview.location || interview.meeting_url || '',
-              startDatetime: interview.scheduled_start,
-              endDatetime: interview.scheduled_end || new Date(new Date(interview.scheduled_start).getTime() + (interview.duration_minutes || 60) * 60000).toISOString(),
+              startDatetime: interview.scheduled_start!,
+              endDatetime: interview.scheduled_end || new Date(new Date(interview.scheduled_start!).getTime() + (interview.duration_minutes || 60) * 60000).toISOString(),
               timezone: interview.timezone || 'UTC',
               isAllDay: false,
               isRecurring: false,

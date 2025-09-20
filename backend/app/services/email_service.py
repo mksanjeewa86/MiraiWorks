@@ -106,7 +106,7 @@ class EmailService:
                 [email],
                 subject,
                 f"<p>Hi {user_name}, your 2FA code is: <strong>{code}</strong></p>",
-                f"Hi {user_name}, your 2FA code is: {code}"
+                f"Hi {user_name}, your 2FA code is: {code}",
             )
 
     async def send_password_reset(
@@ -172,7 +172,7 @@ class EmailService:
                 [email],
                 subject,
                 f"<p>Hi, your {company_name} admin account is ready. Please activate at: {activation_url}</p>",
-                f"Hi, your {company_name} admin account is ready. Please activate at: {activation_url}"
+                f"Hi, your {company_name} admin account is ready. Please activate at: {activation_url}",
             )
 
     async def send_activation_email(
@@ -212,7 +212,7 @@ class EmailService:
                 [email],
                 subject,
                 f"<p>Hi {first_name}, please activate your account at: {activation_url}</p>",
-                f"Hi {first_name}, please activate your account at: {activation_url}"
+                f"Hi {first_name}, please activate your account at: {activation_url}",
             )
 
     async def send_message_notification(
@@ -245,7 +245,9 @@ class EmailService:
             html_body, text_body = email_template_service.render_email_template(
                 "notifications/message_notification", context, subject, "New Message"
             )
-            return await self.send_email([recipient_email], subject, html_body, text_body)
+            return await self.send_email(
+                [recipient_email], subject, html_body, text_body
+            )
         except Exception as e:
             logger.error(f"Failed to render message notification email template: {e}")
             # Fallback to a simple message if template fails
@@ -253,7 +255,7 @@ class EmailService:
                 [recipient_email],
                 subject,
                 f"<p>Hi {recipient_name}, you have a new message from {sender_name}: {display_content}</p>",
-                f"Hi {recipient_name}, you have a new message from {sender_name}: {display_content}"
+                f"Hi {recipient_name}, you have a new message from {sender_name}: {display_content}",
             )
 
 

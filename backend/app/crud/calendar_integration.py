@@ -13,11 +13,7 @@ class CRUDCalendarIntegration(CRUDBase[ExternalCalendarAccount, dict, dict]):
     """Calendar integration CRUD operations."""
 
     async def get_by_user_and_provider_account(
-        self,
-        db: AsyncSession,
-        user_id: int,
-        provider: str,
-        provider_account_id: str
+        self, db: AsyncSession, user_id: int, provider: str, provider_account_id: str
     ) -> Optional[ExternalCalendarAccount]:
         """Get calendar account by user, provider and provider account ID."""
         result = await db.execute(
@@ -33,9 +29,7 @@ class CRUDCalendarIntegration(CRUDBase[ExternalCalendarAccount, dict, dict]):
 
     async def get_user_by_email(self, db: AsyncSession, email: str) -> Optional[User]:
         """Get user by email."""
-        result = await db.execute(
-            select(User).where(User.email == email)
-        )
+        result = await db.execute(select(User).where(User.email == email))
         return result.scalar_one_or_none()
 
     async def get_active_accounts_by_user(

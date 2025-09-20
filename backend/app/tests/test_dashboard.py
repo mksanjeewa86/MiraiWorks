@@ -22,7 +22,7 @@ class TestDashboard:
         auth_headers: dict,
         db_session: AsyncSession,
         test_company: Company,
-        test_user: User
+        test_user: User,
     ):
         """Test successful retrieval of dashboard statistics."""
         # Create test data for stats
@@ -34,7 +34,7 @@ class TestDashboard:
             last_name="Two",
             company_id=test_company.id,
             hashed_password="hashedpass",
-            is_active=True
+            is_active=True,
         )
         db_session.add(user2)
 
@@ -45,7 +45,7 @@ class TestDashboard:
             email="company2@test.com",
             phone="+0987654321",
             description="Test company 2",
-            is_active="1"
+            is_active="1",
         )
         db_session.add(company2)
 
@@ -61,7 +61,7 @@ class TestDashboard:
             title="Test Interview 1",
             scheduled_start=datetime.utcnow() + timedelta(days=1),
             status=InterviewStatus.SCHEDULED.value,
-            meeting_url="https://test.com/meeting1"
+            meeting_url="https://test.com/meeting1",
         )
         interview2 = Interview(
             candidate_id=user2.id,
@@ -71,7 +71,7 @@ class TestDashboard:
             title="Test Interview 2",
             scheduled_start=datetime.utcnow() + timedelta(days=2),
             status=InterviewStatus.COMPLETED.value,
-            meeting_url="https://test.com/meeting2"
+            meeting_url="https://test.com/meeting2",
         )
         db_session.add(interview1)
         db_session.add(interview2)
@@ -80,12 +80,12 @@ class TestDashboard:
         resume1 = Resume(
             user_id=test_user.id,
             title="Software Engineer Resume",
-            pdf_file_path="resumes/resume1.pdf"
+            pdf_file_path="resumes/resume1.pdf",
         )
         resume2 = Resume(
             user_id=user2.id,
             title="Frontend Developer Resume",
-            pdf_file_path="resumes/resume2.pdf"
+            pdf_file_path="resumes/resume2.pdf",
         )
         db_session.add(resume1)
         db_session.add(resume2)
@@ -95,23 +95,20 @@ class TestDashboard:
             title="Test Conversation 1",
             type="direct",
             created_by=test_user.id,
-            updated_at=datetime.utcnow() - timedelta(days=5)
+            updated_at=datetime.utcnow() - timedelta(days=5),
         )
         conversation2 = Conversation(
             title="Test Conversation 2",
             type="direct",
             created_by=test_user.id,
-            updated_at=datetime.utcnow() - timedelta(days=10)
+            updated_at=datetime.utcnow() - timedelta(days=10),
         )
         db_session.add(conversation1)
         db_session.add(conversation2)
 
         await db_session.commit()
 
-        response = await client.get(
-            "/api/dashboard/stats",
-            headers=auth_headers
-        )
+        response = await client.get("/api/dashboard/stats", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -151,7 +148,7 @@ class TestDashboard:
         client: AsyncClient,
         auth_headers: dict,
         db_session: AsyncSession,
-        test_company: Company
+        test_company: Company,
     ):
         """Test that dashboard stats only count active users and companies."""
         # Create inactive user
@@ -161,7 +158,7 @@ class TestDashboard:
             last_name="User",
             company_id=test_company.id,
             hashed_password="hashedpass",
-            is_active=False
+            is_active=False,
         )
         db_session.add(inactive_user)
 
@@ -172,16 +169,13 @@ class TestDashboard:
             email="inactive@company.com",
             phone="+1234567890",
             description="Inactive company",
-            is_active="0"
+            is_active="0",
         )
         db_session.add(inactive_company)
 
         await db_session.commit()
 
-        response = await client.get(
-            "/api/dashboard/stats",
-            headers=auth_headers
-        )
+        response = await client.get("/api/dashboard/stats", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -198,7 +192,7 @@ class TestDashboard:
         client: AsyncClient,
         auth_headers: dict,
         db_session: AsyncSession,
-        test_user: User
+        test_user: User,
     ):
         """Test that only recent conversations (last 30 days) are counted as active."""
         # Create old conversation (more than 30 days ago)
@@ -206,7 +200,7 @@ class TestDashboard:
             title="Old Conversation",
             type="direct",
             created_by=test_user.id,
-            updated_at=datetime.utcnow() - timedelta(days=35)
+            updated_at=datetime.utcnow() - timedelta(days=35),
         )
         db_session.add(old_conversation)
 
@@ -215,16 +209,13 @@ class TestDashboard:
             title="Recent Conversation",
             type="direct",
             created_by=test_user.id,
-            updated_at=datetime.utcnow() - timedelta(days=5)
+            updated_at=datetime.utcnow() - timedelta(days=5),
         )
         db_session.add(recent_conversation)
 
         await db_session.commit()
 
-        response = await client.get(
-            "/api/dashboard/stats",
-            headers=auth_headers
-        )
+        response = await client.get("/api/dashboard/stats", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -239,7 +230,7 @@ class TestDashboard:
         auth_headers: dict,
         db_session: AsyncSession,
         test_company: Company,
-        test_user: User
+        test_user: User,
     ):
         """Test successful retrieval of recent activity."""
         # Create recent users (within last 7 days)
@@ -250,7 +241,7 @@ class TestDashboard:
             company_id=test_company.id,
             hashed_password="hashedpass",
             is_active=True,
-            created_at=datetime.utcnow() - timedelta(days=3)
+            created_at=datetime.utcnow() - timedelta(days=3),
         )
         db_session.add(recent_user)
 
@@ -267,7 +258,7 @@ class TestDashboard:
             scheduled_start=datetime.utcnow() + timedelta(days=1),
             status=InterviewStatus.SCHEDULED.value,
             meeting_url="https://test.com/meeting",
-            created_at=datetime.utcnow() - timedelta(days=2)
+            created_at=datetime.utcnow() - timedelta(days=2),
         )
         db_session.add(recent_interview)
 
@@ -275,10 +266,7 @@ class TestDashboard:
         await db_session.refresh(recent_user)
         await db_session.refresh(recent_interview)
 
-        response = await client.get(
-            "/api/dashboard/activity",
-            headers=auth_headers
-        )
+        response = await client.get("/api/dashboard/activity", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -302,7 +290,10 @@ class TestDashboard:
 
             # Verify items are sorted by timestamp (descending)
             if len(data) > 1:
-                timestamps = [datetime.fromisoformat(item["timestamp"].replace("Z", "+00:00")) for item in data]
+                timestamps = [
+                    datetime.fromisoformat(item["timestamp"].replace("Z", "+00:00"))
+                    for item in data
+                ]
                 assert timestamps == sorted(timestamps, reverse=True)
 
     @pytest.mark.asyncio
@@ -311,7 +302,7 @@ class TestDashboard:
         client: AsyncClient,
         auth_headers: dict,
         db_session: AsyncSession,
-        test_company: Company
+        test_company: Company,
     ):
         """Test recent activity with custom limit parameter."""
         # Create multiple recent users
@@ -323,7 +314,7 @@ class TestDashboard:
                 company_id=test_company.id,
                 hashed_password="hashedpass",
                 is_active=True,
-                created_at=datetime.utcnow() - timedelta(days=1, hours=i)
+                created_at=datetime.utcnow() - timedelta(days=1, hours=i),
             )
             db_session.add(user)
 
@@ -331,8 +322,7 @@ class TestDashboard:
 
         # Test with limit=5
         response = await client.get(
-            "/api/dashboard/activity?limit=5",
-            headers=auth_headers
+            "/api/dashboard/activity?limit=5", headers=auth_headers
         )
 
         assert response.status_code == 200
@@ -343,15 +333,12 @@ class TestDashboard:
 
     @pytest.mark.asyncio
     async def test_get_recent_activity_limit_validation(
-        self,
-        client: AsyncClient,
-        auth_headers: dict
+        self, client: AsyncClient, auth_headers: dict
     ):
         """Test recent activity with invalid limit parameter."""
         # Test with limit > 100 (should be rejected)
         response = await client.get(
-            "/api/dashboard/activity?limit=150",
-            headers=auth_headers
+            "/api/dashboard/activity?limit=150", headers=auth_headers
         )
 
         # Should return validation error for limit > 100
@@ -359,8 +346,7 @@ class TestDashboard:
 
         # Test with valid limit
         response = await client.get(
-            "/api/dashboard/activity?limit=50",
-            headers=auth_headers
+            "/api/dashboard/activity?limit=50", headers=auth_headers
         )
         assert response.status_code == 200
         data = response.json()
@@ -376,15 +362,10 @@ class TestDashboard:
 
     @pytest.mark.asyncio
     async def test_get_recent_activity_empty_result(
-        self,
-        client: AsyncClient,
-        auth_headers: dict
+        self, client: AsyncClient, auth_headers: dict
     ):
         """Test recent activity when there's no recent activity."""
-        response = await client.get(
-            "/api/dashboard/activity",
-            headers=auth_headers
-        )
+        response = await client.get("/api/dashboard/activity", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -398,7 +379,7 @@ class TestDashboard:
         client: AsyncClient,
         auth_headers: dict,
         db_session: AsyncSession,
-        test_company: Company
+        test_company: Company,
     ):
         """Test that user activity items have correct metadata."""
         # Create recent user
@@ -409,16 +390,13 @@ class TestDashboard:
             company_id=test_company.id,
             hashed_password="hashedpass",
             is_active=True,
-            created_at=datetime.utcnow() - timedelta(days=1)
+            created_at=datetime.utcnow() - timedelta(days=1),
         )
         db_session.add(recent_user)
         await db_session.commit()
         await db_session.refresh(recent_user)
 
-        response = await client.get(
-            "/api/dashboard/activity",
-            headers=auth_headers
-        )
+        response = await client.get("/api/dashboard/activity", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -441,7 +419,7 @@ class TestDashboard:
         client: AsyncClient,
         auth_headers: dict,
         db_session: AsyncSession,
-        test_user: User
+        test_user: User,
     ):
         """Test that interview activity items have correct metadata."""
         # Create recent interview
@@ -454,16 +432,13 @@ class TestDashboard:
             scheduled_start=datetime.utcnow() + timedelta(days=1),
             status=InterviewStatus.SCHEDULED.value,
             meeting_url="https://test.com/meeting",
-            created_at=datetime.utcnow() - timedelta(days=1)
+            created_at=datetime.utcnow() - timedelta(days=1),
         )
         db_session.add(recent_interview)
         await db_session.commit()
         await db_session.refresh(recent_interview)
 
-        response = await client.get(
-            "/api/dashboard/activity",
-            headers=auth_headers
-        )
+        response = await client.get("/api/dashboard/activity", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -483,18 +458,13 @@ class TestDashboard:
 
     @pytest.mark.asyncio
     async def test_dashboard_stats_performance(
-        self,
-        client: AsyncClient,
-        auth_headers: dict
+        self, client: AsyncClient, auth_headers: dict
     ):
         """Test dashboard stats endpoint performance."""
         import time
 
         start_time = time.time()
-        response = await client.get(
-            "/api/dashboard/stats",
-            headers=auth_headers
-        )
+        response = await client.get("/api/dashboard/stats", headers=auth_headers)
         end_time = time.time()
 
         assert response.status_code == 200
@@ -503,18 +473,13 @@ class TestDashboard:
 
     @pytest.mark.asyncio
     async def test_recent_activity_performance(
-        self,
-        client: AsyncClient,
-        auth_headers: dict
+        self, client: AsyncClient, auth_headers: dict
     ):
         """Test recent activity endpoint performance."""
         import time
 
         start_time = time.time()
-        response = await client.get(
-            "/api/dashboard/activity",
-            headers=auth_headers
-        )
+        response = await client.get("/api/dashboard/activity", headers=auth_headers)
         end_time = time.time()
 
         assert response.status_code == 200

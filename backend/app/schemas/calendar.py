@@ -61,7 +61,9 @@ class EventCreate(BaseModel):
     @field_validator("end_datetime")
     @classmethod
     def validate_end_after_start(cls, v, info):
-        start_datetime = info.data.get("start_datetime") or info.data.get("startDatetime")
+        start_datetime = info.data.get("start_datetime") or info.data.get(
+            "startDatetime"
+        )
         if start_datetime and v <= start_datetime:
             raise ValueError("End datetime must be after start datetime")
         return v

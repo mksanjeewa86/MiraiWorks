@@ -212,7 +212,9 @@ async def get_unread_message_count(db: AsyncSession, user_id: int) -> int:
 class CRUDDirectMessage(CRUDBase[DirectMessage, dict, dict]):
     """Direct message CRUD operations."""
 
-    async def get_users_with_roles(self, db: AsyncSession, user_ids: List[int]) -> List[User]:
+    async def get_users_with_roles(
+        self, db: AsyncSession, user_ids: List[int]
+    ) -> List[User]:
         """Get users with their roles by IDs."""
         result = await db.execute(
             select(User)
@@ -223,7 +225,9 @@ class CRUDDirectMessage(CRUDBase[DirectMessage, dict, dict]):
         )
         return result.scalars().all()
 
-    async def get_message_with_relationships(self, db: AsyncSession, message_id: int) -> Optional[DirectMessage]:
+    async def get_message_with_relationships(
+        self, db: AsyncSession, message_id: int
+    ) -> Optional[DirectMessage]:
         """Get message with sender and recipient relationships."""
         result = await db.execute(
             select(DirectMessage)
@@ -273,8 +277,12 @@ class CRUDDirectMessage(CRUDBase[DirectMessage, dict, dict]):
                 User.last_name.ilike(search_term),
                 User.email.ilike(search_term),
             )
-            messages_query = messages_query.join(DirectMessage.sender).where(search_conditions)
-            count_query = count_query.join(DirectMessage.sender).where(search_conditions)
+            messages_query = messages_query.join(DirectMessage.sender).where(
+                search_conditions
+            )
+            count_query = count_query.join(DirectMessage.sender).where(
+                search_conditions
+            )
 
         if search_request.with_user_id:
             user_filter = or_(
@@ -298,7 +306,12 @@ class CRUDDirectMessage(CRUDBase[DirectMessage, dict, dict]):
         return messages_result.scalars().all(), count_result.scalar() or 0
 
     async def get_message_participants(
-        self, db: AsyncSession, current_user_id: int, current_user_roles: List[str], query: Optional[str] = None, limit: int = 50
+        self,
+        db: AsyncSession,
+        current_user_id: int,
+        current_user_roles: List[str],
+        query: Optional[str] = None,
+        limit: int = 50,
     ) -> List[User]:
         """Get list of users current user can send messages to based on role restrictions."""
         # Build base query

@@ -110,7 +110,9 @@ class DirectMessageService:
         result = await db.execute(query)
         messages = result.scalars().all()
 
-        return list(messages)  # Return in ascending order (oldest first, newest at bottom)
+        return list(
+            messages
+        )  # Return in ascending order (oldest first, newest at bottom)
 
     async def get_conversations(
         self, db: AsyncSession, user_id: int, search_query: Optional[str] = None
@@ -123,12 +125,18 @@ class DirectMessageService:
         latest_message_subquery = (
             select(
                 case(
-                    (DirectMessage.sender_id > DirectMessage.recipient_id, DirectMessage.sender_id),
-                    else_=DirectMessage.recipient_id
+                    (
+                        DirectMessage.sender_id > DirectMessage.recipient_id,
+                        DirectMessage.sender_id,
+                    ),
+                    else_=DirectMessage.recipient_id,
                 ).label("user1"),
                 case(
-                    (DirectMessage.sender_id < DirectMessage.recipient_id, DirectMessage.sender_id),
-                    else_=DirectMessage.recipient_id
+                    (
+                        DirectMessage.sender_id < DirectMessage.recipient_id,
+                        DirectMessage.sender_id,
+                    ),
+                    else_=DirectMessage.recipient_id,
                 ).label("user2"),
                 func.max(DirectMessage.created_at).label("last_activity"),
             )

@@ -11,31 +11,33 @@ from typing import Optional, List
 import uuid
 import uvicorn
 
+
 # Schemas that exactly match frontend CalendarEvent interface
 class EventCreate(BaseModel):
     title: str
     description: Optional[str] = None
     location: Optional[str] = None
     startDatetime: str  # Frontend sends as ISO string
-    endDatetime: str    # Frontend sends as ISO string
+    endDatetime: str  # Frontend sends as ISO string
     timezone: Optional[str] = "UTC"
     isAllDay: Optional[bool] = False
     attendees: Optional[List[str]] = []
     status: Optional[str] = None
 
-    @validator('title')
+    @validator("title")
     def title_must_not_be_empty(cls, v):
         if not v or not v.strip():
-            raise ValueError('Title cannot be empty')
+            raise ValueError("Title cannot be empty")
         return v.strip()
 
-    @validator('startDatetime', 'endDatetime')
+    @validator("startDatetime", "endDatetime")
     def datetime_must_be_valid(cls, v):
         try:
-            datetime.fromisoformat(v.replace('Z', '+00:00'))
+            datetime.fromisoformat(v.replace("Z", "+00:00"))
         except ValueError:
-            raise ValueError('Invalid datetime format')
+            raise ValueError("Invalid datetime format")
         return v
+
 
 class EventInfo(BaseModel):
     id: str
@@ -53,9 +55,11 @@ class EventInfo(BaseModel):
     createdAt: str
     updatedAt: str
 
+
 class EventsListResponse(BaseModel):
     events: List[EventInfo]
     has_more: bool = False
+
 
 # Create FastAPI app
 app = FastAPI(title="Simple Calendar API v2")
@@ -63,7 +67,12 @@ app = FastAPI(title="Simple Calendar API v2")
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3001", "http://localhost:3002", "http://localhost:3003", "http://localhost:3004"],
+    allow_origins=[
+        "http://localhost:3001",
+        "http://localhost:3002",
+        "http://localhost:3003",
+        "http://localhost:3004",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -72,15 +81,18 @@ app.add_middleware(
 # In-memory storage for events
 events_storage = []
 
+
 @app.get("/")
 async def root():
     return {"message": "Simple Calendar API v2 Server"}
+
 
 @app.get("/api/calendar/events", response_model=EventsListResponse)
 async def get_events(startDate: Optional[str] = None, endDate: Optional[str] = None):
     """Get calendar events."""
     print(f"GET /api/calendar/events - startDate: {startDate}, endDate: {endDate}")
     return EventsListResponse(events=events_storage, has_more=False)
+
 
 @app.post("/api/calendar/events", response_model=EventInfo, status_code=201)
 async def create_event(event_data: EventCreate):
@@ -114,6 +126,7 @@ async def create_event(event_data: EventCreate):
     print(f"Created event: {event_info}")
     return event_info
 
+
 @app.put("/api/calendar/events/{event_id}", response_model=EventInfo)
 async def update_event(event_id: str, event_data: EventCreate):
     """Update a calendar event."""
@@ -146,6 +159,7 @@ async def update_event(event_id: str, event_data: EventCreate):
     # If not found, create new
     return await create_event(event_data)
 
+
 @app.delete("/api/calendar/events/{event_id}")
 async def delete_event(event_id: str):
     """Delete a calendar event."""
@@ -162,6 +176,7 @@ async def delete_event(event_id: str):
     else:
         print("Event not found")
         return {"message": "Event not found"}
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

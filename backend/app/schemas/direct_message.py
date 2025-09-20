@@ -5,7 +5,9 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class DirectMessageBase(BaseModel):
-    content: str = Field(..., min_length=1, description="Message content cannot be empty")
+    content: str = Field(
+        ..., min_length=1, description="Message content cannot be empty"
+    )
     type: str = "text"
     file_url: Optional[str] = None
     file_name: Optional[str] = None

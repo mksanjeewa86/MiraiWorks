@@ -90,9 +90,7 @@ async def test_profile_update_updates_user_and_settings(
         "bio": "Works on critical systems",
     }
 
-    response = await client.put(
-        "/api/user/profile", json=payload, headers=auth_headers
-    )
+    response = await client.put("/api/user/profile", json=payload, headers=auth_headers)
 
     assert response.status_code == 200
     data = response.json()

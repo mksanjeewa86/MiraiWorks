@@ -114,6 +114,7 @@ class UserRoleInfo(BaseModel):
 
 class CompanyInfo(BaseModel):
     """Simplified company info for user responses."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: int

@@ -20,7 +20,9 @@ from app.utils.constants import UserRole as UserRoleEnum
 
 
 @pytest.mark.asyncio
-async def test_company_admin_user_creation_e2e_flow(client: AsyncClient, db_session: AsyncSession):
+async def test_company_admin_user_creation_e2e_flow(
+    client: AsyncClient, db_session: AsyncSession
+):
     """Test the complete end-to-end user creation flow for a company admin."""
 
     print("\n🧪 Starting End-to-End Company Admin User Creation Test")
@@ -47,7 +49,7 @@ async def test_company_admin_user_creation_e2e_flow(client: AsyncClient, db_sess
         name="E2E Test Company",
         email="e2e@company.com",
         phone="03-1234-5678",
-        type="employer"
+        type="employer",
     )
     db_session.add(test_company)
     await db_session.commit()
@@ -55,11 +57,11 @@ async def test_company_admin_user_creation_e2e_flow(client: AsyncClient, db_sess
 
     # Step 2: Create company admin user
     company_admin = User(
-        email='e2e.admin@test.com',
-        first_name='E2E',
-        last_name='Admin',
+        email="e2e.admin@test.com",
+        first_name="E2E",
+        last_name="Admin",
         company_id=test_company.id,
-        hashed_password=auth_service.get_password_hash('testpass123'),
+        hashed_password=auth_service.get_password_hash("testpass123"),
         is_active=True,
         is_admin=True,
         require_2fa=False,
@@ -85,8 +87,7 @@ async def test_company_admin_user_creation_e2e_flow(client: AsyncClient, db_sess
     # Handle 2FA if required
     if token_data.get("require_2fa"):
         verify_response = await client.post(
-            "/api/auth/2fa/verify",
-            json={"user_id": company_admin.id, "code": "123456"}
+            "/api/auth/2fa/verify", json={"user_id": company_admin.id, "code": "123456"}
         )
         assert verify_response.status_code == 200
         token_data = verify_response.json()
@@ -97,32 +98,33 @@ async def test_company_admin_user_creation_e2e_flow(client: AsyncClient, db_sess
 
     # Simulate what happens when company admin loads the form
     frontend_form_data = {
-        "first_name": "",        # Initially empty
-        "last_name": "",         # Initially empty
-        "email": "",             # Initially empty
-        "company_id": "",        # Will be auto-set
-        "role": ""               # Will be auto-set
+        "first_name": "",  # Initially empty
+        "last_name": "",  # Initially empty
+        "email": "",  # Initially empty
+        "company_id": "",  # Will be auto-set
+        "role": "",  # Will be auto-set
     }
 
     # Simulate auto-setting company and role (from useEffect)
-    if test_company.type == 'employer':
-        auto_role = 'employer'
+    if test_company.type == "employer":
+        auto_role = "employer"
     else:
-        auto_role = 'recruiter'
+        auto_role = "recruiter"
 
     frontend_form_data["company_id"] = str(test_company.id)
     frontend_form_data["role"] = auto_role
 
-
     # Check form validation at this point (should be disabled)
     is_form_valid_empty = (
-        bool(frontend_form_data["first_name"]) and
-        bool(frontend_form_data["last_name"]) and
-        bool(frontend_form_data["email"]) and
-        bool(frontend_form_data["company_id"]) and
-        bool(frontend_form_data["role"])
+        bool(frontend_form_data["first_name"])
+        and bool(frontend_form_data["last_name"])
+        and bool(frontend_form_data["email"])
+        and bool(frontend_form_data["company_id"])
+        and bool(frontend_form_data["role"])
     )
-    assert not is_form_valid_empty, "Form should be invalid when required fields are empty"
+    assert (
+        not is_form_valid_empty
+    ), "Form should be invalid when required fields are empty"
 
     # Simulate user filling in the form
     frontend_form_data["first_name"] = "John"
@@ -131,13 +133,15 @@ async def test_company_admin_user_creation_e2e_flow(client: AsyncClient, db_sess
 
     # Check form validation after filling (should be enabled)
     is_form_valid_filled = (
-        bool(frontend_form_data["first_name"]) and
-        bool(frontend_form_data["last_name"]) and
-        bool(frontend_form_data["email"]) and
-        bool(frontend_form_data["company_id"]) and
-        bool(frontend_form_data["role"])
+        bool(frontend_form_data["first_name"])
+        and bool(frontend_form_data["last_name"])
+        and bool(frontend_form_data["email"])
+        and bool(frontend_form_data["company_id"])
+        and bool(frontend_form_data["role"])
     )
-    assert is_form_valid_filled, "Form should be valid when all required fields are filled"
+    assert (
+        is_form_valid_filled
+    ), "Form should be valid when all required fields are filled"
 
     # Step 6: Test backend API with frontend data
 
@@ -146,13 +150,11 @@ async def test_company_admin_user_creation_e2e_flow(client: AsyncClient, db_sess
         "first_name": frontend_form_data["first_name"],
         "last_name": frontend_form_data["last_name"],
         "company_id": int(frontend_form_data["company_id"]),
-        "roles": [frontend_form_data["role"]]
+        "roles": [frontend_form_data["role"]],
     }
 
     create_response = await client.post(
-        "/api/admin/users",
-        json=backend_user_data,
-        headers=headers
+        "/api/admin/users", json=backend_user_data, headers=headers
     )
 
     assert create_response.status_code == 201
@@ -184,13 +186,11 @@ async def test_company_admin_user_creation_e2e_flow(client: AsyncClient, db_sess
         "first_name": "Invalid",
         "last_name": "User",
         "company_id": test_company.id,
-        "roles": ["super_admin"]
+        "roles": ["super_admin"],
     }
 
     forbidden_response = await client.post(
-        "/api/admin/users",
-        json=invalid_user_data,
-        headers=headers
+        "/api/admin/users", json=invalid_user_data, headers=headers
     )
 
     assert forbidden_response.status_code == 403
@@ -202,7 +202,7 @@ async def test_company_admin_user_creation_e2e_flow(client: AsyncClient, db_sess
         name="Other Company",
         email="other@company.com",
         phone="03-9876-5432",
-        type="recruiter"
+        type="recruiter",
     )
     db_session.add(other_company)
     await db_session.commit()
@@ -213,19 +213,16 @@ async def test_company_admin_user_creation_e2e_flow(client: AsyncClient, db_sess
         "first_name": "Other",
         "last_name": "User",
         "company_id": other_company.id,
-        "roles": ["recruiter"]
+        "roles": ["recruiter"],
     }
 
     other_company_response = await client.post(
-        "/api/admin/users",
-        json=other_company_user_data,
-        headers=headers
+        "/api/admin/users", json=other_company_user_data, headers=headers
     )
 
     assert other_company_response.status_code == 403
     error_detail = other_company_response.json()["detail"]
     assert "other companies" in error_detail.lower()
-
 
 
 if __name__ == "__main__":

@@ -58,9 +58,7 @@ class InterviewService:
         recruiter = recruiter_result.scalar_one()
         recruiter_company_id = recruiter.company_id
 
-        interview_status = (
-            status or InterviewStatus.PENDING_SCHEDULE.value
-        )
+        interview_status = status or InterviewStatus.PENDING_SCHEDULE.value
 
         # Create interview
         interview = Interview(
@@ -401,7 +399,10 @@ class InterviewService:
             )
 
         recruiter_roles = [ur.role.name for ur in recruiter.user_roles]
-        if not (UserRole.RECRUITER.value in recruiter_roles or UserRole.COMPANY_ADMIN.value in recruiter_roles):
+        if not (
+            UserRole.RECRUITER.value in recruiter_roles
+            or UserRole.COMPANY_ADMIN.value in recruiter_roles
+        ):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Specified user is not a recruiter or company admin",

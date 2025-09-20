@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 from datetime import datetime, timedelta
 
 
@@ -66,7 +66,9 @@ async def test_overdue_todos_mark_expired(client, auth_headers):
         "title": "Submit expense report",
         "due_date": (datetime.utcnow() - timedelta(days=1)).isoformat(),
     }
-    create_resp = await client.post("/api/todos", json=past_due_payload, headers=auth_headers)
+    create_resp = await client.post(
+        "/api/todos", json=past_due_payload, headers=auth_headers
+    )
     assert create_resp.status_code == 201
 
     list_resp = await client.get("/api/todos", headers=auth_headers)

@@ -15,25 +15,43 @@ class LocalStorageService:
     def __init__(self, base_path: str = "uploads"):
         self.base_path = Path(base_path)
         self.base_path.mkdir(exist_ok=True)
-        logger.info(f"LocalStorageService initialized with path: {self.base_path.absolute()}")
+        logger.info(
+            f"LocalStorageService initialized with path: {self.base_path.absolute()}"
+        )
 
-    def generate_file_path(self, user_id: int, filename: str, folder: str = "attachments") -> str:
+    def generate_file_path(
+        self, user_id: int, filename: str, folder: str = "attachments"
+    ) -> str:
         """Generate a unique file path for storage."""
         now = datetime.utcnow()
         unique_id = str(uuid.uuid4())
 
         # Sanitize filename
-        safe_filename = "".join(c for c in filename if c.isalnum() or c in ".-_").rstrip()
+        safe_filename = "".join(
+            c for c in filename if c.isalnum() or c in ".-_"
+        ).rstrip()
         if not safe_filename:
             safe_filename = "file"
 
         # Create folder structure: folder/user_id/year/month/uuid_filename
-        file_path = self.base_path / folder / str(user_id) / str(now.year) / f"{now.month:02d}" / f"{unique_id}_{safe_filename}"
+        file_path = (
+            self.base_path
+            / folder
+            / str(user_id)
+            / str(now.year)
+            / f"{now.month:02d}"
+            / f"{unique_id}_{safe_filename}"
+        )
 
         return str(file_path)
 
     async def upload_file_data(
-        self, file_content: bytes, filename: str, content_type: str, user_id: int, folder: str = "attachments"
+        self,
+        file_content: bytes,
+        filename: str,
+        content_type: str,
+        user_id: int,
+        folder: str = "attachments",
     ) -> Tuple[str, str, int]:
         """Upload file data and return (file_path, file_hash, file_size)."""
 
@@ -43,7 +61,7 @@ class LocalStorageService:
         Path(file_path).parent.mkdir(parents=True, exist_ok=True)
 
         # Write file
-        with open(file_path, 'wb') as f:
+        with open(file_path, "wb") as f:
             f.write(file_content)
 
         # Calculate hash
@@ -62,6 +80,7 @@ class LocalStorageService:
             rel_path = Path(file_path).relative_to(self.base_path)
             # URL encode the path
             import urllib.parse
+
             encoded_path = urllib.parse.quote(str(rel_path))
             return f"/api/files/download/{encoded_path}"
         except ValueError:
@@ -76,7 +95,7 @@ class LocalStorageService:
     def get_file_content(self, file_path: str) -> Optional[bytes]:
         """Get file content."""
         try:
-            with open(file_path, 'rb') as f:
+            with open(file_path, "rb") as f:
                 return f.read()
         except Exception as e:
             logger.error(f"Failed to read file {file_path}: {e}")

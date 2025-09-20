@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,8 +13,6 @@ from app.schemas.user_settings import (
 )
 
 router = APIRouter()
-
-
 
 
 @router.get("/settings", response_model=UserSettingsResponse)
@@ -119,7 +116,9 @@ async def get_user_profile(
     current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
 ):
     """Get current user's profile information."""
-    user_settings = await user_settings_crud.get_user_settings_by_user_id(db, current_user.id)
+    user_settings = await user_settings_crud.get_user_settings_by_user_id(
+        db, current_user.id
+    )
 
     return UserProfileResponse(
         id=current_user.id,
@@ -152,15 +151,23 @@ async def update_user_profile(
 
     # Update user fields if any
     if user_data:
-        current_user = await user_settings_crud.update_user_profile(db, current_user, user_data)
+        current_user = await user_settings_crud.update_user_profile(
+            db, current_user, user_data
+        )
 
     # Update settings fields if any
     user_settings = None
     if settings_data:
-        user_settings = await user_settings_crud.get_or_create_user_settings(db, current_user.id)
-        user_settings = await user_settings_crud.update_user_settings(db, user_settings, settings_data)
+        user_settings = await user_settings_crud.get_or_create_user_settings(
+            db, current_user.id
+        )
+        user_settings = await user_settings_crud.update_user_settings(
+            db, user_settings, settings_data
+        )
     else:
-        user_settings = await user_settings_crud.get_user_settings_by_user_id(db, current_user.id)
+        user_settings = await user_settings_crud.get_user_settings_by_user_id(
+            db, current_user.id
+        )
 
     return UserProfileResponse(
         id=current_user.id,

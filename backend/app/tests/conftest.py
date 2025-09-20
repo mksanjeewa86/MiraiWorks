@@ -16,9 +16,12 @@ from sqlalchemy.pool import StaticPool
 # Set environment to test before importing settings
 try:
     import bcrypt
-    if not hasattr(bcrypt, '__about__'):
+
+    if not hasattr(bcrypt, "__about__"):
+
         class _About:
-            __version__ = getattr(bcrypt, '__version__', 'unknown')
+            __version__ = getattr(bcrypt, "__version__", "unknown")
+
         bcrypt.__about__ = _About()
 except ImportError:
     pass
@@ -27,6 +30,7 @@ os.environ["ENVIRONMENT"] = "test"
 
 from app.database import Base, get_db
 from app.main import app
+
 # Import all models to ensure they are registered with SQLAlchemy
 from app.models import *  # Import all models
 from app.services.auth_service import auth_service
@@ -285,7 +289,10 @@ async def candidate_headers(client, test_candidate_only_user):
     """Get authentication headers for candidate user."""
     response = await client.post(
         "/api/auth/login",
-        json={"email": test_candidate_only_user.email, "password": "candidatepassword456"},
+        json={
+            "email": test_candidate_only_user.email,
+            "password": "candidatepassword456",
+        },
     )
     assert response.status_code == 200
     token_data = response.json()
@@ -315,8 +322,8 @@ async def admin_auth_headers(client, test_admin_user):
             "/api/auth/2fa/verify",
             json={
                 "user_id": test_admin_user.id,
-                "code": "123456"  # Mock 2FA code for tests
-            }
+                "code": "123456",  # Mock 2FA code for tests
+            },
         )
         assert verify_response.status_code == 200
         token_data = verify_response.json()
@@ -346,12 +353,14 @@ async def super_admin_auth_headers(client, test_super_admin):
                 "/api/auth/2fa/verify",
                 json={
                     "user_id": test_super_admin.id,
-                    "code": "123456"  # Mock 2FA code for tests
-                }
+                    "code": "123456",  # Mock 2FA code for tests
+                },
             )
 
             if verify_response.status_code != 200:
-                raise Exception(f"2FA verification failed with status {verify_response.status_code}")
+                raise Exception(
+                    f"2FA verification failed with status {verify_response.status_code}"
+                )
 
             token_data = verify_response.json()
 

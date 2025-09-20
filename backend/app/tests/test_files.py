@@ -1,4 +1,4 @@
-﻿import io
+import io
 import pytest
 from unittest.mock import AsyncMock, Mock, patch
 from httpx import AsyncClient
@@ -11,13 +11,13 @@ class TestFiles:
     """Comprehensive tests for file management functionality."""
 
     @pytest.mark.asyncio
-    @patch('app.services.storage_service.get_storage_service')
+    @patch("app.services.storage_service.get_storage_service")
     async def test_upload_file_success(
         self,
         mock_get_storage_service,
         client: AsyncClient,
         auth_headers: dict,
-        test_user: User
+        test_user: User,
     ):
         """Test successful file upload."""
         # Create test file first to get correct size
@@ -27,14 +27,10 @@ class TestFiles:
         # This will test the real upload flow
 
         # Create test file data
-        file_data = {
-            "file": ("test.txt", io.BytesIO(file_content), "text/plain")
-        }
+        file_data = {"file": ("test.txt", io.BytesIO(file_content), "text/plain")}
 
         response = await client.post(
-            "/api/files/upload",
-            files=file_data,
-            headers=auth_headers
+            "/api/files/upload", files=file_data, headers=auth_headers
         )
 
         assert response.status_code == 200
@@ -58,15 +54,16 @@ class TestFiles:
         assert "test.txt" in data["s3_key"]
         # Verify UUID pattern is present (UUID format: 8-4-4-4-12 characters)
         import re
-        uuid_pattern = r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
-        assert re.search(uuid_pattern, data["s3_key"]), f"UUID pattern not found in {data['s3_key']}"
+
+        uuid_pattern = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+        assert re.search(
+            uuid_pattern, data["s3_key"]
+        ), f"UUID pattern not found in {data['s3_key']}"
 
     @pytest.mark.asyncio
     async def test_upload_file_unauthorized(self, client: AsyncClient):
         """Test file upload without authentication fails."""
-        file_data = {
-            "file": ("test.txt", io.BytesIO(b"content"), "text/plain")
-        }
+        file_data = {"file": ("test.txt", io.BytesIO(b"content"), "text/plain")}
 
         response = await client.post("/api/files/upload", files=file_data)
 
@@ -75,19 +72,13 @@ class TestFiles:
 
     @pytest.mark.asyncio
     async def test_upload_file_no_filename(
-        self,
-        client: AsyncClient,
-        auth_headers: dict
+        self, client: AsyncClient, auth_headers: dict
     ):
         """Test file upload without filename fails."""
-        file_data = {
-            "file": ("", io.BytesIO(b"content"), "text/plain")
-        }
+        file_data = {"file": ("", io.BytesIO(b"content"), "text/plain")}
 
         response = await client.post(
-            "/api/files/upload",
-            files=file_data,
-            headers=auth_headers
+            "/api/files/upload", files=file_data, headers=auth_headers
         )
 
         assert response.status_code == 422
@@ -97,19 +88,13 @@ class TestFiles:
 
     @pytest.mark.asyncio
     async def test_upload_file_invalid_extension(
-        self,
-        client: AsyncClient,
-        auth_headers: dict
+        self, client: AsyncClient, auth_headers: dict
     ):
         """Test file upload with invalid extension fails."""
-        file_data = {
-            "file": ("test.exe", io.BytesIO(b"content"), "application/exe")
-        }
+        file_data = {"file": ("test.exe", io.BytesIO(b"content"), "application/exe")}
 
         response = await client.post(
-            "/api/files/upload",
-            files=file_data,
-            headers=auth_headers
+            "/api/files/upload", files=file_data, headers=auth_headers
         )
 
         assert response.status_code == 400
@@ -117,22 +102,14 @@ class TestFiles:
         assert "File type not allowed" in error_detail
 
     @pytest.mark.asyncio
-    async def test_upload_file_too_large(
-        self,
-        client: AsyncClient,
-        auth_headers: dict
-    ):
+    async def test_upload_file_too_large(self, client: AsyncClient, auth_headers: dict):
         """Test file upload with file size exceeding limit fails."""
         # Create a file larger than 10MB (MAX_FILE_SIZE)
         large_content = b"x" * (11 * 1024 * 1024)  # 11MB
-        file_data = {
-            "file": ("large.txt", io.BytesIO(large_content), "text/plain")
-        }
+        file_data = {"file": ("large.txt", io.BytesIO(large_content), "text/plain")}
 
         response = await client.post(
-            "/api/files/upload",
-            files=file_data,
-            headers=auth_headers
+            "/api/files/upload", files=file_data, headers=auth_headers
         )
 
         assert response.status_code == 400
@@ -141,9 +118,7 @@ class TestFiles:
 
     @pytest.mark.asyncio
     async def test_upload_file_valid_extensions(
-        self,
-        client: AsyncClient,
-        auth_headers: dict
+        self, client: AsyncClient, auth_headers: dict
     ):
         """Test file upload with various valid extensions."""
         valid_extensions = [
@@ -151,10 +126,15 @@ class TestFiles:
             ("test.pdf", "application/pdf"),
             ("test.png", "image/png"),
             ("test.jpg", "image/jpeg"),
-            ("test.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
+            (
+                "test.docx",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            ),
         ]
 
-        with patch('app.services.storage_service.get_storage_service') as mock_get_storage_service:
+        with patch(
+            "app.services.storage_service.get_storage_service"
+        ) as mock_get_storage_service:
             mock_storage = Mock()
             mock_storage.upload_file_data = AsyncMock(
                 return_value=("test_key", "test_hash", 1024)
@@ -165,14 +145,10 @@ class TestFiles:
             mock_get_storage_service.return_value = mock_storage
 
             for filename, content_type in valid_extensions:
-                file_data = {
-                    "file": (filename, io.BytesIO(b"content"), content_type)
-                }
+                file_data = {"file": (filename, io.BytesIO(b"content"), content_type)}
 
                 response = await client.post(
-                    "/api/files/upload",
-                    files=file_data,
-                    headers=auth_headers
+                    "/api/files/upload", files=file_data, headers=auth_headers
                 )
 
                 assert response.status_code == 200
@@ -181,12 +157,9 @@ class TestFiles:
                 assert data["success"] is True
 
     @pytest.mark.asyncio
-    @patch('app.services.local_storage_service.get_local_storage_service')
+    @patch("app.services.local_storage_service.get_local_storage_service")
     async def test_upload_file_storage_error(
-        self,
-        mock_get_local_storage_service,
-        client: AsyncClient,
-        auth_headers: dict
+        self, mock_get_local_storage_service, client: AsyncClient, auth_headers: dict
     ):
         """Test file upload with storage service error."""
         # Mock local storage service to raise exception
@@ -196,14 +169,10 @@ class TestFiles:
         )
         mock_get_local_storage_service.return_value = mock_storage
 
-        file_data = {
-            "file": ("test.txt", io.BytesIO(b"content"), "text/plain")
-        }
+        file_data = {"file": ("test.txt", io.BytesIO(b"content"), "text/plain")}
 
         response = await client.post(
-            "/api/files/upload",
-            files=file_data,
-            headers=auth_headers
+            "/api/files/upload", files=file_data, headers=auth_headers
         )
 
         assert response.status_code == 500
@@ -211,14 +180,14 @@ class TestFiles:
         assert "Error saving file" in error_detail
 
     @pytest.mark.asyncio
-    @patch('app.services.storage_service.get_storage_service')
-    @patch('app.endpoints.files.check_file_access_permission')
+    @patch("app.services.storage_service.get_storage_service")
+    @patch("app.endpoints.files.check_file_access_permission")
     async def test_download_file_success(
         self,
         mock_check_permission,
         mock_get_storage_service,
         client: AsyncClient,
-        auth_headers: dict
+        auth_headers: dict,
     ):
         """Test successful file download URL generation."""
         # Mock permission check to return True
@@ -235,8 +204,7 @@ class TestFiles:
         test_s3_key = "attachments/1/2024/01/uuid_test.txt"
 
         response = await client.get(
-            f"/api/files/download/{test_s3_key}",
-            headers=auth_headers
+            f"/api/files/download/{test_s3_key}", headers=auth_headers
         )
 
         assert response.status_code == 200
@@ -265,14 +233,14 @@ class TestFiles:
         assert "detail" in response.json()
 
     @pytest.mark.asyncio
-    @patch('app.services.storage_service.get_storage_service')
-    @patch('app.endpoints.files.check_file_access_permission')
+    @patch("app.services.storage_service.get_storage_service")
+    @patch("app.endpoints.files.check_file_access_permission")
     async def test_download_file_not_found(
         self,
         mock_check_permission,
         mock_get_storage_service,
         client: AsyncClient,
-        auth_headers: dict
+        auth_headers: dict,
     ):
         """Test file download with non-existent file fails."""
         # Mock permission check to return True (user has permission but file doesn't exist)
@@ -284,8 +252,7 @@ class TestFiles:
         mock_get_storage_service.return_value = mock_storage
 
         response = await client.get(
-            "/api/files/download/nonexistent_key",
-            headers=auth_headers
+            "/api/files/download/nonexistent_key", headers=auth_headers
         )
 
         assert response.status_code == 404
@@ -293,16 +260,16 @@ class TestFiles:
         assert "File not found" in error_detail
 
     @pytest.mark.asyncio
-    @patch('app.services.local_storage_service.get_local_storage_service')
-    @patch('app.services.storage_service.get_storage_service')
-    @patch('app.endpoints.files.check_file_access_permission')
+    @patch("app.services.local_storage_service.get_local_storage_service")
+    @patch("app.services.storage_service.get_storage_service")
+    @patch("app.endpoints.files.check_file_access_permission")
     async def test_download_file_storage_error(
         self,
         mock_check_permission,
         mock_get_storage_service,
         mock_get_local_storage_service,
         client: AsyncClient,
-        auth_headers: dict
+        auth_headers: dict,
     ):
         """Test file download with storage service error."""
         # Mock permission check to return True
@@ -315,12 +282,13 @@ class TestFiles:
 
         # Mock local storage service to also raise exception
         mock_local_storage = Mock()
-        mock_local_storage.file_exists = Mock(side_effect=Exception("Local storage error"))
+        mock_local_storage.file_exists = Mock(
+            side_effect=Exception("Local storage error")
+        )
         mock_get_local_storage_service.return_value = mock_local_storage
 
         response = await client.get(
-            "/api/files/download/test_key",
-            headers=auth_headers
+            "/api/files/download/test_key", headers=auth_headers
         )
 
         assert response.status_code == 500
@@ -328,12 +296,12 @@ class TestFiles:
         assert "Error downloading file" in error_detail
 
     @pytest.mark.asyncio
-    @patch('app.services.storage_service.get_storage_service')
+    @patch("app.services.storage_service.get_storage_service")
     async def test_delete_file_success(
         self,
         mock_get_storage_service,
         client: AsyncClient,
-        super_admin_auth_headers: dict
+        super_admin_auth_headers: dict,
     ):
         """Test successful file deletion."""
         # Mock storage service
@@ -345,8 +313,7 @@ class TestFiles:
         test_s3_key = "attachments/1/2024/01/uuid_test.txt"
 
         response = await client.delete(
-            f"/api/files/{test_s3_key}",
-            headers=super_admin_auth_headers
+            f"/api/files/{test_s3_key}", headers=super_admin_auth_headers
         )
 
         assert response.status_code == 200
@@ -366,12 +333,12 @@ class TestFiles:
         assert "detail" in response.json()
 
     @pytest.mark.asyncio
-    @patch('app.services.storage_service.get_storage_service')
+    @patch("app.services.storage_service.get_storage_service")
     async def test_delete_file_not_found(
         self,
         mock_get_storage_service,
         client: AsyncClient,
-        super_admin_auth_headers: dict
+        super_admin_auth_headers: dict,
     ):
         """Test file deletion with non-existent file fails."""
         # Mock storage service to return file not found
@@ -380,8 +347,7 @@ class TestFiles:
         mock_get_storage_service.return_value = mock_storage
 
         response = await client.delete(
-            "/api/files/nonexistent_key",
-            headers=super_admin_auth_headers
+            "/api/files/nonexistent_key", headers=super_admin_auth_headers
         )
 
         assert response.status_code == 404
@@ -389,12 +355,12 @@ class TestFiles:
         assert "File not found" in error_detail
 
     @pytest.mark.asyncio
-    @patch('app.services.storage_service.get_storage_service')
+    @patch("app.services.storage_service.get_storage_service")
     async def test_delete_file_deletion_failed(
         self,
         mock_get_storage_service,
         client: AsyncClient,
-        super_admin_auth_headers: dict
+        super_admin_auth_headers: dict,
     ):
         """Test file deletion when storage service deletion fails."""
         # Mock storage service
@@ -404,8 +370,7 @@ class TestFiles:
         mock_get_storage_service.return_value = mock_storage
 
         response = await client.delete(
-            "/api/files/test_key",
-            headers=super_admin_auth_headers
+            "/api/files/test_key", headers=super_admin_auth_headers
         )
 
         assert response.status_code == 500
@@ -413,12 +378,12 @@ class TestFiles:
         assert "Failed to delete file" in error_detail
 
     @pytest.mark.asyncio
-    @patch('app.services.storage_service.get_storage_service')
+    @patch("app.services.storage_service.get_storage_service")
     async def test_delete_file_storage_error(
         self,
         mock_get_storage_service,
         client: AsyncClient,
-        super_admin_auth_headers: dict
+        super_admin_auth_headers: dict,
     ):
         """Test file deletion with storage service error."""
         # Mock storage service to raise exception
@@ -427,8 +392,7 @@ class TestFiles:
         mock_get_storage_service.return_value = mock_storage
 
         response = await client.delete(
-            "/api/files/test_key",
-            headers=super_admin_auth_headers
+            "/api/files/test_key", headers=super_admin_auth_headers
         )
 
         assert response.status_code == 500
@@ -473,15 +437,14 @@ class TestFiles:
         ]
 
         for filename in invalid_files:
-            assert not is_allowed_file(filename), f"File {filename} should not be allowed"
+            assert not is_allowed_file(
+                filename
+            ), f"File {filename} should not be allowed"
 
     @pytest.mark.asyncio
-    @patch('app.services.storage_service.get_storage_service')
+    @patch("app.services.storage_service.get_storage_service")
     async def test_upload_with_special_characters_in_filename(
-        self,
-        mock_get_storage_service,
-        client: AsyncClient,
-        auth_headers: dict
+        self, mock_get_storage_service, client: AsyncClient, auth_headers: dict
     ):
         """Test file upload with special characters in filename."""
         # Mock storage service
@@ -496,14 +459,10 @@ class TestFiles:
 
         # Test filename with special characters
         special_filename = "test file (copy) [2024].txt"
-        file_data = {
-            "file": (special_filename, io.BytesIO(b"content"), "text/plain")
-        }
+        file_data = {"file": (special_filename, io.BytesIO(b"content"), "text/plain")}
 
         response = await client.post(
-            "/api/files/upload",
-            files=file_data,
-            headers=auth_headers
+            "/api/files/upload", files=file_data, headers=auth_headers
         )
 
         assert response.status_code == 200
@@ -512,14 +471,14 @@ class TestFiles:
         assert data["success"] is True
 
     @pytest.mark.asyncio
-    @patch('app.services.storage_service.get_storage_service')
-    @patch('app.endpoints.files.check_file_access_permission')
+    @patch("app.services.storage_service.get_storage_service")
+    @patch("app.endpoints.files.check_file_access_permission")
     async def test_download_with_nested_path(
         self,
         mock_check_permission,
         mock_get_storage_service,
         client: AsyncClient,
-        auth_headers: dict
+        auth_headers: dict,
     ):
         """Test file download with nested S3 key path."""
         # Mock permission check to return True
@@ -537,8 +496,7 @@ class TestFiles:
         nested_s3_key = "attachments/user/123/2024/01/uuid_test.txt"
 
         response = await client.get(
-            f"/api/files/download/{nested_s3_key}",
-            headers=auth_headers
+            f"/api/files/download/{nested_s3_key}", headers=auth_headers
         )
 
         assert response.status_code == 200
@@ -560,9 +518,21 @@ class TestFiles:
         from app.endpoints.files import ALLOWED_EXTENSIONS
 
         expected_extensions = {
-            "txt", "pdf", "png", "jpg", "jpeg", "gif",
-            "doc", "docx", "xls", "xlsx", "ppt", "pptx",
-            "zip", "rar", "7z"
+            "txt",
+            "pdf",
+            "png",
+            "jpg",
+            "jpeg",
+            "gif",
+            "doc",
+            "docx",
+            "xls",
+            "xlsx",
+            "ppt",
+            "pptx",
+            "zip",
+            "rar",
+            "7z",
         }
 
         # Verify all expected extensions are present
@@ -579,7 +549,7 @@ class TestFiles:
         client: AsyncClient,
         db_session: AsyncSession,
         test_user: User,
-        test_admin_user: User
+        test_admin_user: User,
     ):
         """Test that message sender can download their uploaded file."""
         from app.schemas.direct_message import DirectMessageCreate
@@ -602,16 +572,18 @@ class TestFiles:
             file_url=file_url,
             file_name="test-file.txt",
             file_size=1024,
-            file_type="text/plain"
+            file_type="text/plain",
         )
 
         # Send the message
         await direct_message_service.send_message(db_session, sender.id, message_data)
 
         # Test that sender can download the file
-        with patch('app.services.storage_service.get_storage_service') as mock_storage_service, \
-             patch('app.services.local_storage_service.get_local_storage_service') as mock_local_storage:
-
+        with patch(
+            "app.services.storage_service.get_storage_service"
+        ) as mock_storage_service, patch(
+            "app.services.local_storage_service.get_local_storage_service"
+        ) as mock_local_storage:
             # Mock MinIO storage service to fail (no connection)
             mock_minio = Mock()
             mock_minio.file_exists = Mock(side_effect=Exception("MinIO not available"))
@@ -620,13 +592,15 @@ class TestFiles:
             # Mock local storage service with proper base_path
             mock_storage = Mock()
             mock_storage.base_path = Path("/tmp/uploads")  # Proper path object
-            mock_storage.file_exists = Mock(return_value=False)  # File doesn't exist locally
+            mock_storage.file_exists = Mock(
+                return_value=False
+            )  # File doesn't exist locally
             mock_local_storage.return_value = mock_storage
 
             # Since file doesn't exist, it should return 404
             response = await client.get(
                 f"/api/files/download/message-attachments/1/2024/test-file.txt",
-                headers=sender_headers
+                headers=sender_headers,
             )
 
             # Permission check passes (user has access), but file doesn't exist on disk
@@ -639,7 +613,7 @@ class TestFiles:
         client: AsyncClient,
         db_session: AsyncSession,
         test_user: User,
-        test_admin_user: User
+        test_admin_user: User,
     ):
         """Test file download permission system works correctly."""
         from app.schemas.direct_message import DirectMessageCreate
@@ -662,16 +636,18 @@ class TestFiles:
             file_url=file_url,
             file_name="test-file.txt",
             file_size=1024,
-            file_type="text/plain"
+            file_type="text/plain",
         )
 
         # Send the message
         await direct_message_service.send_message(db_session, sender.id, message_data)
 
         # Test that recipient can download the file
-        with patch('app.services.storage_service.get_storage_service') as mock_storage_service, \
-             patch('app.services.local_storage_service.get_local_storage_service') as mock_local_storage:
-
+        with patch(
+            "app.services.storage_service.get_storage_service"
+        ) as mock_storage_service, patch(
+            "app.services.local_storage_service.get_local_storage_service"
+        ) as mock_local_storage:
             # Mock MinIO storage service to fail (no connection)
             mock_minio = Mock()
             mock_minio.file_exists = Mock(side_effect=Exception("MinIO not available"))
@@ -680,13 +656,15 @@ class TestFiles:
             # Mock local storage service with proper base_path
             mock_storage = Mock()
             mock_storage.base_path = Path("/tmp/uploads")  # Proper path object
-            mock_storage.file_exists = Mock(return_value=False)  # File doesn't exist locally
+            mock_storage.file_exists = Mock(
+                return_value=False
+            )  # File doesn't exist locally
             mock_local_storage.return_value = mock_storage
 
             # Since file doesn't exist, it should return 404
             response = await client.get(
                 f"/api/files/download/message-attachments/1/2024/test-file.txt",
-                headers=recipient_headers
+                headers=recipient_headers,
             )
 
             # Permission check passes (user has access), but file doesn't exist on disk
@@ -696,6 +674,7 @@ class TestFiles:
     def _create_test_token(self, user_id: int) -> str:
         """Helper method to create test JWT token."""
         from app.services.auth_service import auth_service
+
         return auth_service.create_access_token(data={"sub": str(user_id)})
 
     @pytest.mark.asyncio
@@ -704,7 +683,7 @@ class TestFiles:
         client: AsyncClient,
         db_session: AsyncSession,
         test_user: User,
-        test_admin_user: User
+        test_admin_user: User,
     ):
         """Test file download permissions work correctly between different users."""
         from app.schemas.direct_message import DirectMessageCreate
@@ -727,16 +706,20 @@ class TestFiles:
             file_url=file_url,
             file_name="test-permission.txt",
             file_size=1024,
-            file_type="text/plain"
+            file_type="text/plain",
         )
 
         # Send the message from sender to recipient
-        await direct_message_service.send_message(db_session, test_user.id, message_data)
+        await direct_message_service.send_message(
+            db_session, test_user.id, message_data
+        )
 
         # Mock storage services to simulate file system behavior
-        with patch('app.services.storage_service.get_storage_service') as mock_storage_service, \
-             patch('app.services.local_storage_service.get_local_storage_service') as mock_local_storage:
-
+        with patch(
+            "app.services.storage_service.get_storage_service"
+        ) as mock_storage_service, patch(
+            "app.services.local_storage_service.get_local_storage_service"
+        ) as mock_local_storage:
             # Mock MinIO storage service to fail (no connection)
             mock_minio = Mock()
             mock_minio.file_exists = Mock(side_effect=Exception("MinIO not available"))
@@ -753,23 +736,34 @@ class TestFiles:
             _mock_full_path = Path("/tmp/uploads") / download_path
 
             # Mock path.exists() to return True and patch the FileResponse import
-            with patch.object(Path, 'exists', return_value=True), \
-                 patch('fastapi.responses.FileResponse') as mock_file_response:
-
+            with patch.object(Path, "exists", return_value=True), patch(
+                "fastapi.responses.FileResponse"
+            ) as mock_file_response:
                 # Mock FileResponse to return a proper response
                 from fastapi.responses import Response
-                mock_response = Response(content="test file content", media_type="text/plain")
+
+                mock_response = Response(
+                    content="test file content", media_type="text/plain"
+                )
                 mock_file_response.return_value = mock_response
 
                 # Test 1: Sender should be able to download
-                sender_download = await client.get(f"/api/files/download/{download_path}", headers=sender_headers)
+                sender_download = await client.get(
+                    f"/api/files/download/{download_path}", headers=sender_headers
+                )
 
                 # Test 2: Recipient should be able to download
-                recipient_download = await client.get(f"/api/files/download/{download_path}", headers=recipient_headers)
+                recipient_download = await client.get(
+                    f"/api/files/download/{download_path}", headers=recipient_headers
+                )
 
                 # Both users should have permission (either 200 for successful download or other non-403 status)
                 # The key is that neither should get 403 (Forbidden)
-                assert sender_download.status_code != 403, f"Sender should have access, got {sender_download.status_code}"
-                assert recipient_download.status_code != 403, f"Recipient should have access, got {recipient_download.status_code}"
+                assert (
+                    sender_download.status_code != 403
+                ), f"Sender should have access, got {sender_download.status_code}"
+                assert (
+                    recipient_download.status_code != 403
+                ), f"Recipient should have access, got {recipient_download.status_code}"
 
                 # Since permission checks passed, the downloads should succeed

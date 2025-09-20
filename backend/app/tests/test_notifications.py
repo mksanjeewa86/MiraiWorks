@@ -10,6 +10,7 @@ from app.models.notification import Notification
 from app.services.notification_service import notification_service
 from app.models.user import User
 
+
 async def create_notification(
     db_session: AsyncSession,
     *,
@@ -130,9 +131,7 @@ async def test_unread_count_endpoint(
     second.is_read = True
     await db_session.commit()
 
-    response = await client.get(
-        "/api/notifications/unread-count", headers=auth_headers
-    )
+    response = await client.get("/api/notifications/unread-count", headers=auth_headers)
 
     assert response.status_code == 200
     assert response.json()["unread_count"] == 1

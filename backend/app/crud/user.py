@@ -20,13 +20,17 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         result = await db.execute(select(User).where(User.email == email))
         return result.scalar_one_or_none()
 
-    async def get_with_company_and_roles(self, db: AsyncSession, user_id: int) -> Optional[User]:
+    async def get_with_company_and_roles(
+        self, db: AsyncSession, user_id: int
+    ) -> Optional[User]:
         """Get user with company and roles loaded."""
         result = await db.execute(
-            select(User).options(
+            select(User)
+            .options(
                 selectinload(User.company),
-                selectinload(User.user_roles).selectinload(UserRole.role)
-            ).where(User.id == user_id)
+                selectinload(User.user_roles).selectinload(UserRole.role),
+            )
+            .where(User.id == user_id)
         )
         return result.scalar_one_or_none()
 
@@ -81,7 +85,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         # Build base query
         base_query = select(User).options(
             selectinload(User.company),
-            selectinload(User.user_roles).selectinload(UserRole.role)
+            selectinload(User.user_roles).selectinload(UserRole.role),
         )
 
         # Handle role filter
@@ -107,30 +111,31 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
         # Apply pagination
         offset = (page - 1) * size
-        users_query = base_query.offset(offset).limit(size).order_by(User.created_at.desc())
+        users_query = (
+            base_query.offset(offset).limit(size).order_by(User.created_at.desc())
+        )
 
         result = await db.execute(users_query)
         users = result.scalars().all()
 
         return users, total
 
-    async def check_company_admin_exists(self, db: AsyncSession, company_id: int) -> int:
+    async def check_company_admin_exists(
+        self, db: AsyncSession, company_id: int
+    ) -> int:
         """Check if company already has admin users."""
         admin_query = select(func.count(User.id)).where(
             and_(
                 User.company_id == company_id,
                 User.is_admin == True,
-                User.is_deleted == False
+                User.is_deleted == False,
             )
         )
         result = await db.execute(admin_query)
         return result.scalar() or 0
 
     async def bulk_delete(
-        self,
-        db: AsyncSession,
-        user_ids: List[int],
-        deleted_by: int
+        self, db: AsyncSession, user_ids: List[int], deleted_by: int
     ) -> tuple[int, List[str]]:
         """Soft delete multiple users."""
         deleted_count = 0
@@ -156,10 +161,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         return deleted_count, errors
 
     async def bulk_suspend(
-        self,
-        db: AsyncSession,
-        user_ids: List[int],
-        suspended_by: int
+        self, db: AsyncSession, user_ids: List[int], suspended_by: int
     ) -> tuple[int, List[str]]:
         """Suspend multiple users."""
         suspended_count = 0
@@ -185,9 +187,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         return suspended_count, errors
 
     async def bulk_unsuspend(
-        self,
-        db: AsyncSession,
-        user_ids: List[int]
+        self, db: AsyncSession, user_ids: List[int]
     ) -> tuple[int, List[str]]:
         """Unsuspend multiple users."""
         unsuspended_count = 0
@@ -212,7 +212,9 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         await db.commit()
         return unsuspended_count, errors
 
-    async def assign_roles(self, db: AsyncSession, user_id: int, roles: List[UserRoleEnum]):
+    async def assign_roles(
+        self, db: AsyncSession, user_id: int, roles: List[UserRoleEnum]
+    ):
         """Assign roles to user."""
         # Remove existing roles
         existing_roles_query = select(UserRole).where(UserRole.user_id == user_id)

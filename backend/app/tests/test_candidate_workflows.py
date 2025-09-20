@@ -1,4 +1,3 @@
-
 """Focused integration tests for candidate-facing workflows."""
 
 import pytest
@@ -13,7 +12,9 @@ from app.services.auth_service import auth_service
 from app.utils.constants import UserRole as UserRoleEnum
 
 
-async def ensure_role(db_session: AsyncSession, roles: dict[str, Role], role: UserRoleEnum) -> Role:
+async def ensure_role(
+    db_session: AsyncSession, roles: dict[str, Role], role: UserRoleEnum
+) -> Role:
     existing = roles.get(role.value)
     if existing:
         return existing
@@ -48,7 +49,11 @@ async def test_admin_can_list_candidates(
     await db_session.commit()
     await db_session.refresh(candidate)
 
-    db_session.add(UserRole(user_id=candidate.id, role_id=test_roles[UserRoleEnum.CANDIDATE.value].id))
+    db_session.add(
+        UserRole(
+            user_id=candidate.id, role_id=test_roles[UserRoleEnum.CANDIDATE.value].id
+        )
+    )
     await db_session.commit()
 
     response = await client.get(
@@ -78,7 +83,9 @@ async def test_candidate_can_view_published_jobs(
         "company_id": test_employer_user.company_id,
     }
 
-    create_response = await client.post("/api/jobs", json=job_payload, headers=auth_headers)
+    create_response = await client.post(
+        "/api/jobs", json=job_payload, headers=auth_headers
+    )
     assert create_response.status_code == 201
     job = create_response.json()
 
@@ -109,7 +116,9 @@ async def test_candidate_updates_profile(
         "bio": "Ready for new challenges",
     }
 
-    response = await client.put("/api/user/profile", json=payload, headers=candidate_headers)
+    response = await client.put(
+        "/api/user/profile", json=payload, headers=candidate_headers
+    )
     assert response.status_code == 200
     data = response.json()
     assert data["first_name"] == "Updated"

@@ -118,7 +118,9 @@ async def create_interview_model(
         timezone="UTC",
     )
 
-    full_interview = await interview_crud.get_with_relationships(db_session, interview.id)
+    full_interview = await interview_crud.get_with_relationships(
+        db_session, interview.id
+    )
     return full_interview, recruiter
 
 

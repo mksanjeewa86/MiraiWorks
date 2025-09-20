@@ -23,7 +23,9 @@ logger = get_logger(__name__)
 async def test_endpoint():
     """Simple test endpoint to verify routing works."""
     import sys
+
     return {"message": "File endpoints are working", "test": True}
+
 
 # Configuration
 UPLOAD_DIR = os.environ.get("UPLOAD_DIR", "/tmp/uploads")
@@ -56,24 +58,22 @@ except OSError as e:
     os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
-
-
 def _normalize_storage_key(raw_key: str) -> str:
     """Validate and normalize inbound storage keys."""
-    key = raw_key.strip().replace('\\', '/')
+    key = raw_key.strip().replace("\\", "/")
     if not key:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid file key'
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid file key"
         )
-    if key.startswith('/'):
+    if key.startswith("/"):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid file key'
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid file key"
         )
 
     posix_path = PurePosixPath(key)
-    if any(part == '..' for part in posix_path.parts):
+    if any(part == ".." for part in posix_path.parts):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid file key'
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid file key"
         )
 
     return str(posix_path)
@@ -86,7 +86,7 @@ def _resolve_local_path(base_path: Path, key: str) -> Path:
     if not candidate.is_relative_to(base):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail='You do not have permission to access this file',
+            detail="You do not have permission to access this file",
         )
     return candidate
 
@@ -165,10 +165,10 @@ async def check_file_access_permission(
         # Check if this file is attached to any message where user is sender or recipient
         message_result = await db.execute(
             select(DirectMessage).where(
-                or_(*file_conditions) &
-                (
-                    (DirectMessage.sender_id == user_id) |
-                    (DirectMessage.recipient_id == user_id)
+                or_(*file_conditions)
+                & (
+                    (DirectMessage.sender_id == user_id)
+                    | (DirectMessage.recipient_id == user_id)
                 )
             )
         )
@@ -194,7 +194,10 @@ async def upload_file(
     """Upload a file and return its URL and metadata."""
 
     import sys
-    logger.info(f"Upload request received - filename: {file.filename}, content_type: {file.content_type}, user: {current_user.id}")
+
+    logger.info(
+        f"Upload request received - filename: {file.filename}, content_type: {file.content_type}, user: {current_user.id}"
+    )
 
     # Validate file
     if not file.filename:
@@ -223,7 +226,6 @@ async def upload_file(
             detail=f"File too large. Maximum size is {MAX_FILE_SIZE} bytes",
         )
 
-
     # Try local storage directly (skip MinIO for now)
 
     try:
@@ -233,7 +235,11 @@ async def upload_file(
 
         # Upload with local storage
         file_path, file_hash, file_size = await storage_service.upload_file_data(
-            file_content, file.filename, file.content_type, current_user.id, "message-attachments"
+            file_content,
+            file.filename,
+            file.content_type,
+            current_user.id,
+            "message-attachments",
         )
 
         # Generate download URL
@@ -256,6 +262,7 @@ async def upload_file(
 
     except Exception as e:
         import traceback
+
         traceback.print_exc()
         logger.error(f"Error saving file {file.filename} to local storage: {str(e)}")
 
@@ -284,7 +291,7 @@ async def download_file(
         logger.warning(f"User {current_user.id} denied access to file {safe_key}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to access this file"
+            detail="You don't have permission to access this file",
         )
 
     logger.info(f"User {current_user.id} granted access to file {safe_key}")
@@ -292,13 +299,18 @@ async def download_file(
     # Try MinIO first
     try:
         from app.services.storage_service import get_storage_service
+
         storage_service = get_storage_service()
 
         # Check if file exists
         if storage_service.file_exists(safe_key):
             # Generate presigned URL for download
             download_url = storage_service.get_presigned_url(safe_key)
-            return {"download_url": download_url, "s3_key": safe_key, "expires_in": "1 hour"}
+            return {
+                "download_url": download_url,
+                "s3_key": safe_key,
+                "expires_in": "1 hour",
+            }
 
     except Exception as e:
         logger.warning(f"MinIO download failed, trying local storage: {str(e)}")
@@ -319,18 +331,18 @@ async def download_file(
         if full_file_path.exists():
             # Determine media type and disposition based on file extension
             filename = os.path.basename(safe_key)
-            file_ext = filename.lower().split('.')[-1] if '.' in filename else ''
+            file_ext = filename.lower().split(".")[-1] if "." in filename else ""
 
             # Set appropriate media type
-            media_type = 'application/octet-stream'
-            if file_ext in ['jpg', 'jpeg', 'png', 'gif', 'webp']:
+            media_type = "application/octet-stream"
+            if file_ext in ["jpg", "jpeg", "png", "gif", "webp"]:
                 media_type = f'image/{file_ext.replace("jpg", "jpeg")}'
-            elif file_ext in ['pdf']:
-                media_type = 'application/pdf'
-            elif file_ext in ['txt']:
-                media_type = 'text/plain'
-            elif file_ext in ['doc', 'docx']:
-                media_type = 'application/msword'
+            elif file_ext in ["pdf"]:
+                media_type = "application/pdf"
+            elif file_ext in ["txt"]:
+                media_type = "text/plain"
+            elif file_ext in ["doc", "docx"]:
+                media_type = "application/msword"
 
             # Control download behavior
             if download == "true":
@@ -344,7 +356,7 @@ async def download_file(
                 path=str(full_file_path),
                 filename=filename,
                 media_type=media_type,
-                headers=headers
+                headers=headers,
             )
 
         # File not found in either storage
@@ -362,7 +374,6 @@ async def download_file(
         )
 
 
-
 @router.delete("/{s3_key:path}")
 async def delete_file(
     s3_key: str,
@@ -375,7 +386,7 @@ async def delete_file(
     if not is_super_admin(current_user):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail='Super admin privileges required to delete files',
+            detail="Super admin privileges required to delete files",
         )
 
     try:
@@ -394,7 +405,7 @@ async def delete_file(
 
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail='Failed to delete file',
+                detail="Failed to delete file",
             )
 
     except HTTPException:
@@ -403,7 +414,7 @@ async def delete_file(
         logger.error(f"Error deleting file {safe_key}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail='Error deleting file',
+            detail="Error deleting file",
         )
 
     # Fall back to local storage deletion
@@ -424,10 +435,10 @@ async def delete_file(
         logger.error(f"Error deleting local file {safe_key}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail='Error deleting file',
+            detail="Error deleting file",
         )
 
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
-        detail='File not found',
+        detail="File not found",
     )

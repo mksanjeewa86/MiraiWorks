@@ -25,12 +25,17 @@ router = APIRouter()
 
 
 @router.post("", response_model=JobInfo, status_code=status.HTTP_201_CREATED)
-@router.post("/", response_model=JobInfo, status_code=status.HTTP_201_CREATED, include_in_schema=False)
+@router.post(
+    "/",
+    response_model=JobInfo,
+    status_code=status.HTTP_201_CREATED,
+    include_in_schema=False,
+)
 async def create_job(
     *,
     db: AsyncSession = Depends(get_db),
     job_in: JobCreate,
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ) -> Any:
     """
     Create new job posting.
@@ -39,7 +44,7 @@ async def create_job(
     if not current_user.is_admin and not current_user.company_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions to create job postings"
+            detail="Not enough permissions to create job postings",
         )
 
     # If user is not admin, ensure they can only create jobs for their company
@@ -47,12 +52,12 @@ async def create_job(
         if job_in.company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Can only create jobs for your own company"
+                detail="Can only create jobs for your own company",
             )
 
     # Add posted_by field from current user
     job_data = job_in.model_dump()
-    job_data['posted_by'] = current_user.id
+    job_data["posted_by"] = current_user.id
 
     job = await job_crud.create_with_slug(db=db, obj_in=JobCreate(**job_data))
     return job
@@ -69,8 +74,10 @@ async def list_jobs(
     salary_min: Optional[int] = Query(None, ge=0, description="Minimum salary filter"),
     salary_max: Optional[int] = Query(None, ge=0, description="Maximum salary filter"),
     company_id: Optional[int] = Query(None, description="Filter by company"),
-    search: Optional[str] = Query(None, description="Search in title, description, requirements"),
-    status: Optional[str] = Query("published", description="Job status filter")
+    search: Optional[str] = Query(
+        None, description="Search in title, description, requirements"
+    ),
+    status: Optional[str] = Query("published", description="Job status filter"),
 ) -> Any:
     """
     Retrieve jobs with optional filtering.
@@ -85,14 +92,11 @@ async def list_jobs(
             salary_min=salary_min,
             salary_max=salary_max,
             company_id=company_id,
-            search=search
+            search=search,
         )
     else:
         jobs = await job_crud.get_jobs_by_status(
-            db=db,
-            status=status,
-            skip=skip,
-            limit=limit
+            db=db, status=status, skip=skip, limit=limit
         )
 
     has_more = len(jobs) == limit
@@ -117,7 +121,7 @@ async def search_jobs(
     salary_max: Optional[int] = Query(None, description="Maximum salary"),
     company_id: Optional[int] = Query(None, description="Company ID filter"),
     skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=500)
+    limit: int = Query(100, ge=1, le=500),
 ) -> Any:
     """
     Advanced job search with multiple criteria.
@@ -131,7 +135,7 @@ async def search_jobs(
         salary_min=salary_min,
         salary_max=salary_max,
         company_id=company_id,
-        search=query
+        search=query,
     )
 
     has_more = len(jobs) == limit
@@ -147,7 +151,7 @@ async def search_jobs(
 @router.get("/popular", response_model=List[JobInfo])
 async def get_popular_jobs(
     db: AsyncSession = Depends(get_db),
-    limit: int = Query(10, ge=1, le=50, description="Number of popular jobs to return")
+    limit: int = Query(10, ge=1, le=50, description="Number of popular jobs to return"),
 ) -> Any:
     """
     Get most popular jobs by view count.
@@ -160,7 +164,7 @@ async def get_popular_jobs(
 async def get_recent_jobs(
     db: AsyncSession = Depends(get_db),
     days: int = Query(7, ge=1, le=30, description="Jobs posted in the last N days"),
-    limit: int = Query(100, ge=1, le=500)
+    limit: int = Query(100, ge=1, le=500),
 ) -> Any:
     """
     Get recently posted jobs.
@@ -174,7 +178,7 @@ async def get_expiring_jobs(
     db: AsyncSession = Depends(get_db),
     days: int = Query(7, ge=1, le=30, description="Jobs expiring in the next N days"),
     limit: int = Query(100, ge=1, le=500),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ) -> Any:
     """
     Get jobs expiring soon (admin/employer only).
@@ -182,7 +186,7 @@ async def get_expiring_jobs(
     if not current_user.is_admin and not current_user.company_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions to view expiring jobs"
+            detail="Not enough permissions to view expiring jobs",
         )
 
     jobs = await job_crud.get_jobs_expiring_soon(db=db, days=days, limit=limit)
@@ -192,15 +196,14 @@ async def get_expiring_jobs(
 @router.get("/statistics", response_model=JobStatsResponse)
 async def get_job_statistics(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ) -> Any:
     """
     Get job posting statistics (admin only).
     """
     if not current_user.is_admin:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin access required"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required"
         )
 
     stats = await job_crud.get_job_statistics(db=db)
@@ -214,7 +217,7 @@ async def get_company_jobs(
     company_id: int,
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=500),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ) -> Any:
     """
     Get jobs for a specific company.
@@ -223,32 +226,24 @@ async def get_company_jobs(
     if not current_user.is_admin and current_user.company_id != company_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Can only view jobs for your own company"
+            detail="Can only view jobs for your own company",
         )
 
     jobs = await job_crud.get_by_company(
-        db=db,
-        company_id=company_id,
-        skip=skip,
-        limit=limit
+        db=db, company_id=company_id, skip=skip, limit=limit
     )
     return jobs
 
 
 @router.get("/{job_id}", response_model=JobInfo)
-async def get_job(
-    *,
-    db: AsyncSession = Depends(get_db),
-    job_id: int
-) -> Any:
+async def get_job(*, db: AsyncSession = Depends(get_db), job_id: int) -> Any:
     """
     Get job by ID and increment view count.
     """
     job = await job_crud.get(db=db, id=job_id)
     if not job:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Job not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Job not found"
         )
 
     # Increment view count for published jobs
@@ -259,19 +254,14 @@ async def get_job(
 
 
 @router.get("/slug/{slug}", response_model=JobInfo)
-async def get_job_by_slug(
-    *,
-    db: AsyncSession = Depends(get_db),
-    slug: str
-) -> Any:
+async def get_job_by_slug(*, db: AsyncSession = Depends(get_db), slug: str) -> Any:
     """
     Get job by slug and increment view count.
     """
     job = await job_crud.get_by_slug(db=db, slug=slug)
     if not job:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Job not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Job not found"
         )
 
     # Increment view count for published jobs
@@ -287,7 +277,7 @@ async def update_job(
     db: AsyncSession = Depends(get_db),
     job_id: int,
     job_in: JobUpdate,
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ) -> Any:
     """
     Update job posting.
@@ -295,8 +285,7 @@ async def update_job(
     job = await job_crud.get(db=db, id=job_id)
     if not job:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Job not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Job not found"
         )
 
     # Check permissions
@@ -304,20 +293,18 @@ async def update_job(
         if current_user.company_id != job.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Can only update jobs for your own company"
+                detail="Can only update jobs for your own company",
             )
 
     if job_in.salary_min is not None and job_in.salary_max is not None:
         if job_in.salary_max <= job_in.salary_min:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="salary_max must be greater than salary_min"
+                detail="salary_max must be greater than salary_min",
             )
 
     job = await job_crud.update(db=db, db_obj=job, obj_in=job_in)
     return job
-
-
 
 
 @router.patch("/bulk/status", response_model=List[JobInfo])
@@ -325,37 +312,37 @@ async def bulk_update_job_status(
     *,
     db: AsyncSession = Depends(get_db),
     payload: JobBulkStatusUpdateRequest,
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ) -> Any:
     """Bulk update job statuses."""
     if not current_user.is_admin and not current_user.company_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions to update job postings"
+            detail="Not enough permissions to update job postings",
         )
 
-    new_status = payload.status.value if hasattr(payload.status, "value") else payload.status
+    new_status = (
+        payload.status.value if hasattr(payload.status, "value") else payload.status
+    )
     jobs = await job_crud.bulk_update_status(
-        db=db,
-        job_ids=payload.job_ids,
-        status=new_status
+        db=db, job_ids=payload.job_ids, status=new_status
     )
 
     if not jobs:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Jobs not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Jobs not found"
         )
 
     if not current_user.is_admin:
         unauthorized = [
-            job for job in jobs
+            job
+            for job in jobs
             if getattr(job, "company_id", None) != current_user.company_id
         ]
         if unauthorized:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Can only update jobs for your own company"
+                detail="Can only update jobs for your own company",
             )
 
     return jobs
@@ -367,27 +354,28 @@ async def update_job_status(
     db: AsyncSession = Depends(get_db),
     job_id: int,
     status_in: JobStatusUpdateRequest,
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ) -> Any:
     """Update the status of an existing job posting."""
     job = await job_crud.get(db=db, id=job_id)
     if not job:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Job not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Job not found"
         )
 
     if not current_user.is_admin and current_user.company_id != job.company_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Can only update jobs for your own company"
+            detail="Can only update jobs for your own company",
         )
 
-    new_status = status_in.status.value if hasattr(status_in.status, "value") else status_in.status
+    new_status = (
+        status_in.status.value
+        if hasattr(status_in.status, "value")
+        else status_in.status
+    )
     updated_job = await job_crud.update(
-        db=db,
-        db_obj=job,
-        obj_in={"status": new_status}
+        db=db, db_obj=job, obj_in={"status": new_status}
     )
     return updated_job
 
@@ -397,7 +385,7 @@ async def delete_job(
     *,
     db: AsyncSession = Depends(get_db),
     job_id: int,
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """
     Delete job posting (admin only).
@@ -405,14 +393,13 @@ async def delete_job(
     if not current_user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only admins can delete job postings"
+            detail="Only admins can delete job postings",
         )
 
     job = await job_crud.get(db=db, id=job_id)
     if not job:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Job not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Job not found"
         )
 
     await job_crud.remove(db=db, id=job_id)

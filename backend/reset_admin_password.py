@@ -5,15 +5,18 @@ import asyncio
 import sys
 from passlib.context import CryptContext
 
+
 def hash_password(password: str) -> str:
     """Hash a password using bcrypt"""
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     return pwd_context.hash(password)
 
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against its hash"""
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     return pwd_context.verify(plain_password, hashed_password)
+
 
 async def main():
     # Test the existing hash
@@ -28,6 +31,7 @@ async def main():
     new_hash = hash_password(test_password)
     print(f"New hash: {new_hash}")
     print(f"New hash verification: {verify_password(test_password, new_hash)}")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

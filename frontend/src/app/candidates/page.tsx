@@ -177,12 +177,12 @@ function CandidatesPageContent() {
       return matchesSearch && matchesStatus && matchesSource && matchesExperience;
     })
     .sort((a, b) => {
-      let aValue: unknown = a[sortBy as keyof Candidate];
-      let bValue: unknown = b[sortBy as keyof Candidate];
+      let aValue: string | number | Date = a[sortBy as keyof Candidate] as string;
+      let bValue: string | number | Date = b[sortBy as keyof Candidate] as string;
 
       if (sortBy === 'last_activity' || sortBy === 'created_at') {
-        aValue = new Date(aValue);
-        bValue = new Date(bValue);
+        aValue = new Date(aValue as string);
+        bValue = new Date(bValue as string);
       }
 
       if (sortBy === 'name') {

@@ -7,10 +7,12 @@ Generate corrected email templates to confirm HTML rendering
 import asyncio
 import sys
 import os
-sys.path.insert(0, os.path.abspath('.'))
+
+sys.path.insert(0, os.path.abspath("."))
 
 from app.services.email_preview_service import email_preview_service
 from app.services.email_service import email_service
+
 
 async def main():
     print("Email Template Fix Verification")
@@ -42,7 +44,7 @@ async def main():
         print("- MIME structure: CORRECT")
 
         # Check content
-        if '<h2>Your Verification Code</h2>' in html_content:
+        if "<h2>Your Verification Code</h2>" in html_content:
             print("- 2FA content: PROPERLY FORMATTED")
         else:
             print("- 2FA content: ISSUE DETECTED")
@@ -66,7 +68,9 @@ async def main():
     except Exception as e:
         print(f"ERROR: {e}")
         import traceback
+
         traceback.print_exc()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

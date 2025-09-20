@@ -12,7 +12,7 @@ def log_action(
     resource_type: str = "",
     resource_id: Optional[int] = None,
     details: Optional[Dict[str, Any]] = None,
-    **kwargs
+    **kwargs,
 ) -> None:
     """
     Log an audit action.

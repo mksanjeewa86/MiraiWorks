@@ -13,17 +13,13 @@ import subprocess
 import sys
 from pathlib import Path
 
+
 def run_command(cmd, cwd=None, env=None):
     """Run command and return success status."""
     try:
         print(f"🔧 Running: {' '.join(cmd)}")
         result = subprocess.run(
-            cmd,
-            cwd=cwd,
-            env=env,
-            check=True,
-            capture_output=True,
-            text=True
+            cmd, cwd=cwd, env=env, check=True, capture_output=True, text=True
         )
         print(f"✅ Success: {' '.join(cmd)}")
         if result.stdout:
@@ -35,6 +31,7 @@ def run_command(cmd, cwd=None, env=None):
         if e.stdout:
             print(f"📄 Output:\n{e.stdout}")
         return False
+
 
 def setup_test_environment():
     """Set up test environment variables and files."""
@@ -75,34 +72,35 @@ DISABLE_AUTH_FOR_TESTS=false
 MOCK_EXTERNAL_SERVICES=true
 """
 
-    with open(env_test_file, 'w') as f:
+    with open(env_test_file, "w") as f:
         f.write(env_content)
 
     print(f"✅ Created {env_test_file}")
 
     # Set up environment variables
     env = os.environ.copy()
-    env['PYTHONPATH'] = str(backend_dir)
-    env['ENVIRONMENT'] = 'test'
+    env["PYTHONPATH"] = str(backend_dir)
+    env["ENVIRONMENT"] = "test"
 
     return env, backend_dir
+
 
 def check_dependencies():
     """Check if required dependencies are installed."""
     print("🔧 Checking dependencies...")
 
     required_packages = [
-        'pytest',
-        'pytest-asyncio',
-        'pytest-cov',
-        'httpx',
-        'fastapi',
-        'sqlalchemy'
+        "pytest",
+        "pytest-asyncio",
+        "pytest-cov",
+        "httpx",
+        "fastapi",
+        "sqlalchemy",
     ]
 
     for package in required_packages:
         try:
-            __import__(package.replace('-', '_'))
+            __import__(package.replace("-", "_"))
             print(f"✅ {package} is installed")
         except ImportError:
             print(f"❌ {package} is NOT installed")
@@ -110,6 +108,7 @@ def check_dependencies():
             return False
 
     return True
+
 
 def check_fixture_imports(backend_dir, env):
     """Test if fixtures can be imported correctly."""
@@ -146,101 +145,117 @@ except Exception as e:
     sys.exit(1)
 """
 
-    return run_command([
-        sys.executable, '-c', test_script
-    ], cwd=backend_dir, env=env)
+    return run_command([sys.executable, "-c", test_script], cwd=backend_dir, env=env)
+
 
 def run_pytest_collection(backend_dir, env):
     """Test pytest collection without running tests."""
     print("🔧 Testing pytest collection...")
 
-    return run_command([
-        sys.executable, '-m', 'pytest',
-        'app/tests/',
-        '--collect-only',
-        '-v'
-    ], cwd=backend_dir, env=env)
+    return run_command(
+        [sys.executable, "-m", "pytest", "app/tests/", "--collect-only", "-v"],
+        cwd=backend_dir,
+        env=env,
+    )
+
 
 def run_single_test(backend_dir, env):
     """Run a single simple test to validate setup."""
     print("🔧 Running single test validation...")
 
     # First check if we have working tests
-    test_files = list(Path(backend_dir / 'app/tests').glob('test_*.py'))
+    test_files = list(Path(backend_dir / "app/tests").glob("test_*.py"))
     if not test_files:
         print("❌ No test files found!")
         return False
 
     # Try to run the fixture check test if it exists
-    fixture_test = backend_dir / 'app/tests/test_fixture_check.py'
+    fixture_test = backend_dir / "app/tests/test_fixture_check.py"
     if fixture_test.exists():
         print("🎯 Running fixture validation test...")
-        return run_command([
-            sys.executable, '-m', 'pytest',
-            'app/tests/test_fixture_check.py',
-            '-v', '--tb=short'
-        ], cwd=backend_dir, env=env)
+        return run_command(
+            [
+                sys.executable,
+                "-m",
+                "pytest",
+                "app/tests/test_fixture_check.py",
+                "-v",
+                "--tb=short",
+            ],
+            cwd=backend_dir,
+            env=env,
+        )
 
     # Otherwise run any available test
-    return run_command([
-        sys.executable, '-m', 'pytest',
-        str(test_files[0]),
-        '-v', '--tb=short', '--maxfail=1'
-    ], cwd=backend_dir, env=env)
+    return run_command(
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            str(test_files[0]),
+            "-v",
+            "--tb=short",
+            "--maxfail=1",
+        ],
+        cwd=backend_dir,
+        env=env,
+    )
+
 
 def run_full_tests(backend_dir, env, verbose=False, coverage=False):
     """Run full test suite."""
     print("🔧 Running full test suite...")
 
-    cmd = [
-        sys.executable, '-m', 'pytest',
-        'app/tests/',
-        '--tb=short',
-        '--maxfail=5'
-    ]
+    cmd = [sys.executable, "-m", "pytest", "app/tests/", "--tb=short", "--maxfail=5"]
 
     if verbose:
-        cmd.extend(['-v', '--durations=10'])
+        cmd.extend(["-v", "--durations=10"])
 
     if coverage:
-        cmd.extend([
-            '--cov=app',
-            '--cov-report=term-missing',
-            '--cov-report=html:htmlcov',
-            '--cov-fail-under=70'
-        ])
+        cmd.extend(
+            [
+                "--cov=app",
+                "--cov-report=term-missing",
+                "--cov-report=html:htmlcov",
+                "--cov-fail-under=70",
+            ]
+        )
 
     return run_command(cmd, cwd=backend_dir, env=env)
+
 
 def fix_fixtures():
     """Attempt to fix common fixture issues."""
     print("🔧 Attempting to fix fixture issues...")
 
     backend_dir = Path(__file__).parent.parent
-    conftest_file = backend_dir / 'app/tests/conftest.py'
+    conftest_file = backend_dir / "app/tests/conftest.py"
 
     if not conftest_file.exists():
         print("❌ conftest.py not found!")
         return False
 
     # Read current conftest
-    with open(conftest_file, 'r') as f:
+    with open(conftest_file, "r") as f:
         content = f.read()
 
     fixes_applied = []
 
     # Fix 1: Remove pytest_asyncio imports if causing issues
-    if 'import pytest_asyncio' in content:
-        content = content.replace('import pytest_asyncio\n', '')
+    if "import pytest_asyncio" in content:
+        content = content.replace("import pytest_asyncio\n", "")
         fixes_applied.append("Removed pytest_asyncio import")
 
     # Fix 2: Ensure proper pytest.fixture decorators
-    content = content.replace('@pytest_asyncio.fixture', '@pytest.fixture')
-    if '@pytest_asyncio.fixture' in content:
+    content = content.replace("@pytest_asyncio.fixture", "@pytest.fixture")
+    if "@pytest_asyncio.fixture" in content:
         fixes_applied.append("Fixed pytest fixture decorators")
 
     # Fix 3: Add async fixture support
-    if '@pytest.fixture(scope="session")' in content and 'def event_loop' not in content:
+    if (
+        '@pytest.fixture(scope="session")' in content
+        and "def event_loop" not in content
+    ):
         event_loop_fixture = '''
 
 @pytest.fixture(scope="session")
@@ -256,13 +271,13 @@ def event_loop():
 
     if fixes_applied:
         # Backup original
-        backup_file = conftest_file.with_suffix('.py.bak')
-        with open(backup_file, 'w') as f:
-            with open(conftest_file, 'r') as original:
+        backup_file = conftest_file.with_suffix(".py.bak")
+        with open(backup_file, "w") as f:
+            with open(conftest_file, "r") as original:
                 f.write(original.read())
 
         # Write fixed version
-        with open(conftest_file, 'w') as f:
+        with open(conftest_file, "w") as f:
             f.write(content)
 
         print(f"✅ Applied fixes: {', '.join(fixes_applied)}")
@@ -272,16 +287,25 @@ def event_loop():
     print("ℹ️ No fixture issues detected to fix")
     return True
 
+
 def main():
-    parser = argparse.ArgumentParser(description='Local pytest validation script')
-    parser.add_argument('--fix-fixtures', action='store_true',
-                       help='Attempt to fix common fixture issues')
-    parser.add_argument('--verbose', action='store_true',
-                       help='Run tests with verbose output')
-    parser.add_argument('--coverage', action='store_true',
-                       help='Run tests with coverage reporting')
-    parser.add_argument('--single-test', action='store_true',
-                       help='Run only a single test for validation')
+    parser = argparse.ArgumentParser(description="Local pytest validation script")
+    parser.add_argument(
+        "--fix-fixtures",
+        action="store_true",
+        help="Attempt to fix common fixture issues",
+    )
+    parser.add_argument(
+        "--verbose", action="store_true", help="Run tests with verbose output"
+    )
+    parser.add_argument(
+        "--coverage", action="store_true", help="Run tests with coverage reporting"
+    )
+    parser.add_argument(
+        "--single-test",
+        action="store_true",
+        help="Run only a single test for validation",
+    )
 
     args = parser.parse_args()
 
@@ -327,5 +351,6 @@ def main():
         print("❌ Some tests failed. Check the output above.")
         return 1
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     sys.exit(main())

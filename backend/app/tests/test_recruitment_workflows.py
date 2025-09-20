@@ -1,4 +1,3 @@
-
 """Targeted recruitment workflow integration tests."""
 
 import pytest
@@ -52,7 +51,9 @@ async def test_job_statistics_endpoint(
         headers=auth_headers,
     )
 
-    stats_response = await client.get("/api/jobs/statistics", headers=admin_auth_headers)
+    stats_response = await client.get(
+        "/api/jobs/statistics", headers=admin_auth_headers
+    )
     assert stats_response.status_code == 200
     data = stats_response.json()
     assert data["total_jobs"] >= 1

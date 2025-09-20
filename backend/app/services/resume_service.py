@@ -649,5 +649,5 @@ class ResumeService:
 
     def validate_resume_data(self, resume_data: dict) -> bool:
         """Validate resume data structure."""
-        required_fields = ['title', 'full_name', 'email']
+        required_fields = ["title", "full_name", "email"]
         return all(field in resume_data for field in required_fields)

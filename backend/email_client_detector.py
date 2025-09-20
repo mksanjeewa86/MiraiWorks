@@ -7,13 +7,15 @@ Sends test emails with client detection headers to identify rendering issues
 import asyncio
 import sys
 import os
-sys.path.insert(0, os.path.abspath('.'))
+
+sys.path.insert(0, os.path.abspath("."))
 
 from app.services.email_service import email_service
 from app.config import settings
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+
 
 class EmailClientDetector:
     def __init__(self, test_email: str):
@@ -147,7 +149,7 @@ This is a test email from MiraiWorks Email System
             [self.test_email],
             "🔍 Email Client Detection & HTML Rendering Test",
             html_body,
-            text_body
+            text_body,
         )
 
         return success
@@ -157,10 +159,10 @@ This is a test email from MiraiWorks Email System
         print("📧 Sending minimal HTML test...")
 
         try:
-            msg = MIMEMultipart('alternative')
-            msg['Subject'] = '🧪 Minimal HTML Test - MiraiWorks'
-            msg['From'] = f"{settings.from_name} <{settings.from_email}>"
-            msg['To'] = self.test_email
+            msg = MIMEMultipart("alternative")
+            msg["Subject"] = "🧪 Minimal HTML Test - MiraiWorks"
+            msg["From"] = f"{settings.from_name} <{settings.from_email}>"
+            msg["To"] = self.test_email
 
             # Ultra-simple text
             text_content = """Minimal HTML Test
@@ -179,8 +181,8 @@ If you see HTML tags like <h1> or <div>, HTML is disabled."""
 <p>If you see HTML tags like &lt;h1&gt; or &lt;div&gt;, HTML is disabled.</p>
 </body></html>"""
 
-            text_part = MIMEText(text_content, 'plain')
-            html_part = MIMEText(html_content, 'html')
+            text_part = MIMEText(text_content, "plain")
+            html_part = MIMEText(html_content, "html")
 
             msg.attach(text_part)
             msg.attach(html_part)
@@ -201,13 +203,14 @@ If you see HTML tags like <h1> or <div>, HTML is disabled."""
             print(f"❌ Minimal HTML test failed: {e}")
             return False
 
+
 async def main():
     """Run email client detection."""
     print("🔍 Email Client Detection Tool")
-    print("="*50)
+    print("=" * 50)
 
     test_email = input("Enter your email address for testing: ").strip()
-    if not test_email or '@' not in test_email:
+    if not test_email or "@" not in test_email:
         print("❌ Invalid email address")
         return
 
@@ -224,15 +227,18 @@ async def main():
     success2 = detector.send_minimal_html_test()
     print(f"Minimal HTML test sent: {'✅' if success2 else '❌'}")
 
-    print("\n" + "="*50)
+    print("\n" + "=" * 50)
     print("📬 Check your email inbox for:")
     print("1. '🔍 Email Client Detection & HTML Rendering Test'")
     print("2. '🧪 Minimal HTML Test'")
     print("\n💡 Next steps:")
-    print("- If you see formatted content: HTML works, original issue may be template-specific")
+    print(
+        "- If you see formatted content: HTML works, original issue may be template-specific"
+    )
     print("- If you see raw HTML: Your email client has HTML rendering disabled")
     print("- Try different email clients (Gmail web, mobile app, etc.)")
     print("- Check your email client's HTML/formatting settings")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

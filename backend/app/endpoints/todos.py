@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -24,7 +24,9 @@ async def _get_todo_or_404(
 ) -> Todo:
     todo_obj = await todo_crud.get(db, todo_id)
     if not todo_obj or todo_obj.owner_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Todo not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Todo not found"
+        )
     return todo_obj
 
 
@@ -38,7 +40,9 @@ async def list_todos(
     current_user: User = Depends(get_current_active_user),
 ):
     """List todos for the current user."""
-    if status_filter is not None and status_filter not in {status.value for status in TodoStatus}:
+    if status_filter is not None and status_filter not in {
+        status.value for status in TodoStatus
+    }:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid status filter",
@@ -104,7 +108,9 @@ async def complete_todo(
     todo_obj = await _get_todo_or_404(db, todo_id=todo_id, current_user=current_user)
     if todo_obj.status == TodoStatus.COMPLETED.value:
         return todo_obj
-    todo_obj = await todo_crud.mark_complete(db, todo=todo_obj, completed_by=current_user.id)
+    todo_obj = await todo_crud.mark_complete(
+        db, todo=todo_obj, completed_by=current_user.id
+    )
     return todo_obj
 
 

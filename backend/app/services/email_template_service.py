@@ -1,8 +1,9 @@
-﻿from pathlib import Path
+from pathlib import Path
 from typing import Dict, Any, Tuple
 
 try:
     from jinja2 import Environment, FileSystemLoader
+
     JINJA2_AVAILABLE = True
 except ImportError:
     JINJA2_AVAILABLE = False
@@ -18,8 +19,7 @@ class EmailTemplateService:
             # Use Jinja2 for proper template rendering
             # Disable autoescape for email templates since they contain HTML content
             self.jinja_env = Environment(
-                loader=FileSystemLoader(str(self.template_dir)),
-                autoescape=False
+                loader=FileSystemLoader(str(self.template_dir)), autoescape=False
             )
         else:
             # Fallback to regex replacement if Jinja2 not available
@@ -37,15 +37,17 @@ class EmailTemplateService:
         if not full_template_path.exists():
             raise FileNotFoundError(f"Template not found: {full_template_path}")
 
-        with open(full_template_path, 'r', encoding='utf-8') as file:
+        with open(full_template_path, "r", encoding="utf-8") as file:
             return file.read()
 
     def _load_base_template(self) -> str:
         """Load the base HTML template."""
         if not self.base_template_path.exists():
-            raise FileNotFoundError(f"Base template not found: {self.base_template_path}")
+            raise FileNotFoundError(
+                f"Base template not found: {self.base_template_path}"
+            )
 
-        with open(self.base_template_path, 'r', encoding='utf-8') as file:
+        with open(self.base_template_path, "r", encoding="utf-8") as file:
             return file.read()
 
     def _render_template(self, template_content: str, context: Dict[str, Any]) -> str:
@@ -63,7 +65,7 @@ class EmailTemplateService:
                 result = template_content
                 for key, value in context.items():
                     # Replace {{ key }} with value
-                    pattern = r'\{\{\s*' + re.escape(key) + r'\s*\}\}'
+                    pattern = r"\{\{\s*" + re.escape(key) + r"\s*\}\}"
                     result = re.sub(pattern, str(value), result)
                 return result
             except Exception as e:
@@ -74,7 +76,7 @@ class EmailTemplateService:
         template_path: str,
         context: Dict[str, Any],
         subject: str,
-        header_title: str = "MiraiWorks"
+        header_title: str = "MiraiWorks",
     ) -> Tuple[str, str]:
         """
         Render both HTML and text versions of an email template.
@@ -100,7 +102,7 @@ class EmailTemplateService:
                 base_context = {
                     "subject": subject,
                     "header_title": header_title,
-                    "content": rendered_content
+                    "content": rendered_content,
                 }
                 html_body = base_template.render(base_context)
 
@@ -119,7 +121,7 @@ class EmailTemplateService:
                 base_context = {
                     "subject": subject,
                     "header_title": header_title,
-                    "content": rendered_content
+                    "content": rendered_content,
                 }
                 html_body = self._render_template(base_template, base_context)
 

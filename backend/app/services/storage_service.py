@@ -60,7 +60,12 @@ class StorageService:
         return hashlib.sha256(file_data).hexdigest()
 
     async def upload_file_data(
-        self, file_data: bytes, filename: str, content_type: str, user_id: int, folder: str = "attachments"
+        self,
+        file_data: bytes,
+        filename: str,
+        content_type: str,
+        user_id: int,
+        folder: str = "attachments",
     ) -> tuple[str, str, int]:
         """
         Upload file data to S3 and return (s3_key, sha256_hash, file_size).
@@ -110,7 +115,9 @@ class StorageService:
         try:
             # Read file data
             file_data = await file.read()
-            return await self.upload_file_data(file_data, file.filename, file.content_type, user_id, folder)
+            return await self.upload_file_data(
+                file_data, file.filename, file.content_type, user_id, folder
+            )
 
         except Exception as e:
             logger.error(f"File upload error: {e}")
@@ -144,7 +151,6 @@ class StorageService:
         """Get presigned URL for direct upload."""
         try:
             # Generate presigned POST URL
-
 
             url = self.client.presigned_url(
                 method="PUT",
@@ -202,12 +208,14 @@ class StorageService:
 # Global instance (lazy loaded)
 _storage_service = None
 
+
 def get_storage_service() -> StorageService:
     """Get storage service instance (lazy loaded)"""
     global _storage_service
     if _storage_service is None:
         _storage_service = StorageService()
     return _storage_service
+
 
 # For backward compatibility
 def storage_service() -> StorageService:

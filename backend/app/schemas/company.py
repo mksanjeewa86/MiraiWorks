@@ -6,6 +6,7 @@ from app.utils.constants import CompanyType
 
 class CompanyBase(BaseModel):
     """Base company schema with common fields."""
+
     name: str
     type: CompanyType
     email: EmailStr
@@ -19,12 +20,14 @@ class CompanyBase(BaseModel):
 
 class CompanyCreate(CompanyBase):
     """Schema for creating a new company."""
+
     is_demo: Optional[bool] = False
     demo_days: Optional[int] = 30  # Default 30 days demo period
 
 
 class CompanyUpdate(BaseModel):
     """Schema for updating a company."""
+
     name: Optional[str] = None
     type: Optional[CompanyType] = None
     email: Optional[EmailStr] = None
@@ -43,6 +46,7 @@ class CompanyUpdate(BaseModel):
 
 class CompanyResponse(CompanyBase):
     """Schema for company response."""
+
     id: int
     is_active: bool
     is_demo: bool
@@ -62,6 +66,7 @@ class CompanyResponse(CompanyBase):
 
 class CompanyListResponse(BaseModel):
     """Schema for paginated company list response."""
+
     companies: list[CompanyResponse]
     total: int
     page: int
@@ -71,6 +76,7 @@ class CompanyListResponse(BaseModel):
 
 class CompanyAdminStatus(BaseModel):
     """Schema for company admin status."""
+
     company_id: int
     has_active_admin: bool
     admin_count: int

@@ -256,7 +256,7 @@ async def logout(
     if not logout_data or not logout_data.refresh_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Refresh token required for logout"
+            detail="Refresh token required for logout",
         )
 
     # Find user by refresh token and revoke it
@@ -439,7 +439,7 @@ async def change_password(
 @router.get("/me", response_model=UserInfo)
 async def get_current_user_info(
     current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """Get current user information."""
     # Fetch user with company relationship
@@ -553,7 +553,7 @@ async def activate_account(
             "Account activation failed - no hashed password set",
             user_id=user.id,
             email=user.email,
-            component="auth"
+            component="auth",
         )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -570,7 +570,7 @@ async def activate_account(
             user_id=user.id,
             email=user.email,
             password_length=len(activation_data.temporaryPassword),
-            component="auth"
+            component="auth",
         )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -584,22 +584,20 @@ async def activate_account(
         "is_active": True,
         "last_login": datetime.utcnow(),
     }
-    
+
     # Add default phone number if user doesn't have one
     if not user.phone:
         update_values["phone"] = "+1-555-0100"  # Default placeholder phone
-    
-    await db.execute(
-        update(User)
-        .where(User.id == user.id)
-        .values(**update_values)
-    )
+
+    await db.execute(update(User).where(User.id == user.id).values(**update_values))
 
     # Check if user already has settings, if not create default ones
-    existing_settings_query = select(UserSettings).where(UserSettings.user_id == user.id)
+    existing_settings_query = select(UserSettings).where(
+        UserSettings.user_id == user.id
+    )
     existing_settings_result = await db.execute(existing_settings_query)
     existing_settings = existing_settings_result.scalar_one_or_none()
-    
+
     if not existing_settings:
         # Create default user settings for activated user
         default_settings = UserSettings(
@@ -628,10 +626,10 @@ async def activate_account(
         )
 
     await db.commit()
-    
+
     # Refresh user object to get updated data
     await db.refresh(user)
-    
+
     logger.info(
         "User account activated successfully",
         user_id=user.id,

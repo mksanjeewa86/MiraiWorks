@@ -1,3 +1,4 @@
+import logging
 import secrets
 import string
 from datetime import datetime, timedelta
@@ -24,6 +25,7 @@ from app.utils.constants import CompanyType
 from app.utils.constants import UserRole as UserRoleEnum
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.get("/companies", response_model=CompanyListResponse)
@@ -72,9 +74,7 @@ async def get_companies(
             user_count=0,
             job_count=0,
             is_deleted=company.is_deleted,
-            deleted_at=company.deleted_at.isoformat()
-            if company.deleted_at
-            else None,
+            deleted_at=company.deleted_at.isoformat() if company.deleted_at else None,
             deleted_by=company.deleted_by,
             created_at=company.created_at.isoformat(),
             updated_at=company.updated_at.isoformat(),
@@ -130,16 +130,16 @@ async def get_company(
         user_count=user_count or 0,
         job_count=job_count or 0,
         is_deleted=company.is_deleted,
-        deleted_at=company.deleted_at.isoformat()
-        if company.deleted_at
-        else None,
+        deleted_at=company.deleted_at.isoformat() if company.deleted_at else None,
         deleted_by=company.deleted_by,
         created_at=company.created_at.isoformat(),
         updated_at=company.updated_at.isoformat(),
     )
 
 
-@router.post("/companies", response_model=CompanyResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/companies", response_model=CompanyResponse, status_code=status.HTTP_201_CREATED
+)
 async def create_company(
     company_data: CompanyCreate,
     current_user: User = Depends(require_super_admin),
@@ -272,9 +272,7 @@ async def create_company(
         user_count=1,
         job_count=0,
         is_deleted=company.is_deleted,
-        deleted_at=company.deleted_at.isoformat()
-        if company.deleted_at
-        else None,
+        deleted_at=company.deleted_at.isoformat() if company.deleted_at else None,
         deleted_by=company.deleted_by,
         created_at=company.created_at.isoformat(),
         updated_at=company.updated_at.isoformat(),
@@ -299,7 +297,9 @@ async def update_company(
 
     # Check for duplicate email if email is being updated
     if "email" in update_data and update_data["email"] != company.email:
-        existing_company_query = select(Company).where(Company.email == update_data["email"])
+        existing_company_query = select(Company).where(
+            Company.email == update_data["email"]
+        )
         existing_company_result = await db.execute(existing_company_query)
         if existing_company_result.scalar_one_or_none():
             raise HTTPException(
@@ -312,7 +312,9 @@ async def update_company(
 
     company = await company_crud.company.update(db, db_obj=company, obj_in=update_data)
 
-    company_data_with_counts = await company_crud.company.get_with_counts(db, company_id)
+    company_data_with_counts = await company_crud.company.get_with_counts(
+        db, company_id
+    )
     if company_data_with_counts:
         company, user_count, job_count = company_data_with_counts
     else:
@@ -339,9 +341,7 @@ async def update_company(
         user_count=user_count or 0,
         job_count=job_count or 0,
         is_deleted=company.is_deleted,
-        deleted_at=company.deleted_at.isoformat()
-        if company.deleted_at
-        else None,
+        deleted_at=company.deleted_at.isoformat() if company.deleted_at else None,
         deleted_by=company.deleted_by,
         created_at=company.created_at.isoformat(),
         updated_at=company.updated_at.isoformat(),
@@ -385,13 +385,10 @@ async def get_company_admin_status(
     company = await company_crud.company.get(db, company_id)
     if not company:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Company not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Company not found"
         )
 
     admin_count = await company_crud.company.get_admin_count(db, company_id)
     return CompanyAdminStatus(
-        company_id=company_id,
-        has_active_admin=admin_count > 0,
-        admin_count=admin_count
+        company_id=company_id, has_active_admin=admin_count > 0, admin_count=admin_count
     )

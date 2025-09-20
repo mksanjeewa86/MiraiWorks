@@ -224,9 +224,7 @@ async def test_stats_summary_reports_confirmed_interview(
         db_session, interview, test_employer_user, test_candidate_only_user
     )
 
-    response = await client.get(
-        "/api/interviews/stats/summary", headers=auth_headers
-    )
+    response = await client.get("/api/interviews/stats/summary", headers=auth_headers)
 
     assert response.status_code == 200
     stats = response.json()

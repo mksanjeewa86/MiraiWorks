@@ -18,20 +18,22 @@ import pymysql
 # Initialize password context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+
 def hash_password(password: str) -> str:
     """Hash a password using bcrypt."""
     return pwd_context.hash(password)
+
 
 def main():
     """Fix admin user passwords."""
     # Database connection settings
     db_config = {
-        'host': 'localhost',
-        'port': 3306,  # Default Docker MySQL port mapping
-        'user': 'hrms',
-        'password': 'hrms',
-        'database': 'miraiworks',
-        'charset': 'utf8mb4'
+        "host": "localhost",
+        "port": 3306,  # Default Docker MySQL port mapping
+        "user": "hrms",
+        "password": "hrms",
+        "database": "miraiworks",
+        "charset": "utf8mb4",
     }
 
     # Generate proper password hash for 'password'
@@ -44,7 +46,9 @@ def main():
 
         with connection.cursor() as cursor:
             # Get current hashes
-            cursor.execute("SELECT email, hashed_password FROM users WHERE email IN ('admin@example.com', 'admin@ccc.com')")
+            cursor.execute(
+                "SELECT email, hashed_password FROM users WHERE email IN ('admin@example.com', 'admin@ccc.com')"
+            )
             current_users = cursor.fetchall()
 
             print("Current password hashes:")
@@ -54,14 +58,16 @@ def main():
             # Update password hashes
             cursor.execute(
                 "UPDATE users SET hashed_password = %s WHERE email IN ('admin@example.com', 'admin@ccc.com')",
-                (new_hash,)
+                (new_hash,),
             )
 
             # Commit changes
             connection.commit()
 
             # Verify changes
-            cursor.execute("SELECT email, LEFT(hashed_password, 50) as hash_preview FROM users WHERE email IN ('admin@example.com', 'admin@ccc.com')")
+            cursor.execute(
+                "SELECT email, LEFT(hashed_password, 50) as hash_preview FROM users WHERE email IN ('admin@example.com', 'admin@ccc.com')"
+            )
             updated_users = cursor.fetchall()
 
             print(f"\nUpdated {cursor.rowcount} user password hashes:")
@@ -76,10 +82,11 @@ def main():
         return 1
 
     finally:
-        if 'connection' in locals():
+        if "connection" in locals():
             connection.close()
 
     return 0
+
 
 if __name__ == "__main__":
     exit(main())

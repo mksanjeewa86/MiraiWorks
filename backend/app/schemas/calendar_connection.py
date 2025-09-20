@@ -62,6 +62,7 @@ class CalendarConnection(CalendarConnectionBase):
 
 class CalendarConnectionPublic(BaseModel):
     """Public version without sensitive tokens"""
+
     id: int
     provider: str
     provider_email: EmailStr
@@ -81,12 +82,14 @@ class CalendarConnectionPublic(BaseModel):
 
 class GoogleCalendarAuth(BaseModel):
     """Google Calendar OAuth response"""
+
     code: str
     state: Optional[str] = None
 
 
 class OutlookCalendarAuth(BaseModel):
     """Outlook Calendar OAuth response"""
+
     code: str
     state: Optional[str] = None
 

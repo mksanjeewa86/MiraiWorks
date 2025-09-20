@@ -138,15 +138,29 @@ async def email_preview_dashboard():
     """
 
     template_descriptions = {
-        "auth/activation": ("User Account Activation", "Sent when a new user account needs to be activated"),
-        "auth/2fa_code": ("Two-Factor Authentication", "Verification codes for 2FA login"),
-        "admin/company_activation": ("Company Admin Setup", "Sent to new company administrators"),
-        "notifications/message_notification": ("Message Notifications", "Alerts for new messages between users")
+        "auth/activation": (
+            "User Account Activation",
+            "Sent when a new user account needs to be activated",
+        ),
+        "auth/2fa_code": (
+            "Two-Factor Authentication",
+            "Verification codes for 2FA login",
+        ),
+        "admin/company_activation": (
+            "Company Admin Setup",
+            "Sent to new company administrators",
+        ),
+        "notifications/message_notification": (
+            "Message Notifications",
+            "Alerts for new messages between users",
+        ),
     }
 
     for template in templates:
-        title, description = template_descriptions.get(template, (template, "Email template"))
-        category = template.split('/')[0].title()
+        title, description = template_descriptions.get(
+            template, (template, "Email template")
+        )
+        category = template.split("/")[0].title()
 
         html += f"""
                     <div class="template-card">
@@ -180,7 +194,7 @@ async def email_preview_dashboard():
 @router.get("/template", response_class=HTMLResponse)
 async def preview_template(
     name: str = Query(..., description="Template path (e.g., auth/activation)"),
-    format: str = Query("html", description="Format: html or text")
+    format: str = Query("html", description="Format: html or text"),
 ):
     """Preview a specific email template."""
     try:
@@ -331,7 +345,9 @@ async def preview_all_templates():
         return html
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to generate previews: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to generate previews: {str(e)}"
+        )
 
 
 @router.get("/templates")
@@ -339,5 +355,5 @@ async def list_templates():
     """Get list of available email templates."""
     return {
         "templates": email_preview_service.get_available_templates(),
-        "count": len(email_preview_service.get_available_templates())
+        "count": len(email_preview_service.get_available_templates()),
     }

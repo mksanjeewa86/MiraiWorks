@@ -20,14 +20,16 @@ from app.utils.constants import UserRole as UserRoleEnum
 class TestAccountActivation:
     """Comprehensive tests for account activation functionality."""
 
-    async def test_activation_success_flow(self, client: AsyncClient, db_session: AsyncSession):
+    async def test_activation_success_flow(
+        self, client: AsyncClient, db_session: AsyncSession
+    ):
         """Test successful account activation with all required steps."""
         # Create test company
         company = Company(
             name="Test Activation Company",
             email="activation@test.com",
             phone="03-1234-5678",
-            type="employer"
+            type="employer",
         )
         db_session.add(company)
         await db_session.commit()
@@ -56,7 +58,7 @@ class TestAccountActivation:
             "userId": user.id,
             "email": "activate@test.com",
             "temporaryPassword": temp_password,
-            "newPassword": "NewSecure@123"
+            "newPassword": "NewSecure@123",
         }
 
         response = await client.post("/api/auth/activate", json=activation_data)
@@ -82,11 +84,15 @@ class TestAccountActivation:
         assert user.last_login is not None
 
         # Verify new password works
-        new_password_valid = auth_service.verify_password("NewSecure@123", user.hashed_password)
+        new_password_valid = auth_service.verify_password(
+            "NewSecure@123", user.hashed_password
+        )
         assert new_password_valid is True
 
         # Verify old password no longer works
-        old_password_valid = auth_service.verify_password(temp_password, user.hashed_password)
+        old_password_valid = auth_service.verify_password(
+            temp_password, user.hashed_password
+        )
         assert old_password_valid is False
 
         # Verify user settings were created
@@ -103,7 +109,7 @@ class TestAccountActivation:
             "userId": 99999,  # Non-existent user
             "email": "nonexistent@test.com",
             "temporaryPassword": "TempPass123",
-            "newPassword": "NewSecure@123"
+            "newPassword": "NewSecure@123",
         }
 
         response = await client.post("/api/auth/activate", json=activation_data)
@@ -111,7 +117,9 @@ class TestAccountActivation:
         assert response.status_code == 404
         assert "User not found" in response.json()["detail"]
 
-    async def test_activation_email_mismatch(self, client: AsyncClient, db_session: AsyncSession):
+    async def test_activation_email_mismatch(
+        self, client: AsyncClient, db_session: AsyncSession
+    ):
         """Test activation with mismatched email address."""
         # Create test user
         user = User(
@@ -129,7 +137,7 @@ class TestAccountActivation:
             "userId": user.id,
             "email": "wrong@test.com",  # Wrong email
             "temporaryPassword": "TempPass123",
-            "newPassword": "NewSecure@123"
+            "newPassword": "NewSecure@123",
         }
 
         response = await client.post("/api/auth/activate", json=activation_data)
@@ -137,7 +145,9 @@ class TestAccountActivation:
         assert response.status_code == 400
         assert "Email does not match user record" in response.json()["detail"]
 
-    async def test_activation_already_active_user(self, client: AsyncClient, db_session: AsyncSession):
+    async def test_activation_already_active_user(
+        self, client: AsyncClient, db_session: AsyncSession
+    ):
         """Test activation attempt on already active user."""
         user = User(
             email="active@test.com",
@@ -154,7 +164,7 @@ class TestAccountActivation:
             "userId": user.id,
             "email": "active@test.com",
             "temporaryPassword": "TempPass123",
-            "newPassword": "NewSecure@123"
+            "newPassword": "NewSecure@123",
         }
 
         response = await client.post("/api/auth/activate", json=activation_data)
@@ -162,7 +172,9 @@ class TestAccountActivation:
         assert response.status_code == 400
         assert "User account is already activated" in response.json()["detail"]
 
-    async def test_activation_invalid_temporary_password(self, client: AsyncClient, db_session: AsyncSession):
+    async def test_activation_invalid_temporary_password(
+        self, client: AsyncClient, db_session: AsyncSession
+    ):
         """Test activation with incorrect temporary password."""
         user = User(
             email="temppass@test.com",
@@ -179,7 +191,7 @@ class TestAccountActivation:
             "userId": user.id,
             "email": "temppass@test.com",
             "temporaryPassword": "WrongTempPass123",  # Wrong password
-            "newPassword": "NewSecure@123"
+            "newPassword": "NewSecure@123",
         }
 
         response = await client.post("/api/auth/activate", json=activation_data)
@@ -187,7 +199,9 @@ class TestAccountActivation:
         assert response.status_code == 401
         assert "Invalid temporary password" in response.json()["detail"]
 
-    async def test_activation_no_hashed_password(self, client: AsyncClient, db_session: AsyncSession):
+    async def test_activation_no_hashed_password(
+        self, client: AsyncClient, db_session: AsyncSession
+    ):
         """Test activation for user with no password set."""
         user = User(
             email="nopass@test.com",
@@ -204,7 +218,7 @@ class TestAccountActivation:
             "userId": user.id,
             "email": "nopass@test.com",
             "temporaryPassword": "AnyPassword123",
-            "newPassword": "NewSecure@123"
+            "newPassword": "NewSecure@123",
         }
 
         response = await client.post("/api/auth/activate", json=activation_data)
@@ -212,7 +226,9 @@ class TestAccountActivation:
         assert response.status_code == 401
         assert "Account not properly configured" in response.json()["detail"]
 
-    async def test_activation_password_validation(self, client: AsyncClient, db_session: AsyncSession):
+    async def test_activation_password_validation(
+        self, client: AsyncClient, db_session: AsyncSession
+    ):
         """Test activation with various new password formats."""
         user = User(
             email="passval@test.com",
@@ -230,13 +246,15 @@ class TestAccountActivation:
             "userId": user.id,
             "email": "passval@test.com",
             "temporaryPassword": "TempPass123",
-            "newPassword": "weak"  # Too short
+            "newPassword": "weak",  # Too short
         }
 
         response = await client.post("/api/auth/activate", json=weak_password_data)
         assert response.status_code == 422  # Validation error
 
-    async def test_activation_case_sensitivity(self, client: AsyncClient, db_session: AsyncSession):
+    async def test_activation_case_sensitivity(
+        self, client: AsyncClient, db_session: AsyncSession
+    ):
         """Test that temporary passwords are case-sensitive."""
         temp_password = "CaseSensitive123"
         user = User(
@@ -262,14 +280,16 @@ class TestAccountActivation:
                 "userId": user.id,
                 "email": "case@test.com",
                 "temporaryPassword": wrong_case_password,
-                "newPassword": "NewSecure@123"
+                "newPassword": "NewSecure@123",
             }
 
             response = await client.post("/api/auth/activate", json=activation_data)
             assert response.status_code == 401
             assert "Invalid temporary password" in response.json()["detail"]
 
-    async def test_activation_whitespace_handling(self, client: AsyncClient, db_session: AsyncSession):
+    async def test_activation_whitespace_handling(
+        self, client: AsyncClient, db_session: AsyncSession
+    ):
         """Test activation with whitespace in passwords."""
         temp_password = "NoSpaces123"
         user = User(
@@ -285,10 +305,10 @@ class TestAccountActivation:
 
         # Test with leading/trailing spaces
         space_variations = [
-            " NoSpaces123",      # Leading space
-            "NoSpaces123 ",      # Trailing space
-            " NoSpaces123 ",     # Both spaces
-            "No Spaces123",      # Space in middle
+            " NoSpaces123",  # Leading space
+            "NoSpaces123 ",  # Trailing space
+            " NoSpaces123 ",  # Both spaces
+            "No Spaces123",  # Space in middle
         ]
 
         for spaced_password in space_variations:
@@ -296,13 +316,15 @@ class TestAccountActivation:
                 "userId": user.id,
                 "email": "space@test.com",
                 "temporaryPassword": spaced_password,
-                "newPassword": "NewSecure@123"
+                "newPassword": "NewSecure@123",
             }
 
             response = await client.post("/api/auth/activate", json=activation_data)
             assert response.status_code == 401
 
-    async def test_activation_company_admin_flow(self, client: AsyncClient, db_session: AsyncSession):
+    async def test_activation_company_admin_flow(
+        self, client: AsyncClient, db_session: AsyncSession
+    ):
         """Test activation flow for company admin user."""
         # Create company
         company = Company(
@@ -310,7 +332,7 @@ class TestAccountActivation:
             email="admin@company.com",
             phone="03-1234-5678",
             type="employer",
-            is_active="0"  # Company starts inactive (stored as string)
+            is_active="0",  # Company starts inactive (stored as string)
         )
         db_session.add(company)
         await db_session.commit()
@@ -318,8 +340,7 @@ class TestAccountActivation:
 
         # Create company admin role
         admin_role = Role(
-            name=UserRoleEnum.COMPANY_ADMIN,
-            description="Company Administrator"
+            name=UserRoleEnum.COMPANY_ADMIN, description="Company Administrator"
         )
         db_session.add(admin_role)
         await db_session.commit()
@@ -350,7 +371,7 @@ class TestAccountActivation:
             "userId": admin_user.id,
             "email": "admin@company.com",
             "temporaryPassword": "AdminTemp123",
-            "newPassword": "AdminSecure@123"
+            "newPassword": "AdminSecure@123",
         }
 
         response = await client.post("/api/auth/activate", json=activation_data)
@@ -365,9 +386,13 @@ class TestAccountActivation:
 
         # Verify company is activated (when admin activates)
         await db_session.refresh(company)
-        assert company.is_active == "1"  # Note: is_active is stored as string in database
+        assert (
+            company.is_active == "1"
+        )  # Note: is_active is stored as string in database
 
-    async def test_activation_missing_phone_default(self, client: AsyncClient, db_session: AsyncSession):
+    async def test_activation_missing_phone_default(
+        self, client: AsyncClient, db_session: AsyncSession
+    ):
         """Test that default phone number is added during activation."""
         user = User(
             email="phone@test.com",
@@ -385,7 +410,7 @@ class TestAccountActivation:
             "userId": user.id,
             "email": "phone@test.com",
             "temporaryPassword": "TempPass123",
-            "newPassword": "NewSecure@123"
+            "newPassword": "NewSecure@123",
         }
 
         response = await client.post("/api/auth/activate", json=activation_data)
@@ -396,7 +421,9 @@ class TestAccountActivation:
         await db_session.refresh(user)
         assert user.phone == "+1-555-0100"
 
-    async def test_activation_preserves_existing_phone(self, client: AsyncClient, db_session: AsyncSession):
+    async def test_activation_preserves_existing_phone(
+        self, client: AsyncClient, db_session: AsyncSession
+    ):
         """Test that existing phone number is preserved during activation."""
         existing_phone = "+81-90-1234-5678"
         user = User(
@@ -415,7 +442,7 @@ class TestAccountActivation:
             "userId": user.id,
             "email": "existingphone@test.com",
             "temporaryPassword": "TempPass123",
-            "newPassword": "NewSecure@123"
+            "newPassword": "NewSecure@123",
         }
 
         response = await client.post("/api/auth/activate", json=activation_data)
@@ -426,7 +453,9 @@ class TestAccountActivation:
         await db_session.refresh(user)
         assert user.phone == existing_phone
 
-    async def test_activation_authentication_tokens(self, client: AsyncClient, db_session: AsyncSession):
+    async def test_activation_authentication_tokens(
+        self, client: AsyncClient, db_session: AsyncSession
+    ):
         """Test that valid authentication tokens are returned."""
         user = User(
             email="tokens@test.com",
@@ -443,7 +472,7 @@ class TestAccountActivation:
             "userId": user.id,
             "email": "tokens@test.com",
             "temporaryPassword": "TempPass123",
-            "newPassword": "NewSecure@123"
+            "newPassword": "NewSecure@123",
         }
 
         response = await client.post("/api/auth/activate", json=activation_data)
@@ -472,7 +501,9 @@ class TestAccountActivation:
 class TestActivationEdgeCases:
     """Test edge cases and unusual scenarios for activation."""
 
-    async def test_activation_special_characters_password(self, client: AsyncClient, db_session: AsyncSession):
+    async def test_activation_special_characters_password(
+        self, client: AsyncClient, db_session: AsyncSession
+    ):
         """Test activation with special characters in passwords."""
         temp_password = "Sp3c!@l#Ch@rs"
         user = User(
@@ -490,13 +521,15 @@ class TestActivationEdgeCases:
             "userId": user.id,
             "email": "special@test.com",
             "temporaryPassword": temp_password,
-            "newPassword": "N3wSp3c!@l#P@ss"
+            "newPassword": "N3wSp3c!@l#P@ss",
         }
 
         response = await client.post("/api/auth/activate", json=activation_data)
         assert response.status_code == 200
 
-    async def test_activation_unicode_email(self, client: AsyncClient, db_session: AsyncSession):
+    async def test_activation_unicode_email(
+        self, client: AsyncClient, db_session: AsyncSession
+    ):
         """Test activation with unicode characters in email."""
         unicode_email = "test@例え.テスト"
         user = User(
@@ -514,13 +547,15 @@ class TestActivationEdgeCases:
             "userId": user.id,
             "email": unicode_email,
             "temporaryPassword": "TempPass123",
-            "newPassword": "NewSecure@123"
+            "newPassword": "NewSecure@123",
         }
 
         response = await client.post("/api/auth/activate", json=activation_data)
         assert response.status_code == 200
 
-    async def test_activation_concurrent_attempts(self, client: AsyncClient, db_session: AsyncSession):
+    async def test_activation_concurrent_attempts(
+        self, client: AsyncClient, db_session: AsyncSession
+    ):
         """Test multiple concurrent activation attempts (should only work once)."""
         user = User(
             email="concurrent@test.com",
@@ -537,7 +572,7 @@ class TestActivationEdgeCases:
             "userId": user.id,
             "email": "concurrent@test.com",
             "temporaryPassword": "TempPass123",
-            "newPassword": "NewSecure@123"
+            "newPassword": "NewSecure@123",
         }
 
         # First activation should succeed

@@ -61,7 +61,9 @@ class CRUDDashboard:
         )
         return result.scalars().all()
 
-    async def get_recent_interviews(self, db: AsyncSession, limit: int = 10) -> List[Interview]:
+    async def get_recent_interviews(
+        self, db: AsyncSession, limit: int = 10
+    ) -> List[Interview]:
         """Get recent interviews (last 7 days)."""
         seven_days_ago = datetime.utcnow() - timedelta(days=7)
         result = await db.execute(
@@ -72,7 +74,9 @@ class CRUDDashboard:
         )
         return result.scalars().all()
 
-    async def get_recent_companies(self, db: AsyncSession, limit: int = 10) -> List[Company]:
+    async def get_recent_companies(
+        self, db: AsyncSession, limit: int = 10
+    ) -> List[Company]:
         """Get recent companies (last 7 days)."""
         seven_days_ago = datetime.utcnow() - timedelta(days=7)
         result = await db.execute(
@@ -83,7 +87,9 @@ class CRUDDashboard:
         )
         return result.scalars().all()
 
-    async def get_recent_resumes(self, db: AsyncSession, limit: int = 10) -> List[Resume]:
+    async def get_recent_resumes(
+        self, db: AsyncSession, limit: int = 10
+    ) -> List[Resume]:
         """Get recent resumes (last 7 days)."""
         seven_days_ago = datetime.utcnow() - timedelta(days=7)
         result = await db.execute(

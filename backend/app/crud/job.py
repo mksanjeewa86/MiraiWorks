@@ -14,9 +14,7 @@ class CRUDJob(CRUDBase[Job, JobCreate, JobUpdate]):
     async def get_by_slug(self, db: AsyncSession, *, slug: str) -> Optional[Job]:
         """Get job by slug."""
         result = await db.execute(
-            select(Job)
-            .where(Job.slug == slug)
-            .options(selectinload(Job.company))
+            select(Job).where(Job.slug == slug).options(selectinload(Job.company))
         )
         return result.scalar_one_or_none()
 
@@ -31,7 +29,7 @@ class CRUDJob(CRUDBase[Job, JobCreate, JobUpdate]):
         salary_min: Optional[int] = None,
         salary_max: Optional[int] = None,
         company_id: Optional[int] = None,
-        search: Optional[str] = None
+        search: Optional[str] = None,
     ) -> List[Job]:
         """Get published jobs with optional filters."""
         query = select(Job).where(Job.status == "published")
@@ -56,7 +54,7 @@ class CRUDJob(CRUDBase[Job, JobCreate, JobUpdate]):
             search_filter = or_(
                 Job.title.ilike(f"%{search}%"),
                 Job.description.ilike(f"%{search}%"),
-                Job.requirements.ilike(f"%{search}%")
+                Job.requirements.ilike(f"%{search}%"),
             )
             query = query.where(search_filter)
 
@@ -73,12 +71,7 @@ class CRUDJob(CRUDBase[Job, JobCreate, JobUpdate]):
         return result.scalars().all()
 
     async def get_by_company(
-        self,
-        db: AsyncSession,
-        *,
-        company_id: int,
-        skip: int = 0,
-        limit: int = 100
+        self, db: AsyncSession, *, company_id: int, skip: int = 0, limit: int = 100
     ) -> List[Job]:
         """Get jobs by company."""
         result = await db.execute(
@@ -92,19 +85,14 @@ class CRUDJob(CRUDBase[Job, JobCreate, JobUpdate]):
         return result.scalars().all()
 
     async def search_jobs(
-        self,
-        db: AsyncSession,
-        *,
-        query_text: str,
-        skip: int = 0,
-        limit: int = 100
+        self, db: AsyncSession, *, query_text: str, skip: int = 0, limit: int = 100
     ) -> List[Job]:
         """Search jobs by text."""
         search_filter = or_(
             Job.title.ilike(f"%{query_text}%"),
             Job.description.ilike(f"%{query_text}%"),
             Job.requirements.ilike(f"%{query_text}%"),
-            Job.location.ilike(f"%{query_text}%")
+            Job.location.ilike(f"%{query_text}%"),
         )
 
         result = await db.execute(
@@ -118,12 +106,7 @@ class CRUDJob(CRUDBase[Job, JobCreate, JobUpdate]):
         return result.scalars().all()
 
     async def get_jobs_by_status(
-        self,
-        db: AsyncSession,
-        *,
-        status: str,
-        skip: int = 0,
-        limit: int = 100
+        self, db: AsyncSession, *, status: str, skip: int = 0, limit: int = 100
     ) -> List[Job]:
         """Get jobs by status."""
         result = await db.execute(
@@ -136,7 +119,9 @@ class CRUDJob(CRUDBase[Job, JobCreate, JobUpdate]):
         )
         return result.scalars().all()
 
-    async def increment_view_count(self, db: AsyncSession, *, job_id: int) -> Optional[Job]:
+    async def increment_view_count(
+        self, db: AsyncSession, *, job_id: int
+    ) -> Optional[Job]:
         """Increment job view count."""
         job = await self.get(db, id=job_id)
         if job:
@@ -146,11 +131,7 @@ class CRUDJob(CRUDBase[Job, JobCreate, JobUpdate]):
         return job
 
     async def get_popular_jobs(
-        self,
-        db: AsyncSession,
-        *,
-        skip: int = 0,
-        limit: int = 10
+        self, db: AsyncSession, *, skip: int = 0, limit: int = 10
     ) -> List[Job]:
         """Get most popular jobs by view count."""
         result = await db.execute(
@@ -164,24 +145,14 @@ class CRUDJob(CRUDBase[Job, JobCreate, JobUpdate]):
         return result.scalars().all()
 
     async def get_recent_jobs(
-        self,
-        db: AsyncSession,
-        *,
-        days: int = 7,
-        skip: int = 0,
-        limit: int = 100
+        self, db: AsyncSession, *, days: int = 7, skip: int = 0, limit: int = 100
     ) -> List[Job]:
         """Get jobs posted in the last N days."""
         cutoff_date = datetime.utcnow() - timedelta(days=days)
 
         result = await db.execute(
             select(Job)
-            .where(
-                and_(
-                    Job.status == "published",
-                    Job.created_at >= cutoff_date
-                )
-            )
+            .where(and_(Job.status == "published", Job.created_at >= cutoff_date))
             .order_by(desc(Job.created_at))
             .offset(skip)
             .limit(limit)
@@ -190,12 +161,7 @@ class CRUDJob(CRUDBase[Job, JobCreate, JobUpdate]):
         return result.scalars().all()
 
     async def get_jobs_expiring_soon(
-        self,
-        db: AsyncSession,
-        *,
-        days: int = 7,
-        skip: int = 0,
-        limit: int = 100
+        self, db: AsyncSession, *, days: int = 7, skip: int = 0, limit: int = 100
     ) -> List[Job]:
         """Get jobs expiring in the next N days."""
         cutoff_date = datetime.utcnow() + timedelta(days=days)
@@ -206,7 +172,7 @@ class CRUDJob(CRUDBase[Job, JobCreate, JobUpdate]):
                 and_(
                     Job.status == "published",
                     Job.expires_at.isnot(None),
-                    Job.expires_at <= cutoff_date
+                    Job.expires_at <= cutoff_date,
                 )
             )
             .order_by(Job.expires_at)
@@ -220,15 +186,12 @@ class CRUDJob(CRUDBase[Job, JobCreate, JobUpdate]):
         """Get job posting statistics."""
         # Total jobs by status
         status_counts = await db.execute(
-            select(Job.status, func.count(Job.id))
-            .group_by(Job.status)
+            select(Job.status, func.count(Job.id)).group_by(Job.status)
         )
         status_stats = dict(status_counts.all())
 
         # Total applications
-        total_applications = await db.execute(
-            select(func.sum(Job.application_count))
-        )
+        total_applications = await db.execute(select(func.sum(Job.application_count)))
         total_app_count = total_applications.scalar() or 0
 
         # Jobs by type
@@ -243,13 +206,13 @@ class CRUDJob(CRUDBase[Job, JobCreate, JobUpdate]):
         salary_stats = await db.execute(
             select(
                 Job.job_type,
-                func.avg((Job.salary_min + Job.salary_max) / 2).label("avg_salary")
+                func.avg((Job.salary_min + Job.salary_max) / 2).label("avg_salary"),
             )
             .where(
                 and_(
                     Job.status == "published",
                     Job.salary_min.isnot(None),
-                    Job.salary_max.isnot(None)
+                    Job.salary_max.isnot(None),
                 )
             )
             .group_by(Job.job_type)
@@ -264,20 +227,14 @@ class CRUDJob(CRUDBase[Job, JobCreate, JobUpdate]):
             "average_salaries": avg_salaries,
             "published_jobs": status_stats.get("published", 0),
             "draft_jobs": status_stats.get("draft", 0),
-            "closed_jobs": status_stats.get("closed", 0)
+            "closed_jobs": status_stats.get("closed", 0),
         }
 
     async def bulk_update_status(
-        self,
-        db: AsyncSession,
-        *,
-        job_ids: List[int],
-        status: str
+        self, db: AsyncSession, *, job_ids: List[int], status: str
     ) -> List[Job]:
         """Bulk update job status."""
-        result = await db.execute(
-            select(Job).where(Job.id.in_(job_ids))
-        )
+        result = await db.execute(select(Job).where(Job.id.in_(job_ids)))
         jobs = result.scalars().all()
 
         for job in jobs:
@@ -290,17 +247,13 @@ class CRUDJob(CRUDBase[Job, JobCreate, JobUpdate]):
         await db.commit()
         return jobs
 
-    async def create_with_slug(
-        self,
-        db: AsyncSession,
-        *,
-        obj_in: JobCreate
-    ) -> Job:
+    async def create_with_slug(self, db: AsyncSession, *, obj_in: JobCreate) -> Job:
         """Create job with auto-generated slug."""
         # Generate slug from title
         import re
-        slug_base = re.sub(r'[^a-zA-Z0-9\s-]', '', obj_in.title.lower())
-        slug_base = re.sub(r'\s+', '-', slug_base.strip())
+
+        slug_base = re.sub(r"[^a-zA-Z0-9\s-]", "", obj_in.title.lower())
+        slug_base = re.sub(r"\s+", "-", slug_base.strip())
 
         # Ensure slug uniqueness
         slug = slug_base

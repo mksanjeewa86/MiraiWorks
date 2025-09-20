@@ -1,4 +1,4 @@
-﻿# Import all models to ensure they are registered with SQLAlchemy
+# Import all models to ensure they are registered with SQLAlchemy
 from .attachment import Attachment
 from .audit import AuditLog
 from .auth import OauthAccount, PasswordResetRequest, RefreshToken

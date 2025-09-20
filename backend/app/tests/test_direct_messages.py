@@ -124,7 +124,9 @@ async def test_get_conversations_returns_latest(
             ),
         )
 
-    response = await client.get("/api/direct-messages/conversations", headers=auth_headers)
+    response = await client.get(
+        "/api/direct-messages/conversations", headers=auth_headers
+    )
 
     assert response.status_code == 200
     data = response.json()
@@ -221,7 +223,6 @@ async def test_mark_messages_as_read(
     assert message.read_at is not None
 
 
-
 @pytest.mark.asyncio
 async def test_search_messages_finds_matches(
     client: AsyncClient,
@@ -259,4 +260,3 @@ async def test_search_messages_finds_matches(
     data = response.json()
     assert data["total"] >= 1
     assert any("summary" in msg["content"].lower() for msg in data["messages"])
-

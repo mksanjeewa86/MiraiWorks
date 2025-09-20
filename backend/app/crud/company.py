@@ -39,7 +39,7 @@ class CRUDCompany(CRUDBase[Company, CompanyCreate, CompanyUpdate]):
             and_(
                 User.company_id == company_id,
                 User.is_admin == True,
-                User.is_deleted == False
+                User.is_deleted == False,
             )
         )
         result = await db.execute(admin_query)

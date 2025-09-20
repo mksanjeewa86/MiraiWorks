@@ -9,7 +9,9 @@ class Settings(BaseSettings):
     environment: str = "development"
 
     # Database
-    db_url: str = Field(default="mysql+asyncmy://changeme:changeme@localhost:3306/miraiworks")
+    db_url: str = Field(
+        default="mysql+asyncmy://changeme:changeme@localhost:3306/miraiworks"
+    )
 
     # Redis
     redis_url: str = Field(default="redis://localhost:6379/0")

@@ -19,7 +19,7 @@ class EmailPreviewService:
                     "activation_url": "http://localhost:3001/activate/42",
                 },
                 "subject": "Activate your MiraiWorks Account",
-                "header_title": "Welcome to MiraiWorks"
+                "header_title": "Welcome to MiraiWorks",
             },
             "auth/2fa_code": {
                 "context": {
@@ -27,7 +27,7 @@ class EmailPreviewService:
                     "code": "123456",
                 },
                 "subject": "Your MiraiWorks Verification Code",
-                "header_title": "Your Verification Code"
+                "header_title": "Your Verification Code",
             },
             "admin/company_activation": {
                 "context": {
@@ -37,7 +37,7 @@ class EmailPreviewService:
                     "activation_url": "http://localhost:3001/activate/99",
                 },
                 "subject": "Welcome to MiraiWorks - Activate your Tech Solutions Inc admin account",
-                "header_title": "Welcome to MiraiWorks"
+                "header_title": "Welcome to MiraiWorks",
             },
             "notifications/message_notification": {
                 "context": {
@@ -47,8 +47,8 @@ class EmailPreviewService:
                     "conversation_url": "http://localhost:3001/messages?user=123",
                 },
                 "subject": "New message from Alex Johnson - MiraiWorks",
-                "header_title": "New Message"
-            }
+                "header_title": "New Message",
+            },
         }
 
     def get_available_templates(self) -> List[str]:
@@ -67,7 +67,7 @@ class EmailPreviewService:
                 template_path,
                 template_config["context"],
                 template_config["subject"],
-                template_config["header_title"]
+                template_config["header_title"],
             )
 
             return {
@@ -88,7 +88,7 @@ class EmailPreviewService:
             except Exception as e:
                 previews[template_path] = {
                     "error": str(e),
-                    "template_path": template_path
+                    "template_path": template_path,
                 }
         return previews
 

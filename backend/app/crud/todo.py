@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from datetime import datetime, timezone
 
@@ -22,7 +22,9 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
             .where(
                 Todo.owner_id == owner_id,
                 Todo.due_date.isnot(None),
-                Todo.status.notin_([TodoStatus.COMPLETED.value, TodoStatus.EXPIRED.value]),
+                Todo.status.notin_(
+                    [TodoStatus.COMPLETED.value, TodoStatus.EXPIRED.value]
+                ),
                 Todo.due_date < now,
             )
             .values(status=TodoStatus.EXPIRED.value, expired_at=now)
@@ -52,14 +54,18 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         total_result = await db.execute(total_query)
         total = total_result.scalar() or 0
 
-        query = query.order_by(Todo.due_date.is_(None), Todo.due_date.asc(), Todo.created_at.desc())
+        query = query.order_by(
+            Todo.due_date.is_(None), Todo.due_date.asc(), Todo.created_at.desc()
+        )
         query = query.offset(offset).limit(limit)
 
         result = await db.execute(query)
         todos = result.scalars().all()
         return todos, total
 
-    async def list_recent(self, db: AsyncSession, *, owner_id: int, limit: int = 5) -> list[Todo]:
+    async def list_recent(
+        self, db: AsyncSession, *, owner_id: int, limit: int = 5
+    ) -> list[Todo]:
         await self.auto_mark_expired(db, owner_id)
         result = await db.execute(
             select(Todo)
@@ -108,7 +114,9 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
 
         return await super().update(db, db_obj=db_obj, obj_in=update_data)
 
-    async def mark_complete(self, db: AsyncSession, *, todo: Todo, completed_by: int) -> Todo:
+    async def mark_complete(
+        self, db: AsyncSession, *, todo: Todo, completed_by: int
+    ) -> Todo:
         todo.mark_completed()
         todo.last_updated_by = completed_by
         db.add(todo)

@@ -38,6 +38,7 @@ class CRUDMessaging(CRUDBase[Conversation, dict, dict]):
         if search:
             search_term = f"%{search}%"
             from sqlalchemy import or_
+
             query = query.where(
                 or_(
                     Conversation.title.ilike(search_term),
@@ -48,7 +49,9 @@ class CRUDMessaging(CRUDBase[Conversation, dict, dict]):
             )
 
         # Count total
-        count_result = await db.execute(select(func.count()).select_from(query.subquery()))
+        count_result = await db.execute(
+            select(func.count()).select_from(query.subquery())
+        )
         total = count_result.scalar()
 
         # Apply pagination

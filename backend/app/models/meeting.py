@@ -68,9 +68,7 @@ class Meeting(Base):
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     meeting_type: Mapped[str] = mapped_column(String(20), nullable=False)  # MeetingType
-    status: Mapped[str] = mapped_column(
-        String(20), nullable=False, default="scheduled"
-    )
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="scheduled")
 
     # Scheduling
     scheduled_start: Mapped[datetime] = mapped_column(DateTime, nullable=False)

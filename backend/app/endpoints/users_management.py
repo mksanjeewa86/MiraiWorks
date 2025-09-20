@@ -30,8 +30,6 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-
-
 @router.get("/users", response_model=UserListResponse)
 async def get_users(
     page: int = Query(1, ge=1),
@@ -53,7 +51,7 @@ async def get_users(
     if not (is_super_admin(current_user) or is_company_admin(current_user)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions to view users"
+            detail="Not enough permissions to view users",
         )
 
     # Determine company filter based on permissions
@@ -95,11 +93,11 @@ async def get_users(
             company_id=user.company_id,
             company_name=user.company.name if user.company else None,
             roles=user_roles,
-            is_deleted=getattr(user, 'is_deleted', False),
-            deleted_at=getattr(user, 'deleted_at', None),
-            is_suspended=getattr(user, 'is_suspended', False),
-            suspended_at=getattr(user, 'suspended_at', None),
-            suspended_by=getattr(user, 'suspended_by', None),
+            is_deleted=getattr(user, "is_deleted", False),
+            deleted_at=getattr(user, "deleted_at", None),
+            is_suspended=getattr(user, "is_suspended", False),
+            suspended_at=getattr(user, "suspended_at", None),
+            suspended_by=getattr(user, "suspended_by", None),
         )
         user_list.append(user_info)
 
@@ -125,7 +123,7 @@ async def create_user(
     if not (is_super_admin(current_user) or is_company_admin(current_user)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions to create users"
+            detail="Not enough permissions to create users",
         )
 
     # Company admin can only create users in their company
@@ -133,7 +131,7 @@ async def create_user(
         if user_data.company_id and user_data.company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Cannot create users for other companies"
+                detail="Cannot create users for other companies",
             )
         user_data.company_id = current_user.company_id
 
@@ -143,11 +141,13 @@ async def create_user(
             if role in forbidden_roles:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail=f"Company admins cannot assign {role.value} role"
+                    detail=f"Company admins cannot assign {role.value} role",
                 )
 
         # Limit company_admin role assignment to prevent privilege escalation
-        company_admin_roles = [role for role in user_data.roles if role == UserRoleEnum.COMPANY_ADMIN]
+        company_admin_roles = [
+            role for role in user_data.roles if role == UserRoleEnum.COMPANY_ADMIN
+        ]
         if len(company_admin_roles) > 0:
             # Check if current user is the only company admin
             existing_admin_query = select(func.count(User.id)).where(
@@ -155,7 +155,7 @@ async def create_user(
                     User.company_id == current_user.company_id,
                     User.is_admin == True,
                     User.is_deleted == False,
-                    User.id != current_user.id  # Exclude current user
+                    User.id != current_user.id,  # Exclude current user
                 )
             )
             existing_admin_result = await db.execute(existing_admin_query)
@@ -164,17 +164,15 @@ async def create_user(
             if other_admin_count == 0:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Cannot create another company admin. You are the only company admin."
+                    detail="Cannot create another company admin. You are the only company admin.",
                 )
 
     # Check if user already exists
-    existing_user = await db.execute(
-        select(User).where(User.email == user_data.email)
-    )
+    existing_user = await db.execute(select(User).where(User.email == user_data.email))
     if existing_user.scalar_one_or_none():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User with this email already exists"
+            detail="User with this email already exists",
         )
 
     # Validate company exists if specified
@@ -184,12 +182,13 @@ async def create_user(
         )
         if not company.scalar_one_or_none():
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Company not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Company not found"
             )
 
     # Generate temporary password
-    temp_password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(12))
+    temp_password = "".join(
+        secrets.choice(string.ascii_letters + string.digits) for _ in range(12)
+    )
     hashed_password = auth_service.get_password_hash(temp_password)
 
     # Check if user should be admin based on roles
@@ -204,7 +203,7 @@ async def create_user(
             and_(
                 User.company_id == user_data.company_id,
                 User.is_admin == True,
-                User.is_deleted == False
+                User.is_deleted == False,
             )
         )
         existing_admin_result = await db.execute(existing_admin_query)
@@ -213,7 +212,7 @@ async def create_user(
         if existing_admin_count > 0:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="This company already has an admin user. Only one admin per company is allowed."
+                detail="This company already has an admin user. Only one admin per company is allowed.",
             )
 
     # Auto-enable 2FA for admin users
@@ -239,9 +238,7 @@ async def create_user(
     # Assign roles
     if user_data.roles:
         for role_name in user_data.roles:
-            role = await db.execute(
-                select(Role.id).where(Role.name == role_name.value)
-            )
+            role = await db.execute(select(Role.id).where(Role.name == role_name.value))
             role_id = role.scalar_one_or_none()
             if role_id:
                 user_role = UserRole(user_id=new_user.id, role_id=role_id)
@@ -261,7 +258,7 @@ async def create_user(
             new_user.first_name,
             activation_token,
             temp_password,
-            new_user.id
+            new_user.id,
         )
     except Exception as e:
         # Log error but don't fail the user creation
@@ -299,14 +296,13 @@ async def bulk_delete_users(
 
     if not operation.user_ids:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No user IDs provided"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="No user IDs provided"
         )
 
     if not (is_super_admin(current_user) or is_company_admin(current_user)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions to delete users"
+            detail="Not enough permissions to delete users",
         )
 
     # Validate user permissions for each user
@@ -330,13 +326,15 @@ async def bulk_delete_users(
 
         valid_user_ids.append(user_id)
 
-    deleted_count, delete_errors = await user_crud.user.bulk_delete(db, valid_user_ids, current_user.id)
+    deleted_count, delete_errors = await user_crud.user.bulk_delete(
+        db, valid_user_ids, current_user.id
+    )
     errors.extend(delete_errors)
 
     return {
         "message": f"Successfully deleted {deleted_count} user(s)",
         "deleted_count": deleted_count,
-        "errors": errors
+        "errors": errors,
     }
 
 
@@ -350,15 +348,14 @@ async def bulk_reset_passwords(
 
     if not operation.user_ids:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No user IDs provided"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="No user IDs provided"
         )
 
     # Check permissions
     if not (is_super_admin(current_user) or is_company_admin(current_user)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions to reset passwords"
+            detail="Not enough permissions to reset passwords",
         )
 
     reset_count = 0
@@ -378,11 +375,15 @@ async def bulk_reset_passwords(
             # Company admin can only reset passwords for users in their company
             if is_company_admin(current_user) and not is_super_admin(current_user):
                 if user.company_id != current_user.company_id:
-                    errors.append(f"Cannot reset password for user {user_id} from other company")
+                    errors.append(
+                        f"Cannot reset password for user {user_id} from other company"
+                    )
                     continue
 
             # Generate new temporary password
-            temp_password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(12))
+            temp_password = "".join(
+                secrets.choice(string.ascii_letters + string.digits) for _ in range(12)
+            )
             hashed_password = auth_service.get_password_hash(temp_password)
 
             # Update user password
@@ -394,9 +395,7 @@ async def bulk_reset_passwords(
             if operation.send_email:
                 try:
                     await email_service.send_password_reset_email(
-                        user.email,
-                        user.first_name,
-                        temp_password
+                        user.email, user.first_name, temp_password
                     )
                 except Exception as e:
                     errors.append(f"Failed to send email to user {user_id}: {str(e)}")
@@ -410,7 +409,7 @@ async def bulk_reset_passwords(
         "message": f"Successfully reset passwords for {reset_count} user(s)",
         "reset_count": reset_count,
         "errors": errors,
-        "temporary_passwords": temp_passwords if not operation.send_email else None
+        "temporary_passwords": temp_passwords if not operation.send_email else None,
     }
 
 
@@ -424,15 +423,14 @@ async def bulk_resend_activation(
 
     if not operation.user_ids:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No user IDs provided"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="No user IDs provided"
         )
 
     # Check permissions
     if not (is_super_admin(current_user) or is_company_admin(current_user)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions to resend activation emails"
+            detail="Not enough permissions to resend activation emails",
         )
 
     sent_count = 0
@@ -451,7 +449,9 @@ async def bulk_resend_activation(
             # Company admin can only resend for users in their company
             if is_company_admin(current_user) and not is_super_admin(current_user):
                 if user.company_id != current_user.company_id:
-                    errors.append(f"Cannot resend activation for user {user_id} from other company")
+                    errors.append(
+                        f"Cannot resend activation for user {user_id} from other company"
+                    )
                     continue
 
             # Check if user is already active
@@ -460,17 +460,15 @@ async def bulk_resend_activation(
                 continue
 
             # Generate new temporary password and activation token
-            temp_password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(12))
+            temp_password = "".join(
+                secrets.choice(string.ascii_letters + string.digits) for _ in range(12)
+            )
             hashed_password = auth_service.get_password_hash(temp_password)
             user.hashed_password = hashed_password
 
             activation_token = auth_service.generate_activation_token(user.email)
             await email_service.send_activation_email(
-                user.email,
-                user.first_name,
-                activation_token,
-                temp_password,
-                user.id
+                user.email, user.first_name, activation_token, temp_password, user.id
             )
             sent_count += 1
 
@@ -480,7 +478,7 @@ async def bulk_resend_activation(
     return {
         "message": f"Successfully sent activation emails to {sent_count} user(s)",
         "sent_count": sent_count,
-        "errors": errors
+        "errors": errors,
     }
 
 
@@ -494,14 +492,13 @@ async def bulk_suspend_users(
 
     if not operation.user_ids:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No user IDs provided"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="No user IDs provided"
         )
 
     if not (is_super_admin(current_user) or is_company_admin(current_user)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions to suspend users"
+            detail="Not enough permissions to suspend users",
         )
 
     # Validate user permissions
@@ -525,13 +522,15 @@ async def bulk_suspend_users(
 
         valid_user_ids.append(user_id)
 
-    suspended_count, suspend_errors = await user_crud.user.bulk_suspend(db, valid_user_ids, current_user.id)
+    suspended_count, suspend_errors = await user_crud.user.bulk_suspend(
+        db, valid_user_ids, current_user.id
+    )
     errors.extend(suspend_errors)
 
     return {
         "message": f"Successfully suspended {suspended_count} user(s)",
         "suspended_count": suspended_count,
-        "errors": errors
+        "errors": errors,
     }
 
 
@@ -545,14 +544,13 @@ async def bulk_unsuspend_users(
 
     if not operation.user_ids:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No user IDs provided"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="No user IDs provided"
         )
 
     if not (is_super_admin(current_user) or is_company_admin(current_user)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions to unsuspend users"
+            detail="Not enough permissions to unsuspend users",
         )
 
     # Validate user permissions
@@ -572,13 +570,15 @@ async def bulk_unsuspend_users(
 
         valid_user_ids.append(user_id)
 
-    unsuspended_count, unsuspend_errors = await user_crud.user.bulk_unsuspend(db, valid_user_ids)
+    unsuspended_count, unsuspend_errors = await user_crud.user.bulk_unsuspend(
+        db, valid_user_ids
+    )
     errors.extend(unsuspend_errors)
 
     return {
         "message": f"Successfully unsuspended {unsuspended_count} user(s)",
         "unsuspended_count": unsuspended_count,
-        "errors": errors
+        "errors": errors,
     }
 
 
@@ -593,8 +593,7 @@ async def get_user(
     user = await user_crud.user.get_with_company_and_roles(db, user_id)
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
     # Check permissions
@@ -602,14 +601,14 @@ async def get_user(
         if current_user.id != user_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not enough permissions to view this user"
+                detail="Not enough permissions to view this user",
             )
 
     if is_company_admin(current_user) and not is_super_admin(current_user):
         if user.company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Cannot view users from other companies"
+                detail="Cannot view users from other companies",
             )
 
     user_roles = [role.role.name for role in user.user_roles]
@@ -629,11 +628,11 @@ async def get_user(
         company_id=user.company_id,
         company_name=user.company.name if user.company else None,
         roles=user_roles,
-        is_deleted=getattr(user, 'is_deleted', False),
-        deleted_at=getattr(user, 'deleted_at', None),
-        is_suspended=getattr(user, 'is_suspended', False),
-        suspended_at=getattr(user, 'suspended_at', None),
-        suspended_by=getattr(user, 'suspended_by', None),
+        is_deleted=getattr(user, "is_deleted", False),
+        deleted_at=getattr(user, "deleted_at", None),
+        is_suspended=getattr(user, "is_suspended", False),
+        suspended_at=getattr(user, "suspended_at", None),
+        suspended_by=getattr(user, "suspended_by", None),
     )
 
 
@@ -648,24 +647,25 @@ async def update_user(
 
     # Get user
     result = await db.execute(
-        select(User).options(
+        select(User)
+        .options(
             selectinload(User.company),
-            selectinload(User.user_roles).selectinload(UserRole.role)
-        ).where(User.id == user_id)
+            selectinload(User.user_roles).selectinload(UserRole.role),
+        )
+        .where(User.id == user_id)
     )
     user = result.scalar_one_or_none()
 
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
     # Check permissions
     if not (is_super_admin(current_user) or is_company_admin(current_user)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions to update users"
+            detail="Not enough permissions to update users",
         )
 
     # Company admin can only update users from their company
@@ -673,7 +673,7 @@ async def update_user(
         if user.company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Cannot update users from other companies"
+                detail="Cannot update users from other companies",
             )
 
         # Company admin role restrictions for updates
@@ -683,14 +683,17 @@ async def update_user(
                 if role in forbidden_roles:
                     raise HTTPException(
                         status_code=status.HTTP_403_FORBIDDEN,
-                        detail=f"Company admins cannot assign {role.value} role"
+                        detail=f"Company admins cannot assign {role.value} role",
                     )
 
         # Prevent company_id changes by company admins
-        if user_data.company_id is not None and user_data.company_id != current_user.company_id:
+        if (
+            user_data.company_id is not None
+            and user_data.company_id != current_user.company_id
+        ):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Company admins cannot move users to other companies"
+                detail="Company admins cannot move users to other companies",
             )
 
     # Update user fields
@@ -706,9 +709,7 @@ async def update_user(
     # Handle role updates
     if user_data.roles is not None:
         # Remove existing roles
-        await db.execute(
-            select(UserRole).where(UserRole.user_id == user_id)
-        )
+        await db.execute(select(UserRole).where(UserRole.user_id == user_id))
         existing_roles = await db.execute(
             select(UserRole).where(UserRole.user_id == user_id)
         )
@@ -717,9 +718,7 @@ async def update_user(
 
         # Add new roles
         for role_name in user_data.roles:
-            role = await db.execute(
-                select(Role.id).where(Role.name == role_name.value)
-            )
+            role = await db.execute(select(Role.id).where(Role.name == role_name.value))
             role_id = role.scalar_one_or_none()
             if role_id:
                 user_role = UserRole(user_id=user_id, role_id=role_id)
@@ -747,11 +746,11 @@ async def update_user(
         company_id=user.company_id,
         company_name=user.company.name if user.company else None,
         roles=user_roles,
-        is_deleted=getattr(user, 'is_deleted', False),
-        deleted_at=getattr(user, 'deleted_at', None),
-        is_suspended=getattr(user, 'is_suspended', False),
-        suspended_at=getattr(user, 'suspended_at', None),
-        suspended_by=getattr(user, 'suspended_by', None),
+        is_deleted=getattr(user, "is_deleted", False),
+        deleted_at=getattr(user, "deleted_at", None),
+        is_suspended=getattr(user, "is_suspended", False),
+        suspended_at=getattr(user, "suspended_at", None),
+        suspended_by=getattr(user, "suspended_by", None),
     )
 
 
@@ -766,27 +765,26 @@ async def delete_user(
     user = await user_crud.user.get(db, user_id)
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
     if not (is_super_admin(current_user) or is_company_admin(current_user)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions to delete users"
+            detail="Not enough permissions to delete users",
         )
 
     if is_company_admin(current_user) and not is_super_admin(current_user):
         if user.company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Cannot delete users from other companies"
+                detail="Cannot delete users from other companies",
             )
 
     if user_id == current_user.id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot delete your own account"
+            detail="Cannot delete your own account",
         )
 
     await user_crud.user.soft_delete(db, user_id, current_user.id)
@@ -808,15 +806,14 @@ async def reset_user_password(
 
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
     # Check permissions
     if not (is_super_admin(current_user) or is_company_admin(current_user)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions to reset passwords"
+            detail="Not enough permissions to reset passwords",
         )
 
     # Company admin can only reset passwords for users in their company
@@ -824,11 +821,13 @@ async def reset_user_password(
         if user.company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Cannot reset passwords for users from other companies"
+                detail="Cannot reset passwords for users from other companies",
             )
 
     # Generate new temporary password
-    temp_password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(12))
+    temp_password = "".join(
+        secrets.choice(string.ascii_letters + string.digits) for _ in range(12)
+    )
     hashed_password = auth_service.get_password_hash(temp_password)
 
     # Update user password
@@ -839,9 +838,7 @@ async def reset_user_password(
     if reset_data.send_email:
         try:
             await email_service.send_password_reset_email(
-                user.email,
-                user.first_name,
-                temp_password
+                user.email, user.first_name, temp_password
             )
         except Exception as e:
             # Log error but don't fail the operation
@@ -849,7 +846,7 @@ async def reset_user_password(
 
     return {
         "message": "Password reset successfully",
-        "temporary_password": temp_password if not reset_data.send_email else None
+        "temporary_password": temp_password if not reset_data.send_email else None,
     }
 
 
@@ -867,15 +864,14 @@ async def resend_activation_email(
 
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
     # Check permissions
     if not (is_super_admin(current_user) or is_company_admin(current_user)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions to resend activation emails"
+            detail="Not enough permissions to resend activation emails",
         )
 
     # Company admin can only resend for users in their company
@@ -883,35 +879,32 @@ async def resend_activation_email(
         if user.company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Cannot resend activation for users from other companies"
+                detail="Cannot resend activation for users from other companies",
             )
 
     # Check if user is already active
     if user.is_active:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User is already active"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="User is already active"
         )
 
     # Generate new temporary password and activation token
     try:
-        temp_password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(12))
+        temp_password = "".join(
+            secrets.choice(string.ascii_letters + string.digits) for _ in range(12)
+        )
         hashed_password = auth_service.get_password_hash(temp_password)
         user.hashed_password = hashed_password
         await db.commit()
 
         activation_token = auth_service.generate_activation_token(user.email)
         await email_service.send_activation_email(
-            user.email,
-            user.first_name,
-            activation_token,
-            temp_password,
-            user.id
+            user.email, user.first_name, activation_token, temp_password, user.id
         )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to send activation email: {str(e)}"
+            detail=f"Failed to send activation email: {str(e)}",
         )
 
     return {"message": "Activation email sent successfully"}
@@ -928,33 +921,31 @@ async def suspend_user(
     user = await user_crud.user.get(db, user_id)
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
     if not (is_super_admin(current_user) or is_company_admin(current_user)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions to suspend users"
+            detail="Not enough permissions to suspend users",
         )
 
     if is_company_admin(current_user) and not is_super_admin(current_user):
         if user.company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Cannot suspend users from other companies"
+                detail="Cannot suspend users from other companies",
             )
 
     if user_id == current_user.id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot suspend your own account"
+            detail="Cannot suspend your own account",
         )
 
     if user.is_suspended:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User is already suspended"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="User is already suspended"
         )
 
     await user_crud.user.suspend_user(db, user_id, current_user.id)
@@ -972,27 +963,25 @@ async def unsuspend_user(
     user = await user_crud.user.get(db, user_id)
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
     if not (is_super_admin(current_user) or is_company_admin(current_user)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions to unsuspend users"
+            detail="Not enough permissions to unsuspend users",
         )
 
     if is_company_admin(current_user) and not is_super_admin(current_user):
         if user.company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Cannot unsuspend users from other companies"
+                detail="Cannot unsuspend users from other companies",
             )
 
     if not user.is_suspended:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User is not suspended"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="User is not suspended"
         )
 
     await user_crud.user.unsuspend_user(db, user_id)

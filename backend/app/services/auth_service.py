@@ -58,7 +58,9 @@ class AuthService:
             to_encode = data.copy()
             expire = datetime.utcnow() + timedelta(days=self.refresh_token_expire_days)
             to_encode.update({"exp": expire, "type": "refresh"})
-            encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
+            encoded_jwt = jwt.encode(
+                to_encode, self.secret_key, algorithm=self.algorithm
+            )
             return encoded_jwt
         else:
             # Create random refresh token for storage
@@ -80,7 +82,9 @@ class AuthService:
         except JWTError:
             return None
 
-    def decode_token(self, token: str, token_type: str = "access") -> Optional[dict[str, Any]]:
+    def decode_token(
+        self, token: str, token_type: str = "access"
+    ) -> Optional[dict[str, Any]]:
         """Alias for verify_token for backward compatibility."""
         return self.verify_token(token, token_type)
 
@@ -160,10 +164,7 @@ class AuthService:
                 selectinload(User.company),
                 selectinload(User.user_roles).selectinload(UserRoleModel.role),
             )
-            .where(
-                User.email == email,
-                User.is_deleted == False
-            )
+            .where(User.email == email, User.is_deleted == False)
         )
 
         user = result.scalar_one_or_none()
@@ -185,10 +186,7 @@ class AuthService:
 
     def generate_activation_token(self, email: str) -> str:
         """Generate an activation token for user email verification."""
-        data = {
-            "sub": email,
-            "type": "activation"
-        }
+        data = {"sub": email, "type": "activation"}
         # Activation tokens expire in 24 hours
         expire_delta = timedelta(hours=24)
         to_encode = data.copy()

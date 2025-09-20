@@ -21,13 +21,16 @@ from app.models.user import User
 # Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+
 def hash_password(password: str) -> str:
     """Hash a password using bcrypt"""
     return pwd_context.hash(password)
 
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against its hash"""
     return pwd_context.verify(plain_password, hashed_password)
+
 
 async def fix_admin_passwords():
     """Fix admin user password hashes"""
@@ -35,9 +38,7 @@ async def fix_admin_passwords():
     engine = create_async_engine(settings.db_url, echo=True)
 
     # Create session maker
-    async_session = sessionmaker(
-        engine, class_=AsyncSession, expire_on_commit=False
-    )
+    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     async with async_session() as session:
         try:
@@ -77,7 +78,9 @@ async def fix_admin_passwords():
 
             if admin:
                 verification = verify_password("admin123", admin.hashed_password)
-                print(f"Admin password verification: {'SUCCESS' if verification else 'FAILED'}")
+                print(
+                    f"Admin password verification: {'SUCCESS' if verification else 'FAILED'}"
+                )
 
             ccc_user = await session.execute(
                 select(User).where(User.email == "admin@ccc.com")
@@ -86,7 +89,9 @@ async def fix_admin_passwords():
 
             if ccc:
                 verification = verify_password("password", ccc.hashed_password)
-                print(f"CCC admin password verification: {'SUCCESS' if verification else 'FAILED'}")
+                print(
+                    f"CCC admin password verification: {'SUCCESS' if verification else 'FAILED'}"
+                )
 
         except Exception as e:
             print(f"Error: {e}")
@@ -94,6 +99,7 @@ async def fix_admin_passwords():
             raise
         finally:
             await engine.dispose()
+
 
 if __name__ == "__main__":
     asyncio.run(fix_admin_passwords())
