@@ -14,7 +14,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { usersApi } from '@/api/users';
-import { User as UserType } from '@/types/user';
+import { UserManagement as UserType } from '@/types/user';
 import { useToast } from '@/contexts/ToastContext';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
@@ -116,13 +116,13 @@ function EditUserContent() {
       switch (action) {
         case 'suspend':
           await usersApi.suspendUser(parseInt(userId));
-          setUser(prev => prev ? { ...prev, is_suspended: true } : null);
+          setUser((prev: UserType | null) => prev ? { ...prev, is_suspended: true } : null);
           showToast({ type: 'success', title: 'User suspended successfully' });
           break;
 
         case 'unsuspend':
           await usersApi.unsuspendUser(parseInt(userId));
-          setUser(prev => prev ? { ...prev, is_suspended: false } : null);
+          setUser((prev: UserType | null) => prev ? { ...prev, is_suspended: false } : null);
           showToast({ type: 'success', title: 'User unsuspended successfully' });
           break;
 

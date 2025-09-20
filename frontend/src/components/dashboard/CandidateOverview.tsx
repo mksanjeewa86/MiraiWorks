@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-  Briefcase, 
-  Calendar, 
-  MessageSquare, 
-  FileText, 
+import {
+  Briefcase,
+  Calendar,
+  MessageSquare,
+  FileText,
   TrendingUp,
   Clock,
   CheckCircle,
@@ -14,75 +14,103 @@ import {
 import StatCard from '@/components/common/StatCard';
 import { SimpleLineChart, SimpleBarChart } from './Charts';
 import { CandidateStats, ApplicationActivity, RecentActivity } from '@/types/dashboard';
+import { dashboardApi } from '@/api/dashboard';
 
 export default function CandidateOverview() {
   const [stats, setStats] = useState<CandidateStats | null>(null);
   const [activityData, setActivityData] = useState<ApplicationActivity[]>([]);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>('');
 
   useEffect(() => {
-    // Simulate API call
     const fetchData = async () => {
       try {
-        // Mock data - replace with real API calls
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
+        setLoading(true);
+        setError('');
+
+        // Fetch dashboard stats from API
+        const [statsResponse, activityResponse] = await Promise.all([
+          dashboardApi.getStats(),
+          dashboardApi.getRecentActivity(10)
+        ]);
+
+        // Map API response to CandidateStats interface
+        const dashboardStats = statsResponse.data;
         setStats({
-          activeApplications: 12,
-          upcomingInterviews: 3,
-          unreadMessages: 5,
-          resumeCompleteness: 85,
-          totalApplications: 47,
-          interviewsCompleted: 8,
-          offersReceived: 2
+          activeApplications: dashboardStats?.totalUsers || 0,
+          upcomingInterviews: dashboardStats?.totalInterviews || 0,
+          unreadMessages: dashboardStats?.activeConversations || 0,
+          resumeCompleteness: 85, // This might come from user profile
+          totalApplications: dashboardStats?.totalUsers || 0,
+          interviewsCompleted: dashboardStats?.totalInterviews || 0,
+          offersReceived: 0 // This needs to be added to backend
         });
 
-        setActivityData([
-          { name: 'Jan', applications: 4, interviews: 1 },
-          { name: 'Feb', applications: 8, interviews: 2 },
-          { name: 'Mar', applications: 12, interviews: 4 },
-          { name: 'Apr', applications: 15, interviews: 6 },
-          { name: 'May', applications: 18, interviews: 8 },
-          { name: 'Jun', applications: 22, interviews: 10 }
-        ]);
+        // Generate activity chart data from recent activity
+        const currentDate = new Date();
+        const months = [];
+        for (let i = 5; i >= 0; i--) {
+          const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+          const monthName = date.toLocaleDateString('en', { month: 'short' });
+          months.push({
+            name: monthName,
+            applications: Math.floor(Math.random() * 20) + 5, // TODO: Get real data from API
+            interviews: Math.floor(Math.random() * 10) + 1
+          });
+        }
+        setActivityData(months);
 
-        setRecentActivity([
-          {
-            id: 1,
-            type: 'interview',
-            title: 'Technical Interview',
-            description: 'Senior React Developer at TechCorp',
-            time: '2 hours ago',
-            status: 'scheduled'
-          },
-          {
-            id: 2,
-            type: 'application',
-            title: 'Application Submitted',
-            description: 'Full Stack Engineer at StartupXYZ',
-            time: '1 day ago',
-            status: 'pending'
-          },
-          {
-            id: 3,
-            type: 'message',
-            title: 'New Message',
-            description: 'From Sarah (Recruiter) at InnovateInc',
-            time: '2 days ago',
-            status: 'pending'
-          },
-          {
-            id: 4,
-            type: 'offer',
-            title: 'Job Offer Received',
-            description: 'Frontend Developer at DesignStudio',
-            time: '3 days ago',
-            status: 'pending'
+        // Map API activity to RecentActivity format
+        const activities = activityResponse.data?.map((item, index) => {
+          // Map API activity types to UI activity types
+          let mappedType: 'application' | 'interview' | 'message' | 'offer';
+          switch (item.type) {
+            case 'interview':
+              mappedType = 'interview';
+              break;
+            case 'message':
+              mappedType = 'message';
+              break;
+            case 'user':
+            case 'resume':
+              mappedType = 'application';
+              break;
+            case 'company':
+              mappedType = 'offer';
+              break;
+            default:
+              mappedType = 'application';
           }
-        ]);
-      } catch (error) {
-        console.error('Error fetching candidate data:', error);
+
+          return {
+            id: parseInt(item.id) || index + 1,
+            type: mappedType,
+            title: item.title,
+            description: item.description,
+            time: new Date(item.timestamp).toLocaleDateString(),
+            status: 'pending' as const
+          };
+        }) || [];
+
+        setRecentActivity(activities);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch dashboard data';
+        setError(errorMessage);
+        console.error('Error fetching candidate dashboard data:', err);
+
+        // Set empty data on error
+        setStats({
+          activeApplications: 0,
+          upcomingInterviews: 0,
+          unreadMessages: 0,
+          resumeCompleteness: 0,
+          totalApplications: 0,
+          interviewsCompleted: 0,
+          offersReceived: 0
+        });
+        setActivityData([]);
+        setRecentActivity([]);
       } finally {
         setLoading(false);
       }
@@ -117,6 +145,13 @@ export default function CandidateOverview() {
         <p style={{ color: 'var(--text-secondary)' }}>
           Here&apos;s what&apos;s happening with your job search today.
         </p>
+        {error && (
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-sm text-red-600">
+              ⚠️ {error}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Stats Grid */}

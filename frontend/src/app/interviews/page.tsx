@@ -1,113 +1,90 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Search, Calendar, Clock, User, MapPin, Edit, Trash2, Eye } from 'lucide-react';
 import Link from 'next/link';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
-
-interface Interview {
-  id: number;
-  title: string;
-  candidate_name: string;
-  recruiter_name: string;
-  company_name: string;
-  scheduled_date: string;
-  start_time: string;
-  end_time: string;
-  location: string;
-  type: 'phone' | 'video' | 'in_person';
-  status: 'scheduled' | 'completed' | 'cancelled' | 'rescheduled';
-  notes?: string;
-  created_at: string;
-}
-
-type StatusFilter = 'all' | Interview['status'];
-type TypeFilter = 'all' | Interview['type'];
-type SortField = 'scheduled_date' | 'candidate_name' | 'status';
+import { interviewsApi } from '@/api/interviews';
+import type {
+  InterviewListItem,
+  InterviewStatusFilter,
+  InterviewTypeFilter,
+  InterviewSortField
+} from '@/types/interview';
 
 function InterviewsPageContent() {
-  const [interviews, setInterviews] = useState<Interview[]>([]);
+  const [interviews, setInterviews] = useState<InterviewListItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
-  const [sortBy, setSortBy] = useState<SortField>('scheduled_date');
+  const [statusFilter, setStatusFilter] = useState<InterviewStatusFilter>('all');
+  const [typeFilter, setTypeFilter] = useState<InterviewTypeFilter>('all');
+  const [sortBy, setSortBy] = useState<InterviewSortField>('scheduled_date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Mock data for development
-  const mockInterviews: Interview[] = useMemo(() => [
-    {
-      id: 1,
-      title: 'Senior Software Engineer Interview',
-      candidate_name: 'John Smith',
-      recruiter_name: 'Sarah Wilson',
-      company_name: 'Tech Corp',
-      scheduled_date: '2025-01-25',
-      start_time: '10:00',
-      end_time: '11:00',
-      location: 'Conference Room A',
-      type: 'in_person',
-      status: 'scheduled',
-      notes: 'Technical interview focusing on React and Node.js',
-      created_at: '2025-01-20T10:00:00Z'
-    },
-    {
-      id: 2,
-      title: 'Product Manager Position',
-      candidate_name: 'Emily Chen',
-      recruiter_name: 'Michael Johnson',
-      company_name: 'Innovation Ltd',
-      scheduled_date: '2025-01-26',
-      start_time: '14:00',
-      end_time: '15:30',
-      location: 'Zoom Meeting',
-      type: 'video',
-      status: 'scheduled',
-      notes: 'Final round interview with CEO',
-      created_at: '2025-01-21T09:30:00Z'
-    },
-    {
-      id: 3,
-      title: 'DevOps Engineer Role',
-      candidate_name: 'David Brown',
-      recruiter_name: 'Lisa Anderson',
-      company_name: 'Cloud Solutions',
-      scheduled_date: '2025-01-24',
-      start_time: '09:00',
-      end_time: '10:00',
-      location: 'Phone Interview',
-      type: 'phone',
-      status: 'completed',
-      notes: 'Initial screening completed successfully',
-      created_at: '2025-01-19T15:00:00Z'
-    }
-  ], []);
 
+  // Fetch interviews from API
   useEffect(() => {
-    // Simulate API call
     const fetchInterviews = async () => {
-      setLoading(true);
       try {
-        // In a real app, this would be an API call:
-        // const response = await fetch('/api/interviews');
-        // const data = await response.json();
+        setLoading(true);
+        setError('');
 
-        // For now, use mock data
-        setTimeout(() => {
-          setInterviews(mockInterviews);
-          setLoading(false);
-        }, 1000);
-      } catch (error) {
-        console.error('Error fetching interviews:', error);
+        const response = await interviewsApi.getAll();
+
+        // Map API response to local Interview interface
+        const interviewsData = response.data?.interviews?.map(interview => ({
+          id: interview.id,
+          title: interview.title,
+          candidate_name: interview.candidate?.first_name && interview.candidate?.last_name
+            ? `${interview.candidate.first_name} ${interview.candidate.last_name}`
+            : 'Unknown Candidate',
+          recruiter_name: interview.recruiter?.first_name && interview.recruiter?.last_name
+            ? `${interview.recruiter.first_name} ${interview.recruiter.last_name}`
+            : 'Unknown Recruiter',
+          company_name: interview.company_name || 'Unknown Company',
+          scheduled_date: interview.scheduled_start ? new Date(interview.scheduled_start).toISOString().split('T')[0] : '',
+          start_time: interview.scheduled_start ? new Date(interview.scheduled_start).toTimeString().split(' ')[0].slice(0, 5) : '',
+          end_time: interview.scheduled_end ? new Date(interview.scheduled_end).toTimeString().split(' ')[0].slice(0, 5) : '',
+          location: interview.location || 'TBD',
+          type: (interview.interview_type as 'phone' | 'video' | 'in_person') || 'video',
+          status: (() => {
+            // Map API status to display status
+            switch (interview.status) {
+              case 'pending_schedule':
+              case 'scheduled':
+              case 'confirmed':
+                return 'scheduled' as const;
+              case 'completed':
+                return 'completed' as const;
+              case 'cancelled':
+                return 'cancelled' as const;
+              case 'in_progress':
+                return 'scheduled' as const; // Show as scheduled when in progress
+              default:
+                return 'scheduled' as const;
+            }
+          })() as InterviewListItem['status'],
+          notes: interview.notes || '',
+          created_at: interview.created_at
+        })) || [];
+
+        setInterviews(interviewsData);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch interviews';
+        setError(errorMessage);
+        console.error('Error fetching interviews:', err);
+        setInterviews([]);
+      } finally {
         setLoading(false);
       }
     };
 
     fetchInterviews();
-  }, [mockInterviews]);
+  }, []);
 
   // Filter and sort interviews
   const filteredInterviews = interviews
@@ -131,8 +108,8 @@ function InterviewsPageContent() {
         aValue = new Date(`${a.scheduled_date} ${a.start_time}`);
         bValue = new Date(`${b.scheduled_date} ${b.start_time}`);
       } else {
-        aValue = String(a[sortBy]).toLowerCase();
-        bValue = String(b[sortBy]).toLowerCase();
+        aValue = String(a[sortBy as keyof InterviewListItem]).toLowerCase();
+        bValue = String(b[sortBy as keyof InterviewListItem]).toLowerCase();
       }
 
       if (aValue instanceof Date && bValue instanceof Date) {
@@ -153,8 +130,8 @@ function InterviewsPageContent() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedInterviews = filteredInterviews.slice(startIndex, startIndex + itemsPerPage);
 
-  const getStatusBadge = (status: Interview['status']) => {
-    const statusClasses: Record<Interview['status'], string> = {
+  const getStatusBadge = (status: InterviewListItem['status']) => {
+    const statusClasses: Record<InterviewListItem['status'], string> = {
       scheduled: 'bg-blue-100 text-blue-800',
       completed: 'bg-green-100 text-green-800',
       cancelled: 'bg-red-100 text-red-800',
@@ -168,14 +145,14 @@ function InterviewsPageContent() {
     );
   };
 
-  const getTypeBadge = (type: Interview['type']) => {
-    const typeClasses: Record<Interview['type'], string> = {
+  const getTypeBadge = (type: InterviewListItem['type']) => {
+    const typeClasses: Record<InterviewListItem['type'], string> = {
       phone: 'bg-gray-100 text-gray-800',
       video: 'bg-purple-100 text-purple-800',
       in_person: 'bg-indigo-100 text-indigo-800'
     };
 
-    const typeLabels: Record<Interview['type'], string> = {
+    const typeLabels: Record<InterviewListItem['type'], string> = {
       phone: 'Phone',
       video: 'Video',
       in_person: 'In-Person'
@@ -191,10 +168,12 @@ function InterviewsPageContent() {
   const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this interview?')) {
       try {
-        // In a real app: await fetch(`/api/interviews/${id}`, { method: 'DELETE' });
+        await interviewsApi.delete(id);
         setInterviews(prev => prev.filter(interview => interview.id !== id));
-      } catch (error) {
-        console.error('Error deleting interview:', error);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to delete interview';
+        setError(errorMessage);
+        console.error('Error deleting interview:', err);
       }
     }
   };
@@ -219,6 +198,11 @@ function InterviewsPageContent() {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Interviews</h1>
               <p className="text-gray-600 mt-1">Manage and track all interview sessions</p>
+              {error && (
+                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600">⚠️ {error}</p>
+                </div>
+              )}
             </div>
             <Link
               href="/interviews/new"
@@ -247,7 +231,7 @@ function InterviewsPageContent() {
               {/* Status Filter */}
               <select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+                onChange={(e) => setStatusFilter(e.target.value as InterviewStatusFilter)}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="all">All Statuses</option>
@@ -260,7 +244,7 @@ function InterviewsPageContent() {
               {/* Type Filter */}
               <select
                 value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value as TypeFilter)}
+                onChange={(e) => setTypeFilter(e.target.value as InterviewTypeFilter)}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="all">All Types</option>
@@ -274,7 +258,7 @@ function InterviewsPageContent() {
                 value={`${sortBy}_${sortOrder}`}
                 onChange={(e) => {
                   const [field, order] = e.target.value.split('_');
-                  setSortBy(field as SortField);
+                  setSortBy(field as InterviewSortField);
                   setSortOrder(order as 'asc' | 'desc');
                 }}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"

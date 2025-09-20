@@ -40,4 +40,8 @@ export * from './calendar';
 export * from './todo';
 
 export * from './position';
-
+export * from './candidate';
+export * from './user';
+export * from './forms';
+export * from './components';
+export * from './location';

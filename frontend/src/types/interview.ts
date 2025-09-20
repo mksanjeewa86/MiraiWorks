@@ -89,3 +89,34 @@ export interface CalendarEvent {
   createdAt: string;
   updatedAt: string;
 }
+
+// Interview List Response Types
+export interface InterviewsListResponse<T = Interview> {
+  interviews: T[];
+  total: number;
+  page: number;
+  size: number;
+  pages: number;
+}
+
+// Page-specific Interview interface for simplified display
+export interface InterviewListItem {
+  id: number;
+  title: string;
+  candidate_name: string;
+  recruiter_name: string;
+  company_name: string;
+  scheduled_date: string;
+  start_time: string;
+  end_time: string;
+  location: string;
+  type: 'phone' | 'video' | 'in_person';
+  status: 'scheduled' | 'completed' | 'cancelled' | 'rescheduled';
+  notes?: string;
+  created_at: string;
+}
+
+// Filter and sort types for interview pages
+export type InterviewStatusFilter = 'all' | InterviewListItem['status'];
+export type InterviewTypeFilter = 'all' | InterviewListItem['type'];
+export type InterviewSortField = 'scheduled_date' | 'candidate_name' | 'status';

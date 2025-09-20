@@ -25,13 +25,13 @@ import {
   Mail as MailIcon,
 } from 'lucide-react';
 import { usersApi } from '@/api/users';
-import { User, UserFilters } from '@/types/user';
+import { UserManagement, UserFilters } from '@/types/user';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
 
 function UsersPageContent() {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<UserManagement[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedUsers, setSelectedUsers] = useState<Set<number>>(new Set());
@@ -687,7 +687,7 @@ function UsersPageContent() {
                               Admin
                             </span>
                           )}
-                          {user.roles.map((role) => (
+                          {user.roles.map((role: string) => (
                             <span key={role} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                               {role.replace('_', ' ')}
                             </span>

@@ -1,8 +1,4 @@
-export interface PrefectureOption {
-  code: string;
-  nameJa: string;
-  nameEn: string;
-}
+import type { PrefectureOption } from '@/types/location';
 
 export const PREFECTURES: PrefectureOption[] = [
   { code: 'hokkaido', nameJa: '北海道', nameEn: 'Hokkaido' },

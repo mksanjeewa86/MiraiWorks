@@ -3,16 +3,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { Shield, RotateCcw } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import type { TwoFactorFormProps } from '@/types/components';
-
-const twoFactorSchema = z.object({
-  code: z.string().length(6, 'Code must be 6 digits').regex(/^\d+$/, 'Code must contain only numbers'),
-});
-
-type TwoFactorFormData = z.infer<typeof twoFactorSchema>;
+import { twoFactorSchema, type TwoFactorFormData } from '@/types/forms';
 
 export default function TwoFactorForm({ onSubmit, onResend, isLoading = false, error }: TwoFactorFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);

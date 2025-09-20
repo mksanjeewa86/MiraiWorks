@@ -1,6 +1,6 @@
 import { apiClient } from './apiClient';
 import type { ApiResponse } from '@/types';
-import type { User } from '@/types/user';
+import type { UserManagement } from '@/types/user';
 
 export interface UserFilters {
   search?: string;
@@ -13,7 +13,7 @@ export interface UserFilters {
 }
 
 export const usersApi = {
-  async getUsers(filters?: UserFilters): Promise<ApiResponse<{ users: User[]; total: number; pages: number; page: number; size: number; }>> {
+  async getUsers(filters?: UserFilters): Promise<ApiResponse<{ users: UserManagement[]; total: number; pages: number; page: number; size: number; }>> {
     const params = new URLSearchParams();
 
     if (filters?.search) params.set('search', filters.search);
@@ -25,22 +25,22 @@ export const usersApi = {
     if (filters?.include_deleted !== undefined) params.set('include_deleted', filters.include_deleted.toString());
 
     const url = params.toString() ? `/api/users?${params.toString()}` : '/api/users';
-    const response = await apiClient.get<{ users: User[]; total: number; pages: number; page: number; size: number; }>(url);
+    const response = await apiClient.get<{ users: UserManagement[]; total: number; pages: number; page: number; size: number; }>(url);
     return { data: response.data, success: true };
   },
 
-  async getById(id: number): Promise<ApiResponse<User>> {
-    const response = await apiClient.get<User>(`/api/users/${id}`);
+  async getById(id: number): Promise<ApiResponse<UserManagement>> {
+    const response = await apiClient.get<UserManagement>(`/api/users/${id}`);
     return { data: response.data, success: true };
   },
 
-  async create(userData: Partial<User>): Promise<ApiResponse<User>> {
-    const response = await apiClient.post<User>('/api/users', userData);
+  async create(userData: Partial<UserManagement>): Promise<ApiResponse<UserManagement>> {
+    const response = await apiClient.post<UserManagement>('/api/users', userData);
     return { data: response.data, success: true };
   },
 
-  async update(id: number, userData: Partial<User>): Promise<ApiResponse<User>> {
-    const response = await apiClient.put<User>(`/api/users/${id}`, userData);
+  async update(id: number, userData: Partial<UserManagement>): Promise<ApiResponse<UserManagement>> {
+    const response = await apiClient.put<UserManagement>(`/api/users/${id}`, userData);
     return { data: response.data, success: true };
   },
 
@@ -50,15 +50,15 @@ export const usersApi = {
   },
 
   // Legacy method names for backward compatibility
-  async getUser(id: number): Promise<ApiResponse<User>> {
+  async getUser(id: number): Promise<ApiResponse<UserManagement>> {
     return this.getById(id);
   },
 
-  async createUser(userData: Partial<User>): Promise<ApiResponse<User>> {
+  async createUser(userData: Partial<UserManagement>): Promise<ApiResponse<UserManagement>> {
     return this.create(userData);
   },
 
-  async updateUser(id: number, userData: Partial<User>): Promise<ApiResponse<User>> {
+  async updateUser(id: number, userData: Partial<UserManagement>): Promise<ApiResponse<UserManagement>> {
     return this.update(id, userData);
   },
 
@@ -66,13 +66,13 @@ export const usersApi = {
     return this.delete(id);
   },
 
-  async suspendUser(id: number): Promise<ApiResponse<User>> {
-    const response = await apiClient.put<User>(`/api/users/${id}/suspend`);
+  async suspendUser(id: number): Promise<ApiResponse<UserManagement>> {
+    const response = await apiClient.put<UserManagement>(`/api/users/${id}/suspend`);
     return { data: response.data, success: true };
   },
 
-  async unsuspendUser(id: number): Promise<ApiResponse<User>> {
-    const response = await apiClient.put<User>(`/api/users/${id}/unsuspend`);
+  async unsuspendUser(id: number): Promise<ApiResponse<UserManagement>> {
+    const response = await apiClient.put<UserManagement>(`/api/users/${id}/unsuspend`);
     return { data: response.data, success: true };
   },
 

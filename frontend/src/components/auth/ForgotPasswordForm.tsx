@@ -3,16 +3,10 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { Mail, CheckCircle } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import type { ForgotPasswordFormProps } from '@/types/components';
-
-const forgotPasswordSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-});
-
-type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
+import { forgotPasswordSchema, type ForgotPasswordFormData } from '@/types/forms';
 
 export default function ForgotPasswordForm({ onSubmit, isLoading = false, error }: ForgotPasswordFormProps) {
   const [isSubmitted, setIsSubmitted] = useState(false);

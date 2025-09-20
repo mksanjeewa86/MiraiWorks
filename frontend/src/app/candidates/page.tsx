@@ -5,12 +5,14 @@ import { Plus, Search, Mail, Phone, MapPin, Edit, Trash2, Eye, User, Star, Calen
 import Link from 'next/link';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
-import type { Candidate } from '@/types/candidate';
+import { candidatesApi } from '@/api/candidates';
+import type { Candidate, CandidateApiFilters } from '@/types/candidate';
 
 
 function CandidatesPageContent() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sourceFilter, setSourceFilter] = useState<string>('all');
@@ -19,6 +21,8 @@ function CandidatesPageContent() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [totalCandidates, setTotalCandidates] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
 
   // Mock data for development
   const mockCandidates: Candidate[] = useMemo(() => [
@@ -104,39 +108,63 @@ function CandidatesPageContent() {
     }
   ], []);
 
+  // Fetch candidates from API
   useEffect(() => {
-    // Simulate API call
     const fetchCandidates = async () => {
-      setLoading(true);
       try {
-        // In a real app, this would be an API call:
-        // const response = await fetch('/api/candidates');
-        // const data = await response.json();
+        setLoading(true);
+        setError('');
 
-        // For now, use mock data
-        setTimeout(() => {
-          setCandidates(mockCandidates);
-          setLoading(false);
-        }, 1000);
-      } catch (error) {
-        console.error('Error fetching candidates:', error);
+        const filters: CandidateApiFilters = {
+          page: currentPage,
+          size: itemsPerPage,
+          search: searchTerm || undefined,
+          role: 'candidate' as const
+        };
+
+        const response = await candidatesApi.getCandidates(filters);
+
+        // Map users to candidates format
+        const candidatesData = response.data?.users?.map(user => ({
+          id: user.id,
+          first_name: user.first_name,
+          last_name: user.last_name,
+          email: user.email,
+          phone: user.phone || '',
+          location: '', // Not available in User type
+          title: 'Job Seeker', // Not available in User type
+          company: user.company_name || '',
+          experience_years: 0, // Not available in User type
+          skills: [], // Not available in User type
+          status: 'active' as const,
+          rating: 0,
+          source: 'website' as const,
+          applied_positions: 0,
+          last_activity: user.updated_at || user.created_at,
+          resume_url: '',
+          notes: '', // Not available in User type
+          created_at: user.created_at
+        })) || [];
+
+        setCandidates(candidatesData);
+        setTotalCandidates(response.data?.total || 0);
+        setTotalPages(response.data?.pages || 0);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch candidates';
+        setError(errorMessage);
+        console.error('Error fetching candidates:', err);
+        setCandidates([]);
+      } finally {
         setLoading(false);
       }
     };
 
     fetchCandidates();
-  }, [mockCandidates]);
+  }, [currentPage, itemsPerPage, searchTerm]);
 
-  // Filter and sort candidates
+  // Apply client-side filters (search is handled server-side)
   const filteredCandidates = candidates
     .filter(candidate => {
-      const fullName = `${candidate.first_name} ${candidate.last_name}`.toLowerCase();
-      const matchesSearch =
-        fullName.includes(searchTerm.toLowerCase()) ||
-        candidate.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        candidate.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        candidate.skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()));
-
       const matchesStatus = statusFilter === 'all' || candidate.status === statusFilter;
       const matchesSource = sourceFilter === 'all' || candidate.source === sourceFilter;
 
@@ -155,7 +183,7 @@ function CandidatesPageContent() {
         }
       }
 
-      return matchesSearch && matchesStatus && matchesSource && matchesExperience;
+      return matchesStatus && matchesSource && matchesExperience;
     })
     .sort((a, b) => {
       let aValue: string | number | Date = a[sortBy as keyof Candidate] as string;
@@ -178,10 +206,11 @@ function CandidatesPageContent() {
       }
     });
 
-  // Pagination
-  const totalPages = Math.ceil(filteredCandidates.length / itemsPerPage);
+  // Calculate display range for results count
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedCandidates = filteredCandidates.slice(startIndex, startIndex + itemsPerPage);
+
+  // Use candidates from API directly (pagination handled server-side)
+  const paginatedCandidates = filteredCandidates;
 
   const getStatusBadge = (status: string) => {
     const statusClasses = {
@@ -247,10 +276,13 @@ function CandidatesPageContent() {
   const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this candidate?')) {
       try {
-        // In a real app: await fetch(`/api/candidates/${id}`, { method: 'DELETE' });
+        await candidatesApi.deleteCandidate(id);
         setCandidates(candidates.filter(candidate => candidate.id !== id));
-      } catch (error) {
-        console.error('Error deleting candidate:', error);
+        setTotalCandidates(prev => prev - 1);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to delete candidate';
+        setError(errorMessage);
+        console.error('Error deleting candidate:', err);
       }
     }
   };
@@ -280,6 +312,11 @@ function CandidatesPageContent() {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Candidates</h1>
               <p className="text-gray-600 mt-1">Manage your talent pipeline and candidate relationships</p>
+              {error && (
+                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600">⚠️ {error}</p>
+                </div>
+              )}
             </div>
             <div className="flex gap-3">
               <button
@@ -437,7 +474,10 @@ function CandidatesPageContent() {
           {/* Results Count */}
           <div className="mb-4">
             <p className="text-gray-600">
-              Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredCandidates.length)} of {filteredCandidates.length} candidates
+              Showing {startIndex + 1}-{Math.min(startIndex + paginatedCandidates.length, startIndex + itemsPerPage)} of {totalCandidates} candidates
+              {filteredCandidates.length !== candidates.length && (
+                <span className="text-gray-500"> (filtered from {candidates.length})</span>
+              )}
             </p>
           </div>
 

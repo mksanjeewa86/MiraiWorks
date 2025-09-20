@@ -21,7 +21,7 @@ export interface EventsListResponse<T = unknown> {
   has_more: boolean;
 }
 
-export interface InterviewsListResponse<T = unknown> {
+export interface GenericInterviewsListResponse<T = unknown> {
   interviews: T[];
   total: number;
   has_more: boolean;

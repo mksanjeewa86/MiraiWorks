@@ -1,7 +1,7 @@
 import { API_ENDPOINTS } from './config';
 import { apiClient } from './apiClient';
-import type { ApiResponse, InterviewsListResponse } from '@/types';
-import type { Interview } from '@/types/interview';
+import type { ApiResponse } from '@/types';
+import type { Interview, InterviewsListResponse } from '@/types/interview';
 
 export const interviewsApi = {
   async getAll(): Promise<ApiResponse<InterviewsListResponse<Interview>>> {

@@ -22,11 +22,23 @@ export interface Candidate {
 export type CandidateStatus = Candidate['status'];
 export type CandidateSource = Candidate['source'];
 
+// Client-side filters for UI
 export interface CandidateFilters {
   search: string;
   status: 'all' | CandidateStatus;
   source: 'all' | CandidateSource;
   experience: 'all' | 'entry' | 'mid' | 'senior';
+}
+
+// API filters for backend requests
+export interface CandidateApiFilters {
+  page?: number;
+  size?: number;
+  search?: string;
+  company_id?: number;
+  is_active?: boolean;
+  role?: 'candidate';
+  include_deleted?: boolean;
 }
 
 export interface CandidateListResponse {

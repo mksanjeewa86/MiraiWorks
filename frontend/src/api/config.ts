@@ -119,4 +119,10 @@ export const API_ENDPOINTS = {
     STATS: '/api/dashboard/stats',
     ACTIVITY: '/api/dashboard/activity',
   },
+
+  // Admin/Users endpoints (includes candidates)
+  ADMIN: {
+    USERS: '/api/admin/users',
+    USER_BY_ID: (id: string | number) => `/api/admin/users/${id}`,
+  },
 } as const;

@@ -1,4 +1,4 @@
-export interface User {
+export interface UserManagement {
   id: number;
   email: string;
   first_name: string;
@@ -45,7 +45,7 @@ export interface UserUpdate {
 }
 
 export interface UserListResponse {
-  users: User[];
+  users: UserManagement[];
   total: number;
   page: number;
   size: number;
