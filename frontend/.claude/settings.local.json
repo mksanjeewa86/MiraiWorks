@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build:*)",
+      "Read(//c/Users/mksan/OneDrive/ドキュメント/projects/MiraiWorks/**)",
+      "Bash(docker build:*)",
+      "Bash(docker-compose:*)",
+      "Bash(chmod:*)",
+      "Bash(curl:*)",
+      "Bash(npm run dev:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(docker exec:*)",
+      "Bash(find:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

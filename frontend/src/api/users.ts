@@ -24,28 +24,28 @@ export const usersApi = {
     if (filters?.size) params.set('size', filters.size.toString());
     if (filters?.include_deleted !== undefined) params.set('include_deleted', filters.include_deleted.toString());
 
-    const url = params.toString() ? `/api/users?${params.toString()}` : '/api/users';
+    const url = params.toString() ? `/api/admin/users?${params.toString()}` : '/api/admin/users';
     const response = await apiClient.get<{ users: UserManagement[]; total: number; pages: number; page: number; size: number; }>(url);
     return { data: response.data, success: true };
   },
 
   async getById(id: number): Promise<ApiResponse<UserManagement>> {
-    const response = await apiClient.get<UserManagement>(`/api/users/${id}`);
+    const response = await apiClient.get<UserManagement>(`/api/admin/users/${id}`);
     return { data: response.data, success: true };
   },
 
   async create(userData: Partial<UserManagement>): Promise<ApiResponse<UserManagement>> {
-    const response = await apiClient.post<UserManagement>('/api/users', userData);
+    const response = await apiClient.post<UserManagement>('/api/admin/users', userData);
     return { data: response.data, success: true };
   },
 
   async update(id: number, userData: Partial<UserManagement>): Promise<ApiResponse<UserManagement>> {
-    const response = await apiClient.put<UserManagement>(`/api/users/${id}`, userData);
+    const response = await apiClient.put<UserManagement>(`/api/admin/users/${id}`, userData);
     return { data: response.data, success: true };
   },
 
   async delete(id: number): Promise<ApiResponse<void>> {
-    await apiClient.delete<void>(`/api/users/${id}`);
+    await apiClient.delete<void>(`/api/admin/users/${id}`);
     return { data: undefined, success: true };
   },
 
@@ -67,48 +67,48 @@ export const usersApi = {
   },
 
   async suspendUser(id: number): Promise<ApiResponse<UserManagement>> {
-    const response = await apiClient.put<UserManagement>(`/api/users/${id}/suspend`);
+    const response = await apiClient.post<UserManagement>(`/api/admin/users/${id}/suspend`);
     return { data: response.data, success: true };
   },
 
   async unsuspendUser(id: number): Promise<ApiResponse<UserManagement>> {
-    const response = await apiClient.put<UserManagement>(`/api/users/${id}/unsuspend`);
+    const response = await apiClient.post<UserManagement>(`/api/admin/users/${id}/unsuspend`);
     return { data: response.data, success: true };
   },
 
   async resetPassword(id: number): Promise<ApiResponse<{ message: string }>> {
-    const response = await apiClient.post<{ message: string }>(`/api/users/${id}/reset-password`);
+    const response = await apiClient.post<{ message: string }>(`/api/admin/users/${id}/reset-password`);
     return { data: response.data, success: true };
   },
 
   async resendActivation(id: number): Promise<ApiResponse<{ message: string }>> {
-    const response = await apiClient.post<{ message: string }>(`/api/users/${id}/resend-activation`);
+    const response = await apiClient.post<{ message: string }>(`/api/admin/users/${id}/resend-activation`);
     return { data: response.data, success: true };
   },
 
   // Bulk operations
   async bulkDelete(userIds: number[]): Promise<ApiResponse<{ message: string }>> {
-    const response = await apiClient.post<{ message: string }>('/api/users/bulk/delete', { user_ids: userIds });
+    const response = await apiClient.post<{ message: string }>('/api/admin/users/bulk/delete', { user_ids: userIds });
     return { data: response.data, success: true };
   },
 
   async bulkResetPassword(userIds: number[]): Promise<ApiResponse<{ message: string }>> {
-    const response = await apiClient.post<{ message: string }>('/api/users/bulk/reset-password', { user_ids: userIds });
+    const response = await apiClient.post<{ message: string }>('/api/admin/users/bulk/reset-password', { user_ids: userIds });
     return { data: response.data, success: true };
   },
 
   async bulkResendActivation(userIds: number[]): Promise<ApiResponse<{ message: string }>> {
-    const response = await apiClient.post<{ message: string }>('/api/users/bulk/resend-activation', { user_ids: userIds });
+    const response = await apiClient.post<{ message: string }>('/api/admin/users/bulk/resend-activation', { user_ids: userIds });
     return { data: response.data, success: true };
   },
 
   async bulkSuspend(userIds: number[]): Promise<ApiResponse<{ message: string }>> {
-    const response = await apiClient.post<{ message: string }>('/api/users/bulk/suspend', { user_ids: userIds });
+    const response = await apiClient.post<{ message: string }>('/api/admin/users/bulk/suspend', { user_ids: userIds });
     return { data: response.data, success: true };
   },
 
   async bulkUnsuspend(userIds: number[]): Promise<ApiResponse<{ message: string }>> {
-    const response = await apiClient.post<{ message: string }>('/api/users/bulk/unsuspend', { user_ids: userIds });
+    const response = await apiClient.post<{ message: string }>('/api/admin/users/bulk/unsuspend', { user_ids: userIds });
     return { data: response.data, success: true };
   },
 };

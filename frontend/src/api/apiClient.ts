@@ -72,18 +72,33 @@ export const makeAuthenticatedRequest = async <T>(
     // Handle other HTTP errors
     if (!response.ok) {
       let errorMessage = `API request failed: ${response.status} ${response.statusText}`;
-      
+
       try {
         const errorData = await response.json();
         if (errorData.message) {
-          errorMessage = errorData.message;
+          errorMessage = typeof errorData.message === 'string'
+            ? errorData.message
+            : JSON.stringify(errorData.message);
         } else if (errorData.detail) {
-          errorMessage = errorData.detail;
+          // Handle both string and array/object details
+          if (typeof errorData.detail === 'string') {
+            errorMessage = errorData.detail;
+          } else if (Array.isArray(errorData.detail)) {
+            // Handle validation errors array
+            errorMessage = errorData.detail.map((error: unknown) =>
+              typeof error === 'string' ? error : (error as { msg?: string }).msg || JSON.stringify(error)
+            ).join(', ');
+          } else {
+            errorMessage = JSON.stringify(errorData.detail);
+          }
+        } else {
+          // Fallback to stringify the entire error object
+          errorMessage = JSON.stringify(errorData);
         }
       } catch {
         // Use default error message if parsing fails
       }
-      
+
       throw new Error(errorMessage);
     }
 
@@ -115,18 +130,33 @@ export const makePublicRequest = async <T>(
 
   if (!response.ok) {
     let errorMessage = `API request failed: ${response.status} ${response.statusText}`;
-    
+
     try {
       const errorData = await response.json();
       if (errorData.message) {
-        errorMessage = errorData.message;
+        errorMessage = typeof errorData.message === 'string'
+          ? errorData.message
+          : JSON.stringify(errorData.message);
       } else if (errorData.detail) {
-        errorMessage = errorData.detail;
+        // Handle both string and array/object details
+        if (typeof errorData.detail === 'string') {
+          errorMessage = errorData.detail;
+        } else if (Array.isArray(errorData.detail)) {
+          // Handle validation errors array
+          errorMessage = errorData.detail.map((error: unknown) =>
+            typeof error === 'string' ? error : (error as { msg?: string }).msg || JSON.stringify(error)
+          ).join(', ');
+        } else {
+          errorMessage = JSON.stringify(errorData.detail);
+        }
+      } else {
+        // Fallback to stringify the entire error object
+        errorMessage = JSON.stringify(errorData);
       }
     } catch {
       // Use default error message if parsing fails
     }
-    
+
     throw new Error(errorMessage);
   }
 

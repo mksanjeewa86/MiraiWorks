@@ -1,0 +1,43 @@
+# Production configuration
+
+services:
+  backend:
+    environment:
+      - NODE_ENV=production
+      - LOG_LEVEL=INFO
+      - ENVIRONMENT=production
+      - RELOAD=false
+    # Remove code volume mounting for production
+    volumes:
+      - backend_logs:/app/logs
+      - uploads_data:/uploads
+
+  # Frontend service for production
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: miraiworks_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://backend:8000
+      - NEXT_TELEMETRY_DISABLED=1
+      - HOSTNAME=0.0.0.0
+      - PORT=3000
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:3000/api/health"]
+      timeout: 10s
+      retries: 5
+      interval: 30s
+    networks:
+      - miraiworks-network
+
+volumes:
+  backend_logs:
+  uploads_data:

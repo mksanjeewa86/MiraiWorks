@@ -89,7 +89,6 @@ next-env.d.ts
 # Docker
 Dockerfile
 .dockerignore
-docker-compose*.yml
 
 # CI/CD
 .github/

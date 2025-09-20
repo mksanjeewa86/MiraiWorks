@@ -1,0 +1,32 @@
+# Override configuration for development
+
+services:
+  backend:
+    environment:
+      # Development environment variables
+      - DEBUG=true
+      - LOG_LEVEL=DEBUG
+      - ENVIRONMENT=development
+      - RELOAD=true
+    # Override CMD for development with auto-reload
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--log-level", "debug"]
+    # Enable code mounting for development (comment out for production)
+    volumes:
+      - ./backend:/app
+      - backend_logs:/app/logs
+      - uploads_data:/uploads
+
+  # Override database for development with more permissive settings
+  db:
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: miraiworks
+      MYSQL_USER: hrms
+      MYSQL_PASSWORD: hrms
+      # Allow connections from any host in development
+      MYSQL_ROOT_HOST: '%'
+    command: --default-authentication-plugin=mysql_native_password --bind-address=0.0.0.0
+
+volumes:
+  backend_logs:
+  uploads_data:

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import type { ChangeEvent, FormEvent, CSSProperties } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import { useAuth } from '@/contexts/AuthContext';
 import { PREFECTURES } from '@/utils/prefectures';
 import { positionsApi } from '@/api/positions';
 import type { Position as ApiPosition, PositionCreate } from '@/types';
@@ -121,6 +122,7 @@ const mapApiPositionToLocal = (apiPosition: ApiPosition): Position => {
 };
 
 function PositionsPageContent() {
+  const { user, isLoading: authLoading } = useAuth();
   const [positions, setPositions] = useState<Position[]>([]);
   const [filteredPositions, setFilteredPositions] = useState<Position[]>([]);
   const [loading, setLoading] = useState(true);
@@ -139,10 +141,18 @@ function PositionsPageContent() {
   // Load positions from API
   useEffect(() => {
     const loadPositions = async () => {
+      // Wait for user to be available and auth to finish loading
+      if (authLoading || !user) {
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
-        const response = await positionsApi.getAll();
+        // Pass user's company_id as a filter to only show positions from their company
+        const response = await positionsApi.getAll({
+          company_id: user.company_id
+        });
         if (response.success && response.data) {
           const mappedPositions = response.data.positions.map(mapApiPositionToLocal);
           setPositions(mappedPositions);
@@ -158,7 +168,7 @@ function PositionsPageContent() {
     };
 
     loadPositions();
-  }, []);
+  }, [user, authLoading]);
 
   // Apply filters and search
   useEffect(() => {
@@ -243,7 +253,7 @@ function PositionsPageContent() {
         benefits: parseMultiline(formData.benefits),
         application_deadline: formData.deadline || undefined,
         is_urgent: formData.is_urgent,
-        company_id: 1, // TODO: Get from user context
+        company_id: user?.company_id || 1, // Use current user's company
       };
 
       const response = await positionsApi.create(positionData);
@@ -317,6 +327,17 @@ function PositionsPageContent() {
     setLevelFilter('all');
     setLocationFilter('all');
   };
+  // Show loading spinner while auth is loading
+  if (authLoading) {
+    return (
+      <AppLayout>
+        <div className="flex items-center justify-center min-h-64">
+          <div className="loading-spinner border-gray-300 border-t-brand-primary h-8 w-8" aria-label="Loading"></div>
+        </div>
+      </AppLayout>
+    );
+  }
+
   return (
     <AppLayout>
       <NewPositionModal

@@ -5,6 +5,7 @@ import { Plus, Search, Calendar, Clock, User, MapPin, Edit, Trash2, Eye } from '
 import Link from 'next/link';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import { useAuth } from '@/contexts/AuthContext';
 import { interviewsApi } from '@/api/interviews';
 import type {
   InterviewListItem,
@@ -14,6 +15,7 @@ import type {
 } from '@/types/interview';
 
 function InterviewsPageContent() {
+  const { user } = useAuth();
   const [interviews, setInterviews] = useState<InterviewListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -29,11 +31,20 @@ function InterviewsPageContent() {
   // Fetch interviews from API
   useEffect(() => {
     const fetchInterviews = async () => {
+      // Wait for user to be available
+      if (!user) {
+        return;
+      }
+
       try {
         setLoading(true);
         setError('');
 
-        const response = await interviewsApi.getAll();
+        // Pass required parameters based on current user
+        const response = await interviewsApi.getAll({
+          recruiter_id: user.id, // Assuming the current user is the recruiter
+          employer_company_id: user.company_id
+        });
 
         // Map API response to local Interview interface
         const interviewsData = response.data?.interviews?.map(interview => ({
@@ -84,7 +95,7 @@ function InterviewsPageContent() {
     };
 
     fetchInterviews();
-  }, []);
+  }, [user]);
 
   // Filter and sort interviews
   const filteredInterviews = interviews
