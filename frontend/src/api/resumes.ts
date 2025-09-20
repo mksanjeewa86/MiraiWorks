@@ -1,213 +1,63 @@
+import { API_ENDPOINTS } from './config';
+import { apiClient, publicApiClient } from './apiClient';
 import type { ApiResponse, Resume, WorkExperience, Education, Skill } from '@/types';
-import { API_CONFIG } from '@/config/api';
 
-// Resumes API
 export const resumesApi = {
-  getAll: async (): Promise<ApiResponse<Resume[]>> => {
-    const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/resumes`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const responseData = await response.json();
-    return { data: responseData.resumes, success: true };
+  async getAll(): Promise<ApiResponse<Resume[]>> {
+    const response = await apiClient.get<{ resumes: Resume[] }>(API_ENDPOINTS.RESUMES.BASE);
+    return { data: response.data.resumes, success: true };
   },
 
-  getById: async (id: number): Promise<ApiResponse<Resume>> => {
-    const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/resumes/${id}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return { data, success: true };
+  async getById(id: number): Promise<ApiResponse<Resume>> {
+    const response = await apiClient.get<Resume>(API_ENDPOINTS.RESUMES.BY_ID(id));
+    return { data: response.data, success: true };
   },
 
-  getBySlug: async (slug: string): Promise<ApiResponse<Resume>> => {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/public/resumes/${slug}`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return { data, success: true };
+  async getBySlug(slug: string): Promise<ApiResponse<Resume>> {
+    const response = await publicApiClient.get<Resume>(API_ENDPOINTS.RESUMES.BY_SLUG(slug));
+    return { data: response.data, success: true };
   },
 
-  create: async (resumeData: Partial<Resume>): Promise<ApiResponse<Resume>> => {
-    const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/resumes`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(resumeData),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return { data, success: true };
+  async create(resumeData: Partial<Resume>): Promise<ApiResponse<Resume>> {
+    const response = await apiClient.post<Resume>(API_ENDPOINTS.RESUMES.BASE, resumeData);
+    return { data: response.data, success: true };
   },
 
-  update: async (id: number, resumeData: Partial<Resume>): Promise<ApiResponse<Resume>> => {
-    const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/resumes/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(resumeData),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return { data, success: true };
+  async update(id: number, resumeData: Partial<Resume>): Promise<ApiResponse<Resume>> {
+    const response = await apiClient.put<Resume>(API_ENDPOINTS.RESUMES.BY_ID(id), resumeData);
+    return { data: response.data, success: true };
   },
 
-  delete: async (id: number): Promise<ApiResponse<void>> => {
-    const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/resumes/${id}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-    }
-    
+  async delete(id: number): Promise<ApiResponse<void>> {
+    await apiClient.delete<void>(API_ENDPOINTS.RESUMES.BY_ID(id));
     return { data: undefined, success: true };
   },
 
   // Work Experience endpoints
-  addExperience: async (resumeId: number, experience: Partial<WorkExperience>): Promise<ApiResponse<WorkExperience>> => {
-    const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/resumes/${resumeId}/experiences`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(experience),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return { data, success: true };
+  async addExperience(resumeId: number, experience: Partial<WorkExperience>): Promise<ApiResponse<WorkExperience>> {
+    const response = await apiClient.post<WorkExperience>(API_ENDPOINTS.RESUMES.EXPERIENCES(resumeId), experience);
+    return { data: response.data, success: true };
   },
 
-  updateExperience: async (experienceId: number, experience: Partial<WorkExperience>): Promise<ApiResponse<WorkExperience>> => {
-    const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/experiences/${experienceId}`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(experience),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return { data, success: true };
+  async updateExperience(experienceId: number, experience: Partial<WorkExperience>): Promise<ApiResponse<WorkExperience>> {
+    const response = await apiClient.put<WorkExperience>(API_ENDPOINTS.RESUMES.EXPERIENCE_BY_ID(experienceId), experience);
+    return { data: response.data, success: true };
   },
 
-  deleteExperience: async (experienceId: number): Promise<ApiResponse<void>> => {
-    const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/experiences/${experienceId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-    }
-    
+  async deleteExperience(experienceId: number): Promise<ApiResponse<void>> {
+    await apiClient.delete<void>(API_ENDPOINTS.RESUMES.EXPERIENCE_BY_ID(experienceId));
     return { data: undefined, success: true };
   },
 
   // Education endpoints
-  addEducation: async (resumeId: number, education: Partial<Education>): Promise<ApiResponse<Education>> => {
-    const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/resumes/${resumeId}/education`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(education),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return { data, success: true };
+  async addEducation(resumeId: number, education: Partial<Education>): Promise<ApiResponse<Education>> {
+    const response = await apiClient.post<Education>(API_ENDPOINTS.RESUMES.EDUCATION(resumeId), education);
+    return { data: response.data, success: true };
   },
 
   // Skills endpoints
-  addSkill: async (resumeId: number, skill: Partial<Skill>): Promise<ApiResponse<Skill>> => {
-    const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/resumes/${resumeId}/skills`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(skill),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return { data, success: true };
+  async addSkill(resumeId: number, skill: Partial<Skill>): Promise<ApiResponse<Skill>> {
+    const response = await apiClient.post<Skill>(API_ENDPOINTS.RESUMES.SKILLS(resumeId), skill);
+    return { data: response.data, success: true };
   },
 };

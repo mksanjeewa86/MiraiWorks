@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Save } from 'lucide-react';
-import { usersApi } from '@/api/usersApi';
-import { companiesApi } from '@/api/companiesApi';
+import { usersApi } from '@/api/users';
+import { companiesApi } from '@/api/companies';
 import { UserCreate } from '@/types/user';
 import { Company } from '@/types/company';
 import { UserFormData } from '@/types/forms';
@@ -116,7 +116,9 @@ function AddUserPageContent() {
         } else if (isSuperAdmin) {
           // Super admin can see all companies
           const response = await companiesApi.getCompanies({ size: 100 });
-          setCompanies(response.data.companies);
+          if (response.data?.companies) {
+            setCompanies(response.data.companies);
+          }
         } else {
           // Other roles - no company selection needed
           setCompanies([]);

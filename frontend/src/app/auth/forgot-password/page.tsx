@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import Brand from '@/components/common/Brand';
 import ForgotPasswordForm from '@/components/auth/ForgotPasswordForm';
-import { API_CONFIG } from '@/config/api';
+import { API_CONFIG } from '@/api/config';
 
 export default function ForgotPasswordPage() {
   const [error, setError] = useState<string>('');

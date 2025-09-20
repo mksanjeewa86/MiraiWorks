@@ -13,7 +13,7 @@ import {
   Mail,
   AlertTriangle
 } from 'lucide-react';
-import { usersApi } from '@/api/usersApi';
+import { usersApi } from '@/api/users';
 import { User as UserType } from '@/types/user';
 import { useToast } from '@/contexts/ToastContext';
 import AppLayout from '@/components/layout/AppLayout';
@@ -57,6 +57,12 @@ function EditUserContent() {
         setLoading(true);
         const response = await usersApi.getUser(parseInt(userId));
         const userData = response.data;
+
+        if (!userData) {
+          setError('User not found');
+          return;
+        }
+
         setUser(userData);
         setFormData({
           first_name: userData.first_name,
@@ -89,7 +95,9 @@ function EditUserContent() {
     try {
       setSubmitting(true);
       const response = await usersApi.updateUser(parseInt(userId), formData);
-      setUser(response.data);
+      if (response.data) {
+        setUser(response.data);
+      }
       showToast({ type: 'success', title: 'User updated successfully' });
     } catch (err) {
       console.error('Error updating user:', err);

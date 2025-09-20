@@ -12,8 +12,8 @@ logger = logging.getLogger(__name__)
 async def get_public_stats():
     """Get public platform statistics."""
     return {
-        "total_jobs": 0,
-        "active_jobs": 0,
+        "total_positions": 0,
+        "active_positions": 0,
         "total_companies": 0,
         "total_candidates": 0,
         "successful_placements": 0,
@@ -25,17 +25,17 @@ async def get_public_stats():
     }
 
 
-@router.get("/jobs")
-async def get_public_jobs(
+@router.get("/positions")
+async def get_public_positions(
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
     search: Optional[str] = Query(None),
     location: Optional[str] = Query(None),
     category: Optional[str] = Query(None),
 ):
-    """Get public job listings."""
+    """Get public position listings."""
     return {
-        "jobs": [],
+        "positions": [],
         "total": 0,
         "page": offset // limit + 1,
         "total_pages": 0,
@@ -45,17 +45,17 @@ async def get_public_jobs(
     }
 
 
-@router.get("/jobs/search")
-async def search_public_jobs(
+@router.get("/positions/search")
+async def search_public_positions(
     q: str = Query(..., min_length=1),
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
     location: Optional[str] = Query(None),
     salary_min: Optional[int] = Query(None),
     salary_max: Optional[int] = Query(None),
-    job_type: Optional[str] = Query(None),
+    position_type: Optional[str] = Query(None),
 ):
-    """Search public job listings."""
+    """Search public position listings."""
     return {
         "results": [],
         "total": 0,
@@ -67,7 +67,7 @@ async def search_public_jobs(
             "salary_range": [salary_min, salary_max]
             if salary_min or salary_max
             else None,
-            "job_type": job_type,
+            "position_type": position_type,
         },
         "suggestions": [],
     }
@@ -123,7 +123,7 @@ async def get_sitemap():
         <priority>1.0</priority>
     </url>
     <url>
-        <loc>http://localhost:3000/jobs</loc>
+        <loc>http://localhost:3000/positions</loc>
         <changefreq>daily</changefreq>
         <priority>0.9</priority>
     </url>
@@ -151,7 +151,7 @@ async def get_robots_txt():
     """Generate robots.txt for search engine crawlers."""
     robots_content = """User-agent: *
 Allow: /
-Allow: /jobs
+Allow: /positions
 Allow: /companies
 Allow: /public/*
 
@@ -170,26 +170,26 @@ Sitemap: http://localhost:3000/api/public/sitemap.xml
     )
 
 
-@router.get("/rss/jobs.xml", response_class=Response)
-async def get_jobs_rss():
-    """Generate RSS feed for job listings."""
+@router.get("/rss/positions.xml", response_class=Response)
+async def get_positions_rss():
+    """Generate RSS feed for position listings."""
     rss_content = """<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
     <channel>
-        <title>MiraiWorks - Latest Jobs</title>
-        <link>http://localhost:3000/jobs</link>
-        <description>Latest job opportunities on MiraiWorks platform</description>
+        <title>MiraiWorks - Latest Positions</title>
+        <link>http://localhost:3000/positions</link>
+        <description>Latest position opportunities on MiraiWorks platform</description>
         <language>en-us</language>
         <lastBuildDate>Fri, 06 Sep 2025 00:00:00 GMT</lastBuildDate>
         <generator>MiraiWorks RSS Generator</generator>
 
-        <!-- Job items would be dynamically generated here -->
+        <!-- Position items would be dynamically generated here -->
         <item>
-            <title>Sample Job - Software Engineer</title>
-            <link>http://localhost:3000/jobs/sample-job-1</link>
-            <description>Sample job description for RSS feed</description>
+            <title>Sample Position - Software Engineer</title>
+            <link>http://localhost:3000/positions/sample-position-1</link>
+            <description>Sample position description for RSS feed</description>
             <pubDate>Fri, 06 Sep 2025 00:00:00 GMT</pubDate>
-            <guid>http://localhost:3000/jobs/sample-job-1</guid>
+            <guid>http://localhost:3000/positions/sample-position-1</guid>
         </item>
     </channel>
 </rss>"""

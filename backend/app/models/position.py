@@ -2,15 +2,15 @@ from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Text
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, synonym
 
 from app.models.db_types import CompatLONGTEXT as LONGTEXT
 
 from .base import Base
 
 
-class Job(Base):
-    __tablename__ = "jobs"
+class Position(Base):
+    __tablename__ = "positions"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
@@ -40,7 +40,7 @@ class Job(Base):
     )
     city: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, index=True)
 
-    # Job details
+    # Position details
     job_type: Mapped[str] = mapped_column(
         String(50), nullable=False, default="full_time", index=True
     )
@@ -128,19 +128,19 @@ class Job(Base):
     )
 
     # Relationships
-    company = relationship("Company", back_populates="jobs")
+    company = relationship("Company", back_populates="positions")
     posted_by_user = relationship("User", foreign_keys=[posted_by])
     applications = relationship(
-        "JobApplication", back_populates="job", cascade="all, delete-orphan"
+        "PositionApplication", back_populates="position", cascade="all, delete-orphan"
     )
 
     # Indexes for performance
     __table_args__ = (
-        Index("idx_jobs_company_status", "company_id", "status"),
-        Index("idx_jobs_published", "published_at", "status"),
-        Index("idx_jobs_location_type", "country", "city", "job_type"),
-        Index("idx_jobs_experience_remote", "experience_level", "remote_type"),
-        Index("idx_jobs_featured_status", "is_featured", "status", "published_at"),
+        Index("idx_positions_company_status", "company_id", "status"),
+        Index("idx_positions_published", "published_at", "status"),
+        Index("idx_positions_location_type", "country", "city", "job_type"),
+        Index("idx_positions_experience_remote", "experience_level", "remote_type"),
+        Index("idx_positions_featured_status", "is_featured", "status", "published_at"),
     )
 
     @property
@@ -193,14 +193,15 @@ class Job(Base):
         return self.is_active and not self.external_apply_url
 
 
-class JobApplication(Base):
-    __tablename__ = "job_applications"
+
+class PositionApplication(Base):
+    __tablename__ = "position_applications"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
     # References
-    job_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("jobs.id", ondelete="CASCADE"), nullable=False, index=True
+    position_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("positions.id", ondelete="CASCADE"), nullable=False, index=True
     )
     candidate_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
@@ -251,15 +252,16 @@ class JobApplication(Base):
     )
 
     # Relationships
-    job = relationship("Job", back_populates="applications")
+    position = relationship("Position", back_populates="applications")
     candidate = relationship("User", foreign_keys=[candidate_id])
     resume = relationship("Resume")
     status_updater = relationship("User", foreign_keys=[status_updated_by])
     referrer = relationship("User", foreign_keys=[referrer_id])
 
+
     # Indexes
     __table_args__ = (
-        Index("idx_applications_job_status", "job_id", "status"),
+        Index("idx_applications_position_status", "position_id", "status"),
         Index("idx_applications_candidate", "candidate_id", "applied_at"),
         Index("idx_applications_status_date", "status", "status_updated_at"),
     )

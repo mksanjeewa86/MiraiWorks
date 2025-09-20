@@ -3,12 +3,12 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AppLayout from '@/components/layout/AppLayout';
-import { jobsApi } from "@/api/jobs";
-import type { Job } from '@/types';
+import { positionsApi } from "@/api/positions";
+import type { Position } from '@/types';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
-function JobsPageContent() {
-  const [jobs, setJobs] = useState<Job[]>([]);
+function PositionsPageContent() {
+  const [positions, setPositions] = useState<Position[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -17,36 +17,36 @@ function JobsPageContent() {
 
   // Set page title
   useEffect(() => {
-    document.title = 'Jobs - MiraiWorks';
+    document.title = 'Positions - MiraiWorks';
   }, []);
 
-  // Fetch jobs from API
+  // Fetch positions from API
   useEffect(() => {
-    const fetchJobs = async () => {
+    const fetchPositions = async () => {
       try {
         setLoading(true);
         setError('');
         
         const filters = {
-          category: selectedCategory !== 'all' ? selectedCategory : undefined,
-          type: selectedType !== 'all' ? selectedType : undefined,
+          department: selectedCategory !== 'all' ? selectedCategory : undefined,
+          job_type: selectedType !== 'all' ? selectedType : undefined,
           search: searchQuery || undefined,
           limit: 50
         };
         
-        const response = await jobsApi.getPublic(filters);
-        setJobs(response.data?.jobs || []);
+        const response = await positionsApi.getPublic(filters);
+        setPositions(response.data?.positions || response.data?.positions || []);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch jobs');
-        console.error('Failed to fetch jobs:', err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch positions');
+        console.error('Failed to fetch positions:', err);
         // Fallback to empty array on error
-        setJobs([]);
+        setPositions([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchJobs();
+    fetchPositions();
   }, [searchQuery, selectedCategory, selectedType]);
 
   const categories = [
@@ -61,21 +61,25 @@ function JobsPageContent() {
 
   const jobTypes = [
     { value: 'all', label: 'All Types' },
-    { value: 'full-time', label: 'Full-time' },
-    { value: 'part-time', label: 'Part-time' },
+    { value: 'full_time', label: 'Full-time' },
+    { value: 'part_time', label: 'Part-time' },
     { value: 'contract', label: 'Contract' },
-    { value: 'remote', label: 'Remote' }
+    { value: 'temporary', label: 'Temporary' },
+    { value: 'internship', label: 'Internship' },
+    { value: 'freelance', label: 'Freelance' }
   ];
 
-  // Jobs are already filtered by the API based on search, category, and type
-  const filteredJobs = jobs;
+  // Positions are already filtered by the API based on search, category, and type
+  const filteredPositions = positions;
 
-  const getJobTypeColor = (type: string) => {
+  const getPositionTypeColor = (type: string) => {
     switch (type) {
-      case 'full-time': return 'bg-green-100 text-green-800';
-      case 'part-time': return 'bg-blue-100 text-blue-800';
+      case 'full_time': return 'bg-green-100 text-green-800';
+      case 'part_time': return 'bg-blue-100 text-blue-800';
       case 'contract': return 'bg-purple-100 text-purple-800';
-      case 'remote': return 'bg-orange-100 text-orange-800';
+      case 'temporary': return 'bg-orange-100 text-orange-800';
+      case 'internship': return 'bg-pink-100 text-pink-800';
+      case 'freelance': return 'bg-yellow-100 text-yellow-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -87,7 +91,7 @@ function JobsPageContent() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Find Your Next Job
+              Find Your Next Position
             </h1>
             <p className="text-xl text-gray-600">
               Discover thousands of job opportunities from top companies
@@ -100,7 +104,7 @@ function JobsPageContent() {
               <div className="md:col-span-2">
                 <input
                   type="text"
-                  placeholder="Search jobs, companies, or locations..."
+                  placeholder="Search positions, companies, or locations..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full px-4 py-3 pr-8 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -137,12 +141,12 @@ function JobsPageContent() {
         </div>
       </section>
 
-      {/* Jobs List */}
+      {/* Positions List */}
       <section className="py-12 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-2xl font-bold text-gray-900">
-              {filteredJobs.length} Job{filteredJobs.length !== 1 ? 's' : ''} Found
+              {filteredPositions.length} Position{filteredPositions.length !== 1 ? 's' : ''} Found
             </h2>
             <p className="text-gray-600">
               Showing results for your search criteria
@@ -152,14 +156,14 @@ function JobsPageContent() {
           {loading && (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading jobs...</p>
+              <p className="text-gray-600">Loading positions...</p>
             </div>
           )}
 
           {error && (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">❌</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Error Loading Jobs</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Error Loading Positions</h3>
               <p className="text-red-600 mb-6">{error}</p>
               <button
                 onClick={() => window.location.reload()}
@@ -173,11 +177,11 @@ function JobsPageContent() {
 
           {!loading && !error && (
             <div className="space-y-6">
-              {filteredJobs.map(job => (
+              {filteredPositions.map(job => (
               <div 
                 key={job.id} 
                 className={`bg-white rounded-lg border shadow-sm hover:shadow-md transition-shadow p-6 ${
-                  job.featured ? 'ring-2 ring-blue-200 border-blue-200' : 'border-gray-200'
+                  job.is_featured ? 'ring-2 ring-blue-200 border-blue-200' : 'border-gray-200'
                 }`}
               >
                 <div className="flex items-start justify-between">
@@ -186,7 +190,7 @@ function JobsPageContent() {
                       <h3 className="text-xl font-bold text-gray-900">
                         {job.title}
                       </h3>
-                      {job.featured && (
+                      {job.is_featured && (
                         <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
                           Featured
                         </span>
@@ -194,10 +198,12 @@ function JobsPageContent() {
                     </div>
                     
                     <div className="flex flex-wrap items-center gap-4 mb-3 text-sm text-gray-600">
-                      <span className="font-medium text-blue-600">{job.company}</span>
-                      <span>📍 {job.location}</span>
-                      <span>💰 {job.salary}</span>
-                      <span>📅 Posted {new Date(job.postedDate).toLocaleDateString()}</span>
+                      <span className="font-medium text-blue-600">{job.company_name || 'Unknown Company'}</span>
+                      <span>📍 {job.location || 'Location not specified'}</span>
+                      {job.salary_min && job.salary_max && (
+                        <span>💰 ¥{(job.salary_min / 10000).toFixed(0)}万 - ¥{(job.salary_max / 10000).toFixed(0)}万</span>
+                      )}
+                      <span>📅 Posted {new Date(job.published_at || job.created_at || '').toLocaleDateString()}</span>
                     </div>
 
                     <p className="text-gray-600 mb-4">
@@ -205,30 +211,30 @@ function JobsPageContent() {
                     </p>
 
                     <div className="flex flex-wrap gap-2 mb-4">
-                      {job.requirements?.slice(0, 3).map((req: string, index: number) => (
-                        <span 
+                      {job.required_skills?.slice(0, 3).map((req: string, index: number) => (
+                        <span
                           key={index}
                           className="px-3 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full"
                         >
                           {req}
                         </span>
                       ))}
-                      {(job.requirements?.length || 0) > 3 && (
+                      {(job.required_skills?.length || 0) > 3 && (
                         <span className="px-3 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full">
-                          +{(job.requirements?.length || 0) - 3} more
+                          +{(job.required_skills?.length || 0) - 3} more
                         </span>
                       )}
                     </div>
                   </div>
 
                   <div className="flex flex-col items-end gap-3 ml-6">
-                    <span className={`px-3 py-1 text-xs font-medium rounded-full ${getJobTypeColor(job.type)}`}>
-                      {job.type.replace('-', ' ').toUpperCase()}
+                    <span className={`px-3 py-1 text-xs font-medium rounded-full ${getPositionTypeColor(job.job_type)}`}>
+                      {job.job_type.replace('_', ' ').toUpperCase()}
                     </span>
                     
                     <div className="flex flex-col sm:flex-row gap-2">
                       <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
-                        Save Job
+                        Save Position
                       </button>
                       <Link
                         href="/auth/login"
@@ -245,10 +251,10 @@ function JobsPageContent() {
             </div>
           )}
 
-          {!loading && !error && filteredJobs.length === 0 && (
+          {!loading && !error && filteredPositions.length === 0 && (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">🔍</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">No jobs found</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">No positions found</h3>
               <p className="text-gray-600 mb-6">
                 Try adjusting your search criteria or browse all categories
               </p>
@@ -272,7 +278,7 @@ function JobsPageContent() {
       <section className="py-16 bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">
-            Don&apos;t See the Right Job?
+            Don&apos;t See the Right Position?
           </h2>
           <p className="text-xl text-gray-300 mb-8">
             Create a profile and let employers find you, or set up job alerts to never miss an opportunity.
@@ -286,7 +292,7 @@ function JobsPageContent() {
               Create Profile
             </Link>
             <button className="inline-flex items-center px-8 py-3 text-lg font-medium rounded-md border border-gray-600 text-gray-300 bg-transparent hover:bg-gray-800 transition-colors">
-              Set Up Job Alerts
+              Set Up Position Alerts
             </button>
           </div>
         </div>
@@ -295,10 +301,10 @@ function JobsPageContent() {
   );
 }
 
-export default function JobsPage() {
+export default function PositionsPage() {
   return (
     <ProtectedRoute>
-      <JobsPageContent />
+      <PositionsPageContent />
     </ProtectedRoute>
   );
 }

@@ -1,145 +1,73 @@
-import type { 
-  ApiResponse, 
-  AuthResponse, 
-  LoginCredentials, 
+import { API_ENDPOINTS, API_CONFIG } from './config';
+import { publicApiClient } from './apiClient';
+import type {
+  ApiResponse,
+  AuthResponse,
+  LoginCredentials,
   RegisterData,
   User
 } from '@/types';
-import { API_CONFIG } from '@/config/api';
 
-// Authentication API
 export const authApi = {
-  login: async (credentials: LoginCredentials): Promise<ApiResponse<AuthResponse>> => {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(credentials),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return { data, success: true };
+  async login(credentials: LoginCredentials): Promise<ApiResponse<AuthResponse>> {
+    const response = await publicApiClient.post<AuthResponse>(API_ENDPOINTS.AUTH.LOGIN, credentials);
+    return { data: response.data, success: true };
   },
 
-  register: async (registerData: RegisterData): Promise<ApiResponse<AuthResponse>> => {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(registerData),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return { data, success: true };
+  async register(registerData: RegisterData): Promise<ApiResponse<AuthResponse>> {
+    const response = await publicApiClient.post<AuthResponse>(API_ENDPOINTS.AUTH.REGISTER, registerData);
+    return { data: response.data, success: true };
   },
 
-  me: async (token: string): Promise<ApiResponse<User>> => {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/me`, {
+  async me(token: string): Promise<ApiResponse<User>> {
+    // For this method we need to pass token manually since it's called before auth context is set up
+    const response = await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.AUTH.ME}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
     });
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
-    
+
     const data = await response.json();
     return { data, success: true };
   },
 
-  refreshToken: async (refreshToken: string): Promise<ApiResponse<AuthResponse>> => {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/refresh`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ refresh_token: refreshToken }),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return { data, success: true };
+  async refreshToken(refreshToken: string): Promise<ApiResponse<AuthResponse>> {
+    const response = await publicApiClient.post<AuthResponse>(API_ENDPOINTS.AUTH.REFRESH, { refresh_token: refreshToken });
+    return { data: response.data, success: true };
   },
 
-  verifyTwoFactor: async (data: { user_id: number; code: string }): Promise<ApiResponse<AuthResponse>> => {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/2fa/verify`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-    }
-    
-    const responseData = await response.json();
-    return { data: responseData, success: true };
+  async verifyTwoFactor(data: { user_id: number; code: string }): Promise<ApiResponse<AuthResponse>> {
+    const response = await publicApiClient.post<AuthResponse>(API_ENDPOINTS.AUTH.VERIFY_2FA, data);
+    return { data: response.data, success: true };
   },
 
-  logout: async (token: string): Promise<void> => {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/logout`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    // Don't throw error for logout - just clear local storage regardless
-    if (!response.ok) {
-      console.warn('Logout API failed, but continuing with local cleanup');
+  async logout(token: string): Promise<void> {
+    try {
+      // Use manual fetch since logout should work even if auth fails
+      await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.AUTH.LOGOUT}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+    } catch (error) {
+      // Don't throw error for logout - just clear local storage regardless
+      console.warn('Logout API failed, but continuing with local cleanup', error);
     }
   },
 
-  forgotPassword: async (email: string): Promise<void> => {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/forgot-password`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email }),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-    }
+  async forgotPassword(email: string): Promise<void> {
+    await publicApiClient.post<void>(API_ENDPOINTS.AUTH.FORGOT_PASSWORD, { email });
   },
 
-  resetPassword: async (token: string, password: string): Promise<void> => {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/reset-password`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ token, password }),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-    }
+  async resetPassword(token: string, password: string): Promise<void> {
+    await publicApiClient.post<void>(API_ENDPOINTS.AUTH.RESET_PASSWORD, { token, password });
   }
 };

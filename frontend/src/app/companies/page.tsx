@@ -18,7 +18,7 @@ import {
   Power,
   PowerOff,
 } from 'lucide-react';
-import { companiesApi } from '@/api/companiesApi';
+import { companiesApi } from '@/api/companies';
 import { Company, CompanyFilters, CompanyType } from '@/types/company';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
@@ -52,6 +52,12 @@ function CompaniesPageContent() {
     try {
       setLoading(true);
       const response = await companiesApi.getCompanies(filters);
+
+      if (!response.data) {
+        setError('No data received');
+        return;
+      }
+
       setCompanies(response.data.companies);
       setPagination({
         total: response.data.total,

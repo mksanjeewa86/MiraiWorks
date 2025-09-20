@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Save, Calendar, Settings } from 'lucide-react';
-import { companiesApi } from '@/api/companiesApi';
+import { companiesApi } from '@/api/companies';
 import { CompanyCreate, CompanyType } from '@/types/company';
 import { CompanyFormData } from '@/types/forms';
 import { useToast } from '@/contexts/ToastContext';

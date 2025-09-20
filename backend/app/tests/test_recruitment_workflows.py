@@ -7,11 +7,11 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.models.job import Job
+from app.models.position import Position
 from app.models.user import User
 
 
-async def create_job(
+async def create_position(
     client: AsyncClient,
     headers: dict,
     *,
@@ -20,13 +20,13 @@ async def create_job(
 ) -> dict:
     payload = {
         "title": title,
-        "description": "Job description",
+        "description": "Position description",
         "requirements": "Requirements",
         "location": "Remote",
         "job_type": "full_time",
         "company_id": company_id,
     }
-    response = await client.post("/api/jobs", json=payload, headers=headers)
+    response = await client.post("/api/positions", json=payload, headers=headers)
     assert response.status_code == 201
     return response.json()
 
@@ -38,7 +38,7 @@ async def test_job_statistics_endpoint(
     admin_auth_headers: dict,
     test_employer_user: User,
 ):
-    job = await create_job(
+    position = await create_position(
         client,
         auth_headers,
         title=f"Platform Engineer {uuid4().hex[:4]}",
@@ -46,17 +46,17 @@ async def test_job_statistics_endpoint(
     )
 
     await client.patch(
-        f"/api/jobs/{job['id']}/status",
+        f"/api/positions/{position['id']}/status",
         json={"status": "published"},
         headers=auth_headers,
     )
 
     stats_response = await client.get(
-        "/api/jobs/statistics", headers=admin_auth_headers
+        "/api/positions/statistics", headers=admin_auth_headers
     )
     assert stats_response.status_code == 200
     data = stats_response.json()
-    assert data["total_jobs"] >= 1
+    assert data["total_positions"] >= 1
 
 
 @pytest.mark.asyncio
@@ -65,7 +65,7 @@ async def test_job_search_returns_matching_titles(
     auth_headers: dict,
     test_employer_user: User,
 ):
-    job = await create_job(
+    position = await create_position(
         client,
         auth_headers,
         title="Data Scientist",
@@ -73,18 +73,18 @@ async def test_job_search_returns_matching_titles(
     )
 
     await client.patch(
-        f"/api/jobs/{job['id']}/status",
+        f"/api/positions/{position['id']}/status",
         json={"status": "published"},
         headers=auth_headers,
     )
 
     search_response = await client.get(
-        "/api/jobs/search",
+        "/api/positions/search",
         params={"query": "Data"},
     )
     assert search_response.status_code == 200
     jobs = search_response.json()["jobs"]
-    assert any("Data Scientist" in job_info["title"] for job_info in jobs)
+    assert any("Data Scientist" in position_info["title"] for position_info in jobs)
 
 
 @pytest.mark.asyncio
@@ -94,7 +94,7 @@ async def test_employer_updates_job_details(
     db_session: AsyncSession,
     test_employer_user: User,
 ):
-    job = await create_job(
+    position = await create_position(
         client,
         auth_headers,
         title="QA Specialist",
@@ -103,12 +103,15 @@ async def test_employer_updates_job_details(
 
     update_payload = {"summary": "Quality assurance specialist", "status": "published"}
     response = await client.put(
-        f"/api/jobs/{job['id']}",
+        f"/api/positions/{position['id']}",
         json=update_payload,
         headers=auth_headers,
     )
 
     assert response.status_code == 200
-    result = await db_session.execute(select(Job).where(Job.id == job["id"]))
+    result = await db_session.execute(select(Position).where(Position.id == position["id"]))
     stored = result.scalar_one()
     assert stored.summary == "Quality assurance specialist"
+
+
+

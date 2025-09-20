@@ -1,97 +1,51 @@
-import type { ApiResponse, Company } from '@/types';
-import { API_CONFIG } from '@/config/api';
+import { API_ENDPOINTS } from './config';
+import { apiClient } from './apiClient';
+import type { ApiResponse, Company, CompanyFilters, CompanyListResponse } from '@/types';
 
-// Companies API
 export const companiesApi = {
-  getAll: async (): Promise<ApiResponse<Company[]>> => {
-    const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/companies`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return { data, success: true };
+  async getAll(): Promise<ApiResponse<Company[]>> {
+    const response = await apiClient.get<Company[]>(API_ENDPOINTS.COMPANIES.BASE);
+    return { data: response.data, success: true };
   },
 
-  getById: async (id: number): Promise<ApiResponse<Company>> => {
-    const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/companies/${id}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return { data, success: true };
+  async getById(id: number): Promise<ApiResponse<Company>> {
+    const response = await apiClient.get<Company>(API_ENDPOINTS.COMPANIES.BY_ID(id.toString()));
+    return { data: response.data, success: true };
   },
 
-  create: async (companyData: Partial<Company>): Promise<ApiResponse<Company>> => {
-    const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/companies`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(companyData),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return { data, success: true };
+  // Legacy method names for backward compatibility
+  async getCompanies(filters?: CompanyFilters): Promise<ApiResponse<CompanyListResponse>> {
+    const params = new URLSearchParams();
+
+    if (filters?.page) params.set('page', filters.page.toString());
+    if (filters?.size) params.set('size', filters.size.toString());
+    if (filters?.search) params.set('search', filters.search);
+    if (filters?.company_type) params.set('company_type', filters.company_type);
+    if (filters?.is_active !== undefined) params.set('is_active', filters.is_active.toString());
+    if (filters?.is_demo !== undefined) params.set('is_demo', filters.is_demo.toString());
+    if (filters?.include_deleted !== undefined) params.set('include_deleted', filters.include_deleted.toString());
+
+    const url = params.toString() ? `${API_ENDPOINTS.COMPANIES.BASE}?${params.toString()}` : API_ENDPOINTS.COMPANIES.BASE;
+    const response = await apiClient.get<CompanyListResponse>(url);
+    return { data: response.data, success: true };
   },
 
-  update: async (id: number, companyData: Partial<Company>): Promise<ApiResponse<Company>> => {
-    const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/companies/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(companyData),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return { data, success: true };
+  async getCompany(id: number): Promise<ApiResponse<Company>> {
+    return this.getById(id);
   },
 
-  delete: async (id: number): Promise<ApiResponse<void>> => {
-    const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/companies/${id}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-    }
-    
+  async createCompany(companyData: Partial<Company>): Promise<ApiResponse<Company>> {
+    const response = await apiClient.post<Company>(API_ENDPOINTS.COMPANIES.BASE, companyData);
+    return { data: response.data, success: true };
+  },
+
+  async updateCompany(id: number, companyData: Partial<Company>): Promise<ApiResponse<Company>> {
+    const response = await apiClient.put<Company>(API_ENDPOINTS.COMPANIES.BY_ID(id.toString()), companyData);
+    return { data: response.data, success: true };
+  },
+
+  async deleteCompany(id: number): Promise<ApiResponse<void>> {
+    await apiClient.delete<void>(API_ENDPOINTS.COMPANIES.BY_ID(id.toString()));
     return { data: undefined, success: true };
   },
 };

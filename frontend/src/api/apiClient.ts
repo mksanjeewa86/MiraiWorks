@@ -1,5 +1,5 @@
 // Centralized API client with automatic authentication handling
-import { API_CONFIG } from '@/config/api';
+import { API_CONFIG } from './config';
 
 // Global auth handler reference
 let authHandlerRef: {

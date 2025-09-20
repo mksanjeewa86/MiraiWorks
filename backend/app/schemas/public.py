@@ -1,60 +1,16 @@
 from datetime import datetime
-from enum import Enum
 from typing import Any, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-
-class JobStatus(str, Enum):
-    DRAFT = "draft"
-    PUBLISHED = "published"
-    PAUSED = "paused"
-    CLOSED = "closed"
-    ARCHIVED = "archived"
-
-
-class JobType(str, Enum):
-    FULL_TIME = "full_time"
-    PART_TIME = "part_time"
-    CONTRACT = "contract"
-    TEMPORARY = "temporary"
-    INTERNSHIP = "internship"
-    FREELANCE = "freelance"
-
-
-class ExperienceLevel(str, Enum):
-    ENTRY_LEVEL = "entry_level"
-    MID_LEVEL = "mid_level"
-    SENIOR_LEVEL = "senior_level"
-    EXECUTIVE = "executive"
-    INTERNSHIP = "internship"
-
-
-class RemoteType(str, Enum):
-    ON_SITE = "on_site"
-    REMOTE = "remote"
-    HYBRID = "hybrid"
-
-
-class SalaryType(str, Enum):
-    HOURLY = "hourly"
-    DAILY = "daily"
-    MONTHLY = "monthly"
-    ANNUAL = "annual"
-    PROJECT = "project"
-
-
-class ApplicationStatus(str, Enum):
-    APPLIED = "applied"
-    UNDER_REVIEW = "under_review"
-    PHONE_SCREEN = "phone_screen"
-    INTERVIEW = "interview"
-    TECHNICAL_TEST = "technical_test"
-    FINAL_INTERVIEW = "final_interview"
-    OFFER_SENT = "offer_sent"
-    HIRED = "hired"
-    REJECTED = "rejected"
-    WITHDRAWN = "withdrawn"
+from app.schemas.position import (
+    ApplicationStatus,
+    ExperienceLevel,
+    PositionStatus,
+    PositionType,
+    RemoteType,
+    SalaryType,
+)
 
 
 # Company Profile Schemas
@@ -143,8 +99,8 @@ class PublicCompany(BaseModel):
     profile: Optional[CompanyProfileResponse] = None
 
 
-# Job Schemas
-class JobBase(BaseModel):
+# Position Schemas
+class PositionBase(BaseModel):
     title: str = Field(..., min_length=3, max_length=255)
     summary: Optional[str] = Field(None, max_length=500)
     description: str = Field(..., min_length=50)
@@ -152,7 +108,7 @@ class JobBase(BaseModel):
     location: Optional[str] = Field(None, max_length=255)
     country: Optional[str] = Field(None, max_length=100)
     city: Optional[str] = Field(None, max_length=100)
-    job_type: JobType = JobType.FULL_TIME
+    job_type: PositionType = PositionType.FULL_TIME
     experience_level: ExperienceLevel = ExperienceLevel.MID_LEVEL
     remote_type: RemoteType = RemoteType.ON_SITE
     requirements: Optional[str] = None
@@ -186,11 +142,11 @@ class JobBase(BaseModel):
         return v
 
 
-class JobCreate(JobBase):
+class PositionCreate(PositionBase):
     pass
 
 
-class JobUpdate(BaseModel):
+class PositionUpdate(BaseModel):
     title: Optional[str] = Field(None, min_length=3, max_length=255)
     summary: Optional[str] = Field(None, max_length=500)
     description: Optional[str] = Field(None, min_length=50)
@@ -198,7 +154,7 @@ class JobUpdate(BaseModel):
     location: Optional[str] = Field(None, max_length=255)
     country: Optional[str] = Field(None, max_length=100)
     city: Optional[str] = Field(None, max_length=100)
-    job_type: Optional[JobType] = None
+    job_type: Optional[PositionType] = None
     experience_level: Optional[ExperienceLevel] = None
     remote_type: Optional[RemoteType] = None
     requirements: Optional[str] = None
@@ -214,18 +170,18 @@ class JobUpdate(BaseModel):
     application_deadline: Optional[datetime] = None
     external_apply_url: Optional[str] = None
     application_questions: Optional[list[dict[str, Any]]] = None
-    status: Optional[JobStatus] = None
+    status: Optional[PositionStatus] = None
     is_featured: Optional[bool] = None
     is_urgent: Optional[bool] = None
 
 
-class JobResponse(JobBase):
+class PositionResponse(PositionBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
     slug: str
     company_id: int
-    status: JobStatus
+    status: PositionStatus
     is_featured: bool
     is_urgent: bool
     view_count: int
@@ -245,7 +201,7 @@ class JobResponse(JobBase):
     company: Optional[PublicCompany] = None
 
 
-class JobSummary(BaseModel):
+class PositionSummary(BaseModel):
     """Lightweight job summary for listings"""
 
     model_config = ConfigDict(from_attributes=True)
@@ -258,7 +214,7 @@ class JobSummary(BaseModel):
     company_name: str
     company_logo: Optional[str] = None
     location: Optional[str] = None
-    job_type: JobType
+    job_type: PositionType
     experience_level: ExperienceLevel
     remote_type: RemoteType
     salary_range_display: Optional[str] = None
@@ -269,28 +225,28 @@ class JobSummary(BaseModel):
 
 
 # Job Application Schemas
-class JobApplicationBase(BaseModel):
+class PositionApplicationBase(BaseModel):
     cover_letter: Optional[str] = Field(None, max_length=5000)
     application_answers: Optional[dict[str, Any]] = None
     source: Optional[str] = Field(None, max_length=100)
 
 
-class JobApplicationCreate(JobApplicationBase):
-    job_id: int
+class PositionApplicationCreate(PositionApplicationBase):
+    position_id: int
     resume_id: Optional[int] = None
 
 
-class JobApplicationUpdate(BaseModel):
+class PositionApplicationUpdate(BaseModel):
     cover_letter: Optional[str] = Field(None, max_length=5000)
     status: Optional[ApplicationStatus] = None
     notes: Optional[str] = None
 
 
-class JobApplicationResponse(JobApplicationBase):
+class PositionApplicationResponse(PositionApplicationBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    job_id: int
+    position_id: int
     candidate_id: int
     resume_id: Optional[int] = None
     status: ApplicationStatus
@@ -303,18 +259,18 @@ class JobApplicationResponse(JobApplicationBase):
     days_since_applied: int
 
     # Related data (populated when needed)
-    job: Optional[JobResponse] = None
+    position: Optional[PositionResponse] = None
     candidate: Optional[dict[str, Any]] = None  # Limited candidate info
 
 
 # Search and filtering schemas
-class JobSearchParams(BaseModel):
+class PositionSearchParams(BaseModel):
     q: Optional[str] = None  # Search query
     location: Optional[str] = None
     country: Optional[str] = None
     city: Optional[str] = None
     company_id: Optional[int] = None
-    job_type: Optional[JobType] = None
+    job_type: Optional[PositionType] = None
     experience_level: Optional[ExperienceLevel] = None
     remote_type: Optional[RemoteType] = None
     salary_min: Optional[int] = None
@@ -329,8 +285,8 @@ class JobSearchParams(BaseModel):
     featured_only: bool = False
 
 
-class JobSearchResponse(BaseModel):
-    jobs: list[JobSummary]
+class PositionSearchResponse(BaseModel):
+    positions: list[PositionSummary]
     total: int
     page: int
     limit: int
@@ -361,9 +317,9 @@ class CompanySearchResponse(BaseModel):
 # Public statistics
 class PublicStats(BaseModel):
     total_companies: int
-    total_jobs: int
+    total_positions: int
     total_applications: int
     featured_companies: list[PublicCompany]
-    latest_jobs: list[JobSummary]
+    latest_positions: list[PositionSummary]
     job_categories: dict[str, int]  # job_type -> count
     location_stats: dict[str, int]  # location -> count

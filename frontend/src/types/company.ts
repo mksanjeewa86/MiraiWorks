@@ -13,7 +13,8 @@ export interface Company {
   description?: string;
   is_active: boolean;
   user_count: number;
-  job_count: number;
+  position_count: number;
+  job_count?: number; // Legacy compatibility
   is_demo: boolean;
   demo_end_date?: string;
   demo_features?: string;
@@ -76,33 +77,22 @@ export interface CompanyFilters {
   include_deleted?: boolean;
 }
 
-// Job and Application Types
-export interface Job {
+// Position Application Types
+export interface PositionApplication {
   id: number;
-  title: string;
-  description: string;
-  company: string;
-  location: string;
-  salary: string;
-  type: string;
-  category: string;
-  requirements: string[];
-  postedDate: string;
-  featured: boolean;
-  status: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface JobApplication {
-  id: number;
-  job_id: number;
+  position_id: number;
   user_id: number;
-  status: string;
+  candidate_id?: number;
+  status: 'applied' | 'under_review' | 'phone_screen' | 'interview' | 'technical_test' | 'final_interview' | 'offer_sent' | 'hired' | 'rejected' | 'withdrawn';
   cover_letter?: string;
+  application_answers?: Record<string, unknown>[];
   resume_id?: number;
+  source?: string;
+  notes?: string;
+  last_contacted_at?: string;
   applied_at: string;
   updated_at: string;
-  job: Job;
-  applicant: import('./auth').User;
+  position?: import('./position').Position;
+  applicant?: import('./auth').User;
 }
+

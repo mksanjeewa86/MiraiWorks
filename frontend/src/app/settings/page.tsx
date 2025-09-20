@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { userSettingsApi } from "@/api/userSettings";
-import { calendarApi } from "@/api/calendarApi";
+import { calendarApi } from "@/api/calendar";
 import { UserSettings, CalendarConnection } from "@/types";
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
@@ -109,7 +109,7 @@ function SettingsPageContent() {
       const response = await calendarApi.getConnections();
       setCalendarState(prev => ({
         ...prev,
-        connections: response.data,
+        connections: response.data || [],
         loading: false
       }));
     } catch (error) {
@@ -250,7 +250,11 @@ function SettingsPageContent() {
         : await calendarApi.getOutlookAuthUrl();
       
       // Open auth URL in new window
-      window.open(authResponse.data.auth_url, '_blank', 'width=500,height=600');
+      if (authResponse.data?.auth_url) {
+        window.open(authResponse.data.auth_url, '_blank', 'width=500,height=600');
+      } else {
+        throw new Error('No auth URL received');
+      }
       
       setCalendarState(prev => ({ ...prev, connecting: false }));
       

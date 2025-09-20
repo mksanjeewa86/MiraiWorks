@@ -2,14 +2,14 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { API_CONFIG } from '@/config/api';
+import { API_CONFIG } from '@/api/config';
 import AppLayout from '@/components/layout/AppLayout';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { Search, Send, Smile, Paperclip, RefreshCw, X } from 'lucide-react';
 import { messagesApi } from "@/api/messages";
-import { usersApi } from "@/api/usersApi";
+import { usersApi } from "@/api/users";
 import type { Conversation, LegacyMessage as Message } from '@/types';
 import type { MessagesPageState } from '@/types/pages';
 import dynamic from 'next/dynamic';
@@ -608,12 +608,14 @@ function MessagesPageContent() {
 
               // For super admin, only show company admins (users who can receive messages)
               // Check multiple ways to identify super admin
-              const isSuperAdmin = user?.roles?.some(role => role.role.name === 'super_admin') || user?.id === 7 ||
+              const isSuperAdmin = user?.roles?.some(role => (role as { role: { name: string } }).role?.name === 'super_admin') || user?.id === 7 ||
                                   (user && !user.company_id && user.is_admin); // Super admin typically has no company_id but is admin
 
               if (isSuperAdmin) {
                 filteredUsers = filteredUsers.filter(u => {
-                  const isCompanyAdmin = u.roles.includes('company_admin') || u.roles.includes('admin') || (u.is_admin === true && u.company_id);
+                  const isCompanyAdmin = u.roles.includes('company_admin') ||
+                                        u.roles.includes('admin') ||
+                                        (u.is_admin === true && u.company_id);
                   return isCompanyAdmin;
                 });
               }

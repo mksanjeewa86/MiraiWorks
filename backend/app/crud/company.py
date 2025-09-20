@@ -13,15 +13,15 @@ class CRUDCompany(CRUDBase[Company, CompanyCreate, CompanyUpdate]):
     """Company CRUD operations."""
 
     async def get_with_counts(self, db: AsyncSession, company_id: int):
-        """Get company with user and job counts."""
+        """Get company with user and position counts."""
         query = (
             select(
                 Company,
                 func.count(User.id).label("user_count"),
-                func.coalesce(func.count(Company.jobs), 0).label("job_count"),
+                func.coalesce(func.count(Company.positions), 0).label("position_count"),
             )
             .outerjoin(User, Company.id == User.company_id)
-            .outerjoin(Company.jobs)
+            .outerjoin(Company.positions)
             .where(Company.id == company_id)
             .group_by(Company.id)
         )

@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 # Enums
-class JobStatus(str, Enum):
+class PositionStatus(str, Enum):
     DRAFT = "draft"
     PUBLISHED = "published"
     PAUSED = "paused"
@@ -14,7 +14,7 @@ class JobStatus(str, Enum):
     ARCHIVED = "archived"
 
 
-class JobType(str, Enum):
+class PositionType(str, Enum):
     FULL_TIME = "full_time"
     PART_TIME = "part_time"
     CONTRACT = "contract"
@@ -59,7 +59,7 @@ class ApplicationStatus(str, Enum):
 
 
 # Base Schemas
-class JobBase(BaseModel):
+class PositionBase(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     title: str = Field(..., max_length=255, min_length=1)
@@ -69,7 +69,7 @@ class JobBase(BaseModel):
     location: Optional[str] = Field(None, max_length=255)
     country: Optional[str] = Field(None, max_length=100)
     city: Optional[str] = Field(None, max_length=100)
-    job_type: JobType = JobType.FULL_TIME
+    job_type: PositionType = PositionType.FULL_TIME
     experience_level: ExperienceLevel = ExperienceLevel.MID_LEVEL
     remote_type: RemoteType = RemoteType.ON_SITE
     requirements: Optional[str] = None
@@ -92,7 +92,7 @@ class JobBase(BaseModel):
         if isinstance(value, str):
             normalized = value.replace("-", "_").lower()
             try:
-                return JobType(normalized)
+                return PositionType(normalized)
             except ValueError:
                 return value
         return value
@@ -120,7 +120,7 @@ class JobBase(BaseModel):
         return value
 
 
-class JobSalaryInfo(BaseModel):
+class PositionSalaryInfo(BaseModel):
     salary_min: Optional[int] = Field(None, gt=0)  # In cents
     salary_max: Optional[int] = Field(None, gt=0)  # In cents
     salary_type: SalaryType = SalaryType.ANNUAL
@@ -135,12 +135,12 @@ class JobSalaryInfo(BaseModel):
         return v
 
 
-class JobCreate(JobBase, JobSalaryInfo):
+class PositionCreate(PositionBase, PositionSalaryInfo):
     company_id: int
     posted_by: Optional[int] = None
 
 
-class JobUpdate(BaseModel):
+class PositionUpdate(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     title: Optional[str] = Field(None, max_length=255, min_length=1)
@@ -150,7 +150,7 @@ class JobUpdate(BaseModel):
     location: Optional[str] = Field(None, max_length=255)
     country: Optional[str] = Field(None, max_length=100)
     city: Optional[str] = Field(None, max_length=100)
-    job_type: Optional[JobType] = None
+    job_type: Optional[PositionType] = None
     experience_level: Optional[ExperienceLevel] = None
     remote_type: Optional[RemoteType] = None
     requirements: Optional[str] = None
@@ -166,7 +166,7 @@ class JobUpdate(BaseModel):
     application_deadline: Optional[datetime] = Field(None, alias="deadline")
     external_apply_url: Optional[str] = Field(None, max_length=1000)
     application_questions: Optional[List[dict]] = None
-    status: Optional[JobStatus] = None
+    status: Optional[PositionStatus] = None
     is_featured: Optional[bool] = None
     is_urgent: Optional[bool] = None
     seo_title: Optional[str] = Field(None, max_length=255)
@@ -179,7 +179,7 @@ class JobUpdate(BaseModel):
         if isinstance(value, str):
             normalized = value.replace("-", "_").lower()
             try:
-                return JobType(normalized)
+                return PositionType(normalized)
             except ValueError:
                 return value
         return value
@@ -207,13 +207,13 @@ class JobUpdate(BaseModel):
         return value
 
 
-class JobInfo(JobBase, JobSalaryInfo):
+class PositionInfo(PositionBase, PositionSalaryInfo):
     title: str = Field(default="", max_length=255)
     description: Optional[str] = None
     id: int
     slug: Optional[str] = None
     company_id: int
-    status: JobStatus = JobStatus.DRAFT
+    status: PositionStatus = PositionStatus.DRAFT
     view_count: int = 0
     application_count: int = 0
     published_at: Optional[datetime] = None
@@ -239,11 +239,11 @@ class JobInfo(JobBase, JobSalaryInfo):
     def _default_enum_fields(cls, value, info):
         if value is None:
             defaults = {
-                "job_type": JobType.FULL_TIME,
+                "job_type": PositionType.FULL_TIME,
                 "experience_level": ExperienceLevel.MID_LEVEL,
                 "remote_type": RemoteType.ON_SITE,
                 "salary_type": SalaryType.ANNUAL,
-                "status": JobStatus.DRAFT,
+                "status": PositionStatus.DRAFT,
             }
             return defaults[info.field_name]
         return value
@@ -276,27 +276,27 @@ class JobInfo(JobBase, JobSalaryInfo):
 
 
 # Job Application Schemas
-class JobApplicationBase(BaseModel):
+class PositionApplicationBase(BaseModel):
     cover_letter: Optional[str] = None
     application_answers: Optional[List[dict]] = None  # Will be JSON serialized
     source: Optional[str] = Field(None, max_length=100)
 
 
-class JobApplicationCreate(JobApplicationBase):
-    job_id: int
+class PositionApplicationCreate(PositionApplicationBase):
+    position_id: int
     resume_id: Optional[int] = None
 
 
-class JobApplicationUpdate(BaseModel):
+class PositionApplicationUpdate(BaseModel):
     status: Optional[ApplicationStatus] = None
     cover_letter: Optional[str] = None
     notes: Optional[str] = None
     last_contacted_at: Optional[datetime] = None
 
 
-class JobApplicationInfo(JobApplicationBase):
+class PositionApplicationInfo(PositionApplicationBase):
     id: int
-    job_id: int
+    position_id: int
     candidate_id: int
     resume_id: Optional[int] = None
     status: ApplicationStatus = ApplicationStatus.APPLIED
@@ -376,16 +376,16 @@ class CompanyProfileInfo(CompanyProfileBase):
 
 
 # List and Filter Schemas
-class JobListParams(BaseModel):
+class PositionListParams(BaseModel):
     search: Optional[str] = None
     company_id: Optional[int] = None
-    job_type: Optional[JobType] = None
+    job_type: Optional[PositionType] = None
     experience_level: Optional[ExperienceLevel] = None
     remote_type: Optional[RemoteType] = None
     location: Optional[str] = None
     country: Optional[str] = None
     city: Optional[str] = None
-    status: Optional[JobStatus] = None
+    status: Optional[PositionStatus] = None
     is_featured: Optional[bool] = None
     salary_min: Optional[int] = None
     salary_max: Optional[int] = None
@@ -398,8 +398,8 @@ class JobListParams(BaseModel):
     offset: int = Field(0, ge=0)
 
 
-class JobListResponse(BaseModel):
-    jobs: List[JobInfo]
+class PositionListResponse(BaseModel):
+    positions: List[PositionInfo]
     total: int
     skip: int = 0
     limit: int = 0
@@ -407,18 +407,22 @@ class JobListResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-
-class JobStatusUpdateRequest(BaseModel):
-    status: JobStatus
-
-
-class JobBulkStatusUpdateRequest(BaseModel):
-    job_ids: List[int] = Field(..., min_length=1)
-    status: JobStatus
+    @property
+    def jobs(self) -> List[PositionInfo]:
+        return self.positions
 
 
-class JobApplicationListParams(BaseModel):
-    job_id: Optional[int] = None
+class PositionStatusUpdateRequest(BaseModel):
+    status: PositionStatus
+
+
+class PositionBulkStatusUpdateRequest(BaseModel):
+    position_ids: List[int] = Field(..., min_length=1, alias="position_ids")
+    status: PositionStatus
+
+
+class PositionApplicationListParams(BaseModel):
+    position_id: Optional[int] = None
     candidate_id: Optional[int] = None
     status: Optional[ApplicationStatus] = None
     applied_after: Optional[datetime] = None
@@ -431,28 +435,39 @@ class JobApplicationListParams(BaseModel):
     offset: int = Field(0, ge=0)
 
 
-class JobApplicationListResponse(BaseModel):
-    applications: List[JobApplicationInfo]
+class PositionApplicationListResponse(BaseModel):
+    applications: List[PositionApplicationInfo]
     total: int
     has_more: bool = False
 
 
-class JobStatsResponse(BaseModel):
-    total_jobs: int
+class PositionStatsResponse(BaseModel):
+    total_positions: int
     by_status: dict = Field(default_factory=dict)
     by_type: dict = Field(default_factory=dict)
     by_experience_level: dict = Field(default_factory=dict)
     published_this_month: int = 0
     total_applications: int = 0
-    average_applications_per_job: float = 0
-    most_viewed_jobs: List[JobInfo] = Field(default_factory=list)
+    average_applications_per_position: float = 0
+    most_viewed_positions: List[PositionInfo] = Field(default_factory=list)
 
 
-class JobSearchResponse(BaseModel):
-    jobs: List[JobInfo]
+class PositionSearchResponse(BaseModel):
+    positions: List[PositionInfo]
     total: int
     facets: dict = Field(default_factory=dict)  # For search faceting
     has_more: bool = False
     search_query: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+    @property
+    def jobs(self) -> List[PositionInfo]:
+        return self.positions
+
+
+
+
+
+
+

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import Brand from '@/components/common/Brand';
 import ResetPasswordForm from '@/components/auth/ResetPasswordForm';
-import { API_CONFIG } from '@/config/api';
+import { API_CONFIG } from '@/api/config';
 
 function ResetPasswordContent() {
   const router = useRouter();

@@ -3,7 +3,7 @@ import { authApi } from '@/api/auth';
 import { dashboardApi } from "@/api/dashboard";
 import { messagesApi } from "@/api/messages";
 import { resumesApi } from "@/api/resumes";
-import { API_CONFIG } from '@/config/api';
+import { API_CONFIG } from '@/api/config';
 import type { TestResult, TestSuite } from '@/types/components';
 
 const ApiTestRunner: React.FC = () => {

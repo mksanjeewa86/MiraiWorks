@@ -2,18 +2,19 @@
 export * from './apiClient';
 
 // API Configuration
-export * from '../config/api';
+export * from './config';
 
 // Authentication APIs
 export * from './auth';
 
 // Business entity APIs
 export * from './companies';
-export * from './jobs';
+export * from './positions';
 export * from './interviews';
 export * from './resumes';
 
 // User and settings APIs
+export * from './users';
 export * from './userSettings';
 
 // Communication APIs

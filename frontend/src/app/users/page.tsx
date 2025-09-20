@@ -24,7 +24,7 @@ import {
   CheckCircle,
   Mail as MailIcon,
 } from 'lucide-react';
-import { usersApi } from '@/api/usersApi';
+import { usersApi } from '@/api/users';
 import { User, UserFilters } from '@/types/user';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
@@ -67,6 +67,12 @@ function UsersPageContent() {
     try {
       setLoading(true);
       const response = await usersApi.getUsers(filters);
+
+      if (!response.data) {
+        setError('No data received');
+        return;
+      }
+
       setUsers(response.data.users);
       setPagination({
         total: response.data.total,
@@ -176,11 +182,7 @@ function UsersPageContent() {
       onConfirm: async () => {
         try {
           const response = await usersApi.bulkDelete(Array.from(selectedUsers));
-          if (response.data.errors && response.data.errors.length > 0) {
-            setError(`Bulk delete completed with some errors: ${response.data.errors.join(', ')}`);
-          } else {
-            setSuccessMessage(response.data.message);
-          }
+          setSuccessMessage(response.data?.message || 'Users deleted successfully');
           setSelectedUsers(new Set());
           await loadUsers();
         } catch (err) {
@@ -222,11 +224,7 @@ function UsersPageContent() {
       onConfirm: async () => {
         try {
           const response = await usersApi.bulkResetPassword(Array.from(selectedUsers));
-          if (response.data.errors && response.data.errors.length > 0) {
-            setError(`Bulk password reset completed with some errors: ${response.data.errors.join(', ')}`);
-          } else {
-            setSuccessMessage(response.data.message);
-          }
+          setSuccessMessage(response.data?.message || 'Password reset emails sent successfully');
           setSelectedUsers(new Set());
         } catch (err) {
           console.error('Bulk reset password error:', err);
@@ -267,11 +265,7 @@ function UsersPageContent() {
       onConfirm: async () => {
         try {
           const response = await usersApi.bulkResendActivation(Array.from(selectedUsers));
-          if (response.data.errors && response.data.errors.length > 0) {
-            setError(`Bulk activation email send completed with some errors: ${response.data.errors.join(', ')}`);
-          } else {
-            setSuccessMessage(response.data.message);
-          }
+          setSuccessMessage(response.data?.message || 'Activation emails sent successfully');
           setSelectedUsers(new Set());
         } catch (err) {
           console.error('Bulk resend activation error:', err);
@@ -318,11 +312,7 @@ function UsersPageContent() {
       onConfirm: async () => {
         try {
           const response = await usersApi.bulkSuspend(Array.from(selectedUsers));
-          if (response.data.errors && response.data.errors.length > 0) {
-            setError(`Bulk suspend completed with some errors: ${response.data.errors.join(', ')}`);
-          } else {
-            setSuccessMessage(response.data.message);
-          }
+          setSuccessMessage(response.data?.message || 'Users suspended successfully');
           setSelectedUsers(new Set());
           await loadUsers();
         } catch (err) {
@@ -370,11 +360,7 @@ function UsersPageContent() {
       onConfirm: async () => {
         try {
           const response = await usersApi.bulkUnsuspend(Array.from(selectedUsers));
-          if (response.data.errors && response.data.errors.length > 0) {
-            setError(`Bulk unsuspend completed with some errors: ${response.data.errors.join(', ')}`);
-          } else {
-            setSuccessMessage(response.data.message);
-          }
+          setSuccessMessage(response.data?.message || 'Users unsuspended successfully');
           setSelectedUsers(new Set());
           await loadUsers();
         } catch (err) {

@@ -4,6 +4,8 @@ import type { ChangeEvent, FormEvent, CSSProperties } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { PREFECTURES } from '@/utils/prefectures';
+import { positionsApi } from '@/api/positions';
+import type { Position as ApiPosition, PositionCreate } from '@/types';
 import {
   BriefcaseBusiness,
   Search,
@@ -26,35 +28,27 @@ import {
 } from 'lucide-react';
 
 // Types
-
-interface Position {
-  id: number;
-  title: string;
+interface Position extends Omit<ApiPosition, 'requirements'> {
   company: string;
-  department: string;
-  location: string;
-  type: 'full-time' | 'part-time' | 'contract' | 'internship';
-  level: 'entry' | 'mid' | 'senior' | 'executive';
-  salaryMin: number;
-  salaryMax: number;
-  status: 'draft' | 'published' | 'paused' | 'closed' | 'filled';
   applications: number;
   views: number;
   postedDate: string;
   deadline: string;
-  description: string;
   requirements: string[];
-  benefits: string[];
   remote: boolean;
   urgent: boolean;
+  type: 'full-time' | 'part-time' | 'contract' | 'internship' | 'freelance' | 'temporary';
+  level: 'entry' | 'mid' | 'senior' | 'executive';
+  salaryMin: number;
+  salaryMax: number;
 }
 
 interface NewPositionFormData {
   title: string;
   department: string;
   location: string;
-  type: Position['type'];
-  level: Position['level'];
+  job_type: Position['job_type'];
+  experience_level: Position['experience_level'];
   salaryMin: string;
   salaryMax: string;
   status: Position['status'];
@@ -63,8 +57,8 @@ interface NewPositionFormData {
   description: string;
   requirements: string;
   benefits: string;
-  remote: boolean;
-  urgent: boolean;
+  remote_type: Position['remote_type'];
+  is_urgent: boolean;
 }
 
 const formatDateInput = (date: Date) => date.toISOString().split('T')[0];
@@ -78,8 +72,8 @@ const getDefaultFormData = (): NewPositionFormData => {
     title: '',
     department: '',
     location: '',
-    type: 'full-time',
-    level: 'entry',
+    job_type: 'full_time',
+    experience_level: 'entry_level',
     salaryMin: '',
     salaryMax: '',
     status: 'draft',
@@ -88,8 +82,8 @@ const getDefaultFormData = (): NewPositionFormData => {
     description: '',
     requirements: '',
     benefits: '',
-    remote: false,
-    urgent: false,
+    remote_type: 'on_site',
+    is_urgent: false,
   };
 };
 
@@ -107,119 +101,30 @@ const FILTER_LOCATION_OPTIONS = [
   { label: 'All Locations', value: 'all' },
   ...LOCATION_OPTIONS,
 ];
-// Mock data
-const mockPositions: Position[] = [
-  {
-    id: 1,
-    title: 'Senior Full Stack Developer',
-    company: 'TechCorp Inc.',
-    department: 'Engineering',
-    location: 'Tokyo, Japan',
-    type: 'full-time',
-    level: 'senior',
-    salaryMin: 8000000,
-    salaryMax: 12000000,
-    status: 'published',
-    applications: 42,
-    views: 156,
-    postedDate: '2024-01-15',
-    deadline: '2024-02-15',
-    description: 'We are looking for a senior full stack developer to join our growing team...',
-    requirements: ['React', 'Node.js', 'TypeScript', '5+ years experience'],
-    benefits: ['Health Insurance', 'Remote Work', 'Stock Options'],
-    remote: true,
-    urgent: false
-  },
-  {
-    id: 2,
-    title: 'Product Manager',
-    company: 'StartupXYZ',
-    department: 'Product',
-    location: 'Osaka, Japan',
-    type: 'full-time',
-    level: 'mid',
-    salaryMin: 6000000,
-    salaryMax: 9000000,
-    status: 'published',
-    applications: 28,
-    views: 89,
-    postedDate: '2024-01-18',
-    deadline: '2024-02-18',
-    description: 'Join our product team to drive innovation and user experience...',
-    requirements: ['Product Management', 'Agile', 'Data Analysis', '3+ years experience'],
-    benefits: ['Flexible Hours', 'Learning Budget', 'Team Events'],
-    remote: false,
-    urgent: true
-  },
-  {
-    id: 3,
-    title: 'UX/UI Designer',
-    company: 'Design Studio Co.',
-    department: 'Design',
-    location: 'Remote',
-    type: 'contract',
-    level: 'mid',
-    salaryMin: 4000000,
-    salaryMax: 6000000,
-    status: 'paused',
-    applications: 15,
-    views: 67,
-    postedDate: '2024-01-10',
-    deadline: '2024-02-10',
-    description: 'Create beautiful and intuitive user experiences for our digital products...',
-    requirements: ['Figma', 'Adobe Creative Suite', 'User Research', '2+ years experience'],
-    benefits: ['Remote Work', 'Creative Freedom', 'Portfolio Projects'],
-    remote: true,
-    urgent: false
-  },
-  {
-    id: 4,
-    title: 'Data Scientist',
-    company: 'Analytics Pro',
-    department: 'Data Science',
-    location: 'Tokyo, Japan',
-    type: 'full-time',
-    level: 'senior',
-    salaryMin: 7000000,
-    salaryMax: 10000000,
-    status: 'filled',
-    applications: 67,
-    views: 203,
-    postedDate: '2024-01-05',
-    deadline: '2024-02-05',
-    description: 'Lead data science initiatives and build predictive models...',
-    requirements: ['Python', 'Machine Learning', 'SQL', 'PhD preferred'],
-    benefits: ['Research Time', 'Conference Budget', 'Publication Support'],
-    remote: true,
-    urgent: false
-  },
-  {
-    id: 5,
-    title: 'Marketing Coordinator',
-    company: 'Growth Marketing Inc.',
-    department: 'Marketing',
-    location: 'Nagoya, Japan',
-    type: 'full-time',
-    level: 'entry',
-    salaryMin: 3000000,
-    salaryMax: 4500000,
-    status: 'draft',
-    applications: 0,
-    views: 0,
-    postedDate: '2024-01-20',
-    deadline: '2024-02-20',
-    description: 'Support marketing campaigns and content creation efforts...',
-    requirements: ['Marketing Basics', 'Content Creation', 'Social Media', 'Fresh Graduate OK'],
-    benefits: ['Training Program', 'Mentorship', 'Career Growth'],
-    remote: false,
-    urgent: false
-  }
-
-];
+// Helper function to map API data to frontend format
+const mapApiPositionToLocal = (apiPosition: ApiPosition): Position => {
+  return {
+    ...apiPosition,
+    company: apiPosition.company_name || 'Unknown Company',
+    applications: apiPosition.application_count || 0,
+    views: apiPosition.view_count || 0,
+    postedDate: apiPosition.published_at || apiPosition.created_at || new Date().toISOString(),
+    deadline: apiPosition.application_deadline || '',
+    requirements: apiPosition.required_skills || [],
+    salaryMin: apiPosition.salary_min || 0,
+    salaryMax: apiPosition.salary_max || 0,
+    remote: apiPosition.remote_type === 'remote' || apiPosition.remote_type === 'hybrid',
+    urgent: apiPosition.is_urgent || false,
+    type: (apiPosition.job_type?.replace('_', '-') || 'full-time') as Position['type'],
+    level: (apiPosition.experience_level?.replace('_level', '').replace('_', '') || 'mid') as Position['level'],
+  };
+};
 
 function PositionsPageContent() {
-  const [positions, setPositions] = useState<Position[]>(mockPositions);
-  const [filteredPositions, setFilteredPositions] = useState<Position[]>(mockPositions);
+  const [positions, setPositions] = useState<Position[]>([]);
+  const [filteredPositions, setFilteredPositions] = useState<Position[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -231,12 +136,36 @@ function PositionsPageContent() {
   const itemsPerPage = 10;
   const [isNewPositionOpen, setIsNewPositionOpen] = useState(false);
 
+  // Load positions from API
+  useEffect(() => {
+    const loadPositions = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await positionsApi.getAll();
+        if (response.success && response.data) {
+          const mappedPositions = response.data.positions.map(mapApiPositionToLocal);
+          setPositions(mappedPositions);
+        } else {
+          setError('Failed to load positions');
+        }
+      } catch (err) {
+        console.error('Error loading positions:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load positions');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPositions();
+  }, []);
+
   // Apply filters and search
   useEffect(() => {
     const filtered = positions.filter(position => {
       const matchesSearch = position.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           position.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          position.department.toLowerCase().includes(searchTerm.toLowerCase());
+                          (position.department || '').toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === 'all' || position.status === statusFilter;
       const matchesType = typeFilter === 'all' || position.type === typeFilter;
       const matchesLevel = levelFilter === 'all' || position.level === levelFilter;
@@ -291,41 +220,45 @@ function PositionsPageContent() {
     applications: positions.reduce((sum, p) => sum + p.applications, 0),
     avgViews: Math.round(positions.reduce((sum, p) => sum + p.views, 0) / positions.length) || 0
   };
-  const handleCreatePosition = (formData: NewPositionFormData) => {
-    const parseMultiline = (value: string) => (
-      value
-        .split('\n')
-        .map(item => item.trim())
-        .filter(Boolean)
-    );
-    const salaryMin = Number(formData.salaryMin);
-    const salaryMax = Number(formData.salaryMax);
-    const nextId = positions.reduce((maxId, position) => Math.max(maxId, position.id), 0) + 1;
-    const companyName = positions[0]?.company ?? 'Not specified';
-    const newPosition: Position = {
-      id: nextId,
-      title: formData.title.trim(),
-      company: companyName,
-      department: formData.department.trim(),
-      location: formData.location,
-      type: formData.type,
-      level: formData.level,
-      salaryMin,
-      salaryMax,
-      status: formData.status,
-      applications: 0,
-      views: 0,
-      postedDate: formData.postedDate,
-      deadline: formData.deadline,
-      description: formData.description.trim(),
-      requirements: parseMultiline(formData.requirements),
-      benefits: parseMultiline(formData.benefits),
-      remote: formData.remote,
-      urgent: formData.urgent,
-    };
-    setPositions(prev => [newPosition, ...prev]);
-    setIsNewPositionOpen(false);
-    setCurrentPage(1);
+  const handleCreatePosition = async (formData: NewPositionFormData) => {
+    try {
+      const parseMultiline = (value: string) => (
+        value
+          .split('\n')
+          .map(item => item.trim())
+          .filter(Boolean)
+      );
+
+      const positionData: PositionCreate = {
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        department: formData.department.trim(),
+        location: formData.location,
+        job_type: formData.job_type,
+        experience_level: formData.experience_level,
+        remote_type: formData.remote_type,
+        salary_min: formData.salaryMin ? Number(formData.salaryMin) * 100 : undefined, // Convert to cents
+        salary_max: formData.salaryMax ? Number(formData.salaryMax) * 100 : undefined, // Convert to cents
+        required_skills: parseMultiline(formData.requirements),
+        benefits: parseMultiline(formData.benefits),
+        application_deadline: formData.deadline || undefined,
+        is_urgent: formData.is_urgent,
+        company_id: 1, // TODO: Get from user context
+      };
+
+      const response = await positionsApi.create(positionData);
+      if (response.success && response.data) {
+        const newPosition = mapApiPositionToLocal(response.data);
+        setPositions(prev => [newPosition, ...prev]);
+        setIsNewPositionOpen(false);
+        setCurrentPage(1);
+      } else {
+        setError('Failed to create position');
+      }
+    } catch (err) {
+      console.error('Error creating position:', err);
+      setError(err instanceof Error ? err.message : 'Failed to create position');
+    }
   };
   // Helper functions
   const getStatusBadge = (status: Position['status']) => {
@@ -334,18 +267,20 @@ function PositionsPageContent() {
       published: 'bg-green-100 text-green-800 border-green-200',
       paused: 'bg-yellow-100 text-yellow-800 border-yellow-200',
       closed: 'bg-red-100 text-red-800 border-red-200',
-      filled: 'bg-blue-100 text-blue-800 border-blue-200'
+      archived: 'bg-gray-100 text-gray-800 border-gray-200'
     };
-    return styles[status];
+    return styles[status] || styles.draft;
   };
   const getTypeBadge = (type: Position['type']) => {
     const styles = {
       'full-time': 'bg-blue-50 text-blue-700 border-blue-200',
       'part-time': 'bg-purple-50 text-purple-700 border-purple-200',
       'contract': 'bg-orange-50 text-orange-700 border-orange-200',
-      'internship': 'bg-pink-50 text-pink-700 border-pink-200'
+      'internship': 'bg-pink-50 text-pink-700 border-pink-200',
+      'freelance': 'bg-green-50 text-green-700 border-green-200',
+      'temporary': 'bg-yellow-50 text-yellow-700 border-yellow-200'
     };
-    return styles[type];
+    return styles[type] || styles['full-time'];
   };
   const getLevelBadge = (level: Position['level']) => {
     const styles = {
@@ -354,9 +289,10 @@ function PositionsPageContent() {
       'senior': 'bg-purple-50 text-purple-700 border-purple-200',
       'executive': 'bg-red-50 text-red-700 border-red-200'
     };
-    return styles[level];
+    return styles[level] || styles['mid'];
   };
   const formatSalary = (min: number, max: number) => {
+    if (!min || !max) return 'Salary not specified';
     return `¥${(min / 1000000).toFixed(1)}M - ¥${(max / 1000000).toFixed(1)}M`;
   };
   const formatDate = (dateString: string) => {
@@ -491,7 +427,7 @@ function PositionsPageContent() {
                 <option value="published">Published</option>
                 <option value="paused">Paused</option>
                 <option value="closed">Closed</option>
-                <option value="filled">Filled</option>
+                <option value="archived">Archived</option>
               </select>
               <select
                 value={typeFilter}
@@ -538,6 +474,20 @@ function PositionsPageContent() {
             </div>
           </div>
         </div>
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-center gap-2">
+              <div className="text-red-600">
+                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <p className="text-red-800 font-medium">{error}</p>
+            </div>
+          </div>
+        )}
+
         {/* Positions Table */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
@@ -586,7 +536,16 @@ function PositionsPageContent() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {currentPositions.length === 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-12 text-center">
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        <p className="text-gray-500">Loading positions...</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : currentPositions.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-6 py-12 text-center">
                       <div className="flex flex-col items-center gap-3">
@@ -879,33 +838,36 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="type">Type</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="job_type">Type</label>
               <select
-                id="type"
-                name="type"
-                value={formData.type}
+                id="job_type"
+                name="job_type"
+                value={formData.job_type}
                 onChange={handleInputChange}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
               >
-                <option value="full-time">Full-time</option>
-                <option value="part-time">Part-time</option>
+                <option value="full_time">Full-time</option>
+                <option value="part_time">Part-time</option>
                 <option value="contract">Contract</option>
                 <option value="internship">Internship</option>
+                <option value="freelance">Freelance</option>
+                <option value="temporary">Temporary</option>
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="level">Level</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="experience_level">Level</label>
               <select
-                id="level"
-                name="level"
-                value={formData.level}
+                id="experience_level"
+                name="experience_level"
+                value={formData.experience_level}
                 onChange={handleInputChange}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
               >
-                <option value="entry">Entry</option>
-                <option value="mid">Mid</option>
-                <option value="senior">Senior</option>
+                <option value="entry_level">Entry Level</option>
+                <option value="mid_level">Mid Level</option>
+                <option value="senior_level">Senior Level</option>
                 <option value="executive">Executive</option>
+                <option value="internship">Internship</option>
               </select>
             </div>
             <div>
@@ -921,7 +883,21 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
                 <option value="published">Published</option>
                 <option value="paused">Paused</option>
                 <option value="closed">Closed</option>
-                <option value="filled">Filled</option>
+                <option value="archived">Archived</option>
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="remote_type">Remote Work</label>
+              <select
+                id="remote_type"
+                name="remote_type"
+                value={formData.remote_type}
+                onChange={handleInputChange}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
+              >
+                <option value="on_site">On-site</option>
+                <option value="remote">Remote</option>
+                <option value="hybrid">Hybrid</option>
               </select>
             </div>
             <div>
@@ -1015,18 +991,8 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
               <input
                 type="checkbox"
-                name="remote"
-                checked={formData.remote}
-                onChange={handleCheckboxChange}
-                className="h-4 w-4 rounded border-gray-300 text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]"
-              />
-              Remote friendly role
-            </label>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-              <input
-                type="checkbox"
-                name="urgent"
-                checked={formData.urgent}
+                name="is_urgent"
+                checked={formData.is_urgent}
                 onChange={handleCheckboxChange}
                 className="h-4 w-4 rounded border-gray-300 text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]"
               />

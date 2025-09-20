@@ -1,4 +1,4 @@
-﻿import { API_ENDPOINTS } from '@/config/api';
+﻿import { API_ENDPOINTS } from './config';
 import { apiClient } from './apiClient';
 import type { Todo, TodoListResponse, TodoPayload, TodoListParams } from '@/types/todo';
 

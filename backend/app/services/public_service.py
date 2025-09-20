@@ -5,13 +5,14 @@ from sqlalchemy import asc, desc, func, or_
 from sqlalchemy.orm import Session
 
 from app.models.company import Company
-from app.models.job import CompanyProfile, Job, JobApplication, JobStatus
+from app.models.position import CompanyProfile, Position, PositionApplication
+from app.schemas.position import PositionStatus
 from app.models.user import User
 from app.schemas.public import (
     CompanyProfileUpdate,
     CompanySearchParams,
-    JobApplicationCreate,
-    JobSearchParams,
+    PositionApplicationCreate,
+    PositionSearchParams,
 )
 from app.services.audit_service import log_action
 
@@ -27,12 +28,12 @@ class PublicService:
         total_companies = (
             self.db.query(Company).filter(Company.is_active == "1").count()
         )
-        total_jobs = (
-            self.db.query(Job).filter(Job.status == JobStatus.PUBLISHED).count()
+        total_positions = (
+            self.db.query(Position).filter(Position.status == PositionStatus.PUBLISHED).count()
         )
-        total_applications = self.db.query(JobApplication).count()
+        total_applications = self.db.query(PositionApplication).count()
 
-        # Featured companies (those with profiles and job postings)
+        # Featured companies (those with profiles and position postings)
         featured_companies = (
             self.db.query(Company)
             .join(CompanyProfile)
@@ -41,55 +42,55 @@ class PublicService:
             .all()
         )
 
-        # Latest jobs
-        latest_jobs = (
-            self.db.query(Job)
-            .filter(Job.status == JobStatus.PUBLISHED)
-            .order_by(desc(Job.published_at))
+        # Latest positions
+        latest_positions = (
+            self.db.query(Position)
+            .filter(Position.status == PositionStatus.PUBLISHED)
+            .order_by(desc(Position.published_at))
             .limit(8)
             .all()
         )
 
-        # Job categories (job types)
-        job_categories = dict(
-            self.db.query(Job.job_type, func.count(Job.id))
-            .filter(Job.status == JobStatus.PUBLISHED)
-            .group_by(Job.job_type)
+        # Position categories (position types)
+        position_categories = dict(
+            self.db.query(Position.position_type, func.count(Position.id))
+            .filter(Position.status == PositionStatus.PUBLISHED)
+            .group_by(Position.position_type)
             .all()
         )
 
         # Location stats
         location_stats = dict(
-            self.db.query(Job.country, func.count(Job.id))
-            .filter(Job.status == JobStatus.PUBLISHED, Job.country.isnot(None))
-            .group_by(Job.country)
-            .order_by(desc(func.count(Job.id)))
+            self.db.query(Position.country, func.count(Position.id))
+            .filter(Position.status == PositionStatus.PUBLISHED, Position.country.isnot(None))
+            .group_by(Position.country)
+            .order_by(desc(func.count(Position.id)))
             .limit(10)
             .all()
         )
 
         return {
             "total_companies": total_companies,
-            "total_jobs": total_jobs,
+            "total_positions": total_positions,
             "total_applications": total_applications,
             "featured_companies": featured_companies,
-            "latest_jobs": latest_jobs,
-            "job_categories": job_categories,
+            "latest_positions": latest_positions,
+            "position_categories": position_categories,
             "location_stats": location_stats,
         }
 
-    def search_jobs(self, params: JobSearchParams) -> dict[str, Any]:
-        """Search jobs with filtering and pagination"""
+    def search_positions(self, params: PositionSearchParams) -> dict[str, Any]:
+        """Search positions with filtering and pagination"""
 
-        query = self.db.query(Job).filter(Job.status == JobStatus.PUBLISHED)
+        query = self.db.query(Position).filter(Position.status == PositionStatus.PUBLISHED)
 
         # Text search
         if params.q:
             query = query.filter(
                 or_(
-                    Job.title.contains(params.q),
-                    Job.description.contains(params.q),
-                    Job.summary.contains(params.q),
+                    Position.title.contains(params.q),
+                    Position.description.contains(params.q),
+                    Position.summary.contains(params.q),
                 )
             )
 
@@ -97,40 +98,40 @@ class PublicService:
         if params.location:
             query = query.filter(
                 or_(
-                    Job.location.contains(params.location),
-                    Job.city.contains(params.location),
-                    Job.country.contains(params.location),
+                    Position.location.contains(params.location),
+                    Position.city.contains(params.location),
+                    Position.country.contains(params.location),
                 )
             )
 
         if params.country:
-            query = query.filter(Job.country == params.country)
+            query = query.filter(Position.country == params.country)
 
         if params.city:
-            query = query.filter(Job.city == params.city)
+            query = query.filter(Position.city == params.city)
 
         if params.company_id:
-            query = query.filter(Job.company_id == params.company_id)
+            query = query.filter(Position.company_id == params.company_id)
 
-        # Job type filters
-        if params.job_type:
-            query = query.filter(Job.job_type == params.job_type)
+        # Position type filters
+        if params.position_type:
+            query = query.filter(Position.position_type == params.position_type)
 
         if params.experience_level:
-            query = query.filter(Job.experience_level == params.experience_level)
+            query = query.filter(Position.experience_level == params.experience_level)
 
         if params.remote_type:
-            query = query.filter(Job.remote_type == params.remote_type)
+            query = query.filter(Position.remote_type == params.remote_type)
 
         # Salary filters
         if params.salary_min:
             query = query.filter(
-                Job.salary_min >= params.salary_min * 100
+                Position.salary_min >= params.salary_min * 100
             )  # Convert to cents
 
         if params.salary_max:
             query = query.filter(
-                Job.salary_max <= params.salary_max * 100
+                Position.salary_max <= params.salary_max * 100
             )  # Convert to cents
 
         # Skills filter (if skills are stored as JSON)
@@ -138,25 +139,25 @@ class PublicService:
             for skill in params.skills:
                 query = query.filter(
                     or_(
-                        Job.required_skills.contains(skill),
-                        Job.preferred_skills.contains(skill),
+                        Position.required_skills.contains(skill),
+                        Position.preferred_skills.contains(skill),
                     )
                 )
 
         # Featured only
         if params.featured_only:
-            query = query.filter(Job.is_featured == True)
+            query = query.filter(Position.is_featured == True)
 
         # Sorting
         if params.sort_by == "published_date":
-            order_col = Job.published_at
+            order_col = Position.published_at
         elif params.sort_by == "salary":
-            order_col = Job.salary_max
+            order_col = Position.salary_max
         elif params.sort_by == "company":
             query = query.join(Company)
             order_col = Company.name
         else:  # relevance - default to published date
-            order_col = Job.published_at
+            order_col = Position.published_at
 
         if params.sort_order == "asc":
             query = query.order_by(asc(order_col))
@@ -168,13 +169,13 @@ class PublicService:
 
         # Apply pagination
         offset = (params.page - 1) * params.limit
-        jobs = query.offset(offset).limit(params.limit).all()
+        positions = query.offset(offset).limit(params.limit).all()
 
         # Get available filter values
-        filters = self._get_job_filters()
+        filters = self._get_position_filters()
 
         return {
-            "jobs": jobs,
+            "positions": positions,
             "total": total,
             "page": params.page,
             "limit": params.limit,
@@ -182,24 +183,24 @@ class PublicService:
             "filters": filters,
         }
 
-    def get_job_by_slug(self, slug: str) -> Job:
-        """Get job by slug and increment view count"""
-        job = (
-            self.db.query(Job)
-            .filter(Job.slug == slug, Job.status == JobStatus.PUBLISHED)
+    def get_position_by_slug(self, slug: str) -> Position:
+        """Get position by slug and increment view count"""
+        position = (
+            self.db.query(Position)
+            .filter(Position.slug == slug, Position.status == PositionStatus.PUBLISHED)
             .first()
         )
 
-        if not job:
+        if not position:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Job not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Position not found"
             )
 
         # Increment view count
-        job.increment_view_count()
+        position.increment_view_count()
         self.db.commit()
 
-        return job
+        return position
 
     def search_companies(self, params: CompanySearchParams) -> dict[str, Any]:
         """Search companies with public profiles"""
@@ -288,40 +289,40 @@ class PublicService:
 
         return company
 
-    def get_company_jobs(self, company_id: int, limit: int = 50) -> list[Job]:
-        """Get active jobs for a company"""
+    def get_company_positions(self, company_id: int, limit: int = 50) -> list[Position]:
+        """Get active positions for a company"""
         return (
-            self.db.query(Job)
-            .filter(Job.company_id == company_id, Job.status == JobStatus.PUBLISHED)
-            .order_by(desc(Job.published_at))
+            self.db.query(Position)
+            .filter(Position.company_id == company_id, Position.status == PositionStatus.PUBLISHED)
+            .order_by(desc(Position.published_at))
             .limit(limit)
             .all()
         )
 
-    def apply_to_job(
-        self, job_id: int, application_data: JobApplicationCreate, candidate: User
-    ) -> JobApplication:
-        """Submit job application"""
+    def apply_to_position(
+        self, position_id: int, application_data: PositionApplicationCreate, candidate: User
+    ) -> PositionApplication:
+        """Submit position application"""
 
-        # Get job and validate
-        job = self.db.query(Job).filter(Job.id == job_id).first()
-        if not job:
+        # Get position and validate
+        position = self.db.query(Position).filter(Position.id == position_id).first()
+        if not position:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Job not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Position not found"
             )
 
-        if not job.can_apply():
+        if not position.can_apply():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Job applications are not being accepted",
+                detail="Position applications are not being accepted",
             )
 
         # Check for duplicate application
         existing = (
-            self.db.query(JobApplication)
+            self.db.query(PositionApplication)
             .filter(
-                JobApplication.job_id == job_id,
-                JobApplication.candidate_id == candidate.id,
+                PositionApplication.position_id == position_id,
+                PositionApplication.candidate_id == candidate.id,
             )
             .first()
         )
@@ -329,12 +330,12 @@ class PublicService:
         if existing:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="You have already applied to this job",
+                detail="You have already applied to this position",
             )
 
         # Create application
-        application = JobApplication(
-            job_id=job_id,
+        application = PositionApplication(
+            position_id=position_id,
             candidate_id=candidate.id,
             resume_id=application_data.resume_id,
             cover_letter=application_data.cover_letter,
@@ -344,8 +345,8 @@ class PublicService:
 
         self.db.add(application)
 
-        # Update job application count
-        job.application_count += 1
+        # Update position application count
+        position.application_count += 1
 
         self.db.commit()
 
@@ -353,37 +354,37 @@ class PublicService:
         log_action(
             self.db,
             candidate,
-            "job.apply",
-            f"Applied to job '{job.title}' (ID: {job.id})",
-            {"job_id": job.id, "application_id": application.id},
+            "position.apply",
+            f"Applied to position '{position.title}' (ID: {position.id})",
+            {"position_id": position.id, "application_id": application.id},
         )
 
         return application
 
-    def _get_job_filters(self) -> dict[str, Any]:
-        """Get available filter values for job search"""
+    def _get_position_filters(self) -> dict[str, Any]:
+        """Get available filter values for position search"""
 
         # Get unique values for filters
         countries = [
             row[0]
-            for row in self.db.query(Job.country)
-            .filter(Job.status == JobStatus.PUBLISHED, Job.country.isnot(None))
+            for row in self.db.query(Position.country)
+            .filter(Position.status == PositionStatus.PUBLISHED, Position.country.isnot(None))
             .distinct()
             .all()
         ]
 
         cities = [
             row[0]
-            for row in self.db.query(Job.city)
-            .filter(Job.status == JobStatus.PUBLISHED, Job.city.isnot(None))
+            for row in self.db.query(Position.city)
+            .filter(Position.status == PositionStatus.PUBLISHED, Position.city.isnot(None))
             .distinct()
             .all()
         ]
 
         companies = (
             self.db.query(Company.id, Company.name)
-            .join(Job)
-            .filter(Job.status == JobStatus.PUBLISHED)
+            .join(Position)
+            .filter(Position.status == PositionStatus.PUBLISHED)
             .distinct()
             .all()
         )
@@ -392,9 +393,9 @@ class PublicService:
             "countries": sorted(countries),
             "cities": sorted(cities),
             "companies": [{"id": c.id, "name": c.name} for c in companies],
-            "job_types": [t.value for t in Job.job_type.type.enums],
-            "experience_levels": [e.value for e in Job.experience_level.type.enums],
-            "remote_types": [r.value for r in Job.remote_type.type.enums],
+            "position_types": [t.value for t in Position.position_type.type.enums],
+            "experience_levels": [e.value for e in Position.experience_level.type.enums],
+            "remote_types": [r.value for r in Position.remote_type.type.enums],
         }
 
 

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Save, Calendar, Settings, Trash2, UserX } from 'lucide-react';
 import { PREFECTURES } from '@/utils/prefectures';
-import { companiesApi } from '@/api/companiesApi';
+import { companiesApi } from '@/api/companies';
 import { Company, CompanyType, CompanyUpdate } from '@/types/company';
 import { CompanyFormData } from '@/types/forms';
 import { useToast } from '@/contexts/ToastContext';
@@ -47,6 +47,12 @@ function EditCompanyContent() {
         setLoading(true);
         const response = await companiesApi.getCompany(parseInt(companyId));
         const companyData = response.data;
+
+        if (!companyData) {
+          setError('Company not found');
+          return;
+        }
+
         setCompany(companyData);
         setFormData({
           name: companyData.name,

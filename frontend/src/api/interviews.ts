@@ -1,143 +1,46 @@
+import { API_ENDPOINTS } from './config';
+import { apiClient } from './apiClient';
 import type { ApiResponse, InterviewsListResponse } from '@/types';
 import type { Interview } from '@/types/interview';
-import { API_CONFIG } from '@/config/api';
 
-// Interviews API
 export const interviewsApi = {
-  getAll: async (): Promise<ApiResponse<InterviewsListResponse<Interview>>> => {
-    const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/interviews`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return { data, success: true };
+  async getAll(): Promise<ApiResponse<InterviewsListResponse<Interview>>> {
+    const response = await apiClient.get<InterviewsListResponse<Interview>>(API_ENDPOINTS.INTERVIEWS.BASE);
+    return { data: response.data, success: true };
   },
 
-  getById: async (id: number): Promise<ApiResponse<Interview>> => {
-    const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/interviews/${id}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return { data, success: true };
+  async getById(id: number): Promise<ApiResponse<Interview>> {
+    const response = await apiClient.get<Interview>(API_ENDPOINTS.INTERVIEWS.BY_ID(id));
+    return { data: response.data, success: true };
   },
 
-  create: async (interviewData: Partial<Interview>): Promise<ApiResponse<Interview>> => {
-    const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/interviews`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(interviewData),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return { data, success: true };
+  async create(interviewData: Partial<Interview>): Promise<ApiResponse<Interview>> {
+    const response = await apiClient.post<Interview>(API_ENDPOINTS.INTERVIEWS.BASE, interviewData);
+    return { data: response.data, success: true };
   },
 
-  update: async (id: number, interviewData: Partial<Interview>): Promise<ApiResponse<Interview>> => {
-    const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/interviews/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(interviewData),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return { data, success: true };
+  async update(id: number, interviewData: Partial<Interview>): Promise<ApiResponse<Interview>> {
+    const response = await apiClient.put<Interview>(API_ENDPOINTS.INTERVIEWS.BY_ID(id), interviewData);
+    return { data: response.data, success: true };
   },
 
-  delete: async (id: number): Promise<ApiResponse<void>> => {
-    const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/interviews/${id}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-    }
-    
+  async delete(id: number): Promise<ApiResponse<void>> {
+    await apiClient.delete<void>(API_ENDPOINTS.INTERVIEWS.BY_ID(id));
     return { data: undefined, success: true };
   },
 
-  updateStatus: async (id: number, status: string): Promise<ApiResponse<Interview>> => {
-    const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/interviews/${id}/status`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ status }),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return { data, success: true };
+  async updateStatus(id: number, status: string): Promise<ApiResponse<Interview>> {
+    const response = await apiClient.put<Interview>(API_ENDPOINTS.INTERVIEWS.STATUS(id), { status });
+    return { data: response.data, success: true };
   },
 
-  schedule: async (id: number, scheduleData: {
+  async schedule(id: number, scheduleData: {
     scheduledAt: string;
     duration: number;
     location?: string;
     meetingLink?: string;
-  }): Promise<ApiResponse<Interview>> => {
-    const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/interviews/${id}/schedule`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(scheduleData),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return { data, success: true };
+  }): Promise<ApiResponse<Interview>> {
+    const response = await apiClient.put<Interview>(API_ENDPOINTS.INTERVIEWS.SCHEDULE(id), scheduleData);
+    return { data: response.data, success: true };
   },
 };

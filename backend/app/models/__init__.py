@@ -5,7 +5,7 @@ from .auth import OauthAccount, PasswordResetRequest, RefreshToken
 from .company import Company
 from .direct_message import DirectMessage
 from .interview import Interview, InterviewProposal
-from .job import CompanyProfile, Job, JobApplication
+from .position import CompanyProfile, Position, PositionApplication
 from .meeting import (
     Meeting,
     MeetingRecording,
@@ -56,9 +56,9 @@ __all__ = [
     "MeetingTranscript",
     "MeetingSummary",
     "meeting_participants",
-    "Job",
-    "JobApplication",
     "CompanyProfile",
+    "Position",
+    "PositionApplication",
     "UserSettings",
     "Todo",
 ]

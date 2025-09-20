@@ -604,51 +604,121 @@ frontend/src/
     └── ...
 ```
 
-## Implementation Checklist
+## Implementation Status & Remaining Tasks
 
-### Pre-Migration
-- [ ] Backup production database
-- [ ] Create feature branch
-- [ ] Set up testing environment
-- [ ] Document current API endpoints
+### ✅ COMPLETED
+- [x] Backend model structure created (`models/position.py`)
+- [x] Backend schema structure created (`schemas/position.py`)
+- [x] Backend CRUD operations created (`crud/position.py`)
+- [x] Backend API endpoints created (`endpoints/positions.py`)
+- [x] Backward compatibility layer implemented:
+  - [x] Legacy model aliases (`models/job.py` → `position.py`)
+  - [x] Legacy schema aliases (`schemas/job.py` → `position.py`)
+  - [x] Legacy endpoint routing (`endpoints/jobs.py` → `positions.py`)
+- [x] Router configuration updated (`routers.py`)
+- [x] Both `/api/positions` and `/api/jobs` endpoints available
 
-### Database Migration
-- [ ] Create Alembic migration script
-- [ ] Test migration on development database
-- [ ] Verify data integrity after migration
-- [ ] Update database indexes and constraints
+### 🔄 IN PROGRESS / REMAINING TASKS
 
-### Backend Code Migration
-- [ ] Rename model files and classes
-- [ ] Update schema files and classes
-- [ ] Migrate CRUD operations
-- [ ] Update API endpoints with dual routing
-- [ ] Update all imports and references
+#### Phase 1: Database Migration (CRITICAL - MUST DO FIRST)
+- [ ] **Create Alembic migration script** to rename tables:
+  ```sql
+  ALTER TABLE jobs RENAME TO positions;
+  ALTER TABLE job_applications RENAME TO position_applications;
+  ALTER TABLE position_applications CHANGE job_id position_id int NOT NULL;
+  ```
+- [ ] **Update database indexes** with new table names
+- [ ] **Test migration on development database**
+- [ ] **Verify data integrity after migration**
 
-### Frontend Code Migration
-- [ ] Create new positions API client
-- [ ] Update positions page to use real backend data
-- [ ] Update job types and interfaces
-- [ ] Test both admin and public interfaces
+#### Phase 2: Backend Code Finalization
+- [ ] **Update positions endpoint** to implement permission-based filtering:
+  - [ ] Public access: filtered response data
+  - [ ] Admin access: full response data
+- [ ] **Update all imports** throughout backend codebase:
+  - [ ] Check `dependencies.py` for job imports
+  - [ ] Check `services/` for job imports
+  - [ ] Check `workers/` for job imports
+- [ ] **Update tests**:
+  - [ ] Run existing `test_positions.py`
+  - [ ] Update any remaining `test_jobs.py` references
+  - [ ] Add permission-based filtering tests
 
-### Testing
-- [ ] Update all existing tests
-- [ ] Add backward compatibility tests
-- [ ] Add integration tests
-- [ ] Test migration rollback procedures
+#### Phase 3: Frontend Migration
+- [ ] **Create unified positions API client** (`frontend/src/api/positions.ts`)
+- [ ] **Update positions page** (`frontend/src/app/positions/page.tsx`):
+  - [ ] Remove mock data
+  - [ ] Connect to real backend API
+  - [ ] Use admin authentication
+- [ ] **Update jobs page** (`frontend/src/app/jobs/page.tsx`):
+  - [ ] Switch from `jobsApi` to `positionsApi.getPublic()`
+  - [ ] Test public access (no authentication)
+- [ ] **Update type definitions** (`frontend/src/types/`)
+- [ ] **Test both admin and public interfaces**
 
-### Documentation
-- [ ] Update API documentation
-- [ ] Update deployment guides
-- [ ] Create migration runbook
-- [ ] Update user documentation
+#### Phase 4: Testing & Validation
+- [ ] **Run all backend tests**
+- [ ] **Test API backward compatibility**:
+  - [ ] Verify `/api/jobs` still works
+  - [ ] Verify `/api/positions` works with new features
+- [ ] **Test frontend integration**:
+  - [ ] Admin positions page functionality
+  - [ ] Public jobs page functionality
+- [ ] **Performance testing**
 
-### Deployment
-- [ ] Deploy to staging environment
-- [ ] Run comprehensive tests
-- [ ] Deploy to production with rollback plan
-- [ ] Monitor for issues
-- [ ] Deprecation notices for old endpoints
+#### Phase 5: Documentation & Cleanup
+- [ ] **Update API documentation**
+- [ ] **Add deprecation notices** to legacy endpoints
+- [ ] **Update README** with new terminology
+- [ ] **Clean up any unused legacy code**
+
+### 🚨 IMMEDIATE NEXT STEPS (PRIORITY ORDER)
+
+1. **DATABASE MIGRATION** (Highest Priority)
+   - Create and run Alembic migration to rename tables
+   - This must be done before testing the new endpoints
+
+2. **Backend Permission Filtering**
+   - Implement the public vs admin response filtering in positions endpoint
+
+3. **Frontend API Client**
+   - Create the unified positions API client
+   - Update both pages to use it
+
+4. **Testing**
+   - Run comprehensive tests
+   - Fix any issues discovered
+
+### 📋 CRITICAL DEPENDENCIES
+
+- **Database migration MUST be completed first** - New endpoints won't work without renamed tables
+- **Backend endpoints must implement permission filtering** before frontend can be properly tested
+- **Frontend pages must be updated together** to ensure consistent user experience
+
+### 🔧 QUICK START COMMANDS
+
+```bash
+# 1. Create database migration
+cd backend
+alembic revision --autogenerate -m "rename_jobs_to_positions"
+
+# 2. Run migration
+alembic upgrade head
+
+# 3. Test backend endpoints
+python -m pytest app/tests/test_positions.py -v
+
+# 4. Test frontend (after API client is created)
+cd frontend
+npm run dev
+```
+
+### ⚠️ ROLLBACK PLAN
+
+If issues arise:
+1. Database rollback: `alembic downgrade -1`
+2. Code rollback: Revert to legacy imports
+3. Frontend rollback: Keep using `jobsApi`
 
 ## Backward Compatibility Strategy
 
