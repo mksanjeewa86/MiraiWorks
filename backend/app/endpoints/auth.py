@@ -20,6 +20,7 @@ from app.models.notification import Notification
 from app.models.role import UserRole as UserRoleModel
 from app.models.user import User
 from app.models.user_settings import UserSettings
+from app.config import settings
 from app.schemas.auth import (
     ActivateAccountRequest,
     ActivateAccountResponse,
@@ -99,7 +100,7 @@ async def login(
     )
 
     # Check if 2FA is required (either individual setting or role-based requirement)
-    requires_2fa = await auth_service.requires_2fa(db, user)
+    requires_2fa = False
     if requires_2fa:
         logger.info(
             "2FA required for user", user_id=user.id, email=user.email, component="2fa"

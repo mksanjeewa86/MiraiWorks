@@ -24,7 +24,8 @@ from app.schemas.job import (
 router = APIRouter()
 
 
-@router.post("/", response_model=JobInfo, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=JobInfo, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=JobInfo, status_code=status.HTTP_201_CREATED, include_in_schema=False)
 async def create_job(
     *,
     db: AsyncSession = Depends(get_db),
@@ -57,7 +58,8 @@ async def create_job(
     return job
 
 
-@router.get("/", response_model=JobListResponse)
+@router.get("", response_model=JobListResponse)
+@router.get("/", response_model=JobListResponse, include_in_schema=False)
 async def list_jobs(
     db: AsyncSession = Depends(get_db),
     skip: int = Query(0, ge=0, description="Number of jobs to skip"),

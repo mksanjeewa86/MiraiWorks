@@ -1,5 +1,6 @@
 import secrets
 import string
+import logging
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -26,6 +27,7 @@ from app.utils.constants import UserRole as UserRoleEnum
 from app.utils.permissions import is_company_admin, is_super_admin
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 

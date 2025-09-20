@@ -105,4 +105,9 @@ logs/
 CREDENTIALS.md
 credentials.md
 *credentials*
-*CREDENTIALS*uploads/
+*CREDENTIALS*
+# Backend uploads - ignore all uploaded files but keep directory structure
+/backend/uploads/*
+!/backend/uploads/.gitkeep
+
+git_run.ps1

@@ -70,7 +70,6 @@ function ResumePreviewContent() {
     
     try {
       // In a real implementation, this would generate/download a PDF
-      console.log('Downloading resume:', resume.id);
       alert('Download functionality would be implemented here');
     } catch (err) {
       console.error('Failed to download resume:', err);

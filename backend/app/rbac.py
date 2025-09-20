@@ -85,6 +85,7 @@ ROLE_PERMISSIONS: dict[UserRole, set[str]] = {
         "users.read",  # Limited to candidates through recruiters
         "messages.create",
         "messages.read",
+        "interviews.create",
         "interviews.read",
         "interviews.update",
         "interviews.propose",

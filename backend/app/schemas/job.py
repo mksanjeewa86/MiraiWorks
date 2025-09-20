@@ -60,6 +60,8 @@ class ApplicationStatus(str, Enum):
 
 # Base Schemas
 class JobBase(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     title: str = Field(..., max_length=255, min_length=1)
     description: str = Field(..., min_length=10)
     summary: Optional[str] = Field(None, max_length=1000)
@@ -75,7 +77,7 @@ class JobBase(BaseModel):
     required_skills: Optional[List[str]] = None  # Will be JSON serialized
     benefits: Optional[List[str]] = None  # Will be JSON serialized
     perks: Optional[List[str]] = None  # Will be JSON serialized
-    application_deadline: Optional[datetime] = None
+    application_deadline: Optional[datetime] = Field(None, alias="deadline")
     external_apply_url: Optional[str] = Field(None, max_length=1000)
     application_questions: Optional[List[dict]] = None  # Will be JSON serialized
     is_featured: bool = False
@@ -84,6 +86,38 @@ class JobBase(BaseModel):
     seo_description: Optional[str] = Field(None, max_length=500)
     social_image_url: Optional[str] = Field(None, max_length=1000)
 
+    @field_validator("job_type", mode="before")
+    @classmethod
+    def normalize_job_type(cls, value):
+        if isinstance(value, str):
+            normalized = value.replace('-', '_').lower()
+            try:
+                return JobType(normalized)
+            except ValueError:
+                return value
+        return value
+
+    @field_validator("experience_level", mode="before")
+    @classmethod
+    def normalize_experience_level(cls, value):
+        if isinstance(value, str):
+            normalized = value.replace('-', '_').lower()
+            try:
+                return ExperienceLevel(normalized)
+            except ValueError:
+                return value
+        return value
+
+    @field_validator("remote_type", mode="before")
+    @classmethod
+    def normalize_remote_type(cls, value):
+        if isinstance(value, str):
+            normalized = value.replace('-', '_').lower()
+            try:
+                return RemoteType(normalized)
+            except ValueError:
+                return value
+        return value
 
 class JobSalaryInfo(BaseModel):
     salary_min: Optional[int] = Field(None, gt=0)  # In cents
@@ -106,6 +140,8 @@ class JobCreate(JobBase, JobSalaryInfo):
 
 
 class JobUpdate(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     title: Optional[str] = Field(None, max_length=255, min_length=1)
     description: Optional[str] = Field(None, min_length=10)
     summary: Optional[str] = Field(None, max_length=1000)
@@ -126,7 +162,7 @@ class JobUpdate(BaseModel):
     salary_type: Optional[SalaryType] = None
     salary_currency: Optional[str] = Field(None, max_length=3)
     show_salary: Optional[bool] = None
-    application_deadline: Optional[datetime] = None
+    application_deadline: Optional[datetime] = Field(None, alias="deadline")
     external_apply_url: Optional[str] = Field(None, max_length=1000)
     application_questions: Optional[List[dict]] = None
     status: Optional[JobStatus] = None
@@ -135,6 +171,39 @@ class JobUpdate(BaseModel):
     seo_title: Optional[str] = Field(None, max_length=255)
     seo_description: Optional[str] = Field(None, max_length=500)
     social_image_url: Optional[str] = Field(None, max_length=1000)
+    @field_validator("job_type", mode="before")
+    @classmethod
+    def normalize_job_type_update(cls, value):
+        if isinstance(value, str):
+            normalized = value.replace('-', '_').lower()
+            try:
+                return JobType(normalized)
+            except ValueError:
+                return value
+        return value
+
+    @field_validator("experience_level", mode="before")
+    @classmethod
+    def normalize_experience_level_update(cls, value):
+        if isinstance(value, str):
+            normalized = value.replace('-', '_').lower()
+            try:
+                return ExperienceLevel(normalized)
+            except ValueError:
+                return value
+        return value
+
+    @field_validator("remote_type", mode="before")
+    @classmethod
+    def normalize_remote_type_update(cls, value):
+        if isinstance(value, str):
+            normalized = value.replace('-', '_').lower()
+            try:
+                return RemoteType(normalized)
+            except ValueError:
+                return value
+        return value
+
 
 
 class JobInfo(JobBase, JobSalaryInfo):

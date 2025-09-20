@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Filter, Calendar, Clock, User, MapPin, Edit, Trash2, Eye } from 'lucide-react';
+import { Plus, Search, Calendar, Clock, User, MapPin, Edit, Trash2, Eye } from 'lucide-react';
 import Link from 'next/link';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
@@ -22,16 +22,20 @@ interface Interview {
   created_at: string;
 }
 
+type StatusFilter = 'all' | Interview['status'];
+type TypeFilter = 'all' | Interview['type'];
+type SortField = 'scheduled_date' | 'candidate_name' | 'status';
+
 function InterviewsPageContent() {
   const [interviews, setInterviews] = useState<Interview[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [typeFilter, setTypeFilter] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<string>('scheduled_date');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
+  const [sortBy, setSortBy] = useState<SortField>('scheduled_date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  const itemsPerPage = 10;
 
   // Mock data for development
   const mockInterviews: Interview[] = [
@@ -107,6 +111,7 @@ function InterviewsPageContent() {
 
   // Filter and sort interviews
   const filteredInterviews = interviews
+    .slice()
     .filter(interview => {
       const matchesSearch =
         interview.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -119,28 +124,37 @@ function InterviewsPageContent() {
       return matchesSearch && matchesStatus && matchesType;
     })
     .sort((a, b) => {
-      let aValue: unknown = a[sortBy as keyof Interview];
-      let bValue: unknown = b[sortBy as keyof Interview];
+      let aValue: string | Date;
+      let bValue: string | Date;
 
       if (sortBy === 'scheduled_date') {
-        aValue = new Date(a.scheduled_date + ' ' + a.start_time);
-        bValue = new Date(b.scheduled_date + ' ' + b.start_time);
-      }
-
-      if (sortOrder === 'asc') {
-        return aValue > bValue ? 1 : -1;
+        aValue = new Date(`${a.scheduled_date} ${a.start_time}`);
+        bValue = new Date(`${b.scheduled_date} ${b.start_time}`);
       } else {
-        return aValue < bValue ? 1 : -1;
+        aValue = String(a[sortBy]).toLowerCase();
+        bValue = String(b[sortBy]).toLowerCase();
       }
-    });
 
-  // Pagination
+      if (aValue instanceof Date && bValue instanceof Date) {
+        const diff = aValue.getTime() - bValue.getTime();
+        return sortOrder === 'asc' ? diff : -diff;
+      }
+
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        const diff = aValue.localeCompare(bValue);
+        return sortOrder === 'asc' ? diff : -diff;
+      }
+
+      return 0;
+    })
+
+// Pagination
   const totalPages = Math.ceil(filteredInterviews.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedInterviews = filteredInterviews.slice(startIndex, startIndex + itemsPerPage);
 
-  const getStatusBadge = (status: string) => {
-    const statusClasses = {
+  const getStatusBadge = (status: Interview['status']) => {
+    const statusClasses: Record<Interview['status'], string> = {
       scheduled: 'bg-blue-100 text-blue-800',
       completed: 'bg-green-100 text-green-800',
       cancelled: 'bg-red-100 text-red-800',
@@ -154,14 +168,14 @@ function InterviewsPageContent() {
     );
   };
 
-  const getTypeBadge = (type: string) => {
-    const typeClasses = {
+  const getTypeBadge = (type: Interview['type']) => {
+    const typeClasses: Record<Interview['type'], string> = {
       phone: 'bg-gray-100 text-gray-800',
       video: 'bg-purple-100 text-purple-800',
       in_person: 'bg-indigo-100 text-indigo-800'
     };
 
-    const typeLabels = {
+    const typeLabels: Record<Interview['type'], string> = {
       phone: 'Phone',
       video: 'Video',
       in_person: 'In-Person'
@@ -169,7 +183,7 @@ function InterviewsPageContent() {
 
     return (
       <span className={`px-2 py-1 rounded-full text-xs font-medium ${typeClasses[type as keyof typeof typeClasses]}`}>
-        {typeLabels[type as keyof typeof typeLabels]}
+        {typeLabels[type]}
       </span>
     );
   };
@@ -178,7 +192,7 @@ function InterviewsPageContent() {
     if (window.confirm('Are you sure you want to delete this interview?')) {
       try {
         // In a real app: await fetch(`/api/interviews/${id}`, { method: 'DELETE' });
-        setInterviews(interviews.filter(interview => interview.id !== id));
+        setInterviews(prev => prev.filter(interview => interview.id !== id));
       } catch (error) {
         console.error('Error deleting interview:', error);
       }
@@ -233,7 +247,7 @@ function InterviewsPageContent() {
               {/* Status Filter */}
               <select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="all">All Statuses</option>
@@ -246,7 +260,7 @@ function InterviewsPageContent() {
               {/* Type Filter */}
               <select
                 value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
+                onChange={(e) => setTypeFilter(e.target.value as TypeFilter)}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="all">All Types</option>
@@ -260,7 +274,7 @@ function InterviewsPageContent() {
                 value={`${sortBy}_${sortOrder}`}
                 onChange={(e) => {
                   const [field, order] = e.target.value.split('_');
-                  setSortBy(field);
+                  setSortBy(field as SortField);
                   setSortOrder(order as 'asc' | 'desc');
                 }}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -455,3 +469,4 @@ export default function InterviewsPage() {
     </ProtectedRoute>
   );
 }
+

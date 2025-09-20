@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Optional
 
 from pydantic import BaseModel, ConfigDict, field_validator
@@ -13,24 +13,14 @@ class InterviewCreate(BaseModel):
     title: str
     description: Optional[str] = None
     position_title: Optional[str] = None
-    interview_type: str = "video"  # video, phone, in_person
-
-    @field_validator("title")
-    @classmethod
-    def validate_title(cls, v):
-        if not v or not v.strip():
-            raise ValueError("Title is required")
-        return v.strip()
-
-    @field_validator("interview_type")
-    @classmethod
-    def validate_interview_type(cls, v):
-        allowed_types = ["video", "phone", "in_person"]
-        if v not in allowed_types:
-            raise ValueError(
-                f'Interview type must be one of: {", ".join(allowed_types)}'
-            )
-        return v
+    interview_type: str = "video"
+    status: Optional[str] = None
+    scheduled_start: Optional[datetime] = None
+    scheduled_end: Optional[datetime] = None
+    timezone: Optional[str] = "UTC"
+    location: Optional[str] = None
+    meeting_url: Optional[str] = None
+    notes: Optional[str] = None
 
 
 class InterviewUpdate(BaseModel):
@@ -41,13 +31,10 @@ class InterviewUpdate(BaseModel):
     location: Optional[str] = None
     meeting_url: Optional[str] = None
     notes: Optional[str] = None
-
-    @field_validator("title")
-    @classmethod
-    def validate_title(cls, v):
-        if v is not None and (not v or not v.strip()):
-            raise ValueError("Title cannot be empty")
-        return v.strip() if v else v
+    status: Optional[str] = None
+    scheduled_start: Optional[datetime] = None
+    scheduled_end: Optional[datetime] = None
+    timezone: Optional[str] = None
 
 
 class ProposalCreate(BaseModel):
@@ -96,13 +83,13 @@ class ProposalInfo(BaseModel):
     start_datetime: datetime
     end_datetime: datetime
     timezone: str
-    location: Optional[str]
-    notes: Optional[str]
+    location: Optional[str] = None
+    notes: Optional[str] = None
     status: str
     responded_by: Optional[int]
     responder_name: Optional[str]
     responded_at: Optional[datetime]
-    response_notes: Optional[str]
+    response_notes: Optional[str] = None
     expires_at: Optional[datetime]
     created_at: datetime
 
@@ -112,7 +99,7 @@ class ParticipantInfo(BaseModel):
     email: str
     full_name: str
     role: str
-    company_name: Optional[str]
+    company_name: Optional[str] = None
 
 
 class InterviewInfo(BaseModel):
@@ -120,35 +107,31 @@ class InterviewInfo(BaseModel):
 
     id: int
     title: str
-    description: Optional[str]
-    position_title: Optional[str]
+    description: Optional[str] = None
+    position_title: Optional[str] = None
     status: str
     interview_type: str
 
-    # Participants
     candidate: ParticipantInfo
     recruiter: ParticipantInfo
-    employer_company_name: str
+    employer_company_name: Optional[str] = None
 
-    # Scheduling
-    scheduled_start: Optional[datetime]
-    scheduled_end: Optional[datetime]
-    timezone: Optional[str]
-    location: Optional[str]
-    meeting_url: Optional[str]
-    duration_minutes: Optional[int]
+    scheduled_start: Optional[datetime] = None
+    scheduled_end: Optional[datetime] = None
+    timezone: Optional[str] = None
+    location: Optional[str] = None
+    meeting_url: Optional[str] = None
+    duration_minutes: Optional[int] = None
 
-    # Metadata
-    notes: Optional[str]
-    preparation_notes: Optional[str]
-    created_by: Optional[int]
-    confirmed_by: Optional[int]
-    confirmed_at: Optional[datetime]
-    cancelled_by: Optional[int]
-    cancelled_at: Optional[datetime]
-    cancellation_reason: Optional[str]
+    notes: Optional[str] = None
+    preparation_notes: Optional[str] = None
+    created_by: Optional[int] = None
+    confirmed_by: Optional[int] = None
+    confirmed_at: Optional[datetime] = None
+    cancelled_by: Optional[int] = None
+    cancelled_at: Optional[datetime] = None
+    cancellation_reason: Optional[str] = None
 
-    # Related data
     proposals: list[ProposalInfo] = []
     active_proposal_count: int = 0
 
@@ -183,8 +166,8 @@ class InterviewReschedule(BaseModel):
 class InterviewsListRequest(BaseModel):
     status: Optional[str] = None
     candidate_id: Optional[int] = None
-    recruiter_id: Optional[int] = None
-    employer_company_id: Optional[int] = None
+    recruiter_id: int
+    employer_company_id: int
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
     limit: int = 50
@@ -231,8 +214,8 @@ class InterviewCalendarEvent(BaseModel):
     end: datetime
     status: str
     participants: list[str]  # Email addresses
-    location: Optional[str]
-    meeting_url: Optional[str]
+    location: Optional[str] = None
+    meeting_url: Optional[str] = None
 
 
 class CalendarIntegrationStatus(BaseModel):

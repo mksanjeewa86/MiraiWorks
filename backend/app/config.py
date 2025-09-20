@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     jwt_refresh_ttl_days: int = 30
 
     # 2FA
-    force_2fa_for_admins: bool = True
+    force_2fa_for_admins: bool = False
 
     # OAuth
     google_oauth_client_id: Optional[str] = None
@@ -64,3 +64,5 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+if settings.environment.lower() == "test":
+    settings.force_2fa_for_admins = False

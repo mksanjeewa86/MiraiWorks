@@ -33,7 +33,8 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-@router.post("/", response_model=InterviewInfo, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=InterviewInfo, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=InterviewInfo, status_code=status.HTTP_201_CREATED, include_in_schema=False)
 @requires_permission("interviews.create")
 async def create_interview(
     interview_data: InterviewCreate,
@@ -41,25 +42,45 @@ async def create_interview(
     db: AsyncSession = Depends(get_db),
 ):
     """Create a new interview."""
+    employer_company_id = interview_data.employer_company_id or current_user.company_id
+    if employer_company_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Employer company context required",
+        )
+
+    recruiter_id = (
+        interview_data.recruiter_id
+        or interview_data.interviewer_id
+        or current_user.id
+    )
+
     interview = await interview_service.create_interview(
         db=db,
         candidate_id=interview_data.candidate_id,
-        recruiter_id=interview_data.recruiter_id,
-        employer_company_id=interview_data.employer_company_id,
+        recruiter_id=recruiter_id,
+        employer_company_id=employer_company_id,
         title=interview_data.title,
         description=interview_data.description,
-        position_title=interview_data.position_title,
+        position_title=interview_data.position_title or interview_data.title,
         interview_type=interview_data.interview_type,
         created_by=current_user.id,
+        status=interview_data.status,
+        scheduled_start=interview_data.scheduled_start,
+        scheduled_end=interview_data.scheduled_end,
+        timezone=interview_data.timezone,
+        location=interview_data.location,
+        meeting_url=interview_data.meeting_url,
+        notes=interview_data.notes,
     )
 
-    # Get interview with relationships for proper response formatting
     interview_with_relationships = await interview_crud.get_with_relationships(db, interview.id)
 
     return await _format_interview_response(db, interview_with_relationships)
 
 
-@router.get("/", response_model=InterviewsListResponse)
+@router.get("", response_model=InterviewsListResponse)
+@router.get("/", response_model=InterviewsListResponse, include_in_schema=False)
 @requires_permission("interviews.read")
 async def get_interviews(
     request: InterviewsListRequest = Depends(),

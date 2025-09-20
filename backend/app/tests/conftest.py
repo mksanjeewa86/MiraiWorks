@@ -14,6 +14,15 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from sqlalchemy.pool import StaticPool
 
 # Set environment to test before importing settings
+try:
+    import bcrypt
+    if not hasattr(bcrypt, '__about__'):
+        class _About:
+            __version__ = getattr(bcrypt, '__version__', 'unknown')
+        bcrypt.__about__ = _About()
+except ImportError:
+    pass
+
 os.environ["ENVIRONMENT"] = "test"
 
 from app.database import Base, get_db

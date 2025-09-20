@@ -20,7 +20,6 @@ export const useServerSentEvents = ({
       eventSourceRef.current = new EventSource(sseUrl);
 
       eventSourceRef.current.onopen = () => {
-        console.log('SSE connected');
         onConnect?.();
       };
 

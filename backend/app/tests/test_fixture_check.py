@@ -19,7 +19,11 @@ async def test_fixtures_work(client: AsyncClient, test_user: User):
 
 
 @pytest.mark.asyncio
-async def test_auth_headers_work(client: AsyncClient, auth_headers: dict, test_user: User):
+async def test_auth_headers_work(
+    client: AsyncClient,
+    auth_headers: dict,
+    test_employer_user: User,
+):
     """Test if auth headers fixture works."""
     assert auth_headers is not None
     assert "Authorization" in auth_headers
@@ -28,4 +32,4 @@ async def test_auth_headers_work(client: AsyncClient, auth_headers: dict, test_u
     response = await client.get("/api/auth/me", headers=auth_headers)
     assert response.status_code == 200
     data = response.json()
-    assert data["email"] == test_user.email
+    assert data["email"] == test_employer_user.email

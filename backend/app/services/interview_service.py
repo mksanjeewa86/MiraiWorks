@@ -13,6 +13,7 @@ from app.models.interview import Interview, InterviewProposal
 from app.models.role import UserRole as UserRoleModel
 from app.models.user import User
 from app.services.calendar_service import google_calendar_service
+from app.config import settings
 from app.services.microsoft_calendar_service import microsoft_calendar_service
 from app.utils.constants import InterviewStatus, UserRole
 from app.utils.permissions import is_company_admin, is_super_admin
@@ -33,7 +34,14 @@ class InterviewService:
         description: Optional[str] = None,
         position_title: Optional[str] = None,
         interview_type: str = "video",
-        created_by: int = None,
+        created_by: Optional[int] = None,
+        status: Optional[str] = None,
+        scheduled_start: Optional[datetime] = None,
+        scheduled_end: Optional[datetime] = None,
+        timezone: Optional[str] = "UTC",
+        location: Optional[str] = None,
+        meeting_url: Optional[str] = None,
+        notes: Optional[str] = None,
     ) -> Interview:
         """Create a new interview."""
         # Validate participants exist and have correct roles
@@ -50,6 +58,10 @@ class InterviewService:
         recruiter = recruiter_result.scalar_one()
         recruiter_company_id = recruiter.company_id
 
+        interview_status = (
+            status or InterviewStatus.PENDING_SCHEDULE.value
+        )
+
         # Create interview
         interview = Interview(
             candidate_id=candidate_id,
@@ -60,8 +72,14 @@ class InterviewService:
             description=description,
             position_title=position_title,
             interview_type=interview_type,
-            status=InterviewStatus.PENDING_SCHEDULE.value,
+            status=interview_status,
             created_by=created_by,
+            scheduled_start=scheduled_start,
+            scheduled_end=scheduled_end,
+            timezone=timezone or "UTC",
+            location=location,
+            meeting_url=meeting_url,
+            notes=notes,
         )
 
         db.add(interview)

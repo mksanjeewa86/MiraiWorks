@@ -37,7 +37,6 @@ function TwoFactorContent() {
   const handleResend = async () => {
     // Implementation would depend on your auth system
     // For now, just show a success message
-    console.log('Resend code for:', email);
   };
 
   if (!email) {
