@@ -15,7 +15,7 @@ from app.services.interview_service import interview_service
 from app.utils.constants import UserRole as UserRoleEnum
 
 
-async def create_job(
+async def create_position(
     client: AsyncClient,
     headers: dict,
     *,
@@ -30,7 +30,7 @@ async def create_job(
         "job_type": "full_time",
         "company_id": company_id,
     }
-    response = await client.post("/api/jobs", json=payload, headers=headers)
+    response = await client.post("/api/positions", json=payload, headers=headers)
     assert response.status_code == 201
     return response.json()
 
@@ -41,7 +41,7 @@ async def test_employer_creates_and_lists_job(
     auth_headers: dict,
     test_employer_user: User,
 ):
-    created_job = await create_job(
+    created_position = await create_position(
         client,
         auth_headers,
         title="QA Engineer",
@@ -49,20 +49,20 @@ async def test_employer_creates_and_lists_job(
     )
 
     publish_response = await client.patch(
-        f"/api/jobs/{created_job['id']}/status",
+        f"/api/positions/{created_position['id']}/status",
         json={"status": "published"},
         headers=auth_headers,
     )
     assert publish_response.status_code == 200
 
     list_response = await client.get(
-        "/api/jobs",
+        "/api/positions",
         headers=auth_headers,
         params={"company_id": test_employer_user.company_id, "status": "published"},
     )
     assert list_response.status_code == 200
-    jobs = list_response.json()["jobs"]
-    assert any(job["id"] == created_job["id"] for job in jobs)
+    positions = list_response.json()["positions"]
+    assert any(position["id"] == created_position["id"] for position in positions)
 
 
 @pytest.mark.asyncio
@@ -72,7 +72,7 @@ async def test_admin_updates_job_status(
     admin_auth_headers: dict,
     test_employer_user: User,
 ):
-    job = await create_job(
+    position = await create_position(
         client,
         auth_headers,
         title="Data Analyst",
@@ -80,7 +80,7 @@ async def test_admin_updates_job_status(
     )
 
     response = await client.patch(
-        f"/api/jobs/{job['id']}/status",
+        f"/api/positions/{position['id']}/status",
         json={"status": "closed"},
         headers=admin_auth_headers,
     )

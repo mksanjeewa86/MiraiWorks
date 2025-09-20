@@ -74,7 +74,7 @@ async def test_candidate_can_view_published_jobs(
     candidate_headers: dict,
     test_employer_user: User,
 ):
-    job_payload = {
+    position_payload = {
         "title": "Backend Developer",
         "description": "Build APIs",
         "requirements": "Python",
@@ -84,22 +84,22 @@ async def test_candidate_can_view_published_jobs(
     }
 
     create_response = await client.post(
-        "/api/jobs", json=job_payload, headers=auth_headers
+        "/api/positions", json=position_payload, headers=auth_headers
     )
     assert create_response.status_code == 201
-    job = create_response.json()
+    position = create_response.json()
 
     publish_response = await client.patch(
-        f"/api/jobs/{job['id']}/status",
+        f"/api/positions/{position['id']}/status",
         json={"status": "published"},
         headers=auth_headers,
     )
     assert publish_response.status_code == 200
 
-    list_response = await client.get("/api/jobs", headers=candidate_headers)
+    list_response = await client.get("/api/positions", headers=candidate_headers)
     assert list_response.status_code == 200
-    jobs = list_response.json()["jobs"]
-    assert any(item["id"] == job["id"] for item in jobs)
+    positions = list_response.json()["positions"]
+    assert any(item["id"] == position["id"] for item in positions)
 
 
 @pytest.mark.asyncio

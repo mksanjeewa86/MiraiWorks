@@ -146,18 +146,13 @@ class TestPositionEndpoints:
     @pytest.mark.asyncio
     async def test_search_positions_success(self, client: AsyncClient):
         """Test successful position search."""
-        search_data = {
-            "query": "python",
-            "location": "San Francisco",
-            "job_type": "full_time",
-            "salary_min": 100000,
-        }
-
         with patch("app.crud.position.position.get_published_positions") as mock_search:
             mock_positions = [Position(id=1, title="Python Developer", company_id=1)]
             mock_search.return_value = mock_positions
 
-            response = await client.get("/api/positions/search", json=search_data)
+            response = await client.get(
+                "/api/positions/?search=python&location=San Francisco&job_type=full_time&salary_min=100000"
+            )
 
             assert response.status_code == 200
             data = response.json()

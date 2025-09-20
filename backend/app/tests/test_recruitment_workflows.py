@@ -79,12 +79,12 @@ async def test_job_search_returns_matching_titles(
     )
 
     search_response = await client.get(
-        "/api/positions/search",
-        params={"query": "Data"},
+        "/api/positions",
+        params={"search": "Data"},
     )
     assert search_response.status_code == 200
-    jobs = search_response.json()["jobs"]
-    assert any("Data Scientist" in position_info["title"] for position_info in jobs)
+    positions = search_response.json()["positions"]
+    assert any("Data Scientist" in position_info["title"] for position_info in positions)
 
 
 @pytest.mark.asyncio
