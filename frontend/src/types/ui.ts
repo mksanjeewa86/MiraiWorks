@@ -19,3 +19,37 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   rightIcon?: ReactNode;
   fullWidth?: boolean;
 }
+
+// Color Scheme Types for Role-based UI
+export interface ColorScheme {
+  // Main sidebar background and borders
+  background: string;
+  backgroundOverlay: string;
+  border: string;
+  headerBackground: string;
+
+  // Brand/logo colors
+  brandBackground: string;
+  brandAccent: string;
+
+  // Text colors
+  textPrimary: string;
+  textSecondary: string;
+
+  // Button and navigation colors
+  buttonBorder: string;
+  buttonHover: string;
+  buttonActive: string;
+
+  // User avatar background
+  avatarBackground: string;
+  avatarRing: string;
+
+  // Active indicators
+  activeIndicator: string;
+  activeIndicatorShadow: string;
+
+  // Status indicator
+  statusIndicator: string;
+  statusIndicatorShadow: string;
+}

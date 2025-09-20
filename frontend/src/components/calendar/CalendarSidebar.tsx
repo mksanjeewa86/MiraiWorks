@@ -16,24 +16,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 import type { CalendarEvent } from '@/types/interview';
-
-interface CalendarSidebarProps {
-  isOpen: boolean;
-  onClose: () => void;
-  events: CalendarEvent[];
-  onEventClick: (event: CalendarEvent) => void;
-  filters: {
-    eventType: string;
-    status: string;
-    search: string;
-  };
-  onFiltersChange: (filters: {
-    eventType: string;
-    status: string;
-    search: string;
-  }) => void;
-  userRole: string;
-}
+import type { CalendarSidebarProps } from '@/types/components';
 
 export default function CalendarSidebar({
   isOpen,
@@ -226,7 +209,7 @@ export default function CalendarSidebar({
 
                       {/* Events */}
                       <div className="space-y-3">
-                        {dateEvents.map(event => (
+                        {dateEvents.map((event: CalendarEvent) => (
                           <div
                             key={event.id}
                             className="p-4 rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all cursor-pointer bg-white hover:bg-gray-50/80"

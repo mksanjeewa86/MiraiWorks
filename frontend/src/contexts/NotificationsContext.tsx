@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { AppNotification } from "@/types/notification";
 import { notificationsApi } from "@/api/notifications";
 import { useAuth } from './AuthContext';
@@ -23,7 +23,7 @@ export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({ ch
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Show toast notification
-  const showNotification = (title: string, message: string, type = 'info') => {
+  const showNotification = (title: string, message: string) => {
     // This would typically integrate with a toast library like react-hot-toast
     if (window.Notification && Notification.permission === 'granted') {
       new window.Notification(title, {
@@ -41,27 +41,27 @@ export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({ ch
   }, []);
 
   // Fetch initial notifications and unread count
-  const refreshNotifications = async () => {
+  const refreshNotifications = useCallback(async () => {
     if (!user) return;
-    
+
     try {
       const response = await notificationsApi.getNotifications(50);
       setNotifications(response.notifications);
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
     }
-  };
+  }, [user]);
 
-  const refreshUnreadCount = async () => {
+  const refreshUnreadCount = useCallback(async () => {
     if (!user) return;
-    
+
     try {
       const response = await notificationsApi.getUnreadCount();
       setUnreadCount(response.unread_count);
     } catch (error) {
       console.error('Failed to fetch unread count:', error);
     }
-  };
+  }, [user]);
 
   // Mark notifications as read
   const markAsRead = async (notificationIds: number[]) => {
@@ -181,7 +181,7 @@ export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({ ch
         pollingIntervalRef.current = null;
       }
     };
-  }, [user, accessToken]);
+  }, [user, accessToken, refreshUnreadCount]);
 
   // Load initial data when user logs in
   useEffect(() => {
@@ -192,7 +192,7 @@ export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({ ch
       setNotifications([]);
       setUnreadCount(0);
     }
-  }, [user]);
+  }, [user, refreshNotifications, refreshUnreadCount]);
 
   const value: NotificationsContextType = {
     notifications,

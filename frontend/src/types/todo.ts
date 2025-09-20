@@ -29,3 +29,10 @@ export interface TodoPayload {
   due_date?: string | null;
   status?: TodoStatus;
 }
+
+export interface TodoListParams {
+  includeCompleted?: boolean;
+  status?: TodoStatus | 'pending' | 'in_progress' | 'completed' | 'expired';
+  limit?: number;
+  offset?: number;
+}

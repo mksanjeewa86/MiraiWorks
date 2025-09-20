@@ -1,10 +1,7 @@
-import { ReactNode } from 'react';
+import React from 'react';
 import WebsiteHeader from './WebsiteHeader';
 import WebsiteFooter from './WebsiteFooter';
-
-interface WebsiteLayoutProps {
-  children: ReactNode;
-}
+import type { WebsiteLayoutProps } from '@/types/components';
 
 const WebsiteLayout = ({ children }: WebsiteLayoutProps) => {
   return (

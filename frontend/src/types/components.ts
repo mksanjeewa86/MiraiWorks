@@ -1,5 +1,6 @@
 import { type ReactNode, type ButtonHTMLAttributes, type InputHTMLAttributes } from 'react';
 import { LucideIcon } from 'lucide-react';
+import type { CalendarEvent } from './interview';
 
 // ====================
 // UI COMPONENT INTERFACES
@@ -187,4 +188,109 @@ export interface TestSuite {
 export interface NotificationDropdownProps {
   isOpen: boolean;
   onToggle: () => void;
+}
+
+// ====================
+// COMPONENT PROP INTERFACES
+// ====================
+
+// Calendar Component Props
+export interface CalendarViewProps {
+  currentDate: Date;
+  onDateChange: (date: Date) => void;
+  viewType: 'month' | 'week' | 'day';
+  events: CalendarEvent[];
+  onDateSelect: (date: Date) => void;
+  onEventClick: (event: CalendarEvent) => void;
+  loading: boolean;
+  canCreateEvents: boolean;
+}
+
+export interface CalendarSidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+  events: CalendarEvent[];
+  onEventClick: (event: CalendarEvent) => void;
+  filters: {
+    eventType: string;
+    status: string;
+    search: string;
+  };
+  onFiltersChange: (filters: {
+    eventType: string;
+    status: string;
+    search: string;
+  }) => void;
+  userRole: string;
+}
+
+export interface EventModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  event: CalendarEvent | null;
+  selectedDate: Date | null;
+  isCreateMode: boolean;
+  onSave: (eventData: Partial<CalendarEvent>) => void;
+  onDelete: (event: CalendarEvent) => Promise<void> | void;
+}
+
+export interface EventFormData {
+  title: string;
+  description: string;
+  location: string;
+  startDatetime: string;
+  endDatetime: string;
+  timezone: string;
+  isAllDay: boolean;
+  attendees: string[];
+  status: string;
+}
+
+// Auth Component Props
+export interface ProtectedRouteProps {
+  children: React.ReactNode;
+  allowedRoles?: string[];
+  fallback?: React.ReactNode;
+  redirectTo?: string;
+}
+
+export interface ResetPasswordFormProps {
+  onSubmit: (password: string) => Promise<void>;
+  isLoading?: boolean;
+  error?: string;
+}
+
+export interface ForgotPasswordFormProps {
+  onSubmit: (email: string) => Promise<void>;
+  isLoading?: boolean;
+  error?: string;
+}
+
+// UI Component Props
+export interface ConfirmationModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  title: string;
+  message: string | React.ReactNode;
+  confirmText?: string;
+  cancelText?: string;
+  variant?: 'danger' | 'warning' | 'info';
+  confirmButtonClass?: string;
+  icon?: React.ReactNode;
+}
+
+export interface WebsiteLayoutProps {
+  children: React.ReactNode;
+}
+
+export interface PlaceholderPageProps {
+  title: string;
+  description: string;
+  icon?: React.ReactNode;
+  actions?: React.ReactNode;
+  primaryAction?: {
+    label: string;
+    onClick: () => void;
+  };
 }

@@ -1,4 +1,3 @@
-import { type ReactNode } from 'react';
 import { clsx } from 'clsx';
 import type { CardProps, CardHeaderProps, CardContentProps, CardTitleProps, CardDescriptionProps } from '@/types/components';
 

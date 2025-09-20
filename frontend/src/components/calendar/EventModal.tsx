@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   X,
   MapPin,
@@ -12,28 +12,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import type { CalendarEvent } from '@/types/interview';
-
-interface EventModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  event: CalendarEvent | null;
-  selectedDate: Date | null;
-  isCreateMode: boolean;
-  onSave: (eventData: Partial<CalendarEvent>) => void;
-  onDelete: (event: CalendarEvent) => Promise<void> | void;
-}
-
-interface EventFormData {
-  title: string;
-  description: string;
-  location: string;
-  startDatetime: string;
-  endDatetime: string;
-  isAllDay: boolean;
-  attendees: string[];
-  status: string;
-  timezone: string;
-}
+import type { EventModalProps, EventFormData } from '@/types/components';
 
 export default function EventModal({
   isOpen,
@@ -79,10 +58,10 @@ export default function EventModal({
   };
 
   // Safe date to datetime-local format
-  const safeDateToLocalString = (dateString: string | null | undefined, fallback: Date = new Date()): string => {
+  const safeDateToLocalString = useCallback((dateString: string | null | undefined, fallback: Date = new Date()): string => {
     const date = safeParseDate(dateString);
     return (date || fallback).toISOString().slice(0, 16);
-  };
+  }, []);
 
   // Initialize form data
   useEffect(() => {
@@ -122,7 +101,7 @@ export default function EventModal({
       setErrors({});
       setAttendeeInput('');
     }
-  }, [isOpen, isCreateMode, event, selectedDate]);
+  }, [isOpen, isCreateMode, event, selectedDate, safeDateToLocalString]);
 
   // Form validation
   const validateForm = () => {

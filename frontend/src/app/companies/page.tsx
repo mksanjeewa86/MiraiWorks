@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
   Building2,
@@ -48,7 +48,7 @@ function CompaniesPageContent() {
     size: 20,
   });
 
-  const loadCompanies = async () => {
+  const loadCompanies = useCallback(async () => {
     try {
       setLoading(true);
       const response = await companiesApi.getCompanies(filters);
@@ -65,7 +65,7 @@ function CompaniesPageContent() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
 
   // Debounce search term to avoid API calls on every keystroke
   useEffect(() => {
@@ -78,7 +78,7 @@ function CompaniesPageContent() {
 
   useEffect(() => {
     loadCompanies();
-  }, [filters]);
+  }, [loadCompanies]);
 
   // Auto-hide success message after 5 seconds
   useEffect(() => {

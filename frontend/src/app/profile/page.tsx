@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
@@ -30,7 +30,6 @@ import { makeAuthenticatedRequest } from '@/api/apiClient';
 
 function ProfilePageContent() {
   const { user } = useAuth();
-  const router = useRouter();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -374,10 +373,12 @@ function ProfilePageContent() {
             <Card className="p-6">
               <div className="flex items-start gap-6">
                 <div className="relative">
-                  {profile.personal_info.avatar_url || avatarUrl ? (
-                    <img
-                      src={avatarUrl || profile.personal_info.avatar_url}
+                  {(profile.personal_info.avatar_url || avatarUrl) ? (
+                    <Image
+                      src={(avatarUrl || profile.personal_info.avatar_url) as string}
                       alt="Profile picture"
+                      width={96}
+                      height={96}
                       className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
                     />
                   ) : (

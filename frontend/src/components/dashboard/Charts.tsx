@@ -1,7 +1,7 @@
 'use client';
 
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import type { ChartData, PieChartLabelProps, LineChartProps, AreaChartProps, BarChartProps, PieChartProps } from '@/types/charts';
+import type { PieChartLabelProps, LineChartProps, AreaChartProps, BarChartProps, PieChartProps } from '@/types/charts';
 
 export function SimpleLineChart({ 
   data, 

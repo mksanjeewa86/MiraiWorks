@@ -44,13 +44,6 @@ export default function AppLayout({ children, pageTitle, pageDescription }: AppL
     }
   }, [isMobile])
 
-  const handleMenuClick = () => {
-    if (isMobile) {
-      setSidebarOpen(!sidebarOpen)
-    } else {
-      setSidebarCollapsed(!sidebarCollapsed)
-    }
-  }
 
   const handleSidebarClose = () => {
     setSidebarOpen(false)

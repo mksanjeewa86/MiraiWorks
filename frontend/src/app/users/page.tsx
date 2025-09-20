@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
   Users,
@@ -63,7 +63,7 @@ function UsersPageContent() {
     size: 20,
   });
 
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     try {
       setLoading(true);
       const response = await usersApi.getUsers(filters);
@@ -80,7 +80,7 @@ function UsersPageContent() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
 
   // Debounce search term to avoid API calls on every keystroke
   useEffect(() => {
@@ -93,7 +93,7 @@ function UsersPageContent() {
 
   useEffect(() => {
     loadUsers();
-  }, [filters]);
+  }, [loadUsers]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -156,7 +156,7 @@ function UsersPageContent() {
           Are you sure you want to delete the following {selectedUsers.size} user(s)? This action cannot be undone.
         </p>
         <ul className="list-none space-y-2 max-h-48 overflow-y-auto bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 p-4 rounded-lg">
-          {selectedUserObjects.map((user, index) => (
+          {selectedUserObjects.map((user) => (
             <li key={user.id} className="flex items-center space-x-2 text-sm">
               <span className="w-2 h-2 bg-red-400 rounded-full flex-shrink-0"></span>
               <span className="text-red-700 dark:text-red-300">{user.email}</span>
@@ -202,7 +202,7 @@ function UsersPageContent() {
           Reset passwords for the following {selectedUsers.size} user(s)? Temporary passwords will be generated and sent via email.
         </p>
         <ul className="list-none space-y-2 max-h-48 overflow-y-auto bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 p-4 rounded-lg">
-          {selectedUserObjects.map((user, index) => (
+          {selectedUserObjects.map((user) => (
             <li key={user.id} className="flex items-center space-x-2 text-sm">
               <span className="w-2 h-2 bg-purple-400 rounded-full flex-shrink-0"></span>
               <span className="text-purple-700 dark:text-purple-300">{user.email}</span>
@@ -247,7 +247,7 @@ function UsersPageContent() {
           Send activation emails to the following {selectedUsers.size} user(s)?
         </p>
         <ul className="list-none space-y-2 max-h-48 overflow-y-auto bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 p-4 rounded-lg">
-          {selectedUserObjects.map((user, index) => (
+          {selectedUserObjects.map((user) => (
             <li key={user.id} className="flex items-center space-x-2 text-sm">
               <span className="w-2 h-2 bg-blue-400 rounded-full flex-shrink-0"></span>
               <span className="text-blue-700 dark:text-blue-300">{user.email}</span>
@@ -298,7 +298,7 @@ function UsersPageContent() {
           Are you sure you want to suspend the following {targetUsers.length} user(s)? They will not be able to login until unsuspended.
         </p>
         <ul className="list-none space-y-2 max-h-48 overflow-y-auto p-4 rounded-lg bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20">
-          {targetUsers.map((user, index) => (
+          {targetUsers.map((user) => (
             <li key={user.id} className="flex items-center space-x-2 text-sm">
               <span className="w-2 h-2 bg-red-400 rounded-full flex-shrink-0"></span>
               <span className="text-red-700 dark:text-red-300">{user.email}</span>
@@ -350,7 +350,7 @@ function UsersPageContent() {
           Are you sure you want to unsuspend the following {targetUsers.length} user(s)? They will be able to login again.
         </p>
         <ul className="list-none space-y-2 max-h-48 overflow-y-auto p-4 rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20">
-          {targetUsers.map((user, index) => (
+          {targetUsers.map((user) => (
             <li key={user.id} className="flex items-center space-x-2 text-sm">
               <span className="w-2 h-2 bg-green-400 rounded-full flex-shrink-0"></span>
               <span className="text-green-700 dark:text-green-300">{user.email}</span>

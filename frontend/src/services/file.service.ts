@@ -131,7 +131,7 @@ export class FileService {
                         });
                     }
                     break;
-                } catch (error) {
+                } catch {
                     retries++;
                     if (retries === maxRetries) {
                         throw new Error(`Failed to upload chunk ${i} after ${maxRetries} retries`);
@@ -223,7 +223,7 @@ export class FileService {
             } else if (file.type === 'application/pdf') {
                 await this.validatePDF(file);
             }
-        } catch (error) {
+        } catch {
             errors.push(`File ${file.name} appears to be corrupted or invalid`);
         }
 

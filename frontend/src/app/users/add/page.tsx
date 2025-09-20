@@ -102,7 +102,7 @@ function AddUserPageContent() {
         setFormData(prev => ({ ...prev, role }));
       }
     }
-  }, [formData.company_id, companies, isSuperAdmin]);
+  }, [formData.company_id, formData.role, companies, isSuperAdmin]);
 
   // Load companies for the dropdown
   useEffect(() => {

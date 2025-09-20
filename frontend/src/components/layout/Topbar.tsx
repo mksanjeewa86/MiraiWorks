@@ -1,11 +1,10 @@
 'use client';
 
-import { Settings, User, LogOut, Menu } from 'lucide-react'
+import { Settings, User, LogOut } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { useAuth } from '@/contexts/AuthContext'
-import Brand from '@/components/common/Brand'
 import NotificationDropdown from '@/components/notifications/NotificationDropdown'
 import type { TopbarProps } from '@/types/components'
 

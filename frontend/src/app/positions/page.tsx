@@ -156,7 +156,7 @@ const mockPositions: Position[] = [
 ];
 
 function PositionsPageContent() {
-  const [positions, setPositions] = useState<Position[]>(mockPositions);
+  const [positions] = useState<Position[]>(mockPositions);
   const [filteredPositions, setFilteredPositions] = useState<Position[]>(mockPositions);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');

@@ -11,7 +11,7 @@ import { Users, Building2, UserCheck, UserX, Activity, TrendingUp, Calendar, Mes
 import { CompanyAdminStats } from '@/types/dashboard';
 
 export default function CompanyAdminDashboard() {
-  const { user } = useAuth();
+  const { } = useAuth();
   const [stats, setStats] = useState<CompanyAdminStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

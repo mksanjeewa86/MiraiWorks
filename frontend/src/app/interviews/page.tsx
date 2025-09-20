@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Plus, Search, Calendar, Clock, User, MapPin, Edit, Trash2, Eye } from 'lucide-react';
 import Link from 'next/link';
 import AppLayout from '@/components/layout/AppLayout';
@@ -38,7 +38,7 @@ function InterviewsPageContent() {
   const itemsPerPage = 10;
 
   // Mock data for development
-  const mockInterviews: Interview[] = [
+  const mockInterviews: Interview[] = useMemo(() => [
     {
       id: 1,
       title: 'Senior Software Engineer Interview',
@@ -84,7 +84,7 @@ function InterviewsPageContent() {
       notes: 'Initial screening completed successfully',
       created_at: '2025-01-19T15:00:00Z'
     }
-  ];
+  ], []);
 
   useEffect(() => {
     // Simulate API call
@@ -107,7 +107,7 @@ function InterviewsPageContent() {
     };
 
     fetchInterviews();
-  }, []);
+  }, [mockInterviews]);
 
   // Filter and sort interviews
   const filteredInterviews = interviews

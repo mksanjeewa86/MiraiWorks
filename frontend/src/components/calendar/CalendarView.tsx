@@ -11,18 +11,8 @@ import {
   Loader2
 } from 'lucide-react';
 import type { CalendarEvent } from '@/types/interview';
+import type { CalendarViewProps } from '@/types/components';
 import { getEventColorScheme } from '@/utils/calendarHelpers';
-
-interface CalendarViewProps {
-  currentDate: Date;
-  onDateChange: (date: Date) => void;
-  viewType: 'month' | 'week' | 'day';
-  events: CalendarEvent[];
-  onDateSelect: (date: Date) => void;
-  onEventClick: (event: CalendarEvent) => void;
-  loading: boolean;
-  canCreateEvents: boolean;
-}
 
 export default function CalendarView({
   currentDate,

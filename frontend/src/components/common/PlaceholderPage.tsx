@@ -1,19 +1,8 @@
 ﻿'use client';
 
-import type { ReactNode } from 'react';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-
-interface PlaceholderPageProps {
-  title: string;
-  description: string;
-  icon?: ReactNode;
-  actions?: ReactNode;
-  primaryAction?: {
-    label: string;
-    onClick: () => void;
-  };
-}
+import type { PlaceholderPageProps } from '@/types/components';
 
 export default function PlaceholderPage({
   title,

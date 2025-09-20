@@ -1,16 +1,9 @@
 ﻿import { API_ENDPOINTS } from '@/config/api';
 import { apiClient } from './apiClient';
-import type { Todo, TodoListResponse, TodoPayload, TodoStatus } from '@/types/todo';
-
-interface ListParams {
-  includeCompleted?: boolean;
-  status?: TodoStatus | 'pending' | 'in_progress' | 'completed' | 'expired';
-  limit?: number;
-  offset?: number;
-}
+import type { Todo, TodoListResponse, TodoPayload, TodoListParams } from '@/types/todo';
 
 export const todosApi = {
-  async list(params: ListParams = {}): Promise<TodoListResponse> {
+  async list(params: TodoListParams = {}): Promise<TodoListResponse> {
     const searchParams = new URLSearchParams();
 
     if (params.includeCompleted === false) {

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { dashboardApi } from "@/api/dashboard";
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
@@ -23,7 +22,6 @@ import {
 import { SuperAdminStats } from '@/types/dashboard';
 
 export default function SuperAdminDashboard() {
-  const { user } = useAuth();
   const [stats, setStats] = useState<SuperAdminStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

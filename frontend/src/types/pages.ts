@@ -1,6 +1,15 @@
 import type { Resume, CalendarEvent, UserProfile, UserSettings, Conversation, LegacyMessage as Message, DirectMessageInfo, CompanyType } from '@/types';
 
 // ====================
+// PAGE INFO & METADATA
+// ====================
+
+export interface PageInfo {
+  title: string;
+  description: string;
+}
+
+// ====================
 // SETTINGS PAGE STATE
 // ====================
 

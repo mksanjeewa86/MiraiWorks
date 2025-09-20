@@ -1,15 +1,10 @@
 'use client';
 
-import { useEffect, type ReactNode } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-
-interface ProtectedRouteProps {
-  children: ReactNode;
-  fallback?: ReactNode;
-  redirectTo?: string;
-}
+import type { ProtectedRouteProps } from '@/types/components';
 
 export default function ProtectedRoute({
   children,

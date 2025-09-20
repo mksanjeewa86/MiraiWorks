@@ -1,4 +1,3 @@
-import { LucideIcon } from 'lucide-react';
 import type { StatCardProps } from '@/types/components';
 
 const colorMap = {

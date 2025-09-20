@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_CONFIG } from '@/config/api';
 import AppLayout from '@/components/layout/AppLayout';
@@ -96,9 +96,15 @@ function MessagesPageContent() {
     }
   }, [user]);
 
-  const fetchMessages = async () => {
+  const scrollToBottom = useCallback(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, []);
+
+  const fetchMessages = useCallback(async () => {
     if (!state.activeConversationId) return;
-    
+
     try {
       setState(prev => ({ ...prev, loading: true }));
       const response = await messagesApi.getMessages(state.activeConversationId, 50);
@@ -111,16 +117,16 @@ function MessagesPageContent() {
         }));
         setTimeout(scrollToBottom, 100);
       }
-    } catch (error) {
+    } catch {
       setState(prev => ({ ...prev, error: 'Failed to load messages', loading: false }));
     }
-  };
+  }, [state.activeConversationId, scrollToBottom]);
 
   useEffect(() => {
     if (state.activeConversationId) {
       fetchMessages();
     }
-  }, [state.activeConversationId]);
+  }, [state.activeConversationId, fetchMessages]);
 
   // Page visibility handling
   useEffect(() => {
@@ -188,11 +194,8 @@ function MessagesPageContent() {
         clearInterval(pollingIntervalRef.current);
       }
     };
-  }, [state.activeConversationId, state.messages.length, user]);
+  }, [state.activeConversationId, state.messages.length, user, scrollToBottom]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
 
   const refreshConversationList = async () => {
     try {
@@ -215,7 +218,7 @@ function MessagesPageContent() {
           };
         });
       }
-    } catch (error) {
+    } catch {
       // Silently handle refresh errors
     }
   };
@@ -363,7 +366,7 @@ function MessagesPageContent() {
       // Add to existing files
       setAttachedFiles(prev => [...prev, ...uploadedFiles]);
 
-    } catch (error) {
+    } catch {
       setState(prev => ({
         ...prev,
         error: 'Failed to upload one or more files. Please try again.'
@@ -518,7 +521,7 @@ function MessagesPageContent() {
         }));
         setTimeout(scrollToBottom, 100);
       }
-    } catch (error) {
+    } catch {
       setState(prev => ({
         ...prev,
         error: 'Failed to load messages',
@@ -571,7 +574,7 @@ function MessagesPageContent() {
               });
             }
           }
-        } catch (participantsError) {
+        } catch {
           // Silently continue to fallback
         }
 
@@ -671,11 +674,11 @@ function MessagesPageContent() {
           isSearching: false
         }));
       }
-    } catch (error) {
-      setState(prev => ({ 
-        ...prev, 
+    } catch {
+      setState(prev => ({
+        ...prev,
         isSearching: false,
-        showSearchResults: false 
+        showSearchResults: false
       }));
     }
   };

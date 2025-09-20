@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { CheckCircle2, ClipboardList, Clock, ListCheck, Plus, RotateCcw, Trash2, AlertCircle, CalendarDays, StickyNote } from 'lucide-react';
 
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
@@ -187,7 +187,7 @@ function TodosPageContent() {
   const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const loadTodos = async () => {
+  const loadTodos = useCallback(async () => {
     setLoading(true);
     try {
       const [listResponse, recent] = await Promise.all([
@@ -204,11 +204,11 @@ function TodosPageContent() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast]);
 
   useEffect(() => {
     void loadTodos();
-  }, []);
+  }, [loadTodos]);
 
   const stats = useMemo(() => {
     const pendingCount = todos.filter((todo) => !['completed', 'expired'].includes(todo.status)).length;

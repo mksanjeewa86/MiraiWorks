@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Eye, EyeOff, Lock, CheckCircle } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import type { ResetPasswordFormProps } from '@/types/components';
 
 const resetPasswordSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
@@ -16,12 +17,6 @@ const resetPasswordSchema = z.object({
 });
 
 type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
-
-interface ResetPasswordFormProps {
-  onSubmit: (password: string) => Promise<void>;
-  isLoading?: boolean;
-  error?: string;
-}
 
 export default function ResetPasswordForm({ onSubmit, isLoading = false, error }: ResetPasswordFormProps) {
   const [isSubmitted, setIsSubmitted] = useState(false);

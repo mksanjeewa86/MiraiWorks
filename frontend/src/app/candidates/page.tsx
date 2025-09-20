@@ -1,31 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Plus, Search, Filter, Mail, Phone, MapPin, Edit, Trash2, Eye, User, Star, Calendar, Download, Upload } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Plus, Search, Mail, Phone, MapPin, Edit, Trash2, Eye, User, Star, Calendar, Download, Upload } from 'lucide-react';
 import Link from 'next/link';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import type { Candidate } from '@/types/candidate';
 
-interface Candidate {
-  id: number;
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone?: string;
-  location?: string;
-  title?: string;
-  company?: string;
-  experience_years?: number;
-  skills: string[];
-  status: 'active' | 'interviewing' | 'hired' | 'rejected' | 'withdrawn';
-  rating?: number;
-  source: 'website' | 'referral' | 'linkedin' | 'agency' | 'event' | 'other';
-  applied_positions: number;
-  last_activity: string;
-  resume_url?: string;
-  notes?: string;
-  created_at: string;
-}
 
 function CandidatesPageContent() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -40,7 +21,7 @@ function CandidatesPageContent() {
   const [itemsPerPage] = useState(10);
 
   // Mock data for development
-  const mockCandidates: Candidate[] = [
+  const mockCandidates: Candidate[] = useMemo(() => [
     {
       id: 1,
       first_name: 'John',
@@ -121,7 +102,7 @@ function CandidatesPageContent() {
       notes: 'Good design skills but not the right fit for this role',
       created_at: '2025-01-12T08:45:00Z'
     }
-  ];
+  ], []);
 
   useEffect(() => {
     // Simulate API call
@@ -144,7 +125,7 @@ function CandidatesPageContent() {
     };
 
     fetchCandidates();
-  }, []);
+  }, [mockCandidates]);
 
   // Filter and sort candidates
   const filteredCandidates = candidates

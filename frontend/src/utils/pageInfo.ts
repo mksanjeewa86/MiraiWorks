@@ -1,7 +1,4 @@
-export interface PageInfo {
-  title: string;
-  description: string;
-}
+import type { PageInfo } from '@/types/pages';
 
 export const PAGE_INFO_MAP: Record<string, PageInfo> = {
   // Dashboard routes
