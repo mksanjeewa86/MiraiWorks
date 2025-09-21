@@ -9,9 +9,11 @@ import EventModal from '@/components/calendar/EventModal';
 import { Grid, List, Clock, Menu, Plus } from 'lucide-react';
 import { calendarApi } from '@/api/calendar';
 import { interviewsApi } from '@/api/interviews';
+import { useAuth } from '@/contexts/AuthContext';
 import type { CalendarEvent, Interview } from '@/types/interview';
 
 function CalendarPageContent() {
+  const { user } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewType, setViewType] = useState<'month' | 'week' | 'day'>('month');
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -87,57 +89,65 @@ function CalendarPageContent() {
       }
 
       try {
-        // Load interview events as well
-        const interviewResponse = await interviewsApi.getAll();
-        let interviews: Interview[] = [];
+        // Load interview events as well (only if user is available and has company_id)
+        if (!user || !user.company_id) {
+          // Skip interviews if user data is not available
+          console.warn('User data not available for loading interviews');
+        } else {
+          const interviewResponse = await interviewsApi.getAll({
+            recruiter_id: user.id,
+            employer_company_id: user.company_id
+          });
+          let interviews: Interview[] = [];
 
-        // Robust response format handling for interviews
-        if (interviewResponse?.data) {
-          if (Array.isArray(interviewResponse.data)) {
-            interviews = interviewResponse.data;
-          } else if (interviewResponse.data && typeof interviewResponse.data === 'object') {
-            // Handle object response with nested data
-            const dataObj = interviewResponse.data as unknown as Record<string, unknown>;
-            if (Array.isArray(dataObj.items)) {
-              interviews = dataObj.items;
-            } else if (Array.isArray(dataObj.interviews)) {
-              interviews = dataObj.interviews;
-            } else if (Array.isArray(dataObj.data)) {
-              interviews = dataObj.data;
+          // Robust response format handling for interviews
+          if (interviewResponse?.data) {
+            if (Array.isArray(interviewResponse.data)) {
+              interviews = interviewResponse.data;
+            } else if (interviewResponse.data && typeof interviewResponse.data === 'object') {
+              // Handle object response with nested data
+              const dataObj = interviewResponse.data as unknown as Record<string, unknown>;
+              if (Array.isArray(dataObj.items)) {
+                interviews = dataObj.items;
+              } else if (Array.isArray(dataObj.interviews)) {
+                interviews = dataObj.interviews;
+              } else if (Array.isArray(dataObj.data)) {
+                interviews = dataObj.data;
+              } else {
+                console.warn('Interviews API returned unexpected format:', interviewResponse);
+                interviews = [];
+              }
             } else {
-              console.warn('Interviews API returned unexpected format:', interviewResponse);
+              console.warn('Interviews API data is not in expected format:', interviewResponse);
               interviews = [];
             }
           } else {
-            console.warn('Interviews API data is not in expected format:', interviewResponse);
+            console.warn('Interviews API returned no data:', interviewResponse);
             interviews = [];
           }
-        } else {
-          console.warn('Interviews API returned no data:', interviewResponse);
-          interviews = [];
-        }
 
-        // Safely process interviews array
-        if (Array.isArray(interviews) && interviews.length > 0) {
-          const interviewEvents: CalendarEvent[] = interviews
-            .filter(interview => interview && interview.scheduled_start)
-            .map(interview => ({
-              id: `interview-${interview.id}`,
-              title: `Interview: ${interview.position_title || interview.title || 'Untitled Interview'}`,
-              description: interview.description || '',
-              location: interview.location || interview.meeting_url || '',
-              startDatetime: interview.scheduled_start!,
-              endDatetime: interview.scheduled_end || new Date(new Date(interview.scheduled_start!).getTime() + (interview.duration_minutes || 60) * 60000).toISOString(),
-              timezone: interview.timezone || 'UTC',
-              isAllDay: false,
-              isRecurring: false,
-              organizerEmail: interview.recruiter?.email || '',
-              attendees: [interview.candidate?.email, interview.recruiter?.email].filter(Boolean) as string[],
-              status: interview.status || 'tentative',
-              createdAt: interview.created_at || new Date().toISOString(),
-              updatedAt: interview.updated_at || new Date().toISOString()
-            }));
-          allEvents = [...allEvents, ...interviewEvents];
+          // Safely process interviews array
+          if (Array.isArray(interviews) && interviews.length > 0) {
+            const interviewEvents: CalendarEvent[] = interviews
+              .filter(interview => interview && interview.scheduled_start)
+              .map(interview => ({
+                id: `interview-${interview.id}`,
+                title: `Interview: ${interview.position_title || interview.title || 'Untitled Interview'}`,
+                description: interview.description || '',
+                location: interview.location || interview.meeting_url || '',
+                startDatetime: interview.scheduled_start!,
+                endDatetime: interview.scheduled_end || new Date(new Date(interview.scheduled_start!).getTime() + (interview.duration_minutes || 60) * 60000).toISOString(),
+                timezone: interview.timezone || 'UTC',
+                isAllDay: false,
+                isRecurring: false,
+                organizerEmail: interview.recruiter?.email || '',
+                attendees: [interview.candidate?.email, interview.recruiter?.email].filter(Boolean) as string[],
+                status: interview.status || 'tentative',
+                createdAt: interview.created_at || new Date().toISOString(),
+                updatedAt: interview.updated_at || new Date().toISOString()
+              }));
+            allEvents = [...allEvents, ...interviewEvents];
+          }
         }
       } catch (error) {
         console.warn('Failed to load interview events:', error);

@@ -36,6 +36,13 @@ function InterviewsPageContent() {
         return;
       }
 
+      // Check if user has required fields
+      if (!user.company_id) {
+        setError('User company information is missing. Please contact your administrator.');
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         setError('');
@@ -243,7 +250,13 @@ function InterviewsPageContent() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as InterviewStatusFilter)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundPosition: 'right 12px center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: '16px'
+                }}
               >
                 <option value="all">All Statuses</option>
                 <option value="scheduled">Scheduled</option>
@@ -256,7 +269,13 @@ function InterviewsPageContent() {
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value as InterviewTypeFilter)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundPosition: 'right 12px center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: '16px'
+                }}
               >
                 <option value="all">All Types</option>
                 <option value="phone">Phone</option>
@@ -272,7 +291,13 @@ function InterviewsPageContent() {
                   setSortBy(field as InterviewSortField);
                   setSortOrder(order as 'asc' | 'desc');
                 }}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundPosition: 'right 12px center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: '16px'
+                }}
               >
                 <option value="scheduled_date_asc">Date (Earliest)</option>
                 <option value="scheduled_date_desc">Date (Latest)</option>

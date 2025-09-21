@@ -4,19 +4,13 @@ import type { ApiResponse } from '@/types';
 import type { Interview, InterviewsListResponse } from '@/types/interview';
 
 export const interviewsApi = {
-  async getAll(params?: { recruiter_id?: number; employer_company_id?: number }): Promise<ApiResponse<InterviewsListResponse<Interview>>> {
+  async getAll(params: { recruiter_id: number; employer_company_id: number }): Promise<ApiResponse<InterviewsListResponse<Interview>>> {
     let url = API_ENDPOINTS.INTERVIEWS.BASE;
 
-    if (params) {
-      const searchParams = new URLSearchParams();
-      if (params.recruiter_id !== undefined) {
-        searchParams.append('recruiter_id', params.recruiter_id.toString());
-      }
-      if (params.employer_company_id !== undefined) {
-        searchParams.append('employer_company_id', params.employer_company_id.toString());
-      }
-      url += `?${searchParams.toString()}`;
-    }
+    const searchParams = new URLSearchParams();
+    searchParams.append('recruiter_id', params.recruiter_id.toString());
+    searchParams.append('employer_company_id', params.employer_company_id.toString());
+    url += `?${searchParams.toString()}`;
 
     const response = await apiClient.get<InterviewsListResponse<Interview>>(url);
     return { data: response.data, success: true };

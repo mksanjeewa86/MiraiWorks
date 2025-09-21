@@ -440,8 +440,14 @@ function PositionsPageContent() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
-                style={{ '--tw-ring-color': 'var(--brand-primary)' } as CSSProperties}
+                className="pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundPosition: 'right 12px center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: '16px',
+                  '--tw-ring-color': 'var(--brand-primary)'
+                } as CSSProperties}
               >
                 <option value="all">All Status</option>
                 <option value="draft">Draft</option>
@@ -453,8 +459,14 @@ function PositionsPageContent() {
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
-                style={{ '--tw-ring-color': 'var(--brand-primary)' } as CSSProperties}
+                className="pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundPosition: 'right 12px center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: '16px',
+                  '--tw-ring-color': 'var(--brand-primary)'
+                } as CSSProperties}
               >
                 <option value="all">All Types</option>
                 <option value="full-time">Full-time</option>
@@ -465,8 +477,14 @@ function PositionsPageContent() {
               <select
                 value={levelFilter}
                 onChange={(e) => setLevelFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
-                style={{ '--tw-ring-color': 'var(--brand-primary)' } as CSSProperties}
+                className="pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundPosition: 'right 12px center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: '16px',
+                  '--tw-ring-color': 'var(--brand-primary)'
+                } as CSSProperties}
               >
                 <option value="all">All Levels</option>
                 <option value="entry">Entry</option>
@@ -477,8 +495,14 @@ function PositionsPageContent() {
               <select
                 value={locationFilter}
                 onChange={(e) => setLocationFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
-                style={{ '--tw-ring-color': 'var(--brand-primary)' } as CSSProperties}
+                className="pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundPosition: 'right 12px center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: '16px',
+                  '--tw-ring-color': 'var(--brand-primary)'
+                } as CSSProperties}
               >
                 {FILTER_LOCATION_OPTIONS.map(({ label, value }) => (
                   <option key={value} value={value}>
@@ -823,7 +847,13 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
                 value={formData.title}
                 onChange={handleInputChange}
                 placeholder="e.g. Senior Software Engineer"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] appearance-none bg-white"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundPosition: 'right 12px center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: '16px'
+                }}
               />
             </div>
             <div>
@@ -836,7 +866,13 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
                 value={formData.department}
                 onChange={handleInputChange}
                 placeholder="e.g. Engineering"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] appearance-none bg-white"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundPosition: 'right 12px center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: '16px'
+                }}
               />
             </div>
             <div>
@@ -848,7 +884,13 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
                 name="location"
                 value={formData.location}
                 onChange={handleInputChange}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] appearance-none bg-white"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundPosition: 'right 12px center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: '16px'
+                }}
               >
                 <option value="" disabled>Select location</option>
                 {LOCATION_OPTIONS.map(({ label, value }) => (
@@ -865,7 +907,13 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
                 name="job_type"
                 value={formData.job_type}
                 onChange={handleInputChange}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] appearance-none bg-white"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundPosition: 'right 12px center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: '16px'
+                }}
               >
                 <option value="full_time">Full-time</option>
                 <option value="part_time">Part-time</option>
@@ -882,7 +930,13 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
                 name="experience_level"
                 value={formData.experience_level}
                 onChange={handleInputChange}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] appearance-none bg-white"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundPosition: 'right 12px center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: '16px'
+                }}
               >
                 <option value="entry_level">Entry Level</option>
                 <option value="mid_level">Mid Level</option>
@@ -898,7 +952,13 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
                 name="status"
                 value={formData.status}
                 onChange={handleInputChange}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] appearance-none bg-white"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundPosition: 'right 12px center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: '16px'
+                }}
               >
                 <option value="draft">Draft</option>
                 <option value="published">Published</option>
@@ -914,7 +974,13 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
                 name="remote_type"
                 value={formData.remote_type}
                 onChange={handleInputChange}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] appearance-none bg-white"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundPosition: 'right 12px center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: '16px'
+                }}
               >
                 <option value="on_site">On-site</option>
                 <option value="remote">Remote</option>
@@ -929,7 +995,13 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
                 type="date"
                 value={formData.postedDate}
                 onChange={handleInputChange}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] appearance-none bg-white"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundPosition: 'right 12px center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: '16px'
+                }}
               />
             </div>
             <div>
@@ -940,7 +1012,13 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
                 type="date"
                 value={formData.deadline}
                 onChange={handleInputChange}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] appearance-none bg-white"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundPosition: 'right 12px center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: '16px'
+                }}
               />
             </div>
             <div>
@@ -980,7 +1058,13 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
                 value={formData.description}
                 onChange={handleInputChange}
                 placeholder="Outline the responsibilities and expectations for this role."
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] appearance-none bg-white"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundPosition: 'right 12px center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: '16px'
+                }}
               ></textarea>
             </div>
             <div>
@@ -992,7 +1076,13 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
                 value={formData.requirements}
                 onChange={handleInputChange}
                 placeholder="List each requirement on a new line."
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] appearance-none bg-white"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundPosition: 'right 12px center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: '16px'
+                }}
               ></textarea>
             </div>
             <div>

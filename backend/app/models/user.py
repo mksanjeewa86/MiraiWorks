@@ -43,7 +43,7 @@ class User(Base):
     )
 
     # Relationships
-    company = relationship("Company", back_populates="users")
+    company = relationship("Company", back_populates="users", lazy="noload")
     user_roles = relationship(
         "UserRole", back_populates="user", cascade="all, delete-orphan"
     )

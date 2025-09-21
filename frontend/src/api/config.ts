@@ -35,8 +35,8 @@ export const API_ENDPOINTS = {
 
   // Company endpoints
   COMPANIES: {
-    BASE: '/api/companies',
-    BY_ID: (id: string) => `/api/companies/${id}`,
+    BASE: '/api/admin/companies',
+    BY_ID: (id: string) => `/api/admin/companies/${id}`,
   },
 
   // Position endpoints (updated from JOBS)

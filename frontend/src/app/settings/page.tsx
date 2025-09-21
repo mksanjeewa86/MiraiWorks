@@ -648,8 +648,14 @@ function SettingsPageContent() {
             <select
               value={state.settings?.language || 'en'}
               onChange={(e) => updatePreferences('language', e.target.value)}
-              className="w-full p-3 pr-8 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800"
-              style={{ color: 'var(--text-primary)' }}
+              className="w-full p-3 pr-8 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 appearance-none"
+              style={{
+                color: 'var(--text-primary)',
+                backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                backgroundPosition: 'right 12px center',
+                backgroundRepeat: 'no-repeat',
+                backgroundSize: '16px'
+              }}
             >
               <option value="en">English</option>
               <option value="es">Spanish</option>
@@ -666,8 +672,14 @@ function SettingsPageContent() {
             <select
               value={state.settings?.timezone || 'America/New_York'}
               onChange={(e) => updatePreferences('timezone', e.target.value)}
-              className="w-full p-3 pr-8 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800"
-              style={{ color: 'var(--text-primary)' }}
+              className="w-full p-3 pr-8 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 appearance-none"
+              style={{
+                color: 'var(--text-primary)',
+                backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                backgroundPosition: 'right 12px center',
+                backgroundRepeat: 'no-repeat',
+                backgroundSize: '16px'
+              }}
             >
               <option value="America/New_York">Eastern Time (ET)</option>
               <option value="America/Chicago">Central Time (CT)</option>
@@ -686,8 +698,14 @@ function SettingsPageContent() {
           <select
             value={state.settings?.date_format || 'MM/DD/YYYY'}
             onChange={(e) => updatePreferences('date_format', e.target.value)}
-            className="w-full p-3 pr-8 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800"
-            style={{ color: 'var(--text-primary)' }}
+            className="w-full p-3 pr-8 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 appearance-none"
+            style={{
+              color: 'var(--text-primary)',
+              backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+              backgroundPosition: 'right 12px center',
+              backgroundRepeat: 'no-repeat',
+              backgroundSize: '16px'
+            }}
           >
             <option value="MM/DD/YYYY">MM/DD/YYYY</option>
             <option value="DD/MM/YYYY">DD/MM/YYYY</option>
