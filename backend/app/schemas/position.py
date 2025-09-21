@@ -263,6 +263,50 @@ class PositionInfo(PositionBase, PositionSalaryInfo):
     def _default_int_fields(cls, value):
         return 0 if value is None else value
 
+    @field_validator("preferred_skills", "required_skills", "benefits", "perks", mode="before")
+    @classmethod
+    def _parse_json_list_fields(cls, value):
+        """Parse JSON string fields into lists if needed."""
+        if value is None:
+            return None
+        if isinstance(value, str):
+            try:
+                import json
+                return json.loads(value)
+            except (json.JSONDecodeError, ValueError):
+                # If it's not valid JSON, return empty list
+                return []
+        if isinstance(value, list):
+            return value
+        return []
+
+    @field_validator("experience_level", mode="before")
+    @classmethod
+    def _normalize_experience_level_final(cls, value):
+        """Additional normalization for experience level."""
+        if isinstance(value, str):
+            # Map common variations to standard values
+            mapping = {
+                "entry": "entry_level",
+                "junior": "entry_level",
+                "mid": "mid_level",
+                "middle": "mid_level",
+                "senior": "senior_level",
+                "lead": "senior_level",
+                "executive": "executive",
+                "intern": "internship",
+                "internship": "internship"
+            }
+            normalized = value.replace("-", "_").lower()
+            if normalized in mapping:
+                return ExperienceLevel(mapping[normalized])
+            try:
+                return ExperienceLevel(normalized)
+            except ValueError:
+                # Default to mid_level if can't parse
+                return ExperienceLevel.MID_LEVEL
+        return value
+
     # Computed properties
     is_active: bool = False
     days_since_published: Optional[int] = None

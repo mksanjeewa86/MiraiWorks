@@ -128,6 +128,84 @@ class EmailService:
         logger.info(f"[STUB] Would send welcome email to {email} for role {role}")
         return True
 
+    async def send_registration_completion_email(self, email: str, first_name: str) -> bool:
+        """Send registration completion email with login button."""
+        subject = "Welcome to MiraiWorks - Registration Complete!"
+
+        login_url = f"{self.app_base_url}/auth/login"
+        jobs_url = f"{self.app_base_url}/jobs"
+
+        # Prepare template context
+        context = {
+            "first_name": first_name,
+            "email": email,
+            "login_url": login_url,
+            "jobs_url": jobs_url,
+        }
+
+        try:
+            html_body, text_body = email_template_service.render_email_template(
+                "auth/registration_complete", context, subject, "Welcome to MiraiWorks"
+            )
+            return await self.send_email([email], subject, html_body, text_body)
+        except Exception as e:
+            logger.error(f"Failed to render registration completion email template: {e}")
+            # Fallback to a simple HTML message if template fails
+            html_fallback = f"""
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #6C63FF;">Welcome to MiraiWorks, {first_name}!</h2>
+
+                <p>Congratulations! Your account has been successfully created.</p>
+
+                <p>You can now:</p>
+                <ul>
+                    <li>Browse thousands of job opportunities</li>
+                    <li>Apply to positions that interest you</li>
+                    <li>Build your professional profile</li>
+                    <li>Get matched with top employers in Japan</li>
+                </ul>
+
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="{login_url}" style="background-color: #6C63FF; color: white; padding: 12px 24px; text-decoration: none; border-radius: 24px; display: inline-block;">
+                        Login to Your Account
+                    </a>
+                </div>
+
+                <p>Or start browsing jobs immediately:</p>
+                <div style="text-align: center; margin: 20px 0;">
+                    <a href="{jobs_url}" style="background-color: #22C55E; color: white; padding: 12px 24px; text-decoration: none; border-radius: 24px; display: inline-block;">
+                        Browse Jobs
+                    </a>
+                </div>
+
+                <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+                <p style="color: #666; font-size: 14px;">
+                    Thank you for joining MiraiWorks - Your future starts here!<br>
+                    <a href="{self.app_base_url}">Visit MiraiWorks</a>
+                </p>
+            </div>
+            """
+
+            text_fallback = f"""
+Welcome to MiraiWorks, {first_name}!
+
+Congratulations! Your account has been successfully created.
+
+You can now:
+- Browse thousands of job opportunities
+- Apply to positions that interest you
+- Build your professional profile
+- Get matched with top employers in Japan
+
+Login to your account: {login_url}
+Or browse jobs: {jobs_url}
+
+Thank you for joining MiraiWorks - Your future starts here!
+Visit: {self.app_base_url}
+            """
+
+            return await self.send_email([email], subject, html_fallback, text_fallback)
+
     async def send_password_reset_notification(
         self, email: str, user_name: str, admin_name: str
     ) -> bool:

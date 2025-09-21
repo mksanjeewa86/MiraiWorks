@@ -10,6 +10,38 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class RegisterRequest(BaseModel):
+    email: EmailStr
+    password: str
+    first_name: str
+    last_name: str
+    phone: Optional[str] = None
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, v):
+        if len(v) < 8:
+            raise ValueError("Password must be at least 8 characters long")
+        return v
+
+    @field_validator("first_name", "last_name")
+    @classmethod
+    def validate_names(cls, v):
+        if not v or not v.strip():
+            raise ValueError("Name fields cannot be empty")
+        return v.strip()
+
+
+class RegisterResponse(BaseModel):
+    message: str
+    success: bool = True
+    access_token: Optional[str] = None
+    refresh_token: Optional[str] = None
+    token_type: str = "bearer"
+    expires_in: Optional[int] = None
+    user: Optional["UserInfo"] = None
+
+
 class LoginResponse(BaseModel):
     access_token: str
     refresh_token: str
@@ -151,5 +183,6 @@ class PasswordResetRequestInfo(BaseModel):
 
 
 # Update forward references
+RegisterResponse.model_rebuild()
 LoginResponse.model_rebuild()
 TwoFAVerifyResponse.model_rebuild()

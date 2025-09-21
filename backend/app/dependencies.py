@@ -49,19 +49,27 @@ async def get_current_user(
     if user_id is None:
         raise credentials_exception
 
-    # Get user from database
+    # Get user from database with explicit join
     result = await db.execute(
         select(User)
-        .options(
-            selectinload(User.company),
-            selectinload(User.user_roles).selectinload(UserRoleModel.role),
-        )
+        .options(selectinload(User.company))
         .where(User.id == user_id, User.is_active.is_(True))
     )
 
     user = result.scalar_one_or_none()
     if user is None:
         raise credentials_exception
+
+    # Explicitly load user roles in a separate query to avoid greenlet issues
+    roles_result = await db.execute(
+        select(UserRoleModel)
+        .options(selectinload(UserRoleModel.role))
+        .where(UserRoleModel.user_id == user_id)
+    )
+    user_roles = roles_result.scalars().all()
+
+    # Manually set the user_roles to avoid lazy loading issues
+    user.user_roles = user_roles
 
     return user
 

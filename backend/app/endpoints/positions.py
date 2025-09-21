@@ -79,6 +79,7 @@ async def list_positions(
     salary_max: Optional[int] = Query(None, ge=0, description="Maximum salary filter"),
     company_id: Optional[int] = Query(None, description="Filter by company"),
     search: Optional[str] = Query(None, description="Search in title, description, requirements"),
+    days_since_posted: Optional[int] = Query(None, ge=1, description="Filter positions posted within last N days"),
     status: Optional[str] = Query("published", description="Position status filter"),
     current_user: Optional[User] = Depends(get_optional_current_user),
 ) -> Any:
@@ -86,7 +87,7 @@ async def list_positions(
     is_admin_access = bool(current_user and (current_user.is_admin or current_user.company_id))
 
     if not is_admin_access:
-        positions = await position_crud.get_published_positions(
+        positions, total_count = await position_crud.get_published_positions_with_count(
             db=db,
             skip=skip,
             limit=limit,
@@ -96,12 +97,17 @@ async def list_positions(
             salary_max=salary_max,
             company_id=company_id,
             search=search,
+            days_since_posted=days_since_posted,
         )
 
         sanitized: List[PositionInfo] = []
         for pos in positions:
             info = PositionInfo.model_validate(pos, from_attributes=True)
-            updates = {"application_count": 0, "view_count": 0}
+            updates = {
+                "application_count": 0,
+                "view_count": 0,
+                "company_name": pos.company.name if pos.company else None
+            }
             if not pos.show_salary:
                 updates.update(
                     salary_min=None,
@@ -114,7 +120,7 @@ async def list_positions(
         has_more = len(sanitized) == limit
         return PositionListResponse(
             positions=sanitized,
-            total=len(sanitized),
+            total=total_count,
             skip=skip,
             limit=limit,
             has_more=has_more,
@@ -143,10 +149,19 @@ async def list_positions(
             limit=limit,
         )
 
+    # Convert positions to PositionInfo with company names
+    position_infos: List[PositionInfo] = []
+    for pos in positions:
+        info = PositionInfo.model_validate(pos, from_attributes=True)
+        # Populate company_name from relationship
+        if hasattr(pos, 'company') and pos.company:
+            info = info.model_copy(update={"company_name": pos.company.name})
+        position_infos.append(info)
+
     has_more = len(positions) == limit
 
     return PositionListResponse(
-        positions=positions,
+        positions=position_infos,
         total=len(positions),
         skip=skip,
         limit=limit,

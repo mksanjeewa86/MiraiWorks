@@ -234,12 +234,20 @@ class AuthService:
         user.last_login = datetime.utcnow()
         await db.commit()
 
+        # Load user roles explicitly to avoid greenlet issues
+        roles_result = await db.execute(
+            select(UserRoleModel)
+            .options(selectinload(UserRoleModel.role))
+            .where(UserRoleModel.user_id == user.id)
+        )
+        user_roles = roles_result.scalars().all()
+
         # Create access token payload
         access_token_data = {
             "sub": str(user.id),
             "email": user.email,
             "company_id": user.company_id,
-            "roles": [ur.role.name for ur in user.user_roles],
+            "roles": [ur.role.name for ur in user_roles],
         }
 
         # Create tokens
@@ -259,7 +267,7 @@ class AuthService:
                 "email": user.email,
                 "full_name": user.full_name,
                 "company_id": user.company_id,
-                "roles": [ur.role.name for ur in user.user_roles],
+                "roles": [ur.role.name for ur in user_roles],
             },
         }
 

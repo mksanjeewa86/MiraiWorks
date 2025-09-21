@@ -70,6 +70,89 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
         result = await db.execute(query)
         return result.scalars().all()
 
+    async def get_published_positions_with_count(
+        self,
+        db: AsyncSession,
+        *,
+        skip: int = 0,
+        limit: int = 100,
+        location: Optional[str] = None,
+        job_type: Optional[str] = None,
+        salary_min: Optional[int] = None,
+        salary_max: Optional[int] = None,
+        company_id: Optional[int] = None,
+        search: Optional[str] = None,
+        days_since_posted: Optional[int] = None,
+    ) -> tuple[List[Position], int]:
+        """Get published positions with optional filters and total count."""
+        # Base query for filtering
+        base_query = select(Position).where(Position.status == "published")
+
+        # Apply filters
+        if location:
+            base_query = base_query.where(Position.location.ilike(f"%{location}%"))
+
+        if job_type:
+            base_query = base_query.where(Position.job_type == job_type)
+
+        if salary_min:
+            base_query = base_query.where(Position.salary_min >= salary_min)
+
+        if salary_max:
+            base_query = base_query.where(Position.salary_max <= salary_max)
+
+        if company_id:
+            base_query = base_query.where(Position.company_id == company_id)
+
+        if search:
+            search_filter = or_(
+                Position.title.ilike(f"%{search}%"),
+                Position.description.ilike(f"%{search}%"),
+                Position.requirements.ilike(f"%{search}%"),
+            )
+            base_query = base_query.where(search_filter)
+
+        if days_since_posted:
+            from datetime import datetime, timedelta
+            cutoff_date = datetime.utcnow() - timedelta(days=days_since_posted)
+            base_query = base_query.where(Position.published_at >= cutoff_date)
+
+        # Get total count by rebuilding the filter conditions without pagination
+        count_query = select(func.count(Position.id)).where(Position.status == "published")
+
+        # Apply the same filters for counting
+        if location:
+            count_query = count_query.where(Position.location.ilike(f"%{location}%"))
+        if job_type:
+            count_query = count_query.where(Position.job_type == job_type)
+        if salary_min:
+            count_query = count_query.where(Position.salary_min >= salary_min)
+        if salary_max:
+            count_query = count_query.where(Position.salary_max <= salary_max)
+        if company_id:
+            count_query = count_query.where(Position.company_id == company_id)
+        if search:
+            search_filter = or_(
+                Position.title.ilike(f"%{search}%"),
+                Position.description.ilike(f"%{search}%"),
+                Position.requirements.ilike(f"%{search}%"),
+            )
+            count_query = count_query.where(search_filter)
+        if days_since_posted:
+            from datetime import datetime, timedelta
+            cutoff_date = datetime.utcnow() - timedelta(days=days_since_posted)
+            count_query = count_query.where(Position.published_at >= cutoff_date)
+
+        count_result = await db.execute(count_query)
+        total_count = count_result.scalar()
+
+        # Get paginated results
+        data_query = base_query.order_by(desc(Position.created_at)).offset(skip).limit(limit).options(selectinload(Position.company))
+        data_result = await db.execute(data_query)
+        positions = data_result.scalars().all()
+
+        return positions, total_count
+
     async def get_by_company(
         self, db: AsyncSession, *, company_id: int, skip: int = 0, limit: int = 100
     ) -> List[Position]:

@@ -45,6 +45,7 @@ from app.database import AsyncSessionLocal
 from app.models import User, Company, Role, UserRole, UserSettings, CompanyProfile
 from app.models.message import Message
 from app.models.interview import Interview
+from app.models.position import Position
 from app.services.auth_service import auth_service
 from app.utils.constants import CompanyType, MessageType, InterviewStatus
 
@@ -70,6 +71,10 @@ async def create_seed_data():
             # Clear interviews
             await db.execute(delete(Interview))
             print("   - Cleared interviews")
+
+            # Clear positions
+            await db.execute(delete(Position))
+            print("   - Cleared positions")
 
             # Clear company profiles
             await db.execute(delete(CompanyProfile))
@@ -122,75 +127,75 @@ async def create_seed_data():
             print("\nCreating companies...")
             companies_data = [
                 {
-                    "name": "MiraiWorks System",
+                    "name": "MiraiWorks システム",
                     "type": CompanyType.EMPLOYER,
-                    "email": "admin@miraiworks.com",
-                    "phone": "+1-555-0100",
-                    "website": "https://miraiworks.com",
-                    "postal_code": "10001",
-                    "prefecture": "NY",
-                    "city": "New York",
-                    "description": "MiraiWorks platform system company",
+                    "email": "admin@miraiworks.jp",
+                    "phone": "+81-3-1234-5678",
+                    "website": "https://miraiworks.jp",
+                    "postal_code": "100-0001",
+                    "prefecture": "Tokyo",
+                    "city": "Chiyoda",
+                    "description": "MiraiWorks プラットフォームシステム運営会社",
                     "is_active": "1",
                 },
                 {
-                    "name": "TechCorp Solutions",
+                    "name": "テックコーポレーション",
                     "type": CompanyType.EMPLOYER,
-                    "email": "hr@techcorp.com",
-                    "phone": "+1-555-0101",
-                    "website": "https://techcorp.com",
-                    "postal_code": "94105",
-                    "prefecture": "CA",
-                    "city": "San Francisco",
-                    "description": "Leading technology solutions provider",
+                    "email": "hr@techcorp.jp",
+                    "phone": "+81-3-2345-6789",
+                    "website": "https://techcorp.jp",
+                    "postal_code": "150-0001",
+                    "prefecture": "Tokyo",
+                    "city": "Shibuya",
+                    "description": "最先端技術ソリューションプロバイダー",
                     "is_active": "1",
                 },
                 {
-                    "name": "InnovateLab Inc",
+                    "name": "イノベートラボ株式会社",
                     "type": CompanyType.RECRUITER,
-                    "email": "contact@innovatelab.com",
-                    "phone": "+1-555-0102",
-                    "website": "https://innovatelab.com",
-                    "postal_code": "02101",
-                    "prefecture": "MA",
-                    "city": "Boston",
-                    "description": "Innovation-focused recruitment agency",
+                    "email": "contact@innovatelab.jp",
+                    "phone": "+81-6-3456-7890",
+                    "website": "https://innovatelab.jp",
+                    "postal_code": "530-0001",
+                    "prefecture": "Osaka",
+                    "city": "Kita",
+                    "description": "革新的な採用支援エージェンシー",
                     "is_active": "1",
                 },
                 {
-                    "name": "DataDriven Analytics",
+                    "name": "データドリブン・アナリティクス",
                     "type": CompanyType.EMPLOYER,
-                    "email": "jobs@datadriven.com",
-                    "phone": "+1-555-0103",
-                    "website": "https://datadriven.com",
-                    "postal_code": "98101",
-                    "prefecture": "WA",
-                    "city": "Seattle",
-                    "description": "Data analytics and business intelligence company",
+                    "email": "jobs@datadriven.jp",
+                    "phone": "+81-45-4567-8901",
+                    "website": "https://datadriven.jp",
+                    "postal_code": "220-0001",
+                    "prefecture": "Kanagawa",
+                    "city": "Yokohama",
+                    "description": "データ分析とビジネスインテリジェンス企業",
                     "is_active": "1",
                 },
                 {
-                    "name": "CloudScale Systems",
+                    "name": "クラウドスケール・システムズ",
                     "type": CompanyType.EMPLOYER,
-                    "email": "careers@cloudscale.com",
-                    "phone": "+1-555-0104",
-                    "website": "https://cloudscale.com",
-                    "postal_code": "78701",
-                    "prefecture": "TX",
-                    "city": "Austin",
-                    "description": "Cloud infrastructure and scaling solutions",
+                    "email": "careers@cloudscale.jp",
+                    "phone": "+81-52-5678-9012",
+                    "website": "https://cloudscale.jp",
+                    "postal_code": "460-0001",
+                    "prefecture": "Aichi",
+                    "city": "Nagoya",
+                    "description": "クラウドインフラとスケーリングソリューション",
                     "is_active": "1",
                 },
                 {
-                    "name": "NextGen Recruiting",
+                    "name": "ネクストジェン・リクルーティング",
                     "type": CompanyType.RECRUITER,
-                    "email": "info@nextgenrecruiting.com",
-                    "phone": "+1-555-0105",
-                    "website": "https://nextgenrecruiting.com",
-                    "postal_code": "60601",
-                    "prefecture": "IL",
-                    "city": "Chicago",
-                    "description": "Next generation recruitment services",
+                    "email": "info@nextgenrecruiting.jp",
+                    "phone": "+81-92-6789-0123",
+                    "website": "https://nextgenrecruiting.jp",
+                    "postal_code": "810-0001",
+                    "prefecture": "Fukuoka",
+                    "city": "Chuo",
+                    "description": "次世代採用サービス",
                     "is_active": "1",
                 },
             ]
@@ -209,67 +214,67 @@ async def create_seed_data():
             print("\nCreating users...")
             users_data = [
                 {
-                    "company_id": companies[0].id,  # MiraiWorks System
-                    "email": "superadmin@miraiworks.com",
+                    "company_id": companies[0].id,  # MiraiWorks システム
+                    "email": "superadmin@miraiworks.jp",
                     "hashed_password": auth_service.get_password_hash("password"),
-                    "first_name": "Super",
-                    "last_name": "Administrator",
-                    "phone": "+1-555-0200",
+                    "first_name": "スーパー",
+                    "last_name": "管理者",
+                    "phone": "+81-3-1111-2222",
                     "is_active": True,
                     "is_admin": True,
                     "role": "super_admin",
                 },
                 {
-                    "company_id": companies[1].id,  # TechCorp Solutions
-                    "email": "admin@techcorp.com",
+                    "company_id": companies[1].id,  # テックコーポレーション
+                    "email": "admin@techcorp.jp",
                     "hashed_password": auth_service.get_password_hash("password"),
-                    "first_name": "John",
-                    "last_name": "Smith",
-                    "phone": "+1-555-0201",
+                    "first_name": "田中",
+                    "last_name": "太郎",
+                    "phone": "+81-3-2222-3333",
                     "is_active": True,
                     "is_admin": False,
                     "role": "company_admin",
                 },
                 {
-                    "company_id": companies[2].id,  # InnovateLab Inc
-                    "email": "recruiter@innovatelab.com",
+                    "company_id": companies[2].id,  # イノベートラボ株式会社
+                    "email": "recruiter@innovatelab.jp",
                     "hashed_password": auth_service.get_password_hash("password"),
-                    "first_name": "Sarah",
-                    "last_name": "Johnson",
-                    "phone": "+1-555-0202",
+                    "first_name": "佐藤",
+                    "last_name": "花子",
+                    "phone": "+81-6-3333-4444",
                     "is_active": True,
                     "is_admin": False,
                     "role": "recruiter",
                 },
                 {
-                    "company_id": companies[3].id,  # DataDriven Analytics
-                    "email": "hr@datadriven.com",
+                    "company_id": companies[3].id,  # データドリブン・アナリティクス
+                    "email": "hr@datadriven.jp",
                     "hashed_password": auth_service.get_password_hash("password"),
-                    "first_name": "Michael",
-                    "last_name": "Chen",
-                    "phone": "+1-555-0203",
+                    "first_name": "鈴木",
+                    "last_name": "一郎",
+                    "phone": "+81-45-4444-5555",
                     "is_active": True,
                     "is_admin": False,
                     "role": "employer",
                 },
                 {
-                    "company_id": companies[4].id,  # CloudScale Systems
-                    "email": "manager@cloudscale.com",
+                    "company_id": companies[4].id,  # クラウドスケール・システムズ
+                    "email": "manager@cloudscale.jp",
                     "hashed_password": auth_service.get_password_hash("password"),
-                    "first_name": "Emily",
-                    "last_name": "Davis",
-                    "phone": "+1-555-0204",
+                    "first_name": "高橋",
+                    "last_name": "美咲",
+                    "phone": "+81-52-5555-6666",
                     "is_active": True,
                     "is_admin": False,
                     "role": "company_admin",
                 },
                 {
-                    "company_id": companies[5].id,  # NextGen Recruiting
-                    "email": "lead@nextgenrecruiting.com",
+                    "company_id": companies[5].id,  # ネクストジェン・リクルーティング
+                    "email": "lead@nextgenrecruiting.jp",
                     "hashed_password": auth_service.get_password_hash("password"),
-                    "first_name": "David",
-                    "last_name": "Wilson",
-                    "phone": "+1-555-0205",
+                    "first_name": "伊藤",
+                    "last_name": "健太",
+                    "phone": "+81-92-6666-7777",
                     "is_active": True,
                     "is_admin": False,
                     "role": "recruiter",
@@ -299,40 +304,40 @@ async def create_seed_data():
             # Create user settings for all users
             user_settings_data = [
                 {
-                    "job_title": "System Administrator",
-                    "bio": "Super administrator managing the MiraiWorks platform",
-                    "language": "en",
-                    "timezone": "America/New_York",
+                    "job_title": "システム管理者",
+                    "bio": "MiraiWorksプラットフォームの管理運営を担当するスーパー管理者",
+                    "language": "ja",
+                    "timezone": "Asia/Tokyo",
                 },
                 {
-                    "job_title": "HR Director",
-                    "bio": "Leading talent acquisition and human resources at TechCorp",
-                    "language": "en",
-                    "timezone": "America/Los_Angeles",
+                    "job_title": "人事部長",
+                    "bio": "テックコーポレーションの人材獲得と人事業務を統括",
+                    "language": "ja",
+                    "timezone": "Asia/Tokyo",
                 },
                 {
-                    "job_title": "Senior Recruiter",
-                    "bio": "Specialized in tech recruitment and talent sourcing",
-                    "language": "en",
-                    "timezone": "America/New_York",
+                    "job_title": "シニアリクルーター",
+                    "bio": "IT技術者採用と人材開拓の専門家",
+                    "language": "ja",
+                    "timezone": "Asia/Tokyo",
                 },
                 {
-                    "job_title": "Talent Acquisition Manager",
-                    "bio": "Data-driven approach to finding the best talent",
-                    "language": "en",
-                    "timezone": "America/Los_Angeles",
+                    "job_title": "人材獲得マネージャー",
+                    "bio": "データ分析を活用した最適な人材発掘",
+                    "language": "ja",
+                    "timezone": "Asia/Tokyo",
                 },
                 {
-                    "job_title": "People Operations Manager",
-                    "bio": "Building great teams for cloud-scale solutions",
-                    "language": "en",
-                    "timezone": "America/Chicago",
+                    "job_title": "人事オペレーション責任者",
+                    "bio": "クラウドスケールソリューションのための優秀なチーム構築",
+                    "language": "ja",
+                    "timezone": "Asia/Tokyo",
                 },
                 {
-                    "job_title": "Lead Recruitment Consultant",
-                    "bio": "Next-generation recruitment strategies and solutions",
-                    "language": "en",
-                    "timezone": "America/Chicago",
+                    "job_title": "リクルートメントコンサルタント主任",
+                    "bio": "次世代採用戦略とソリューションの企画・実行",
+                    "language": "ja",
+                    "timezone": "Asia/Tokyo",
                 },
             ]
 
@@ -345,70 +350,70 @@ async def create_seed_data():
             # Create company profiles for all companies
             company_profiles_data = [
                 {
-                    "tagline": "Powering the future of recruitment",
-                    "mission": "To revolutionize how companies and candidates connect through innovative technology",
-                    "values": '["Innovation", "Transparency", "Excellence", "Collaboration"]',
-                    "culture": "A dynamic, technology-driven environment focused on continuous improvement and user satisfaction",
+                    "tagline": "未来の採用を支えるプラットフォーム",
+                    "mission": "革新的なテクノロジーで企業と人材の最適なマッチングを実現する",
+                    "values": '["革新性", "透明性", "卓越性", "協働"]',
+                    "culture": "継続的な改善とユーザー満足度を重視する、ダイナミックでテクノロジー主導の環境",
                     "employee_count": "11-50",
-                    "headquarters": "New York, NY",
+                    "headquarters": "東京都千代田区",
                     "founded_year": 2024,
-                    "benefits_summary": "Comprehensive health benefits, flexible working, professional development",
-                    "perks_highlights": '["Remote work options", "Professional development budget", "Health & wellness programs"]',
+                    "benefits_summary": "包括的な健康保険、フレックス勤務、専門能力開発支援",
+                    "perks_highlights": '["リモートワーク対応", "教育研修費補助", "健康・ウェルネスプログラム"]',
                 },
                 {
-                    "tagline": "Technology solutions that matter",
-                    "mission": "Delivering cutting-edge technology solutions that drive business success",
-                    "values": '["Innovation", "Quality", "Customer Success", "Integrity"]',
-                    "culture": "Fast-paced, innovative environment where creativity and technical excellence thrive",
+                    "tagline": "価値ある技術ソリューション",
+                    "mission": "ビジネス成功を推進する最先端技術ソリューションの提供",
+                    "values": '["革新性", "品質", "顧客成功", "誠実性"]',
+                    "culture": "創造性と技術的卓越性が活かされる、革新的でペースの早い環境",
                     "employee_count": "201-500",
-                    "headquarters": "San Francisco, CA",
+                    "headquarters": "東京都渋谷区",
                     "founded_year": 2018,
-                    "benefits_summary": "Full health coverage, equity participation, unlimited PTO",
-                    "perks_highlights": '["Stock options", "Unlimited vacation", "Top-tier equipment", "Learning stipend"]',
+                    "benefits_summary": "完全健康保険、株式参加、無制限有給休暇",
+                    "perks_highlights": '["ストックオプション", "無制限有給", "最高級機器支給", "学習支援金"]',
                 },
                 {
-                    "tagline": "Innovation meets talent",
-                    "mission": "Connecting innovative companies with exceptional talent through strategic recruitment",
-                    "values": '["Excellence", "Partnership", "Innovation", "Trust"]',
-                    "culture": "Collaborative and results-driven, focused on building lasting partnerships",
+                    "tagline": "革新と人材の出会い",
+                    "mission": "戦略的採用により革新的企業と優秀な人材を結ぶ",
+                    "values": '["卓越性", "パートナーシップ", "革新性", "信頼"]',
+                    "culture": "長期的なパートナーシップ構築に焦点を当てた、協調的で成果重視の環境",
                     "employee_count": "51-100",
-                    "headquarters": "Boston, MA",
+                    "headquarters": "大阪府大阪市北区",
                     "founded_year": 2020,
-                    "benefits_summary": "Competitive compensation, health benefits, flexible schedules",
-                    "perks_highlights": '["Flexible hours", "Professional networking", "Performance bonuses"]',
+                    "benefits_summary": "競争力のある給与、健康保険、柔軟な勤務スケジュール",
+                    "perks_highlights": '["フレックスタイム", "業界ネットワーキング", "成果ボーナス"]',
                 },
                 {
-                    "tagline": "Data-driven decisions, human-centered results",
-                    "mission": "Transforming data into actionable insights for business growth",
-                    "values": '["Data Integrity", "Innovation", "Collaboration", "Impact"]',
-                    "culture": "Analytical and collaborative environment where data meets creativity",
+                    "tagline": "データ駆動の意思決定、人間中心の結果",
+                    "mission": "データを実用的な洞察に変換し、ビジネス成長を促進する",
+                    "values": '["データ整合性", "革新性", "協働", "インパクト"]',
+                    "culture": "データと創造性が融合する、分析的で協調的な環境",
                     "employee_count": "101-200",
-                    "headquarters": "Seattle, WA",
+                    "headquarters": "神奈川県横浜市",
                     "founded_year": 2019,
-                    "benefits_summary": "Comprehensive benefits, professional development, work-life balance",
-                    "perks_highlights": '["Data science training", "Conference attendance", "Wellness programs"]',
+                    "benefits_summary": "包括的福利厚生、専門能力開発、ワークライフバランス",
+                    "perks_highlights": '["データサイエンス研修", "学会参加支援", "ウェルネスプログラム"]',
                 },
                 {
-                    "tagline": "Scaling possibilities in the cloud",
-                    "mission": "Empowering businesses to scale seamlessly with cloud infrastructure solutions",
-                    "values": '["Scalability", "Reliability", "Innovation", "Excellence"]',
-                    "culture": "High-performance culture focused on reliability and continuous improvement",
+                    "tagline": "クラウドで可能性を拡げる",
+                    "mission": "クラウドインフラソリューションで企業のシームレスなスケーリングを支援",
+                    "values": '["拡張性", "信頼性", "革新性", "卓越性"]',
+                    "culture": "信頼性と継続的改善に焦点を当てた高性能文化",
                     "employee_count": "51-100",
-                    "headquarters": "Austin, TX",
+                    "headquarters": "愛知県名古屋市",
                     "founded_year": 2021,
-                    "benefits_summary": "Full benefits package, equity options, professional growth",
-                    "perks_highlights": '["Cloud certifications", "Tech conferences", "Team building events"]',
+                    "benefits_summary": "完全福利厚生パッケージ、株式オプション、専門成長支援",
+                    "perks_highlights": '["クラウド認定取得支援", "技術会議参加", "チームビルディングイベント"]',
                 },
                 {
-                    "tagline": "The future of recruitment is here",
-                    "mission": "Revolutionizing recruitment through technology and personalized service",
-                    "values": '["Innovation", "Personalization", "Results", "Partnership"]',
-                    "culture": "Forward-thinking and client-focused, embracing new technologies and methodologies",
+                    "tagline": "採用の未来がここに",
+                    "mission": "テクノロジーと個別化サービスで採用業界を革新する",
+                    "values": '["革新性", "個別化", "成果", "パートナーシップ"]',
+                    "culture": "新技術と手法を取り入れた、先進的でクライアント重視の環境",
                     "employee_count": "11-50",
-                    "headquarters": "Chicago, IL",
+                    "headquarters": "福岡県福岡市中央区",
                     "founded_year": 2022,
-                    "benefits_summary": "Competitive package, professional development, flexible work",
-                    "perks_highlights": '["Remote flexibility", "Industry training", "Performance incentives"]',
+                    "benefits_summary": "競争力のあるパッケージ、専門能力開発、柔軟な働き方",
+                    "perks_highlights": '["リモート柔軟性", "業界研修", "成果インセンティブ"]',
                 },
             ]
 
@@ -422,52 +427,52 @@ async def create_seed_data():
             # Create direct messages between users
             print("\nCreating direct messages...")
             messages_data = [
-                # TechCorp and InnovateLab recruitment discussion
+                # テックコーポレーションとイノベートラボの採用相談
                 {
-                    "sender_id": users[1][0].id,  # admin@techcorp.com
-                    "recipient_id": users[2][0].id,  # recruiter@innovatelab.com
+                    "sender_id": users[1][0].id,  # admin@techcorp.jp
+                    "recipient_id": users[2][0].id,  # recruiter@innovatelab.jp
                     "type": MessageType.TEXT.value,
-                    "content": "Hello! We're looking for talented developers for our new project. Can you help us find some candidates?",
+                    "content": "お疲れ様です。新しいプロジェクトで優秀な開発者を探しています。候補者をご紹介いただけますでしょうか？",
                 },
                 {
-                    "sender_id": users[2][0].id,  # recruiter@innovatelab.com
-                    "recipient_id": users[1][0].id,  # admin@techcorp.com
+                    "sender_id": users[2][0].id,  # recruiter@innovatelab.jp
+                    "recipient_id": users[1][0].id,  # admin@techcorp.jp
                     "type": MessageType.TEXT.value,
-                    "content": "Absolutely! I'd be happy to help. What specific skills are you looking for?",
+                    "content": "もちろんです！喜んでサポートさせていただきます。どのような技術スキルをお求めでしょうか？",
                 },
                 {
-                    "sender_id": users[1][0].id,  # admin@techcorp.com
-                    "recipient_id": users[2][0].id,  # recruiter@innovatelab.com
+                    "sender_id": users[1][0].id,  # admin@techcorp.jp
+                    "recipient_id": users[2][0].id,  # recruiter@innovatelab.jp
                     "type": MessageType.TEXT.value,
-                    "content": "We need full-stack developers with React and Node.js experience. 3+ years preferred.",
-                },
-
-                # DataDriven and NextGen partnership
-                {
-                    "sender_id": users[3][0].id,  # hr@datadriven.com
-                    "recipient_id": users[5][0].id,  # lead@nextgenrecruiting.com
-                    "type": MessageType.TEXT.value,
-                    "content": "Hi! I saw your recruitment services and I'm interested in partnering with you.",
-                },
-                {
-                    "sender_id": users[5][0].id,  # lead@nextgenrecruiting.com
-                    "recipient_id": users[3][0].id,  # hr@datadriven.com
-                    "type": MessageType.TEXT.value,
-                    "content": "Great to hear from you! We specialize in data science and analytics roles. What positions are you looking to fill?",
+                    "content": "ReactとNode.jsの経験を持つフルスタック開発者が必要です。3年以上の経験者を希望しています。",
                 },
 
-                # CloudScale team coordination
+                # データドリブンとネクストジェンのパートナーシップ
                 {
-                    "sender_id": users[4][0].id,  # manager@cloudscale.com
-                    "recipient_id": users[2][0].id,  # recruiter@innovatelab.com
+                    "sender_id": users[3][0].id,  # hr@datadriven.jp
+                    "recipient_id": users[5][0].id,  # lead@nextgenrecruiting.jp
                     "type": MessageType.TEXT.value,
-                    "content": "Welcome to our collaboration! Let's coordinate our hiring efforts.",
+                    "content": "こんにちは！御社の採用サービスを拝見し、パートナーシップに興味があります。",
                 },
                 {
-                    "sender_id": users[0][0].id,  # superadmin@miraiworks.com
-                    "recipient_id": users[4][0].id,  # manager@cloudscale.com
+                    "sender_id": users[5][0].id,  # lead@nextgenrecruiting.jp
+                    "recipient_id": users[3][0].id,  # hr@datadriven.jp
                     "type": MessageType.TEXT.value,
-                    "content": "Welcome to MiraiWorks! Let me know if you need any platform assistance.",
+                    "content": "ご連絡いただきありがとうございます！弊社はデータサイエンスとアナリティクス分野の採用を専門としています。どちらのポジションをお探しでしょうか？",
+                },
+
+                # クラウドスケールチームの連携
+                {
+                    "sender_id": users[4][0].id,  # manager@cloudscale.jp
+                    "recipient_id": users[2][0].id,  # recruiter@innovatelab.jp
+                    "type": MessageType.TEXT.value,
+                    "content": "協業への参加、ありがとうございます！採用活動を連携して進めましょう。",
+                },
+                {
+                    "sender_id": users[0][0].id,  # superadmin@miraiworks.jp
+                    "recipient_id": users[4][0].id,  # manager@cloudscale.jp
+                    "type": MessageType.TEXT.value,
+                    "content": "MiraiWorksへようこそ！プラットフォームに関してご不明な点がございましたら、お気軽にお声かけください。",
                 },
             ]
 
@@ -486,47 +491,47 @@ async def create_seed_data():
             interviews_data = [
                 {
                     "candidate_id": users[1][0].id,  # Will use company user as mock candidate
-                    "recruiter_id": users[2][0].id,  # recruiter@innovatelab.com
-                    "employer_company_id": companies[1].id,  # TechCorp Solutions
-                    "recruiter_company_id": companies[2].id,  # InnovateLab Inc
-                    "title": "Senior Full-Stack Developer Interview",
-                    "description": "Technical interview for senior full-stack developer position focusing on React and Node.js",
-                    "position_title": "Senior Full-Stack Developer",
+                    "recruiter_id": users[2][0].id,  # recruiter@innovatelab.jp
+                    "employer_company_id": companies[1].id,  # テックコーポレーション
+                    "recruiter_company_id": companies[2].id,  # イノベートラボ株式会社
+                    "title": "シニアフルスタック開発者面接",
+                    "description": "ReactとNode.jsに重点を置いたシニアフルスタック開発者ポジションの技術面接",
+                    "position_title": "シニアフルスタック開発者",
                     "status": InterviewStatus.SCHEDULED.value,
                     "interview_type": "video",
                     "scheduled_start": base_time + timedelta(days=3, hours=10),
                     "scheduled_end": base_time + timedelta(days=3, hours=11),
-                    "timezone": "America/New_York",
-                    "meeting_url": "https://meet.techcorp.com/interview-001",
+                    "timezone": "Asia/Tokyo",
+                    "meeting_url": "https://meet.techcorp.jp/interview-001",
                     "meeting_id": "tcorp-001",
                 },
                 {
                     "candidate_id": users[3][0].id,  # Will use company user as mock candidate
-                    "recruiter_id": users[5][0].id,  # lead@nextgenrecruiting.com
-                    "employer_company_id": companies[3].id,  # DataDriven Analytics
-                    "recruiter_company_id": companies[5].id,  # NextGen Recruiting
-                    "title": "Data Scientist Position Interview",
-                    "description": "Interview for data scientist role with focus on machine learning and analytics",
-                    "position_title": "Senior Data Scientist",
+                    "recruiter_id": users[5][0].id,  # lead@nextgenrecruiting.jp
+                    "employer_company_id": companies[3].id,  # データドリブン・アナリティクス
+                    "recruiter_company_id": companies[5].id,  # ネクストジェン・リクルーティング
+                    "title": "データサイエンティストポジション面接",
+                    "description": "機械学習とアナリティクスに焦点を当てたデータサイエンティスト職の面接",
+                    "position_title": "シニアデータサイエンティスト",
                     "status": InterviewStatus.CONFIRMED.value,
                     "interview_type": "video",
                     "scheduled_start": base_time + timedelta(days=5, hours=14),
                     "scheduled_end": base_time + timedelta(days=5, hours=15, minutes=30),
-                    "timezone": "America/Los_Angeles",
+                    "timezone": "Asia/Tokyo",
                     "meeting_url": "https://zoom.us/j/datadriven123",
                     "meeting_id": "zoom-dd-123",
                 },
                 {
                     "candidate_id": users[4][0].id,  # Will use company user as mock candidate
-                    "recruiter_id": users[2][0].id,  # recruiter@innovatelab.com
-                    "employer_company_id": companies[4].id,  # CloudScale Systems
-                    "recruiter_company_id": companies[2].id,  # InnovateLab Inc
-                    "title": "DevOps Engineer Interview",
-                    "description": "Technical interview for DevOps engineer position with focus on cloud infrastructure",
-                    "position_title": "Senior DevOps Engineer",
+                    "recruiter_id": users[2][0].id,  # recruiter@innovatelab.jp
+                    "employer_company_id": companies[4].id,  # クラウドスケール・システムズ
+                    "recruiter_company_id": companies[2].id,  # イノベートラボ株式会社
+                    "title": "DevOpsエンジニア面接",
+                    "description": "クラウドインフラに重点を置いたDevOpsエンジニアポジションの技術面接",
+                    "position_title": "シニアDevOpsエンジニア",
                     "status": InterviewStatus.PENDING_SCHEDULE.value,
                     "interview_type": "video",
-                    "timezone": "America/Chicago",
+                    "timezone": "Asia/Tokyo",
                 },
             ]
 
@@ -534,6 +539,113 @@ async def create_seed_data():
                 interview = Interview(**interview_data)
                 db.add(interview)
                 print(f"   - Created interview '{interview_data['title']}'")
+
+            # Create positions (sample jobs)
+            print("\nCreating positions...")
+
+            # Helper function to create position slug
+            def create_slug(title: str, company_name: str) -> str:
+                import re
+                import hashlib
+                # For Japanese titles, create a hash-based slug
+                combined = f"{title}-{company_name}"
+                # Create a hash for Japanese characters
+                hash_obj = hashlib.md5(combined.encode('utf-8'))
+                return f"position-{hash_obj.hexdigest()[:12]}"
+
+            positions_data = [
+                # All positions will be generated automatically with Japanese content
+            ]
+
+            # Add more positions to reach approximately 100 total
+            additional_positions = []
+
+            # Create variations of existing positions for different companies and locations
+            base_positions = [
+                ("ソフトウェアエンジニア", "technology", "full_time", "mid_level", ["Python", "JavaScript", "SQL", "Git"], 6000000, 9000000),
+                ("データアナリスト", "data", "full_time", "mid_level", ["SQL", "Excel", "Python", "Tableau"], 5000000, 7000000),
+                ("マーケティングコーディネーター", "marketing", "full_time", "entry_level", ["Social Media", "Content Creation", "Email Marketing"], 3500000, 4500000),
+                ("営業担当", "sales", "full_time", "mid_level", ["Sales", "CRM", "Account Management"], 4500000, 7000000),
+                ("UIデザイナー", "design", "full_time", "mid_level", ["UI Design", "Figma", "Adobe Creative Suite"], 5000000, 7500000),
+                ("ビジネスアナリスト", "business", "full_time", "mid_level", ["Business Analysis", "Requirements Gathering", "SQL"], 5500000, 7500000),
+                ("テクニカルサポートエンジニア", "support", "full_time", "entry_level", ["Technical Support", "Troubleshooting", "Customer Service"], 4000000, 5500000),
+                ("サイバーセキュリティアナリスト", "security", "full_time", "mid_level", ["Security Analysis", "Risk Assessment", "Incident Response"], 6000000, 8500000),
+                ("システム管理者", "technology", "full_time", "mid_level", ["Linux", "Windows Server", "Network Administration"], 5000000, 7000000),
+                ("プロジェクトマネージャー", "project_management", "full_time", "senior_level", ["Project Management", "Agile", "Scrum", "PMP"], 6500000, 9000000),
+            ]
+
+            locations = [
+                ("東京都千代田区", "Japan", "千代田区"),
+                ("東京都渋谷区", "Japan", "渋谷区"),
+                ("東京都新宿区", "Japan", "新宿区"),
+                ("大阪府大阪市北区", "Japan", "大阪市北区"),
+                ("神奈川県横浜市", "Japan", "横浜市"),
+                ("愛知県名古屋市", "Japan", "名古屋市"),
+                ("福岡県福岡市中央区", "Japan", "福岡市中央区"),
+                ("リモート", "Japan", None),
+            ]
+
+            remote_types = ["on_site", "remote", "hybrid"]
+            job_types = ["full_time", "part_time", "contract"]
+
+            for i, (title, dept, job_type, exp_level, skills, min_sal, max_sal) in enumerate(base_positions * 7):  # Multiply to get more variations
+                if len(additional_positions) >= 70:  # Limit to avoid too many
+                    break
+
+                company = companies[(i % 4) + 1]  # Rotate through companies 1-4
+                location, country, city = locations[i % len(locations)]
+                remote_type = remote_types[i % len(remote_types)]
+                job_type_var = job_types[i % len(job_types)]
+
+                # Adjust salary for part-time and contract
+                if job_type_var == "part_time":
+                    min_sal = int(min_sal * 0.6)
+                    max_sal = int(max_sal * 0.6)
+                elif job_type_var == "contract":
+                    min_sal = int(min_sal * 1.2)
+                    max_sal = int(max_sal * 1.2)
+
+                position = {
+                    "title": f"{title} {i+1}" if i > 0 else title,
+                    "company_id": company.id,
+                    "department": dept,
+                    "job_type": job_type_var,
+                    "experience_level": exp_level,
+                    "remote_type": remote_type,
+                    "location": location,
+                    "country": country,
+                    "city": city,
+                    "description": f"{title}として私たちのチームに参加し、あなたの専門知識と献身で会社の成功を支援してください。",
+                    "summary": f"{title}のポジションで成長機会あり",
+                    "requirements": f"{', '.join(skills[:3])}の経験と強力な問題解決スキルが必要です。",
+                    "required_skills": '[' + ', '.join([f'"{skill}"' for skill in skills]) + ']',
+                    "preferred_skills": '[' + ', '.join([f'"{skill} Advanced"' for skill in skills[:2]]) + ']',
+                    "salary_min": min_sal,  # Already in yen
+                    "salary_max": max_sal,  # Already in yen
+                    "salary_currency": "JPY",
+                    "show_salary": True,
+                    "status": "published",
+                    "published_at": base_time - timedelta(days=(i % 10) + 1),
+                    "posted_by": users[(i % 4) + 1][0].id,
+                }
+                additional_positions.append(position)
+
+            # Combine all positions
+            all_positions = positions_data + additional_positions
+
+            # Create position records
+            created_positions = []
+            for position_data in all_positions:
+                # Create slug
+                position_data["slug"] = create_slug(position_data["title"],
+                    next(c.name for c in companies if c.id == position_data["company_id"]))
+
+                position = Position(**position_data)
+                db.add(position)
+                await db.flush()
+                created_positions.append(position)
+
+            print(f"   - Created {len(all_positions)} positions")
 
             # Commit all changes
             await db.commit()
@@ -549,11 +661,12 @@ async def create_seed_data():
             print(f"   - {len(companies)} company profiles")
             print(f"   - {len(messages_data)} messages")
             print(f"   - {len(interviews_data)} interviews")
+            print(f"   - {len(all_positions)} positions")
 
             print("\nLOGIN CREDENTIALS (All passwords: 'password'):")
             print("=" * 50)
             print("Super Admin:")
-            print("   Email: superadmin@miraiworks.com")
+            print("   Email: superadmin@miraiworks.jp")
             print("   Password: password")
 
             print("\nCompany Users:")

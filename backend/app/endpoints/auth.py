@@ -17,7 +17,7 @@ from app.dependencies import (
 from app.models.auth import PasswordResetRequest
 from app.models.company import Company
 from app.models.notification import Notification
-from app.models.role import UserRole as UserRoleModel
+from app.models.role import Role, UserRole as UserRoleModel
 from app.models.user import User
 from app.models.user_settings import UserSettings
 from app.config import settings
@@ -31,6 +31,8 @@ from app.schemas.auth import (
     PasswordResetRequestInfo,
     RefreshTokenRequest,
     RefreshTokenResponse,
+    RegisterRequest,
+    RegisterResponse,
     TwoFAVerifyRequest,
     TwoFAVerifyResponse,
     UserInfo,
@@ -159,6 +161,139 @@ async def login(
             roles=user.user_roles,
             is_active=user.is_active,
             last_login=user.last_login,
+        ),
+    )
+
+
+@router.post("/register", response_model=RegisterResponse)
+async def register(
+    register_data: RegisterRequest, db: AsyncSession = Depends(get_db)
+):
+    """Register a new candidate user."""
+    logger.info(
+        "New user registration attempt", email=register_data.email, component="auth"
+    )
+
+    # Check if user already exists
+    existing_user_result = await db.execute(
+        select(User).where(User.email == register_data.email)
+    )
+    existing_user = existing_user_result.scalar_one_or_none()
+
+    if existing_user:
+        logger.warning(
+            "Registration failed - email already exists",
+            email=register_data.email,
+            component="auth",
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email address is already registered",
+        )
+
+    # Hash password
+    hashed_password = auth_service.get_password_hash(register_data.password)
+
+    # Create new user
+    new_user = User(
+        email=register_data.email,
+        hashed_password=hashed_password,
+        first_name=register_data.first_name,
+        last_name=register_data.last_name,
+        phone=register_data.phone or "+81-90-0000-0000",  # Default Japanese phone
+        is_active=True,  # Candidates are immediately active
+        is_admin=False,  # Candidates are not admins
+        company_id=None,  # Candidates don't belong to companies
+        last_login=datetime.utcnow(),
+    )
+
+    db.add(new_user)
+    await db.commit()
+    await db.refresh(new_user)
+
+    # Assign default "candidate" role
+    candidate_role_result = await db.execute(
+        select(Role).where(Role.name == "candidate")
+    )
+    candidate_role = candidate_role_result.scalar_one_or_none()
+
+    if candidate_role:
+        user_role = UserRoleModel(
+            user_id=new_user.id,
+            role_id=candidate_role.id
+        )
+        db.add(user_role)
+
+    # Create default user settings
+    default_settings = UserSettings(
+        user_id=new_user.id,
+        job_title="Job Seeker",
+        bio="Welcome to MiraiWorks! I'm looking for exciting career opportunities.",
+        email_notifications=True,
+        push_notifications=True,
+        sms_notifications=False,
+        interview_reminders=True,
+        application_updates=True,
+        message_notifications=True,
+        language="en",
+        timezone="Asia/Tokyo",
+        date_format="YYYY/MM/DD",
+    )
+    db.add(default_settings)
+    await db.commit()
+
+    # Refresh user to get updated relationships
+    await db.refresh(new_user)
+
+    logger.info(
+        "User registered successfully",
+        user_id=new_user.id,
+        email=new_user.email,
+        component="auth",
+    )
+
+    # Send registration completion email
+    try:
+        await email_service.send_registration_completion_email(
+            email=new_user.email,
+            first_name=new_user.first_name
+        )
+        logger.info(
+            "Registration completion email sent successfully",
+            user_id=new_user.id,
+            email=new_user.email,
+            component="email",
+        )
+    except Exception as e:
+        logger.error(
+            "Failed to send registration completion email",
+            user_id=new_user.id,
+            email=new_user.email,
+            error=str(e),
+            component="email",
+        )
+        # Don't fail registration if email fails
+
+    # Generate authentication tokens for automatic login
+    tokens = await auth_service.create_login_tokens(db, new_user)
+
+    return RegisterResponse(
+        message="Account created successfully",
+        success=True,
+        access_token=tokens["access_token"],
+        refresh_token=tokens["refresh_token"],
+        expires_in=tokens["expires_in"],
+        user=UserInfo(
+            id=new_user.id,
+            email=new_user.email,
+            first_name=new_user.first_name,
+            last_name=new_user.last_name,
+            full_name=new_user.full_name,
+            company_id=new_user.company_id,
+            company=new_user.company,
+            roles=new_user.user_roles,
+            is_active=new_user.is_active,
+            last_login=new_user.last_login,
         ),
     )
 

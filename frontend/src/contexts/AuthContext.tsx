@@ -249,7 +249,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       dispatch({ type: 'AUTH_SUCCESS', payload: response.data! });
     } catch (error: unknown) {
-      const errorMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Registration failed';
+      console.error('Registration error:', error);
+      let errorMessage = 'Registration failed';
+
+      // Handle different error response formats
+      if (error && typeof error === 'object') {
+        const err = error as any;
+        if (err.response?.data?.detail) {
+          errorMessage = err.response.data.detail;
+        } else if (err.response?.data?.message) {
+          errorMessage = err.response.data.message;
+        } else if (err.message) {
+          errorMessage = err.message;
+        }
+      }
+
       dispatch({ type: 'AUTH_ERROR', payload: errorMessage });
       throw error;
     }

@@ -45,7 +45,7 @@ class User(Base):
     # Relationships
     company = relationship("Company", back_populates="users", lazy="noload")
     user_roles = relationship(
-        "UserRole", back_populates="user", cascade="all, delete-orphan"
+        "UserRole", back_populates="user", cascade="all, delete-orphan", lazy="noload"
     )
     refresh_tokens = relationship(
         "RefreshToken", back_populates="user", cascade="all, delete-orphan"

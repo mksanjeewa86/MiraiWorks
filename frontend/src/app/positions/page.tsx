@@ -306,11 +306,19 @@ function PositionsPageContent() {
     return `¥${(min / 1000000).toFixed(1)}M - ¥${(max / 1000000).toFixed(1)}M`;
   };
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+    try {
+      if (!dateString) return "Recently";
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "Recently";
+
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch (error) {
+      return "Recently";
+    }
   };
   const handleSort = (field: typeof sortBy) => {
     if (sortBy === field) {

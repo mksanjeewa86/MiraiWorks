@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Eye, EyeOff, Loader2, User, Building, Mail, Lock, Phone } from 'lucide-react';
+import { Eye, EyeOff, Loader2, User, Mail, Lock, Phone } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -12,20 +12,28 @@ import Brand from '@/components/common/Brand';
 
 const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
+      'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'),
+  confirmPassword: z.string(),
   first_name: z.string().min(1, 'First name is required'),
   last_name: z.string().min(1, 'Last name is required'),
   phone: z.string().optional(),
-  company_name: z.string().min(1, 'Company name is required'),
-  company_domain: z.string().min(1, 'Company domain is required'),
-  industry: z.string().optional(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const { register: registerUser, isAuthenticated, error, clearError } = useAuth();
   const router = useRouter();
 
@@ -43,13 +51,43 @@ export default function RegisterPage() {
     }
   }, [isAuthenticated, router]);
 
+  // Password strength calculation
+  const getPasswordStrength = (password: string): string => {
+    let score = 0;
+    if (password.length >= 8) score++;
+    if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score++;
+    if (/\d/.test(password)) score++;
+    if (/[@$!%*?&]/.test(password)) score++;
+
+    if (score <= 1) return 'weak';
+    if (score <= 2) return 'medium';
+    if (score <= 3) return 'strong';
+    return 'very strong';
+  };
+
+  // Check if passwords match
+  const getPasswordMatchStatus = (): 'none' | 'matching' | 'not-matching' => {
+    if (!confirmPassword) return 'none';
+    return password === confirmPassword ? 'matching' : 'not-matching';
+  };
+
   const onSubmit = async (data: RegisterFormData) => {
     setLoading(true);
     clearError();
-    
+    setSuccessMessage('');
+
     try {
-      await registerUser(data);
-      router.push('/dashboard');
+      // Remove confirmPassword from data before sending to API
+      const { confirmPassword, ...submitData } = data;
+      await registerUser(submitData);
+
+      // Show success message
+      setSuccessMessage('Account created successfully! Redirecting...');
+
+      // Redirect to jobs page after a short delay
+      setTimeout(() => {
+        router.push('/jobs');
+      }, 2000);
     } catch {
       // Error is handled by AuthContext
     } finally {
@@ -74,6 +112,13 @@ export default function RegisterPage() {
         {/* Register Form */}
         <div className="card p-8">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {/* Success Message */}
+            {successMessage && (
+              <div className="p-4 rounded-2xl bg-green-50 border border-green-200">
+                <p className="text-sm text-green-600">{successMessage}</p>
+              </div>
+            )}
+
             {/* Error Message */}
             {error && (
               <div className="p-4 rounded-2xl bg-red-50 border border-red-200">
@@ -88,13 +133,14 @@ export default function RegisterPage() {
                   First Name
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-500 h-4 w-4" />
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
                   <input
                     id="first_name"
                     type="text"
                     {...register('first_name')}
-                    className="input w-full pl-9"
-                    placeholder="John"
+                    className="input w-full"
+                    style={{ paddingLeft: '3rem', paddingRight: '0.75rem' }}
+                    placeholder="First name"
                   />
                 </div>
                 {errors.first_name && (
@@ -107,13 +153,14 @@ export default function RegisterPage() {
                   Last Name
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-500 h-4 w-4" />
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
                   <input
                     id="last_name"
                     type="text"
                     {...register('last_name')}
-                    className="input w-full pl-9"
-                    placeholder="Doe"
+                    className="input w-full"
+                    style={{ paddingLeft: '3rem', paddingRight: '0.75rem' }}
+                    placeholder="Last name"
                   />
                 </div>
                 {errors.last_name && (
@@ -128,13 +175,14 @@ export default function RegisterPage() {
                 Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-500 h-4 w-4" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
                 <input
                   id="email"
                   type="email"
                   {...register('email')}
-                  className="input w-full pl-9"
-                  placeholder="john@company.com"
+                  className="input w-full"
+                  style={{ paddingLeft: '3rem', paddingRight: '0.75rem' }}
+                  placeholder="your.email@example.com"
                   autoComplete="email"
                 />
               </div>
@@ -149,29 +197,137 @@ export default function RegisterPage() {
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-500 h-4 w-4" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
-                  {...register('password')}
-                  className="input w-full pl-9 pr-12"
+                  {...register('password', {
+                    onChange: (e) => setPassword(e.target.value)
+                  })}
+                  className="input w-full"
+                  style={{ paddingLeft: '3rem', paddingRight: '3rem' }}
                   placeholder="Create a secure password"
                   autoComplete="new-password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 z-10"
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4" style={{ color: 'var(--text-muted)' }} />
+                    <EyeOff className="h-4 w-4 text-gray-400" />
                   ) : (
-                    <Eye className="h-4 w-4" style={{ color: 'var(--text-muted)' }} />
+                    <Eye className="h-4 w-4 text-gray-400" />
                   )}
                 </button>
               </div>
+
+              {/* Password Strength Indicator */}
+              {password && (
+                <div className="mt-2">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs font-medium text-gray-600">Password strength:</span>
+                    <span className={`text-xs font-medium ${
+                      getPasswordStrength(password) === 'weak' ? 'text-red-600' :
+                      getPasswordStrength(password) === 'medium' ? 'text-yellow-600' :
+                      getPasswordStrength(password) === 'strong' ? 'text-green-600' : 'text-gray-400'
+                    }`}>
+                      {getPasswordStrength(password)}
+                    </span>
+                  </div>
+                  <div className="flex gap-1">
+                    <div className={`h-1 w-full rounded ${
+                      password.length >= 8 ? 'bg-green-500' : 'bg-gray-200'
+                    }`}></div>
+                    <div className={`h-1 w-full rounded ${
+                      /[A-Z]/.test(password) && /[a-z]/.test(password) ? 'bg-green-500' : 'bg-gray-200'
+                    }`}></div>
+                    <div className={`h-1 w-full rounded ${
+                      /\d/.test(password) ? 'bg-green-500' : 'bg-gray-200'
+                    }`}></div>
+                    <div className={`h-1 w-full rounded ${
+                      /[@$!%*?&]/.test(password) ? 'bg-green-500' : 'bg-gray-200'
+                    }`}></div>
+                  </div>
+                  <div className="mt-1 text-xs text-gray-500">
+                    <ul className="space-y-1">
+                      <li className={password.length >= 8 ? 'text-green-600' : 'text-gray-500'}>
+                        ✓ At least 8 characters
+                      </li>
+                      <li className={/[A-Z]/.test(password) && /[a-z]/.test(password) ? 'text-green-600' : 'text-gray-500'}>
+                        ✓ Upper and lowercase letters
+                      </li>
+                      <li className={/\d/.test(password) ? 'text-green-600' : 'text-gray-500'}>
+                        ✓ At least one number
+                      </li>
+                      <li className={/[@$!%*?&]/.test(password) ? 'text-green-600' : 'text-gray-500'}>
+                        ✓ At least one special character (@$!%*?&)
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              )}
+
               {errors.password && (
                 <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+              )}
+            </div>
+
+            {/* Confirm Password */}
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+                Confirm Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
+                <input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  {...register('confirmPassword', {
+                    onChange: (e) => setConfirmPassword(e.target.value)
+                  })}
+                  className="input w-full"
+                  style={{ paddingLeft: '3rem', paddingRight: '3rem' }}
+                  placeholder="Confirm your password"
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 z-10"
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4 text-gray-400" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-gray-400" />
+                  )}
+                </button>
+              </div>
+
+              {/* Password Match Indicator */}
+              {confirmPassword && (
+                <div className="mt-2">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs font-medium text-gray-600">Password match:</span>
+                    <span className={`text-xs font-medium ${
+                      getPasswordMatchStatus() === 'matching' ? 'text-green-600' :
+                      getPasswordMatchStatus() === 'not-matching' ? 'text-red-600' : 'text-gray-400'
+                    }`}>
+                      {getPasswordMatchStatus() === 'matching' && '✓ Passwords match'}
+                      {getPasswordMatchStatus() === 'not-matching' && '✗ Passwords do not match'}
+                    </span>
+                  </div>
+                  <div className="flex gap-1">
+                    <div className={`h-1 w-full rounded ${
+                      getPasswordMatchStatus() === 'matching' ? 'bg-green-500' :
+                      getPasswordMatchStatus() === 'not-matching' ? 'bg-red-500' : 'bg-gray-200'
+                    }`}></div>
+                  </div>
+                </div>
+              )}
+
+              {errors.confirmPassword && (
+                <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>
               )}
             </div>
 
@@ -181,72 +337,19 @@ export default function RegisterPage() {
                 Phone Number (Optional)
               </label>
               <div className="relative">
-                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-500 h-4 w-4" />
+                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
                 <input
                   id="phone"
                   type="tel"
                   {...register('phone')}
-                  className="input w-full pl-9"
-                  placeholder="+1 (555) 123-4567"
+                  className="input w-full"
+                  style={{ paddingLeft: '3rem', paddingRight: '0.75rem' }}
+                  placeholder="+81 (90) 1234-5678"
                   autoComplete="tel"
                 />
               </div>
             </div>
 
-            {/* Company Information */}
-            <div className="border-t pt-6">
-              <h3 className="text-lg font-medium mb-4" style={{ color: 'var(--text-primary)' }}>
-                Company Information
-              </h3>
-              
-              <div>
-                <label htmlFor="company_name" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
-                  Company Name
-                </label>
-                <div className="relative">
-                  <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-500 h-4 w-4" />
-                  <input
-                    id="company_name"
-                    type="text"
-                    {...register('company_name')}
-                    className="input w-full pl-9"
-                    placeholder="Acme Corporation"
-                  />
-                </div>
-                {errors.company_name && (
-                  <p className="mt-1 text-sm text-red-600">{errors.company_name.message}</p>
-                )}
-              </div>
-
-              <div className="mt-4">
-                <label htmlFor="company_domain" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
-                  Company Domain
-                </label>
-                <input
-                  id="company_domain"
-                  type="text"
-                  {...register('company_domain')}
-                  className="input w-full"
-                  placeholder="acme.com"
-                />
-                {errors.company_domain && (
-                  <p className="mt-1 text-sm text-red-600">{errors.company_domain.message}</p>
-                )}
-              </div>
-
-              <div className="mt-4">
-                <label htmlFor="industry" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
-                  Industry (Optional)
-                </label>
-                <input
-                  id="industry"
-                  type="text"
-                  {...register('industry')}
-                  className="input w-full"
-                  placeholder="Technology"
-                />
-              </div>
-            </div>
 
             {/* Submit Button */}
             <button
