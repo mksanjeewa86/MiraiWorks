@@ -3,19 +3,19 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.crud.direct_messages import direct_message
+from app.crud.messages import message
 from app.database import get_db
 from app.dependencies import get_current_active_user
 from app.models.user import User
-from app.schemas.direct_message import (
+from app.schemas.message import (
     ConversationListResponse,
-    DirectMessageCreate,
-    DirectMessageInfo,
+    MessageCreate,
+    MessageInfo,
     MessageListResponse,
     MessageReadRequest,
     MessageSearchRequest,
 )
-from app.services.direct_message_service import direct_message_service
+from app.services.message_service import message_service
 from app.services.notification_service import notification_service
 from app.utils.logging import get_logger
 
@@ -28,7 +28,7 @@ async def validate_messaging_permission(
 ):
     """Validate that sender can message recipient based on role restrictions."""
     # Get both users with their roles
-    users = await direct_message.get_users_with_roles(db, [sender_id, recipient_id])
+    users = await message.get_users_with_roles(db, [sender_id, recipient_id])
     if len(users) != 2:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -73,7 +73,7 @@ async def get_conversations(
     db: AsyncSession = Depends(get_db),
 ):
     """Get list of users the current user has exchanged messages with."""
-    conversations = await direct_message_service.get_conversations(
+    conversations = await message_service.get_conversations(
         db, current_user.id, search
     )
 
@@ -91,14 +91,14 @@ async def get_messages_with_user(
     db: AsyncSession = Depends(get_db),
 ):
     """Get messages between current user and another user."""
-    messages = await direct_message_service.get_messages_with_user(
+    messages = await message_service.get_messages_with_user(
         db, current_user.id, other_user_id, limit, before_id
     )
 
     # Convert to response format
     message_infos = []
     for msg in messages:
-        message_info = DirectMessageInfo(
+        message_info = MessageInfo(
             id=msg.id,
             sender_id=msg.sender_id,
             recipient_id=msg.recipient_id,
@@ -126,9 +126,9 @@ async def get_messages_with_user(
     )
 
 
-@router.post("/send", response_model=DirectMessageInfo)
+@router.post("/send", response_model=MessageInfo)
 async def send_message(
-    message_data: DirectMessageCreate,
+    message_data: MessageCreate,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -136,36 +136,36 @@ async def send_message(
     # Validate messaging permissions based on roles
     await validate_messaging_permission(db, current_user.id, message_data.recipient_id)
 
-    message = await direct_message_service.send_message(
+    new_message = await message_service.send_message(
         db, current_user.id, message_data
     )
 
     # Load with relationships for response
-    message = await direct_message.get_message_with_relationships(db, message.id)
+    message_with_relations = await message.get_message_with_relationships(db, new_message.id)
 
     # Handle notifications (email and in-app)
     await notification_service.handle_new_message_notifications(
-        db, current_user.id, message.recipient_id, message
+        db, current_user.id, message_with_relations.recipient_id, message_with_relations
     )
 
-    return DirectMessageInfo(
-        id=message.id,
-        sender_id=message.sender_id,
-        recipient_id=message.recipient_id,
-        sender_name=message.sender.full_name,
-        recipient_name=message.recipient.full_name,
-        sender_email=message.sender.email,
-        recipient_email=message.recipient.email,
-        content=message.content,
-        type=message.type,
-        is_read=message.is_read,
-        reply_to_id=message.reply_to_id,
-        file_url=message.file_url,
-        file_name=message.file_name,
-        file_size=message.file_size,
-        file_type=message.file_type,
-        created_at=message.created_at,
-        read_at=message.read_at,
+    return MessageInfo(
+        id=message_with_relations.id,
+        sender_id=message_with_relations.sender_id,
+        recipient_id=message_with_relations.recipient_id,
+        sender_name=message_with_relations.sender.full_name,
+        recipient_name=message_with_relations.recipient.full_name,
+        sender_email=message_with_relations.sender.email,
+        recipient_email=message_with_relations.recipient.email,
+        content=message_with_relations.content,
+        type=message_with_relations.type,
+        is_read=message_with_relations.is_read,
+        reply_to_id=message_with_relations.reply_to_id,
+        file_url=message_with_relations.file_url,
+        file_name=message_with_relations.file_name,
+        file_size=message_with_relations.file_size,
+        file_type=message_with_relations.file_type,
+        created_at=message_with_relations.created_at,
+        read_at=message_with_relations.read_at,
     )
 
 
@@ -176,14 +176,14 @@ async def search_messages(
     db: AsyncSession = Depends(get_db),
 ):
     """Search messages by content and sender name."""
-    messages, total = await direct_message.search_messages_with_count(
+    messages, total = await message.search_messages_with_count(
         db, current_user.id, search_request
     )
 
     # Convert to response format
     message_infos = []
     for msg in messages:
-        message_info = DirectMessageInfo(
+        message_info = MessageInfo(
             id=msg.id,
             sender_id=msg.sender_id,
             recipient_id=msg.recipient_id,
@@ -218,7 +218,7 @@ async def mark_messages_as_read(
     db: AsyncSession = Depends(get_db),
 ):
     """Mark specific messages as read."""
-    count = await direct_message_service.mark_messages_as_read(
+    count = await message_service.mark_messages_as_read(
         db, current_user.id, read_request.message_ids
     )
 
@@ -232,7 +232,7 @@ async def mark_conversation_as_read(
     db: AsyncSession = Depends(get_db),
 ):
     """Mark all messages from another user as read."""
-    count = await direct_message_service.mark_conversation_as_read(
+    count = await message_service.mark_conversation_as_read(
         db, current_user.id, other_user_id
     )
 
@@ -251,7 +251,7 @@ async def get_message_participants(
     current_user_roles = [user_role.role.name for user_role in current_user.user_roles]
 
     # Get users using CRUD method
-    users = await direct_message.get_message_participants(
+    users = await message.get_message_participants(
         db, current_user.id, current_user_roles, query, limit
     )
 

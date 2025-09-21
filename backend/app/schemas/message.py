@@ -1,201 +1,72 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, field_validator
-
-from app.utils.constants import MessageType
+from pydantic import BaseModel, ConfigDict, Field
 
 
-class ConversationParticipant(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+class MessageBase(BaseModel):
+    content: str = Field(
+        ..., min_length=1, description="Message content cannot be empty"
+    )
+    type: str = "text"
+    file_url: Optional[str] = None
+    file_name: Optional[str] = None
+    file_size: Optional[int] = None
+    file_type: Optional[str] = None
 
+
+class MessageCreate(MessageBase):
+    recipient_id: int
+    reply_to_id: Optional[int] = None
+
+
+class MessageInfo(MessageBase):
     id: int
-    email: str
-    full_name: str
-    company_name: Optional[str]
-    is_online: bool = False
-
-
-class AttachmentInfo(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    original_filename: str
-    mime_type: str
-    file_size: int
-    file_size_mb: float
-    is_image: bool
-    is_document: bool
-    is_available: bool
-    virus_status: str
-    download_url: Optional[str] = None  # Presigned URL for download
-    created_at: datetime
-
-
-class MessageInfo(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    type: str
-    content: Optional[str]
-    is_edited: bool = False
-    edited_content: Optional[str] = None
     sender_id: int
+    recipient_id: int
     sender_name: str
+    recipient_name: str
     sender_email: str
+    recipient_email: str
+    is_read: bool
     reply_to_id: Optional[int] = None
-    reply_to: Optional["MessageInfo"] = None
-    attachments: list[AttachmentInfo] = []
-    is_read: bool = False
     created_at: datetime
-    updated_at: datetime
+    read_at: Optional[datetime] = None
 
-
-class ConversationInfo(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: int
-    title: Optional[str]
-    type: str
-    is_active: bool
-    participants: list[ConversationParticipant]
+
+class ConversationSummary(BaseModel):
+    """Summary of messages between two users."""
+
+    other_user_id: int
+    other_user_name: str
+    other_user_email: str
+    other_user_company: Optional[str] = None
     last_message: Optional[MessageInfo] = None
-    unread_count: int = 0
-    created_at: datetime
-    updated_at: datetime
+    unread_count: int
+    last_activity: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 
-class ConversationCreate(BaseModel):
-    participant_ids: list[int]
-    title: Optional[str] = None
-
-    @field_validator("participant_ids")
-    @classmethod
-    def validate_participants(cls, v):
-        if not v:
-            raise ValueError("At least one participant is required")
-        if len(v) > 50:  # Reasonable limit for group conversations
-            raise ValueError("Too many participants")
-        return v
-
-
-class MessageCreate(BaseModel):
-    content: str
-    type: MessageType = MessageType.TEXT
-    reply_to_id: Optional[int] = None
-
-    @field_validator("content")
-    @classmethod
-    def validate_content(cls, v):
-        if not v or not v.strip():
-            raise ValueError("Message content cannot be empty")
-        if len(v) > 10000:  # 10KB limit
-            raise ValueError("Message content too long")
-        return v.strip()
-
-
-class MessageUpdate(BaseModel):
-    content: str
-
-    @field_validator("content")
-    @classmethod
-    def validate_content(cls, v):
-        if not v or not v.strip():
-            raise ValueError("Message content cannot be empty")
-        if len(v) > 10000:
-            raise ValueError("Message content too long")
-        return v.strip()
-
-
-class FileUploadRequest(BaseModel):
-    filename: str
-    mime_type: str
-    file_size: int
-
-    @field_validator("filename")
-    @classmethod
-    def validate_filename(cls, v):
-        if not v or not v.strip():
-            raise ValueError("Filename is required")
-        # Sanitize filename
-        safe_chars = set(
-            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_ "
-        )
-        if not all(c in safe_chars for c in v):
-            raise ValueError("Filename contains invalid characters")
-        return v.strip()
-
-    @field_validator("file_size")
-    @classmethod
-    def validate_file_size(cls, v):
-        max_size = 100 * 1024 * 1024  # 100MB
-        if v > max_size:
-            raise ValueError(f"File size exceeds limit of {max_size // (1024*1024)}MB")
-        if v <= 0:
-            raise ValueError("File size must be positive")
-        return v
-
-
-class FileUploadResponse(BaseModel):
-    upload_url: str
-    s3_key: str
-    expires_at: str
-    attachment_id: int
-
-
-class ConversationListRequest(BaseModel):
-    search: Optional[str] = None
-    limit: int = 20
-    offset: int = 0
-
-    @field_validator("limit")
-    @classmethod
-    def validate_limit(cls, v):
-        if v > 100:
-            raise ValueError("Limit cannot exceed 100")
-        return v
-
-
-class MessageListRequest(BaseModel):
+class MessageSearchRequest(BaseModel):
+    query: Optional[str] = None  # Search in message content and sender names
+    with_user_id: Optional[int] = None  # Filter messages with specific user
     limit: int = 50
-    before_id: Optional[int] = None
-
-    @field_validator("limit")
-    @classmethod
-    def validate_limit(cls, v):
-        if v > 100:
-            raise ValueError("Limit cannot exceed 100")
-        return v
-
-
-class MessageReadRequest(BaseModel):
-    up_to_message_id: int
-
-
-class ConversationListResponse(BaseModel):
-    conversations: list[ConversationInfo]
-    total: int
-    has_more: bool
+    offset: int = 0
 
 
 class MessageListResponse(BaseModel):
     messages: list[MessageInfo]
+    total: int
     has_more: bool
-    conversation_id: int
 
 
-class TypingIndicator(BaseModel):
-    conversation_id: int
-    is_typing: bool
+class ConversationListResponse(BaseModel):
+    conversations: list[ConversationSummary]
+    total: int
 
 
-class AttachmentScanComplete(BaseModel):
-    attachment_id: int
-    virus_status: str
-    is_available: bool
-    scan_result: Optional[str] = None
-
-
-# Update forward references
-MessageInfo.model_rebuild()
-ConversationInfo.model_rebuild()
+class MessageReadRequest(BaseModel):
+    message_ids: list[int]

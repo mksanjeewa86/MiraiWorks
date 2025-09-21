@@ -3,13 +3,13 @@ from pathlib import Path, PurePosixPath
 from typing import Optional
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.database import get_db
 from app.dependencies import get_current_active_user
-from app.models.direct_message import DirectMessage
+from app.models.message import Message
 from app.models.role import UserRole
 from app.models.user import User
 from app.utils.logging import get_logger
@@ -150,25 +150,25 @@ async def check_file_access_permission(
         file_conditions = []
         for pattern in patterns_to_try:
             # Exact match
-            file_conditions.append(DirectMessage.file_url == pattern)
+            file_conditions.append(Message.file_url == pattern)
             # LIKE match (contains the pattern)
-            file_conditions.append(DirectMessage.file_url.like(f"%{pattern}%"))
+            file_conditions.append(Message.file_url.like(f"%{pattern}%"))
 
             # URL decoded version if different
             try:
                 decoded = urllib.parse.unquote(pattern)
                 if decoded != pattern:
-                    file_conditions.append(DirectMessage.file_url.like(f"%{decoded}%"))
+                    file_conditions.append(Message.file_url.like(f"%{decoded}%"))
             except:
                 pass
 
         # Check if this file is attached to any message where user is sender or recipient
         message_result = await db.execute(
-            select(DirectMessage).where(
+            select(Message).where(
                 or_(*file_conditions)
                 & (
-                    (DirectMessage.sender_id == user_id)
-                    | (DirectMessage.recipient_id == user_id)
+                    (Message.sender_id == user_id)
+                    | (Message.recipient_id == user_id)
                 )
             )
         )
@@ -441,4 +441,73 @@ async def delete_file(
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
         detail="File not found",
+    )
+
+
+@router.get("/message/{user_id}/{filename}")
+async def serve_message_file(
+    user_id: int,
+    filename: str,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Serve message attachment files with proper security checks."""
+    from fastapi.responses import FileResponse
+    from pathlib import Path
+
+    # Security check - user can only access their own files or files in messages they're part of
+    file_path = f"message_files/{user_id}/{filename}"
+
+    # Check if current user can access this file
+    if current_user.id != user_id:
+        # Check if the file is part of a message where current user is sender or recipient
+        message_result = await db.execute(
+            select(Message).where(
+                Message.file_name == filename,
+                or_(
+                    Message.sender_id == current_user.id,
+                    Message.recipient_id == current_user.id
+                )
+            )
+        )
+        message = message_result.scalar_one_or_none()
+
+        if not message:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to access this file"
+            )
+
+    # Construct file path
+    upload_base = Path("uploads")
+    full_file_path = upload_base / file_path
+
+    # Ensure file exists
+    if not full_file_path.exists():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="File not found"
+        )
+
+    # Security check - ensure path doesn't escape upload directory
+    try:
+        full_file_path.resolve().relative_to(upload_base.resolve())
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid file path"
+        )
+
+    # Determine media type
+    import mimetypes
+    media_type, _ = mimetypes.guess_type(str(full_file_path))
+    if not media_type:
+        media_type = "application/octet-stream"
+
+    # Return file
+    return FileResponse(
+        path=str(full_file_path),
+        filename=filename,
+        media_type=media_type,
+        headers={"Content-Disposition": f"inline; filename={filename}"}
     )

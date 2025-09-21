@@ -6,10 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.crud.base import CRUDBase
-from app.models.direct_message import DirectMessage
+from app.models.message import Message
 from app.models.role import Role, UserRole
 from app.models.user import User
-from app.schemas.direct_message import MessageSearchRequest
+from app.schemas.message import MessageSearchRequest
 
 
 async def get_messages_between_users(
@@ -18,26 +18,26 @@ async def get_messages_between_users(
     user2_id: int,
     limit: int = 50,
     offset: int = 0,
-) -> list[DirectMessage]:
+) -> list[Message]:
     """Get messages between two users."""
     query = (
-        select(DirectMessage)
+        select(Message)
         .where(
             or_(
                 and_(
-                    DirectMessage.sender_id == user1_id,
-                    DirectMessage.receiver_id == user2_id,
+                    Message.sender_id == user1_id,
+                    Message.recipient_id == user2_id,
                 ),
                 and_(
-                    DirectMessage.sender_id == user2_id,
-                    DirectMessage.receiver_id == user1_id,
+                    Message.sender_id == user2_id,
+                    Message.recipient_id == user1_id,
                 ),
             )
         )
         .options(
-            selectinload(DirectMessage.sender), selectinload(DirectMessage.receiver)
+            selectinload(Message.sender), selectinload(Message.recipient)
         )
-        .order_by(desc(DirectMessage.created_at))
+        .order_by(desc(Message.created_at))
         .offset(offset)
         .limit(limit)
     )
@@ -49,14 +49,14 @@ async def get_messages_between_users(
 async def create_message(
     db: AsyncSession,
     sender_id: int,
-    receiver_id: int,
+    recipient_id: int,
     content: str,
     message_type: str = "text",
-) -> DirectMessage:
+) -> Message:
     """Create a new direct message."""
-    message = DirectMessage(
+    message = Message(
         sender_id=sender_id,
-        receiver_id=receiver_id,
+        recipient_id=recipient_id,
         content=content,
         type=message_type,
     )
@@ -68,13 +68,13 @@ async def create_message(
 
 async def get_message_by_id(
     db: AsyncSession, message_id: int
-) -> Optional[DirectMessage]:
+) -> Optional[Message]:
     """Get message by ID."""
     result = await db.execute(
-        select(DirectMessage)
-        .where(DirectMessage.id == message_id)
+        select(Message)
+        .where(Message.id == message_id)
         .options(
-            selectinload(DirectMessage.sender), selectinload(DirectMessage.receiver)
+            selectinload(Message.sender), selectinload(Message.recipient)
         )
     )
     return result.scalar_one_or_none()
@@ -83,16 +83,16 @@ async def get_message_by_id(
 async def mark_messages_as_read(
     db: AsyncSession,
     sender_id: int,
-    receiver_id: int,
+    recipient_id: int,
 ) -> int:
     """Mark all messages from sender to receiver as read."""
     query = (
-        update(DirectMessage)
+        update(Message)
         .where(
             and_(
-                DirectMessage.sender_id == sender_id,
-                DirectMessage.receiver_id == receiver_id,
-                DirectMessage.read_at.is_(None),
+                Message.sender_id == sender_id,
+                Message.recipient_id == recipient_id,
+                Message.read_at.is_(None),
             )
         )
         .values(read_at=datetime.utcnow())
@@ -111,22 +111,22 @@ async def get_conversation_partners(
     # Subquery to get the latest message for each conversation
     latest_message_subquery = (
         select(
-            func.greatest(DirectMessage.sender_id, DirectMessage.receiver_id).label(
+            func.greatest(Message.sender_id, Message.recipient_id).label(
                 "user1"
             ),
-            func.least(DirectMessage.sender_id, DirectMessage.receiver_id).label(
+            func.least(Message.sender_id, Message.recipient_id).label(
                 "user2"
             ),
-            func.max(DirectMessage.created_at).label("latest_message_time"),
+            func.max(Message.created_at).label("latest_message_time"),
         )
         .where(
             or_(
-                DirectMessage.sender_id == user_id, DirectMessage.receiver_id == user_id
+                Message.sender_id == user_id, Message.recipient_id == user_id
             )
         )
         .group_by(
-            func.greatest(DirectMessage.sender_id, DirectMessage.receiver_id),
-            func.least(DirectMessage.sender_id, DirectMessage.receiver_id),
+            func.greatest(Message.sender_id, Message.recipient_id),
+            func.least(Message.sender_id, Message.recipient_id),
         )
         .subquery()
     )
@@ -138,14 +138,14 @@ async def get_conversation_partners(
             User.first_name,
             User.last_name,
             User.email,
-            DirectMessage.content.label("last_message"),
-            DirectMessage.created_at.label("last_message_time"),
-            DirectMessage.sender_id.label("last_sender_id"),
+            Message.content.label("last_message"),
+            Message.created_at.label("last_message_time"),
+            Message.sender_id.label("last_sender_id"),
             func.count(
                 case(
                     (
-                        DirectMessage.read_at.is_(None)
-                        & (DirectMessage.receiver_id == user_id),
+                        Message.read_at.is_(None)
+                        & (Message.recipient_id == user_id),
                         1,
                     )
                 )
@@ -153,19 +153,19 @@ async def get_conversation_partners(
         )
         .select_from(latest_message_subquery)
         .join(
-            DirectMessage,
+            Message,
             and_(
                 or_(
                     and_(
-                        DirectMessage.sender_id == latest_message_subquery.c.user1,
-                        DirectMessage.receiver_id == latest_message_subquery.c.user2,
+                        Message.sender_id == latest_message_subquery.c.user1,
+                        Message.recipient_id == latest_message_subquery.c.user2,
                     ),
                     and_(
-                        DirectMessage.sender_id == latest_message_subquery.c.user2,
-                        DirectMessage.receiver_id == latest_message_subquery.c.user1,
+                        Message.sender_id == latest_message_subquery.c.user2,
+                        Message.recipient_id == latest_message_subquery.c.user1,
                     ),
                 ),
-                DirectMessage.created_at
+                Message.created_at
                 == latest_message_subquery.c.latest_message_time,
             ),
         )
@@ -185,11 +185,11 @@ async def get_conversation_partners(
             User.first_name,
             User.last_name,
             User.email,
-            DirectMessage.content,
-            DirectMessage.created_at,
-            DirectMessage.sender_id,
+            Message.content,
+            Message.created_at,
+            Message.sender_id,
         )
-        .order_by(desc(DirectMessage.created_at))
+        .order_by(desc(Message.created_at))
     )
 
     result = await db.execute(query)
@@ -198,10 +198,10 @@ async def get_conversation_partners(
 
 async def get_unread_message_count(db: AsyncSession, user_id: int) -> int:
     """Get total unread message count for user."""
-    query = select(func.count(DirectMessage.id)).where(
+    query = select(func.count(Message.id)).where(
         and_(
-            DirectMessage.receiver_id == user_id,
-            DirectMessage.read_at.is_(None),
+            Message.recipient_id == user_id,
+            Message.read_at.is_(None),
         )
     )
 
@@ -209,8 +209,8 @@ async def get_unread_message_count(db: AsyncSession, user_id: int) -> int:
     return result.scalar() or 0
 
 
-class CRUDDirectMessage(CRUDBase[DirectMessage, dict, dict]):
-    """Direct message CRUD operations."""
+class CRUDMessage(CRUDBase[Message, dict, dict]):
+    """Message CRUD operations."""
 
     async def get_users_with_roles(
         self, db: AsyncSession, user_ids: List[int]
@@ -227,74 +227,74 @@ class CRUDDirectMessage(CRUDBase[DirectMessage, dict, dict]):
 
     async def get_message_with_relationships(
         self, db: AsyncSession, message_id: int
-    ) -> Optional[DirectMessage]:
+    ) -> Optional[Message]:
         """Get message with sender and recipient relationships."""
         result = await db.execute(
-            select(DirectMessage)
+            select(Message)
             .options(
-                selectinload(DirectMessage.sender),
-                selectinload(DirectMessage.recipient),
+                selectinload(Message.sender),
+                selectinload(Message.recipient),
             )
-            .where(DirectMessage.id == message_id)
+            .where(Message.id == message_id)
         )
         return result.scalar_one_or_none()
 
     async def search_messages_with_count(
         self, db: AsyncSession, user_id: int, search_request: MessageSearchRequest
-    ) -> tuple[List[DirectMessage], int]:
+    ) -> tuple[List[Message], int]:
         """Search messages and get total count."""
         # Base query for messages
         base_conditions = or_(
             and_(
-                DirectMessage.sender_id == user_id,
-                DirectMessage.is_deleted_by_sender == False,
+                Message.sender_id == user_id,
+                Message.is_deleted_by_sender == False,
             ),
             and_(
-                DirectMessage.recipient_id == user_id,
-                DirectMessage.is_deleted_by_recipient == False,
+                Message.recipient_id == user_id,
+                Message.is_deleted_by_recipient == False,
             ),
         )
 
         # Messages query
         messages_query = (
-            select(DirectMessage)
+            select(Message)
             .options(
-                selectinload(DirectMessage.sender),
-                selectinload(DirectMessage.recipient),
+                selectinload(Message.sender),
+                selectinload(Message.recipient),
             )
             .where(base_conditions)
         )
 
         # Count query
-        count_query = select(func.count(DirectMessage.id)).where(base_conditions)
+        count_query = select(func.count(Message.id)).where(base_conditions)
 
         # Apply search filters
         if search_request.query:
             search_term = f"%{search_request.query}%"
             search_conditions = or_(
-                DirectMessage.content.ilike(search_term),
+                Message.content.ilike(search_term),
                 User.first_name.ilike(search_term),
                 User.last_name.ilike(search_term),
                 User.email.ilike(search_term),
             )
-            messages_query = messages_query.join(DirectMessage.sender).where(
+            messages_query = messages_query.join(Message.sender).where(
                 search_conditions
             )
-            count_query = count_query.join(DirectMessage.sender).where(
+            count_query = count_query.join(Message.sender).where(
                 search_conditions
             )
 
         if search_request.with_user_id:
             user_filter = or_(
-                DirectMessage.sender_id == search_request.with_user_id,
-                DirectMessage.recipient_id == search_request.with_user_id,
+                Message.sender_id == search_request.with_user_id,
+                Message.recipient_id == search_request.with_user_id,
             )
             messages_query = messages_query.where(user_filter)
             count_query = count_query.where(user_filter)
 
         # Apply pagination and ordering
         messages_query = (
-            messages_query.order_by(desc(DirectMessage.created_at))
+            messages_query.order_by(desc(Message.created_at))
             .offset(search_request.offset)
             .limit(search_request.limit)
         )
@@ -353,4 +353,4 @@ class CRUDDirectMessage(CRUDBase[DirectMessage, dict, dict]):
 
 
 # Create the CRUD instance
-direct_message = CRUDDirectMessage(DirectMessage)
+message = CRUDMessage(Message)

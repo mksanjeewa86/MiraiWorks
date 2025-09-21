@@ -7,13 +7,12 @@ from app.endpoints import (
     calendar_connections,
     companies,
     dashboard,
-    direct_messages,
+    messages,
     email_preview,
     files,
     infrastructure,
     interviews,
     positions,
-    messaging,
     notifications,
     todos,
     public,
@@ -29,10 +28,11 @@ def include_routers(app: FastAPI) -> None:
     app.include_router(infrastructure.router, tags=["infrastructure"])
     app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
     app.include_router(dashboard.router, prefix="/api/dashboard", tags=["dashboard"])
+
+    # Messages system (unified messaging)
     app.include_router(
-        direct_messages.router, prefix="/api/direct-messages", tags=["direct-messages"]
+        messages.router, prefix="/api/messages", tags=["messages"]
     )
-    app.include_router(messaging.router, prefix="/api/messaging", tags=["messaging"])
     app.include_router(
         notifications.router, prefix="/api/notifications", tags=["notifications"]
     )

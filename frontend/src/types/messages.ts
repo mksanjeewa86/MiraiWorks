@@ -120,8 +120,8 @@ export interface LegacyMessage {
   read_by?: Record<string, unknown>[]; // Avoiding circular import
 }
 
-// Direct message info from backend
-export interface DirectMessageInfo {
+// Message info from backend
+export interface MessageInfo {
   id: number;
   sender_id: number;
   recipient_id: number;
@@ -157,7 +157,7 @@ export interface Conversation {
   other_user_name: string;
   other_user_email: string;
   other_user_company?: string;
-  last_message?: DirectMessageInfo;
+  last_message?: MessageInfo;
   last_message_content?: string;
   last_message_at?: string;
   unread_count: number;

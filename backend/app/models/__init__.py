@@ -3,7 +3,7 @@ from .attachment import Attachment
 from .audit import AuditLog
 from .auth import OauthAccount, PasswordResetRequest, RefreshToken
 from .company import Company
-from .direct_message import DirectMessage
+from .message import Message
 from .interview import Interview, InterviewProposal
 from .position import CompanyProfile, Position, PositionApplication
 from .meeting import (
@@ -39,7 +39,7 @@ __all__ = [
     "OauthAccount",
     "AuditLog",
     "Notification",
-    "DirectMessage",
+    "Message",
     "Attachment",
     "Interview",
     "InterviewProposal",

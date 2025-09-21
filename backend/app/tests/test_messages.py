@@ -1,4 +1,4 @@
-"""Focused integration tests for direct message endpoints."""
+"""Focused integration tests for message endpoints."""
 
 import pytest
 from typing import Optional
@@ -7,11 +7,11 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.models.direct_message import DirectMessage
+from app.models.message import Message
 from app.models.role import Role, UserRole
 from app.models.user import User
-from app.schemas.direct_message import DirectMessageCreate
-from app.services.direct_message_service import direct_message_service
+from app.schemas.message import MessageCreate
+from app.services.message_service import message_service
 from app.utils.constants import UserRole as UserRoleEnum
 from app.services.auth_service import auth_service
 
@@ -80,7 +80,7 @@ async def test_send_message_creates_record(
 
     payload = {"recipient_id": recipient.id, "content": "Hello there", "type": "text"}
     response = await client.post(
-        "/api/direct-messages/send", json=payload, headers=auth_headers
+        "/api/messages/send", json=payload, headers=auth_headers
     )
 
     assert response.status_code == 200
@@ -90,7 +90,7 @@ async def test_send_message_creates_record(
     assert data["content"] == "Hello there"
 
     stored = await db_session.execute(
-        select(DirectMessage).where(DirectMessage.id == data["id"])
+        select(Message).where(Message.id == data["id"])
     )
     message = stored.scalar_one()
     assert message.content == "Hello there"
@@ -114,10 +114,10 @@ async def test_get_conversations_returns_latest(
     )
 
     for idx in range(2):
-        await direct_message_service.send_message(
+        await message_service.send_message(
             db_session,
             sender_id=test_employer_user.id,
-            message_data=DirectMessageCreate(
+            message_data=MessageCreate(
                 recipient_id=partner.id,
                 content=f"Ping {idx}",
                 type="text",
@@ -125,7 +125,7 @@ async def test_get_conversations_returns_latest(
         )
 
     response = await client.get(
-        "/api/direct-messages/conversations", headers=auth_headers
+        "/api/messages/conversations", headers=auth_headers
     )
 
     assert response.status_code == 200
@@ -154,19 +154,19 @@ async def test_get_messages_with_user_returns_thread(
         company_id=test_employer_user.company_id,
     )
 
-    await direct_message_service.send_message(
+    await message_service.send_message(
         db_session,
         sender_id=test_employer_user.id,
-        message_data=DirectMessageCreate(
+        message_data=MessageCreate(
             recipient_id=partner.id,
             content="Hello",
             type="text",
         ),
     )
-    await direct_message_service.send_message(
+    await message_service.send_message(
         db_session,
         sender_id=partner.id,
-        message_data=DirectMessageCreate(
+        message_data=MessageCreate(
             recipient_id=test_employer_user.id,
             content="Hi!",
             type="text",
@@ -174,7 +174,7 @@ async def test_get_messages_with_user_returns_thread(
     )
 
     response = await client.get(
-        f"/api/direct-messages/with/{partner.id}", headers=auth_headers
+        f"/api/messages/with/{partner.id}", headers=auth_headers
     )
 
     assert response.status_code == 200
@@ -200,10 +200,10 @@ async def test_mark_messages_as_read(
         company_id=test_employer_user.company_id,
     )
 
-    message = await direct_message_service.send_message(
+    message = await message_service.send_message(
         db_session,
         sender_id=sender.id,
-        message_data=DirectMessageCreate(
+        message_data=MessageCreate(
             recipient_id=test_employer_user.id,
             content="Unread",
             type="text",
@@ -211,7 +211,7 @@ async def test_mark_messages_as_read(
     )
 
     response = await client.put(
-        "/api/direct-messages/mark-read",
+        "/api/messages/mark-read",
         headers=auth_headers,
         json={"message_ids": [message.id]},
     )
@@ -240,10 +240,10 @@ async def test_search_messages_finds_matches(
         company_id=test_employer_user.company_id,
     )
 
-    await direct_message_service.send_message(
+    await message_service.send_message(
         db_session,
         sender_id=test_employer_user.id,
-        message_data=DirectMessageCreate(
+        message_data=MessageCreate(
             recipient_id=partner.id,
             content="Meeting notes summary",
             type="text",
@@ -251,7 +251,7 @@ async def test_search_messages_finds_matches(
     )
 
     response = await client.post(
-        "/api/direct-messages/search",
+        "/api/messages/search",
         headers=auth_headers,
         json={"query": "summary", "limit": 5, "offset": 0},
     )

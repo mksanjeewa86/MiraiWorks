@@ -552,8 +552,8 @@ class TestFiles:
         test_admin_user: User,
     ):
         """Test that message sender can download their uploaded file."""
-        from app.schemas.direct_message import DirectMessageCreate
-        from app.services.direct_message_service import direct_message_service
+        from app.schemas.message import MessageCreate
+        from app.services.message_service import message_service
         from pathlib import Path
 
         sender = test_user
@@ -565,7 +565,7 @@ class TestFiles:
 
         # Create a message with file attachment
         file_url = "/api/files/download/message-attachments/1/2024/test-file.txt"
-        message_data = DirectMessageCreate(
+        message_data = MessageCreate(
             recipient_id=recipient.id,
             content="📎 test-file.txt",
             type="file",
@@ -576,7 +576,7 @@ class TestFiles:
         )
 
         # Send the message
-        await direct_message_service.send_message(db_session, sender.id, message_data)
+        await message_service.send_message(db_session, sender.id, message_data)
 
         # Test that sender can download the file
         with patch(
@@ -616,8 +616,8 @@ class TestFiles:
         test_admin_user: User,
     ):
         """Test file download permission system works correctly."""
-        from app.schemas.direct_message import DirectMessageCreate
-        from app.services.direct_message_service import direct_message_service
+        from app.schemas.message import MessageCreate
+        from app.services.message_service import message_service
         from pathlib import Path
 
         sender = test_user
@@ -629,7 +629,7 @@ class TestFiles:
 
         # Create a message with file attachment
         file_url = "/api/files/download/message-attachments/1/2024/test-file.txt"
-        message_data = DirectMessageCreate(
+        message_data = MessageCreate(
             recipient_id=recipient.id,
             content="📎 test-file.txt",
             type="file",
@@ -640,7 +640,7 @@ class TestFiles:
         )
 
         # Send the message
-        await direct_message_service.send_message(db_session, sender.id, message_data)
+        await message_service.send_message(db_session, sender.id, message_data)
 
         # Test that recipient can download the file
         with patch(
@@ -686,8 +686,8 @@ class TestFiles:
         test_admin_user: User,
     ):
         """Test file download permissions work correctly between different users."""
-        from app.schemas.direct_message import DirectMessageCreate
-        from app.services.direct_message_service import direct_message_service
+        from app.schemas.message import MessageCreate
+        from app.services.message_service import message_service
         from pathlib import Path
 
         # Use token-based auth instead of login to avoid 2FA issues
@@ -699,7 +699,7 @@ class TestFiles:
 
         # Create a message with file attachment (simulating file upload + message)
         file_url = "/api/files/download/message-attachments/1/2025/test-permission.txt"
-        message_data = DirectMessageCreate(
+        message_data = MessageCreate(
             recipient_id=test_admin_user.id,
             content="📎 test-permission.txt",
             type="file",
@@ -710,7 +710,7 @@ class TestFiles:
         )
 
         # Send the message from sender to recipient
-        await direct_message_service.send_message(
+        await message_service.send_message(
             db_session, test_user.id, message_data
         )
 

@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.company import Company
 from app.models.interview import Interview
-from app.models.message import Conversation
+from app.models.message import Message
 from app.models.resume import Resume
 from app.models.user import User
 
@@ -36,8 +36,8 @@ class CRUDDashboard:
         # Active conversations (conversations with messages in last 30 days)
         thirty_days_ago = datetime.utcnow() - timedelta(days=30)
         active_conversations_result = await db.execute(
-            select(func.count(Conversation.id.distinct())).where(
-                Conversation.updated_at >= thirty_days_ago
+            select(func.count(Message.id.distinct())).where(
+                Message.created_at >= thirty_days_ago
             )
         )
         active_conversations = active_conversations_result.scalar() or 0

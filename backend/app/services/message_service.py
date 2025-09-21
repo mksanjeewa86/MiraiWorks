@@ -6,12 +6,12 @@ from sqlalchemy import and_, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.direct_message import DirectMessage
+from app.models.message import Message
 from app.models.user import User
-from app.schemas.direct_message import (
+from app.schemas.message import (
     ConversationSummary,
-    DirectMessageCreate,
-    DirectMessageInfo,
+    MessageCreate,
+    MessageInfo,
     MessageSearchRequest,
 )
 from app.utils.logging import get_logger
@@ -19,13 +19,13 @@ from app.utils.logging import get_logger
 logger = get_logger(__name__)
 
 
-class DirectMessageService:
+class MessageService:
     def __init__(self):
         pass
 
     async def send_message(
-        self, db: AsyncSession, sender_id: int, message_data: DirectMessageCreate
-    ) -> DirectMessage:
+        self, db: AsyncSession, sender_id: int, message_data: MessageCreate
+    ) -> Message:
         """Send a direct message to another user."""
         # Direct messaging - no restrictions by default
 
@@ -41,7 +41,7 @@ class DirectMessageService:
             )
 
         # Create message
-        message = DirectMessage(
+        message = Message(
             sender_id=sender_id,
             recipient_id=message_data.recipient_id,
             content=message_data.content,
@@ -62,7 +62,7 @@ class DirectMessageService:
             sender_id=sender_id,
             recipient_id=message_data.recipient_id,
             message_id=message.id,
-            component="direct_message",
+            component="message",
         )
 
         return message
@@ -74,37 +74,37 @@ class DirectMessageService:
         other_user_id: int,
         limit: int = 50,
         before_id: Optional[int] = None,
-    ) -> list[DirectMessage]:
+    ) -> list[Message]:
         """Get messages between current user and another user."""
 
         query = (
-            select(DirectMessage)
+            select(Message)
             .options(
-                selectinload(DirectMessage.sender),
-                selectinload(DirectMessage.recipient),
-                selectinload(DirectMessage.reply_to).selectinload(DirectMessage.sender),
+                selectinload(Message.sender),
+                selectinload(Message.recipient),
+                selectinload(Message.reply_to).selectinload(Message.sender),
             )
             .where(
                 or_(
                     and_(
-                        DirectMessage.sender_id == current_user_id,
-                        DirectMessage.recipient_id == other_user_id,
-                        DirectMessage.is_deleted_by_sender == False,
+                        Message.sender_id == current_user_id,
+                        Message.recipient_id == other_user_id,
+                        Message.is_deleted_by_sender == False,
                     ),
                     and_(
-                        DirectMessage.sender_id == other_user_id,
-                        DirectMessage.recipient_id == current_user_id,
-                        DirectMessage.is_deleted_by_recipient == False,
+                        Message.sender_id == other_user_id,
+                        Message.recipient_id == current_user_id,
+                        Message.is_deleted_by_recipient == False,
                     ),
                 )
             )
-            .order_by(DirectMessage.created_at)
+            .order_by(Message.created_at)
         )
 
         if before_id:
             # For ascending order, we want messages with id > before_id for "load more older messages"
             # But since we changed to ascending, let's keep the same pagination behavior
-            query = query.where(DirectMessage.id < before_id)
+            query = query.where(Message.id < before_id)
 
         query = query.limit(limit)
         result = await db.execute(query)
@@ -126,24 +126,24 @@ class DirectMessageService:
             select(
                 case(
                     (
-                        DirectMessage.sender_id > DirectMessage.recipient_id,
-                        DirectMessage.sender_id,
+                        Message.sender_id > Message.recipient_id,
+                        Message.sender_id,
                     ),
-                    else_=DirectMessage.recipient_id,
+                    else_=Message.recipient_id,
                 ).label("user1"),
                 case(
                     (
-                        DirectMessage.sender_id < DirectMessage.recipient_id,
-                        DirectMessage.sender_id,
+                        Message.sender_id < Message.recipient_id,
+                        Message.sender_id,
                     ),
-                    else_=DirectMessage.recipient_id,
+                    else_=Message.recipient_id,
                 ).label("user2"),
-                func.max(DirectMessage.created_at).label("last_activity"),
+                func.max(Message.created_at).label("last_activity"),
             )
             .where(
                 or_(
-                    DirectMessage.sender_id == user_id,
-                    DirectMessage.recipient_id == user_id,
+                    Message.sender_id == user_id,
+                    Message.recipient_id == user_id,
                 )
             )
             .group_by("user1", "user2")
@@ -184,37 +184,37 @@ class DirectMessageService:
 
             # Get latest message
             latest_msg_result = await db.execute(
-                select(DirectMessage)
+                select(Message)
                 .options(
-                    selectinload(DirectMessage.sender),
-                    selectinload(DirectMessage.recipient),
+                    selectinload(Message.sender),
+                    selectinload(Message.recipient),
                 )
                 .where(
                     or_(
                         and_(
-                            DirectMessage.sender_id == user_id,
-                            DirectMessage.recipient_id == other_user_id,
-                            DirectMessage.is_deleted_by_sender == False,
+                            Message.sender_id == user_id,
+                            Message.recipient_id == other_user_id,
+                            Message.is_deleted_by_sender == False,
                         ),
                         and_(
-                            DirectMessage.sender_id == other_user_id,
-                            DirectMessage.recipient_id == user_id,
-                            DirectMessage.is_deleted_by_recipient == False,
+                            Message.sender_id == other_user_id,
+                            Message.recipient_id == user_id,
+                            Message.is_deleted_by_recipient == False,
                         ),
                     )
                 )
-                .order_by(desc(DirectMessage.created_at))
+                .order_by(desc(Message.created_at))
                 .limit(1)
             )
             latest_message = latest_msg_result.scalar_one_or_none()
 
             # Count unread messages from other user
             unread_result = await db.execute(
-                select(func.count(DirectMessage.id)).where(
-                    DirectMessage.sender_id == other_user_id,
-                    DirectMessage.recipient_id == user_id,
-                    DirectMessage.is_read == False,
-                    DirectMessage.is_deleted_by_recipient == False,
+                select(func.count(Message.id)).where(
+                    Message.sender_id == other_user_id,
+                    Message.recipient_id == user_id,
+                    Message.is_read == False,
+                    Message.is_deleted_by_recipient == False,
                 )
             )
             unread_count = unread_result.scalar()
@@ -222,7 +222,7 @@ class DirectMessageService:
             # Convert to response format
             last_message_info = None
             if latest_message:
-                last_message_info = DirectMessageInfo(
+                last_message_info = MessageInfo(
                     id=latest_message.id,
                     sender_id=latest_message.sender_id,
                     recipient_id=latest_message.recipient_id,
@@ -259,23 +259,23 @@ class DirectMessageService:
 
     async def search_messages(
         self, db: AsyncSession, user_id: int, search_request: MessageSearchRequest
-    ) -> list[DirectMessage]:
+    ) -> list[Message]:
         """Search messages by content and sender name."""
         query = (
-            select(DirectMessage)
+            select(Message)
             .options(
-                selectinload(DirectMessage.sender),
-                selectinload(DirectMessage.recipient),
+                selectinload(Message.sender),
+                selectinload(Message.recipient),
             )
             .where(
                 or_(
                     and_(
-                        DirectMessage.sender_id == user_id,
-                        DirectMessage.is_deleted_by_sender == False,
+                        Message.sender_id == user_id,
+                        Message.is_deleted_by_sender == False,
                     ),
                     and_(
-                        DirectMessage.recipient_id == user_id,
-                        DirectMessage.is_deleted_by_recipient == False,
+                        Message.recipient_id == user_id,
+                        Message.is_deleted_by_recipient == False,
                     ),
                 )
             )
@@ -284,9 +284,9 @@ class DirectMessageService:
         # Apply search filters
         if search_request.query:
             search_term = f"%{search_request.query}%"
-            query = query.join(DirectMessage.sender).where(
+            query = query.join(Message.sender).where(
                 or_(
-                    DirectMessage.content.ilike(search_term),
+                    Message.content.ilike(search_term),
                     User.first_name.ilike(search_term),
                     User.last_name.ilike(search_term),
                     User.email.ilike(search_term),
@@ -296,13 +296,13 @@ class DirectMessageService:
         if search_request.with_user_id:
             query = query.where(
                 or_(
-                    DirectMessage.sender_id == search_request.with_user_id,
-                    DirectMessage.recipient_id == search_request.with_user_id,
+                    Message.sender_id == search_request.with_user_id,
+                    Message.recipient_id == search_request.with_user_id,
                 )
             )
 
         query = (
-            query.order_by(desc(DirectMessage.created_at))
+            query.order_by(desc(Message.created_at))
             .offset(search_request.offset)
             .limit(search_request.limit)
         )
@@ -316,10 +316,10 @@ class DirectMessageService:
         """Mark multiple messages as read."""
         # Only mark messages where user is the recipient
         result = await db.execute(
-            select(DirectMessage).where(
-                DirectMessage.id.in_(message_ids),
-                DirectMessage.recipient_id == user_id,
-                DirectMessage.is_read == False,
+            select(Message).where(
+                Message.id.in_(message_ids),
+                Message.recipient_id == user_id,
+                Message.is_read == False,
             )
         )
         messages = result.scalars().all()
@@ -335,7 +335,7 @@ class DirectMessageService:
             logger.info(
                 f"Marked {count} messages as read",
                 user_id=user_id,
-                component="direct_message",
+                component="message",
             )
 
         return count
@@ -345,11 +345,11 @@ class DirectMessageService:
     ) -> int:
         """Mark all unread messages from another user as read."""
         result = await db.execute(
-            select(DirectMessage).where(
-                DirectMessage.sender_id == other_user_id,
-                DirectMessage.recipient_id == user_id,
-                DirectMessage.is_read == False,
-                DirectMessage.is_deleted_by_recipient == False,
+            select(Message).where(
+                Message.sender_id == other_user_id,
+                Message.recipient_id == user_id,
+                Message.is_read == False,
+                Message.is_deleted_by_recipient == False,
             )
         )
         messages = result.scalars().all()
@@ -366,11 +366,11 @@ class DirectMessageService:
                 f"Marked conversation as read - {count} messages",
                 user_id=user_id,
                 other_user_id=other_user_id,
-                component="direct_message",
+                component="message",
             )
 
         return count
 
 
 # Create singleton instance
-direct_message_service = DirectMessageService()
+message_service = MessageService()

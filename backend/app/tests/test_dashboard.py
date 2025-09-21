@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.company import Company
 from app.models.interview import Interview
-from app.models.message import Conversation
+from app.models.message import Message
 from app.models.resume import Resume
 from app.models.user import User
 from app.schemas.interview import InterviewStatus
@@ -90,21 +90,23 @@ class TestDashboard:
         db_session.add(resume1)
         db_session.add(resume2)
 
-        # Create active conversations (within last 30 days)
-        conversation1 = Conversation(
-            title="Test Conversation 1",
-            type="direct",
-            created_by=test_user.id,
-            updated_at=datetime.utcnow() - timedelta(days=5),
+        # Create active messages (within last 30 days) to simulate conversations
+        message1 = Message(
+            sender_id=test_user.id,
+            recipient_id=user2.id,
+            content="Test message 1",
+            type="text",
+            created_at=datetime.utcnow() - timedelta(days=5),
         )
-        conversation2 = Conversation(
-            title="Test Conversation 2",
-            type="direct",
-            created_by=test_user.id,
-            updated_at=datetime.utcnow() - timedelta(days=10),
+        message2 = Message(
+            sender_id=user2.id,
+            recipient_id=test_user.id,
+            content="Test message 2",
+            type="text",
+            created_at=datetime.utcnow() - timedelta(days=10),
         )
-        db_session.add(conversation1)
-        db_session.add(conversation2)
+        db_session.add(message1)
+        db_session.add(message2)
 
         await db_session.commit()
 
@@ -195,23 +197,25 @@ class TestDashboard:
         test_user: User,
     ):
         """Test that only recent conversations (last 30 days) are counted as active."""
-        # Create old conversation (more than 30 days ago)
-        old_conversation = Conversation(
-            title="Old Conversation",
-            type="direct",
-            created_by=test_user.id,
-            updated_at=datetime.utcnow() - timedelta(days=35),
+        # Create old message (more than 30 days ago)
+        old_message = Message(
+            sender_id=test_user.id,
+            recipient_id=test_user.id,  # Self message for simplicity
+            content="Old message",
+            type="text",
+            created_at=datetime.utcnow() - timedelta(days=35),
         )
-        db_session.add(old_conversation)
+        db_session.add(old_message)
 
-        # Create recent conversation
-        recent_conversation = Conversation(
-            title="Recent Conversation",
-            type="direct",
-            created_by=test_user.id,
-            updated_at=datetime.utcnow() - timedelta(days=5),
+        # Create recent message
+        recent_message = Message(
+            sender_id=test_user.id,
+            recipient_id=test_user.id,  # Self message for simplicity
+            content="Recent message",
+            type="text",
+            created_at=datetime.utcnow() - timedelta(days=5),
         )
-        db_session.add(recent_conversation)
+        db_session.add(recent_message)
 
         await db_session.commit()
 

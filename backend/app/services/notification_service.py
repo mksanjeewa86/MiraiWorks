@@ -6,7 +6,7 @@ from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.direct_message import DirectMessage
+from app.models.message import Message
 from app.models.notification import Notification
 from app.models.user import User
 
@@ -55,7 +55,7 @@ class NotificationService:
         db: AsyncSession,
         sender_id: int,
         recipient_id: int,
-        message: DirectMessage,
+        message: Message,
     ) -> None:
         """Handle all notifications for a new message."""
         # Get sender and recipient with settings

@@ -73,17 +73,18 @@ export const API_ENDPOINTS = {
     SKILLS: (resumeId: string | number) => `/api/resumes/${resumeId}/skills`,
   },
 
-  // Message endpoints
+  // Message endpoints (New unified system)
   MESSAGES: {
     BASE: '/api/messages',
     BY_ID: (id: string | number) => `/api/messages/${id}`,
-    CONVERSATIONS: '/api/direct-messages/conversations',
-    WITH_USER: (userId: string | number) => `/api/direct-messages/with/${userId}`,
-    SEND: '/api/direct-messages/send',
-    MARK_READ: (userId: string | number) => `/api/direct-messages/mark-conversation-read/${userId}`,
-    SEARCH: '/api/direct-messages/search',
-    PARTICIPANTS: '/api/direct-messages/participants',
+    CONVERSATIONS: '/api/messages/conversations',
+    WITH_USER: (userId: string | number) => `/api/messages/with/${userId}`,
+    SEND: '/api/messages/send',
+    MARK_READ: (userId: string | number) => `/api/messages/mark-conversation-read/${userId}`,
+    SEARCH: '/api/messages/search',
+    PARTICIPANTS: '/api/messages/participants',
   },
+
 
   // File endpoints
   FILES: {

@@ -1,6 +1,6 @@
 import { API_ENDPOINTS, API_CONFIG } from './config';
 import { apiClient } from './apiClient';
-import type { ApiResponse, Conversation, Message, DirectMessageInfo } from '@/types';
+import type { ApiResponse, Conversation, Message, MessageInfo } from '@/types';
 
 // Helper to build query strings
 const buildQueryString = (params?: Record<string, string | number | undefined>): string => {
@@ -118,7 +118,7 @@ export const messagesApi = {
   },
 
   async searchMessages(query: string, withUserId?: number): Promise<ApiResponse<{
-    messages: DirectMessageInfo[];
+    messages: MessageInfo[];
   }>> {
     const requestBody = {
       query,
@@ -127,7 +127,7 @@ export const messagesApi = {
       offset: 0,
     };
 
-    const response = await apiClient.post<{ messages: DirectMessageInfo[] }>(API_ENDPOINTS.MESSAGES.SEARCH, requestBody);
+    const response = await apiClient.post<{ messages: MessageInfo[] }>(API_ENDPOINTS.MESSAGES.SEARCH, requestBody);
     return { data: { messages: response.data.messages || [] }, success: true };
   },
 

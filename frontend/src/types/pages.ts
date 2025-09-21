@@ -1,4 +1,4 @@
-import type { Resume, CalendarEvent, UserProfile, UserSettings, Conversation, LegacyMessage as Message, DirectMessageInfo, CompanyType } from '@/types';
+import type { Resume, CalendarEvent, UserProfile, UserSettings, Conversation, LegacyMessage as Message, MessageInfo, CompanyType } from '@/types';
 
 // ====================
 // PAGE INFO & METADATA
@@ -49,7 +49,7 @@ export interface MessagesPageState {
   }>;
   searchingContacts: boolean;
   hasMoreMessages: boolean;
-  searchResults: DirectMessageInfo[];
+  searchResults: MessageInfo[];
   isSearching: boolean;
   showSearchResults: boolean;
   showProfileModal: boolean;
