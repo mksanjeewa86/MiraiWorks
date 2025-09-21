@@ -1,5 +1,10 @@
 # Architecture Recommendations
 
+**Last Updated**: September 21, 2025
+**Status**: Current architectural guidance for MiraiWorks development
+
+> **Note**: These recommendations should be evaluated alongside the architectural rules defined in `CLAUDE.md`
+
 ## 1. Schema Optimization
 
 Current resume schemas are well-structured but could be optimized:
