@@ -335,7 +335,7 @@ function TodosPageContent() {
       return 0;
     };
 
-    let result = [...baseList];
+    const result = [...baseList];
     result.sort((a, b) => {
       const weightDiff = viewFilter === 'all' ? getStatusWeight(a) - getStatusWeight(b) : 0;
       if (weightDiff !== 0) return weightDiff;
