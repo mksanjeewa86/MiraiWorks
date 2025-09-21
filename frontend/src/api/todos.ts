@@ -10,6 +10,10 @@ export const todosApi = {
       searchParams.set('include_completed', 'false');
     }
 
+    if (params.includeDeleted === true) {
+      searchParams.set('include_deleted', 'true');
+    }
+
     if (params.status) {
       searchParams.set('status', params.status);
     }
@@ -53,7 +57,13 @@ export const todosApi = {
     return response.data as Todo;
   },
 
-  async remove(id: number): Promise<void> {
-    await apiClient.delete<void>(API_ENDPOINTS.TODOS.BY_ID(id));
+  async remove(id: number): Promise<Todo> {
+    const response = await apiClient.delete<Todo>(API_ENDPOINTS.TODOS.BY_ID(id));
+    return response.data as Todo;
+  },
+
+  async restore(id: number): Promise<Todo> {
+    const response = await apiClient.post<Todo>(`${API_ENDPOINTS.TODOS.BY_ID(id)}/restore`);
+    return response.data as Todo;
   },
 };

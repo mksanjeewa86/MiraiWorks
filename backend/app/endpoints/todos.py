@@ -20,10 +20,14 @@ router = APIRouter()
 
 
 async def _get_todo_or_404(
-    db: AsyncSession, *, todo_id: int, current_user: User
+    db: AsyncSession, *, todo_id: int, current_user: User, allow_deleted: bool = True
 ) -> Todo:
     todo_obj = await todo_crud.get(db, todo_id)
     if not todo_obj or todo_obj.owner_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Todo not found"
+        )
+    if not allow_deleted and todo_obj.is_deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Todo not found"
         )
@@ -33,6 +37,7 @@ async def _get_todo_or_404(
 @router.get("", response_model=TodoListResponse)
 async def list_todos(
     include_completed: bool = Query(True, description="Include completed todos"),
+    include_deleted: bool = Query(False, description="Include deleted todos"),
     status_filter: str | None = Query(None, alias="status"),
     limit: int = Query(100, ge=1, le=200),
     offset: int = Query(0, ge=0),
@@ -53,6 +58,7 @@ async def list_todos(
         owner_id=current_user.id,
         status=status_filter,
         include_completed=include_completed,
+        include_deleted=include_deleted,
         limit=limit,
         offset=offset,
     )
@@ -91,7 +97,7 @@ async def update_todo(
     current_user: User = Depends(get_current_active_user),
 ):
     """Update an existing todo."""
-    todo_obj = await _get_todo_or_404(db, todo_id=todo_id, current_user=current_user)
+    todo_obj = await _get_todo_or_404(db, todo_id=todo_id, current_user=current_user, allow_deleted=False)
     todo_obj = await todo_crud.update_todo(
         db, db_obj=todo_obj, obj_in=todo_in, updated_by=current_user.id
     )
@@ -105,7 +111,7 @@ async def complete_todo(
     current_user: User = Depends(get_current_active_user),
 ):
     """Mark a todo as completed."""
-    todo_obj = await _get_todo_or_404(db, todo_id=todo_id, current_user=current_user)
+    todo_obj = await _get_todo_or_404(db, todo_id=todo_id, current_user=current_user, allow_deleted=False)
     if todo_obj.status == TodoStatus.COMPLETED.value:
         return todo_obj
     todo_obj = await todo_crud.mark_complete(
@@ -121,21 +127,36 @@ async def reopen_todo(
     current_user: User = Depends(get_current_active_user),
 ):
     """Reopen a completed or expired todo."""
-    todo_obj = await _get_todo_or_404(db, todo_id=todo_id, current_user=current_user)
+    todo_obj = await _get_todo_or_404(db, todo_id=todo_id, current_user=current_user, allow_deleted=False)
     if todo_obj.status == TodoStatus.PENDING.value:
         return todo_obj
     todo_obj = await todo_crud.reopen(db, todo=todo_obj, reopened_by=current_user.id)
     return todo_obj
 
 
-@router.delete("/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_todo(
+@router.delete("/{todo_id}", response_model=TodoRead)
+async def soft_delete_todo(
     todo_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    """Delete a todo."""
-    todo_obj = await _get_todo_or_404(db, todo_id=todo_id, current_user=current_user)
-    await db.delete(todo_obj)
-    await db.commit()
-    return None
+    """Soft delete a todo."""
+    todo_obj = await _get_todo_or_404(db, todo_id=todo_id, current_user=current_user, allow_deleted=False)
+    if todo_obj.is_deleted:
+        return todo_obj
+    todo_obj = await todo_crud.soft_delete(db, todo=todo_obj, deleted_by=current_user.id)
+    return todo_obj
+
+
+@router.post("/{todo_id}/restore", response_model=TodoRead)
+async def restore_todo(
+    todo_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Restore a soft deleted todo."""
+    todo_obj = await _get_todo_or_404(db, todo_id=todo_id, current_user=current_user, allow_deleted=True)
+    if not todo_obj.is_deleted:
+        return todo_obj
+    todo_obj = await todo_crud.restore(db, todo=todo_obj, restored_by=current_user.id)
+    return todo_obj

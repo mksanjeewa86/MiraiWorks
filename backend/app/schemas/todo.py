@@ -104,6 +104,8 @@ class TodoRead(BaseModel):
     due_date: datetime | None = None
     completed_at: datetime | None = None
     expired_at: datetime | None = None
+    is_deleted: bool
+    deleted_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
     is_expired: bool

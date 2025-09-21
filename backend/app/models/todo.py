@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.utils.constants import TodoStatus
@@ -35,6 +35,12 @@ class Todo(Base):
         String(20), nullable=False, default=TodoStatus.PENDING.value, index=True
     )
     priority: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    is_deleted: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, index=True
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     due_date: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
@@ -85,3 +91,11 @@ class Todo(Base):
         self.status = TodoStatus.PENDING.value
         self.completed_at = None
         self.expired_at = None
+
+    def soft_delete(self) -> None:
+        self.is_deleted = True
+        self.deleted_at = datetime.utcnow()
+
+    def restore(self) -> None:
+        self.is_deleted = False
+        self.deleted_at = None

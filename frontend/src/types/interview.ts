@@ -120,3 +120,34 @@ export interface InterviewListItem {
 export type InterviewStatusFilter = 'all' | InterviewListItem['status'];
 export type InterviewTypeFilter = 'all' | InterviewListItem['type'];
 export type InterviewSortField = 'scheduled_date' | 'candidate_name' | 'status';
+
+// Form data types for interview creation and editing
+export interface InterviewFormData {
+  title: string;
+  description: string;
+  candidate_id: string;
+  position_title: string;
+  interview_type: 'video' | 'phone' | 'in_person';
+  scheduled_start: string;
+  scheduled_end: string;
+  timezone: string;
+  location: string;
+  meeting_url: string;
+  notes: string;
+  preparation_notes: string;
+}
+
+export interface InterviewEditFormData {
+  title: string;
+  description: string;
+  position_title: string;
+  interview_type: 'video' | 'phone' | 'in_person';
+  scheduled_start: string;
+  scheduled_end: string;
+  timezone: string;
+  location: string;
+  meeting_url: string;
+  notes: string;
+  preparation_notes: string;
+  status: Interview['status'];
+}

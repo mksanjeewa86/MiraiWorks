@@ -6,6 +6,7 @@ import Link from 'next/link';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
 import { interviewsApi } from '@/api/interviews';
 import type {
   InterviewListItem,
@@ -16,6 +17,7 @@ import type {
 
 function InterviewsPageContent() {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [interviews, setInterviews] = useState<InterviewListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -183,15 +185,31 @@ function InterviewsPageContent() {
     );
   };
 
-  const handleDelete = async (id: number) => {
-    if (window.confirm('Are you sure you want to delete this interview?')) {
+  const handleDelete = async (id: number, title: string) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${title}"?\n\nThis action cannot be undone and will permanently remove the interview and all associated data.`
+    );
+
+    if (confirmed) {
       try {
         await interviewsApi.delete(id);
         setInterviews(prev => prev.filter(interview => interview.id !== id));
+
+        showToast({
+          type: 'success',
+          title: 'Interview Deleted',
+          message: `"${title}" has been successfully deleted`
+        });
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to delete interview';
         setError(errorMessage);
         console.error('Error deleting interview:', err);
+
+        showToast({
+          type: 'error',
+          title: 'Delete Failed',
+          message: errorMessage
+        });
       }
     }
   };
@@ -418,7 +436,7 @@ function InterviewsPageContent() {
                               <Edit size={16} />
                             </Link>
                             <button
-                              onClick={() => handleDelete(interview.id)}
+                              onClick={() => handleDelete(interview.id, interview.title)}
                               className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
                               title="Delete Interview"
                             >

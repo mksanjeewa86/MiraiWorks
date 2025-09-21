@@ -38,12 +38,19 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         owner_id: int,
         status: str | None = None,
         include_completed: bool = True,
+        include_deleted: bool = False,
         limit: int = 100,
         offset: int = 0,
     ) -> tuple[list[Todo], int]:
         await self.auto_mark_expired(db, owner_id)
 
         query: Select = select(Todo).where(Todo.owner_id == owner_id)
+
+        # Filter by deleted status
+        if include_deleted:
+            query = query.where(Todo.is_deleted == True)
+        else:
+            query = query.where(Todo.is_deleted == False)
 
         if status:
             query = query.where(Todo.status == status)
@@ -69,7 +76,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         await self.auto_mark_expired(db, owner_id)
         result = await db.execute(
             select(Todo)
-            .where(Todo.owner_id == owner_id)
+            .where(Todo.owner_id == owner_id, Todo.is_deleted == False)
             .order_by(Todo.updated_at.desc())
             .limit(limit)
         )
@@ -127,6 +134,22 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
     async def reopen(self, db: AsyncSession, *, todo: Todo, reopened_by: int) -> Todo:
         todo.mark_pending()
         todo.last_updated_by = reopened_by
+        db.add(todo)
+        await db.commit()
+        await db.refresh(todo)
+        return todo
+
+    async def soft_delete(self, db: AsyncSession, *, todo: Todo, deleted_by: int) -> Todo:
+        todo.soft_delete()
+        todo.last_updated_by = deleted_by
+        db.add(todo)
+        await db.commit()
+        await db.refresh(todo)
+        return todo
+
+    async def restore(self, db: AsyncSession, *, todo: Todo, restored_by: int) -> Todo:
+        todo.restore()
+        todo.last_updated_by = restored_by
         db.add(todo)
         await db.commit()
         await db.refresh(todo)
