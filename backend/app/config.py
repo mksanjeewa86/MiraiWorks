@@ -62,6 +62,18 @@ class Settings(BaseSettings):
     # App
     app_base_url: str = Field(default="http://localhost:3001")
 
+    # WebRTC/TURN Server
+    coturn_host: str = Field(default="localhost")
+    coturn_port: int = Field(default=3478)
+    coturn_secret: str = Field(default="coturn-secret")
+
+    # Speech-to-Text Service
+    stt_service_url: Optional[str] = None
+    stt_api_key: Optional[str] = None
+
+    # OpenAI (for transcription/AI features)
+    openai_api_key: Optional[str] = None
+
     model_config = {"env_file": ".env", "case_sensitive": False}
 
 

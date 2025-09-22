@@ -28,6 +28,13 @@ from .role import Role, UserRole
 from .user import User
 from .todo import Todo
 from .user_settings import UserSettings
+from .video_call import (
+    VideoCall,
+    CallParticipant,
+    RecordingConsent,
+    CallTranscription,
+    TranscriptionSegment,
+)
 
 __all__ = [
     "Company",
@@ -61,4 +68,9 @@ __all__ = [
     "PositionApplication",
     "UserSettings",
     "Todo",
+    "VideoCall",
+    "CallParticipant",
+    "RecordingConsent",
+    "CallTranscription",
+    "TranscriptionSegment",
 ]
