@@ -165,6 +165,18 @@ async def get_client_ip(request) -> str:
     return request.client.host if request.client else "unknown"
 
 
+async def get_current_user_with_company(
+    current_user: User = Depends(get_current_active_user)
+) -> User:
+    """Get current user and ensure they have a company."""
+    if not current_user.company_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Company association required"
+        )
+    return current_user
+
+
 async def require_super_admin(current_user: User = Depends(get_current_user)) -> User:
     """Require user to be a super admin."""
     # Check if user has super_admin role

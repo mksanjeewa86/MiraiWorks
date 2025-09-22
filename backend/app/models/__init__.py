@@ -28,6 +28,18 @@ from .role import Role, UserRole
 from .user import User
 from .todo import Todo
 from .user_settings import UserSettings
+from .exam import (
+    Exam,
+    ExamQuestion,
+    ExamSession,
+    ExamAnswer,
+    ExamAssignment,
+    ExamMonitoringEvent,
+    ExamType,
+    ExamStatus,
+    QuestionType,
+    SessionStatus,
+)
 
 __all__ = [
     "Company",
@@ -61,4 +73,14 @@ __all__ = [
     "PositionApplication",
     "UserSettings",
     "Todo",
+    "Exam",
+    "ExamQuestion",
+    "ExamSession",
+    "ExamAnswer",
+    "ExamAssignment",
+    "ExamMonitoringEvent",
+    "ExamType",
+    "ExamStatus",
+    "QuestionType",
+    "SessionStatus",
 ]
