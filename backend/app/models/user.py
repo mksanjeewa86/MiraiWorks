@@ -80,6 +80,9 @@ class User(Base):
     calendar_connections = relationship(
         "CalendarConnection", back_populates="user", cascade="all, delete-orphan"
     )
+    mbti_test = relationship(
+        "MBTITest", back_populates="user", cascade="all, delete-orphan", uselist=False
+    )
 
     @property
     def full_name(self):

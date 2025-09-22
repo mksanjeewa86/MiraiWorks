@@ -12,6 +12,7 @@ from app.endpoints import (
     files,
     infrastructure,
     interviews,
+    mbti,
     positions,
     notifications,
     todos,
@@ -43,6 +44,7 @@ def include_routers(app: FastAPI) -> None:
         calendar_connections.router, prefix="/api/user", tags=["calendar-connections"]
     )
     app.include_router(interviews.router, prefix="/api/interviews", tags=["interviews"])
+    app.include_router(mbti.router, prefix="/api/mbti", tags=["mbti"])
     app.include_router(positions.router, prefix="/api/positions", tags=["positions"])
     app.include_router(webhooks.router, prefix="/api/webhooks", tags=["webhooks"])
     app.include_router(resumes.router, prefix="/api/resumes", tags=["resumes"])

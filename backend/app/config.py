@@ -62,6 +62,16 @@ class Settings(BaseSettings):
     # App
     app_base_url: str = Field(default="http://localhost:3001")
 
+    # WebRTC Configuration (Optional)
+    coturn_host: Optional[str] = "localhost"
+    coturn_port: Optional[int] = 3478
+    coturn_secret: Optional[str] = "coturn-secret"
+
+    # External Services (Optional)
+    stt_service_url: Optional[str] = ""
+    stt_api_key: Optional[str] = ""
+    openai_api_key: Optional[str] = ""
+
     model_config = {"env_file": ".env", "case_sensitive": False}
 
 

@@ -28,6 +28,7 @@ from .role import Role, UserRole
 from .user import User
 from .todo import Todo
 from .user_settings import UserSettings
+from .mbti_test import MBTITest, MBTIQuestion
 
 __all__ = [
     "Company",
@@ -61,4 +62,6 @@ __all__ = [
     "PositionApplication",
     "UserSettings",
     "Todo",
+    "MBTITest",
+    "MBTIQuestion",
 ]
