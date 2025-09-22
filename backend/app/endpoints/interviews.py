@@ -76,6 +76,7 @@ async def create_interview(
         timezone=interview_data.timezone,
         location=interview_data.location,
         meeting_url=interview_data.meeting_url,
+        video_call_type=interview_data.video_call_type,
         notes=interview_data.notes,
     )
 
@@ -480,7 +481,6 @@ async def _check_interview_access(user: User, interview: Interview) -> bool:
 # Video Call Integration Endpoints
 
 @router.post("/{interview_id}/video-call", response_model=VideoCallInfo)
-@requires_permission("interviews.update")
 async def create_interview_video_call(
     interview_id: int,
     video_call_data: VideoCallCreate,

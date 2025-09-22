@@ -316,7 +316,7 @@ function PositionsPageContent() {
         month: 'short',
         day: 'numeric'
       });
-    } catch (error) {
+    } catch {
       return "Recently";
     }
   };

@@ -55,6 +55,7 @@ class Interview(Base):
 
     # Meeting details
     meeting_url = Column(String(1000), nullable=True)  # Video meeting link
+    video_call_type = Column(String(50), nullable=True)  # system_generated, custom_url
     meeting_id = Column(String(255), nullable=True)  # Meeting platform ID
     meeting_password = Column(String(100), nullable=True)
 

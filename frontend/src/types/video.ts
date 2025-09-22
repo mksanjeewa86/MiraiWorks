@@ -64,7 +64,7 @@ export interface CallParticipant {
   joined_at?: string;
   left_at?: string;
   connection_quality?: ConnectionQuality;
-  device_info?: Record<string, any>;
+  device_info?: Record<string, unknown>;
 }
 
 export interface WebRTCState {

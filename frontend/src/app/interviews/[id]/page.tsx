@@ -198,6 +198,16 @@ function InterviewDetailsContent() {
           </div>
 
           <div className="flex items-center space-x-3">
+            {/* Show video call button for video interviews */}
+            {interview.interview_type === 'video' && (
+              <Link
+                href={`/video-call/${interview.id}`}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              >
+                <Video className="h-4 w-4" />
+                Start Video Call
+              </Link>
+            )}
             <Link
               href={`/interviews/${interview.id}/edit`}
               className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-4 py-2 rounded-lg flex items-center gap-2"

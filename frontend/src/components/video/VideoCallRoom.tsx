@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Card } from '../ui/Card';
-import { Button } from '../ui/Button';
+import { useParams, useRouter } from 'next/navigation';
+import Card from '../ui/Card';
+import Button from '../ui/Button';
 import { VideoControls } from './VideoControls';
 import { ParticipantVideo } from './ParticipantVideo';
 import { TranscriptionPanel } from './TranscriptionPanel';
@@ -20,7 +20,7 @@ interface VideoCallRoomProps {
 
 export const VideoCallRoom: React.FC<VideoCallRoomProps> = ({ callId: propCallId }) => {
   const { callId: paramCallId } = useParams<{ callId: string }>();
-  const navigate = useNavigate();
+  const router = useRouter();
   const callId = propCallId || paramCallId;
 
   const [showTranscription, setShowTranscription] = useState(true);
@@ -28,6 +28,8 @@ export const VideoCallRoom: React.FC<VideoCallRoomProps> = ({ callId: propCallId
   const [showConsentModal, setShowConsentModal] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [hasJoinedCall, setHasJoinedCall] = useState(false);
+  const [consentCompleted, setConsentCompleted] = useState(false);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -63,8 +65,8 @@ export const VideoCallRoom: React.FC<VideoCallRoomProps> = ({ callId: propCallId
     isTranscribing,
     language: transcriptionLanguage,
     setTranscriptionLanguage,
-    startTranscription,
-    stopTranscription,
+    // startTranscription,
+    // stopTranscription,
   } = useTranscription(callId, videoCall?.transcription_enabled);
 
   // Chat functionality
@@ -75,7 +77,7 @@ export const VideoCallRoom: React.FC<VideoCallRoomProps> = ({ callId: propCallId
       senderName: 'You',
       message,
       timestamp: new Date(),
-      type: type as any,
+      type: type as 'text' | 'link' | 'code' | 'file',
     };
     setChatMessages(prev => [...prev, newMessage]);
   };
@@ -96,24 +98,28 @@ export const VideoCallRoom: React.FC<VideoCallRoomProps> = ({ callId: propCallId
 
   // Auto-join call when component mounts
   useEffect(() => {
-    if (videoCall && !isConnected) {
+    if (videoCall && !hasJoinedCall && !isConnected) {
       handleJoinCall();
     }
-  }, [videoCall, isConnected]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [videoCall, hasJoinedCall, isConnected]);
 
   // Show consent modal when call starts
   useEffect(() => {
-    if (videoCall && videoCall.status === 'in_progress' && !showConsentModal) {
+    if (videoCall && videoCall.status === 'in_progress' && !consentCompleted && !showConsentModal) {
       setShowConsentModal(true);
     }
-  }, [videoCall?.status, showConsentModal]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [videoCall?.status, consentCompleted, showConsentModal]);
 
   const handleJoinCall = async () => {
     try {
+      setHasJoinedCall(true);
       await joinCall();
       await connect();
     } catch (error) {
       console.error('Failed to join call:', error);
+      setHasJoinedCall(false);
     }
   };
 
@@ -121,7 +127,7 @@ export const VideoCallRoom: React.FC<VideoCallRoomProps> = ({ callId: propCallId
     try {
       await disconnect();
       await endCall();
-      navigate('/interviews');
+      router.push('/interviews');
     } catch (error) {
       console.error('Failed to end call:', error);
     }
@@ -130,6 +136,7 @@ export const VideoCallRoom: React.FC<VideoCallRoomProps> = ({ callId: propCallId
   const handleConsentSubmit = async (consented: boolean) => {
     try {
       await recordConsent(consented);
+      setConsentCompleted(true);
       setShowConsentModal(false);
     } catch (error) {
       console.error('Failed to record consent:', error);
@@ -160,7 +167,7 @@ export const VideoCallRoom: React.FC<VideoCallRoomProps> = ({ callId: propCallId
           <h2 className="text-xl font-semibold text-red-600 mb-4">
             {callError || 'Video call not found'}
           </h2>
-          <Button onClick={() => navigate('/interviews')}>
+          <Button onClick={() => router.push('/interviews')}>
             Return to Interviews
           </Button>
         </Card>

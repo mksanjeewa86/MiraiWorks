@@ -254,7 +254,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Handle different error response formats
       if (error && typeof error === 'object') {
-        const err = error as any;
+        const err = error as { response?: { data?: { detail?: string; message?: string } }; message?: string };
         if (err.response?.data?.detail) {
           errorMessage = err.response.data.detail;
         } else if (err.response?.data?.message) {

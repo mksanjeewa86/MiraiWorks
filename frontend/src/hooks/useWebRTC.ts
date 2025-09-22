@@ -65,6 +65,7 @@ export const useWebRTC = (roomId?: string): UseWebRTCResult => {
         connectionQuality: getQualityFromState(connectionState)
       }));
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId]);
 
   const getQualityFromState = (state: string | undefined): ConnectionQuality => {
@@ -153,27 +154,34 @@ export const useWebRTC = (roomId?: string): UseWebRTCResult => {
     });
   };
 
-  const handleSignalingMessage = async (data: any) => {
+  const handleSignalingMessage = async (data: unknown) => {
     if (!peerConnection.current) return;
 
-    switch (data.type) {
+    const message = data as { type?: string; offer?: RTCSessionDescriptionInit; answer?: RTCSessionDescriptionInit; candidate?: RTCIceCandidateInit };
+    switch (message.type) {
       case 'offer':
-        await peerConnection.current.setRemoteDescription(new RTCSessionDescription(data.offer));
-        const answer = await peerConnection.current.createAnswer();
-        await peerConnection.current.setLocalDescription(answer);
-        websocket.current?.send(JSON.stringify({
-          type: 'answer',
-          answer,
-          roomId
-        }));
+        if (message.offer) {
+          await peerConnection.current.setRemoteDescription(new RTCSessionDescription(message.offer));
+          const answer = await peerConnection.current.createAnswer();
+          await peerConnection.current.setLocalDescription(answer);
+          websocket.current?.send(JSON.stringify({
+            type: 'answer',
+            answer,
+            roomId
+          }));
+        }
         break;
 
       case 'answer':
-        await peerConnection.current.setRemoteDescription(new RTCSessionDescription(data.answer));
+        if (message.answer) {
+          await peerConnection.current.setRemoteDescription(new RTCSessionDescription(message.answer));
+        }
         break;
 
       case 'ice-candidate':
-        await peerConnection.current.addIceCandidate(new RTCIceCandidate(data.candidate));
+        if (message.candidate) {
+          await peerConnection.current.addIceCandidate(new RTCIceCandidate(message.candidate));
+        }
         break;
 
       case 'user-joined':

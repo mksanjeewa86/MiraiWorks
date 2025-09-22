@@ -40,9 +40,11 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
     async def get_by_interview_id(self, db: AsyncSession, *, interview_id: int) -> Optional[VideoCall]:
         """Get video call by interview ID."""
         result = await db.execute(
-            select(VideoCall).where(VideoCall.interview_id == interview_id)
+            select(VideoCall)
+            .where(VideoCall.interview_id == interview_id)
+            .order_by(VideoCall.created_at.desc())
         )
-        return result.scalar_one_or_none()
+        return result.scalars().first()
 
     async def get_user_video_calls(
         self, db: AsyncSession, *, user_id: int, skip: int = 0, limit: int = 100
@@ -88,7 +90,30 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
     async def add_participant(
         self, db: AsyncSession, *, video_call_id: int, user_id: int, device_info: Optional[dict] = None
     ) -> CallParticipant:
-        """Add a participant to the video call."""
+        """Add a participant to the video call or return existing participant."""
+        # Check if participant already exists
+        result = await db.execute(
+            select(CallParticipant).where(
+                and_(
+                    CallParticipant.video_call_id == video_call_id,
+                    CallParticipant.user_id == user_id
+                )
+            )
+        )
+        existing_participant = result.scalar_one_or_none()
+
+        if existing_participant:
+            # Update joined_at time and device_info for existing participant
+            existing_participant.joined_at = datetime.utcnow()
+            if device_info:
+                existing_participant.device_info = device_info
+            # Clear left_at if they're rejoining
+            existing_participant.left_at = None
+            await db.commit()
+            await db.refresh(existing_participant)
+            return existing_participant
+
+        # Create new participant
         participant = CallParticipant(
             video_call_id=video_call_id,
             user_id=user_id,

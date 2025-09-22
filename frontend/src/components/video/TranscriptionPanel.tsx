@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Button } from '../ui/Button';
-import { Input } from '../ui/Input';
+import Button from '../ui/Button';
+import Input from '../ui/Input';
 import { LanguageSelector } from './LanguageSelector';
+import { apiClient } from '../../api/apiClient';
 import {
   MagnifyingGlassIcon,
   ArrowDownTrayIcon,
@@ -67,7 +68,7 @@ export const TranscriptionPanel: React.FC<TranscriptionPanelProps> = ({
 
   const highlightText = (text: string, query: string) => {
     if (!query.trim()) return text;
-    
+
     const parts = text.split(new RegExp(`(${query})`, 'gi'));
     return parts.map((part, index) =>
       part.toLowerCase() === query.toLowerCase() ? (
@@ -82,17 +83,8 @@ export const TranscriptionPanel: React.FC<TranscriptionPanelProps> = ({
 
   const handleExport = async (format: 'txt' | 'pdf' | 'srt') => {
     try {
-      const response = await fetch(`/api/video-calls/${callId}/transcript/download?format=${format}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-        },
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        window.open(data.download_url, '_blank');
-      }
+      const response = await apiClient.get(`/api/video-calls/${callId}/transcript/download?format=${format}`);
+      window.open(response.data.download_url, '_blank');
     } catch (error) {
       console.error('Failed to export transcript:', error);
     }

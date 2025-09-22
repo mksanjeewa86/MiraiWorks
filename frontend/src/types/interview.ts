@@ -17,6 +17,7 @@ export interface Interview {
   timezone?: string;
   location?: string;
   meeting_url?: string;
+  video_call_type?: 'system_generated' | 'custom_url';
   duration_minutes?: number;
   notes?: string;
   preparation_notes?: string;
@@ -133,6 +134,7 @@ export interface InterviewFormData {
   timezone: string;
   location: string;
   meeting_url: string;
+  video_call_type: 'system_generated' | 'custom_url';
   notes: string;
   preparation_notes: string;
 }

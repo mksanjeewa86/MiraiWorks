@@ -16,6 +16,33 @@ export const interviewsApi = {
     return { data: response.data, success: true };
   },
 
+  // Get interviews for current user (works for both candidates and recruiters)
+  async getMyInterviews(params?: {
+    status?: string;
+    start_date?: string;
+    end_date?: string;
+    limit?: number;
+    offset?: number
+  }): Promise<ApiResponse<InterviewsListResponse<Interview>>> {
+    let url = API_ENDPOINTS.INTERVIEWS.BASE;
+
+    if (params) {
+      const searchParams = new URLSearchParams();
+      if (params.status) searchParams.append('status', params.status);
+      if (params.start_date) searchParams.append('start_date', params.start_date);
+      if (params.end_date) searchParams.append('end_date', params.end_date);
+      if (params.limit) searchParams.append('limit', params.limit.toString());
+      if (params.offset) searchParams.append('offset', params.offset.toString());
+
+      if (searchParams.toString()) {
+        url += `?${searchParams.toString()}`;
+      }
+    }
+
+    const response = await apiClient.get<InterviewsListResponse<Interview>>(url);
+    return { data: response.data, success: true };
+  },
+
   async getById(id: number): Promise<ApiResponse<Interview>> {
     const response = await apiClient.get<Interview>(API_ENDPOINTS.INTERVIEWS.BY_ID(id));
     return { data: response.data, success: true };

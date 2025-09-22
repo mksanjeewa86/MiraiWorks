@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Save, Calendar, Clock, MapPin, Video, Phone, Users, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Save, Video, Phone, Users, AlertCircle } from 'lucide-react';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { interviewsApi } from '@/api/interviews';
 import type { Interview, InterviewEditFormData } from '@/types/interview';
@@ -13,6 +14,22 @@ function EditInterviewContent() {
   const params = useParams();
   const router = useRouter();
   const { showToast } = useToast();
+  const { user } = useAuth();
+
+  // Check if user can edit interviews (not a candidate)
+  const canEditInterviews = () => {
+    if (!user || !user.roles) return false;
+    const isCandidate = user.roles.some(userRole => userRole.role.name === 'candidate');
+    return !isCandidate && user.roles.length > 0;
+  };
+
+  // Redirect if user cannot edit interviews
+  useEffect(() => {
+    if (user && !canEditInterviews()) {
+      router.push('/interviews');
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, router]);
 
   const [originalInterview, setOriginalInterview] = useState<Interview | null>(null);
   const [formData, setFormData] = useState<InterviewEditFormData>({

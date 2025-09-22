@@ -166,7 +166,7 @@ function CalendarPageContent() {
     } finally {
       setLoading(false);
     }
-  }, [currentDate, viewType]);
+  }, [currentDate, viewType, user]);
 
   useEffect(() => {
     loadEvents();

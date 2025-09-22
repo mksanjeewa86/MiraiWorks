@@ -7,7 +7,7 @@ import Input from '@/components/ui/Input';
 import Badge from '@/components/ui/Badge';
 import { useToast } from '@/contexts/ToastContext';
 import { todosApi } from '@/api/todos';
-import type { Todo, TodoPayload, TaskFormState, TaskModalProps } from '@/types/todo';
+import type { TodoPayload, TaskFormState, TaskModalProps } from '@/types/todo';
 
 const initialFormState: TaskFormState = {
   title: '',

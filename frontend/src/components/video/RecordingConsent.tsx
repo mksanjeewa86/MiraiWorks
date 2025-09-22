@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Button } from '../ui/Button';
-import { Card } from '../ui/Card';
+import Button from '../ui/Button';
+import Card from '../ui/Card';
 import { 
   VideoCameraIcon,
   MicrophoneIcon,

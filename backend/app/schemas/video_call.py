@@ -30,7 +30,7 @@ class VideoCallCreate(BaseModel):
     interview_id: Optional[int] = None
     candidate_id: int
     scheduled_at: datetime
-    enable_transcription: bool = True
+    transcription_enabled: bool = True
     transcription_language: str = "ja"
 
 

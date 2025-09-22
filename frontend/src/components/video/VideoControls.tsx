@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from '../ui/Button';
+import Button from '../ui/Button';
 import {
   MicrophoneIcon,
   VideoCameraIcon,
@@ -52,7 +52,7 @@ export const VideoControls: React.FC<VideoControlsProps> = ({
     <div className="flex items-center space-x-4 bg-gray-800 rounded-lg px-6 py-4 shadow-lg">
       {/* Audio Control */}
       <Button
-        variant={isMuted ? 'destructive' : 'secondary'}
+        variant={isMuted ? 'danger' : 'secondary'}
         size="sm"
         onClick={onToggleAudio}
         className="p-3 rounded-full"
@@ -67,7 +67,7 @@ export const VideoControls: React.FC<VideoControlsProps> = ({
 
       {/* Video Control */}
       <Button
-        variant={isVideoOn ? 'secondary' : 'destructive'}
+        variant={isVideoOn ? 'secondary' : 'danger'}
         size="sm"
         onClick={onToggleVideo}
         className="p-3 rounded-full"
@@ -130,7 +130,7 @@ export const VideoControls: React.FC<VideoControlsProps> = ({
 
       {/* End Call */}
       <Button
-        variant="destructive"
+        variant="danger"
         size="sm"
         onClick={onEndCall}
         className="p-3 rounded-full bg-red-600 hover:bg-red-700"

@@ -9,7 +9,7 @@ interface ParticipantVideoProps {
   className?: string;
 }
 
-export const ParticipantVideo = forwardRef<HTMLVideoElement, ParticipantVideoProps>(
+const ParticipantVideo = forwardRef<HTMLVideoElement, ParticipantVideoProps>(
   ({ stream, isLocal, participantName, isMuted, className = '' }, ref) => {
     return (
       <div className={`relative ${className}`}>
@@ -57,3 +57,7 @@ export const ParticipantVideo = forwardRef<HTMLVideoElement, ParticipantVideoPro
     );
   }
 );
+
+ParticipantVideo.displayName = 'ParticipantVideo';
+
+export { ParticipantVideo };

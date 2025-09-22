@@ -20,6 +20,7 @@ class InterviewCreate(BaseModel):
     timezone: Optional[str] = "UTC"
     location: Optional[str] = None
     meeting_url: Optional[str] = None
+    video_call_type: Optional[str] = None
     notes: Optional[str] = None
 
 
@@ -30,6 +31,7 @@ class InterviewUpdate(BaseModel):
     interview_type: Optional[str] = None
     location: Optional[str] = None
     meeting_url: Optional[str] = None
+    video_call_type: Optional[str] = None
     notes: Optional[str] = None
     status: Optional[str] = None
     scheduled_start: Optional[datetime] = None
@@ -121,6 +123,7 @@ class InterviewInfo(BaseModel):
     timezone: Optional[str] = None
     location: Optional[str] = None
     meeting_url: Optional[str] = None
+    video_call_type: Optional[str] = None
     duration_minutes: Optional[int] = None
 
     notes: Optional[str] = None
@@ -166,8 +169,8 @@ class InterviewReschedule(BaseModel):
 class InterviewsListRequest(BaseModel):
     status: Optional[str] = None
     candidate_id: Optional[int] = None
-    recruiter_id: int
-    employer_company_id: int
+    recruiter_id: Optional[int] = None
+    employer_company_id: Optional[int] = None
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
     limit: int = 50

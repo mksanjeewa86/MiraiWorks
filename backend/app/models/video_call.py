@@ -1,7 +1,7 @@
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, Boolean, Float, Index
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.mysql import JSON
 
 from app.database import Base
 
@@ -61,7 +61,7 @@ class CallParticipant(Base):
     joined_at = Column(DateTime(timezone=True), nullable=True)
     left_at = Column(DateTime(timezone=True), nullable=True)
     connection_quality = Column(String(20), nullable=True)
-    device_info = Column(JSONB, nullable=True)
+    device_info = Column(JSON, nullable=True)
     
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

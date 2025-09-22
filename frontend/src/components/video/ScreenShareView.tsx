@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Button } from '../ui/Button';
+import Button from '../ui/Button';
 import { 
   XMarkIcon,
   ArrowsPointingOutIcon,
@@ -75,7 +75,7 @@ export const ScreenShareView: React.FC<ScreenShareViewProps> = ({
 
             {/* Stop Sharing (only for sharer) */}
             <Button
-              variant="destructive"
+              variant="ghost"
               size="sm"
               onClick={onStopSharing}
               className="bg-red-600 hover:bg-red-700 text-white"

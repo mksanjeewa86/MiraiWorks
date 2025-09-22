@@ -21,7 +21,7 @@ function PositionsPageContent() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPositions, setTotalPositions] = useState(0);
-  const [hasMore, setHasMore] = useState(false);
+  const [, setHasMore] = useState(false);
   const positionsPerPage = 12; // Show 12 positions per page for nice grid layout
 
   // Set page title
@@ -318,7 +318,7 @@ function PositionsPageContent() {
               <div className="flex flex-wrap gap-2">
                 {searchQuery && (
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                    Search: "{searchQuery}"
+                    Search: &ldquo;{searchQuery}&rdquo;
                     <button
                       onClick={() => setSearchQuery('')}
                       className="ml-1 text-indigo-600 hover:text-indigo-800"

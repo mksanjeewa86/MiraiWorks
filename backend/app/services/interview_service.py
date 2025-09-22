@@ -41,6 +41,7 @@ class InterviewService:
         timezone: Optional[str] = "UTC",
         location: Optional[str] = None,
         meeting_url: Optional[str] = None,
+        video_call_type: Optional[str] = None,
         notes: Optional[str] = None,
     ) -> Interview:
         """Create a new interview."""
@@ -60,6 +61,12 @@ class InterviewService:
 
         interview_status = status or InterviewStatus.PENDING_SCHEDULE.value
 
+        # Handle automatic meeting URL generation for video interviews
+        final_meeting_url = meeting_url
+        if interview_type == "video" and video_call_type == "system_generated":
+            # We'll generate the URL after creating the interview to get the ID
+            final_meeting_url = None
+
         # Create interview
         interview = Interview(
             candidate_id=candidate_id,
@@ -76,13 +83,25 @@ class InterviewService:
             scheduled_end=scheduled_end,
             timezone=timezone or "UTC",
             location=location,
-            meeting_url=meeting_url,
+            meeting_url=final_meeting_url,
+            video_call_type=video_call_type,
             notes=notes,
         )
 
         db.add(interview)
         await db.commit()
         await db.refresh(interview)
+
+        # Generate system meeting URL if needed
+        if interview_type == "video" and video_call_type == "system_generated":
+            # Get the base URL from settings or use localhost for development
+            base_url = getattr(settings, 'BASE_URL', 'http://localhost:3000')
+            system_meeting_url = f"{base_url}/video-call/{interview.id}"
+
+            # Update the interview with the generated URL
+            interview.meeting_url = system_meeting_url
+            await db.commit()
+            await db.refresh(interview)
 
         logger.info(
             f"Created interview {interview.id} between candidate {candidate_id} and employer company {employer_company_id}"

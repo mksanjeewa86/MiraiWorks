@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { interviewsApi } from '@/api/interviews';
 import type {
+  Interview,
   InterviewListItem,
   InterviewStatusFilter,
   InterviewTypeFilter,
@@ -18,6 +19,17 @@ import type {
 function InterviewsPageContent() {
   const { user } = useAuth();
   const { showToast } = useToast();
+
+  // Helper function to check if user can create interviews
+  const canCreateInterviews = () => {
+    if (!user || !user.roles) {
+      return false;
+    }
+
+    // Check if user is NOT a candidate (anyone other than candidate can create interviews)
+    const isCandidate = user.roles.some(userRole => userRole.role.name === 'candidate');
+    return !isCandidate && user.roles.length > 0;
+  };
   const [interviews, setInterviews] = useState<InterviewListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -38,21 +50,15 @@ function InterviewsPageContent() {
         return;
       }
 
-      // Check if user has required fields
-      if (!user.company_id) {
-        setError('User company information is missing. Please contact your administrator.');
-        setLoading(false);
-        return;
-      }
-
       try {
         setLoading(true);
         setError('');
 
-        // Pass required parameters based on current user
-        const response = await interviewsApi.getAll({
-          recruiter_id: user.id, // Assuming the current user is the recruiter
-          employer_company_id: user.company_id
+        // Use the new getMyInterviews API method which works for all user types
+        // The backend automatically filters interviews based on the authenticated user
+        const response = await interviewsApi.getMyInterviews({
+          status: statusFilter !== 'all' ? statusFilter : undefined,
+          limit: 100 // Get more interviews to handle frontend filtering/sorting
         });
 
         // Map API response to local Interview interface
@@ -104,7 +110,7 @@ function InterviewsPageContent() {
     };
 
     fetchInterviews();
-  }, [user]);
+  }, [user, statusFilter]);
 
   // Filter and sort interviews
   const filteredInterviews = interviews
@@ -240,13 +246,15 @@ function InterviewsPageContent() {
                 </div>
               )}
             </div>
-            <Link
-              href="/interviews/new"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-            >
-              <Plus size={20} />
-              Schedule Interview
-            </Link>
+            {canCreateInterviews() && (
+              <Link
+                href="/interviews/new"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+              >
+                <Plus size={20} />
+                Schedule Interview
+              </Link>
+            )}
           </div>
 
           {/* Filters and Search */}
@@ -342,10 +350,12 @@ function InterviewsPageContent() {
                 <p className="text-gray-600 mb-4">
                   {searchTerm || statusFilter !== 'all' || typeFilter !== 'all'
                     ? 'Try adjusting your filters to see more results.'
-                    : 'Get started by scheduling your first interview.'
+                    : canCreateInterviews()
+                      ? 'Get started by scheduling your first interview.'
+                      : 'No interviews have been scheduled for you yet.'
                   }
                 </p>
-                {(!searchTerm && statusFilter === 'all' && typeFilter === 'all') && (
+                {(!searchTerm && statusFilter === 'all' && typeFilter === 'all' && canCreateInterviews()) && (
                   <Link
                     href="/interviews/new"
                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg inline-flex items-center gap-2 transition-colors"

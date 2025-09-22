@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { TranscriptionSegment, TranscriptionState } from '../types/video';
+import { apiClient } from '../api/apiClient';
 
 interface UseTranscriptionResult extends TranscriptionState {
   setTranscriptionLanguage: (language: string) => void;
@@ -53,22 +54,25 @@ export const useTranscription = (
     };
   };
 
-  const handleTranscriptionMessage = (data: any) => {
-    switch (data.type) {
+  const handleTranscriptionMessage = (data: unknown) => {
+    const message = data as { type?: string; segment?: { video_call_id: number; speaker_id: number; segment_text: string; start_time: number; end_time: number; confidence?: number }; status?: string; message?: string };
+    switch (message.type) {
       case 'segment':
-        addSegment({
-          video_call_id: parseInt(callId || '0'),
-          speaker_id: data.speaker_id,
-          speaker_name: data.speaker_name,
-          segment_text: data.text,
-          start_time: data.start_time,
-          end_time: data.end_time,
-          confidence: data.confidence,
-        });
+        if (message.segment) {
+          addSegment({
+            video_call_id: parseInt(callId || '0'),
+            speaker_id: message.segment.speaker_id,
+            speaker_name: '',
+            segment_text: message.segment.segment_text,
+            start_time: message.segment.start_time,
+            end_time: message.segment.end_time,
+            confidence: message.segment.confidence,
+          });
+        }
         break;
 
       case 'error':
-        console.error('Transcription error:', data.message);
+        console.error('Transcription error:', message.message);
         setState(prev => ({ ...prev, isTranscribing: false }));
         break;
     }
@@ -174,26 +178,13 @@ export const useTranscription = (
 
   const saveSegmentToBackend = async (segment: TranscriptionSegment) => {
     try {
-      const token = localStorage.getItem('access_token');
-      
-      const response = await fetch(`/api/video-calls/${callId}/transcript/segments`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          speaker_id: segment.speaker_id,
-          segment_text: segment.segment_text,
-          start_time: segment.start_time,
-          end_time: segment.end_time,
-          confidence: segment.confidence,
-        }),
+      await apiClient.post(`/api/video-calls/${callId}/transcript/segments`, {
+        speaker_id: segment.speaker_id,
+        segment_text: segment.segment_text,
+        start_time: segment.start_time,
+        end_time: segment.end_time,
+        confidence: segment.confidence,
       });
-
-      if (!response.ok) {
-        console.error('Failed to save transcription segment');
-      }
     } catch (error) {
       console.error('Error saving transcription segment:', error);
     }
@@ -219,20 +210,8 @@ export const useTranscription = (
 
   const exportTranscript = async (format: 'txt' | 'pdf' | 'srt'): Promise<string | null> => {
     try {
-      const token = localStorage.getItem('access_token');
-      
-      const response = await fetch(`/api/video-calls/${callId}/transcript/download?format=${format}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to export transcript');
-      }
-
-      const data = await response.json();
-      return data.download_url;
+      const response = await apiClient.get(`/api/video-calls/${callId}/transcript/download?format=${format}`);
+      return response.data.download_url;
     } catch (error) {
       console.error('Error exporting transcript:', error);
       return null;
@@ -244,29 +223,27 @@ export const useTranscription = (
     if (callId && enabled) {
       loadExistingSegments();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [callId, enabled]);
 
   const loadExistingSegments = async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      
-      const response = await fetch(`/api/video-calls/${callId}/transcript`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.segments) {
-          setState(prev => ({
-            ...prev,
-            segments: data.segments,
-          }));
-        }
+      const response = await apiClient.get(`/api/video-calls/${callId}/transcript`);
+      if (response.data.segments) {
+        setState(prev => ({
+          ...prev,
+          segments: response.data.segments,
+        }));
       }
-    } catch (error) {
-      console.error('Error loading existing segments:', error);
+    } catch (error: any) {
+      // It's normal for new video calls to not have existing transcripts
+      if (error.message?.includes('Transcript not available') ||
+          error.message?.includes('404') ||
+          error.message?.includes('not found')) {
+        console.log('No existing transcript found for this video call - this is normal for new calls');
+      } else {
+        console.error('Error loading existing segments:', error);
+      }
     }
   };
 

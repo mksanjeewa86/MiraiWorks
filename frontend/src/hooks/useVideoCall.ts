@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { VideoCall } from '../types/video';
+import { apiClient } from '../api/apiClient';
 
 interface UseVideoCallResult {
   videoCall: VideoCall | null;
@@ -21,21 +22,8 @@ export const useVideoCall = (callId?: string): UseVideoCallResult => {
 
     try {
       setLoading(true);
-      const token = localStorage.getItem('access_token');
-      
-      const response = await fetch(`/api/video-calls/${callId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch video call');
-      }
-
-      const data = await response.json();
-      setVideoCall(data);
+      const response = await apiClient.get(`/api/video-calls/${callId}`);
+      setVideoCall(response.data);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
@@ -48,20 +36,7 @@ export const useVideoCall = (callId?: string): UseVideoCallResult => {
     if (!callId) return;
 
     try {
-      const token = localStorage.getItem('access_token');
-      
-      const response = await fetch(`/api/video-calls/${callId}/join`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to join call');
-      }
-
+      await apiClient.post(`/api/video-calls/${callId}/join`);
       await fetchVideoCall(); // Refresh call data
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to join call');
@@ -73,20 +48,7 @@ export const useVideoCall = (callId?: string): UseVideoCallResult => {
     if (!callId) return;
 
     try {
-      const token = localStorage.getItem('access_token');
-      
-      const response = await fetch(`/api/video-calls/${callId}/end`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to end call');
-      }
-
+      await apiClient.post(`/api/video-calls/${callId}/end`);
       await fetchVideoCall(); // Refresh call data
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to end call');
@@ -98,20 +60,7 @@ export const useVideoCall = (callId?: string): UseVideoCallResult => {
     if (!callId) return;
 
     try {
-      const token = localStorage.getItem('access_token');
-      
-      const response = await fetch(`/api/video-calls/${callId}/consent`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ consented }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to record consent');
-      }
+      await apiClient.post(`/api/video-calls/${callId}/consent`, { consented });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to record consent');
       throw err;
@@ -124,6 +73,7 @@ export const useVideoCall = (callId?: string): UseVideoCallResult => {
 
   useEffect(() => {
     fetchVideoCall();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [callId]);
 
   return {

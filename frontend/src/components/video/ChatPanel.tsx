@@ -1,11 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Button } from '../ui/Button';
-import { Input } from '../ui/Input';
-import { 
+import Button from '../ui/Button';
+import Input from '../ui/Input';
+import {
   PaperAirplaneIcon,
   LinkIcon,
   DocumentIcon,
-  ClipboardIcon,
 } from '@heroicons/react/24/outline';
 
 interface ChatMessage {
@@ -33,7 +32,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   onToggleVisibility,
 }) => {
   const [messageText, setMessageText] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
+  const [isTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -139,9 +138,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     );
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-  };
+  // const copyToClipboard = (text: string) => {
+  //   navigator.clipboard.writeText(text);
+  // };
 
   const insertTemplate = (template: string) => {
     setMessageText(prev => prev + template);

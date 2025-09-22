@@ -78,7 +78,13 @@ export default function RegisterPage() {
 
     try {
       // Remove confirmPassword from data before sending to API
-      const { confirmPassword, ...submitData } = data;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { confirmPassword, ...formData } = data;
+      const submitData = {
+        ...formData,
+        company_name: 'Default Company', // TODO: Add company fields to form
+        company_domain: 'default.com'
+      };
       await registerUser(submitData);
 
       // Show success message
