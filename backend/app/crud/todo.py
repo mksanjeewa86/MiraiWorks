@@ -4,11 +4,15 @@ from datetime import datetime, timezone
 
 from sqlalchemy import Select, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.crud.base import CRUDBase
 from app.models.todo import Todo
-from app.schemas.todo import TodoCreate, TodoUpdate
-from app.utils.constants import TodoStatus
+from app.models.user import User
+from app.schemas.todo import TodoCreate, TodoUpdate, TodoAssignmentUpdate, TodoViewersUpdate
+from app.utils.constants import TodoStatus, TodoVisibility
+from app.services.todo_permissions import TodoPermissionService
+from app.crud.todo_viewer import todo_viewer
 
 
 class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
@@ -35,16 +39,23 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         self,
         db: AsyncSession,
         *,
-        owner_id: int,
+        user_id: int,
         status: str | None = None,
         include_completed: bool = True,
         include_deleted: bool = False,
         limit: int = 100,
         offset: int = 0,
     ) -> tuple[list[Todo], int]:
-        await self.auto_mark_expired(db, owner_id)
+        await self.auto_mark_expired(db, user_id)
 
-        query: Select = select(Todo).where(Todo.owner_id == owner_id)
+        # Build query to include todos where user is owner OR assigned
+        query: Select = (
+            select(Todo)
+            .options(selectinload(Todo.assigned_user))
+            .where(
+                (Todo.owner_id == user_id) | (Todo.assigned_user_id == user_id)
+            )
+        )
 
         # Filter by deleted status
         if include_deleted:
@@ -67,8 +78,14 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         query = query.offset(offset).limit(limit)
 
         result = await db.execute(query)
-        todos = result.scalars().all()
-        return todos, total
+        all_todos = result.scalars().all()
+        
+        # Filter based on permissions
+        filtered_todos = await TodoPermissionService.filter_todos_by_permission(
+            db, user_id, all_todos
+        )
+        
+        return filtered_todos, len(filtered_todos)
 
     async def list_recent(
         self, db: AsyncSession, *, owner_id: int, limit: int = 5
@@ -154,6 +171,148 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         await db.commit()
         await db.refresh(todo)
         return todo
+
+    async def get_with_assigned_user(
+        self, db: AsyncSession, *, todo_id: int
+    ) -> Todo | None:
+        """Get todo with assigned user and viewers information."""
+        result = await db.execute(
+            select(Todo)
+            .options(
+                selectinload(Todo.assigned_user),
+                selectinload(Todo.viewers).selectinload(lambda v: v.user)
+            )
+            .where(Todo.id == todo_id)
+        )
+        return result.scalars().first()
+
+    async def assign_todo(
+        self,
+        db: AsyncSession,
+        *,
+        todo: Todo,
+        assignment_data: TodoAssignmentUpdate,
+        assigned_by: int,
+    ) -> Todo:
+        """Assign a todo to a user with visibility settings."""
+        update_data = assignment_data.model_dump(exclude_unset=True)
+        update_data["last_updated_by"] = assigned_by
+        
+        # If assigning to someone, set default visibility to PUBLIC
+        if update_data.get("assigned_user_id") and not update_data.get("visibility"):
+            update_data["visibility"] = TodoVisibility.PUBLIC.value
+        
+        # If unassigning, set visibility to PRIVATE
+        if update_data.get("assigned_user_id") is None:
+            update_data["visibility"] = TodoVisibility.PRIVATE.value
+
+        return await super().update(db, db_obj=todo, obj_in=update_data)
+
+    async def get_assignable_users(self, db: AsyncSession, *, assigner_id: int) -> list[User]:
+        """Get users that can be assigned todos by the assigner."""
+        return await TodoPermissionService.get_assignable_users(db, assigner_id)
+
+    async def list_assigned_todos(
+        self,
+        db: AsyncSession,
+        *,
+        assigned_user_id: int,
+        include_completed: bool = True,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> tuple[list[Todo], int]:
+        """List todos assigned to a specific user."""
+        query: Select = (
+            select(Todo)
+            .options(selectinload(Todo.owner), selectinload(Todo.assigned_user))
+            .where(
+                Todo.assigned_user_id == assigned_user_id,
+                Todo.is_deleted == False,
+                Todo.visibility.in_([TodoVisibility.PUBLIC.value, TodoVisibility.VIEWER.value])
+            )
+        )
+
+        if not include_completed:
+            query = query.where(Todo.status != TodoStatus.COMPLETED.value)
+
+        total_query = select(func.count()).select_from(query.subquery())
+        total_result = await db.execute(total_query)
+        total = total_result.scalar() or 0
+
+        query = query.order_by(
+            Todo.due_date.is_(None), Todo.due_date.asc(), Todo.created_at.desc()
+        )
+        query = query.offset(offset).limit(limit)
+
+        result = await db.execute(query)
+        todos = result.scalars().all()
+        return todos, total
+
+    async def update_viewers(
+        self,
+        db: AsyncSession,
+        *,
+        todo: Todo,
+        viewers_data: TodoViewersUpdate,
+        updated_by: int,
+    ) -> Todo:
+        """Update viewers for a todo."""
+        # Update viewers
+        await todo_viewer.add_viewers(
+            db, 
+            todo_id=todo.id, 
+            viewer_ids=viewers_data.viewer_ids,
+            added_by=updated_by
+        )
+        
+        # Update last_updated_by
+        todo.last_updated_by = updated_by
+        db.add(todo)
+        await db.commit()
+        await db.refresh(todo)
+        
+        return todo
+
+    async def create_with_viewers(
+        self, 
+        db: AsyncSession, 
+        *, 
+        owner_id: int, 
+        created_by: int, 
+        obj_in: TodoCreate
+    ) -> Todo:
+        """Create a todo with viewers."""
+        # Extract viewer_ids from the input
+        viewer_ids = obj_in.viewer_ids or []
+        obj_data = obj_in.model_dump(exclude={'viewer_ids'})
+        
+        # Create the todo first
+        obj_data.setdefault("status", TodoStatus.PENDING.value)
+        obj_data["owner_id"] = owner_id
+        obj_data["created_by"] = created_by
+        obj_data["last_updated_by"] = created_by
+
+        if obj_data.get("due_date") and obj_data["due_date"] < datetime.now(timezone.utc):
+            obj_data["status"] = TodoStatus.EXPIRED.value
+            obj_data["expired_at"] = datetime.now(timezone.utc)
+
+        db_obj = Todo(**obj_data)
+        db.add(db_obj)
+        await db.commit()
+        await db.refresh(db_obj)
+        
+        # Add viewers if any
+        if viewer_ids:
+            await todo_viewer.add_viewers(
+                db, 
+                todo_id=db_obj.id, 
+                viewer_ids=viewer_ids,
+                added_by=created_by
+            )
+            # Refresh to get viewers
+            await db.refresh(db_obj)
+        
+        return db_obj
 
 
 todo = CRUDTodo(Todo)

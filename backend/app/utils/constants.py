@@ -67,6 +67,9 @@ class NotificationType(str, Enum):
     INTERVIEW_CANCELLED = "interview_cancelled"
     MESSAGE_RECEIVED = "message_received"
     SYSTEM_NOTIFICATION = "system_notification"
+    TODO_EXTENSION_REQUEST = "todo_extension_request"
+    TODO_EXTENSION_APPROVED = "todo_extension_approved"
+    TODO_EXTENSION_REJECTED = "todo_extension_rejected"
 
 
 class TodoStatus(str, Enum):
@@ -74,6 +77,18 @@ class TodoStatus(str, Enum):
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
     EXPIRED = "expired"
+
+
+class TodoVisibility(str, Enum):
+    PRIVATE = "private"  # Only owner can see
+    PUBLIC = "public"    # Assigned user can see and interact
+    VIEWER = "viewer"    # Assigned user can see but not interact
+
+
+class ExtensionRequestStatus(str, Enum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
 
 
 class VirusStatus(str, Enum):

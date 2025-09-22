@@ -27,6 +27,8 @@ from .resume import (
 from .role import Role, UserRole
 from .user import User
 from .todo import Todo
+from .todo_attachment import TodoAttachment
+from .todo_viewer import TodoViewer
 from .user_settings import UserSettings
 
 __all__ = [
@@ -61,4 +63,6 @@ __all__ = [
     "PositionApplication",
     "UserSettings",
     "Todo",
+    "TodoAttachment",
+    "TodoViewer",
 ]

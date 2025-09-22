@@ -6,8 +6,18 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Badge from '@/components/ui/Badge';
 import { useToast } from '@/contexts/ToastContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { todosApi } from '@/api/todos';
-import type { Todo, TodoPayload, TaskFormState, TaskModalProps } from '@/types/todo';
+import UserAssignment from './UserAssignment';
+import useTodoPermissions from '@/hooks/useTodoPermissions';
+import type { 
+  Todo, 
+  TodoPayload, 
+  TaskFormState, 
+  TaskModalProps,
+  AssignableUser,
+  TodoAssignmentUpdate 
+} from '@/types/todo';
 
 const initialFormState: TaskFormState = {
   title: '',
@@ -28,10 +38,38 @@ function formatDateForInput(input?: string | null): string {
 
 export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: TaskModalProps) {
   const { showToast } = useToast();
+  const { user } = useAuth();
   const [formState, setFormState] = useState<TaskFormState>(initialFormState);
   const [submitting, setSubmitting] = useState(false);
+  const [assignableUsers, setAssignableUsers] = useState<AssignableUser[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [assignment, setAssignment] = useState<TodoAssignmentUpdate>({});
 
   const isEditing = !!editingTodo;
+  const permissions = editingTodo ? useTodoPermissions(editingTodo) : null;
+  const canAssign = permissions?.canAssign || !isEditing; // Any user can assign when creating
+
+  // Load assignable users when modal opens
+  useEffect(() => {
+    if (isOpen && canAssign) {
+      const loadUsers = async () => {
+        setLoadingUsers(true);
+        try {
+          const users = await todosApi.getAssignableUsers();
+          setAssignableUsers(users);
+        } catch (error) {
+          console.error('Failed to load assignable users:', error);
+          showToast({
+            type: 'error',
+            title: 'Failed to load users for assignment'
+          });
+        } finally {
+          setLoadingUsers(false);
+        }
+      };
+      loadUsers();
+    }
+  }, [isOpen, canAssign, showToast]);
 
   // Reset form when modal opens/closes or when editing todo changes
   useEffect(() => {
@@ -44,8 +82,13 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: T
           dueDate: formatDateForInput(editingTodo.due_date),
           priority: editingTodo.priority ?? '',
         });
+        setAssignment({
+          assigned_user_id: editingTodo.assigned_user_id,
+          visibility: editingTodo.visibility
+        });
       } else {
         setFormState(initialFormState);
+        setAssignment({});
       }
     }
   }, [isOpen, editingTodo]);
@@ -54,6 +97,10 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: T
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     setFormState((prev) => ({ ...prev, [field]: event.target.value }));
+  };
+
+  const handleAssignmentChange = (assignmentData: TodoAssignmentUpdate) => {
+    setAssignment(assignmentData);
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -70,12 +117,25 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: T
       notes: formState.notes.trim() || undefined,
       priority: formState.priority.trim() || undefined,
       due_date: formState.dueDate ? new Date(formState.dueDate).toISOString() : undefined,
+      ...(canAssign && {
+        assigned_user_id: assignment.assigned_user_id,
+        visibility: assignment.visibility
+      })
     };
 
     setSubmitting(true);
     try {
       if (isEditing && editingTodo) {
         await todosApi.update(editingTodo.id, payload);
+        
+        // Handle assignment separately if it changed and user can assign
+        if (canAssign && permissions?.canAssign && (
+          assignment.assigned_user_id !== editingTodo.assigned_user_id ||
+          assignment.visibility !== editingTodo.visibility
+        )) {
+          await todosApi.assignTodo(editingTodo.id, assignment);
+        }
+        
         showToast({ type: 'success', title: 'Task updated successfully' });
       } else {
         await todosApi.create(payload);
@@ -199,6 +259,22 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: T
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none"
               />
             </div>
+
+            {/* Assignment Section */}
+            {canAssign && (
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <UserAssignment
+                  todo={{
+                    ...formState,
+                    assigned_user_id: assignment.assigned_user_id,
+                    visibility: assignment.visibility || 'private'
+                  } as any}
+                  assignableUsers={assignableUsers}
+                  onAssign={handleAssignmentChange}
+                  isLoading={loadingUsers || submitting}
+                />
+              </div>
+            )}
 
             {/* Footer */}
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">

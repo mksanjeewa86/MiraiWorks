@@ -62,6 +62,10 @@ class Settings(BaseSettings):
     # App
     app_base_url: str = Field(default="http://localhost:3001")
 
+    # File Upload Settings
+    upload_directory: str = Field(default="uploads")
+    max_file_size: int = Field(default=25 * 1024 * 1024)  # 25MB in bytes
+
     model_config = {"env_file": ".env", "case_sensitive": False}
 
 
