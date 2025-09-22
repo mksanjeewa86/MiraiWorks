@@ -29,6 +29,13 @@ from app.schemas.resume import (
     SkillInfo,
     WorkExperienceCreate,
     WorkExperienceInfo,
+    PublicResumeInfo,
+    EmailResumeRequest,
+    MessageAttachmentRequest,
+    ResumePublicSettings,
+    RirekishoData,
+    ShokumuKeirekishoData,
+    JapaneseResumeTemplate
 )
 from app.services.pdf_service import PDFService
 from app.services.resume_service import ResumeService
@@ -571,4 +578,319 @@ async def get_resume_analytics(
         "last_viewed": resume.last_viewed_at,
         "shares": 0,  # Would count from ResumeShare table
         "period_days": days,
+    }
+
+
+# Japanese Resume Format Endpoints
+@router.get("/templates/japanese", response_model=list[JapaneseResumeTemplate])
+async def get_japanese_templates(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get Japanese resume format templates (履歴書, 職務経歴書)."""
+    templates = [
+        JapaneseResumeTemplate(
+            format_type="rirekisho",
+            sections=["personal_info", "education", "work_history", "qualifications", "motivation"],
+            field_mappings={
+                "personal_info": ["full_name", "furigana_name", "birth_date", "gender", "nationality", "photo"],
+                "education": ["institution_name", "degree", "graduation_date"],
+                "work_history": ["company_name", "position", "employment_period", "job_description"],
+                "qualifications": ["certification_name", "issue_date", "issuing_organization"],
+                "motivation": ["self_pr", "motivation", "commute_time", "spouse", "dependents"]
+            },
+            validation_rules={
+                "furigana_required": True,
+                "photo_required": True,
+                "birth_date_required": True
+            }
+        ),
+        JapaneseResumeTemplate(
+            format_type="shokumu_keirekisho",
+            sections=["career_summary", "detailed_experience", "skills", "achievements", "self_pr"],
+            field_mappings={
+                "career_summary": ["professional_summary", "total_experience"],
+                "detailed_experience": ["detailed_work_history", "responsibilities", "achievements"],
+                "skills": ["technical_skills", "soft_skills", "languages", "certifications"],
+                "achievements": ["key_accomplishments", "quantified_results"],
+                "self_pr": ["strengths", "career_goals", "why_this_company"]
+            },
+            validation_rules={
+                "detailed_experience_required": True,
+                "career_summary_min_length": 100
+            }
+        )
+    ]
+    return templates
+
+
+@router.post("/{resume_id}/convert-to-rirekisho", response_model=ResumeInfo)
+async def convert_to_rirekisho(
+    resume_id: int,
+    rirekisho_data: RirekishoData,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Convert existing resume to 履歴書 format."""
+    resume_service = ResumeService()
+    
+    resume = await resume_service.get_resume(db, resume_id, current_user.id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    
+    # Convert to Rirekisho format
+    from app.utils.constants import ResumeFormat, ResumeLanguage
+    updated_resume = await resume_service.update_resume(
+        db, 
+        resume_id, 
+        current_user.id, 
+        ResumeUpdate(
+            resume_format=ResumeFormat.RIREKISHO,
+            resume_language=ResumeLanguage.JAPANESE,
+            # Map rirekisho_data to resume fields
+            furigana_name=rirekisho_data.personal_info.get("furigana_name"),
+            birth_date=rirekisho_data.personal_info.get("birth_date"),
+            gender=rirekisho_data.personal_info.get("gender"),
+            nationality=rirekisho_data.personal_info.get("nationality"),
+            marital_status=rirekisho_data.personal_info.get("marital_status"),
+            emergency_contact=rirekisho_data.personal_info.get("emergency_contact")
+        )
+    )
+    
+    return updated_resume
+
+
+@router.post("/{resume_id}/convert-to-shokumu", response_model=ResumeInfo)
+async def convert_to_shokumu_keirekisho(
+    resume_id: int,
+    shokumu_data: ShokumuKeirekishoData,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Convert existing resume to 職務経歴書 format."""
+    resume_service = ResumeService()
+    
+    resume = await resume_service.get_resume(db, resume_id, current_user.id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    
+    # Convert to Shokumu Keirekisho format
+    from app.utils.constants import ResumeFormat, ResumeLanguage
+    updated_resume = await resume_service.update_resume(
+        db, 
+        resume_id, 
+        current_user.id, 
+        ResumeUpdate(
+            resume_format=ResumeFormat.SHOKUMU_KEIREKISHO,
+            resume_language=ResumeLanguage.JAPANESE,
+            professional_summary=shokumu_data.career_summary,
+            objective=shokumu_data.self_pr
+        )
+    )
+    
+    return updated_resume
+
+
+# Public Sharing Endpoints
+@router.put("/{resume_id}/public-settings", response_model=ResumeInfo)
+async def update_public_settings(
+    resume_id: int,
+    settings: ResumePublicSettings,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Update public sharing settings for a resume."""
+    resume_service = ResumeService()
+    
+    resume = await resume_service.update_public_settings(
+        db, 
+        resume_id, 
+        current_user.id, 
+        settings.is_public,
+        settings.custom_slug,
+        settings.allow_pdf_download
+    )
+    
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    
+    return resume
+
+
+@router.get("/public/{slug}", response_model=PublicResumeInfo)
+async def get_public_resume(
+    slug: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """Get public resume by slug (limited information)."""
+    resume_service = ResumeService()
+    
+    resume = await resume_service.get_public_resume(db, slug)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Public resume not found")
+    
+    # Return limited public information
+    return PublicResumeInfo(
+        id=resume.id,
+        title=resume.title,
+        full_name=resume.full_name,
+        professional_summary=resume.professional_summary,
+        resume_format=resume.resume_format,
+        resume_language=resume.resume_language,
+        view_count=resume.view_count,
+        last_viewed_at=resume.last_viewed_at,
+        can_download_pdf=resume.can_download_pdf,
+        experiences=resume.experiences[:5],  # Limit to first 5
+        educations=resume.educations[:3],    # Limit to first 3
+        skills=resume.skills[:10]            # Limit to first 10
+    )
+
+
+@router.get("/public/{slug}/download")
+async def download_public_resume_pdf(
+    slug: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """Download public resume as PDF."""
+    resume_service = ResumeService()
+    pdf_service = PDFService()
+    
+    resume = await resume_service.get_public_resume(db, slug)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Public resume not found")
+    
+    if not resume.can_download_pdf:
+        raise HTTPException(status_code=403, detail="PDF download not allowed")
+    
+    try:
+        # Increment download count
+        await resume_service.increment_download_count(db, resume.id)
+        
+        # Generate PDF
+        result = await pdf_service.generate_pdf(resume)
+        return RedirectResponse(url=result["pdf_url"])
+    except Exception as e:
+        logger.error(f"Error generating public PDF: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate PDF")
+
+
+# Email Integration Endpoints
+@router.post("/{resume_id}/send-email")
+async def send_resume_by_email(
+    resume_id: int,
+    email_request: EmailResumeRequest,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Send resume via email."""
+    resume_service = ResumeService()
+    
+    resume = await resume_service.get_resume(db, resume_id, current_user.id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    
+    try:
+        # Queue email sending as background task
+        background_tasks.add_task(
+            resume_service.send_resume_email,
+            db,
+            resume,
+            email_request.recipient_emails,
+            email_request.subject,
+            email_request.message,
+            email_request.include_pdf,
+            email_request.sender_name or current_user.full_name
+        )
+        
+        return {"message": f"Resume email queued for {len(email_request.recipient_emails)} recipients"}
+    except Exception as e:
+        logger.error(f"Error sending resume email: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to send resume email")
+
+
+# Message Attachment Endpoints
+@router.post("/{resume_id}/attach-to-message")
+async def attach_resume_to_message(
+    resume_id: int,
+    attachment_request: MessageAttachmentRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Attach resume to a message."""
+    resume_service = ResumeService()
+    
+    resume = await resume_service.get_resume(db, resume_id, current_user.id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    
+    try:
+        attachment = await resume_service.attach_to_message(
+            db,
+            resume_id,
+            attachment_request.message_id,
+            attachment_request.include_pdf,
+            attachment_request.auto_attach
+        )
+        
+        return {
+            "message": "Resume attached to message successfully",
+            "attachment_id": attachment.id,
+            "format": attachment.attachment_format
+        }
+    except Exception as e:
+        logger.error(f"Error attaching resume to message: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to attach resume")
+
+
+@router.put("/{resume_id}/auto-attach-settings")
+async def update_auto_attach_settings(
+    resume_id: int,
+    auto_attach: bool,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Enable/disable automatic attachment of resume to messages."""
+    resume_service = ResumeService()
+    
+    resume = await resume_service.get_resume(db, resume_id, current_user.id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    
+    # Update auto-attach settings (would be stored in user preferences or resume settings)
+    # Implementation would update a setting that controls automatic attachment
+    
+    return {
+        "message": f"Auto-attach {'enabled' if auto_attach else 'disabled'} for resume",
+        "resume_id": resume_id,
+        "auto_attach": auto_attach
+    }
+
+
+# Resume Protection Endpoints (for edit/delete restrictions)
+@router.put("/{resume_id}/protection")
+async def update_resume_protection(
+    resume_id: int,
+    can_edit: bool = True,
+    can_delete: bool = True,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Update resume protection settings (prevent edit/delete)."""
+    resume_service = ResumeService()
+    
+    resume = await resume_service.update_resume(
+        db,
+        resume_id,
+        current_user.id,
+        ResumeUpdate(can_edit=can_edit, can_delete=can_delete)
+    )
+    
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    
+    return {
+        "message": "Resume protection settings updated",
+        "can_edit": resume.can_edit,
+        "can_delete": resume.can_delete
     }

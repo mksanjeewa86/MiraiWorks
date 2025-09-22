@@ -3,7 +3,7 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.utils.constants import ResumeStatus, ResumeVisibility, SectionType
+from app.utils.constants import ResumeStatus, ResumeVisibility, SectionType, ResumeFormat, ResumeLanguage
 
 
 # Base schemas
@@ -26,9 +26,23 @@ class ResumeBase(BaseModel):
 
     # Template and styling
     template_id: Optional[str] = Field("modern", max_length=50)
+    resume_format: Optional[ResumeFormat] = ResumeFormat.INTERNATIONAL
+    resume_language: Optional[ResumeLanguage] = ResumeLanguage.ENGLISH
     theme_color: Optional[str] = Field("#2563eb", pattern=r"^#[0-9A-Fa-f]{6}$")
     font_family: Optional[str] = Field("Inter", max_length=50)
     custom_css: Optional[str] = None
+    
+    # Japanese-specific fields
+    furigana_name: Optional[str] = Field(None, max_length=100)  # フリガナ
+    birth_date: Optional[datetime] = None  # 生年月日
+    gender: Optional[str] = Field(None, max_length=10)  # 性別
+    nationality: Optional[str] = Field(None, max_length=50)  # 国籍
+    marital_status: Optional[str] = Field(None, max_length=20)  # 婚姻状況
+    emergency_contact: Optional[dict] = None  # 緊急連絡先
+    
+    # Public sharing
+    is_public: Optional[bool] = False
+    can_download_pdf: Optional[bool] = True
 
     @field_validator("email")
     @classmethod
@@ -62,12 +76,26 @@ class ResumeUpdate(BaseModel):
     professional_summary: Optional[str] = None
     objective: Optional[str] = None
     template_id: Optional[str] = Field(None, max_length=50)
+    resume_format: Optional[ResumeFormat] = None
+    resume_language: Optional[ResumeLanguage] = None
     theme_color: Optional[str] = Field(None, pattern=r"^#[0-9A-Fa-f]{6}$")
     font_family: Optional[str] = Field(None, max_length=50)
     custom_css: Optional[str] = None
+    
+    # Japanese-specific fields
+    furigana_name: Optional[str] = Field(None, max_length=100)
+    birth_date: Optional[datetime] = None
+    gender: Optional[str] = Field(None, max_length=10)
+    nationality: Optional[str] = Field(None, max_length=50)
+    marital_status: Optional[str] = Field(None, max_length=20)
+    emergency_contact: Optional[dict] = None
+    
+    # Settings
     status: Optional[ResumeStatus] = None
     visibility: Optional[ResumeVisibility] = None
     is_primary: Optional[bool] = None
+    is_public: Optional[bool] = None
+    can_download_pdf: Optional[bool] = None
 
 
 # Work Experience schemas
@@ -422,12 +450,34 @@ class ResumeInfo(ResumeBase):
     user_id: int
     status: ResumeStatus
     visibility: ResumeVisibility
+    resume_format: ResumeFormat
+    resume_language: ResumeLanguage
     is_primary: bool
     view_count: int
     download_count: int
     last_viewed_at: Optional[datetime]
-    slug: str
+    
+    # Enhanced sharing features
+    is_public: bool
+    public_url_slug: Optional[str]
     share_token: str
+    can_download_pdf: bool
+    can_edit: bool
+    can_delete: bool
+    
+    # Japanese-specific fields
+    furigana_name: Optional[str]
+    birth_date: Optional[datetime]
+    gender: Optional[str]
+    nationality: Optional[str]
+    marital_status: Optional[str]
+    emergency_contact: Optional[dict]
+    photo_path: Optional[str]
+    
+    # File paths
+    pdf_file_path: Optional[str]
+    pdf_generated_at: Optional[datetime]
+    
     created_at: datetime
     updated_at: datetime
 
@@ -531,3 +581,87 @@ class PDFGenerationResponse(BaseModel):
     pdf_url: str
     expires_at: datetime
     file_size: int  # in bytes
+
+
+# Japanese Resume specific schemas
+class RirekishoData(BaseModel):
+    """履歴書 (Rirekisho) specific data structure"""
+    personal_info: dict = Field(..., description="Personal information including photo")
+    education_history: list[dict] = Field([], description="Educational background")
+    work_history: list[dict] = Field([], description="Work experience") 
+    qualifications: list[dict] = Field([], description="Licenses and certifications")
+    motivation: Optional[str] = Field(None, description="Motivation and self-PR")
+    commute_time: Optional[str] = Field(None, description="Commute time")
+    spouse: Optional[str] = Field(None, description="Spouse information")
+    dependents: Optional[str] = Field(None, description="Number of dependents")
+    
+    
+class ShokumuKeirekishoData(BaseModel):
+    """職務経歴書 (Shokumu Keirekisho) specific data structure"""
+    career_summary: str = Field(..., description="Career summary")
+    detailed_experience: list[dict] = Field(..., description="Detailed work experience")
+    skills_and_expertise: dict = Field(..., description="Technical skills and expertise")
+    achievements: list[str] = Field([], description="Key achievements")
+    self_pr: str = Field(..., description="Self-promotion section")
+
+
+# Public Resume schemas
+class PublicResumeInfo(BaseModel):
+    """Public resume view (limited information)"""
+    id: int
+    title: str
+    full_name: Optional[str]
+    professional_summary: Optional[str]
+    resume_format: ResumeFormat
+    resume_language: ResumeLanguage
+    view_count: int
+    last_viewed_at: Optional[datetime]
+    can_download_pdf: bool
+    
+    # Limited related data
+    experiences: list[WorkExperienceInfo] = []
+    educations: list[EducationInfo] = []
+    skills: list[SkillInfo] = []
+
+
+class EmailResumeRequest(BaseModel):
+    """Request to send resume via email"""
+    recipient_emails: list[str] = Field(..., min_length=1, max_length=10)
+    subject: Optional[str] = Field(None, max_length=200)
+    message: Optional[str] = Field(None, max_length=2000)
+    include_pdf: bool = True
+    sender_name: Optional[str] = Field(None, max_length=100)
+    
+    @field_validator("recipient_emails")
+    @classmethod
+    def validate_emails(cls, v):
+        for email in v:
+            if "@" not in email:
+                raise ValueError(f"Invalid email format: {email}")
+        return v
+
+
+class MessageAttachmentRequest(BaseModel):
+    """Request to attach resume to message"""
+    message_id: int
+    include_pdf: bool = True
+    auto_attach: bool = False
+    
+
+class ResumePublicSettings(BaseModel):
+    """Settings for public resume sharing"""
+    is_public: bool
+    custom_slug: Optional[str] = Field(None, max_length=100)
+    show_contact_info: bool = True
+    allow_pdf_download: bool = True
+    password_protect: bool = False
+    password: Optional[str] = Field(None, min_length=4)
+
+
+# Resume format templates
+class JapaneseResumeTemplate(BaseModel):
+    """Template configuration for Japanese resume formats"""
+    format_type: ResumeFormat
+    sections: list[str] = Field(..., description="Required sections for this format")
+    field_mappings: dict = Field(..., description="Field mappings for template")
+    validation_rules: dict = Field({}, description="Format-specific validation rules")

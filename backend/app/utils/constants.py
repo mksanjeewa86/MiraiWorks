@@ -60,6 +60,20 @@ class SectionType(str, Enum):
     CUSTOM = "custom"
 
 
+class ResumeFormat(str, Enum):
+    RIREKISHO = "rirekisho"  # 履歴書 - Traditional Japanese resume
+    SHOKUMU_KEIREKISHO = "shokumu_keirekisho"  # 職務経歴書 - Career history
+    INTERNATIONAL = "international"  # Standard international resume
+    MODERN = "modern"  # Modern format
+    CREATIVE = "creative"  # Creative format
+
+
+class ResumeLanguage(str, Enum):
+    JAPANESE = "ja"
+    ENGLISH = "en"
+    BILINGUAL = "bilingual"
+
+
 class NotificationType(str, Enum):
     PASSWORD_RESET_REQUEST = "password_reset_request"
     INTERVIEW_PROPOSAL = "interview_proposal"

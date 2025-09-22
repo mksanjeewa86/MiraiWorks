@@ -18,6 +18,8 @@ help:
 	@echo "  install-deps   - Install all dependencies"
 	@echo "  lint           - Run code linting"
 	@echo "  format         - Format code"
+	@echo "  seed-exam-data - Create sample exam data for testing"
+	@echo "  seed-resume-data - Create sample resume data for testing"
 	@echo "  check-all      - Run all checks (lint + format + test)"
 	@echo ""
 	@echo "Cleanup:"
@@ -95,6 +97,16 @@ lint:
 format:
 	@echo "🎨 Formatting code..."
 	ruff format .
+
+# Seed exam data
+seed-exam-data:
+	@echo "🌱 Creating sample exam data..."
+	@export PYTHONPATH=$$(pwd) && python scripts/run_seed.py
+
+# Seed resume data
+seed-resume-data:
+	@echo "🌱 Creating sample resume data..."
+	@export PYTHONPATH=$$(pwd) && python scripts/run_resume_seed.py
 
 # Run all checks
 check-all: lint format test
