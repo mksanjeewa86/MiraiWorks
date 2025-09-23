@@ -7,6 +7,7 @@ from app.endpoints import (
     calendar_connections,
     companies,
     dashboard,
+    exam,
     messages,
     email_preview,
     files,
@@ -54,6 +55,7 @@ def include_routers(app: FastAPI) -> None:
     app.include_router(websocket_video.router, tags=["websocket-video"])
     app.include_router(mbti.router, prefix="/api/mbti", tags=["mbti"])
     app.include_router(positions.router, prefix="/api/positions", tags=["positions"])
+    app.include_router(exam.router, prefix="/api/exam", tags=["exam"])
     app.include_router(webhooks.router, prefix="/api/webhooks", tags=["webhooks"])
     app.include_router(resumes.router, prefix="/api/resumes", tags=["resumes"])
     app.include_router(user_settings.router, prefix="/api/user", tags=["user-settings"])

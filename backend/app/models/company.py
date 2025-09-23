@@ -47,6 +47,7 @@ class Company(Base):
         uselist=False,
         cascade="all, delete-orphan",
     )
+    exams = relationship("Exam", back_populates="company", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Company(id={self.id}, name='{self.name}', type='{self.type}')>"

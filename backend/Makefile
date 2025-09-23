@@ -1,5 +1,5 @@
 # MiraiWorks Backend Testing Makefile
-.PHONY: help test test-verbose test-coverage test-single test-fix install-deps clean-test lint format check-all
+.PHONY: help test test-verbose test-coverage test-single test-fix install-deps clean-test lint format check-all seed-exam-data
 
 # Default target
 help:
@@ -18,6 +18,7 @@ help:
 	@echo "  install-deps   - Install all dependencies"
 	@echo "  lint           - Run code linting"
 	@echo "  format         - Format code"
+	@echo "  seed-exam-data - Create sample exam data for testing"
 	@echo "  check-all      - Run all checks (lint + format + test)"
 	@echo ""
 	@echo "Cleanup:"
@@ -95,6 +96,11 @@ lint:
 format:
 	@echo "🎨 Formatting code..."
 	ruff format .
+
+# Seed exam data
+seed-exam-data:
+	@echo "🌱 Creating sample exam data..."
+	@export PYTHONPATH=$$(pwd) && python scripts/run_seed.py
 
 # Run all checks
 check-all: lint format test

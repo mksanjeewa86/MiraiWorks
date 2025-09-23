@@ -40,6 +40,18 @@ from .video_call import (
     TranscriptionSegment,
 )
 from .mbti_test import MBTITest, MBTIQuestion
+from .exam import (
+    Exam,
+    ExamQuestion,
+    ExamSession,
+    ExamAnswer,
+    ExamAssignment,
+    ExamMonitoringEvent,
+    ExamType,
+    ExamStatus,
+    QuestionType,
+    SessionStatus,
+)
 
 __all__ = [
     "Company",
@@ -84,4 +96,14 @@ __all__ = [
     "TranscriptionSegment",
     "MBTITest",
     "MBTIQuestion",
+    "Exam",
+    "ExamQuestion",
+    "ExamSession",
+    "ExamAnswer",
+    "ExamAssignment",
+    "ExamMonitoringEvent",
+    "ExamType",
+    "ExamStatus",
+    "QuestionType",
+    "SessionStatus",
 ]
