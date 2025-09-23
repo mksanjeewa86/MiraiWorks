@@ -7,7 +7,7 @@ import AppLayout from '@/components/layout/AppLayout';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { Search, Send, Smile, Paperclip, RefreshCw, X } from 'lucide-react';
+import { Search, Send, Smile, Paperclip, RefreshCw, X, Reply, CornerDownRight } from 'lucide-react';
 import { messagesApi } from "@/api/messages";
 import { usersApi } from "@/api/users";
 import type { Conversation, LegacyMessage as Message } from '@/types';
@@ -50,6 +50,7 @@ function MessagesPageContent() {
   const [newMessage, setNewMessage] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [attachedFiles, setAttachedFiles] = useState<Array<{
     id: string;
     file_url: string;
@@ -231,10 +232,12 @@ function MessagesPageContent() {
     // Store original values for error restoration
     const originalText = newMessage.trim();
     const filesToSend = [...attachedFiles];
+    const originalReplyingTo = replyingTo;
 
     // Clear input and files immediately for better UX
     setNewMessage('');
     setAttachedFiles([]);
+    setReplyingTo(null);
     setState(prev => ({ ...prev, sending: true }));
 
     try {
@@ -248,7 +251,8 @@ function MessagesPageContent() {
 
         messagesToSend.push({
           content: textContent,
-          type: 'text' as const
+          type: 'text' as const,
+          reply_to_id: replyingTo?.id
         });
       }
 
@@ -260,7 +264,8 @@ function MessagesPageContent() {
           file_url: file.file_url,
           file_name: file.file_name,
           file_size: file.file_size,
-          file_type: file.file_type
+          file_type: file.file_type,
+          reply_to_id: replyingTo?.id
         });
       }
 
@@ -289,6 +294,7 @@ function MessagesPageContent() {
     } catch (error) {
       setNewMessage(originalText); // Restore original text on error
       setAttachedFiles(filesToSend); // Restore files on error
+      setReplyingTo(originalReplyingTo); // Restore reply state on error
 
       // Show user-friendly error message
       const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
@@ -317,6 +323,9 @@ function MessagesPageContent() {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
+    } else if (e.key === 'Escape' && replyingTo) {
+      e.preventDefault();
+      handleCancelReply();
     }
   };
 
@@ -508,6 +517,9 @@ function MessagesPageContent() {
       // If selecting from contacts, switch to conversations tab
       activeTab: fromContact ? 'conversations' : prev.activeTab
     }));
+
+    // Clear reply state when switching conversations
+    setReplyingTo(null);
 
     // Fetch messages for the selected conversation using the userId directly
     try {
@@ -721,6 +733,19 @@ function MessagesPageContent() {
       'bg-red-500'
     ];
     return colors[id % colors.length];
+  };
+
+  const findReplyMessage = (replyToId: number): Message | undefined => {
+    return state.messages.find(msg => msg.id === replyToId);
+  };
+
+  const handleReplyToMessage = (message: Message) => {
+    setReplyingTo(message);
+    messageInputRef.current?.focus();
+  };
+
+  const handleCancelReply = () => {
+    setReplyingTo(null);
   };
 
   const formatTime = (timestamp: string) => {
@@ -1102,16 +1127,41 @@ function MessagesPageContent() {
                     </div>
                   </div>
                 ) : state.messages.length > 0 ? (
-                  state.messages.map(message => (
-                  <div
-                    key={message.id}
-                    className={`flex mb-4 ${message.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
-                      message.sender_id === user?.id
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
-                    }`}>
+                  state.messages.map(message => {
+                    const repliedMessage = message.reply_to_id ? findReplyMessage(message.reply_to_id) : undefined;
+                    return (
+                    <div
+                      key={message.id}
+                      className={`group flex mb-4 ${message.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div className={`max-w-xs lg:max-w-md ${
+                        message.sender_id === user?.id
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
+                      } rounded-2xl overflow-hidden`}>
+                        
+                        {/* Reply Reference */}
+                        {repliedMessage && (
+                          <div className={`px-4 py-2 border-l-4 ${
+                            message.sender_id === user?.id 
+                              ? 'bg-blue-600 border-blue-300 text-blue-100' 
+                              : 'bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400'
+                          }`}>
+                            <div className="flex items-center gap-1 mb-1">
+                              <CornerDownRight className="h-3 w-3" />
+                              <span className="text-xs font-medium">
+                                {repliedMessage.sender_id === user?.id ? 'You' : 
+                                 state.conversations.find(c => c.other_user_id === repliedMessage.sender_id)?.other_user_name || 'User'}
+                              </span>
+                            </div>
+                            <p className="text-xs truncate max-w-60">
+                              {repliedMessage.type === 'file' ? `📎 ${repliedMessage.file_name}` : repliedMessage.content}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Message Content */}
+                        <div className="px-4 py-2 relative group/message">{
                       {message.type === 'file' && message.file_url ? (
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
@@ -1134,17 +1184,31 @@ function MessagesPageContent() {
                             Download
                           </button>
                         </div>
-                      ) : (
-                        <p className="text-sm">{message.content}</p>
-                      )}
-                      <p className={`text-xs mt-1 ${
-                        message.sender_id === user?.id ? 'text-blue-100' : 'text-gray-500'
-                      }`}>
-                        {formatTime(message.created_at)}
-                      </p>
+                          ) : (
+                            <p className="text-sm">{message.content}</p>
+                          )}
+                          
+                          {/* Reply Button - only show on hover and for others' messages */}
+                          {message.sender_id !== user?.id && (
+                            <button
+                              onClick={() => handleReplyToMessage(message)}
+                              className="absolute top-1 right-1 opacity-0 group-hover/message:opacity-100 transition-opacity bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 p-1 rounded-full"
+                              title="Reply to this message"
+                            >
+                              <Reply className="h-3 w-3 text-gray-600 dark:text-gray-300" />
+                            </button>
+                          )}
+                          
+                          <p className={`text-xs mt-1 ${
+                            message.sender_id === user?.id ? 'text-blue-100' : 'text-gray-500'
+                          }`}>
+                            {formatTime(message.created_at)}
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  ))
+                    );
+                  })
                 ) : (
                   <div className="flex-1 flex items-center justify-center">
                     <div className="text-center">
@@ -1159,6 +1223,34 @@ function MessagesPageContent() {
 
               {/* Message Input */}
               <div className="p-6 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+                
+                {/* Reply Preview */}
+                {replyingTo && (
+                  <div className="mb-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Reply className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                          <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                            Replying to {replyingTo.sender_id === user?.id ? 'yourself' : 
+                              state.conversations.find(c => c.other_user_id === replyingTo.sender_id)?.other_user_name || 'User'}
+                          </span>
+                        </div>
+                        <p className="text-sm text-blue-800 dark:text-blue-200 pl-6 truncate">
+                          {replyingTo.type === 'file' ? `📎 ${replyingTo.file_name}` : replyingTo.content}
+                        </p>
+                      </div>
+                      <button
+                        onClick={handleCancelReply}
+                        className="p-1 hover:bg-blue-100 dark:hover:bg-blue-800 rounded-full transition-colors ml-2"
+                        title="Cancel reply"
+                      >
+                        <X className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Error Display */}
                 {state.error && (
                   <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg">
