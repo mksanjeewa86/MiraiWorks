@@ -80,6 +80,25 @@ class User(Base):
     calendar_connections = relationship(
         "CalendarConnection", back_populates="user", cascade="all, delete-orphan"
     )
+    # Todo extension request relationships
+    requested_extensions = relationship(
+        "TodoExtensionRequest", 
+        foreign_keys="TodoExtensionRequest.requested_by_id",
+        back_populates="requested_by",
+        cascade="all, delete-orphan"
+    )
+    extension_requests_to_review = relationship(
+        "TodoExtensionRequest",
+        foreign_keys="TodoExtensionRequest.creator_id", 
+        back_populates="creator",
+        cascade="all, delete-orphan"
+    )
+    extension_responses = relationship(
+        "TodoExtensionRequest",
+        foreign_keys="TodoExtensionRequest.responded_by_id",
+        back_populates="responded_by",
+        cascade="all, delete-orphan"
+    )
 
     @property
     def full_name(self):

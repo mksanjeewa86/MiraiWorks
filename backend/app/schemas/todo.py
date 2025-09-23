@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.utils.constants import TodoStatus
+from app.utils.constants import TodoStatus, TodoVisibility
 
 
 class TodoBase(BaseModel):
@@ -14,6 +14,9 @@ class TodoBase(BaseModel):
     priority: str | None = Field(default=None, max_length=20)
     due_date: datetime | None = None
     status: str | None = Field(default=TodoStatus.PENDING.value)
+    assigned_user_id: int | None = None
+    visibility: str | None = Field(default=TodoVisibility.PRIVATE.value)
+    viewer_ids: list[int] | None = None
 
     @field_validator("due_date", mode="before")
     @classmethod
@@ -39,6 +42,16 @@ class TodoBase(BaseModel):
             raise ValueError(f"Status must be one of: {', '.join(sorted(allowed))}")
         return value
 
+    @field_validator("visibility")
+    @classmethod
+    def validate_visibility(cls, value: str | None) -> str:
+        if value is None:
+            return TodoVisibility.PRIVATE.value
+        allowed = {visibility.value for visibility in TodoVisibility}
+        if value not in allowed:
+            raise ValueError(f"Visibility must be one of: {', '.join(sorted(allowed))}")
+        return value
+
     @field_validator("title")
     @classmethod
     def validate_title(cls, value: str) -> str:
@@ -58,6 +71,9 @@ class TodoUpdate(BaseModel):
     priority: str | None = Field(default=None, max_length=20)
     due_date: datetime | None = None
     status: str | None = None
+    assigned_user_id: int | None = None
+    visibility: str | None = None
+    viewer_ids: list[int] | None = None
 
     @field_validator("due_date", mode="before")
     @classmethod
@@ -90,17 +106,29 @@ class TodoUpdate(BaseModel):
             raise ValueError(f"Status must be one of: {', '.join(sorted(allowed))}")
         return value
 
+    @field_validator("visibility")
+    @classmethod
+    def validate_visibility(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        allowed = {visibility.value for visibility in TodoVisibility}
+        if value not in allowed:
+            raise ValueError(f"Visibility must be one of: {', '.join(sorted(allowed))}")
+        return value
+
 
 class TodoRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
     owner_id: int
+    assigned_user_id: int | None = None
     title: str
     description: str | None = None
     notes: str | None = None
     status: str
     priority: str | None = None
+    visibility: str
     due_date: datetime | None = None
     completed_at: datetime | None = None
     expired_at: datetime | None = None
@@ -126,3 +154,65 @@ class TodoStatusUpdate(BaseModel):
         if value not in allowed:
             raise ValueError(f"Status must be one of: {', '.join(sorted(allowed))}")
         return value
+
+
+class TodoAssignmentUpdate(BaseModel):
+    assigned_user_id: int | None = None
+    visibility: str | None = None
+
+    @field_validator("visibility")
+    @classmethod
+    def validate_visibility(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        allowed = {visibility.value for visibility in TodoVisibility}
+        if value not in allowed:
+            raise ValueError(f"Visibility must be one of: {', '.join(sorted(allowed))}")
+        return value
+
+
+class AssignableUser(BaseModel):
+    """User that can be assigned to todos."""
+    model_config = ConfigDict(from_attributes=True)
+    
+    id: int
+    email: str
+    first_name: str
+    last_name: str
+    is_active: bool
+
+    @property
+    def full_name(self) -> str:
+        return f"{self.first_name} {self.last_name}"
+
+
+class TodoViewer(BaseModel):
+    """Todo viewer information."""
+    model_config = ConfigDict(from_attributes=True)
+    
+    id: int
+    user_id: int
+    todo_id: int
+    added_at: datetime
+    user: AssignableUser
+
+
+class TodoViewersUpdate(BaseModel):
+    """Update viewers for a todo."""
+    viewer_ids: list[int]
+
+
+class TodoWithAssignedUser(TodoRead):
+    """Todo with assigned user information."""
+    assigned_user: AssignableUser | None = None
+    viewers: list[TodoViewer] | None = None
+
+
+class TodoExtensionValidation(BaseModel):
+    """Validation response for todo extension requests."""
+    model_config = ConfigDict(from_attributes=True)
+    
+    can_request_extension: bool
+    max_allowed_due_date: datetime | None = None
+    days_extension_allowed: int = 3
+    reason: str | None = None  # Reason why extension cannot be requested

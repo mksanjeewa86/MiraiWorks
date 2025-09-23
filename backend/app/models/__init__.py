@@ -28,6 +28,9 @@ from .resume import (
 from .role import Role, UserRole
 from .user import User
 from .todo import Todo
+from .todo_attachment import TodoAttachment
+from .todo_extension_request import TodoExtensionRequest
+from .todo_viewer import TodoViewer
 from .user_settings import UserSettings
 from .video_call import (
     VideoCall,
@@ -70,6 +73,9 @@ __all__ = [
     "PositionApplication",
     "UserSettings",
     "Todo",
+    "TodoAttachment",
+    "TodoExtensionRequest",
+    "TodoViewer",
     "VideoCall",
     "CallParticipant",
     "RecordingConsent",

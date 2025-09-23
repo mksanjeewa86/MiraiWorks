@@ -74,6 +74,10 @@ class Settings(BaseSettings):
     # OpenAI (for transcription/AI features)
     openai_api_key: Optional[str] = None
 
+    # File Upload Settings
+    upload_directory: str = Field(default="uploads")
+    max_file_size: int = Field(default=25 * 1024 * 1024)  # 25MB in bytes
+
     model_config = {"env_file": ".env", "case_sensitive": False}
 
 

@@ -1,17 +1,19 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.utils.constants import TodoStatus
+from app.utils.constants import TodoStatus, TodoVisibility
 
 from .base import Base
 
 if TYPE_CHECKING:
     from .user import User
+    from .todo_viewer import TodoViewer
+    from .todo_extension_request import TodoExtensionRequest
 
 
 class Todo(Base):
@@ -27,6 +29,9 @@ class Todo(Base):
     last_updated_by: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
+    assigned_user_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
 
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -35,6 +40,9 @@ class Todo(Base):
         String(20), nullable=False, default=TodoStatus.PENDING.value, index=True
     )
     priority: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    visibility: Mapped[str] = mapped_column(
+        String(20), nullable=False, default=TodoVisibility.PRIVATE.value, index=True
+    )
     is_deleted: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, index=True
     )
@@ -66,6 +74,15 @@ class Todo(Base):
     )
     updater: Mapped[User | None] = relationship(
         "User", foreign_keys=[last_updated_by], backref="updated_todos"
+    )
+    assigned_user: Mapped[User | None] = relationship(
+        "User", foreign_keys=[assigned_user_id], backref="assigned_todos"
+    )
+    viewers: Mapped[List[TodoViewer]] = relationship(
+        "TodoViewer", back_populates="todo", cascade="all, delete-orphan"
+    )
+    extension_requests: Mapped[List[TodoExtensionRequest]] = relationship(
+        "TodoExtensionRequest", back_populates="todo", cascade="all, delete-orphan"
     )
 
     @property

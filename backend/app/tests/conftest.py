@@ -372,3 +372,161 @@ async def super_admin_auth_headers(client, test_super_admin):
     except Exception as e:
         # Return a dummy header to prevent further crashes
         return {"Authorization": "Bearer dummy_token_for_testing"}
+
+
+@pytest_asyncio.fixture 
+async def test_users(db_session, test_company, test_roles):
+    """Create multiple test users for testing."""
+    users = {}
+    
+    # Recruiter user
+    recruiter = User(
+        email="recruiter@example.com",
+        first_name="Recruiter",
+        last_name="User",
+        company_id=test_company.id,
+        hashed_password=auth_service.get_password_hash("password123"),
+        is_active=True,
+    )
+    db_session.add(recruiter)
+    await db_session.commit()
+    await db_session.refresh(recruiter)
+    
+    recruiter_role = UserRole(
+        user_id=recruiter.id, role_id=test_roles[UserRoleEnum.EMPLOYER.value].id
+    )
+    db_session.add(recruiter_role)
+    
+    # Candidate user  
+    candidate = User(
+        email="candidate@example.com",
+        first_name="Candidate",
+        last_name="User",
+        company_id=None,
+        hashed_password=auth_service.get_password_hash("password123"),
+        is_active=True,
+    )
+    db_session.add(candidate)
+    await db_session.commit()
+    await db_session.refresh(candidate)
+    
+    candidate_role = UserRole(
+        user_id=candidate.id, role_id=test_roles[UserRoleEnum.CANDIDATE.value].id
+    )
+    db_session.add(candidate_role)
+    
+    # Other candidate user
+    other_candidate = User(
+        email="other_candidate@example.com",
+        first_name="Other",
+        last_name="Candidate",
+        company_id=None,
+        hashed_password=auth_service.get_password_hash("password123"),
+        is_active=True,
+    )
+    db_session.add(other_candidate)
+    await db_session.commit()
+    await db_session.refresh(other_candidate)
+    
+    other_candidate_role = UserRole(
+        user_id=other_candidate.id, role_id=test_roles[UserRoleEnum.CANDIDATE.value].id
+    )
+    db_session.add(other_candidate_role)
+    
+    # Other recruiter user
+    other_recruiter = User(
+        email="other_recruiter@example.com", 
+        first_name="Other",
+        last_name="Recruiter",
+        company_id=test_company.id,
+        hashed_password=auth_service.get_password_hash("password123"),
+        is_active=True,
+    )
+    db_session.add(other_recruiter)
+    await db_session.commit()
+    await db_session.refresh(other_recruiter)
+    
+    other_recruiter_role = UserRole(
+        user_id=other_recruiter.id, role_id=test_roles[UserRoleEnum.EMPLOYER.value].id
+    )
+    db_session.add(other_recruiter_role)
+    
+    await db_session.commit()
+    
+    users['recruiter'] = recruiter
+    users['candidate'] = candidate
+    users['other_candidate'] = other_candidate
+    users['other_recruiter'] = other_recruiter
+    
+    return users
+
+
+@pytest_asyncio.fixture
+async def auth_headers(client):
+    """Function to get auth headers for any user."""
+    async def _get_headers(user):
+        response = await client.post(
+            "/api/auth/login",
+            json={"email": user.email, "password": "password123"},
+        )
+        assert response.status_code == 200
+        token_data = response.json()
+        return {"Authorization": f"Bearer {token_data['access_token']}"}
+    
+    return _get_headers
+
+
+@pytest_asyncio.fixture
+async def test_todo_with_attachments(db_session, test_users):
+    """Create a test todo with file attachments."""
+    from app.crud.todo import todo as todo_crud
+    from app.crud.todo_attachment import todo_attachment
+    from app.schemas.todo import TodoCreate
+    from app.schemas.todo_attachment import TodoAttachmentCreate
+    import tempfile
+    
+    user = test_users['recruiter']
+    
+    # Create todo
+    todo_data = TodoCreate(
+        title="Test Todo with Attachments",
+        description="Testing file attachments functionality"
+    )
+    test_todo = await todo_crud.create_with_owner(db_session, obj_in=todo_data, owner_id=user.id)
+    
+    # Create temporary files for testing
+    temp_files = []
+    attachments = []
+    
+    for i in range(2):
+        # Create temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=f'_test_{i}.txt') as temp_file:
+            content = f"Test content for attachment {i}".encode()
+            temp_file.write(content)
+            temp_path = temp_file.name
+            temp_files.append(temp_path)
+        
+        # Create attachment record
+        attachment_data = TodoAttachmentCreate(
+            todo_id=test_todo.id,
+            original_filename=f"test_file_{i}.txt",
+            stored_filename=f"stored_test_{i}.txt",
+            file_path=temp_path,
+            file_size=len(content),
+            mime_type="text/plain",
+            file_extension=".txt",
+            description=f"Test attachment {i}",
+            uploaded_by=user.id
+        )
+        
+        attachment = await todo_attachment.create_attachment(
+            db_session, attachment_data=attachment_data, uploader_id=user.id
+        )
+        attachments.append(attachment)
+    
+    return {
+        'todo': test_todo,
+        'user': user,
+        'attachments': attachments,
+        'temp_files': temp_files
+    }

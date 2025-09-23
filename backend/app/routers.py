@@ -15,6 +15,8 @@ from app.endpoints import (
     positions,
     notifications,
     todos,
+    todo_attachments,
+    todo_extensions,
     public,
     resumes,
     user_settings,
@@ -40,6 +42,8 @@ def include_routers(app: FastAPI) -> None:
     )
     app.include_router(files.router, prefix="/api/files", tags=["files"])
     app.include_router(todos.router, prefix="/api/todos", tags=["todos"])
+    app.include_router(todo_attachments.router, prefix="/api", tags=["todo-attachments"])
+    app.include_router(todo_extensions.router, prefix="/api/todos", tags=["todo-extensions"])
     app.include_router(calendar.router, prefix="/api/calendar", tags=["calendar"])
     app.include_router(
         calendar_connections.router, prefix="/api/user", tags=["calendar-connections"]
