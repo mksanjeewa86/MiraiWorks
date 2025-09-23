@@ -156,4 +156,17 @@ export const API_ENDPOINTS = {
     PROFILE: '/api/auth/me',
     SETTINGS: '/api/user/settings',
   },
+
+  // MBTI endpoints
+  MBTI: {
+    START: '/api/mbti/start',
+    QUESTIONS: '/api/mbti/questions',
+    ANSWER: '/api/mbti/answer',
+    SUBMIT: '/api/mbti/submit',
+    RESULT: '/api/mbti/result',
+    SUMMARY: '/api/mbti/summary',
+    PROGRESS: '/api/mbti/progress',
+    TYPES: '/api/mbti/types',
+    TYPE_DETAILS: (type: string) => `/api/mbti/types/${type}`,
+  },
 } as const;

@@ -39,6 +39,7 @@ from .video_call import (
     CallTranscription,
     TranscriptionSegment,
 )
+from .mbti_test import MBTITest, MBTIQuestion
 
 __all__ = [
     "Company",
@@ -81,4 +82,6 @@ __all__ = [
     "RecordingConsent",
     "CallTranscription",
     "TranscriptionSegment",
+    "MBTITest",
+    "MBTIQuestion",
 ]

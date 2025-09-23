@@ -106,3 +106,42 @@ class AuditAction(str, Enum):
     LOGOUT = "logout"
     PASSWORD_RESET = "password_reset"
     BULK_IMPORT = "bulk_import"
+
+
+class MBTIType(str, Enum):
+    # Analysts (NT)
+    INTJ = "INTJ"  # Architect
+    INTP = "INTP"  # Thinker
+    ENTJ = "ENTJ"  # Commander
+    ENTP = "ENTP"  # Debater
+    
+    # Diplomats (NF)
+    INFJ = "INFJ"  # Advocate
+    INFP = "INFP"  # Mediator
+    ENFJ = "ENFJ"  # Protagonist
+    ENFP = "ENFP"  # Campaigner
+    
+    # Sentinels (SJ)
+    ISTJ = "ISTJ"  # Logistician
+    ISFJ = "ISFJ"  # Protector
+    ESTJ = "ESTJ"  # Executive
+    ESFJ = "ESFJ"  # Consul
+    
+    # Explorers (SP)
+    ISTP = "ISTP"  # Virtuoso
+    ISFP = "ISFP"  # Adventurer
+    ESTP = "ESTP"  # Entrepreneur
+    ESFP = "ESFP"  # Entertainer
+
+
+class MBTIDimension(str, Enum):
+    EXTRAVERSION_INTROVERSION = "E_I"  # E vs I
+    SENSING_INTUITION = "S_N"          # S vs N
+    THINKING_FEELING = "T_F"           # T vs F
+    JUDGING_PERCEIVING = "J_P"         # J vs P
+
+
+class MBTITestStatus(str, Enum):
+    NOT_TAKEN = "not_taken"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"

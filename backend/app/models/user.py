@@ -82,14 +82,14 @@ class User(Base):
     )
     # Todo extension request relationships
     requested_extensions = relationship(
-        "TodoExtensionRequest", 
+        "TodoExtensionRequest",
         foreign_keys="TodoExtensionRequest.requested_by_id",
         back_populates="requested_by",
         cascade="all, delete-orphan"
     )
     extension_requests_to_review = relationship(
         "TodoExtensionRequest",
-        foreign_keys="TodoExtensionRequest.creator_id", 
+        foreign_keys="TodoExtensionRequest.creator_id",
         back_populates="creator",
         cascade="all, delete-orphan"
     )
@@ -98,6 +98,9 @@ class User(Base):
         foreign_keys="TodoExtensionRequest.responded_by_id",
         back_populates="responded_by",
         cascade="all, delete-orphan"
+    )
+    mbti_test = relationship(
+        "MBTITest", back_populates="user", cascade="all, delete-orphan", uselist=False
     )
 
     @property

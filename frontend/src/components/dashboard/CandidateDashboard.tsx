@@ -8,12 +8,20 @@ import Badge from '@/components/ui/Badge';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Button from '@/components/ui/Button';
 import type { CandidateDashboardStats } from '@/types/dashboard';
+import MBTITestButton from '@/components/mbti/MBTITestButton';
+import MBTITestModal from '@/components/mbti/MBTITestModal';
+import MBTIResultCard from '@/components/mbti/MBTIResultCard';
+import { mbtiApi } from '@/api/mbti';
+import type { MBTITestSummary } from '@/types/mbti';
 
 export default function CandidateDashboard() {
   const { user } = useAuth();
   const [stats, setStats] = useState<CandidateDashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showMBTITest, setShowMBTITest] = useState(false);
+  const [mbtiSummary, setMbtiSummary] = useState<MBTITestSummary | null>(null);
+  const [mbtiLoading, setMbtiLoading] = useState(false);
 
   const loadDashboardData = async () => {
     try {
@@ -29,7 +37,25 @@ export default function CandidateDashboard() {
 
   useEffect(() => {
     loadDashboardData();
+    loadMBTISummary();
   }, []);
+
+  const loadMBTISummary = async () => {
+    try {
+      setMbtiLoading(true);
+      const summary = await mbtiApi.getSummary('ja');
+      setMbtiSummary(summary);
+    } catch (err) {
+      // User might not have taken the test yet
+      console.log('No MBTI test results yet');
+    } finally {
+      setMbtiLoading(false);
+    }
+  };
+
+  const handleMBTIComplete = async () => {
+    await loadMBTISummary();
+  };
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -136,6 +162,48 @@ export default function CandidateDashboard() {
           </div>
         </Card>
       </div>
+
+      {/* MBTI Personality Test Section */}
+      <div className="mb-8">
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+              MBTI性格診断
+            </h3>
+            {mbtiSummary && (
+              <Badge variant="success">診断完了</Badge>
+            )}
+          </div>
+          
+          {mbtiLoading ? (
+            <div className="flex justify-center py-8">
+              <LoadingSpinner className="w-8 h-8" />
+            </div>
+          ) : mbtiSummary ? (
+            <MBTIResultCard summary={mbtiSummary} language="ja" showDetails={false} />
+          ) : (
+            <div className="text-center py-6">
+              <div className="mb-4">
+                <span className="text-5xl">🧠</span>
+              </div>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                あなたの性格タイプを診断して、プロフィールに表示しましょう
+              </p>
+              <MBTITestButton 
+                onStartTest={() => setShowMBTITest(true)} 
+                language="ja"
+              />
+            </div>
+          )}
+        </Card>
+      </div>
+
+      {/* MBTI Test Modal */}
+      <MBTITestModal
+        isOpen={showMBTITest}
+        onClose={() => setShowMBTITest(false)}
+        onComplete={handleMBTIComplete}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Application Status Breakdown */}
