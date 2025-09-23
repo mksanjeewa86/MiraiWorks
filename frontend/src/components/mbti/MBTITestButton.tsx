@@ -42,10 +42,21 @@ const MBTITestButton: React.FC<MBTITestButtonProps> = ({
   const handleStartTest = async () => {
     try {
       setLoading(true);
+
+      // Always try to start/restart the test
       await mbtiApi.startTest({ language });
+
+      // Reload progress after starting
+      await loadProgress();
+
+      // Open the test modal
       onStartTest();
     } catch (error) {
       console.error('Failed to start MBTI test:', error);
+      alert(language === 'ja'
+        ? 'テストの開始に失敗しました。しばらく時間をおいて再度お試しください。'
+        : 'Failed to start test. Please try again later.'
+      );
     } finally {
       setLoading(false);
     }

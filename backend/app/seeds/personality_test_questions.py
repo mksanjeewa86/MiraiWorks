@@ -1,10 +1,14 @@
 """
 MBTI Questions Seed Data
-60 questions total: 15 questions per dimension
-Each dimension: E/I, S/N, T/F, J/P
+
+Contains 60 MBTI personality test questions (15 per dimension).
+This file creates the questions needed for the MBTI functionality.
 """
 
-MBTI_QUESTIONS_SEED = [
+from app.models.mbti_model import MBTIQuestion
+
+# MBTI Questions Data (60 questions total: 15 per dimension)
+MBTI_QUESTIONS_DATA = [
     # Extraversion/Introversion Questions (1-15)
     {
         "question_number": 1,
@@ -674,130 +678,47 @@ MBTI_QUESTIONS_SEED = [
     }
 ]
 
-# MBTI Type Information (for reference in the system)
-MBTI_TYPES_INFO = {
-    # Analysts (NT)
-    "INTJ": {
-        "name_en": "The Architect", 
-        "name_ja": "建築家",
-        "temperament": "NT"
-    },
-    "INTP": {
-        "name_en": "The Thinker",
-        "name_ja": "論理学者", 
-        "temperament": "NT"
-    },
-    "ENTJ": {
-        "name_en": "The Commander",
-        "name_ja": "指揮官",
-        "temperament": "NT"
-    },
-    "ENTP": {
-        "name_en": "The Debater",
-        "name_ja": "討論者",
-        "temperament": "NT"
-    },
-    
-    # Diplomats (NF)
-    "INFJ": {
-        "name_en": "The Advocate",
-        "name_ja": "提唱者",
-        "temperament": "NF"
-    },
-    "INFP": {
-        "name_en": "The Mediator",
-        "name_ja": "仲介者",
-        "temperament": "NF"
-    },
-    "ENFJ": {
-        "name_en": "The Protagonist",
-        "name_ja": "主人公",
-        "temperament": "NF"
-    },
-    "ENFP": {
-        "name_en": "The Campaigner",
-        "name_ja": "運動家",
-        "temperament": "NF"
-    },
-    
-    # Sentinels (SJ)
-    "ISTJ": {
-        "name_en": "The Logistician",
-        "name_ja": "管理者",
-        "temperament": "SJ"
-    },
-    "ISFJ": {
-        "name_en": "The Defender",
-        "name_ja": "擁護者",
-        "temperament": "SJ"
-    },
-    "ESTJ": {
-        "name_en": "The Executive",
-        "name_ja": "幹部",
-        "temperament": "SJ"
-    },
-    "ESFJ": {
-        "name_en": "The Consul",
-        "name_ja": "領事",
-        "temperament": "SJ"
-    },
-    
-    # Explorers (SP)
-    "ISTP": {
-        "name_en": "The Virtuoso",
-        "name_ja": "巨匠",
-        "temperament": "SP"
-    },
-    "ISFP": {
-        "name_en": "The Adventurer",
-        "name_ja": "冒険家",
-        "temperament": "SP"
-    },
-    "ESTP": {
-        "name_en": "The Entrepreneur",
-        "name_ja": "起業家",
-        "temperament": "SP"
-    },
-    "ESFP": {
-        "name_en": "The Entertainer",
-        "name_ja": "エンターテイナー",
-        "temperament": "SP"
-    }
-}
 
-# Script to seed the database
-if __name__ == "__main__":
-    import asyncio
-    from sqlalchemy import select
-    from app.database import get_session
-    from app.models.mbti_test import MBTIQuestion
-    
-    async def seed_mbti_questions():
-        async with get_session() as db:
-            # Check if questions already exist
-            existing = await db.execute(select(MBTIQuestion).limit(1))
-            if existing.scalar():
-                print("MBTI questions already seeded!")
-                return
-            
-            # Insert all questions
-            for q_data in MBTI_QUESTIONS_SEED:
-                question = MBTIQuestion(
-                    question_number=q_data["question_number"],
-                    dimension=q_data["dimension"],
-                    question_text_en=q_data["question_text_en"],
-                    question_text_ja=q_data["question_text_ja"],
-                    option_a_en=q_data["option_a_en"],
-                    option_a_ja=q_data["option_a_ja"],
-                    option_b_en=q_data["option_b_en"],
-                    option_b_ja=q_data["option_b_ja"],
-                    scoring_key=q_data["scoring_key"],
-                    is_active=True
-                )
-                db.add(question)
-            
-            await db.commit()
-            print(f"Successfully seeded {len(MBTI_QUESTIONS_SEED)} MBTI questions!")
-    
-    # Run the seed
-    asyncio.run(seed_mbti_questions())
+def transform_mbti_question(q_data):
+    """Transform seed data to match MBTIQuestion model structure."""
+    # Map scoring_key to option traits
+    if q_data["scoring_key"] == "A":
+        # A is the first trait of the dimension
+        option_a_trait = q_data["dimension"].split("_")[0]
+        option_b_trait = q_data["dimension"].split("_")[1]
+        direction = "+"
+    else:  # scoring_key == "B"
+        # B is the first trait, so A is second trait
+        option_a_trait = q_data["dimension"].split("_")[1]
+        option_b_trait = q_data["dimension"].split("_")[0]
+        direction = "-"
+
+    return {
+        "question_number": q_data["question_number"],
+        "dimension": q_data["dimension"],
+        "direction": direction,
+        "question_text_en": q_data["question_text_en"],
+        "question_text_ja": q_data["question_text_ja"],
+        "option_a_en": q_data["option_a_en"],
+        "option_a_ja": q_data["option_a_ja"],
+        "option_b_en": q_data["option_b_en"],
+        "option_b_ja": q_data["option_b_ja"],
+        "option_a_trait": option_a_trait,
+        "option_b_trait": option_b_trait,
+        "version": "1.0",
+        "is_active": True
+    }
+
+
+async def seed_mbti_questions(db):
+    """Create MBTI questions."""
+    print("Creating MBTI questions...")
+
+    for q_data in MBTI_QUESTIONS_DATA:
+        transformed_data = transform_mbti_question(q_data)
+        question = MBTIQuestion(**transformed_data)
+        db.add(question)
+
+    await db.commit()
+    print(f"   - Created {len(MBTI_QUESTIONS_DATA)} MBTI questions")
+    return len(MBTI_QUESTIONS_DATA)

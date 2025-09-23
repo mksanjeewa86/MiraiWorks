@@ -32,7 +32,10 @@ const MBTITestModal: React.FC<MBTITestModalProps> = ({
       setQuestions(questionsData);
     } catch (err) {
       console.error('Failed to load questions:', err);
-      setError(language === 'ja' ? '質問の読み込みに失敗しました' : 'Failed to load questions');
+      const errorMessage = language === 'ja'
+        ? 'MBTI質問の読み込みに失敗しました。管理者がまだMBTI質問を設定していない可能性があります。'
+        : 'Failed to load MBTI questions. The administrator may not have set up MBTI questions yet.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

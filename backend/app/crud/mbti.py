@@ -114,8 +114,8 @@ class CRUDMBTITest(CRUDBase[MBTITest, dict, dict]):
         self, db: AsyncSession, answers: Dict[int, str]
     ) -> Dict[str, int]:
         """Calculate dimension scores from answers."""
-        # Get all questions
-        questions = await self.get_all_questions(db)
+        # Get all questions using the mbti_question instance
+        questions = await mbti_question.get_all_active(db)
         question_map = {q.id: q for q in questions}
         
         # Initialize dimension counts
@@ -163,10 +163,12 @@ class CRUDMBTITest(CRUDBase[MBTITest, dict, dict]):
         test = await self.get_by_user_id(db, user_id=user_id)
         if not test:
             return None
-        
-        total_questions = await self.get_question_count(db)
+
+        # Use the mbti_question instance to get question count - Fixed
+        from app.crud.mbti import mbti_question
+        total_questions = await mbti_question.get_question_count(db)
         answered = len(test.answers) if test.answers else 0
-        
+
         return {
             "status": test.status,
             "completion_percentage": test.completion_percentage,

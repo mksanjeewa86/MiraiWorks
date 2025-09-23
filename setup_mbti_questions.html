@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Setup MBTI Questions</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .section { border: 1px solid #ccc; margin: 10px 0; padding: 15px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        pre { background-color: #f8f9fa; padding: 10px; overflow-x: auto; }
+        input { width: 500px; padding: 8px; margin: 5px; }
+        .question { background: #f9f9f9; padding: 10px; margin: 5px 0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🧠 Setup MBTI Questions</h1>
+
+    <div class="section">
+        <h2>📋 Instructions</h2>
+        <p>This tool will help you add MBTI questions to your database using the admin API.</p>
+        <ol>
+            <li><strong>Make sure your backend is running</strong> on http://localhost:8000</li>
+            <li><strong>You need to be logged in as an admin user</strong></li>
+            <li>Get your admin auth token from the frontend</li>
+            <li>Add sample MBTI questions using the button below</li>
+        </ol>
+    </div>
+
+    <div class="section">
+        <h2>🔑 Admin Authentication</h2>
+        <p>First, get your admin authentication token:</p>
+        <ol>
+            <li>Go to your frontend application (http://localhost:3000)</li>
+            <li>Log in as an admin user</li>
+            <li>Open Developer Tools (F12)</li>
+            <li>Go to Application → Local Storage → http://localhost:3000</li>
+            <li>Copy the value of "accessToken"</li>
+            <li>Paste it in the input below:</li>
+        </ol>
+        <input type="text" id="admin-token" placeholder="Paste your admin accessToken here">
+        <br>
+        <button onclick="testAdminAuth()">Test Admin Access</button>
+        <div id="admin-result"></div>
+    </div>
+
+    <div class="section">
+        <h2>➕ Add Sample MBTI Questions</h2>
+        <button onclick="addSampleQuestions()">Add 5 Sample Questions</button>
+        <div id="questions-result"></div>
+    </div>
+
+    <div class="section">
+        <h2>📊 Sample Questions Preview</h2>
+        <div class="question">
+            <strong>Q1 (E/I):</strong> Do you prefer working in groups or alone?<br>
+            A: I love working in groups and collaborating<br>
+            B: I prefer working alone and focusing deeply
+        </div>
+        <div class="question">
+            <strong>Q2 (S/N):</strong> Do you focus on details or the big picture?<br>
+            A: I focus on specific details and facts<br>
+            B: I focus on patterns and possibilities
+        </div>
+        <div class="question">
+            <strong>Q3 (T/F):</strong> When making decisions, do you rely more on logic or feelings?<br>
+            A: I rely on logical analysis and objective facts<br>
+            B: I consider people's feelings and values
+        </div>
+        <div class="question">
+            <strong>Q4 (J/P):</strong> Do you prefer planned or spontaneous activities?<br>
+            A: I prefer planned and organized activities<br>
+            B: I prefer spontaneous and flexible activities
+        </div>
+        <div class="question">
+            <strong>Q5 (E/I):</strong> How do you recharge your energy?<br>
+            A: By being around people and socializing<br>
+            B: By spending quiet time alone
+        </div>
+    </div>
+
+    <script>
+        const BACKEND_URL = 'http://localhost:8000';
+
+        function showResult(elementId, content, isError = false) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = content;
+            element.className = isError ? 'error' : 'success';
+        }
+
+        async function testAdminAuth() {
+            const token = document.getElementById('admin-token').value.trim();
+            if (!token) {
+                showResult('admin-result', 'Please paste your admin authentication token first', true);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/users/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const user = await response.json();
+                    const roles = user.roles || [];
+                    const primaryRole = roles[0]?.role?.name || 'No role assigned';
+
+                    if (primaryRole === 'super_admin' || primaryRole === 'admin') {
+                        showResult('admin-result', `✅ Admin authentication successful! Role: ${primaryRole}`);
+                    } else {
+                        showResult('admin-result', `❌ You need admin role to add questions. Your role: ${primaryRole}`, true);
+                    }
+                } else {
+                    const error = await response.text();
+                    showResult('admin-result', `❌ Authentication failed: ${response.status} - ${error}`, true);
+                }
+            } catch (error) {
+                showResult('admin-result', `❌ Auth test failed: ${error.message}`, true);
+            }
+        }
+
+        async function addSampleQuestions() {
+            const token = document.getElementById('admin-token').value.trim();
+            if (!token) {
+                showResult('questions-result', '❌ Please test admin authentication first', true);
+                return;
+            }
+
+            const sampleQuestions = [
+                {
+                    question_number: 1,
+                    dimension: "E_I",
+                    question_text_en: "Do you prefer working in groups or alone?",
+                    question_text_ja: "グループで働くことと一人で働くこと、どちらを好みますか？",
+                    option_a_en: "I love working in groups and collaborating",
+                    option_a_ja: "グループで働き、協力することが大好きです",
+                    option_a_trait: "E",
+                    option_b_en: "I prefer working alone and focusing deeply",
+                    option_b_ja: "一人で働き、深く集中することを好みます",
+                    option_b_trait: "I",
+                    version: "1.0",
+                    is_active: true
+                },
+                {
+                    question_number: 2,
+                    dimension: "S_N",
+                    question_text_en: "Do you focus on details or the big picture?",
+                    question_text_ja: "細部に注目しますか、それとも全体像に注目しますか？",
+                    option_a_en: "I focus on specific details and facts",
+                    option_a_ja: "具体的な詳細と事実に注目します",
+                    option_a_trait: "S",
+                    option_b_en: "I focus on patterns and possibilities",
+                    option_b_ja: "パターンと可能性に注目します",
+                    option_b_trait: "N",
+                    version: "1.0",
+                    is_active: true
+                },
+                {
+                    question_number: 3,
+                    dimension: "T_F",
+                    question_text_en: "When making decisions, do you rely more on logic or feelings?",
+                    question_text_ja: "決定を下すとき、論理と感情のどちらにより多く依存しますか？",
+                    option_a_en: "I rely on logical analysis and objective facts",
+                    option_a_ja: "論理的分析と客観的事実に依存します",
+                    option_a_trait: "T",
+                    option_b_en: "I consider people's feelings and values",
+                    option_b_ja: "人々の感情と価値観を考慮します",
+                    option_b_trait: "F",
+                    version: "1.0",
+                    is_active: true
+                },
+                {
+                    question_number: 4,
+                    dimension: "J_P",
+                    question_text_en: "Do you prefer planned or spontaneous activities?",
+                    question_text_ja: "計画的な活動と自発的な活動、どちらを好みますか？",
+                    option_a_en: "I prefer planned and organized activities",
+                    option_a_ja: "計画的で組織化された活動を好みます",
+                    option_a_trait: "J",
+                    option_b_en: "I prefer spontaneous and flexible activities",
+                    option_b_ja: "自発的で柔軟な活動を好みます",
+                    option_b_trait: "P",
+                    version: "1.0",
+                    is_active: true
+                },
+                {
+                    question_number: 5,
+                    dimension: "E_I",
+                    question_text_en: "How do you recharge your energy?",
+                    question_text_ja: "どのようにエネルギーを充電しますか？",
+                    option_a_en: "By being around people and socializing",
+                    option_a_ja: "人々と一緒にいて社交することで",
+                    option_a_trait: "E",
+                    option_b_en: "By spending quiet time alone",
+                    option_b_ja: "一人で静かな時間を過ごすことで",
+                    option_b_trait: "I",
+                    version: "1.0",
+                    is_active: true
+                }
+            ];
+
+            try {
+                showResult('questions-result', '⏳ Adding sample questions...');
+
+                const response = await fetch(`${BACKEND_URL}/api/mbti/admin/questions/bulk`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(sampleQuestions)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showResult('questions-result',
+                        `✅ Successfully added ${result.length} MBTI questions!<br><br>
+                        Now you can:<br>
+                        1. Go back to your frontend application<br>
+                        2. Refresh the page<br>
+                        3. Click the MBTI test button<br>
+                        4. Take the test with these sample questions!`);
+                } else {
+                    const error = await response.text();
+                    showResult('questions-result', `❌ Failed to add questions: ${response.status} - ${error}`, true);
+                }
+            } catch (error) {
+                showResult('questions-result', `❌ Error adding questions: ${error.message}`, true);
+            }
+        }
+    </script>
+</body>
+</html>

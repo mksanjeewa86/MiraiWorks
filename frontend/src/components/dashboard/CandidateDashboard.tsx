@@ -43,11 +43,22 @@ export default function CandidateDashboard() {
   const loadMBTISummary = async () => {
     try {
       setMbtiLoading(true);
-      const summary = await mbtiApi.getSummary('ja');
-      setMbtiSummary(summary);
+
+      // First check the test progress to avoid 404 errors
+      const progress = await mbtiApi.getProgress();
+
+      // Only try to get summary if test is completed
+      if (progress.status === 'completed') {
+        const summary = await mbtiApi.getSummary('ja');
+        setMbtiSummary(summary);
+      } else {
+        // User hasn't completed the test yet - this is normal, no error needed
+        setMbtiSummary(null);
+      }
     } catch (err) {
-      // User might not have taken the test yet
-      console.log('No MBTI test results yet');
+      // Only log actual errors, not expected 404s
+      console.log('Could not load MBTI data:', err);
+      setMbtiSummary(null);
     } finally {
       setMbtiLoading(false);
     }
