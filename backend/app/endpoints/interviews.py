@@ -12,6 +12,7 @@ from app.database import get_db
 from app.dependencies import get_current_active_user
 from app.models.interview import Interview, InterviewProposal
 from app.models.user import User
+from app.utils.constants import InterviewStatus
 from app.schemas.interview import (
     CalendarIntegrationStatus,
     InterviewCalendarEvent,
