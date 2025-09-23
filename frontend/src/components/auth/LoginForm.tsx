@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import Button from '@/components/ui/Button';
+import Button from '@/components/ui/button';
 import type { LoginFormProps } from '@/types/components';
 import { loginSchema, type LoginFormData } from '@/types/forms';
 

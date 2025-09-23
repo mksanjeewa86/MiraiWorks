@@ -78,7 +78,7 @@ export default function RegisterPage() {
 
     try {
       // Remove confirmPassword from data before sending to API
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+       
       const { confirmPassword, ...formData } = data;
       const submitData = {
         ...formData,

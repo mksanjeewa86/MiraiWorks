@@ -54,6 +54,9 @@ interface Question {
   is_required: boolean;
   options: Record<string, string> | null;
   correct_answers: string[] | null;
+  max_length: number | null;
+  min_length: number | null;
+  rating_scale: number | null;
   explanation: string | null;
   tags: string[] | null;
 }

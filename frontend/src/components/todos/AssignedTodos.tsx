@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { UserIcon, InboxIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { useToast } from '@/contexts/ToastContext';
 import { todosApi } from '@/api/todos';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import LoadingSpinner from '@/components/ui/loading-spinner';
 import { TodoItem } from './TodoItem';
-import useTodoPermissions from '@/hooks/useTodoPermissions';
+import { useAuth } from '@/contexts/AuthContext';
+import { getTodoPermissions } from '@/utils/todoPermissions';
 import type { Todo, TodoListResponse, TodoWithAssignedUser, AssignedTodosProps } from '@/types/todo';
 
 const AssignedTodos: React.FC<AssignedTodosProps> = ({
@@ -12,6 +13,7 @@ const AssignedTodos: React.FC<AssignedTodosProps> = ({
   onViewAttachments
 }) => {
   const { showToast } = useToast();
+  const { user } = useAuth();
   const [assignedTodos, setAssignedTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
@@ -42,7 +44,7 @@ const AssignedTodos: React.FC<AssignedTodosProps> = ({
   }, [includeCompleted]);
 
   const handleToggleComplete = async (todo: Todo) => {
-    const permissions = useTodoPermissions(todo);
+    const permissions = getTodoPermissions(todo, user);
     if (!permissions.canChangeStatus) {
       showToast({
         type: 'error',
@@ -72,7 +74,7 @@ const AssignedTodos: React.FC<AssignedTodosProps> = ({
   };
 
   const handleEdit = (todo: Todo) => {
-    const permissions = useTodoPermissions(todo);
+    const permissions = getTodoPermissions(todo, user);
     if (!permissions.canEdit) {
       showToast({
         type: 'error',
@@ -84,7 +86,7 @@ const AssignedTodos: React.FC<AssignedTodosProps> = ({
   };
 
   const handleDelete = async (todo: Todo) => {
-    const permissions = useTodoPermissions(todo);
+    const permissions = getTodoPermissions(todo, user);
     if (!permissions.canDelete) {
       showToast({
         type: 'error',

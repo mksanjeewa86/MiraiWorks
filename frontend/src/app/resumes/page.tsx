@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AppLayout from '@/components/layout/AppLayout';
-import Card from '@/components/ui/Card';
-import Badge from '@/components/ui/Badge';
-import Button from '@/components/ui/Button';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import Card from '@/components/ui/card';
+import Badge from '@/components/ui/badge';
+import Button from '@/components/ui/button';
+import LoadingSpinner from '@/components/ui/loading-spinner';
 import { 
   Plus, 
   FileText, 
@@ -144,7 +144,7 @@ function ResumesPageContent() {
       
       // Create download link
       const link = document.createElement('a');
-      link.href = response.data.pdf_url;
+      link.href = response.data?.pdf_url || '';
       link.download = `${resume.title}.pdf`;
       document.body.appendChild(link);
       link.click();

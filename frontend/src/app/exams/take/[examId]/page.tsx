@@ -79,8 +79,8 @@ export default function TakeExamPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [lastFaceCheck, setLastFaceCheck] = useState<number>(Date.now());
 
-  const timerRef = useRef<NodeJS.Timeout>();
-  const faceCheckRef = useRef<NodeJS.Timeout>();
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const faceCheckRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     startExam();
@@ -182,9 +182,9 @@ export default function TakeExamPage() {
     setAnswers(prev => ({
       ...prev,
       [questionId]: {
-        question_id: questionId,
         ...prev[questionId],
         ...answerData,
+        question_id: questionId,
       }
     }));
   }, []);

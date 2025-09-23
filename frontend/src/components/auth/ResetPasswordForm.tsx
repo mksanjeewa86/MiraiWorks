@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Eye, EyeOff, Lock, CheckCircle } from 'lucide-react';
-import Button from '@/components/ui/Button';
+import Button from '@/components/ui/button';
 import type { ResetPasswordFormProps } from '@/types/components';
 import { resetPasswordSchema, type ResetPasswordFormData } from '@/types/forms';
 

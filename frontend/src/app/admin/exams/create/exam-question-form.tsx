@@ -60,7 +60,7 @@ export function ExamQuestionForm({ question, onSave, onCancel }: ExamQuestionFor
   };
 
   const handleQuestionTypeChange = (type: string) => {
-    let updatedData = {
+    const updatedData = {
       ...formData,
       question_type: type,
       options: {},

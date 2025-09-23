@@ -500,7 +500,7 @@ export default function CreateExamPage() {
                 </div>
                 <Switch
                   checked={examData.show_results_immediately}
-                  onCheckedChange={(checked) => handleExamDataChange("show_results_immediately", checked)}
+                  onCheckedChange={(checked: boolean) => handleExamDataChange("show_results_immediately", checked)}
                 />
               </div>
 
@@ -513,7 +513,7 @@ export default function CreateExamPage() {
                 </div>
                 <Switch
                   checked={examData.show_correct_answers}
-                  onCheckedChange={(checked) => handleExamDataChange("show_correct_answers", checked)}
+                  onCheckedChange={(checked: boolean) => handleExamDataChange("show_correct_answers", checked)}
                 />
               </div>
 
@@ -526,7 +526,7 @@ export default function CreateExamPage() {
                 </div>
                 <Switch
                   checked={examData.show_score}
-                  onCheckedChange={(checked) => handleExamDataChange("show_score", checked)}
+                  onCheckedChange={(checked: boolean) => handleExamDataChange("show_score", checked)}
                 />
               </div>
             </CardContent>
@@ -547,7 +547,7 @@ export default function CreateExamPage() {
                 </div>
                 <Switch
                   checked={examData.is_randomized}
-                  onCheckedChange={(checked) => handleExamDataChange("is_randomized", checked)}
+                  onCheckedChange={(checked: boolean) => handleExamDataChange("is_randomized", checked)}
                 />
               </div>
             </CardContent>
@@ -571,7 +571,7 @@ export default function CreateExamPage() {
                 </div>
                 <Switch
                   checked={examData.allow_web_usage}
-                  onCheckedChange={(checked) => handleExamDataChange("allow_web_usage", checked)}
+                  onCheckedChange={(checked: boolean) => handleExamDataChange("allow_web_usage", checked)}
                 />
               </div>
 
@@ -584,7 +584,7 @@ export default function CreateExamPage() {
                 </div>
                 <Switch
                   checked={examData.monitor_web_usage}
-                  onCheckedChange={(checked) => handleExamDataChange("monitor_web_usage", checked)}
+                  onCheckedChange={(checked: boolean) => handleExamDataChange("monitor_web_usage", checked)}
                 />
               </div>
 
@@ -599,7 +599,7 @@ export default function CreateExamPage() {
                 </div>
                 <Switch
                   checked={examData.require_face_verification}
-                  onCheckedChange={(checked) => handleExamDataChange("require_face_verification", checked)}
+                  onCheckedChange={(checked: boolean) => handleExamDataChange("require_face_verification", checked)}
                 />
               </div>
 
@@ -610,9 +610,10 @@ export default function CreateExamPage() {
                     id="face_check_interval"
                     type="number"
                     value={examData.face_check_interval_minutes}
-                    onChange={(e) => handleExamDataChange("face_check_interval_minutes", parseInt(e.target.value) || 5)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleExamDataChange("face_check_interval_minutes", parseInt(e.target.value) || 5)}
                     min="1"
                     max="60"
+                    fullWidth={false}
                     className="w-32"
                   />
                   <p className="text-sm text-gray-500">

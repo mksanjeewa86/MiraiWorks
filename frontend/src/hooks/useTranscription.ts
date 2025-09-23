@@ -223,7 +223,7 @@ export const useTranscription = (
     if (callId && enabled) {
       loadExistingSegments();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [callId, enabled]);
 
   const loadExistingSegments = async () => {

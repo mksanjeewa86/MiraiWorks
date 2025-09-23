@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { UserCircleIcon, EnvelopeIcon, PhoneIcon, MapPinIcon, CalendarIcon } from '@heroicons/react/24/outline';
-import Card from '@/components/ui/Card';
-import Badge from '@/components/ui/Badge';
-import Button from '@/components/ui/Button';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import Card from '@/components/ui/card';
+import Badge from '@/components/ui/badge';
+import Button from '@/components/ui/button';
+import LoadingSpinner from '@/components/ui/loading-spinner';
 import MBTIResultCard from '@/components/mbti/MBTIResultCard';
 import { mbtiApi } from '@/api/mbti';
 import { useAuth } from '@/contexts/AuthContext';
@@ -74,7 +74,7 @@ const CandidateProfile: React.FC<CandidateProfileProps> = ({ userId, isPublic = 
                   <Badge variant="primary">Active</Badge>
                   <Badge variant="secondary">Available</Badge>
                   {mbtiSummary && (
-                    <Badge variant="info">{mbtiSummary.mbti_type}</Badge>
+                    <Badge variant="outline">{mbtiSummary.mbti_type}</Badge>
                   )}
                 </div>
               </div>

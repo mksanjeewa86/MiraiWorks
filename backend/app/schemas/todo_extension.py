@@ -5,7 +5,7 @@ from typing import Optional
 
 from pydantic import BaseModel, Field, validator
 
-from app.schemas.user import AssignableUser
+from app.schemas.todo import AssignableUser
 from app.utils.constants import ExtensionRequestStatus
 
 

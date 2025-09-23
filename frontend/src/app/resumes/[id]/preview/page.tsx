@@ -3,9 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import AppLayout from '@/components/layout/AppLayout';
-import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import Card from '@/components/ui/card';
+import Button from '@/components/ui/button';
+import LoadingSpinner from '@/components/ui/loading-spinner';
 import { ArrowLeft, Download, Edit, Share2, Eye, Globe, FileText } from 'lucide-react';
 import { Resume, ResumeFormat } from '@/types/resume';
 import { resumesApi } from '@/api/resumes';
@@ -69,7 +69,7 @@ function PreviewResumePageContent() {
       
       // Create download link
       const link = document.createElement('a');
-      link.href = response.data.pdf_url;
+      link.href = response.data?.pdf_url || '';
       link.download = `${resume.title}.pdf`;
       document.body.appendChild(link);
       link.click();
@@ -292,7 +292,7 @@ function PreviewResumePageContent() {
                 dangerouslySetInnerHTML={{ __html: previewHtml }}
                 style={{
                   fontFamily: resume.font_family || 'Inter',
-                  '--theme-color': resume.theme_color || '#2563eb'
+                  ['--theme-color' as any]: resume.theme_color || '#2563eb'
                 }}
               />
             ) : (

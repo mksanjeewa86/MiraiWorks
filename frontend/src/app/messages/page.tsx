@@ -4,9 +4,9 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_CONFIG } from '@/api/config';
 import AppLayout from '@/components/layout/AppLayout';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import Button from '@/components/ui/button';
+import Input from '@/components/ui/input';
+import LoadingSpinner from '@/components/ui/loading-spinner';
 import { Search, Send, Smile, Paperclip, RefreshCw, X, Reply, CornerDownRight } from 'lucide-react';
 import { messagesApi } from "@/api/messages";
 import { usersApi } from "@/api/users";
@@ -1128,7 +1128,7 @@ function MessagesPageContent() {
                   </div>
                 ) : state.messages.length > 0 ? (
                   state.messages.map(message => {
-                    const repliedMessage = message.reply_to_id ? findReplyMessage(message.reply_to_id) : undefined;
+                    const repliedMessage = (message as any).reply_to_id ? findReplyMessage((message as any).reply_to_id) : undefined;
                     return (
                     <div
                       key={message.id}
@@ -1161,33 +1161,33 @@ function MessagesPageContent() {
                         )}
 
                         {/* Message Content */}
-                        <div className="px-4 py-2 relative group/message">{
-                      {message.type === 'file' && message.file_url ? (
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <Paperclip className="h-4 w-4" />
-                            <span className="text-sm font-medium">{message.file_name}</span>
-                          </div>
-                          {message.file_size && (
-                            <p className="text-xs opacity-75">
-                              {(message.file_size / (1024 * 1024)).toFixed(2)} MB
-                            </p>
-                          )}
-                          <button
-                            onClick={() => message.file_url && handleFileDownload(message.file_url, message.file_name)}
-                            className={`inline-block px-3 py-1 text-xs rounded-full border transition-colors ${
-                              message.sender_id === user?.id
-                                ? 'border-white/30 hover:bg-white/20 text-white'
-                                : 'border-gray-300 hover:bg-gray-100 text-gray-700 dark:border-gray-600 dark:hover:bg-gray-700 dark:text-gray-300'
-                            }`}
-                          >
-                            Download
-                          </button>
-                        </div>
+                        <div className="px-4 py-2 relative group/message">
+                          {message.type === 'file' && message.file_url ? (
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <Paperclip className="h-4 w-4" />
+                                <span className="text-sm font-medium">{message.file_name}</span>
+                              </div>
+                              {message.file_size && (
+                                <p className="text-xs opacity-75">
+                                  {(message.file_size / (1024 * 1024)).toFixed(2)} MB
+                                </p>
+                              )}
+                              <button
+                                onClick={() => message.file_url && handleFileDownload(message.file_url, message.file_name)}
+                                className={`inline-block px-3 py-1 text-xs rounded-full border transition-colors ${
+                                  message.sender_id === user?.id
+                                    ? 'border-white/30 hover:bg-white/20 text-white'
+                                    : 'border-gray-300 hover:bg-gray-100 text-gray-700 dark:border-gray-600 dark:hover:bg-gray-700 dark:text-gray-300'
+                                }`}
+                              >
+                                Download
+                              </button>
+                            </div>
                           ) : (
                             <p className="text-sm">{message.content}</p>
                           )}
-                          
+
                           {/* Reply Button - only show on hover and for others' messages */}
                           {message.sender_id !== user?.id && (
                             <button
@@ -1198,7 +1198,7 @@ function MessagesPageContent() {
                               <Reply className="h-3 w-3 text-gray-600 dark:text-gray-300" />
                             </button>
                           )}
-                          
+
                           <p className={`text-xs mt-1 ${
                             message.sender_id === user?.id ? 'text-blue-100' : 'text-gray-500'
                           }`}>

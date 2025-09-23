@@ -37,7 +37,7 @@ export interface CardDescriptionProps {
 // Badge Component Types
 export interface BadgeProps {
   children: ReactNode;
-  variant?: 'primary' | 'secondary' | 'success' | 'warning' | 'error';
+  variant?: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'destructive' | 'default' | 'outline';
   size?: 'sm' | 'md' | 'lg';
   className?: string;
 }

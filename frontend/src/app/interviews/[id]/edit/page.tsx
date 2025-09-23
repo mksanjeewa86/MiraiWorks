@@ -28,7 +28,7 @@ function EditInterviewContent() {
     if (user && !canEditInterviews()) {
       router.push('/interviews');
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [user, router]);
 
   const [originalInterview, setOriginalInterview] = useState<Interview | null>(null);

@@ -100,7 +100,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
         {/* Completion Toggle */}
         {permissions.canChangeStatus ? (
           <button
-            onClick={() => onToggleComplete(todo)}
+            onClick={() => onToggleComplete?.(todo)}
             className={`
               flex-shrink-0 mt-1 p-1 rounded-full transition-colors
               ${isCompleted 

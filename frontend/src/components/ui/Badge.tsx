@@ -8,6 +8,9 @@ const variantClasses = {
   success: 'badge-success',
   warning: 'badge-warning',
   error: 'badge-error',
+  destructive: 'bg-red-100 text-red-800 border-red-200',
+  default: 'bg-gray-100 text-gray-800 border-gray-200',
+  outline: 'bg-transparent text-gray-700 border-gray-300',
 };
 
 const sizeClasses = {
@@ -16,14 +19,14 @@ const sizeClasses = {
   lg: 'px-3 py-1 text-sm',
 };
 
-export default function Badge({ 
-  children, 
-  variant = 'secondary', 
+function Badge({
+  children,
+  variant = 'secondary',
   size = 'md',
-  className 
+  className
 }: BadgeProps) {
   return (
-    <span 
+    <span
       className={clsx(
         'badge',
         variantClasses[variant],
@@ -35,3 +38,6 @@ export default function Badge({
     </span>
   );
 }
+
+export { Badge };
+export default Badge;

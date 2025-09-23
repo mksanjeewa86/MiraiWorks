@@ -3,8 +3,8 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppLayout from '@/components/layout/AppLayout';
-import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
+import Card from '@/components/ui/card';
+import Button from '@/components/ui/button';
 import { ArrowLeft, FileText, Upload, X } from 'lucide-react';
 import { ResumeFormat, ResumeLanguage, ResumeStatus, ResumeVisibility } from '@/types/resume';
 import { resumesApi } from '@/api/resumes';

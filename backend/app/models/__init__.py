@@ -39,7 +39,7 @@ from .video_call import (
     CallTranscription,
     TranscriptionSegment,
 )
-from .mbti_test import MBTITest, MBTIQuestion
+from .mbti_model import MBTITest, MBTIQuestion
 from .exam import (
     Exam,
     ExamQuestion,

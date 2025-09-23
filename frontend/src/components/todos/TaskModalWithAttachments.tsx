@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { X, Plus, Save, ClipboardList, Paperclip } from 'lucide-react';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import Badge from '@/components/ui/Badge';
+import Button from '@/components/ui/button';
+import Input from '@/components/ui/input';
+import Badge from '@/components/ui/badge';
 import { useToast } from '@/contexts/ToastContext';
 import { todosApi } from '@/api/todos';
 import { todoAttachmentAPI } from '@/api/todo-attachments';

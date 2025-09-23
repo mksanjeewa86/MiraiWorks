@@ -15,14 +15,14 @@ const shadowClasses = {
   lg: 'shadow-lg',
 };
 
-export default function Card({ 
-  children, 
-  className, 
+function Card({
+  children,
+  className,
   padding = 'md',
   shadow = 'sm'
 }: CardProps) {
   return (
-    <div 
+    <div
       className={clsx(
         'card',
         paddingClasses[padding],
@@ -34,6 +34,9 @@ export default function Card({
     </div>
   );
 }
+
+export { Card };
+export default Card;
 
 export function CardHeader({ children, className }: CardHeaderProps) {
   return (

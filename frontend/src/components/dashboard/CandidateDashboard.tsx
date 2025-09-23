@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { dashboardApi } from "@/api/dashboard";
-import Card from '@/components/ui/Card';
-import Badge from '@/components/ui/Badge';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import Button from '@/components/ui/Button';
+import Card from '@/components/ui/card';
+import Badge from '@/components/ui/badge';
+import LoadingSpinner from '@/components/ui/loading-spinner';
+import Button from '@/components/ui/button';
 import type { CandidateDashboardStats } from '@/types/dashboard';
 import MBTITestButton from '@/components/mbti/MBTITestButton';
 import MBTITestModal from '@/components/mbti/MBTITestModal';

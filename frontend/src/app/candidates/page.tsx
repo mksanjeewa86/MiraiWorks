@@ -25,7 +25,7 @@ function CandidatesPageContent() {
   const [totalPages, setTotalPages] = useState(0);
 
   // Mock data for development
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   const mockCandidates: Candidate[] = useMemo(() => [
     {
       id: 1,

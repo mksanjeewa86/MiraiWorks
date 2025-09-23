@@ -3,10 +3,10 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/layout/AppLayout';
-import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import Card from '@/components/ui/card';
+import Button from '@/components/ui/button';
+import Input from '@/components/ui/input';
+import LoadingSpinner from '@/components/ui/loading-spinner';
 import { 
   Save, 
   Eye, 
@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import type { Resume, WorkExperience, Skill } from '@/types';
 import type { ResumeBuilderState } from '@/types/pages';
+import { ResumeStatus, ResumeVisibility } from '@/types/resume';
 
 export default function ResumeBuilderPage() {
   const { user } = useAuth();
@@ -37,8 +38,8 @@ export default function ResumeBuilderPage() {
       template_id: 'modern',
       theme_color: '#3b82f6',
       font_family: 'Inter',
-      status: 'draft',
-      visibility: 'private',
+      status: ResumeStatus.DRAFT,
+      visibility: ResumeVisibility.PRIVATE,
       full_name: user?.full_name || '',
       email: user?.email || '',
       phone: '',

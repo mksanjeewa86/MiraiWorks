@@ -29,7 +29,7 @@ function ScheduleInterviewContent() {
     if (user && !canCreateInterviews()) {
       router.push('/interviews');
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [user, router]);
 
   const [formData, setFormData] = useState<InterviewFormData>({
@@ -95,7 +95,7 @@ function ScheduleInterviewContent() {
     };
 
     fetchCandidates();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, []);
 
   // Handle click outside to close dropdown

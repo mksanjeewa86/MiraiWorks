@@ -65,7 +65,7 @@ export const useWebRTC = (roomId?: string, userId?: number): UseWebRTCResult => 
         connectionQuality: getQualityFromState(connectionState)
       }));
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [roomId]);
 
   const getQualityFromState = (state: string | undefined): ConnectionQuality => {

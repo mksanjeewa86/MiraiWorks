@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import Button from '../ui/Button';
-import Input from '../ui/Input';
+import Button from '../ui/button';
+import Input from '../ui/input';
 import { LanguageSelector } from './LanguageSelector';
 import { apiClient } from '../../api/apiClient';
 import {

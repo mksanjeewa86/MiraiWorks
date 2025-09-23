@@ -51,12 +51,16 @@ export type ViewFilter = 'all' | 'active' | 'completed' | 'expired' | 'deleted';
 
 export interface TodoItemProps {
   todo: Todo | TodoWithAssignedUser;
-  onToggleComplete: (todo: Todo) => void;
+  onToggleComplete?: (todo: Todo) => void;
   onEdit: (todo: Todo) => void;
+  onComplete?: (todo: Todo) => void;
+  onReopen?: (todo: Todo) => void;
   onDelete: (todo: Todo) => void;
+  onRestore?: (todo: Todo) => void;
   onViewAttachments?: (todo: Todo) => void;
   attachmentCount?: number;
   totalAttachmentSize?: number;
+  loadingId?: number | null;
 }
 
 // TaskModal component types

@@ -111,7 +111,7 @@ export const useVideoCall = (identifier?: string, options: UseVideoCallOptions =
 
   useEffect(() => {
     fetchVideoCall();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [identifier, options.type]);
 
   return {

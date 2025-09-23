@@ -213,10 +213,7 @@ const MBTITestModal: React.FC<MBTITestModalProps> = ({
                         }
                       </p>
                       <h3 className="text-xl font-semibold text-gray-900">
-                        {language === 'ja' 
-                          ? currentQuestion.question_text_ja || currentQuestion.question_text 
-                          : currentQuestion.question_text || currentQuestion.question_text_en
-                        }
+                        {currentQuestion.question_text}
                       </h3>
                     </div>
 
@@ -235,10 +232,7 @@ const MBTITestModal: React.FC<MBTITestModalProps> = ({
                             A
                           </span>
                           <span className="text-gray-900">
-                            {language === 'ja' 
-                              ? currentQuestion.option_a_ja || currentQuestion.option_a
-                              : currentQuestion.option_a || currentQuestion.option_a_en
-                            }
+                            {currentQuestion.option_a}
                           </span>
                           {answers[currentQuestion.id] === 'A' && (
                             <CheckCircleIcon className="h-5 w-5 text-blue-600 ml-auto" />
@@ -259,10 +253,7 @@ const MBTITestModal: React.FC<MBTITestModalProps> = ({
                             B
                           </span>
                           <span className="text-gray-900">
-                            {language === 'ja' 
-                              ? currentQuestion.option_b_ja || currentQuestion.option_b
-                              : currentQuestion.option_b || currentQuestion.option_b_en
-                            }
+                            {currentQuestion.option_b}
                           </span>
                           {answers[currentQuestion.id] === 'B' && (
                             <CheckCircleIcon className="h-5 w-5 text-blue-600 ml-auto" />

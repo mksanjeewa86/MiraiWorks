@@ -81,7 +81,7 @@ function PublicResumePageContent() {
       
       // Create download link
       const link = document.createElement('a');
-      link.href = response.data.pdf_url;
+      link.href = response.data?.pdf_url || '';
       link.download = `${resume.title}.pdf`;
       document.body.appendChild(link);
       link.click();
@@ -289,7 +289,7 @@ function PublicResumePageContent() {
                 dangerouslySetInnerHTML={{ __html: previewHtml }}
                 style={{
                   fontFamily: resume.font_family || 'Inter',
-                  '--theme-color': resume.theme_color || '#2563eb'
+                  ['--theme-color' as any]: resume.theme_color || '#2563eb'
                 }}
               />
             ) : (

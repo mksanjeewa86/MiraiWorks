@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Card from '../ui/Card';
-import Button from '../ui/Button';
+import Card from '../ui/card';
+import Button from '../ui/button';
 import { VideoControls } from './VideoControls';
 import { ParticipantVideo } from './ParticipantVideo';
 import { TranscriptionPanel } from './TranscriptionPanel';
@@ -107,7 +107,7 @@ export const VideoCallRoom: React.FC<VideoCallRoomProps> = ({ callId: propCallId
     if (videoCall && !hasJoinedCall && !isConnected) {
       handleJoinCall();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [videoCall, hasJoinedCall, isConnected]);
 
   // Show consent modal when call starts
@@ -115,7 +115,7 @@ export const VideoCallRoom: React.FC<VideoCallRoomProps> = ({ callId: propCallId
     if (videoCall && videoCall.status === 'in_progress' && !consentCompleted && !showConsentModal) {
       setShowConsentModal(true);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [videoCall?.status, consentCompleted, showConsentModal]);
 
   const handleJoinCall = async () => {

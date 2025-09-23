@@ -5,7 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import io
 import os
 
-from app.api.deps import get_db, get_current_active_user
+from app.database import get_db
+from app.dependencies import get_current_active_user
 from app.models.user import User
 from app.models.todo import Todo
 from app.crud.todo import todo as todo_crud

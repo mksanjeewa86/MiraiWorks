@@ -3,9 +3,9 @@
 import { Suspense, useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import AppLayout from '@/components/layout/AppLayout';
-import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import Card from '@/components/ui/card';
+import Button from '@/components/ui/button';
+import LoadingSpinner from '@/components/ui/loading-spinner';
 import { 
   ArrowLeft, 
   Download, 

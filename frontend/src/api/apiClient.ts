@@ -28,10 +28,12 @@ export const makeAuthenticatedRequest = async <T>(
   const token = getAuthToken();
   
   const makeRequest = async (authToken: string | null) => {
+    const isFormData = options.body instanceof FormData;
     const response = await fetch(`${API_CONFIG.BASE_URL}${url}`, {
       ...options,
       headers: {
-        'Content-Type': 'application/json',
+        // Don't set Content-Type for FormData (browser will set it with boundary)
+        ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
         ...(authToken && { Authorization: `Bearer ${authToken}` }),
         ...options.headers,
       },
@@ -168,11 +170,16 @@ export const makePublicRequest = async <T>(
 export const apiClient = {
   get: <T>(url: string) => makeAuthenticatedRequest<T>(url, { method: 'GET' }),
 
-  post: <T>(url: string, data?: unknown) =>
-    makeAuthenticatedRequest<T>(url, {
+  post: <T>(url: string, data?: unknown, config?: { headers?: Record<string, string> }) => {
+    const isFormData = data instanceof FormData;
+    const options: RequestInit = {
       method: 'POST',
-      body: data ? JSON.stringify(data) : undefined
-    }),
+      body: isFormData ? data : (data ? JSON.stringify(data) : undefined),
+      ...(config?.headers && { headers: config.headers })
+    };
+
+    return makeAuthenticatedRequest<T>(url, options);
+  },
 
   put: <T>(url: string, data?: unknown) =>
     makeAuthenticatedRequest<T>(url, {

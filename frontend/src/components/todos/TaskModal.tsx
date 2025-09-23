@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { X, Plus, Save, ClipboardList } from 'lucide-react';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import Badge from '@/components/ui/Badge';
+import Button from '@/components/ui/button';
+import Input from '@/components/ui/input';
+import Badge from '@/components/ui/badge';
 import { useToast } from '@/contexts/ToastContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { todosApi } from '@/api/todos';
 import UserAssignment from './UserAssignment';
-import useTodoPermissions from '@/hooks/useTodoPermissions';
+import { getTodoPermissions } from '@/utils/todoPermissions';
 import type {
   Todo,
   TodoPayload,
@@ -46,7 +46,7 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: T
   const [assignment, setAssignment] = useState<TodoAssignmentUpdate>({});
 
   const isEditing = !!editingTodo;
-  const permissions = editingTodo ? useTodoPermissions(editingTodo) : null;
+  const permissions = editingTodo ? getTodoPermissions(editingTodo, user) : null;
   const canAssign = permissions?.canAssign || !isEditing; // Any user can assign when creating
 
   // Load assignable users when modal opens

@@ -3,9 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import AppLayout from '@/components/layout/AppLayout';
-import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import Card from '@/components/ui/card';
+import Button from '@/components/ui/button';
+import LoadingSpinner from '@/components/ui/loading-spinner';
 import { ArrowLeft, FileText, Upload, X, Plus, Trash2, Edit } from 'lucide-react';
 import { Resume, ResumeFormat, ResumeLanguage, ResumeStatus, ResumeVisibility, WorkExperience, Education, Skill, Project, Certification, Language } from '@/types/resume';
 import { resumesApi } from '@/api/resumes';

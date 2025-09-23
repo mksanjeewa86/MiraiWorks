@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Mail, CheckCircle } from 'lucide-react';
-import Button from '@/components/ui/Button';
+import Button from '@/components/ui/button';
 import type { ForgotPasswordFormProps } from '@/types/components';
 import { forgotPasswordSchema, type ForgotPasswordFormData } from '@/types/forms';
 

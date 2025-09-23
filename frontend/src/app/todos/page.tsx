@@ -19,12 +19,12 @@ import {
 
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import AppLayout from '@/components/layout/AppLayout';
-import Card from '@/components/ui/Card';
-import Badge from '@/components/ui/Badge';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import ConfirmationModal from '@/components/ui/ConfirmationModal';
+import Card from '@/components/ui/card';
+import Badge from '@/components/ui/badge';
+import Button from '@/components/ui/button';
+import Input from '@/components/ui/input';
+import LoadingSpinner from '@/components/ui/loading-spinner';
+import ConfirmationModal from '@/components/ui/confirmation-modal';
 import TaskModal from '@/components/todos/TaskModal';
 import { useToast } from '@/contexts/ToastContext';
 import { todosApi } from '@/api/todos';
@@ -194,7 +194,7 @@ function TodoItem({ todo, onEdit, onComplete, onReopen, onDelete, onRestore, loa
                 variant="primary"
                 className="w-full shadow-sm"
                 loading={isProcessing}
-                onClick={() => onRestore(todo)}
+                onClick={() => onRestore?.(todo)}
                 leftIcon={<RotateCcw className="h-4 w-4" />}
               >
                 Restore
@@ -220,7 +220,7 @@ function TodoItem({ todo, onEdit, onComplete, onReopen, onDelete, onRestore, loa
                   variant="primary"
                   className="w-full shadow-sm"
                   loading={isProcessing}
-                  onClick={() => onComplete(todo)}
+                  onClick={() => onComplete?.(todo)}
                   leftIcon={<CheckCircle2 className="h-4 w-4" />}
                 >
                   Finish
@@ -232,7 +232,7 @@ function TodoItem({ todo, onEdit, onComplete, onReopen, onDelete, onRestore, loa
                   variant="outline"
                   className="w-full border-gray-300 dark:border-gray-600"
                   loading={isProcessing}
-                  onClick={() => onReopen(todo)}
+                  onClick={() => onReopen?.(todo)}
                   leftIcon={<RotateCcw className="h-4 w-4" />}
                 >
                   Reopen
