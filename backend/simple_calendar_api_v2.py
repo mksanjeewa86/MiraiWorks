@@ -5,7 +5,7 @@ Simple calendar API server that exactly matches frontend types.
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 from datetime import datetime
 from typing import Optional, List
 import uuid
@@ -24,13 +24,13 @@ class EventCreate(BaseModel):
     attendees: Optional[List[str]] = []
     status: Optional[str] = None
 
-    @validator("title")
+    @field_validator("title")
     def title_must_not_be_empty(cls, v):
         if not v or not v.strip():
             raise ValueError("Title cannot be empty")
         return v.strip()
 
-    @validator("startDatetime", "endDatetime")
+    @field_validator("startDatetime", "endDatetime")
     def datetime_must_be_valid(cls, v):
         try:
             datetime.fromisoformat(v.replace("Z", "+00:00"))

@@ -1,13 +1,10 @@
 """Notification service for todo extension requests."""
 
 import logging
-from typing import List
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.todo_extension_request import TodoExtensionRequest
-from app.models.todo import Todo
-from app.models.user import User
 from app.crud.todo_viewer import todo_viewer
 from app.services.notification_service import NotificationService
 from app.services.email_service import email_service

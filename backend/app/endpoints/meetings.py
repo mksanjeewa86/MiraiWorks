@@ -12,7 +12,7 @@ from app.schemas.meeting import (
     MeetingResponse,
     MeetingUpdate,
 )
-from app.services.auth_service import get_current_user
+from app.dependencies import get_current_user
 from app.services.meeting_service import MeetingService
 from app.utils.permissions import requires_permission
 

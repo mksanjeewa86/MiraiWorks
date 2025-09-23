@@ -1,7 +1,6 @@
 from datetime import datetime
-from typing import Optional, List, Dict, Any, Union
+from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field, ConfigDict
-from enum import Enum
 
 # Import enums from models
 from app.models.exam import ExamType, ExamStatus, QuestionType, SessionStatus

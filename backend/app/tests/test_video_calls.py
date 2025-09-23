@@ -9,7 +9,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "."))
 
 from sqlalchemy import text
 from app.database import AsyncSessionLocal
-from app.models.video_call import VideoCall, CallParticipant, RecordingConsent, CallTranscription, TranscriptionSegment
 
 
 async def check_video_call_tables():

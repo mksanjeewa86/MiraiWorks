@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 from app.schemas.todo import AssignableUser
 from app.utils.constants import ExtensionRequestStatus
@@ -20,7 +20,8 @@ class TodoExtensionRequestCreate(BaseModel):
         description="Reason for requesting extension"
     )
 
-    @validator('reason')
+    @field_validator('reason')
+    @classmethod
     def validate_reason(cls, v):
         if not v or not v.strip():
             raise ValueError('Reason cannot be empty')
@@ -38,13 +39,15 @@ class TodoExtensionRequestResponse(BaseModel):
         description="Optional reason for the response"
     )
 
-    @validator('status')
+    @field_validator('status')
+    @classmethod
     def validate_status(cls, v):
         if v == ExtensionRequestStatus.PENDING:
             raise ValueError('Cannot set status to pending in response')
         return v
 
-    @validator('response_reason')
+    @field_validator('response_reason')
+    @classmethod
     def validate_response_reason(cls, v):
         if v is not None:
             return v.strip() if v.strip() else None
@@ -73,8 +76,7 @@ class TodoExtensionRequestRead(BaseModel):
     creator: AssignableUser
     responded_by: Optional[AssignableUser] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TodoExtensionRequestList(BaseModel):
@@ -95,8 +97,7 @@ class TodoExtensionValidation(BaseModel):
     days_extension_allowed: int = 3
     reason: Optional[str] = None  # Reason why extension cannot be requested
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TodoExtensionNotification(BaseModel):
@@ -113,5 +114,4 @@ class TodoExtensionNotification(BaseModel):
     status: ExtensionRequestStatus
     response_reason: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

@@ -9,7 +9,7 @@ from app.schemas.exam import (
     ExamCreate, ExamUpdate, ExamInfo, ExamQuestionCreate, ExamQuestionUpdate,
     ExamQuestionInfo, ExamTakeRequest, ExamTakeResponse, ExamAnswerSubmit,
     ExamAnswerInfo, ExamSessionInfo, ExamAssignmentCreate, ExamAssignmentInfo,
-    ExamMonitoringEventCreate, ExamMonitoringEventInfo, ExamStatistics,
+    ExamMonitoringEventCreate, ExamMonitoringEventInfo,
     ExamListResponse, ExamSessionListResponse, ExamResultSummary,
     FaceVerificationSubmit, FaceVerificationResponse
 )

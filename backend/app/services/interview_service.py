@@ -10,7 +10,7 @@ from sqlalchemy.orm import selectinload
 from app.models.calendar_integration import ExternalCalendarAccount, SyncedEvent
 from app.models.company import Company
 from app.models.interview import Interview, InterviewProposal
-from app.models.role import UserRole as UserRoleModel
+from app.models.role import Role, UserRole as UserRoleModel
 from app.models.user import User
 from app.services.calendar_service import google_calendar_service
 from app.config import settings
@@ -103,9 +103,6 @@ class InterviewService:
             await db.commit()
             await db.refresh(interview)
 
-        logger.info(
-            f"Created interview {interview.id} between candidate {candidate_id} and employer company {employer_company_id}"
-        )
 
         return interview
 
@@ -385,16 +382,25 @@ class InterviewService:
         employer_company_id: int,
     ):
         """Validate that interview participants have correct roles."""
-        # Get users with roles
+        # Get users
         users_result = await db.execute(
-            select(User)
-            .options(
-                selectinload(User.user_roles).selectinload(UserRoleModel.role),
-                selectinload(User.company),
-            )
-            .where(User.id.in_([candidate_id, recruiter_id]))
+            select(User).where(User.id.in_([candidate_id, recruiter_id]))
         )
         users = {user.id: user for user in users_result.scalars().all()}
+
+        # Get user roles with role names - use explicit join since relationship loading isn't working
+        user_roles_result = await db.execute(
+            select(UserRoleModel, Role)
+            .join(Role, UserRoleModel.role_id == Role.id)
+            .where(UserRoleModel.user_id.in_([candidate_id, recruiter_id]))
+        )
+
+        # Build user -> roles mapping
+        user_role_names = {}
+        for user_role, role in user_roles_result:
+            if user_role.user_id not in user_role_names:
+                user_role_names[user_role.user_id] = []
+            user_role_names[user_role.user_id].append(role.name)
 
         # Validate candidate
         candidate = users.get(candidate_id)
@@ -403,11 +409,11 @@ class InterviewService:
                 status_code=status.HTTP_404_NOT_FOUND, detail="Candidate not found"
             )
 
-        candidate_roles = [ur.role.name for ur in candidate.user_roles]
+        candidate_roles = user_role_names.get(candidate_id, [])
         if UserRole.CANDIDATE.value not in candidate_roles:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Specified user is not a candidate",
+                detail=f"Specified user is not a candidate. Roles found: {candidate_roles}, Expected: {UserRole.CANDIDATE.value}",
             )
 
         # Validate recruiter
@@ -417,14 +423,14 @@ class InterviewService:
                 status_code=status.HTTP_404_NOT_FOUND, detail="Recruiter not found"
             )
 
-        recruiter_roles = [ur.role.name for ur in recruiter.user_roles]
+        recruiter_roles = user_role_names.get(recruiter_id, [])
         if not (
             UserRole.RECRUITER.value in recruiter_roles
             or UserRole.COMPANY_ADMIN.value in recruiter_roles
         ):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Specified user is not a recruiter or company admin",
+                detail=f"Specified user is not a recruiter or company admin. Roles found: {recruiter_roles}",
             )
 
         # Validate employer company exists
@@ -553,6 +559,9 @@ class InterviewService:
     async def _create_calendar_events(self, db: AsyncSession, interview: Interview):
         """Create calendar events for interview participants."""
         participants = [interview.candidate, interview.recruiter]
+
+        # Filter out None participants (in case relationships aren't loaded)
+        participants = [p for p in participants if p is not None]
 
         for participant in participants:
             # Get participant's calendar accounts

@@ -20,7 +20,6 @@ from app.models.notification import Notification
 from app.models.role import Role, UserRole as UserRoleModel
 from app.models.user import User
 from app.models.user_settings import UserSettings
-from app.config import settings
 from app.schemas.auth import (
     ActivateAccountRequest,
     ActivateAccountResponse,

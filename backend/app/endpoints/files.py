@@ -22,7 +22,6 @@ logger = get_logger(__name__)
 @router.get("/test")
 async def test_endpoint():
     """Simple test endpoint to verify routing works."""
-    import sys
 
     return {"message": "File endpoints are working", "test": True}
 
@@ -193,7 +192,6 @@ async def upload_file(
 ):
     """Upload a file and return its URL and metadata."""
 
-    import sys
 
     logger.info(
         f"Upload request received - filename: {file.filename}, content_type: {file.content_type}, user: {current_user.id}"

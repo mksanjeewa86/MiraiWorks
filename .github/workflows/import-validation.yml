@@ -1,0 +1,149 @@
+name: Import Validation
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  import-validation:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+    - name: Install dependencies
+      run: |
+        cd backend
+        python -m pip install --upgrade pip
+        pip install ruff
+        # Install project dependencies for import validation
+        pip install -r requirements.txt
+
+    - name: Check for unused imports
+      run: |
+        cd backend
+        echo "Checking for unused imports..."
+        python -m ruff check app/ --select F401
+        if [ $? -ne 0 ]; then
+          echo "❌ Found unused imports! Run: python -m ruff check app/ --select F401 --fix"
+          exit 1
+        fi
+        echo "✅ No unused imports found"
+
+    - name: Check import errors (missing/wrong imports)
+      run: |
+        cd backend
+        echo "Checking for import errors..."
+        # Test if all modules can be imported
+        python -c "
+        import sys
+        import os
+        sys.path.insert(0, os.getcwd())
+
+        # Test critical imports
+        try:
+            from app.main import app
+            print('✅ Main app imports successfully')
+        except ImportError as e:
+            print(f'❌ Main app import failed: {e}')
+            sys.exit(1)
+
+        try:
+            import app.endpoints
+            print('✅ Endpoints import successfully')
+        except ImportError as e:
+            print(f'❌ Endpoints import failed: {e}')
+            sys.exit(1)
+
+        try:
+            import app.services
+            print('✅ Services import successfully')
+        except ImportError as e:
+            print(f'❌ Services import failed: {e}')
+            sys.exit(1)
+        "
+
+    - name: Full import validation with detailed report
+      run: |
+        cd backend
+        echo "Running comprehensive import validation..."
+
+        # Create comprehensive import checker
+        cat > validate_imports.py << 'EOF'
+        import ast
+        import importlib
+        import sys
+        import os
+        from pathlib import Path
+
+        def check_file_imports(file_path):
+            errors = []
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                tree = ast.parse(content)
+
+                for node in ast.walk(tree):
+                    if isinstance(node, ast.ImportFrom):
+                        module_name = node.module
+                        if module_name is None:
+                            continue
+
+                        try:
+                            module = importlib.import_module(module_name)
+                            for alias in node.names:
+                                if alias.name == '*':
+                                    continue
+                                if not hasattr(module, alias.name):
+                                    errors.append(f"ERROR: {alias.name} not found in {module_name}")
+                        except ImportError as e:
+                            # Skip optional dependencies
+                            if any(opt in str(e) for opt in ['vosk', 'speech_recognition', 'playwright', 'PyPDF2']):
+                                continue
+                            errors.append(f"ERROR: Cannot import {module_name}: {e}")
+            except Exception as e:
+                errors.append(f"ERROR: Failed to parse {file_path}: {e}")
+            return errors
+
+        def main():
+            sys.path.insert(0, os.getcwd())
+            errors = []
+
+            for py_file in Path('app').rglob('*.py'):
+                file_errors = check_file_imports(py_file)
+                if file_errors:
+                    print(f"FILE: {py_file}")
+                    for error in file_errors:
+                        print(f"  {error}")
+                    errors.extend(file_errors)
+
+            if errors:
+                print(f"\n❌ Found {len(errors)} import errors")
+                return 1
+            else:
+                print("✅ All imports are valid")
+                return 0
+
+        if __name__ == "__main__":
+            exit(main())
+        EOF
+
+        python validate_imports.py
+
+    - name: Check import sorting and formatting
+      run: |
+        cd backend
+        echo "Checking import sorting..."
+        python -m ruff check app/ --select I001
+        if [ $? -ne 0 ]; then
+          echo "❌ Imports are not properly sorted! Run: python -m ruff check app/ --select I001 --fix"
+          exit 1
+        fi
+        echo "✅ Imports are properly sorted"

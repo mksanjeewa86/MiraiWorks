@@ -7,7 +7,6 @@ from app import crud
 from app.crud.user import user as user_crud
 from app.schemas.video_call import (
     VideoCallCreate,
-    VideoCallUpdate,
     VideoCallInfo,
     VideoCallToken,
     RecordingConsentRequest,
@@ -27,7 +26,7 @@ from app.services.video_notification_service import video_notification_service
 router = APIRouter(prefix="/video-calls", tags=["video-calls"])
 
 
-@router.post("/schedule", response_model=VideoCallInfo)
+@router.post("/schedule", response_model=VideoCallInfo, status_code=status.HTTP_201_CREATED)
 async def schedule_video_call(
     call_data: VideoCallCreate,
     current_user: User = Depends(get_current_active_user),
@@ -166,10 +165,15 @@ async def join_video_call(
         )
 
     # Update call status to in_progress if it's the first participant
+    print(f"DEBUG: Video call status before check: {video_call.status}")
     if video_call.status == "scheduled":
+        print(f"DEBUG: Updating video call status to in_progress")
         await crud.video_call.update_call_status(
             db, db_obj=video_call, status="in_progress", started_at=datetime.now(timezone.utc)
         )
+        print(f"DEBUG: Video call status after update: {video_call.status}")
+    else:
+        print(f"DEBUG: Video call status is not 'scheduled', no update needed")
 
     # Add participant
     await crud.video_call.add_participant(

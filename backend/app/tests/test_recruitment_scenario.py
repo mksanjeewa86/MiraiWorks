@@ -8,7 +8,6 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.models.interview import Interview
 from app.models.role import Role, UserRole
 from app.models.user import User
 from app.services.interview_service import interview_service

@@ -1,9 +1,8 @@
 import os
 import uuid
 import mimetypes
-import shutil
 from pathlib import Path
-from typing import Optional, BinaryIO
+from typing import Optional
 import logging
 from datetime import datetime
 

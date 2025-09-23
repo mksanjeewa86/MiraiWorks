@@ -1,12 +1,8 @@
 import pytest
 import tempfile
 import os
-from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.todo import Todo
-from app.models.todo_attachment import TodoAttachment
-from app.models.user import User
 from app.crud.todo import todo as todo_crud
 from app.crud.todo_attachment import todo_attachment
 from app.schemas.todo import TodoCreate
@@ -16,14 +12,15 @@ from app.schemas.todo_attachment import TodoAttachmentCreate
 class TestTodoAttachmentCRUD:
     """Unit tests for todo attachment CRUD operations."""
 
-    async def test_create_attachment(self, db: AsyncSession, test_users: dict):
+    @pytest.mark.asyncio
+    async def test_create_attachment(self, db_session: AsyncSession, test_users: dict):
         """Test creating a new attachment."""
         user = test_users['recruiter']
         
         # Create a todo first
         todo_data = TodoCreate(title="Test Todo", description="For attachment testing")
-        test_todo = await todo_crud.create_with_owner(db, obj_in=todo_data, owner_id=user.id)
-        
+        test_todo = await todo_crud.create_with_owner(db_session, obj_in=todo_data, owner_id=user.id)
+
         # Create attachment
         attachment_data = TodoAttachmentCreate(
             todo_id=test_todo.id,
@@ -36,9 +33,9 @@ class TestTodoAttachmentCRUD:
             description="Test attachment",
             uploaded_by=user.id
         )
-        
+
         attachment = await todo_attachment.create_attachment(
-            db, attachment_data=attachment_data, uploader_id=user.id
+            db_session, attachment_data=attachment_data, uploader_id=user.id
         )
         
         assert attachment.id is not None
@@ -49,11 +46,12 @@ class TestTodoAttachmentCRUD:
         assert attachment.uploaded_by == user.id
         assert attachment.description == "Test attachment"
 
-    async def test_get_todo_attachments(self, db: AsyncSession, test_todo_with_attachments: dict):
+    @pytest.mark.asyncio
+    async def test_get_todo_attachments(self, db_session: AsyncSession, test_todo_with_attachments: dict):
         """Test getting all attachments for a todo."""
         todo = test_todo_with_attachments['todo']
         
-        attachments = await todo_attachment.get_todo_attachments(db, todo_id=todo.id)
+        attachments = await todo_attachment.get_todo_attachments(db_session, todo_id=todo.id)
         
         assert len(attachments) >= 1
         assert all(att.todo_id == todo.id for att in attachments)
@@ -61,54 +59,58 @@ class TestTodoAttachmentCRUD:
         if len(attachments) > 1:
             assert attachments[0].uploaded_at >= attachments[1].uploaded_at
 
-    async def test_get_attachment_by_id(self, db: AsyncSession, test_todo_with_attachments: dict):
+    @pytest.mark.asyncio
+    async def test_get_attachment_by_id(self, db_session: AsyncSession, test_todo_with_attachments: dict):
         """Test getting attachment by ID."""
         todo = test_todo_with_attachments['todo']
         original_attachment = test_todo_with_attachments['attachments'][0]
         
         # Get by ID only
         attachment = await todo_attachment.get_attachment_by_id(
-            db, attachment_id=original_attachment.id
+            db_session, attachment_id=original_attachment.id
         )
         assert attachment is not None
         assert attachment.id == original_attachment.id
         
         # Get by ID with todo filter
         attachment = await todo_attachment.get_attachment_by_id(
-            db, attachment_id=original_attachment.id, todo_id=todo.id
+            db_session, attachment_id=original_attachment.id, todo_id=todo.id
         )
         assert attachment is not None
         assert attachment.id == original_attachment.id
         
         # Get by ID with wrong todo filter
         attachment = await todo_attachment.get_attachment_by_id(
-            db, attachment_id=original_attachment.id, todo_id=99999
+            db_session, attachment_id=original_attachment.id, todo_id=99999
         )
         assert attachment is None
 
-    async def test_get_attachments_by_user(self, db: AsyncSession, test_todo_with_attachments: dict):
+    @pytest.mark.asyncio
+    async def test_get_attachments_by_user(self, db_session: AsyncSession, test_todo_with_attachments: dict):
         """Test getting attachments by user."""
         user = test_todo_with_attachments['user']
         
-        attachments = await todo_attachment.get_attachments_by_user(db, user_id=user.id)
+        attachments = await todo_attachment.get_attachments_by_user(db_session, user_id=user.id)
         
         assert len(attachments) >= 1
         assert all(att.uploaded_by == user.id for att in attachments)
 
-    async def test_get_attachments_by_file_type(self, db: AsyncSession, test_todo_with_attachments: dict):
+    @pytest.mark.asyncio
+    async def test_get_attachments_by_file_type(self, db_session: AsyncSession, test_todo_with_attachments: dict):
         """Test getting attachments by file type."""
         todo = test_todo_with_attachments['todo']
         
         # Get text files
         text_attachments = await todo_attachment.get_attachments_by_file_type(
-            db, mime_type_pattern="text/%", todo_id=todo.id
+            db_session, mime_type_pattern="text/%", todo_id=todo.id
         )
         
         for att in text_attachments:
             assert att.mime_type.startswith("text/")
             assert att.todo_id == todo.id
 
-    async def test_update_attachment_description(self, db: AsyncSession, test_todo_with_attachments: dict):
+    @pytest.mark.asyncio
+    async def test_update_attachment_description(self, db_session: AsyncSession, test_todo_with_attachments: dict):
         """Test updating attachment description."""
         attachment = test_todo_with_attachments['attachments'][0]
         user = test_todo_with_attachments['user']
@@ -116,7 +118,7 @@ class TestTodoAttachmentCRUD:
         new_description = "Updated description for test"
         
         updated = await todo_attachment.update_attachment_description(
-            db, 
+            db_session, 
             attachment_id=attachment.id,
             description=new_description,
             user_id=user.id
@@ -126,13 +128,14 @@ class TestTodoAttachmentCRUD:
         assert updated.description == new_description
         assert updated.id == attachment.id
 
-    async def test_update_attachment_description_wrong_user(self, db: AsyncSession, test_todo_with_attachments: dict, test_users: dict):
+    @pytest.mark.asyncio
+    async def test_update_attachment_description_wrong_user(self, db_session: AsyncSession, test_todo_with_attachments: dict, test_users: dict):
         """Test updating attachment description with wrong user fails."""
         attachment = test_todo_with_attachments['attachments'][0]
         other_user = test_users['candidate']  # Different user
         
         updated = await todo_attachment.update_attachment_description(
-            db,
+            db_session,
             attachment_id=attachment.id,
             description="Should not work",
             user_id=other_user.id
@@ -140,7 +143,8 @@ class TestTodoAttachmentCRUD:
         
         assert updated is None
 
-    async def test_delete_attachment(self, db: AsyncSession, test_todo_with_attachments: dict):
+    @pytest.mark.asyncio
+    async def test_delete_attachment(self, db_session: AsyncSession, test_todo_with_attachments: dict):
         """Test deleting an attachment."""
         attachment = test_todo_with_attachments['attachments'][0]
         todo = test_todo_with_attachments['todo']
@@ -152,37 +156,39 @@ class TestTodoAttachmentCRUD:
         
         # Update attachment path to temp file
         attachment.file_path = temp_path
-        await db.commit()
+        await db_session.commit()
         
         success = await todo_attachment.delete_attachment(
-            db, attachment_id=attachment.id, todo_id=todo.id, cleanup_file=True
+            db_session, attachment_id=attachment.id, todo_id=todo.id, cleanup_file=True
         )
         
         assert success is True
         
         # Verify attachment is deleted from database
         deleted_attachment = await todo_attachment.get_attachment_by_id(
-            db, attachment_id=attachment.id
+            db_session, attachment_id=attachment.id
         )
         assert deleted_attachment is None
         
         # Verify file is deleted from disk
         assert not os.path.exists(temp_path)
 
-    async def test_delete_nonexistent_attachment(self, db: AsyncSession):
+    @pytest.mark.asyncio
+    async def test_delete_nonexistent_attachment(self, db_session: AsyncSession):
         """Test deleting non-existent attachment returns False."""
         success = await todo_attachment.delete_attachment(
-            db, attachment_id=99999, cleanup_file=True
+            db_session, attachment_id=99999, cleanup_file=True
         )
         assert success is False
 
-    async def test_delete_attachments_bulk(self, db: AsyncSession, test_users: dict):
+    @pytest.mark.asyncio
+    async def test_delete_attachments_bulk(self, db_session: AsyncSession, test_users: dict):
         """Test bulk deletion of attachments."""
         user = test_users['recruiter']
         
         # Create todo with multiple attachments
         todo_data = TodoCreate(title="Bulk Delete Test", description="Testing bulk operations")
-        test_todo = await todo_crud.create_with_owner(db, obj_in=todo_data, owner_id=user.id)
+        test_todo = await todo_crud.create_with_owner(db_session, obj_in=todo_data, owner_id=user.id)
         
         # Create multiple attachments
         attachment_ids = []
@@ -206,13 +212,13 @@ class TestTodoAttachmentCRUD:
             )
             
             attachment = await todo_attachment.create_attachment(
-                db, attachment_data=attachment_data, uploader_id=user.id
+                db_session, attachment_data=attachment_data, uploader_id=user.id
             )
             attachment_ids.append(attachment.id)
         
         # Bulk delete first 2 attachments
         result = await todo_attachment.delete_attachments_bulk(
-            db, attachment_ids=attachment_ids[:2], todo_id=test_todo.id, cleanup_files=True
+            db_session, attachment_ids=attachment_ids[:2], todo_id=test_todo.id, cleanup_files=True
         )
         
         assert result["deleted_count"] == 2
@@ -228,11 +234,12 @@ class TestTodoAttachmentCRUD:
         # Clean up remaining file
         os.unlink(temp_files[2])
 
-    async def test_get_attachment_stats(self, db: AsyncSession, test_todo_with_attachments: dict):
+    @pytest.mark.asyncio
+    async def test_get_attachment_stats(self, db_session: AsyncSession, test_todo_with_attachments: dict):
         """Test getting attachment statistics."""
         todo = test_todo_with_attachments['todo']
         
-        stats = await todo_attachment.get_attachment_stats(db, todo_id=todo.id)
+        stats = await todo_attachment.get_attachment_stats(db_session, todo_id=todo.id)
         
         assert stats["total_count"] >= 1
         assert stats["total_size_bytes"] > 0
@@ -241,11 +248,12 @@ class TestTodoAttachmentCRUD:
         assert stats["largest_file"] is not None
         assert len(stats["recent_attachments"]) >= 1
 
-    async def test_get_attachment_stats_by_user(self, db: AsyncSession, test_todo_with_attachments: dict):
+    @pytest.mark.asyncio
+    async def test_get_attachment_stats_by_user(self, db_session: AsyncSession, test_todo_with_attachments: dict):
         """Test getting attachment statistics filtered by user."""
         user = test_todo_with_attachments['user']
         
-        stats = await todo_attachment.get_attachment_stats(db, user_id=user.id)
+        stats = await todo_attachment.get_attachment_stats(db_session, user_id=user.id)
         
         assert stats["total_count"] >= 1
         assert all(
@@ -253,11 +261,12 @@ class TestTodoAttachmentCRUD:
             for att in stats["recent_attachments"]
         )
 
-    async def test_get_todo_attachment_summary(self, db: AsyncSession, test_todo_with_attachments: dict):
+    @pytest.mark.asyncio
+    async def test_get_todo_attachment_summary(self, db_session: AsyncSession, test_todo_with_attachments: dict):
         """Test getting attachment summary for a todo."""
         todo = test_todo_with_attachments['todo']
         
-        summary = await todo_attachment.get_todo_attachment_summary(db, todo_id=todo.id)
+        summary = await todo_attachment.get_todo_attachment_summary(db_session, todo_id=todo.id)
         
         assert summary["total_count"] >= 1
         assert summary["total_size_mb"] >= 0
@@ -265,7 +274,8 @@ class TestTodoAttachmentCRUD:
         assert "attachments" in summary
         assert len(summary["attachments"]) == summary["total_count"]
 
-    async def test_attachment_model_properties(self, db: AsyncSession, test_todo_with_attachments: dict):
+    @pytest.mark.asyncio
+    async def test_attachment_model_properties(self, db_session: AsyncSession, test_todo_with_attachments: dict):
         """Test TodoAttachment model computed properties."""
         attachment = test_todo_with_attachments['attachments'][0]
         
@@ -289,13 +299,14 @@ class TestTodoAttachmentCRUD:
         # Test file existence check
         assert attachment.is_file_exists() in [True, False]  # Depends on whether file actually exists
 
-    async def test_cleanup_orphaned_attachments(self, db: AsyncSession, test_users: dict):
+    @pytest.mark.asyncio
+    async def test_cleanup_orphaned_attachments(self, db_session: AsyncSession, test_users: dict):
         """Test cleanup of orphaned attachment records."""
         user = test_users['recruiter']
         
         # Create todo and attachment with non-existent file
         todo_data = TodoCreate(title="Orphan Test", description="Testing orphan cleanup")
-        test_todo = await todo_crud.create_with_owner(db, obj_in=todo_data, owner_id=user.id)
+        test_todo = await todo_crud.create_with_owner(db_session, obj_in=todo_data, owner_id=user.id)
         
         attachment_data = TodoAttachmentCreate(
             todo_id=test_todo.id,
@@ -308,27 +319,28 @@ class TestTodoAttachmentCRUD:
         )
         
         orphan_attachment = await todo_attachment.create_attachment(
-            db, attachment_data=attachment_data, uploader_id=user.id
+            db_session, attachment_data=attachment_data, uploader_id=user.id
         )
         
         # Run cleanup
-        result = await todo_attachment.cleanup_orphaned_attachments(db)
+        result = await todo_attachment.cleanup_orphaned_attachments(db_session)
         
         assert result["deleted_db_records"] >= 1
         assert orphan_attachment.id in result["orphaned_records"]
         
         # Verify orphaned record is deleted
         deleted_attachment = await todo_attachment.get_attachment_by_id(
-            db, attachment_id=orphan_attachment.id
+            db_session, attachment_id=orphan_attachment.id
         )
         assert deleted_attachment is None
 
-    async def test_file_category_detection(self, db: AsyncSession, test_users: dict):
+    @pytest.mark.asyncio
+    async def test_file_category_detection(self, db_session: AsyncSession, test_users: dict):
         """Test file category detection for different MIME types."""
         user = test_users['recruiter']
         
         todo_data = TodoCreate(title="Category Test", description="Testing file categories")
-        test_todo = await todo_crud.create_with_owner(db, obj_in=todo_data, owner_id=user.id)
+        test_todo = await todo_crud.create_with_owner(db_session, obj_in=todo_data, owner_id=user.id)
         
         test_cases = [
             ("image.jpg", "image/jpeg", "image"),
@@ -351,7 +363,7 @@ class TestTodoAttachmentCRUD:
             )
             
             attachment = await todo_attachment.create_attachment(
-                db, attachment_data=attachment_data, uploader_id=user.id
+                db_session, attachment_data=attachment_data, uploader_id=user.id
             )
             
             assert attachment.file_category == expected_category

@@ -5,10 +5,8 @@ No paid APIs required - runs completely locally.
 
 import asyncio
 import logging
-import wave
 import io
 from typing import Optional, List
-from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 

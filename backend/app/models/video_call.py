@@ -18,10 +18,10 @@ class VideoCall(Base):
     candidate_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     
     # Call details
-    scheduled_at = Column(DateTime(timezone=True), nullable=False, index=True)
+    scheduled_at = Column(DateTime(timezone=True), nullable=False)
     started_at = Column(DateTime(timezone=True), nullable=True)
     ended_at = Column(DateTime(timezone=True), nullable=True)
-    status = Column(String(20), nullable=False, default="scheduled", index=True)
+    status = Column(String(20), nullable=False, default="scheduled")
     room_id = Column(String(255), unique=True, nullable=False)
     recording_url = Column(String(255), nullable=True)
     

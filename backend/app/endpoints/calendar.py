@@ -18,7 +18,6 @@ from app.schemas.calendar import (
     EventCreate,
     EventUpdate,
     EventInfo,
-    EventsListRequest,
     EventsListResponse,
 )
 from app.services.google_calendar_service import google_calendar_service

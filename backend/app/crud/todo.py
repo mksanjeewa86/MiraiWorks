@@ -8,6 +8,7 @@ from sqlalchemy.orm import selectinload
 
 from app.crud.base import CRUDBase
 from app.models.todo import Todo
+from app.models.todo_viewer import TodoViewer
 from app.models.user import User
 from app.schemas.todo import TodoCreate, TodoUpdate, TodoAssignmentUpdate, TodoViewersUpdate
 from app.utils.constants import TodoStatus, TodoVisibility
@@ -180,7 +181,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
             select(Todo)
             .options(
                 selectinload(Todo.assigned_user),
-                selectinload(Todo.viewers).selectinload(lambda v: v.user)
+                selectinload(Todo.viewers).selectinload(TodoViewer.user)
             )
             .where(Todo.id == todo_id)
         )
@@ -313,6 +314,12 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
             await db.refresh(db_obj)
         
         return db_obj
+
+    async def create_with_owner(
+        self, db: AsyncSession, *, owner_id: int, obj_in: TodoCreate
+    ) -> Todo:
+        """Create a todo with owner - alias for create_for_user."""
+        return await self.create_for_user(db, owner_id=owner_id, created_by=owner_id, obj_in=obj_in)
 
 
 todo = CRUDTodo(Todo)

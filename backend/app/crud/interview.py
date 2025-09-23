@@ -3,7 +3,7 @@ from typing import Dict, List, Optional
 
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, joinedload
 
 from app.crud.base import CRUDBase
 from app.models.interview import Interview, InterviewProposal
@@ -19,18 +19,54 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
         self, db: AsyncSession, interview_id: int
     ) -> Optional[Interview]:
         """Get interview with all relationships loaded."""
+        # First get the interview
         result = await db.execute(
-            select(Interview)
-            .options(
-                selectinload(Interview.candidate).selectinload(User.company),
-                selectinload(Interview.recruiter).selectinload(User.company),
-                selectinload(Interview.employer_company),
-                selectinload(Interview.creator),
-                selectinload(Interview.proposals),
-            )
-            .where(Interview.id == interview_id)
+            select(Interview).where(Interview.id == interview_id)
         )
-        return result.scalar_one_or_none()
+        interview = result.scalar_one_or_none()
+
+        if not interview:
+            return None
+
+        # Manually load relationships to ensure they work
+        if interview.candidate_id:
+            candidate_result = await db.execute(
+                select(User)
+                .options(joinedload(User.company))
+                .where(User.id == interview.candidate_id)
+            )
+            interview.candidate = candidate_result.scalar_one_or_none()
+
+        if interview.recruiter_id:
+            recruiter_result = await db.execute(
+                select(User)
+                .options(joinedload(User.company))
+                .where(User.id == interview.recruiter_id)
+            )
+            interview.recruiter = recruiter_result.scalar_one_or_none()
+
+        # Load employer company
+        if interview.employer_company_id:
+            from app.models.company import Company
+            company_result = await db.execute(
+                select(Company).where(Company.id == interview.employer_company_id)
+            )
+            interview.employer_company = company_result.scalar_one_or_none()
+
+        # Load creator
+        if interview.created_by:
+            creator_result = await db.execute(
+                select(User).where(User.id == interview.created_by)
+            )
+            interview.creator = creator_result.scalar_one_or_none()
+
+        # Load proposals (keeping selectinload as it might work better for collections)
+        proposals_result = await db.execute(
+            select(InterviewProposal).where(InterviewProposal.interview_id == interview_id)
+        )
+        interview.proposals = proposals_result.scalars().all()
+
+        return interview
 
     async def get_user_interviews(
         self,

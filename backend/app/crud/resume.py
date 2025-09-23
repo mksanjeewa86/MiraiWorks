@@ -1,9 +1,8 @@
-from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import  Optional
 import secrets
 import string
 
-from sqlalchemy import select, update, delete, func, desc, and_, or_
+from sqlalchemy import select, update, func, desc, and_
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,13 +12,6 @@ from app.models.resume import (
     WorkExperience, 
     Education, 
     Skill, 
-    Project, 
-    Certification, 
-    Language, 
-    Reference, 
-    ResumeSection, 
-    ResumeTemplate,
-    ResumeShare,
     ResumeMessageAttachment
 )
 from app.schemas.resume import (
@@ -30,17 +22,7 @@ from app.schemas.resume import (
     EducationCreate,
     EducationUpdate,
     SkillCreate,
-    SkillUpdate,
-    ProjectCreate,
-    ProjectUpdate,
-    CertificationCreate,
-    CertificationUpdate,
-    LanguageCreate,
-    LanguageUpdate,
-    ReferenceCreate,
-    ReferenceUpdate,
-    SectionCreate,
-    SectionUpdate
+    SkillUpdate
 )
 from app.utils.constants import ResumeStatus, ResumeVisibility
 

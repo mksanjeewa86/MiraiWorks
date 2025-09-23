@@ -4,13 +4,12 @@ Performance optimization utilities for video call functionality.
 
 import asyncio
 import logging
-from typing import Dict, List, Optional, Any
+from typing import Dict, Any
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, func
+from sqlalchemy import select, and_
 
 from app.models.video_call import VideoCall, TranscriptionSegment
-from app.crud.video_call import video_call as video_call_crud
 
 
 logger = logging.getLogger(__name__)

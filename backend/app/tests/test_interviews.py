@@ -102,6 +102,9 @@ async def create_interview_model(
         last_name="Service",
     )
 
+    # Ensure the candidate user's session state is fresh
+    await db_session.refresh(candidate_user)
+
     start = datetime.utcnow() + timedelta(days=3)
     interview = await interview_service.create_interview(
         db=db_session,

@@ -33,14 +33,11 @@ WARNING: This script will DELETE all existing seed data and create fresh data!
 
 import asyncio
 import os
-from datetime import datetime, timezone
-from sqlalchemy.ext.asyncio import AsyncSession
 
 # Set environment to avoid conflicts
 os.environ.setdefault("ENVIRONMENT", "development")
 
 # Import through FastAPI app to ensure proper model loading
-from app.main import app
 from app.database import AsyncSessionLocal
 from app.models import User, Company, Role, UserRole, UserSettings, CompanyProfile
 from app.models.message import Message
@@ -59,7 +56,7 @@ async def create_seed_data():
 
     async with AsyncSessionLocal() as db:
         try:
-            from sqlalchemy import select, delete
+            from sqlalchemy import delete
 
             # Clear existing seed data in correct order (reverse of creation)
             print("\nClearing existing seed data...")
@@ -545,7 +542,6 @@ async def create_seed_data():
 
             # Helper function to create position slug
             def create_slug(title: str, company_name: str) -> str:
-                import re
                 import hashlib
                 # For Japanese titles, create a hash-based slug
                 combined = f"{title}-{company_name}"

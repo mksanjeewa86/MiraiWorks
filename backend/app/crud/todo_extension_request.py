@@ -10,7 +10,6 @@ from sqlalchemy.orm import selectinload
 from app.crud.base import CRUDBase
 from app.models.todo_extension_request import TodoExtensionRequest
 from app.models.todo import Todo
-from app.models.user import User
 from app.schemas.todo_extension import (
     TodoExtensionRequestCreate,
     TodoExtensionRequestResponse,

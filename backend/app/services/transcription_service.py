@@ -1,15 +1,11 @@
 import asyncio
-import json
 import logging
-from typing import Optional, List, Dict, Any
+from typing import Optional, Dict
 from datetime import datetime, timezone
 import base64
 import aiohttp
-import websockets
 
 from app.config import settings
-from app.models.video_call import VideoCall, TranscriptionSegment
-from app.crud.video_call import video_call as video_call_crud
 from app.schemas.video_call import TranscriptionSegmentCreate
 from app.services.free_transcription import transcribe_audio_free
 

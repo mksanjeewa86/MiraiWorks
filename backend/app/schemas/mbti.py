@@ -1,9 +1,9 @@
 """Schemas for MBTI personality test."""
 
 from datetime import datetime
-from typing import Dict, Any, Optional
+from typing import Dict, Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 from app.utils.constants import MBTIType, MBTITestStatus
 
@@ -21,8 +21,7 @@ class MBTIQuestionRead(BaseModel):
     option_b_en: str
     option_b_ja: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class MBTIAnswerSubmit(BaseModel):
@@ -43,7 +42,8 @@ class MBTITestSubmit(BaseModel):
     
     answers: Dict[int, str] = Field(..., description="Question ID to answer (A/B) mapping")
     
-    @validator('answers')
+    @field_validator('answers')
+    @classmethod
     def validate_answers(cls, v):
         # Validate all answers are A or B
         for question_id, answer in v.items():
@@ -80,8 +80,7 @@ class MBTITestResult(BaseModel):
     dimension_preferences: Dict[str, str] = Field(default_factory=dict)
     strength_scores: Dict[str, int] = Field(default_factory=dict)
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class MBTITestSummary(BaseModel):
@@ -99,8 +98,7 @@ class MBTITestSummary(BaseModel):
     type_description_ja: str
     temperament: str  # NT, NF, SJ, SP
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class MBTITestProgress(BaseModel):
@@ -112,8 +110,7 @@ class MBTITestProgress(BaseModel):
     total_questions: int = 60
     started_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class MBTITypeInfo(BaseModel):

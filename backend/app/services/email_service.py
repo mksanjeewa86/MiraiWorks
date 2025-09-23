@@ -293,6 +293,29 @@ Visit: {self.app_base_url}
                 f"Hi {first_name}, please activate your account at: {activation_url}",
             )
 
+    async def send_template_email(
+        self,
+        to_email: str,
+        subject: str,
+        template_name: str,
+        template_data: dict,
+    ) -> bool:
+        """Send email using a template."""
+        try:
+            html_body, text_body = email_template_service.render_email_template(
+                template_name, template_data, subject, "Email Notification"
+            )
+            return await self.send_email([to_email], subject, html_body, text_body)
+        except Exception as e:
+            logger.error(f"Failed to render email template '{template_name}': {e}")
+            # Fallback to a simple message if template fails
+            return await self.send_email(
+                [to_email],
+                subject,
+                f"<p>Email notification from MiraiWorks</p>",
+                "Email notification from MiraiWorks",
+            )
+
     async def send_message_notification(
         self,
         recipient_email: str,

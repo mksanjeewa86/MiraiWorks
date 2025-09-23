@@ -11,7 +11,6 @@ import pytest
 import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.pool import StaticPool
 
 # Set environment to test before importing settings
 try:
@@ -37,15 +36,35 @@ from app.services.auth_service import auth_service
 from app.utils.constants import CompanyType
 from app.utils.constants import UserRole as UserRoleEnum
 
-# Test database URL (SQLite in memory)
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+# Test database configuration - MySQL only with Docker
+import time
+import uuid
+import subprocess
+import asyncio as async_lib
 
-# Create test engine
+# Test database URL for Docker MySQL (port 3307 to avoid conflicts)
+# Support both local Docker and GitHub Actions
+import os
+if os.getenv("GITHUB_ACTIONS"):
+    # GitHub Actions uses service containers
+    TEST_DATABASE_URL = "mysql+asyncmy://changeme:changeme@127.0.0.1:3307/miraiworks_test"
+else:
+    # Local Docker development
+    TEST_DATABASE_URL = "mysql+asyncmy://changeme:changeme@localhost:3307/miraiworks_test"
+
+# Create test engine with more conservative settings for CI/CD
 test_engine = create_async_engine(
     TEST_DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
+    pool_size=2,
+    max_overflow=3,
+    pool_recycle=1800,  # Recycle connections every 30 minutes
+    pool_pre_ping=True,
+    pool_timeout=20,
     echo=False,
+    connect_args={
+        "autocommit": False,
+        "connect_timeout": 20,
+    }
 )
 
 TestingSessionLocal = async_sessionmaker(
@@ -67,6 +86,111 @@ async def override_get_db():
 app.dependency_overrides[get_db] = override_get_db
 
 
+def start_test_database():
+    """Start Docker MySQL test database."""
+    print("Starting MySQL test database with Docker...")
+
+    # Check if container is already running and healthy
+    try:
+        result = subprocess.run(
+            ["docker", "ps", "--filter", "name=miraiworks-mysql-test", "--filter", "health=healthy", "--format", "{{.Names}}"],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        if "miraiworks-mysql-test" in result.stdout:
+            print("MySQL test database is already running and healthy")
+            return True
+    except subprocess.CalledProcessError:
+        pass
+
+    # Clean up any existing container
+    try:
+        subprocess.run(
+            ["docker-compose", "-f", "docker-compose.test.yml", "down", "-v"],
+            cwd=str(BACKEND_DIR.parent),
+            capture_output=True
+        )
+    except subprocess.CalledProcessError:
+        pass
+
+    # Start the test database
+    try:
+        subprocess.run(
+            ["docker-compose", "-f", "docker-compose.test.yml", "up", "-d"],
+            check=True,
+            cwd=str(BACKEND_DIR.parent)
+        )
+        print("Started MySQL test database")
+
+        # Wait for database to be ready with health check
+        print("Waiting for MySQL to be ready...")
+        max_attempts = 60
+        for attempt in range(max_attempts):
+            try:
+                # Check health status
+                result = subprocess.run(
+                    ["docker", "inspect", "--format={{.State.Health.Status}}", "miraiworks-mysql-test"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5
+                )
+                if result.returncode == 0 and "healthy" in result.stdout:
+                    print("MySQL is ready and healthy!")
+                    # Additional verification with a connection test
+                    test_result = subprocess.run(
+                        ["docker", "exec", "miraiworks-mysql-test", "mysqladmin", "ping", "-h", "localhost", "-u", "changeme", "-pchangeme"],
+                        capture_output=True,
+                        text=True,
+                        timeout=5
+                    )
+                    if test_result.returncode == 0:
+                        return True
+            except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+                pass
+
+            time.sleep(3)
+            if attempt % 10 == 0:
+                print(f"Waiting for MySQL... (attempt {attempt + 1}/{max_attempts})")
+
+        raise Exception("MySQL failed to start within timeout")
+
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to start MySQL test database: {e}")
+        return False
+
+
+def stop_test_database():
+    """Stop Docker MySQL test database."""
+    try:
+        subprocess.run(
+            ["docker-compose", "-f", "docker-compose.test.yml", "down", "-v"],
+            check=True,
+            cwd=str(BACKEND_DIR.parent)
+        )
+        print("Stopped MySQL test database")
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to stop MySQL test database: {e}")
+
+
+@pytest.fixture(scope="session", autouse=True)
+def setup_test_environment():
+    """Set up the test environment."""
+    if os.getenv("GITHUB_ACTIONS"):
+        # In GitHub Actions, MySQL service is managed by the workflow
+        print("Running in GitHub Actions - using service container")
+        yield
+    else:
+        # Local development - manage Docker container
+        if not start_test_database():
+            pytest.exit("Failed to start MySQL test database")
+
+        yield
+
+        # Clean up
+        stop_test_database()
+
+
 @pytest.fixture(scope="session")
 def event_loop():
     """Create an instance of the default event loop for the test session."""
@@ -75,21 +199,140 @@ def event_loop():
     loop.close()
 
 
+async def force_drop_all_tables():
+    """Force drop all tables directly via SQL to avoid DDL conflicts."""
+    max_retries = 3
+
+    for attempt in range(max_retries):
+        try:
+            async with test_engine.begin() as conn:
+                # Disable foreign key checks
+                from sqlalchemy import text
+                await conn.execute(text("SET FOREIGN_KEY_CHECKS = 0"))
+
+                # Get all table names
+                result = await conn.execute(text("SHOW TABLES"))
+                table_names = [row[0] for row in result.fetchall()]
+
+                # Drop each table directly
+                for table_name in table_names:
+                    try:
+                        await conn.execute(text(f"DROP TABLE IF EXISTS `{table_name}`"))
+                    except Exception as drop_error:
+                        print(f"Warning: Failed to drop table {table_name}: {drop_error}")
+
+                # Re-enable foreign key checks
+                await conn.execute(text("SET FOREIGN_KEY_CHECKS = 1"))
+
+                print(f"Force dropped {len(table_names)} tables")
+                return True
+
+        except Exception as e:
+            if attempt == max_retries - 1:
+                print(f"Failed to force drop tables after {max_retries} attempts: {e}")
+                return False
+            await asyncio.sleep(1)
+
+    return False
+
+
+@pytest_asyncio.fixture(scope="session", autouse=True)
+async def setup_database_schema():
+    """Set up test database schema once per session."""
+    max_retries = 3
+
+    # Force clean the database first
+    print("Force cleaning database...")
+    await force_drop_all_tables()
+
+    # Wait for cleanup to complete
+    await asyncio.sleep(2)
+
+    # Create schema with retries and disable existence checks to avoid DDL conflicts
+    for attempt in range(max_retries):
+        try:
+            async with test_engine.begin() as conn:
+                # Create all tables without checking if they exist first (checkfirst=False)
+                await conn.run_sync(lambda sync_conn: Base.metadata.create_all(sync_conn, checkfirst=False))
+            print("Database schema created successfully")
+            break
+        except Exception as e:
+            if attempt == max_retries - 1:
+                print(f"Failed to create database schema after {max_retries} attempts: {e}")
+                raise e
+            # Wait between retries
+            await asyncio.sleep(3)
+            print(f"Retrying database schema creation... (attempt {attempt + 1}/{max_retries})")
+
+    yield
+
+    # Clean up schema at the end of session
+    try:
+        await force_drop_all_tables()
+        print("Database schema cleaned up")
+    except Exception as e:
+        print(f"Warning: Failed to clean up database schema: {e}")
+
+
 @pytest_asyncio.fixture(scope="function", autouse=True)
 async def setup_database():
-    """Set up test database for each test function."""
-    async with test_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    """Clean data for each test function without recreating schema."""
+    # Clear all table data but keep schema intact
+    table_names = []
+    max_retries = 3
+
+    for attempt in range(max_retries):
+        try:
+            async with test_engine.begin() as conn:
+                from sqlalchemy import text
+
+                # Get all table names
+                result = await conn.execute(text("SHOW TABLES"))
+                table_names = [row[0] for row in result.fetchall()]
+
+                if table_names:
+                    # Disable foreign key checks for cleanup
+                    await conn.execute(text("SET FOREIGN_KEY_CHECKS = 0"))
+
+                    # Truncate all tables to reset auto-increment and remove data
+                    for table_name in table_names:
+                        await conn.execute(text(f"TRUNCATE TABLE `{table_name}`"))
+
+                    # Re-enable foreign key checks
+                    await conn.execute(text("SET FOREIGN_KEY_CHECKS = 1"))
+            break
+        except Exception as e:
+            if attempt == max_retries - 1:
+                print(f"Warning: Failed to clean table data: {e}")
+                # Fallback: try to delete data instead of truncate
+                try:
+                    async with test_engine.begin() as conn:
+                        from sqlalchemy import text
+                        await conn.execute(text("SET FOREIGN_KEY_CHECKS = 0"))
+                        for table_name in table_names:
+                            await conn.execute(text(f"DELETE FROM `{table_name}`"))
+                        await conn.execute(text("SET FOREIGN_KEY_CHECKS = 1"))
+                except Exception as cleanup_error:
+                    print(f"Fallback cleanup also failed: {cleanup_error}")
+            else:
+                await asyncio.sleep(0.5)
+
     yield
-    async with test_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
 
 
 @pytest_asyncio.fixture
 async def db_session():
     """Get database session for tests."""
-    async with TestingSessionLocal() as session:
+    session = None
+    try:
+        session = TestingSessionLocal()
         yield session
+    finally:
+        if session:
+            try:
+                await session.close()
+            except Exception:
+                pass  # Ignore close errors
 
 
 @pytest_asyncio.fixture
@@ -374,11 +617,11 @@ async def super_admin_auth_headers(client, test_super_admin):
         return {"Authorization": "Bearer dummy_token_for_testing"}
 
 
-@pytest_asyncio.fixture 
+@pytest_asyncio.fixture
 async def test_users(db_session, test_company, test_roles):
     """Create multiple test users for testing."""
     users = {}
-    
+
     # Recruiter user
     recruiter = User(
         email="recruiter@example.com",
@@ -391,13 +634,13 @@ async def test_users(db_session, test_company, test_roles):
     db_session.add(recruiter)
     await db_session.commit()
     await db_session.refresh(recruiter)
-    
+
     recruiter_role = UserRole(
         user_id=recruiter.id, role_id=test_roles[UserRoleEnum.EMPLOYER.value].id
     )
     db_session.add(recruiter_role)
-    
-    # Candidate user  
+
+    # Candidate user
     candidate = User(
         email="candidate@example.com",
         first_name="Candidate",
@@ -409,12 +652,12 @@ async def test_users(db_session, test_company, test_roles):
     db_session.add(candidate)
     await db_session.commit()
     await db_session.refresh(candidate)
-    
+
     candidate_role = UserRole(
         user_id=candidate.id, role_id=test_roles[UserRoleEnum.CANDIDATE.value].id
     )
     db_session.add(candidate_role)
-    
+
     # Other candidate user
     other_candidate = User(
         email="other_candidate@example.com",
@@ -427,15 +670,15 @@ async def test_users(db_session, test_company, test_roles):
     db_session.add(other_candidate)
     await db_session.commit()
     await db_session.refresh(other_candidate)
-    
+
     other_candidate_role = UserRole(
         user_id=other_candidate.id, role_id=test_roles[UserRoleEnum.CANDIDATE.value].id
     )
     db_session.add(other_candidate_role)
-    
+
     # Other recruiter user
     other_recruiter = User(
-        email="other_recruiter@example.com", 
+        email="other_recruiter@example.com",
         first_name="Other",
         last_name="Recruiter",
         company_id=test_company.id,
@@ -445,35 +688,22 @@ async def test_users(db_session, test_company, test_roles):
     db_session.add(other_recruiter)
     await db_session.commit()
     await db_session.refresh(other_recruiter)
-    
+
     other_recruiter_role = UserRole(
         user_id=other_recruiter.id, role_id=test_roles[UserRoleEnum.EMPLOYER.value].id
     )
     db_session.add(other_recruiter_role)
-    
+
     await db_session.commit()
-    
+
     users['recruiter'] = recruiter
     users['candidate'] = candidate
     users['other_candidate'] = other_candidate
     users['other_recruiter'] = other_recruiter
-    
+
     return users
 
 
-@pytest_asyncio.fixture
-async def auth_headers(client):
-    """Function to get auth headers for any user."""
-    async def _get_headers(user):
-        response = await client.post(
-            "/api/auth/login",
-            json={"email": user.email, "password": "password123"},
-        )
-        assert response.status_code == 200
-        token_data = response.json()
-        return {"Authorization": f"Bearer {token_data['access_token']}"}
-    
-    return _get_headers
 
 
 @pytest_asyncio.fixture
@@ -484,20 +714,20 @@ async def test_todo_with_attachments(db_session, test_users):
     from app.schemas.todo import TodoCreate
     from app.schemas.todo_attachment import TodoAttachmentCreate
     import tempfile
-    
+
     user = test_users['recruiter']
-    
+
     # Create todo
     todo_data = TodoCreate(
         title="Test Todo with Attachments",
         description="Testing file attachments functionality"
     )
     test_todo = await todo_crud.create_with_owner(db_session, obj_in=todo_data, owner_id=user.id)
-    
+
     # Create temporary files for testing
     temp_files = []
     attachments = []
-    
+
     for i in range(2):
         # Create temporary file
         with tempfile.NamedTemporaryFile(delete=False, suffix=f'_test_{i}.txt') as temp_file:
@@ -505,7 +735,7 @@ async def test_todo_with_attachments(db_session, test_users):
             temp_file.write(content)
             temp_path = temp_file.name
             temp_files.append(temp_path)
-        
+
         # Create attachment record
         attachment_data = TodoAttachmentCreate(
             todo_id=test_todo.id,
@@ -518,15 +748,87 @@ async def test_todo_with_attachments(db_session, test_users):
             description=f"Test attachment {i}",
             uploaded_by=user.id
         )
-        
+
         attachment = await todo_attachment.create_attachment(
             db_session, attachment_data=attachment_data, uploader_id=user.id
         )
         attachments.append(attachment)
-    
+
     return {
         'todo': test_todo,
         'user': user,
         'attachments': attachments,
         'temp_files': temp_files
     }
+
+
+# Helper function to create auth headers for any user
+async def get_auth_headers_for_user(client, user):
+    """Get authentication headers for any user."""
+    # Determine password based on user email
+    if user.email == "test@example.com":
+        password = "testpassword123"
+    elif user.email == "admin@example.com":
+        password = "adminpassword123"
+    elif user.email == "employer@example.com":
+        password = "employerpassword123"
+    elif user.email == "candidate_only@example.com":
+        password = "candidatepassword456"
+    elif user.email == "superadmin@example.com":
+        password = "superpassword123"
+    else:
+        # Default password for test_users fixture
+        password = "password123"
+
+    response = await client.post(
+        "/api/auth/login",
+        json={"email": user.email, "password": password},
+    )
+
+    assert response.status_code == 200, f"Login failed for user {user.email}: {response.text}"
+    token_data = response.json()
+    return {"Authorization": f"Bearer {token_data['access_token']}"}
+
+
+@pytest_asyncio.fixture
+async def test_video_call(db_session, test_users):
+    """Create a test video call."""
+    from app.crud.video_call import video_call as video_call_crud
+    from app.schemas.video_call import VideoCallCreate
+    from app.models.video_call import VideoCall
+    from datetime import datetime, timezone, timedelta
+    from sqlalchemy import select
+    from sqlalchemy.orm import selectinload
+
+    recruiter = test_users['recruiter']
+    candidate = test_users['candidate']
+
+    call_data = VideoCallCreate(
+        candidate_id=candidate.id,
+        scheduled_at=datetime.now(timezone.utc) + timedelta(hours=1),
+        enable_transcription=True,
+        transcription_language="ja"
+    )
+
+    video_call = await video_call_crud.create_with_interviewer(
+        db_session, obj_in=call_data, interviewer_id=recruiter.id
+    )
+
+    # Load relationships explicitly since they use lazy="noload"
+    await db_session.commit()
+    result = await db_session.execute(
+        select(VideoCall)
+        .options(
+            selectinload(VideoCall.interviewer),
+            selectinload(VideoCall.candidate)
+        )
+        .where(VideoCall.id == video_call.id)
+    )
+    video_call = result.scalar_one()
+    return video_call
+
+
+@pytest_asyncio.fixture
+async def auth_headers_func(client):
+    """Get callable auth headers function."""
+    return lambda user: get_auth_headers_for_user(client, user)

@@ -1,10 +1,7 @@
-import pytest
 import asyncio
-from unittest.mock import AsyncMock, patch, MagicMock
-from datetime import datetime, timezone
+from unittest.mock import AsyncMock, patch
 
 from app.services.transcription_service import transcription_service, TranscriptionService
-from app.models.video_call import VideoCall
 
 
 class TestTranscriptionService:

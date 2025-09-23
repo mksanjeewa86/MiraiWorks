@@ -1,11 +1,9 @@
 from typing import List, Optional, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, func, desc
-from sqlalchemy.orm import selectinload
 
 from app.crud.base import CRUDBase
 from app.models.todo_attachment import TodoAttachment
-from app.models.todo import Todo
 from app.schemas.todo_attachment import TodoAttachmentCreate, TodoAttachmentUpdate
 from app.services.file_storage_service import file_storage_service
 
@@ -238,9 +236,9 @@ class CRUDTodoAttachment(CRUDBase[TodoAttachment, TodoAttachmentCreate, TodoAtta
             base_query = base_query.where(and_(*conditions))
         
         # Get total count and size
-        count_query = select(func.count(TodoAttachment.id), func.sum(TodoAttachment.file_size)).select_from(
-            base_query.subquery()
-        )
+        count_query = select(func.count(TodoAttachment.id), func.sum(TodoAttachment.file_size))
+        if conditions:
+            count_query = count_query.where(and_(*conditions))
         count_result = await db.execute(count_query)
         total_count, total_size = count_result.first()
         

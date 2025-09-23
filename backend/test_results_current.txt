@@ -1,0 +1,41 @@
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-7.4.3, pluggy-1.6.0 -- C:\Users\mksan\AppData\Local\Microsoft\WindowsApps\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\mksan\OneDrive\ÉhÉLÉÖÉÅÉìÉg\projects\MiraiWorks\backend
+configfile: pytest.ini
+plugins: anyio-3.7.1, Faker-37.6.0, asyncio-0.21.1, cov-4.1.0
+asyncio: mode=Mode.STRICT
+collecting ... collected 386 items
+
+app/tests/test_activation_comprehensive.py::TestAccountActivation::test_activation_success_flow FAILED [  0%]
+app/tests/test_activation_comprehensive.py::TestAccountActivation::test_activation_user_not_found PASSED [  0%]
+app/tests/test_activation_comprehensive.py::TestAccountActivation::test_activation_email_mismatch PASSED [  0%]
+app/tests/test_activation_comprehensive.py::TestAccountActivation::test_activation_already_active_user PASSED [  1%]
+app/tests/test_activation_comprehensive.py::TestAccountActivation::test_activation_invalid_temporary_password PASSED [  1%]
+app/tests/test_activation_comprehensive.py::TestAccountActivation::test_activation_no_hashed_password PASSED [  1%]
+app/tests/test_activation_comprehensive.py::TestAccountActivation::test_activation_password_validation PASSED [  1%]
+app/tests/test_activation_comprehensive.py::TestAccountActivation::test_activation_case_sensitivity PASSED [  2%]
+app/tests/test_activation_comprehensive.py::TestAccountActivation::test_activation_whitespace_handling PASSED [  2%]
+app/tests/test_activation_comprehensive.py::TestAccountActivation::test_activation_company_admin_flow PASSED [  2%]
+app/tests/test_activation_comprehensive.py::TestAccountActivation::test_activation_missing_phone_default FAILED [  2%]
+app/tests/test_activation_comprehensive.py::TestAccountActivation::test_activation_preserves_existing_phone PASSED [  3%]
+app/tests/test_activation_comprehensive.py::TestAccountActivation::test_activation_authentication_tokens PASSED [  3%]
+app/tests/test_activation_comprehensive.py::TestActivationEdgeCases::test_activation_special_characters_password PASSED [  3%]
+app/tests/test_activation_comprehensive.py::TestActivationEdgeCases::test_activation_unicode_email PASSED [  3%]
+app/tests/test_activation_comprehensive.py::TestActivationEdgeCases::test_activation_concurrent_attempts PASSED [  4%]
+app/tests/test_auth.py::test_login_success_returns_tokens PASSED         [  4%]
+app/tests/test_auth.py::test_login_rejects_invalid_credentials PASSED    [  4%]
+app/tests/test_auth.py::test_refresh_token_cycle PASSED                  [  4%]
+app/tests/test_auth.py::test_refresh_token_invalid_returns_401 PASSED    [  5%]
+app/tests/test_auth.py::test_change_password_allows_new_login PASSED     [  5%]
+app/tests/test_auth.py::test_get_current_user_returns_profile PASSED     [  5%]
+app/tests/test_auth_service_only.py::TestAuthService::test_get_password_hash PASSED [  5%]
+app/tests/test_auth_service_only.py::TestAuthService::test_verify_password PASSED [  6%]
+app/tests/test_auth_service_only.py::TestAuthService::test_create_access_token PASSED [  6%]
+app/tests/test_auth_service_only.py::TestAuthService::test_create_refresh_token PASSED [  6%]
+app/tests/test_auth_service_only.py::TestAuthService::test_decode_token_success PASSED [  6%]
+app/tests/test_auth_service_only.py::TestAuthService::test_decode_token_invalid PASSED [  7%]
+app/tests/test_auth_service_only.py::TestAuthService::test_auth_service_singleton PASSED [  7%]
+app/tests/test_auth_service_only.py::TestAuthService::test_password_hash_different_each_time PASSED [  7%]
+app/tests/test_auth_service_only.py::TestAuthService::test_token_contains_expected_claims PASSED [  8%]
+app/tests/test_auth_service_only.py::TestServiceImportsBasic::test_import_auth_service 

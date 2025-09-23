@@ -1,4 +1,4 @@
-from typing import Dict, Set
+from typing import Dict
 import json
 import logging
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
@@ -7,7 +7,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app import crud
 from app.database import get_db
 # Remove the complex auth dependency for now
-from app.models.user import User
 
 logger = logging.getLogger(__name__)
 

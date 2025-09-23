@@ -1,0 +1,44 @@
+services:
+  mysql-test:
+    image: mysql:8.0
+    container_name: miraiworks-mysql-test
+    environment:
+      MYSQL_ROOT_PASSWORD: changeme
+      MYSQL_DATABASE: miraiworks_test
+      MYSQL_USER: changeme
+      MYSQL_PASSWORD: changeme
+    ports:
+      - "3307:3306"  # Different port to avoid conflicts with production
+    volumes:
+      - mysql_test_data:/var/lib/mysql
+      - ./backend/scripts/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql
+    command: >
+      --default-authentication-plugin=mysql_native_password
+      --max_connections=50
+      --innodb-buffer-pool-size=128M
+      --wait_timeout=3600
+      --interactive_timeout=3600
+      --net_read_timeout=120
+      --net_write_timeout=120
+      --max_allowed_packet=16M
+      --innodb-lock-wait-timeout=120
+      --innodb-log-file-size=32M
+      --innodb-flush-log-at-trx-commit=2
+      --sync_binlog=0
+      --skip-log-bin
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "changeme", "-pchangeme"]
+      timeout: 5s
+      retries: 10
+      interval: 3s
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - test_network
+
+networks:
+  test_network:
+    driver: bridge
+
+volumes:
+  mysql_test_data:

@@ -1,4 +1,4 @@
-﻿# Router configuration
+# Router configuration
 from fastapi import FastAPI
 
 from app.endpoints import (

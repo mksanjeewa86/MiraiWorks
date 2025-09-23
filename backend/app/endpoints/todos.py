@@ -202,7 +202,7 @@ async def reopen_todo(
     return todo_obj
 
 
-@router.delete("/{todo_id}", response_model=TodoRead)
+@router.delete("/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def soft_delete_todo(
     todo_id: int,
     db: AsyncSession = Depends(get_db),
@@ -210,18 +210,16 @@ async def soft_delete_todo(
 ):
     """Soft delete a todo."""
     todo_obj = await _get_todo_or_404(db, todo_id=todo_id, current_user=current_user, allow_deleted=False)
-    
+
     # Check if user can delete this todo
     if not await TodoPermissionService.can_delete_todo(db, current_user.id, todo_obj):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to delete this todo"
         )
-    
-    if todo_obj.is_deleted:
-        return todo_obj
-    todo_obj = await todo_crud.soft_delete(db, todo=todo_obj, deleted_by=current_user.id)
-    return todo_obj
+
+    if not todo_obj.is_deleted:
+        await todo_crud.soft_delete(db, todo=todo_obj, deleted_by=current_user.id)
 
 
 @router.post("/{todo_id}/restore", response_model=TodoRead)

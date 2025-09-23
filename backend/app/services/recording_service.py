@@ -1,12 +1,8 @@
-import asyncio
 import logging
 from typing import Optional, Dict, Any
 from datetime import datetime, timezone
-import json
 
-from app.config import settings
 from app.models.video_call import VideoCall, RecordingConsent
-from app.crud.video_call import video_call as video_call_crud
 from app.services.video_service import video_service
 
 logger = logging.getLogger(__name__)

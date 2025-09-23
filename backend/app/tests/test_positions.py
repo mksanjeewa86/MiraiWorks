@@ -1,11 +1,8 @@
 import pytest
-from datetime import datetime, timedelta
 from httpx import AsyncClient
-from unittest.mock import patch, AsyncMock
+from unittest.mock import patch
 
-from app.crud.position import position as position_crud
 from app.models.position import Position
-from app.schemas.position import PositionCreate, PositionUpdate
 
 
 class TestPositionEndpoints:
@@ -63,12 +60,12 @@ class TestPositionEndpoints:
     @pytest.mark.asyncio
     async def test_list_positions_success(self, client: AsyncClient):
         """Test successful position listing."""
-        with patch("app.crud.position.position.get_published_positions") as mock_get:
+        with patch("app.endpoints.positions.position_crud.get_published_positions_with_count") as mock_get:
             mock_positions = [
                 Position(id=1, title="Position 1", status="published", company_id=1),
                 Position(id=2, title="Position 2", status="published", company_id=1),
             ]
-            mock_get.return_value = mock_positions
+            mock_get.return_value = (mock_positions, 2)
 
             response = await client.get("/api/positions/")
 
@@ -146,9 +143,9 @@ class TestPositionEndpoints:
     @pytest.mark.asyncio
     async def test_search_positions_success(self, client: AsyncClient):
         """Test successful position search."""
-        with patch("app.crud.position.position.get_published_positions") as mock_search:
+        with patch("app.endpoints.positions.position_crud.get_published_positions_with_count") as mock_search:
             mock_positions = [Position(id=1, title="Python Developer", company_id=1)]
-            mock_search.return_value = mock_positions
+            mock_search.return_value = (mock_positions, 1)
 
             response = await client.get(
                 "/api/positions/?search=python&location=San Francisco&job_type=full_time&salary_min=100000"
@@ -416,8 +413,8 @@ class TestPositionEndpoints:
     @pytest.mark.asyncio
     async def test_list_positions_with_filters(self, client: AsyncClient):
         """Test position listing with various filters."""
-        with patch("app.crud.position.position.get_published_positions") as mock_get:
-            mock_get.return_value = []
+        with patch("app.endpoints.positions.position_crud.get_published_positions_with_count") as mock_get:
+            mock_get.return_value = ([], 0)
 
             response = await client.get(
                 "/api/positions/?location=San Francisco&job_type=full_time&salary_min=100000&search=python"

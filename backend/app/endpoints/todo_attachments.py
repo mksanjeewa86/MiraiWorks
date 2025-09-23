@@ -8,14 +8,12 @@ import os
 from app.database import get_db
 from app.dependencies import get_current_active_user
 from app.models.user import User
-from app.models.todo import Todo
 from app.crud.todo import todo as todo_crud
 from app.crud.todo_attachment import todo_attachment
 from app.schemas.todo_attachment import (
     TodoAttachmentInfo,
     TodoAttachmentList,
     FileUploadResponse,
-    FileUploadRequest,
     AttachmentStats,
     BulkDeleteRequest,
     BulkDeleteResponse,

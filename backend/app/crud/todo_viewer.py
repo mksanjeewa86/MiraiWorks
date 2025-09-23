@@ -6,7 +6,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.todo_viewer import TodoViewer
-from app.models.user import User
 
 
 class CRUDTodoViewer:

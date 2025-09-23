@@ -1,34 +1,29 @@
 import pytest
-import tempfile
-import os
-from datetime import datetime, timezone
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from io import BytesIO
 
-from app.models.todo import Todo
-from app.models.todo_attachment import TodoAttachment
-from app.models.user import User
 from app.crud.todo import todo as todo_crud
-from app.crud.todo_attachment import todo_attachment
 from app.schemas.todo import TodoCreate
+from app.tests.conftest import get_auth_headers_for_user
 
 
 class TestTodoAttachmentEndpoints:
     """Comprehensive tests for todo attachment functionality."""
 
+    @pytest.mark.asyncio
     async def test_upload_file_success(
-        self, client: AsyncClient, auth_headers: dict, db: AsyncSession, test_users: dict
+        self, client: AsyncClient, db_session: AsyncSession, test_user
     ):
         """Test successful file upload to todo."""
-        user = test_users['recruiter']
+        user = test_user
         
         # Create a test todo
         todo_data = TodoCreate(
             title="Test Todo with Attachments",
             description="Testing file attachments"
         )
-        test_todo = await todo_crud.create_with_owner(db, obj_in=todo_data, owner_id=user.id)
+        test_todo = await todo_crud.create_with_owner(db_session, obj_in=todo_data, owner_id=user.id)
         
         # Create test file content
         file_content = b"This is test file content for attachment testing."
@@ -45,7 +40,7 @@ class TestTodoAttachmentEndpoints:
             f"/api/todos/{test_todo.id}/attachments/upload",
             files=files,
             data=data,
-            headers=auth_headers(user)
+            headers=await get_auth_headers_for_user(client, user)
         )
         
         assert response.status_code == 201
@@ -57,15 +52,16 @@ class TestTodoAttachmentEndpoints:
         assert result["attachment"]["description"] == "Test file attachment"
         assert result["attachment"]["is_document"] is True
 
+    @pytest.mark.asyncio
     async def test_upload_file_size_limit(
-        self, client: AsyncClient, auth_headers: dict, db: AsyncSession, test_users: dict
+        self, client: AsyncClient, db_session: AsyncSession, test_users: dict
     ):
         """Test file upload size limit enforcement (25MB)."""
         user = test_users['recruiter']
         
         # Create a test todo
         todo_data = TodoCreate(title="Test Todo", description="Testing size limits")
-        test_todo = await todo_crud.create_with_owner(db, obj_in=todo_data, owner_id=user.id)
+        test_todo = await todo_crud.create_with_owner(db_session, obj_in=todo_data, owner_id=user.id)
         
         # Create file larger than 25MB
         large_content = b"x" * (26 * 1024 * 1024)  # 26MB
@@ -77,21 +73,22 @@ class TestTodoAttachmentEndpoints:
         response = await client.post(
             f"/api/todos/{test_todo.id}/attachments/upload",
             files=files,
-            headers=auth_headers(user)
+            headers=await get_auth_headers_for_user(client, user)
         )
         
         assert response.status_code == 400
         assert "exceeds 25MB limit" in response.json()["detail"]
 
+    @pytest.mark.asyncio
     async def test_upload_empty_file(
-        self, client: AsyncClient, auth_headers: dict, db: AsyncSession, test_users: dict
+        self, client: AsyncClient, db_session: AsyncSession, test_users: dict
     ):
         """Test upload of empty file fails."""
         user = test_users['recruiter']
         
         # Create a test todo
         todo_data = TodoCreate(title="Test Todo", description="Testing empty file")
-        test_todo = await todo_crud.create_with_owner(db, obj_in=todo_data, owner_id=user.id)
+        test_todo = await todo_crud.create_with_owner(db_session, obj_in=todo_data, owner_id=user.id)
         
         # Upload empty file
         files = {
@@ -101,14 +98,15 @@ class TestTodoAttachmentEndpoints:
         response = await client.post(
             f"/api/todos/{test_todo.id}/attachments/upload",
             files=files,
-            headers=auth_headers(user)
+            headers=await get_auth_headers_for_user(client, user)
         )
         
         assert response.status_code == 400
         assert "File is empty" in response.json()["detail"]
 
+    @pytest.mark.asyncio
     async def test_upload_to_nonexistent_todo(
-        self, client: AsyncClient, auth_headers: dict, test_users: dict
+        self, client: AsyncClient, test_users: dict
     ):
         """Test file upload to non-existent todo fails."""
         user = test_users['recruiter']
@@ -120,14 +118,15 @@ class TestTodoAttachmentEndpoints:
         response = await client.post(
             f"/api/todos/99999/attachments/upload",
             files=files,
-            headers=auth_headers(user)
+            headers=await get_auth_headers_for_user(client, user)
         )
         
         assert response.status_code == 404
         assert "Todo not found" in response.json()["detail"]
 
+    @pytest.mark.asyncio
     async def test_upload_unauthorized(
-        self, client: AsyncClient, auth_headers: dict, db: AsyncSession, test_users: dict
+        self, client: AsyncClient, db_session: AsyncSession, test_users: dict
     ):
         """Test file upload without proper permissions fails."""
         owner = test_users['recruiter']
@@ -135,7 +134,7 @@ class TestTodoAttachmentEndpoints:
         
         # Create todo owned by someone else
         todo_data = TodoCreate(title="Other's Todo", description="Not accessible")
-        test_todo = await todo_crud.create_with_owner(db, obj_in=todo_data, owner_id=owner.id)
+        test_todo = await todo_crud.create_with_owner(db_session, obj_in=todo_data, owner_id=owner.id)
         
         files = {
             "file": ("test.txt", BytesIO(b"test content"), "text/plain")
@@ -144,14 +143,15 @@ class TestTodoAttachmentEndpoints:
         response = await client.post(
             f"/api/todos/{test_todo.id}/attachments/upload",
             files=files,
-            headers=auth_headers(other_user)
+            headers=await get_auth_headers_for_user(client, other_user)
         )
         
         assert response.status_code == 403
         assert "Not enough permissions" in response.json()["detail"]
 
+    @pytest.mark.asyncio
     async def test_get_todo_attachments(
-        self, client: AsyncClient, auth_headers: dict, db: AsyncSession, test_todo_with_attachments: dict
+        self, client: AsyncClient, db_session: AsyncSession, test_todo_with_attachments: dict
     ):
         """Test getting all attachments for a todo."""
         todo = test_todo_with_attachments['todo']
@@ -159,7 +159,7 @@ class TestTodoAttachmentEndpoints:
         
         response = await client.get(
             f"/api/todos/{todo.id}/attachments",
-            headers=auth_headers(user)
+            headers=await get_auth_headers_for_user(client, user)
         )
         
         assert response.status_code == 200
@@ -169,8 +169,9 @@ class TestTodoAttachmentEndpoints:
         assert "total_size_mb" in result
         assert result["total_count"] >= 1
 
+    @pytest.mark.asyncio
     async def test_get_attachment_details(
-        self, client: AsyncClient, auth_headers: dict, test_todo_with_attachments: dict
+        self, client: AsyncClient, test_todo_with_attachments: dict
     ):
         """Test getting specific attachment details."""
         todo = test_todo_with_attachments['todo']
@@ -179,7 +180,7 @@ class TestTodoAttachmentEndpoints:
         
         response = await client.get(
             f"/api/todos/{todo.id}/attachments/{attachment.id}",
-            headers=auth_headers(user)
+            headers=await get_auth_headers_for_user(client, user)
         )
         
         assert response.status_code == 200
@@ -188,8 +189,9 @@ class TestTodoAttachmentEndpoints:
         assert result["original_filename"] == attachment.original_filename
         assert result["file_size"] == attachment.file_size
 
+    @pytest.mark.asyncio
     async def test_download_attachment(
-        self, client: AsyncClient, auth_headers: dict, test_todo_with_attachments: dict
+        self, client: AsyncClient, test_todo_with_attachments: dict
     ):
         """Test downloading an attachment."""
         todo = test_todo_with_attachments['todo']
@@ -198,7 +200,7 @@ class TestTodoAttachmentEndpoints:
         
         response = await client.get(
             f"/api/todos/{todo.id}/attachments/{attachment.id}/download",
-            headers=auth_headers(user)
+            headers=await get_auth_headers_for_user(client, user)
         )
         
         assert response.status_code == 200
@@ -207,15 +209,16 @@ class TestTodoAttachmentEndpoints:
         # Check Content-Disposition header
         assert "attachment" in response.headers.get("content-disposition", "")
 
+    @pytest.mark.asyncio
     async def test_preview_image_attachment(
-        self, client: AsyncClient, auth_headers: dict, db: AsyncSession, test_users: dict
+        self, client: AsyncClient, db_session: AsyncSession, test_users: dict
     ):
         """Test previewing an image attachment."""
         user = test_users['recruiter']
         
         # Create todo and image attachment
         todo_data = TodoCreate(title="Image Test", description="Testing image preview")
-        test_todo = await todo_crud.create_with_owner(db, obj_in=todo_data, owner_id=user.id)
+        test_todo = await todo_crud.create_with_owner(db_session, obj_in=todo_data, owner_id=user.id)
         
         # Create fake image content (minimal PNG header)
         image_content = b"\x89PNG\r\n\x1a\n" + b"fake image data"
@@ -227,7 +230,7 @@ class TestTodoAttachmentEndpoints:
         upload_response = await client.post(
             f"/api/todos/{test_todo.id}/attachments/upload",
             files=files,
-            headers=auth_headers(user)
+            headers=await get_auth_headers_for_user(client, user)
         )
         
         attachment_id = upload_response.json()["attachment"]["id"]
@@ -235,14 +238,15 @@ class TestTodoAttachmentEndpoints:
         # Test preview
         response = await client.get(
             f"/api/todos/{test_todo.id}/attachments/{attachment_id}/preview",
-            headers=auth_headers(user)
+            headers=await get_auth_headers_for_user(client, user)
         )
         
         assert response.status_code == 200
         assert response.headers.get("content-type") == "image/png"
 
+    @pytest.mark.asyncio
     async def test_preview_unsupported_file_type(
-        self, client: AsyncClient, auth_headers: dict, test_todo_with_attachments: dict
+        self, client: AsyncClient, test_todo_with_attachments: dict
     ):
         """Test preview fails for unsupported file types."""
         todo = test_todo_with_attachments['todo']
@@ -251,14 +255,15 @@ class TestTodoAttachmentEndpoints:
         
         response = await client.get(
             f"/api/todos/{todo.id}/attachments/{attachment.id}/preview",
-            headers=auth_headers(user)
+            headers=await get_auth_headers_for_user(client, user)
         )
         
         assert response.status_code == 400
         assert "Preview not supported" in response.json()["detail"]
 
+    @pytest.mark.asyncio
     async def test_update_attachment_description(
-        self, client: AsyncClient, auth_headers: dict, test_todo_with_attachments: dict
+        self, client: AsyncClient, test_todo_with_attachments: dict
     ):
         """Test updating attachment description."""
         todo = test_todo_with_attachments['todo']
@@ -270,15 +275,16 @@ class TestTodoAttachmentEndpoints:
         response = await client.put(
             f"/api/todos/{todo.id}/attachments/{attachment.id}",
             data={"description": new_description},
-            headers=auth_headers(user)
+            headers=await get_auth_headers_for_user(client, user)
         )
         
         assert response.status_code == 200
         result = response.json()
         assert result["description"] == new_description
 
+    @pytest.mark.asyncio
     async def test_delete_attachment(
-        self, client: AsyncClient, auth_headers: dict, test_todo_with_attachments: dict
+        self, client: AsyncClient, test_todo_with_attachments: dict
     ):
         """Test deleting an attachment."""
         todo = test_todo_with_attachments['todo']
@@ -287,7 +293,7 @@ class TestTodoAttachmentEndpoints:
         
         response = await client.delete(
             f"/api/todos/{todo.id}/attachments/{attachment.id}",
-            headers=auth_headers(user)
+            headers=await get_auth_headers_for_user(client, user)
         )
         
         assert response.status_code == 204
@@ -295,19 +301,20 @@ class TestTodoAttachmentEndpoints:
         # Verify attachment is deleted
         get_response = await client.get(
             f"/api/todos/{todo.id}/attachments/{attachment.id}",
-            headers=auth_headers(user)
+            headers=await get_auth_headers_for_user(client, user)
         )
         assert get_response.status_code == 404
 
+    @pytest.mark.asyncio
     async def test_bulk_delete_attachments(
-        self, client: AsyncClient, auth_headers: dict, db: AsyncSession, test_users: dict
+        self, client: AsyncClient, db_session: AsyncSession, test_users: dict
     ):
         """Test bulk deletion of multiple attachments."""
         user = test_users['recruiter']
         
         # Create todo with multiple attachments
         todo_data = TodoCreate(title="Bulk Delete Test", description="Testing bulk operations")
-        test_todo = await todo_crud.create_with_owner(db, obj_in=todo_data, owner_id=user.id)
+        test_todo = await todo_crud.create_with_owner(db_session, obj_in=todo_data, owner_id=user.id)
         
         attachment_ids = []
         
@@ -320,7 +327,7 @@ class TestTodoAttachmentEndpoints:
             response = await client.post(
                 f"/api/todos/{test_todo.id}/attachments/upload",
                 files=files,
-                headers=auth_headers(user)
+                headers=await get_auth_headers_for_user(client, user)
             )
             
             attachment_ids.append(response.json()["attachment"]["id"])
@@ -331,7 +338,7 @@ class TestTodoAttachmentEndpoints:
         response = await client.post(
             f"/api/todos/{test_todo.id}/attachments/bulk-delete",
             json=delete_data,
-            headers=auth_headers(user)
+            headers=await get_auth_headers_for_user(client, user)
         )
         
         assert response.status_code == 200
@@ -339,8 +346,9 @@ class TestTodoAttachmentEndpoints:
         assert result["deleted_count"] == 2
         assert len(result["failed_deletions"]) == 0
 
+    @pytest.mark.asyncio
     async def test_get_attachment_stats(
-        self, client: AsyncClient, auth_headers: dict, test_todo_with_attachments: dict
+        self, client: AsyncClient, test_todo_with_attachments: dict
     ):
         """Test getting attachment statistics for a todo."""
         todo = test_todo_with_attachments['todo']
@@ -348,7 +356,7 @@ class TestTodoAttachmentEndpoints:
         
         response = await client.get(
             f"/api/todos/{todo.id}/attachments/stats",
-            headers=auth_headers(user)
+            headers=await get_auth_headers_for_user(client, user)
         )
         
         assert response.status_code == 200
@@ -358,29 +366,31 @@ class TestTodoAttachmentEndpoints:
         assert "file_type_counts" in result
         assert result["total_attachments"] >= 1
 
+    @pytest.mark.asyncio
     async def test_get_my_uploads(
-        self, client: AsyncClient, auth_headers: dict, test_users: dict
+        self, client: AsyncClient, test_users: dict
     ):
         """Test getting user's uploaded attachments."""
         user = test_users['recruiter']
         
         response = await client.get(
             "/api/attachments/my-uploads",
-            headers=auth_headers(user)
+            headers=await get_auth_headers_for_user(client, user)
         )
         
         assert response.status_code == 200
         result = response.json()
         assert isinstance(result, list)
 
+    @pytest.mark.asyncio
     async def test_file_type_detection(
-        self, client: AsyncClient, auth_headers: dict, db: AsyncSession, test_users: dict
+        self, client: AsyncClient, db_session: AsyncSession, test_users: dict
     ):
         """Test file type detection for different file formats."""
         user = test_users['recruiter']
         
         todo_data = TodoCreate(title="File Type Test", description="Testing file types")
-        test_todo = await todo_crud.create_with_owner(db, obj_in=todo_data, owner_id=user.id)
+        test_todo = await todo_crud.create_with_owner(db_session, obj_in=todo_data, owner_id=user.id)
         
         # Test different file types
         test_files = [
@@ -398,7 +408,7 @@ class TestTodoAttachmentEndpoints:
             response = await client.post(
                 f"/api/todos/{test_todo.id}/attachments/upload",
                 files=files,
-                headers=auth_headers(user)
+                headers=await get_auth_headers_for_user(client, user)
             )
             
             assert response.status_code == 201
@@ -419,14 +429,15 @@ class TestTodoAttachmentEndpoints:
                 assert attachment["file_category"] == "audio"
                 assert attachment["is_audio"] is True
 
+    @pytest.mark.asyncio
     async def test_concurrent_uploads(
-        self, client: AsyncClient, auth_headers: dict, db: AsyncSession, test_users: dict
+        self, client: AsyncClient, db_session: AsyncSession, test_users: dict
     ):
         """Test handling multiple concurrent file uploads."""
         user = test_users['recruiter']
         
         todo_data = TodoCreate(title="Concurrent Test", description="Testing concurrent uploads")
-        test_todo = await todo_crud.create_with_owner(db, obj_in=todo_data, owner_id=user.id)
+        test_todo = await todo_crud.create_with_owner(db_session, obj_in=todo_data, owner_id=user.id)
         
         # Create multiple upload tasks
         import asyncio
@@ -436,7 +447,7 @@ class TestTodoAttachmentEndpoints:
             return await client.post(
                 f"/api/todos/{test_todo.id}/attachments/upload",
                 files=files,
-                headers=auth_headers(user)
+                headers=await get_auth_headers_for_user(client, user)
             )
         
         # Upload 5 files concurrently
@@ -454,7 +465,7 @@ class TestTodoAttachmentEndpoints:
         # Verify all files are stored
         get_response = await client.get(
             f"/api/todos/{test_todo.id}/attachments",
-            headers=auth_headers(user)
+            headers=await get_auth_headers_for_user(client, user)
         )
         
         assert get_response.status_code == 200

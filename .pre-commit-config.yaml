@@ -1,0 +1,84 @@
+# Pre-commit hooks for code quality
+repos:
+  # Ruff for fast Python linting and formatting
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.6
+    hooks:
+      # Check for unused imports
+      - id: ruff
+        name: Remove unused imports
+        args: [--select=F401, --fix]
+        types: [python]
+        files: ^backend/app/
+
+      # Check import sorting
+      - id: ruff
+        name: Sort imports
+        args: [--select=I001, --fix]
+        types: [python]
+        files: ^backend/app/
+
+      # General ruff checks
+      - id: ruff
+        name: Lint with ruff
+        args: [--fix]
+        types: [python]
+        files: ^backend/
+
+      # Format with ruff
+      - id: ruff-format
+        name: Format with ruff
+        types: [python]
+        files: ^backend/
+
+  # Custom import validation hook
+  - repo: local
+    hooks:
+      - id: import-validation
+        name: Validate Python imports
+        entry: bash
+        language: system
+        files: ^backend/app/.*\.py$
+        args:
+          - -c
+          - |
+            cd backend
+            echo "Validating imports in $@"
+
+            # Check if all files can be imported
+            for file in "$@"; do
+              if [[ "$file" == *"__pycache__"* ]]; then
+                continue
+              fi
+
+              echo "Checking imports in: $file"
+
+              # Convert file path to module path
+              module_path=$(echo "$file" | sed 's|backend/||' | sed 's|\.py$||' | sed 's|/|.|g')
+
+              # Skip if not a valid module
+              if [[ "$module_path" == app.__* ]] || [[ "$module_path" == *.conftest ]]; then
+                continue
+              fi
+
+              # Try to import the module
+              if ! python -c "import sys; sys.path.insert(0, '.'); import $module_path" 2>/dev/null; then
+                echo "❌ Import error in: $file"
+                python -c "import sys; sys.path.insert(0, '.'); import $module_path" || true
+              else
+                echo "✅ Import OK: $file"
+              fi
+            done
+
+  # Additional Python quality checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-ast
+        files: ^backend/
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: end-of-file-fixer
+        files: ^backend/.*\.py$
+      - id: trailing-whitespace
+        files: ^backend/.*\.py$

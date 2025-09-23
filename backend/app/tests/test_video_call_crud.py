@@ -3,14 +3,15 @@ from datetime import datetime, timezone, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.video_call import video_call as video_call_crud
-from app.models.video_call import VideoCall, CallParticipant, RecordingConsent, TranscriptionSegment
+from app.models.video_call import VideoCall
 from app.schemas.video_call import VideoCallCreate
 
 
 class TestVideoCallCRUD:
     """Unit tests for video call CRUD operations."""
 
-    async def test_create_video_call(self, db: AsyncSession, test_users: dict):
+    @pytest.mark.asyncio
+    async def test_create_video_call(self, db_session: AsyncSession, test_users: dict):
         """Test creating a video call."""
         recruiter = test_users['recruiter']
         candidate = test_users['candidate']
@@ -23,7 +24,7 @@ class TestVideoCallCRUD:
         )
         
         video_call = await video_call_crud.create_with_interviewer(
-            db, obj_in=call_data, interviewer_id=recruiter.id
+            db_session, obj_in=call_data, interviewer_id=recruiter.id
         )
         
         assert video_call.id is not None
@@ -33,40 +34,44 @@ class TestVideoCallCRUD:
         assert video_call.transcription_enabled is True
         assert video_call.room_id is not None
 
-    async def test_get_video_call_by_room_id(self, db: AsyncSession, test_video_call: VideoCall):
+    @pytest.mark.asyncio
+    async def test_get_video_call_by_room_id(self, db_session: AsyncSession, test_video_call: VideoCall):
         """Test getting video call by room ID."""
-        result = await video_call_crud.get_by_room_id(db, room_id=test_video_call.room_id)
+        result = await video_call_crud.get_by_room_id(db_session, room_id=test_video_call.room_id)
         
         assert result is not None
         assert result.id == test_video_call.id
         assert result.room_id == test_video_call.room_id
 
-    async def test_get_video_call_by_interview_id(self, db: AsyncSession, test_video_call: VideoCall):
+    @pytest.mark.asyncio
+    async def test_get_video_call_by_interview_id(self, db_session: AsyncSession, test_video_call: VideoCall):
         """Test getting video call by interview ID."""
         if test_video_call.interview_id:
             result = await video_call_crud.get_by_interview_id(
-                db, interview_id=test_video_call.interview_id
+                db_session, interview_id=test_video_call.interview_id
             )
             assert result is not None
             assert result.id == test_video_call.id
 
-    async def test_get_user_video_calls(self, db: AsyncSession, test_video_call: VideoCall):
+    @pytest.mark.asyncio
+    async def test_get_user_video_calls(self, db_session: AsyncSession, test_video_call: VideoCall):
         """Test getting video calls for a user."""
         # Get calls for interviewer
         interviewer_calls = await video_call_crud.get_user_video_calls(
-            db, user_id=test_video_call.interviewer_id
+            db_session, user_id=test_video_call.interviewer_id
         )
         assert len(interviewer_calls) >= 1
         assert any(call.id == test_video_call.id for call in interviewer_calls)
         
         # Get calls for candidate
         candidate_calls = await video_call_crud.get_user_video_calls(
-            db, user_id=test_video_call.candidate_id
+            db_session, user_id=test_video_call.candidate_id
         )
         assert len(candidate_calls) >= 1
         assert any(call.id == test_video_call.id for call in candidate_calls)
 
-    async def test_get_upcoming_calls(self, db: AsyncSession, test_users: dict):
+    @pytest.mark.asyncio
+    async def test_get_upcoming_calls(self, db_session: AsyncSession, test_users: dict):
         """Test getting upcoming video calls."""
         recruiter = test_users['recruiter']
         
@@ -78,37 +83,40 @@ class TestVideoCallCRUD:
         )
         
         future_call = await video_call_crud.create_with_interviewer(
-            db, obj_in=call_data, interviewer_id=recruiter.id
+            db_session, obj_in=call_data, interviewer_id=recruiter.id
         )
         
         # Get upcoming calls
         upcoming = await video_call_crud.get_upcoming_calls(
-            db, user_id=recruiter.id, from_datetime=datetime.now(timezone.utc)
+            db_session, user_id=recruiter.id, from_datetime=datetime.now(timezone.utc)
         )
         
         assert len(upcoming) >= 1
         assert any(call.id == future_call.id for call in upcoming)
 
-    async def test_update_call_status(self, db: AsyncSession, test_video_call: VideoCall):
+    @pytest.mark.asyncio
+    async def test_update_call_status(self, db_session: AsyncSession, test_video_call: VideoCall):
         """Test updating video call status."""
         start_time = datetime.now(timezone.utc)
-        
+
         updated_call = await video_call_crud.update_call_status(
-            db, 
-            db_obj=test_video_call, 
+            db_session,
+            db_obj=test_video_call,
             status="in_progress",
             started_at=start_time
         )
-        
-        assert updated_call.status == "in_progress"
-        assert updated_call.started_at == start_time
 
-    async def test_add_participant(self, db: AsyncSession, test_video_call: VideoCall):
+        assert updated_call.status == "in_progress"
+        # Compare without timezone since database stores timezone-naive datetime
+        assert updated_call.started_at.replace(tzinfo=timezone.utc) == start_time
+
+    @pytest.mark.asyncio
+    async def test_add_participant(self, db_session: AsyncSession, test_video_call: VideoCall):
         """Test adding a participant to video call."""
         device_info = {"browser": "Chrome", "version": "91.0"}
         
         participant = await video_call_crud.add_participant(
-            db,
+            db_session,
             video_call_id=test_video_call.id,
             user_id=test_video_call.candidate_id,
             device_info=device_info
@@ -119,25 +127,27 @@ class TestVideoCallCRUD:
         assert participant.device_info == device_info
         assert participant.joined_at is not None
 
-    async def test_update_participant_left(self, db: AsyncSession, test_video_call: VideoCall):
+    @pytest.mark.asyncio
+    async def test_update_participant_left(self, db_session: AsyncSession, test_video_call: VideoCall):
         """Test updating participant left time."""
         # First add participant
         await video_call_crud.add_participant(
-            db, video_call_id=test_video_call.id, user_id=test_video_call.interviewer_id
+            db_session, video_call_id=test_video_call.id, user_id=test_video_call.interviewer_id
         )
         
         # Update left time
         updated_participant = await video_call_crud.update_participant_left(
-            db, video_call_id=test_video_call.id, user_id=test_video_call.interviewer_id
+            db_session, video_call_id=test_video_call.id, user_id=test_video_call.interviewer_id
         )
         
         assert updated_participant is not None
         assert updated_participant.left_at is not None
 
-    async def test_save_recording_consent(self, db: AsyncSession, test_video_call: VideoCall):
+    @pytest.mark.asyncio
+    async def test_save_recording_consent(self, db_session: AsyncSession, test_video_call: VideoCall):
         """Test saving recording consent."""
         consent = await video_call_crud.save_recording_consent(
-            db,
+            db_session,
             video_call_id=test_video_call.id,
             user_id=test_video_call.candidate_id,
             consented=True
@@ -148,39 +158,42 @@ class TestVideoCallCRUD:
         assert consent.consented is True
         assert consent.consented_at is not None
 
-    async def test_save_recording_consent_update(self, db: AsyncSession, test_video_call: VideoCall):
+    @pytest.mark.asyncio
+    async def test_save_recording_consent_update(self, db_session: AsyncSession, test_video_call: VideoCall):
         """Test updating existing recording consent."""
         # First consent
         await video_call_crud.save_recording_consent(
-            db, video_call_id=test_video_call.id, user_id=test_video_call.interviewer_id, consented=True
+            db_session, video_call_id=test_video_call.id, user_id=test_video_call.interviewer_id, consented=True
         )
         
         # Update consent
         updated_consent = await video_call_crud.save_recording_consent(
-            db, video_call_id=test_video_call.id, user_id=test_video_call.interviewer_id, consented=False
+            db_session, video_call_id=test_video_call.id, user_id=test_video_call.interviewer_id, consented=False
         )
         
         assert updated_consent.consented is False
         assert updated_consent.consented_at is None
 
-    async def test_get_call_consents(self, db: AsyncSession, test_video_call: VideoCall):
+    @pytest.mark.asyncio
+    async def test_get_call_consents(self, db_session: AsyncSession, test_video_call: VideoCall):
         """Test getting all consents for a video call."""
         # Add consents for both participants
         await video_call_crud.save_recording_consent(
-            db, video_call_id=test_video_call.id, user_id=test_video_call.interviewer_id, consented=True
+            db_session, video_call_id=test_video_call.id, user_id=test_video_call.interviewer_id, consented=True
         )
         await video_call_crud.save_recording_consent(
-            db, video_call_id=test_video_call.id, user_id=test_video_call.candidate_id, consented=False
+            db_session, video_call_id=test_video_call.id, user_id=test_video_call.candidate_id, consented=False
         )
         
-        consents = await video_call_crud.get_call_consents(db, video_call_id=test_video_call.id)
+        consents = await video_call_crud.get_call_consents(db_session,video_call_id=test_video_call.id)
         
         assert len(consents) == 2
         consent_by_user = {c.user_id: c for c in consents}
         assert consent_by_user[test_video_call.interviewer_id].consented is True
         assert consent_by_user[test_video_call.candidate_id].consented is False
 
-    async def test_save_transcription_segment(self, db: AsyncSession, test_video_call: VideoCall):
+    @pytest.mark.asyncio
+    async def test_save_transcription_segment(self, db_session: AsyncSession, test_video_call: VideoCall):
         """Test saving a transcription segment."""
         segment_data = {
             "speaker_id": test_video_call.interviewer_id,
@@ -191,7 +204,7 @@ class TestVideoCallCRUD:
         }
         
         segment = await video_call_crud.save_transcription_segment(
-            db, video_call_id=test_video_call.id, segment_data=segment_data
+            db_session, video_call_id=test_video_call.id, segment_data=segment_data
         )
         
         assert segment.video_call_id == test_video_call.id
@@ -201,11 +214,12 @@ class TestVideoCallCRUD:
         assert segment.end_time == segment_data["end_time"]
         assert segment.confidence == segment_data["confidence"]
 
-    async def test_get_call_transcription(self, db: AsyncSession, test_video_call: VideoCall):
+    @pytest.mark.asyncio
+    async def test_get_call_transcription(self, db_session: AsyncSession, test_video_call: VideoCall):
         """Test getting call transcription."""
         # Create transcription
         await video_call_crud.update_transcription_status(
-            db,
+            db_session,
             video_call_id=test_video_call.id,
             status="completed",
             transcript_text="Sample transcript text",
@@ -213,7 +227,7 @@ class TestVideoCallCRUD:
         )
         
         transcription = await video_call_crud.get_call_transcription(
-            db, video_call_id=test_video_call.id
+            db_session, video_call_id=test_video_call.id
         )
         
         assert transcription is not None
@@ -222,18 +236,19 @@ class TestVideoCallCRUD:
         assert transcription.transcript_text == "Sample transcript text"
         assert transcription.word_count == 4
 
-    async def test_update_transcription_status(self, db: AsyncSession, test_video_call: VideoCall):
+    @pytest.mark.asyncio
+    async def test_update_transcription_status(self, db_session: AsyncSession, test_video_call: VideoCall):
         """Test updating transcription status."""
         # Create initial transcription
         transcription = await video_call_crud.update_transcription_status(
-            db, video_call_id=test_video_call.id, status="processing"
+            db_session, video_call_id=test_video_call.id, status="processing"
         )
         
         assert transcription.processing_status == "processing"
         
         # Update to completed
         updated = await video_call_crud.update_transcription_status(
-            db,
+            db_session,
             video_call_id=test_video_call.id,
             status="completed",
             transcript_text="Final transcript",
@@ -244,7 +259,8 @@ class TestVideoCallCRUD:
         assert updated.transcript_text == "Final transcript"
         assert updated.processed_at is not None
 
-    async def test_concurrent_call_limit(self, db: AsyncSession, test_users: dict):
+    @pytest.mark.asyncio
+    async def test_concurrent_call_limit(self, db_session: AsyncSession, test_users: dict):
         """Test concurrent call creation for same user."""
         recruiter = test_users['recruiter']
         candidate1 = test_users['candidate']
@@ -257,7 +273,7 @@ class TestVideoCallCRUD:
         )
         
         call1 = await video_call_crud.create_with_interviewer(
-            db, obj_in=call_data1, interviewer_id=recruiter.id
+            db_session, obj_in=call_data1, interviewer_id=recruiter.id
         )
         
         # Create overlapping call
@@ -267,7 +283,7 @@ class TestVideoCallCRUD:
         )
         
         call2 = await video_call_crud.create_with_interviewer(
-            db, obj_in=call_data2, interviewer_id=recruiter.id
+            db_session, obj_in=call_data2, interviewer_id=recruiter.id
         )
         
         # Both should be created successfully (business logic enforcement in endpoints)

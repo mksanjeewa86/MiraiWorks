@@ -5,12 +5,11 @@ from typing import List, Optional, Dict, Any
 
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.crud.base import CRUDBase
 from app.models.mbti_model import MBTITest, MBTIQuestion
-from app.schemas.mbti import MBTITestSubmit, MBTITestStart
-from app.utils.constants import MBTITestStatus, MBTIType
+from app.schemas.mbti import MBTITestStart
+from app.utils.constants import MBTITestStatus
 
 
 class CRUDMBTITest(CRUDBase[MBTITest, dict, dict]):

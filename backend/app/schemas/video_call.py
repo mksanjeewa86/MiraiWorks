@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum
 from typing import Optional, List
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 
 class VideoCallStatus(str, Enum):
@@ -59,8 +59,7 @@ class VideoCallInfo(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class VideoCallToken(BaseModel):
@@ -80,8 +79,7 @@ class RecordingConsentInfo(BaseModel):
     consented: bool
     consented_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TranscriptionSegmentCreate(BaseModel):
@@ -109,8 +107,7 @@ class TranscriptionSegmentInfo(BaseModel):
     confidence: Optional[float] = None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CallTranscriptionInfo(BaseModel):
@@ -125,8 +122,7 @@ class CallTranscriptionInfo(BaseModel):
     processed_at: Optional[datetime] = None
     segments: Optional[List[TranscriptionSegmentInfo]] = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CallParticipantInfo(BaseModel):
@@ -138,5 +134,4 @@ class CallParticipantInfo(BaseModel):
     connection_quality: Optional[ConnectionQuality] = None
     device_info: Optional[dict] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

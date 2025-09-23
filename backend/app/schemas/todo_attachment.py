@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 
 class TodoAttachmentBase(BaseModel):
@@ -20,7 +20,8 @@ class TodoAttachmentCreate(TodoAttachmentBase):
     file_extension: Optional[str] = Field(None, max_length=10, description="File extension")
     uploaded_by: Optional[int] = Field(None, description="ID of the user who uploaded the file")
 
-    @validator('file_size')
+    @field_validator('file_size')
+    @classmethod
     def validate_file_size(cls, v):
         """Validate file size is within 25MB limit."""
         max_size = 25 * 1024 * 1024  # 25MB in bytes
@@ -28,18 +29,19 @@ class TodoAttachmentCreate(TodoAttachmentBase):
             raise ValueError(f'File size must be less than 25MB (got {v / (1024*1024):.2f}MB)')
         return v
 
-    @validator('original_filename', 'stored_filename')
+    @field_validator('original_filename', 'stored_filename')
+    @classmethod
     def validate_filename(cls, v):
         """Validate filename is not empty and contains valid characters."""
         if not v or not v.strip():
             raise ValueError('Filename cannot be empty')
-        
+
         # Check for invalid characters (basic validation)
         invalid_chars = '<>:"|?*'
         for char in invalid_chars:
             if char in v:
                 raise ValueError(f'Filename contains invalid character: {char}')
-        
+
         return v.strip()
 
 
@@ -71,8 +73,7 @@ class TodoAttachmentInfo(TodoAttachmentBase):
     is_video: bool = Field(..., description="Whether the file is a video")
     is_audio: bool = Field(..., description="Whether the file is an audio file")
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
     @classmethod
     def from_orm_with_computed(cls, attachment_orm):
@@ -130,7 +131,7 @@ class AttachmentStats(BaseModel):
 
 class BulkDeleteRequest(BaseModel):
     """Schema for bulk deleting attachments."""
-    attachment_ids: list[int] = Field(..., min_items=1, description="List of attachment IDs to delete")
+    attachment_ids: list[int] = Field(..., min_length=1, description="List of attachment IDs to delete")
 
 
 class BulkDeleteResponse(BaseModel):

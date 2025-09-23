@@ -1,5 +1,5 @@
 from typing import List, Optional, Dict, Any
-from sqlalchemy import and_, or_, desc, func, select
+from sqlalchemy import and_, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, joinedload
 from datetime import datetime, timedelta
@@ -10,8 +10,6 @@ from app.models.exam import (
     Exam, ExamQuestion, ExamSession, ExamAnswer, ExamAssignment, 
     ExamMonitoringEvent, ExamStatus, SessionStatus, QuestionType
 )
-from app.models.user import User
-from app.models.company import Company
 from app.schemas.exam import (
     ExamCreate, ExamUpdate, ExamQuestionCreate, ExamQuestionUpdate,
     ExamSessionCreate, ExamSessionUpdate, ExamAnswerSubmit,
