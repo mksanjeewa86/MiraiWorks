@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.interview import interview as interview_crud
+from app.crud.interview_note import interview_note as interview_note_crud
 from app.crud.video_call import video_call as video_call_crud
 from app.database import get_db
 from app.dependencies import get_current_active_user
@@ -28,6 +29,7 @@ from app.schemas.interview import (
     ProposalResponse,
 )
 from app.schemas.video_call import VideoCallCreate, VideoCallInfo
+from app.schemas.interview_note import InterviewNoteInfo, InterviewNoteUpdate
 from app.services.interview_service import interview_service
 from app.utils.permissions import is_company_admin, is_super_admin, requires_permission
 
@@ -385,24 +387,36 @@ async def _format_interview_response(
         status=interview.status,
         interview_type=interview.interview_type,
         candidate=ParticipantInfo(
-            id=interview.candidate.id,
-            email=interview.candidate.email,
-            full_name=interview.candidate.full_name,
+            id=interview.candidate.id if interview.candidate else 0,
+            email=interview.candidate.email if interview.candidate else "unknown@example.com",
+            full_name=interview.candidate.full_name if interview.candidate else "Unknown Candidate",
             role="candidate",
             company_name=interview.candidate.company.name
-            if interview.candidate.company
+            if interview.candidate and interview.candidate.company
             else None,
+        ) if interview.candidate else ParticipantInfo(
+            id=0,
+            email="unknown@example.com",
+            full_name="Unknown Candidate",
+            role="candidate",
+            company_name=None,
         ),
         recruiter=ParticipantInfo(
-            id=interview.recruiter.id,
-            email=interview.recruiter.email,
-            full_name=interview.recruiter.full_name,
+            id=interview.recruiter.id if interview.recruiter else 0,
+            email=interview.recruiter.email if interview.recruiter else "unknown@example.com",
+            full_name=interview.recruiter.full_name if interview.recruiter else "Unknown Recruiter",
             role="recruiter",
             company_name=interview.recruiter.company.name
-            if interview.recruiter.company
+            if interview.recruiter and interview.recruiter.company
             else None,
+        ) if interview.recruiter else ParticipantInfo(
+            id=0,
+            email="unknown@example.com",
+            full_name="Unknown Recruiter",
+            role="recruiter",
+            company_name=None,
         ),
-        employer_company_name=interview.employer_company.name,
+        employer_company_name=interview.employer_company.name if interview.employer_company else "Unknown Company",
         scheduled_start=interview.scheduled_start,
         scheduled_end=interview.scheduled_end,
         timezone=interview.timezone,
@@ -614,5 +628,154 @@ async def delete_interview_video_call(
         db_obj=interview,
         obj_in={"meeting_url": None}
     )
-    
+
     return {"message": "Video call removed successfully"}
+
+
+@router.delete("/{interview_id}")
+@requires_permission("interviews.delete")
+async def delete_interview(
+    interview_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Delete an interview."""
+    # Get interview with relationships
+    interview = await interview_crud.get_with_relationships(db, interview_id)
+    if not interview:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Interview not found"
+        )
+
+    # Check access permissions
+    if not await _check_interview_access(current_user, interview):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied to this interview"
+        )
+
+    # Prevent deletion of in-progress or completed interviews
+    if interview.status in [InterviewStatus.IN_PROGRESS, InterviewStatus.COMPLETED]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot delete interview with status '{interview.status}'. Only scheduled or cancelled interviews can be deleted."
+        )
+
+    # Delete the interview
+    await interview_crud.remove(db, id=interview_id)
+
+    return {"message": "Interview deleted successfully"}
+
+
+# Interview Notes Endpoints
+
+@router.get("/{interview_id}/notes", response_model=InterviewNoteInfo)
+async def get_interview_note(
+    interview_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get current user's private note for an interview."""
+    # Get interview to check access
+    interview = await interview_crud.get_with_relationships(db, interview_id)
+    if not interview:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Interview not found"
+        )
+
+    # Check if user has access to the interview
+    if not await _check_interview_access(current_user, interview):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied to this interview"
+        )
+
+    # Get the user's note for this interview
+    note = await interview_note_crud.get_by_interview_and_participant(
+        db, interview_id=interview_id, participant_id=current_user.id
+    )
+
+    if not note:
+        # Return empty note if none exists
+        return InterviewNoteInfo(
+            id=0,
+            interview_id=interview_id,
+            participant_id=current_user.id,
+            content=None,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow()
+        )
+
+    return note
+
+
+@router.put("/{interview_id}/notes", response_model=InterviewNoteInfo)
+async def update_interview_note(
+    interview_id: int,
+    note_data: InterviewNoteUpdate,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Update current user's private note for an interview."""
+    # Get interview to check access
+    interview = await interview_crud.get_with_relationships(db, interview_id)
+    if not interview:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Interview not found"
+        )
+
+    # Check if user has access to the interview
+    if not await _check_interview_access(current_user, interview):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied to this interview"
+        )
+
+    # Create or update the user's note
+    note = await interview_note_crud.create_or_update(
+        db,
+        interview_id=interview_id,
+        participant_id=current_user.id,
+        content=note_data.content
+    )
+
+    return note
+
+
+@router.delete("/{interview_id}/notes")
+async def delete_interview_note(
+    interview_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Delete current user's private note for an interview."""
+    # Get interview to check access
+    interview = await interview_crud.get_with_relationships(db, interview_id)
+    if not interview:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Interview not found"
+        )
+
+    # Check if user has access to the interview
+    if not await _check_interview_access(current_user, interview):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied to this interview"
+        )
+
+    # Delete the user's note
+    deleted = await interview_note_crud.delete_by_interview_and_participant(
+        db, interview_id=interview_id, participant_id=current_user.id
+    )
+
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Note not found"
+        )
+
+    return {"message": "Interview note deleted successfully"}

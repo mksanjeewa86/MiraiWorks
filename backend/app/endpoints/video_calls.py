@@ -15,6 +15,7 @@ from app.schemas.video_call import (
     TranscriptionSegmentCreate,
     TranscriptionSegmentInfo,
     CallTranscriptionInfo,
+    TranscriptionStatus,
 )
 from app.database import get_db
 from app.dependencies import get_current_active_user
@@ -56,6 +57,31 @@ async def schedule_video_call(
     return video_call
 
 
+@router.get("/room/{room_id}", response_model=VideoCallInfo)
+async def get_video_call_by_room(
+    room_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get video call details by room ID (human-readable code)."""
+    video_call = await crud.video_call.get_by_room_id(db, room_id=room_id)
+
+    if not video_call:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Video call room not found"
+        )
+
+    # Check if user is participant
+    if video_call.interviewer_id != current_user.id and video_call.candidate_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have permission to access this video call"
+        )
+
+    return video_call
+
+
 @router.get("/{call_id}", response_model=VideoCallInfo)
 async def get_video_call(
     call_id: int,
@@ -64,21 +90,57 @@ async def get_video_call(
 ):
     """Get video call details."""
     video_call = await crud.video_call.get(db, id=call_id)
-    
+
     if not video_call:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Video call not found"
         )
-    
+
     # Check if user is participant
     if video_call.interviewer_id != current_user.id and video_call.candidate_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to access this video call"
         )
-    
+
     return video_call
+
+
+@router.post("/room/{room_id}/join", response_model=dict)
+async def join_video_call_by_room(
+    room_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Join a video call by room ID (human-readable code)."""
+    video_call = await crud.video_call.get_by_room_id(db, room_id=room_id)
+
+    if not video_call:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Video call room not found"
+        )
+
+    # Check if user is participant
+    if video_call.interviewer_id != current_user.id and video_call.candidate_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not a participant in this video call"
+        )
+
+    # Update call status to in_progress if it's the first participant
+    if video_call.status == "scheduled":
+        await crud.video_call.update_call_status(
+            db, db_obj=video_call, status="in_progress", started_at=datetime.now(timezone.utc)
+        )
+
+    # Add participant
+    await crud.video_call.add_participant(
+        db, video_call_id=video_call.id, user_id=current_user.id
+    )
+
+    return {"message": "Successfully joined the video call", "room_id": video_call.room_id}
 
 
 @router.post("/{call_id}/join", response_model=dict)
@@ -89,32 +151,112 @@ async def join_video_call(
 ):
     """Join a video call."""
     video_call = await crud.video_call.get(db, id=call_id)
-    
+
     if not video_call:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Video call not found"
         )
-    
+
     # Check if user is participant
     if video_call.interviewer_id != current_user.id and video_call.candidate_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You are not a participant in this video call"
         )
-    
+
     # Update call status to in_progress if it's the first participant
     if video_call.status == "scheduled":
         await crud.video_call.update_call_status(
             db, db_obj=video_call, status="in_progress", started_at=datetime.now(timezone.utc)
         )
-    
+
     # Add participant
     await crud.video_call.add_participant(
         db, video_call_id=call_id, user_id=current_user.id
     )
-    
+
     return {"message": "Successfully joined the video call", "room_id": video_call.room_id}
+
+
+@router.post("/room/{room_id}/leave", response_model=dict)
+async def leave_video_call_by_room(
+    room_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Leave a video call by room ID - any participant can leave."""
+    video_call = await crud.video_call.get_by_room_id(db, room_id=room_id)
+
+    if not video_call:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Video call room not found"
+        )
+
+    # Check if user is participant
+    if video_call.interviewer_id != current_user.id and video_call.candidate_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not a participant in this video call"
+        )
+
+    # Update participant left time
+    await crud.video_call.update_participant_left(
+        db, video_call_id=video_call.id, user_id=current_user.id
+    )
+
+    # Check if this was the last participant
+    active_participants = await crud.video_call.get_active_participants(db, video_call_id=video_call.id)
+
+    if len(active_participants) == 0:
+        # Last participant left, end the call
+        video_call = await crud.video_call.update_call_status(
+            db, db_obj=video_call, status="completed", ended_at=datetime.now(timezone.utc)
+        )
+        return {"message": "Left call and ended session (last participant)", "call_ended": True}
+
+    return {"message": "Successfully left the video call", "call_ended": False}
+
+
+@router.post("/{call_id}/leave", response_model=dict)
+async def leave_video_call(
+    call_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Leave a video call - any participant can leave."""
+    video_call = await crud.video_call.get(db, id=call_id)
+
+    if not video_call:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Video call not found"
+        )
+
+    # Check if user is participant
+    if video_call.interviewer_id != current_user.id and video_call.candidate_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not a participant in this video call"
+        )
+
+    # Update participant left time
+    await crud.video_call.update_participant_left(
+        db, video_call_id=call_id, user_id=current_user.id
+    )
+
+    # Check if this was the last participant
+    active_participants = await crud.video_call.get_active_participants(db, video_call_id=call_id)
+
+    if len(active_participants) == 0:
+        # Last participant left, end the call
+        video_call = await crud.video_call.update_call_status(
+            db, db_obj=video_call, status="completed", ended_at=datetime.now(timezone.utc)
+        )
+        return {"message": "Left call and ended session (last participant)", "call_ended": True}
+
+    return {"message": "Successfully left the video call", "call_ended": False}
 
 
 @router.post("/{call_id}/end", response_model=VideoCallInfo)
@@ -123,33 +265,61 @@ async def end_video_call(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """End a video call."""
+    """End a video call - only interviewer can force end."""
     video_call = await crud.video_call.get(db, id=call_id)
-    
+
     if not video_call:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Video call not found"
         )
-    
+
     # Check if user is the interviewer
     if video_call.interviewer_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only the interviewer can end the video call"
+            detail="Only the interviewer can force end the video call"
         )
-    
-    # Update participant left time
-    await crud.video_call.update_participant_left(
-        db, video_call_id=call_id, user_id=current_user.id
-    )
-    
+
+    # Update all participants left time
+    await crud.video_call.end_all_participants(db, video_call_id=call_id)
+
     # Update call status
     video_call = await crud.video_call.update_call_status(
         db, db_obj=video_call, status="completed", ended_at=datetime.now(timezone.utc)
     )
-    
+
     return video_call
+
+
+@router.post("/room/{room_id}/consent", response_model=RecordingConsentInfo)
+async def record_consent_by_room(
+    room_id: str,
+    consent_data: RecordingConsentRequest,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Record user's consent for call recording by room ID."""
+    video_call = await crud.video_call.get_by_room_id(db, room_id=room_id)
+
+    if not video_call:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Video call room not found"
+        )
+
+    # Check if user is participant
+    if video_call.interviewer_id != current_user.id and video_call.candidate_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not a participant in this video call"
+        )
+
+    consent = await crud.video_call.save_recording_consent(
+        db, video_call_id=video_call.id, user_id=current_user.id, consented=consent_data.consented
+    )
+
+    return consent
 
 
 @router.post("/{call_id}/consent", response_model=RecordingConsentInfo)
@@ -161,24 +331,24 @@ async def record_consent(
 ):
     """Record user's consent for call recording."""
     video_call = await crud.video_call.get(db, id=call_id)
-    
+
     if not video_call:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Video call not found"
         )
-    
+
     # Check if user is participant
     if video_call.interviewer_id != current_user.id and video_call.candidate_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You are not a participant in this video call"
         )
-    
+
     consent = await crud.video_call.save_recording_consent(
         db, video_call_id=call_id, user_id=current_user.id, consented=consent_data.consented
     )
-    
+
     return consent
 
 
@@ -237,13 +407,23 @@ async def get_call_transcript(
         )
     
     transcript = await crud.video_call.get_call_transcription(db, video_call_id=call_id)
-    
+
     if not transcript:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Transcript not available for this call"
+        # Return empty transcript for calls that haven't started transcription yet
+        from datetime import datetime, timezone
+        return CallTranscriptionInfo(
+            id=0,
+            video_call_id=call_id,
+            transcript_url=None,
+            transcript_text=None,
+            language=video_call.transcription_language,
+            processing_status=TranscriptionStatus.PENDING,
+            word_count=0,
+            created_at=datetime.now(timezone.utc),
+            processed_at=None,
+            segments=[]
         )
-    
+
     return transcript
 
 

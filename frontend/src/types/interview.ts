@@ -1,4 +1,3 @@
-import type { User } from './auth';
 
 // Interview Types
 export interface Interview {
@@ -29,8 +28,21 @@ export interface Interview {
   cancellation_reason?: string;
   created_at: string;
   updated_at: string;
-  candidate: User;
-  recruiter: User;
+  candidate: {
+    id: number;
+    email: string;
+    full_name: string;
+    role: string;
+    company_name?: string;
+  };
+  recruiter: {
+    id: number;
+    email: string;
+    full_name: string;
+    role: string;
+    company_name?: string;
+  };
+  employer_company_name?: string;
   candidate_name?: string;
   company_name?: string;
   proposals: InterviewProposal[];
@@ -112,7 +124,7 @@ export interface InterviewListItem {
   end_time: string;
   location: string;
   type: 'phone' | 'video' | 'in_person';
-  status: 'scheduled' | 'completed' | 'cancelled' | 'rescheduled';
+  status: 'scheduled' | 'completed' | 'cancelled' | 'rescheduled' | 'in_progress';
   notes?: string;
   created_at: string;
 }

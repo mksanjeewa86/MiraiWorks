@@ -11,6 +11,7 @@ import { useToast } from '@/contexts/ToastContext';
 import { interviewsApi } from '@/api/interviews';
 import { apiClient } from '@/api/apiClient';
 import type { Interview } from '@/types/interview';
+import type { VideoCall } from '@/types/video';
 
 function VideoCallContent() {
   const params = useParams();
@@ -52,15 +53,16 @@ function VideoCallContent() {
         try {
           try {
             // Try to get existing video call
-            const videoCallResponse = await apiClient.get(`/api/interviews/${interviewId}/video-call`);
+            const videoCallResponse = await apiClient.get<VideoCall>(`/api/interviews/${interviewId}/video-call`);
             setVideoCallId(videoCallResponse.data.id.toString());
-          } catch (error: any) {
-            console.log('Video call not found, creating new one:', error.message);
+          } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            console.log('Video call not found, creating new one:', errorMessage);
 
             // If video call doesn't exist (404), create one
-            if (error.message.includes('404') ||
-                error.message.toLowerCase().includes('not found') ||
-                error.message.includes('No video call found')) {
+            if (errorMessage.includes('404') ||
+                errorMessage.toLowerCase().includes('not found') ||
+                errorMessage.includes('No video call found')) {
 
               const videoCallData = {
                 candidate_id: interview.candidate?.id || interview.candidate_id,
@@ -72,7 +74,7 @@ function VideoCallContent() {
               console.log('Creating video call with data:', videoCallData);
               console.log('Interview data:', interview);
 
-              const newVideoCall = await apiClient.post(`/api/interviews/${interviewId}/video-call`, videoCallData);
+              const newVideoCall = await apiClient.post<VideoCall>(`/api/interviews/${interviewId}/video-call`, videoCallData);
 
               setVideoCallId(newVideoCall.data.id.toString());
               showToast({
@@ -81,7 +83,7 @@ function VideoCallContent() {
                 message: 'Video call session has been created for this interview'
               });
             } else {
-              throw new Error(`Failed to access video call: ${error.message}`);
+              throw new Error(`Failed to access video call: ${errorMessage}`);
             }
           }
         } catch (videoCallError) {

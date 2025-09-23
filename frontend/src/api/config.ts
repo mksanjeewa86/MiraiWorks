@@ -60,6 +60,7 @@ export const API_ENDPOINTS = {
     BY_ID: (id: string | number) => `/api/interviews/${id}`,
     STATUS: (id: string | number) => `/api/interviews/${id}/status`,
     SCHEDULE: (id: string | number) => `/api/interviews/${id}/schedule`,
+    NOTES: (id: string | number) => `/api/interviews/${id}/notes`,
   },
 
   // Resume endpoints

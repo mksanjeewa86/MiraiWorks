@@ -9,7 +9,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { interviewsApi } from '@/api/interviews';
 import type {
-  Interview,
   InterviewListItem,
   InterviewStatusFilter,
   InterviewTypeFilter,
@@ -29,6 +28,32 @@ function InterviewsPageContent() {
     // Check if user is NOT a candidate (anyone other than candidate can create interviews)
     const isCandidate = user.roles.some(userRole => userRole.role.name === 'candidate');
     return !isCandidate && user.roles.length > 0;
+  };
+
+  // Helper function to check if user can edit/delete interviews
+  const canModifyInterviews = () => {
+    if (!user || !user.roles) {
+      return false;
+    }
+
+    // Check if user is NOT a candidate (anyone other than candidate can edit/delete interviews)
+    const isCandidate = user.roles.some(userRole => userRole.role.name === 'candidate');
+    return !isCandidate && user.roles.length > 0;
+  };
+
+  // Helper function to check if interview can be deleted
+  const canDeleteInterview = (interview: InterviewListItem) => {
+    // Cannot delete if user doesn't have modify permissions
+    if (!canModifyInterviews()) {
+      return false;
+    }
+
+    // Cannot delete if interview is in progress or completed
+    if (interview.status === 'completed' || interview.status === 'in_progress') {
+      return false;
+    }
+
+    return true;
   };
   const [interviews, setInterviews] = useState<InterviewListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,13 +90,9 @@ function InterviewsPageContent() {
         const interviewsData = response.data?.interviews?.map(interview => ({
           id: interview.id,
           title: interview.title,
-          candidate_name: interview.candidate?.first_name && interview.candidate?.last_name
-            ? `${interview.candidate.first_name} ${interview.candidate.last_name}`
-            : 'Unknown Candidate',
-          recruiter_name: interview.recruiter?.first_name && interview.recruiter?.last_name
-            ? `${interview.recruiter.first_name} ${interview.recruiter.last_name}`
-            : 'Unknown Recruiter',
-          company_name: interview.company_name || 'Unknown Company',
+          candidate_name: interview.candidate?.full_name || 'Unknown Candidate',
+          recruiter_name: interview.recruiter?.full_name || 'Unknown Recruiter',
+          company_name: interview.employer_company_name || 'Unknown Company',
           scheduled_date: interview.scheduled_start ? new Date(interview.scheduled_start).toISOString().split('T')[0] : '',
           start_time: interview.scheduled_start ? new Date(interview.scheduled_start).toTimeString().split(' ')[0].slice(0, 5) : '',
           end_time: interview.scheduled_end ? new Date(interview.scheduled_end).toTimeString().split(' ')[0].slice(0, 5) : '',
@@ -159,6 +180,7 @@ function InterviewsPageContent() {
   const getStatusBadge = (status: InterviewListItem['status']) => {
     const statusClasses: Record<InterviewListItem['status'], string> = {
       scheduled: 'bg-blue-100 text-blue-800',
+      in_progress: 'bg-purple-100 text-purple-800',
       completed: 'bg-green-100 text-green-800',
       cancelled: 'bg-red-100 text-red-800',
       rescheduled: 'bg-yellow-100 text-yellow-800'
@@ -433,25 +455,40 @@ function InterviewsPageContent() {
                           <div className="flex justify-end gap-2">
                             <Link
                               href={`/interviews/${interview.id}`}
-                              className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
-                              title="View Details"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 rounded-lg transition-colors duration-200"
                             >
-                              <Eye size={16} />
+                              <Eye size={14} />
+                              View
                             </Link>
-                            <Link
-                              href={`/interviews/${interview.id}/edit`}
-                              className="text-gray-600 hover:text-gray-900 p-1 rounded hover:bg-gray-50"
-                              title="Edit Interview"
-                            >
-                              <Edit size={16} />
-                            </Link>
-                            <button
-                              onClick={() => handleDelete(interview.id, interview.title)}
-                              className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
-                              title="Delete Interview"
-                            >
-                              <Trash2 size={16} />
-                            </button>
+                            {canModifyInterviews() && (
+                              <>
+                                <Link
+                                  href={`/interviews/${interview.id}/edit`}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 hover:text-gray-700 rounded-lg transition-colors duration-200"
+                                >
+                                  <Edit size={14} />
+                                  Edit
+                                </Link>
+                                {canDeleteInterview(interview) ? (
+                                  <button
+                                    onClick={() => handleDelete(interview.id, interview.title)}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 hover:text-red-700 rounded-lg transition-colors duration-200"
+                                  >
+                                    <Trash2 size={14} />
+                                    Delete
+                                  </button>
+                                ) : (
+                                  <button
+                                    disabled
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-400 bg-gray-50 rounded-lg cursor-not-allowed"
+                                    title="Cannot delete interviews that are in progress or completed"
+                                  >
+                                    <Trash2 size={14} />
+                                    Delete
+                                  </button>
+                                )}
+                              </>
+                            )}
                           </div>
                         </td>
                       </tr>

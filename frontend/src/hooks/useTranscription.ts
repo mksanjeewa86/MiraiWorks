@@ -178,7 +178,7 @@ export const useTranscription = (
 
   const saveSegmentToBackend = async (segment: TranscriptionSegment) => {
     try {
-      await apiClient.post(`/api/video-calls/${callId}/transcript/segments`, {
+      await apiClient.post<TranscriptionSegment>(`/api/video-calls/${callId}/transcript/segments`, {
         speaker_id: segment.speaker_id,
         segment_text: segment.segment_text,
         start_time: segment.start_time,
@@ -210,7 +210,7 @@ export const useTranscription = (
 
   const exportTranscript = async (format: 'txt' | 'pdf' | 'srt'): Promise<string | null> => {
     try {
-      const response = await apiClient.get(`/api/video-calls/${callId}/transcript/download?format=${format}`);
+      const response = await apiClient.get<{ download_url: string }>(`/api/video-calls/${callId}/transcript/download?format=${format}`);
       return response.data.download_url;
     } catch (error) {
       console.error('Error exporting transcript:', error);
@@ -228,18 +228,19 @@ export const useTranscription = (
 
   const loadExistingSegments = async () => {
     try {
-      const response = await apiClient.get(`/api/video-calls/${callId}/transcript`);
+      const response = await apiClient.get<{ segments: TranscriptionSegment[] }>(`/api/video-calls/${callId}/transcript`);
       if (response.data.segments) {
         setState(prev => ({
           ...prev,
           segments: response.data.segments,
         }));
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : '';
       // It's normal for new video calls to not have existing transcripts
-      if (error.message?.includes('Transcript not available') ||
-          error.message?.includes('404') ||
-          error.message?.includes('not found')) {
+      if (errorMessage.includes('Transcript not available') ||
+          errorMessage.includes('404') ||
+          errorMessage.includes('not found')) {
         console.log('No existing transcript found for this video call - this is normal for new calls');
       } else {
         console.error('Error loading existing segments:', error);

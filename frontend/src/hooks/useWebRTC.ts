@@ -10,7 +10,7 @@ interface UseWebRTCResult extends WebRTCState {
   stopScreenShare: () => void;
 }
 
-export const useWebRTC = (roomId?: string): UseWebRTCResult => {
+export const useWebRTC = (roomId?: string, userId?: number): UseWebRTCResult => {
   const [state, setState] = useState<WebRTCState>({
     localStream: null,
     remoteStream: null,
@@ -129,7 +129,12 @@ export const useWebRTC = (roomId?: string): UseWebRTCResult => {
 
   const connectSignaling = async (): Promise<void> => {
     return new Promise((resolve, reject) => {
-      const wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws/video/${roomId}`;
+      // Connect to backend WebSocket server (port 8000)
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const host = window.location.hostname;
+      const port = process.env.NODE_ENV === 'production' ? window.location.port : '8000';
+      const wsUrl = `${protocol}//${host}:${port}/ws/video/${roomId}${userId ? `?user_id=${userId}` : ''}`;
+
       websocket.current = new WebSocket(wsUrl);
 
       websocket.current.onopen = () => {

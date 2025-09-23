@@ -106,6 +106,9 @@ class Interview(Base):
     meetings = relationship(
         "Meeting", back_populates="interview", cascade="all, delete-orphan", lazy="noload"
     )
+    participant_notes = relationship(
+        "InterviewNote", back_populates="interview", cascade="all, delete-orphan", lazy="noload"
+    )
 
     def __repr__(self):
         return f"<Interview(id={self.id}, title='{self.title}', status='{self.status}', candidate_id={self.candidate_id})>"

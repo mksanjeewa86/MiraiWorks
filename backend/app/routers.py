@@ -21,6 +21,7 @@ from app.endpoints import (
     users_management,
     video_calls,
     webhooks,
+    websocket_video,
 )
 
 
@@ -45,6 +46,7 @@ def include_routers(app: FastAPI) -> None:
     )
     app.include_router(interviews.router, prefix="/api/interviews", tags=["interviews"])
     app.include_router(video_calls.router, prefix="/api", tags=["video-calls"])
+    app.include_router(websocket_video.router, tags=["websocket-video"])
     app.include_router(positions.router, prefix="/api/positions", tags=["positions"])
     app.include_router(webhooks.router, prefix="/api/webhooks", tags=["webhooks"])
     app.include_router(resumes.router, prefix="/api/resumes", tags=["resumes"])

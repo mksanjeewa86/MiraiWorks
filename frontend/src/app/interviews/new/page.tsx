@@ -54,7 +54,6 @@ function ScheduleInterviewContent() {
   const [candidatesLoading, setCandidatesLoading] = useState(true);
   const [candidateSearch, setCandidateSearch] = useState('');
   const [showCandidateDropdown, setShowCandidateDropdown] = useState(false);
-  const [selectedCandidate, setSelectedCandidate] = useState<UserManagement | null>(null);
   const candidateDropdownRef = useRef<HTMLDivElement>(null);
 
   // Initialize form with default times
@@ -123,7 +122,6 @@ function ScheduleInterviewContent() {
 
   // Handle candidate selection
   const handleCandidateSelect = (candidate: UserManagement) => {
-    setSelectedCandidate(candidate);
     setFormData(prev => ({ ...prev, candidate_id: candidate.id.toString() }));
     setCandidateSearch(`${candidate.first_name} ${candidate.last_name} (${candidate.email})`);
     setShowCandidateDropdown(false);
@@ -136,7 +134,6 @@ function ScheduleInterviewContent() {
 
   // Handle clear selection
   const handleClearCandidate = () => {
-    setSelectedCandidate(null);
     setFormData(prev => ({ ...prev, candidate_id: '' }));
     setCandidateSearch('');
     setShowCandidateDropdown(false);

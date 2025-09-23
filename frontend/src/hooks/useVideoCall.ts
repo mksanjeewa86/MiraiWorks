@@ -7,22 +7,34 @@ interface UseVideoCallResult {
   loading: boolean;
   error: string | null;
   joinCall: () => Promise<void>;
-  endCall: () => Promise<void>;
+  endCall: () => Promise<{ message: string; call_ended: boolean } | undefined>;
   recordConsent: (consented: boolean) => Promise<void>;
   refreshCall: () => Promise<void>;
 }
 
-export const useVideoCall = (callId?: string): UseVideoCallResult => {
+interface UseVideoCallOptions {
+  type?: 'id' | 'roomCode';
+}
+
+export const useVideoCall = (identifier?: string, options: UseVideoCallOptions = { type: 'id' }): UseVideoCallResult => {
   const [videoCall, setVideoCall] = useState<VideoCall | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchVideoCall = async () => {
-    if (!callId) return;
+    if (!identifier) return;
 
     try {
       setLoading(true);
-      const response = await apiClient.get(`/api/video-calls/${callId}`);
+      let endpoint: string;
+
+      if (options.type === 'roomCode') {
+        endpoint = `/api/video-calls/room/${identifier}`;
+      } else {
+        endpoint = `/api/video-calls/${identifier}`;
+      }
+
+      const response = await apiClient.get<VideoCall>(endpoint);
       setVideoCall(response.data);
       setError(null);
     } catch (err) {
@@ -33,10 +45,18 @@ export const useVideoCall = (callId?: string): UseVideoCallResult => {
   };
 
   const joinCall = async () => {
-    if (!callId) return;
+    if (!identifier || !videoCall) return;
 
     try {
-      await apiClient.post(`/api/video-calls/${callId}/join`);
+      let endpoint: string;
+
+      if (options.type === 'roomCode') {
+        endpoint = `/api/video-calls/room/${identifier}/join`;
+      } else {
+        endpoint = `/api/video-calls/${identifier}/join`;
+      }
+
+      await apiClient.post(endpoint);
       await fetchVideoCall(); // Refresh call data
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to join call');
@@ -45,22 +65,40 @@ export const useVideoCall = (callId?: string): UseVideoCallResult => {
   };
 
   const endCall = async () => {
-    if (!callId) return;
+    if (!identifier || !videoCall) return;
 
     try {
-      await apiClient.post(`/api/video-calls/${callId}/end`);
+      let endpoint: string;
+
+      if (options.type === 'roomCode') {
+        endpoint = `/api/video-calls/room/${identifier}/leave`;
+      } else {
+        endpoint = `/api/video-calls/${identifier}/leave`;
+      }
+
+      // Use /leave endpoint instead of /end to allow any participant to leave
+      const response = await apiClient.post<{ message: string; call_ended: boolean }>(endpoint);
       await fetchVideoCall(); // Refresh call data
+      return response.data;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to end call');
+      setError(err instanceof Error ? err.message : 'Failed to leave call');
       throw err;
     }
   };
 
   const recordConsent = async (consented: boolean) => {
-    if (!callId) return;
+    if (!identifier || !videoCall) return;
 
     try {
-      await apiClient.post(`/api/video-calls/${callId}/consent`, { consented });
+      let endpoint: string;
+
+      if (options.type === 'roomCode') {
+        endpoint = `/api/video-calls/room/${identifier}/consent`;
+      } else {
+        endpoint = `/api/video-calls/${identifier}/consent`;
+      }
+
+      await apiClient.post(endpoint, { consented });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to record consent');
       throw err;
@@ -74,7 +112,7 @@ export const useVideoCall = (callId?: string): UseVideoCallResult => {
   useEffect(() => {
     fetchVideoCall();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [callId]);
+  }, [identifier, options.type]);
 
   return {
     videoCall,

@@ -5,6 +5,7 @@ from .auth import OauthAccount, PasswordResetRequest, RefreshToken
 from .company import Company
 from .message import Message
 from .interview import Interview, InterviewProposal
+from .interview_note import InterviewNote
 from .position import CompanyProfile, Position, PositionApplication
 from .meeting import (
     Meeting,
@@ -50,6 +51,7 @@ __all__ = [
     "Attachment",
     "Interview",
     "InterviewProposal",
+    "InterviewNote",
     "Resume",
     "WorkExperience",
     "Education",

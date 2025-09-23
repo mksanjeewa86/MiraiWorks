@@ -13,14 +13,17 @@ import { useVideoCall } from '../../hooks/useVideoCall';
 import { useWebRTC } from '../../hooks/useWebRTC';
 import { useTranscription } from '../../hooks/useTranscription';
 import { ChatMessage } from '../../types/video';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface VideoCallRoomProps {
   callId?: string;
+  roomCode?: string;
 }
 
-export const VideoCallRoom: React.FC<VideoCallRoomProps> = ({ callId: propCallId }) => {
+export const VideoCallRoom: React.FC<VideoCallRoomProps> = ({ callId: propCallId, roomCode }) => {
   const { callId: paramCallId } = useParams<{ callId: string }>();
   const router = useRouter();
+  const { user } = useAuth();
   const callId = propCallId || paramCallId;
 
   const [showTranscription, setShowTranscription] = useState(true);
@@ -42,7 +45,10 @@ export const VideoCallRoom: React.FC<VideoCallRoomProps> = ({ callId: propCallId
     joinCall,
     endCall,
     recordConsent,
-  } = useVideoCall(callId);
+  } = useVideoCall(
+    roomCode || callId,
+    { type: roomCode ? 'roomCode' : 'id' }
+  );
 
   const {
     localStream,
@@ -58,7 +64,7 @@ export const VideoCallRoom: React.FC<VideoCallRoomProps> = ({ callId: propCallId
     stopScreenShare,
     connect,
     disconnect,
-  } = useWebRTC(videoCall?.room_id);
+  } = useWebRTC(videoCall?.room_id, user?.id);
 
   const {
     segments: transcriptionSegments,

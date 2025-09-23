@@ -83,7 +83,7 @@ export const TranscriptionPanel: React.FC<TranscriptionPanelProps> = ({
 
   const handleExport = async (format: 'txt' | 'pdf' | 'srt') => {
     try {
-      const response = await apiClient.get(`/api/video-calls/${callId}/transcript/download?format=${format}`);
+      const response = await apiClient.get<{ download_url: string }>(`/api/video-calls/${callId}/transcript/download?format=${format}`);
       window.open(response.data.download_url, '_blank');
     } catch (error) {
       console.error('Failed to export transcript:', error);

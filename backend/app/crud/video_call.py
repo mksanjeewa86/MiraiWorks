@@ -237,10 +237,48 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
         await db.refresh(transcription)
         return transcription
 
+    async def get_active_participants(
+        self, db: AsyncSession, *, video_call_id: int
+    ) -> List[CallParticipant]:
+        """Get active participants (those who haven't left yet)."""
+        result = await db.execute(
+            select(CallParticipant)
+            .where(
+                and_(
+                    CallParticipant.video_call_id == video_call_id,
+                    CallParticipant.left_at.is_(None)
+                )
+            )
+        )
+        return result.scalars().all()
+
+    async def end_all_participants(
+        self, db: AsyncSession, *, video_call_id: int
+    ) -> None:
+        """Mark all participants as having left the call."""
+        active_participants = await self.get_active_participants(db, video_call_id=video_call_id)
+
+        current_time = datetime.utcnow()
+        for participant in active_participants:
+            participant.left_at = current_time
+
+        await db.commit()
+
     def _generate_room_id(self) -> str:
-        """Generate a unique room ID for the video call."""
-        import uuid
-        return str(uuid.uuid4())
+        """Generate a human-readable room ID for the video call."""
+        import random
+        import string
+
+        # Generate a Google Meet style room code: xxx-yyyy-zzz
+        def generate_segment(length: int) -> str:
+            return ''.join(random.choices(string.ascii_lowercase, k=length))
+
+        # Create three segments separated by dashes
+        segment1 = generate_segment(3)
+        segment2 = generate_segment(4)
+        segment3 = generate_segment(3)
+
+        return f"{segment1}-{segment2}-{segment3}"
 
 
 video_call = CRUDVideoCall(VideoCall)
