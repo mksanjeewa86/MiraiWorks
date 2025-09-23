@@ -14,7 +14,7 @@ from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.orm import relationship
 
 from app.models.base import BaseModel
-from app.utils.constants import ResumeStatus, ResumeVisibility, SectionType
+from app.utils.constants import ResumeStatus, ResumeVisibility, SectionType, ResumeFormat, ResumeLanguage
 
 
 class Resume(BaseModel):
@@ -45,9 +45,20 @@ class Resume(BaseModel):
 
     # Template and styling
     template_id = Column(String(50), default="modern")
+    resume_format = Column(SQLEnum(ResumeFormat), default=ResumeFormat.INTERNATIONAL)
+    resume_language = Column(SQLEnum(ResumeLanguage), default=ResumeLanguage.ENGLISH)
     theme_color = Column(String(7), default="#2563eb")  # Hex color
     font_family = Column(String(50), default="Inter")
     custom_css = Column(Text)
+    
+    # Japanese-specific fields
+    furigana_name = Column(String(100))  # フリガナ for 履歴書
+    birth_date = Column(DateTime)  # 生年月日
+    gender = Column(String(10))  # 性別
+    nationality = Column(String(50))  # 国籍
+    marital_status = Column(String(20))  # 婚姻状況
+    emergency_contact = Column(JSON)  # 緊急連絡先
+    photo_path = Column(String(500))  # Profile photo for 履歴書
 
     # Metadata
     is_primary = Column(Boolean, default=False)
@@ -59,10 +70,14 @@ class Resume(BaseModel):
     pdf_file_path = Column(String(500))
     pdf_generated_at = Column(DateTime)
     original_file_path = Column(String(500))  # For parsed resumes
-
-    # SEO and sharing
-    slug = Column(String(100), unique=True, index=True)
+    
+    # Sharing and public access
+    is_public = Column(Boolean, default=False)
+    public_url_slug = Column(String(100), unique=True, index=True)
     share_token = Column(String(64), unique=True, index=True)
+    can_download_pdf = Column(Boolean, default=True)
+    can_edit = Column(Boolean, default=True)  # Owner can disable editing
+    can_delete = Column(Boolean, default=True)  # Owner can disable deletion
 
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(
@@ -111,11 +126,16 @@ class Resume(BaseModel):
         return result.scalars().all()
 
     @classmethod
-    async def get_by_slug(cls, db, slug: str):
-        """Get resume by slug."""
+    async def get_by_public_slug(cls, db, slug: str):
+        """Get public resume by slug."""
         from sqlalchemy import select
 
-        result = await db.execute(select(cls).where(cls.slug == slug))
+        result = await db.execute(
+            select(cls).where(
+                cls.public_url_slug == slug,
+                cls.is_public == True
+            )
+        )
         return result.scalars().first()
 
     @classmethod
@@ -130,6 +150,18 @@ class Resume(BaseModel):
         """Increment view count."""
         self.view_count = (self.view_count or 0) + 1
         self.last_viewed_at = datetime.utcnow()
+        
+    def increment_download_count(self):
+        """Increment download count."""
+        self.download_count = (self.download_count or 0) + 1
+        
+    def can_be_edited(self) -> bool:
+        """Check if resume can be edited."""
+        return self.can_edit and self.status != ResumeStatus.ARCHIVED
+        
+    def can_be_deleted(self) -> bool:
+        """Check if resume can be deleted."""
+        return self.can_delete and self.status != ResumeStatus.ARCHIVED
 
 
 class ResumeSection(BaseModel):
@@ -438,3 +470,21 @@ class ResumeShare(BaseModel):
         if self.max_views and self.view_count >= self.max_views:
             return True
         return False
+
+
+class ResumeMessageAttachment(BaseModel):
+    __tablename__ = "resume_message_attachments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    resume_id = Column(Integer, ForeignKey("resumes.id"), nullable=False)
+    message_id = Column(Integer, ForeignKey("messages.id"), nullable=False)
+    
+    # Attachment settings
+    auto_attached = Column(Boolean, default=False)  # Automatically attached when contacting
+    attachment_format = Column(String(20), default="pdf")  # pdf, json, etc.
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    resume = relationship("Resume")
+    # message relationship will be added to Message model

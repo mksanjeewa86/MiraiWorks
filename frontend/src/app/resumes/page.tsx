@@ -1,20 +1,36 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import AppLayout from '@/components/layout/AppLayout';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { Plus, FileText, Eye, Download, Edit, Trash2, Star, Calendar, Share } from 'lucide-react';
+import { 
+  Plus, 
+  FileText, 
+  Eye, 
+  Download, 
+  Edit, 
+  Trash2, 
+  Star, 
+  Calendar, 
+  Share,
+  Globe,
+  Lock,
+  Copy,
+  MoreVertical
+} from 'lucide-react';
 import { resumesApi } from "@/api/resumes";
-import type { Resume } from '@/types';
+import { Resume, ResumeFormat, ResumeStatus } from '@/types/resume';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
 function ResumesPageContent() {
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
+  const [generatingPdf, setGeneratingPdf] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchResumes = async () => {
@@ -62,6 +78,36 @@ function ResumesPageContent() {
     }
   };
 
+  const getFormatDisplayName = (format: ResumeFormat) => {
+    switch (format) {
+      case ResumeFormat.RIREKISHO:
+        return '履歴書';
+      case ResumeFormat.SHOKUMU_KEIREKISHO:
+        return '職務経歴書';
+      case ResumeFormat.INTERNATIONAL:
+        return 'International';
+      case ResumeFormat.MODERN:
+        return 'Modern';
+      default:
+        return format;
+    }
+  };
+
+  const getFormatColor = (format: ResumeFormat) => {
+    switch (format) {
+      case ResumeFormat.RIREKISHO:
+        return 'primary';
+      case ResumeFormat.SHOKUMU_KEIREKISHO:
+        return 'success';
+      case ResumeFormat.INTERNATIONAL:
+        return 'warning';
+      case ResumeFormat.MODERN:
+        return 'secondary';
+      default:
+        return 'primary';
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
@@ -79,6 +125,74 @@ function ResumesPageContent() {
         console.error('Failed to delete resume:', err);
         alert('Failed to delete resume');
       }
+    }
+  };
+
+  const handleDownloadPdf = async (resume: Resume) => {
+    if (!resume.can_download_pdf) {
+      alert('PDF download is not available for this resume.');
+      return;
+    }
+
+    try {
+      setGeneratingPdf(resume.id);
+      
+      const response = await resumesApi.generatePdf(resume.id, {
+        format: 'A4',
+        include_contact_info: true,
+      });
+      
+      // Create download link
+      const link = document.createElement('a');
+      link.href = response.data.pdf_url;
+      link.download = `${resume.title}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      alert('PDF downloaded successfully.');
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      alert('Failed to download PDF. Please try again.');
+    } finally {
+      setGeneratingPdf(null);
+    }
+  };
+
+  const handleTogglePublic = async (resume: Resume) => {
+    try {
+      const response = await resumesApi.togglePublic(resume.id);
+      if (response.data) {
+        setResumes(resumes.map(r => r.id === resume.id ? response.data! : r));
+        alert(`Resume is now ${response.data.is_public ? 'public' : 'private'}.`);
+      }
+    } catch (error) {
+      console.error('Error toggling public status:', error);
+      alert('Failed to update resume visibility. Please try again.');
+    }
+  };
+
+  const handleCopyShareLink = async (resume: Resume) => {
+    if (!resume.is_public || !resume.public_url_slug) {
+      alert('This resume must be public to generate a share link.');
+      return;
+    }
+
+    const shareUrl = `${window.location.origin}/public/resume/${resume.public_url_slug}`;
+    
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      alert('Share link copied to clipboard!');
+    } catch (error) {
+      console.error('Error copying link:', error);
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = shareUrl;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert('Share link copied to clipboard!');
     }
   };
 
@@ -113,15 +227,17 @@ function ResumesPageContent() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>Resumes</h1>
+            <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>Resume Builder</h1>
             <p className="mt-1" style={{ color: 'var(--text-secondary)' }}>
-              Create and manage your professional resumes
+              Create and manage professional resumes in Japanese and international formats
             </p>
           </div>
-          <Button className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Create Resume
-          </Button>
+          <Link href="/resumes/create">
+            <Button className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Create Resume
+            </Button>
+          </Link>
         </div>
 
         {/* Resume Stats */}
@@ -158,17 +274,45 @@ function ResumesPageContent() {
             {resumes.map(resume => (
               <Card key={resume.id} className="p-6 hover:shadow-md transition-shadow">
                 <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <FileText className="h-5 w-5" style={{ color: 'var(--brand-primary)' }} />
                     <Badge variant={getStatusColor(resume.status)}>
                       {resume.status}
                     </Badge>
+                    {resume.resume_format && (
+                      <Badge variant={getFormatColor(resume.resume_format)}>
+                        {getFormatDisplayName(resume.resume_format)}
+                      </Badge>
+                    )}
+                    {resume.is_public && (
+                      <Badge variant="secondary">
+                        <Globe className="h-3 w-3 mr-1" />
+                        Public
+                      </Badge>
+                    )}
+                    {resume.is_primary && (
+                      <Badge variant="warning">
+                        <Star className="h-3 w-3 mr-1" />
+                        Primary
+                      </Badge>
+                    )}
                   </div>
                   <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="sm">
-                      <Star className="h-4 w-4" />
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleTogglePublic(resume)}
+                      title={resume.is_public ? 'Make Private' : 'Make Public'}
+                    >
+                      {resume.is_public ? <Lock className="h-4 w-4" /> : <Globe className="h-4 w-4" />}
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(resume.id)}>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => handleDelete(resume.id)}
+                      disabled={!resume.can_delete}
+                      title="Delete Resume"
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -180,7 +324,12 @@ function ResumesPageContent() {
                       {resume.title}
                     </h3>
                     <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                      {resume.description || 'No description provided'}
+                      {resume.full_name && (
+                        <span className="font-medium">{resume.full_name}</span>
+                      )}
+                      {resume.description && (
+                        <span className="block">{resume.description}</span>
+                      )}
                     </p>
                   </div>
 
@@ -207,15 +356,38 @@ function ResumesPageContent() {
 
                   {/* Action Buttons */}
                   <div className="flex gap-2 pt-4">
-                    <Button size="sm" className="flex-1">
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit
+                    <Link href={`/resumes/${resume.id}/edit`} className="flex-1">
+                      <Button size="sm" className="w-full">
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit
+                      </Button>
+                    </Link>
+                    <Link href={`/resumes/${resume.id}/preview`} className="flex-1">
+                      <Button variant="outline" size="sm" className="w-full">
+                        <Eye className="h-4 w-4 mr-2" />
+                        Preview
+                      </Button>
+                    </Link>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleDownloadPdf(resume)}
+                      disabled={generatingPdf === resume.id || !resume.can_download_pdf}
+                      title="Download PDF"
+                    >
+                      {generatingPdf === resume.id ? (
+                        <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                      ) : (
+                        <Download className="h-4 w-4" />
+                      )}
                     </Button>
-                    <Button variant="outline" size="sm" className="flex-1">
-                      <Eye className="h-4 w-4 mr-2" />
-                      Preview
-                    </Button>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleCopyShareLink(resume)}
+                      disabled={!resume.is_public}
+                      title="Copy Share Link"
+                    >
                       <Share className="h-4 w-4" />
                     </Button>
                   </div>
@@ -227,15 +399,24 @@ function ResumesPageContent() {
           <Card className="p-12 text-center">
             <FileText className="h-16 w-16 mx-auto mb-4" style={{ color: 'var(--text-muted)' }} />
             <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
-              No resumes found
+              No resumes yet
             </h3>
             <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>
-              Create your first resume to get started with your job search.
+              Create professional resumes in multiple formats including Japanese 履歴書 and 職務経歴書, 
+              or international formats. Generate PDFs, share publicly, and manage all your career documents in one place.
             </p>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Your First Resume
-            </Button>
+            <div className="flex flex-wrap justify-center gap-3 mb-6">
+              <Badge variant="primary">履歴書 (Rirekisho)</Badge>
+              <Badge variant="success">職務経歴書 (Shokumu)</Badge>
+              <Badge variant="warning">International</Badge>
+              <Badge variant="secondary">Modern</Badge>
+            </div>
+            <Link href="/resumes/create">
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Your First Resume
+              </Button>
+            </Link>
           </Card>
         )}
       </div>

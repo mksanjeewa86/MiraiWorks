@@ -1,9 +1,61 @@
-// Resume Types
+// Resume Builder Types
+// Enhanced with Japanese formats and sharing features
+
+// ============================================================================
+// ENUMS AND CONSTANTS
+// ============================================================================
+
+export enum ResumeStatus {
+  DRAFT = "draft",
+  PUBLISHED = "published", 
+  ARCHIVED = "archived",
+}
+
+export enum ResumeVisibility {
+  PRIVATE = "private",
+  PUBLIC = "public",
+  UNLISTED = "unlisted",
+}
+
+export enum ResumeFormat {
+  RIREKISHO = "rirekisho",           // 履歴書 - Traditional Japanese resume
+  SHOKUMU_KEIREKISHO = "shokumu_keirekisho", // 職務経歴書 - Career history
+  INTERNATIONAL = "international",    // Standard international resume
+  MODERN = "modern",                 // Modern format
+  CREATIVE = "creative",             // Creative format
+}
+
+export enum ResumeLanguage {
+  JAPANESE = "ja",
+  ENGLISH = "en", 
+  BILINGUAL = "bilingual",
+}
+
+export enum SectionType {
+  SUMMARY = "summary",
+  EXPERIENCE = "experience",
+  EDUCATION = "education",
+  SKILLS = "skills",
+  PROJECTS = "projects",
+  CERTIFICATIONS = "certifications",
+  LANGUAGES = "languages",
+  REFERENCES = "references",
+  CUSTOM = "custom",
+}
+
+// ============================================================================
+// CORE RESUME INTERFACES
+// ============================================================================
+
 export interface Resume {
   id: number;
   user_id: number;
+  
+  // Basic info
   title: string;
   description?: string;
+  
+  // Personal information
   full_name?: string;
   email?: string;
   phone?: string;
@@ -11,31 +63,63 @@ export interface Resume {
   website?: string;
   linkedin_url?: string;
   github_url?: string;
+  
+  // Professional summary
   professional_summary?: string;
   objective?: string;
-  status: 'draft' | 'published' | 'archived';
-  visibility: 'private' | 'public' | 'unlisted';
+  
+  // Template and styling
   template_id: string;
+  resume_format: ResumeFormat;
+  resume_language: ResumeLanguage;
   theme_color: string;
   font_family: string;
   custom_css?: string;
+  
+  // Japanese-specific fields
+  furigana_name?: string;     // フリガナ
+  birth_date?: string;        // 生年月日
+  gender?: string;            // 性別
+  nationality?: string;       // 国籍
+  marital_status?: string;    // 婚姻状況
+  emergency_contact?: Record<string, any>; // 緊急連絡先
+  photo_path?: string;        // Profile photo
+  
+  // Status and visibility
+  status: ResumeStatus;
+  visibility: ResumeVisibility;
   is_primary: boolean;
+  
+  // Enhanced sharing and public access
   is_public: boolean;
+  public_url_slug?: string;
+  share_token: string;
+  can_download_pdf: boolean;
+  can_edit: boolean;
+  can_delete: boolean;
+  
+  // Metadata
   view_count: number;
   download_count: number;
   last_viewed_at?: string;
-  slug: string;
-  share_token: string;
+  
+  // File attachments
+  pdf_file_path?: string;
+  pdf_generated_at?: string;
+  
+  // Timestamps
   created_at: string;
   updated_at: string;
-  sections: ResumeSection[];
-  experiences: WorkExperience[];
-  educations: Education[];
-  skills: Skill[];
-  projects: Project[];
-  certifications: Certification[];
-  languages: Language[];
-  references: Reference[];
+  
+  // Related data
+  sections?: ResumeSection[];
+  experiences?: WorkExperience[];
+  educations?: Education[];
+  skills?: Skill[];
+  projects?: Project[];
+  certifications?: Certification[];
+  languages?: Language[];
+  references?: Reference[];
 }
 
 export interface ResumeSection {
@@ -173,4 +257,301 @@ export interface ResumeTemplate {
   isPremium: boolean;
   usageCount: number;
   previewImageUrl?: string;
+  supportsFormats: ResumeFormat[];
+}
+
+// ============================================================================
+// JAPANESE RESUME SPECIFIC INTERFACES
+// ============================================================================
+
+export interface RirekishoData {
+  personal_info: {
+    full_name: string;
+    furigana_name: string;
+    birth_date: string;
+    gender: string;
+    nationality?: string;
+    marital_status?: string;
+    photo?: File | string;
+    address: string;
+    phone: string;
+    email: string;
+    emergency_contact?: Record<string, any>;
+  };
+  education_history: Array<{
+    school_name: string;
+    department?: string;
+    entrance_date: string;
+    graduation_date?: string;
+    status: "卒業" | "在学中" | "中退";
+  }>;
+  work_history: Array<{
+    company_name: string;
+    position: string;
+    start_date: string;
+    end_date?: string;
+    employment_type: "正社員" | "契約社員" | "アルバイト" | "派遣";
+  }>;
+  qualifications: Array<{
+    name: string;
+    issue_date: string;
+    issuing_organization: string;
+  }>;
+  motivation?: string;
+  commute_time?: string;
+  spouse?: "有" | "無";
+  dependents?: string;
+}
+
+export interface ShokumuKeirekishoData {
+  career_summary: string;
+  detailed_experience: Array<{
+    company_name: string;
+    period: string;
+    position: string;
+    job_description: string;
+    achievements: string[];
+    technologies?: string[];
+  }>;
+  skills_and_expertise: {
+    technical_skills: string[];
+    soft_skills: string[];
+    languages: Array<{
+      name: string;
+      level: string;
+    }>;
+    certifications: string[];
+  };
+  achievements: string[];
+  self_pr: string;
+}
+
+export interface JapaneseResumeTemplate {
+  format_type: ResumeFormat;
+  sections: string[];
+  field_mappings: Record<string, string[]>;
+  validation_rules: Record<string, any>;
+}
+
+// ============================================================================
+// PUBLIC SHARING INTERFACES
+// ============================================================================
+
+export interface PublicResumeInfo {
+  id: number;
+  title: string;
+  full_name?: string;
+  professional_summary?: string;
+  resume_format: ResumeFormat;
+  resume_language: ResumeLanguage;
+  view_count: number;
+  last_viewed_at?: string;
+  can_download_pdf: boolean;
+  
+  // Limited related data
+  experiences: WorkExperience[];
+  educations: Education[];
+  skills: Skill[];
+}
+
+export interface ResumePublicSettings {
+  is_public: boolean;
+  custom_slug?: string;
+  show_contact_info: boolean;
+  allow_pdf_download: boolean;
+  password_protect: boolean;
+  password?: string;
+}
+
+// ============================================================================
+// EMAIL AND MESSAGING INTERFACES
+// ============================================================================
+
+export interface EmailResumeRequest {
+  recipient_emails: string[];
+  subject?: string;
+  message?: string;
+  include_pdf: boolean;
+  sender_name?: string;
+}
+
+export interface MessageAttachmentRequest {
+  message_id: number;
+  include_pdf: boolean;
+  auto_attach: boolean;
+}
+
+export interface ResumeMessageAttachment {
+  id: number;
+  resume_id: number;
+  message_id: number;
+  auto_attached: boolean;
+  attachment_format: string;
+  created_at: string;
+}
+
+// ============================================================================
+// PDF AND EXPORT INTERFACES
+// ============================================================================
+
+export interface PDFGenerationRequest {
+  resume_id: number;
+  format: "A4" | "Letter";
+  include_contact_info: boolean;
+  watermark?: string;
+}
+
+export interface PDFGenerationResponse {
+  pdf_url: string;
+  expires_at: string;
+  file_size: number;
+}
+
+// ============================================================================
+// API RESPONSE INTERFACES
+// ============================================================================
+
+export interface ResumeListResponse {
+  resumes: Resume[];
+  total: number;
+  page: number;
+  page_size: number;
+  has_more: boolean;
+}
+
+export interface ResumeStats {
+  total_resumes: number;
+  by_status: Record<string, number>;
+  by_visibility: Record<string, number>;
+  total_views: number;
+  total_downloads: number;
+  most_viewed_resume?: string;
+  recent_activity: number;
+}
+
+// ============================================================================
+// FORM DATA INTERFACES
+// ============================================================================
+
+export interface ResumeFormData {
+  title: string;
+  description?: string;
+  
+  // Personal information
+  full_name?: string;
+  email?: string;
+  phone?: string;
+  location?: string;
+  website?: string;
+  linkedin_url?: string;
+  github_url?: string;
+  
+  // Professional summary
+  professional_summary?: string;
+  objective?: string;
+  
+  // Template and styling
+  template_id?: string;
+  resume_format?: ResumeFormat;
+  resume_language?: ResumeLanguage;
+  theme_color?: string;
+  font_family?: string;
+  
+  // Japanese-specific fields
+  furigana_name?: string;
+  birth_date?: string;
+  gender?: string;
+  nationality?: string;
+  marital_status?: string;
+  emergency_contact?: Record<string, any>;
+  
+  // Settings
+  visibility?: ResumeVisibility;
+  is_public?: boolean;
+  can_download_pdf?: boolean;
+}
+
+export interface WorkExperienceFormData {
+  company_name: string;
+  position_title: string;
+  location?: string;
+  company_website?: string;
+  start_date: string;
+  end_date?: string;
+  is_current: boolean;
+  description?: string;
+  achievements: string[];
+  technologies: string[];
+}
+
+export interface EducationFormData {
+  institution_name: string;
+  degree: string;
+  field_of_study?: string;
+  location?: string;
+  start_date: string;
+  end_date?: string;
+  is_current: boolean;
+  gpa?: string;
+  honors?: string;
+  description?: string;
+  courses: string[];
+}
+
+// ============================================================================
+// COMPONENT PROP INTERFACES
+// ============================================================================
+
+export interface ResumeBuilderProps {
+  resume?: Resume;
+  onSave: (resume: Resume) => void;
+  onCancel: () => void;
+  mode: "create" | "edit";
+}
+
+export interface ResumePreviewProps {
+  resume: Resume;
+  template?: string;
+  format?: ResumeFormat;
+  showEditControls?: boolean;
+}
+
+export interface ResumePublicViewProps {
+  slug: string;
+  allowDownload?: boolean;
+}
+
+// ============================================================================
+// UTILITY TYPES
+// ============================================================================
+
+export type ResumeStatusType = keyof typeof ResumeStatus;
+export type ResumeVisibilityType = keyof typeof ResumeVisibility;
+export type ResumeFormatType = keyof typeof ResumeFormat;
+export type ResumeLanguageType = keyof typeof ResumeLanguage;
+export type SectionTypeType = keyof typeof SectionType;
+
+// Form validation types
+export type ResumeFormStep = 
+  | "basic_info"
+  | "personal_details"
+  | "experience"
+  | "education"
+  | "skills"
+  | "projects"
+  | "certifications"
+  | "languages"
+  | "template_settings"
+  | "preview";
+
+// Bulk operations
+export interface BulkResumeAction {
+  action: "delete" | "archive" | "publish" | "make_private" | "make_public";
+  resume_ids: number[];
+}
+
+export interface BulkActionResult {
+  success_count: number;
+  error_count: number;
+  errors: string[];
 }

@@ -60,4 +60,68 @@ export const resumesApi = {
     const response = await apiClient.post<Skill>(API_ENDPOINTS.RESUMES.SKILLS(resumeId), skill);
     return { data: response.data, success: true };
   },
+
+  // PDF and Preview endpoints
+  async getPreview(id: number): Promise<ApiResponse<string>> {
+    const response = await apiClient.get<string>(API_ENDPOINTS.RESUMES.PREVIEW(id));
+    return { data: response.data, success: true };
+  },
+
+  async generatePdf(id: number, options?: { format?: string; include_contact_info?: boolean }): Promise<ApiResponse<{ pdf_url: string; file_size: number; expires_at: string }>> {
+    const response = await apiClient.post(API_ENDPOINTS.RESUMES.GENERATE_PDF(id), options || {});
+    return { data: response.data, success: true };
+  },
+
+  // Photo management
+  async uploadPhoto(id: number, photoFile: File): Promise<ApiResponse<{ photo_path: string }>> {
+    const formData = new FormData();
+    formData.append('photo', photoFile);
+    const response = await apiClient.post(API_ENDPOINTS.RESUMES.UPLOAD_PHOTO(id), formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return { data: response.data, success: true };
+  },
+
+  async removePhoto(id: number): Promise<ApiResponse<void>> {
+    await apiClient.delete(API_ENDPOINTS.RESUMES.REMOVE_PHOTO(id));
+    return { data: undefined, success: true };
+  },
+
+  // Public sharing
+  async togglePublic(id: number): Promise<ApiResponse<Resume>> {
+    const response = await apiClient.post<Resume>(API_ENDPOINTS.RESUMES.TOGGLE_PUBLIC(id));
+    return { data: response.data, success: true };
+  },
+
+  async getPublicResume(slug: string): Promise<ApiResponse<{ resume: Resume; html: string }>> {
+    const response = await publicApiClient.get(API_ENDPOINTS.RESUMES.BY_SLUG(slug));
+    return { data: response.data, success: true };
+  },
+
+  async trackPublicView(slug: string): Promise<ApiResponse<void>> {
+    await publicApiClient.post(API_ENDPOINTS.RESUMES.PUBLIC_VIEW(slug));
+    return { data: undefined, success: true };
+  },
+
+  async downloadPublicPdf(slug: string): Promise<ApiResponse<{ pdf_url: string }>> {
+    const response = await publicApiClient.post(API_ENDPOINTS.RESUMES.PUBLIC_DOWNLOAD(slug));
+    return { data: response.data, success: true };
+  },
+
+  // Format conversion
+  async convertToRirekisho(id: number): Promise<ApiResponse<Resume>> {
+    const response = await apiClient.post<Resume>(API_ENDPOINTS.RESUMES.CONVERT_RIREKISHO(id));
+    return { data: response.data, success: true };
+  },
+
+  async convertToShokumu(id: number): Promise<ApiResponse<Resume>> {
+    const response = await apiClient.post<Resume>(API_ENDPOINTS.RESUMES.CONVERT_SHOKUMU(id));
+    return { data: response.data, success: true };
+  },
+
+  // Email functionality
+  async sendByEmail(id: number, emailData: { recipient_emails: string[]; subject?: string; message?: string; include_pdf: boolean }): Promise<ApiResponse<void>> {
+    await apiClient.post(API_ENDPOINTS.RESUMES.SEND_EMAIL(id), emailData);
+    return { data: undefined, success: true };
+  },
 };
