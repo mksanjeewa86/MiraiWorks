@@ -6,35 +6,35 @@
 // ============================================================================
 
 export enum ExamStatus {
-  DRAFT = "draft",
-  ACTIVE = "active", 
-  ARCHIVED = "archived",
+  DRAFT = 'draft',
+  ACTIVE = 'active',
+  ARCHIVED = 'archived',
 }
 
 export enum ExamType {
-  APTITUDE = "aptitude",
-  SKILL = "skill",
-  KNOWLEDGE = "knowledge",
-  PERSONALITY = "personality",
-  CUSTOM = "custom",
+  APTITUDE = 'aptitude',
+  SKILL = 'skill',
+  KNOWLEDGE = 'knowledge',
+  PERSONALITY = 'personality',
+  CUSTOM = 'custom',
 }
 
 export enum QuestionType {
-  MULTIPLE_CHOICE = "multiple_choice",
-  SINGLE_CHOICE = "single_choice",
-  TEXT_INPUT = "text_input",
-  ESSAY = "essay",
-  TRUE_FALSE = "true_false",
-  RATING = "rating",
-  MATCHING = "matching",
+  MULTIPLE_CHOICE = 'multiple_choice',
+  SINGLE_CHOICE = 'single_choice',
+  TEXT_INPUT = 'text_input',
+  ESSAY = 'essay',
+  TRUE_FALSE = 'true_false',
+  RATING = 'rating',
+  MATCHING = 'matching',
 }
 
 export enum SessionStatus {
-  NOT_STARTED = "not_started",
-  IN_PROGRESS = "in_progress",
-  COMPLETED = "completed",
-  EXPIRED = "expired",
-  SUSPENDED = "suspended",
+  NOT_STARTED = 'not_started',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  EXPIRED = 'expired',
+  SUSPENDED = 'suspended',
 }
 
 // ============================================================================

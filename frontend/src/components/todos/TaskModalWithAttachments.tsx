@@ -30,11 +30,11 @@ function formatDateForInput(input?: string | null): string {
   return local.toISOString().slice(0, 16);
 }
 
-export default function TaskModalWithAttachments({ 
-  isOpen, 
-  onClose, 
-  onSuccess, 
-  editingTodo 
+export default function TaskModalWithAttachments({
+  isOpen,
+  onClose,
+  onSuccess,
+  editingTodo,
 }: TaskModalProps) {
   const { showToast } = useToast();
   const [formState, setFormState] = useState<TaskFormState>(initialFormState);
@@ -71,7 +71,7 @@ export default function TaskModalWithAttachments({
   // Load attachments for the todo
   const loadAttachments = async (todoId: number) => {
     if (!todoId) return;
-    
+
     setLoadingAttachments(true);
     try {
       const result = await todoAttachmentAPI.getAttachments(todoId);
@@ -88,11 +88,11 @@ export default function TaskModalWithAttachments({
     }
   };
 
-  const handleInputChange = (field: keyof TaskFormState) => (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    setFormState((prev) => ({ ...prev, [field]: event.target.value }));
-  };
+  const handleInputChange =
+    (field: keyof TaskFormState) =>
+    (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      setFormState((prev) => ({ ...prev, [field]: event.target.value }));
+    };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -125,7 +125,8 @@ export default function TaskModalWithAttachments({
       console.error(err);
       showToast({
         type: 'error',
-        title: err instanceof Error ? err.message : `Failed to ${isEditing ? 'update' : 'create'} task`
+        title:
+          err instanceof Error ? err.message : `Failed to ${isEditing ? 'update' : 'create'} task`,
       });
     } finally {
       setSubmitting(false);
@@ -140,10 +141,10 @@ export default function TaskModalWithAttachments({
 
   // File attachment handlers
   const handleUploadSuccess = (attachment: TodoAttachment) => {
-    setAttachments(prev => [attachment, ...prev]);
-    showToast({ 
-      type: 'success', 
-      title: `File "${attachment.original_filename}" uploaded successfully` 
+    setAttachments((prev) => [attachment, ...prev]);
+    showToast({
+      type: 'success',
+      title: `File "${attachment.original_filename}" uploaded successfully`,
     });
   };
 
@@ -152,13 +153,13 @@ export default function TaskModalWithAttachments({
   };
 
   const handleAttachmentDeleted = (attachmentId: number) => {
-    setAttachments(prev => prev.filter(att => att.id !== attachmentId));
+    setAttachments((prev) => prev.filter((att) => att.id !== attachmentId));
     showToast({ type: 'success', title: 'File deleted successfully' });
   };
 
   const handleAttachmentUpdated = (updatedAttachment: TodoAttachment) => {
-    setAttachments(prev => 
-      prev.map(att => att.id === updatedAttachment.id ? updatedAttachment : att)
+    setAttachments((prev) =>
+      prev.map((att) => (att.id === updatedAttachment.id ? updatedAttachment : att))
     );
     showToast({ type: 'success', title: 'File updated successfully' });
   };
@@ -200,7 +201,8 @@ export default function TaskModalWithAttachments({
                     </Badge>
                     {attachments.length > 0 && (
                       <Badge variant="outline" size="sm">
-                        {attachments.length} file{attachments.length !== 1 ? 's' : ''} • {totalAttachmentSize.toFixed(1)}MB
+                        {attachments.length} file{attachments.length !== 1 ? 's' : ''} •{' '}
+                        {totalAttachmentSize.toFixed(1)}MB
                       </Badge>
                     )}
                   </div>
@@ -287,11 +289,9 @@ export default function TaskModalWithAttachments({
                     className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                   >
                     <Paperclip className="h-4 w-4" />
-                    {attachments.length > 0 ? (
-                      `${attachments.length} attachment${attachments.length !== 1 ? 's' : ''}`
-                    ) : (
-                      'Add attachments'
-                    )}
+                    {attachments.length > 0
+                      ? `${attachments.length} attachment${attachments.length !== 1 ? 's' : ''}`
+                      : 'Add attachments'}
                   </button>
                   {isEditing && (
                     <span className="text-xs text-gray-500">
@@ -313,7 +313,9 @@ export default function TaskModalWithAttachments({
                   <Button
                     type="submit"
                     loading={submitting}
-                    leftIcon={isEditing ? <Save className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                    leftIcon={
+                      isEditing ? <Save className="h-4 w-4" /> : <Plus className="h-4 w-4" />
+                    }
                     disabled={uploadingFiles}
                   >
                     {isEditing ? 'Save Changes' : 'Create Task'}
@@ -383,7 +385,7 @@ export default function TaskModalWithAttachments({
                         <div>Total: {attachments.length} files</div>
                         <div>Size: {totalAttachmentSize.toFixed(2)} MB</div>
                         <div>
-                          Types: {[...new Set(attachments.map(a => a.file_category))].join(', ')}
+                          Types: {[...new Set(attachments.map((a) => a.file_category))].join(', ')}
                         </div>
                       </div>
                     </div>

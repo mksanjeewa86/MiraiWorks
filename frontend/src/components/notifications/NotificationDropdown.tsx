@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Bell, CheckCheck } from 'lucide-react';
 import { useNotifications } from '@/contexts/NotificationsContext';
-import { AppNotification } from "../../types/notification";
+import { AppNotification } from '../../types/notification';
 
 const NotificationDropdown: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -43,8 +43,14 @@ const NotificationDropdown: React.FC = () => {
     }
 
     // Handle navigation based on notification payload
-    if (notification.payload && typeof notification.payload === 'object' && 'conversation_url' in notification.payload) {
-      window.location.href = (notification.payload as { conversation_url: string }).conversation_url;
+    if (
+      notification.payload &&
+      typeof notification.payload === 'object' &&
+      'conversation_url' in notification.payload
+    ) {
+      window.location.href = (
+        notification.payload as { conversation_url: string }
+      ).conversation_url;
     }
   };
 
@@ -73,9 +79,7 @@ const NotificationDropdown: React.FC = () => {
         <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Notifications
-            </h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Notifications</h3>
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllRead}

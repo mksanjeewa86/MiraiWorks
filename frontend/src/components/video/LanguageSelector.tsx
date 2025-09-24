@@ -5,10 +5,7 @@ interface LanguageSelectorProps {
   onChange: (language: string) => void;
 }
 
-export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
-  value,
-  onChange,
-}) => {
+export const LanguageSelector: React.FC<LanguageSelectorProps> = ({ value, onChange }) => {
   const languages = [
     { code: 'ja', label: '日本語', flag: '🇯🇵' },
     { code: 'en', label: 'English', flag: '🇺🇸' },
@@ -16,9 +13,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
 
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        転写言語
-      </label>
+      <label className="block text-sm font-medium text-gray-700 mb-1">転写言語</label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}

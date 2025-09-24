@@ -1,37 +1,39 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  MoreVertical, 
-  Edit, 
-  Trash2, 
-  Users, 
-  BarChart3, 
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Plus,
+  Search,
+  MoreVertical,
+  Edit,
+  Trash2,
+  Users,
+  BarChart3,
   Eye,
-  Calendar,
   Clock,
   BookOpen,
   Target,
-  AlertTriangle,
-  CheckCircle
-} from "lucide-react";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { toast } from "sonner";
+} from 'lucide-react';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { toast } from 'sonner';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
 
 interface Exam {
   id: number;
@@ -62,25 +64,25 @@ interface ExamListResponse {
 }
 
 const ExamStatus = {
-  DRAFT: "draft",
-  ACTIVE: "active", 
-  ARCHIVED: "archived",
+  DRAFT: 'draft',
+  ACTIVE: 'active',
+  ARCHIVED: 'archived',
 } as const;
 
 const ExamType = {
-  APTITUDE: "aptitude",
-  SKILL: "skill",
-  KNOWLEDGE: "knowledge", 
-  PERSONALITY: "personality",
-  CUSTOM: "custom",
+  APTITUDE: 'aptitude',
+  SKILL: 'skill',
+  KNOWLEDGE: 'knowledge',
+  PERSONALITY: 'personality',
+  CUSTOM: 'custom',
 } as const;
 
 export default function AdminExamsPage() {
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
 
@@ -101,81 +103,82 @@ export default function AdminExamsPage() {
     try {
       const params = new URLSearchParams({
         skip: ((page - 1) * 20).toString(),
-        limit: "20",
+        limit: '20',
       });
 
-      if (statusFilter !== "all") {
-        params.append("status", statusFilter);
+      if (statusFilter !== 'all') {
+        params.append('status', statusFilter);
       }
 
       const response = await fetch(`/api/exam/exams?${params}`, {
         headers: {
-          "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
+          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
         },
       });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch exams");
+        throw new Error('Failed to fetch exams');
       }
 
       const data: ExamListResponse = await response.json();
-      
+
       // Filter by search query and type on frontend for simplicity
       let filteredExams = data.exams;
-      
+
       if (searchQuery) {
-        filteredExams = filteredExams.filter(exam => 
-          exam.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (exam.description && exam.description.toLowerCase().includes(searchQuery.toLowerCase()))
+        filteredExams = filteredExams.filter(
+          (exam) =>
+            exam.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (exam.description && exam.description.toLowerCase().includes(searchQuery.toLowerCase()))
         );
       }
 
-      if (typeFilter !== "all") {
-        filteredExams = filteredExams.filter(exam => exam.exam_type === typeFilter);
+      if (typeFilter !== 'all') {
+        filteredExams = filteredExams.filter((exam) => exam.exam_type === typeFilter);
       }
 
       setExams(page === 1 ? filteredExams : [...exams, ...filteredExams]);
       setHasMore(data.has_more);
     } catch (error) {
-      console.error("Error fetching exams:", error);
-      toast.error("Failed to load exams");
+      console.error('Error fetching exams:', error);
+      toast.error('Failed to load exams');
     } finally {
       setLoading(false);
     }
   };
 
   const deleteExam = async (examId: number) => {
-    if (!confirm("Are you sure you want to delete this exam? This action cannot be undone.")) {
+    if (!confirm('Are you sure you want to delete this exam? This action cannot be undone.')) {
       return;
     }
 
     try {
       const response = await fetch(`/api/exam/exams/${examId}`, {
-        method: "DELETE",
+        method: 'DELETE',
         headers: {
-          "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
+          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
         },
       });
 
       if (!response.ok) {
-        throw new Error("Failed to delete exam");
+        throw new Error('Failed to delete exam');
       }
 
-      setExams(exams.filter(exam => exam.id !== examId));
-      toast.success("Exam deleted successfully");
+      setExams(exams.filter((exam) => exam.id !== examId));
+      toast.success('Exam deleted successfully');
     } catch (error) {
-      console.error("Error deleting exam:", error);
-      toast.error("Failed to delete exam");
+      console.error('Error deleting exam:', error);
+      toast.error('Failed to delete exam');
     }
   };
 
   const getExamTypeLabel = (type: string) => {
     const labels = {
-      [ExamType.APTITUDE]: "適性検査",
-      [ExamType.SKILL]: "Skill Test",
-      [ExamType.KNOWLEDGE]: "Knowledge Test",
-      [ExamType.PERSONALITY]: "Personality Test",
-      [ExamType.CUSTOM]: "Custom Test",
+      [ExamType.APTITUDE]: '適性検査',
+      [ExamType.SKILL]: 'Skill Test',
+      [ExamType.KNOWLEDGE]: 'Knowledge Test',
+      [ExamType.PERSONALITY]: 'Personality Test',
+      [ExamType.CUSTOM]: 'Custom Test',
     };
     return labels[type as keyof typeof labels] || type;
   };
@@ -183,13 +186,13 @@ export default function AdminExamsPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case ExamStatus.ACTIVE:
-        return "bg-green-100 text-green-800 border-green-200";
+        return 'bg-green-100 text-green-800 border-green-200';
       case ExamStatus.DRAFT:
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return 'bg-gray-100 text-gray-800 border-gray-200';
       case ExamStatus.ARCHIVED:
-        return "bg-red-100 text-red-800 border-red-200";
+        return 'bg-red-100 text-red-800 border-red-200';
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
@@ -237,7 +240,7 @@ export default function AdminExamsPage() {
                 />
               </div>
             </div>
-            
+
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="Filter by status" />
@@ -274,12 +277,11 @@ export default function AdminExamsPage() {
             <BookOpen className="h-12 w-12 mx-auto text-gray-400 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No exams found</h3>
             <p className="text-gray-600 mb-4">
-              {searchQuery || statusFilter !== "all" || typeFilter !== "all" 
-                ? "No exams match your current filters."
-                : "Get started by creating your first exam."
-              }
+              {searchQuery || statusFilter !== 'all' || typeFilter !== 'all'
+                ? 'No exams match your current filters.'
+                : 'Get started by creating your first exam.'}
             </p>
-            {(!searchQuery && statusFilter === "all" && typeFilter === "all") && (
+            {!searchQuery && statusFilter === 'all' && typeFilter === 'all' && (
               <Button asChild>
                 <Link href="/admin/exams/create">
                   <Plus className="h-4 w-4 mr-2" />
@@ -298,10 +300,10 @@ export default function AdminExamsPage() {
                   <div className="flex-1">
                     <CardTitle className="text-lg mb-2 line-clamp-2">{exam.title}</CardTitle>
                     <CardDescription className="line-clamp-2">
-                      {exam.description || "No description provided"}
+                      {exam.description || 'No description provided'}
                     </CardDescription>
                   </div>
-                  
+
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="sm">
@@ -327,7 +329,7 @@ export default function AdminExamsPage() {
                           Statistics
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem 
+                      <DropdownMenuItem
                         onClick={() => deleteExam(exam.id)}
                         className="text-red-600"
                       >
@@ -342,9 +344,7 @@ export default function AdminExamsPage() {
                   <Badge className={getStatusColor(exam.status)}>
                     {exam.status.charAt(0).toUpperCase() + exam.status.slice(1)}
                   </Badge>
-                  <Badge variant="outline">
-                    {getExamTypeLabel(exam.exam_type)}
-                  </Badge>
+                  <Badge variant="outline">{getExamTypeLabel(exam.exam_type)}</Badge>
                 </div>
               </CardHeader>
 
@@ -355,19 +355,19 @@ export default function AdminExamsPage() {
                     <BookOpen className="h-4 w-4 text-gray-400" />
                     <span>{exam.total_questions || 0} questions</span>
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-gray-400" />
                     <span>{exam.total_sessions || 0} attempts</span>
                   </div>
-                  
+
                   {exam.time_limit_minutes && (
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-gray-400" />
                       <span>{exam.time_limit_minutes}m limit</span>
                     </div>
                   )}
-                  
+
                   <div className="flex items-center gap-2">
                     <Target className="h-4 w-4 text-gray-400" />
                     <span>{exam.max_attempts} max attempts</span>
@@ -422,14 +422,14 @@ export default function AdminExamsPage() {
                       View
                     </Link>
                   </Button>
-                  
+
                   <Button asChild variant="outline" size="sm" className="flex-1">
                     <Link href={`/admin/exams/${exam.id}/statistics`}>
                       <BarChart3 className="h-4 w-4 mr-1" />
                       Stats
                     </Link>
                   </Button>
-                  
+
                   <Button asChild size="sm" className="flex-1">
                     <Link href={`/admin/exams/${exam.id}/edit`}>
                       <Edit className="h-4 w-4 mr-1" />
@@ -451,11 +451,7 @@ export default function AdminExamsPage() {
       {/* Load More */}
       {hasMore && (
         <div className="flex justify-center mt-8">
-          <Button 
-            variant="outline" 
-            onClick={() => setPage(page + 1)}
-            disabled={loading}
-          >
+          <Button variant="outline" onClick={() => setPage(page + 1)} disabled={loading}>
             {loading ? <LoadingSpinner size="sm" className="mr-2" /> : null}
             Load More
           </Button>

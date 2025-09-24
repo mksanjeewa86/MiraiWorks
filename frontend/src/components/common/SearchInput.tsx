@@ -1,20 +1,20 @@
 'use client';
 
-import { Search } from 'lucide-react'
-import { useState } from 'react'
-import type { SearchInputProps } from '@/types/components'
+import { Search } from 'lucide-react';
+import { useState } from 'react';
+import type { SearchInputProps } from '@/types/components';
 
-export default function SearchInput({ 
-  placeholder = "Search...", 
+export default function SearchInput({
+  placeholder = 'Search...',
   onSearch,
-  className = ""
+  className = '',
 }: SearchInputProps) {
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSearch?.(query)
-  }
+    e.preventDefault();
+    onSearch?.(query);
+  };
 
   return (
     <form onSubmit={handleSubmit} className={`relative ${className}`}>
@@ -30,5 +30,5 @@ export default function SearchInput({
         />
       </div>
     </form>
-  )
+  );
 }

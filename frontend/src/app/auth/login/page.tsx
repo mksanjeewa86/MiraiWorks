@@ -45,7 +45,7 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     clearError();
-    
+
     try {
       await login({ email, password });
       // Redirect is now handled by useEffect based on auth state
@@ -75,14 +75,21 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Error Message */}
             {error && (
-              <div className="p-4 rounded-2xl bg-red-50 border border-red-200" data-testid="error-message">
+              <div
+                className="p-4 rounded-2xl bg-red-50 border border-red-200"
+                data-testid="error-message"
+              >
                 <p className="text-sm text-red-600">{error}</p>
               </div>
             )}
 
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium mb-2"
+                style={{ color: 'var(--text-primary)' }}
+              >
                 Email
               </label>
               <input
@@ -100,7 +107,11 @@ export default function LoginPage() {
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium mb-2"
+                style={{ color: 'var(--text-primary)' }}
+              >
                 Password
               </label>
               <div className="relative">
@@ -137,7 +148,11 @@ export default function LoginPage() {
                   type="checkbox"
                   className="h-4 w-4 rounded border-gray-300 text-brand-primary focus:ring-brand-primary"
                 />
-                <label htmlFor="remember-me" className="ml-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                <label
+                  htmlFor="remember-me"
+                  className="ml-2 text-sm"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
                   Remember me
                 </label>
               </div>

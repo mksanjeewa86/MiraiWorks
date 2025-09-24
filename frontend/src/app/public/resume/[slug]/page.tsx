@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Download, Eye, Calendar, User, Globe, Share2, ExternalLink } from 'lucide-react';
-import { Resume, ResumeFormat } from '@/types/resume';
+import { ResumeFormat } from '@/types/resume';
 import { resumesApi } from '@/api/resumes';
 
 interface PublicResumeInfo {
@@ -24,7 +24,7 @@ function PublicResumePageContent() {
   const params = useParams();
   const router = useRouter();
   const slug = params.slug as string;
-  
+
   const [loading, setLoading] = useState(true);
   const [resume, setResume] = useState<PublicResumeInfo | null>(null);
   const [previewHtml, setPreviewHtml] = useState<string>('');
@@ -39,13 +39,13 @@ function PublicResumePageContent() {
     try {
       setLoading(true);
       setError('');
-      
+
       const response = await resumesApi.getPublicResume(slug);
-      
+
       if (response.data) {
         setResume(response.data.resume);
         setPreviewHtml(response.data.html);
-        
+
         // Track view
         try {
           await resumesApi.trackPublicView(slug);
@@ -53,7 +53,6 @@ function PublicResumePageContent() {
           // Ignore view tracking errors
         }
       }
-      
     } catch (error: any) {
       console.error('Error fetching public resume:', error);
       if (error.response?.status === 404) {
@@ -76,9 +75,9 @@ function PublicResumePageContent() {
 
     try {
       setGeneratingPdf(true);
-      
+
       const response = await resumesApi.downloadPublicPdf(slug);
-      
+
       // Create download link
       const link = document.createElement('a');
       link.href = response.data?.pdf_url || '';
@@ -86,7 +85,6 @@ function PublicResumePageContent() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
     } catch (error) {
       console.error('Error downloading PDF:', error);
       alert('Failed to download PDF. Please try again.');
@@ -97,7 +95,7 @@ function PublicResumePageContent() {
 
   const handleShare = async () => {
     const currentUrl = window.location.href;
-    
+
     try {
       await navigator.clipboard.writeText(currentUrl);
       alert('Resume link copied to clipboard!');
@@ -147,20 +145,21 @@ function PublicResumePageContent() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-8">
           <div className="text-6xl mb-4">
-            {error === 'Resume not found' ? '❌' : 
-             error === 'Resume is private' ? '🔒' : '⚠️'}
+            {error === 'Resume not found' ? '❌' : error === 'Resume is private' ? '🔒' : '⚠️'}
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            {error === 'Resume not found' ? 'Resume Not Found' :
-             error === 'Resume is private' ? 'Resume is Private' :
-             'Error Loading Resume'}
+            {error === 'Resume not found'
+              ? 'Resume Not Found'
+              : error === 'Resume is private'
+                ? 'Resume is Private'
+                : 'Error Loading Resume'}
           </h1>
           <p className="text-gray-600 mb-6">
-            {error === 'Resume not found' ? 
-              'The resume you\'re looking for doesn\'t exist or has been removed.' :
-             error === 'Resume is private' ?
-              'This resume is currently private and cannot be viewed publicly.' :
-              'Something went wrong while loading this resume.'}
+            {error === 'Resume not found'
+              ? "The resume you're looking for doesn't exist or has been removed."
+              : error === 'Resume is private'
+                ? 'This resume is currently private and cannot be viewed publicly.'
+                : 'Something went wrong while loading this resume.'}
           </p>
           <button
             onClick={() => router.push('/')}
@@ -189,13 +188,13 @@ function PublicResumePageContent() {
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-3">
               <div className="flex items-center text-sm text-gray-500">
                 <Eye className="h-4 w-4 mr-1" />
                 {resume.view_count} views
               </div>
-              
+
               <button
                 onClick={handleShare}
                 className="inline-flex items-center px-3 py-2 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
@@ -203,7 +202,7 @@ function PublicResumePageContent() {
                 <Share2 className="h-4 w-4 mr-2" />
                 Share
               </button>
-              
+
               {resume.can_download_pdf && (
                 <button
                   onClick={handleDownloadPdf}
@@ -236,27 +235,28 @@ function PublicResumePageContent() {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-white rounded-lg p-6 shadow-sm">
             <div className="flex items-center">
               <Globe className="h-8 w-8 text-green-600 mr-3" />
               <div>
                 <div className="font-medium text-gray-900">Format</div>
-                <div className="text-sm text-gray-600">{getFormatDisplayName(resume.resume_format)}</div>
+                <div className="text-sm text-gray-600">
+                  {getFormatDisplayName(resume.resume_format)}
+                </div>
               </div>
             </div>
           </div>
-          
+
           <div className="bg-white rounded-lg p-6 shadow-sm">
             <div className="flex items-center">
               <Calendar className="h-8 w-8 text-purple-600 mr-3" />
               <div>
                 <div className="font-medium text-gray-900">Last Updated</div>
                 <div className="text-sm text-gray-600">
-                  {resume.last_viewed_at ? 
-                    new Date(resume.last_viewed_at).toLocaleDateString() : 
-                    'Recently'
-                  }
+                  {resume.last_viewed_at
+                    ? new Date(resume.last_viewed_at).toLocaleDateString()
+                    : 'Recently'}
                 </div>
               </div>
             </div>
@@ -267,9 +267,7 @@ function PublicResumePageContent() {
         {resume.professional_summary && (
           <div className="bg-white rounded-lg p-6 shadow-sm mb-8">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Professional Summary</h2>
-            <p className="text-gray-700 leading-relaxed">
-              {resume.professional_summary}
-            </p>
+            <p className="text-gray-700 leading-relaxed">{resume.professional_summary}</p>
           </div>
         )}
 
@@ -281,15 +279,15 @@ function PublicResumePageContent() {
               Public view - {resume.can_download_pdf ? 'Download available' : 'View only'}
             </p>
           </div>
-          
+
           <div className="bg-white">
             {previewHtml ? (
-              <div 
+              <div
                 className="resume-preview-public"
                 dangerouslySetInnerHTML={{ __html: previewHtml }}
                 style={{
                   fontFamily: resume.font_family || 'Inter',
-                  ['--theme-color' as any]: resume.theme_color || '#2563eb'
+                  ['--theme-color' as any]: resume.theme_color || '#2563eb',
                 }}
               />
             ) : (
@@ -325,7 +323,7 @@ function PublicResumePageContent() {
           margin: 20px auto;
           background: white;
           padding: 20px;
-          box-shadow: 0 0 20px rgba(0,0,0,0.1);
+          box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
           min-height: 297mm;
           border-radius: 8px;
         }
@@ -376,12 +374,12 @@ function PublicResumePageContent() {
             max-width: none;
             border-radius: 0;
           }
-          
+
           .bg-gray-50,
           .bg-white {
             background: white !important;
           }
-          
+
           .shadow-sm {
             box-shadow: none !important;
           }

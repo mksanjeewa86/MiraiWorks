@@ -39,9 +39,7 @@ const ParticipantVideo = forwardRef<HTMLVideoElement, ParticipantVideoProps>(
         {/* Participant Info Overlay */}
         <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm flex items-center space-x-1">
           <span>{participantName}</span>
-          {isMuted && (
-            <MicrophoneIcon className="h-4 w-4 text-red-400" />
-          )}
+          {isMuted && <MicrophoneIcon className="h-4 w-4 text-red-400" />}
         </div>
 
         {/* Connection Quality Indicator */}

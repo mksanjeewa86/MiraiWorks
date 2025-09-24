@@ -16,7 +16,10 @@ interface UseVideoCallOptions {
   type?: 'id' | 'roomCode';
 }
 
-export const useVideoCall = (identifier?: string, options: UseVideoCallOptions = { type: 'id' }): UseVideoCallResult => {
+export const useVideoCall = (
+  identifier?: string,
+  options: UseVideoCallOptions = { type: 'id' }
+): UseVideoCallResult => {
   const [videoCall, setVideoCall] = useState<VideoCall | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -111,7 +114,6 @@ export const useVideoCall = (identifier?: string, options: UseVideoCallOptions =
 
   useEffect(() => {
     fetchVideoCall();
-   
   }, [identifier, options.type]);
 
   return {

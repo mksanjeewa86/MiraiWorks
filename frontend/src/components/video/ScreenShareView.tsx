@@ -1,9 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 import Button from '../ui/button';
-import { 
+import {
   XMarkIcon,
   ArrowsPointingOutIcon,
-  ArrowsPointingInIcon 
+  ArrowsPointingInIcon,
 } from '@heroicons/react/24/outline';
 
 interface ScreenShareViewProps {
@@ -39,21 +39,14 @@ export const ScreenShareView: React.FC<ScreenShareViewProps> = ({
     <div className={`screen-share-view ${isFullScreen ? 'fullscreen' : ''}`}>
       <div className="relative w-full h-full bg-black">
         {/* Screen Share Video */}
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          className="w-full h-full object-contain"
-        />
+        <video ref={videoRef} autoPlay playsInline className="w-full h-full object-contain" />
 
         {/* Controls Overlay */}
         <div className="absolute top-4 left-4 right-4 flex justify-between items-center">
           {/* Screen Share Info */}
           <div className="bg-black bg-opacity-75 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
             <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-            <span className="text-sm font-medium">
-              {sharerName}が画面を共有中
-            </span>
+            <span className="text-sm font-medium">{sharerName}が画面を共有中</span>
           </div>
 
           {/* Control Buttons */}
@@ -89,9 +82,7 @@ export const ScreenShareView: React.FC<ScreenShareViewProps> = ({
         {/* Instructions */}
         <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
           <div className="bg-black bg-opacity-75 text-white px-4 py-2 rounded-lg text-center">
-            <p className="text-sm">
-              画面共有中です。ESCキーでフルスクリーンを終了できます。
-            </p>
+            <p className="text-sm">画面共有中です。ESCキーでフルスクリーンを終了できます。</p>
           </div>
         </div>
       </div>

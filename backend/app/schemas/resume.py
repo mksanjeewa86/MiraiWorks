@@ -60,6 +60,7 @@ class ResumeBase(BaseModel):
 
 
 class ResumeCreate(ResumeBase):
+    status: Optional[ResumeStatus] = ResumeStatus.DRAFT
     visibility: Optional[ResumeVisibility] = ResumeVisibility.PRIVATE
 
 

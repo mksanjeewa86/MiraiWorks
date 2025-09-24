@@ -1,18 +1,23 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import { useParams, useSearchParams, useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Clock, Camera, Eye, EyeOff, ChevronLeft, ChevronRight, Save } from "lucide-react";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { toast } from "sonner";
-import { ExamQuestion } from "./exam-question";
-import { ExamTimer } from "./exam-timer";
-import { FaceVerification } from "./face-verification";
-import { WebUsageMonitor } from "./web-usage-monitor";
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useParams, useSearchParams, useRouter } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import {
+  AlertTriangle,
+  Clock,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { toast } from 'sonner';
+import { ExamQuestion } from './exam-question';
+import { ExamTimer } from './exam-timer';
+import { FaceVerification } from './face-verification';
+import { WebUsageMonitor } from './web-usage-monitor';
 
 interface Question {
   id: number;
@@ -65,8 +70,8 @@ export default function TakeExamPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const examId = params.examId as string;
-  const assignmentId = searchParams.get("assignment");
-  const testMode = searchParams.get("mode") === "test";
+  const assignmentId = searchParams.get('assignment');
+  const testMode = searchParams.get('mode') === 'test';
 
   const [examData, setExamData] = useState<ExamTakeResponse | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -101,23 +106,26 @@ export default function TakeExamPage() {
     if (examData?.session.monitor_web_usage) {
       // Request fullscreen for better monitoring
       if (!document.fullscreenElement && !isFullscreen) {
-        document.documentElement.requestFullscreen().then(() => {
-          setIsFullscreen(true);
-        }).catch(() => {
-          // Fullscreen not supported or denied
-          toast.warning("For better security, please avoid switching tabs during the exam");
-        });
+        document.documentElement
+          .requestFullscreen()
+          .then(() => {
+            setIsFullscreen(true);
+          })
+          .catch(() => {
+            // Fullscreen not supported or denied
+            toast.warning('For better security, please avoid switching tabs during the exam');
+          });
       }
     }
   }, [examData, isFullscreen]);
 
   const startExam = async () => {
     try {
-      const response = await fetch("/api/exam/exams/take", {
-        method: "POST",
+      const response = await fetch('/api/exam/exams/take', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
         },
         body: JSON.stringify({
           exam_id: parseInt(examId),
@@ -130,7 +138,7 @@ export default function TakeExamPage() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.detail || "Failed to start exam");
+        throw new Error(error.detail || 'Failed to start exam');
       }
 
       const data: ExamTakeResponse = await response.json();
@@ -144,9 +152,9 @@ export default function TakeExamPage() {
         startTimer(data.time_remaining_seconds);
       }
     } catch (error) {
-      console.error("Error starting exam:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to start exam");
-      router.push("/exams");
+      console.error('Error starting exam:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to start exam');
+      router.push('/exams');
     } finally {
       setLoading(false);
     }
@@ -154,7 +162,7 @@ export default function TakeExamPage() {
 
   const startTimer = (initialTime: number) => {
     setTimeRemaining(initialTime);
-    
+
     timerRef.current = setInterval(() => {
       setTimeRemaining((prev) => {
         if (prev === null || prev <= 1) {
@@ -171,7 +179,7 @@ export default function TakeExamPage() {
     if (!examData?.session.require_face_verification) return;
 
     const interval = examData.session.face_check_interval_minutes * 60 * 1000;
-    
+
     faceCheckRef.current = setInterval(() => {
       setShowFaceVerification(true);
       setLastFaceCheck(Date.now());
@@ -179,25 +187,25 @@ export default function TakeExamPage() {
   };
 
   const handleAnswerChange = useCallback((questionId: number, answerData: Partial<Answer>) => {
-    setAnswers(prev => ({
+    setAnswers((prev) => ({
       ...prev,
       [questionId]: {
         ...prev[questionId],
         ...answerData,
         question_id: questionId,
-      }
+      },
     }));
   }, []);
 
   const saveAnswer = async (questionId: number, answer: Answer) => {
     try {
       const timeSpent = Math.floor((Date.now() - questionStartTime) / 1000);
-      
+
       await fetch(`/api/exam/sessions/${examData?.session.id}/answers`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
         },
         body: JSON.stringify({
           ...answer,
@@ -205,8 +213,8 @@ export default function TakeExamPage() {
         }),
       });
     } catch (error) {
-      console.error("Error saving answer:", error);
-      toast.error("Failed to save answer");
+      console.error('Error saving answer:', error);
+      toast.error('Failed to save answer');
     }
   };
 
@@ -238,14 +246,14 @@ export default function TakeExamPage() {
 
       // Complete the exam
       await fetch(`/api/exam/sessions/${examData.session.id}/complete`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
+          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
         },
       });
 
-      toast.success("Exam submitted successfully!");
-      
+      toast.success('Exam submitted successfully!');
+
       // Exit fullscreen
       if (document.fullscreenElement) {
         document.exitFullscreen();
@@ -257,8 +265,8 @@ export default function TakeExamPage() {
         router.push(`/exams/results/${examData.session.id}`);
       }
     } catch (error) {
-      console.error("Error submitting exam:", error);
-      toast.error("Failed to submit exam");
+      console.error('Error submitting exam:', error);
+      toast.error('Failed to submit exam');
     } finally {
       setSubmitting(false);
     }
@@ -269,36 +277,36 @@ export default function TakeExamPage() {
 
     try {
       await fetch(`/api/exam/sessions/${examData.session.id}/monitoring`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
         },
         body: JSON.stringify({
           event_type: eventType,
           event_data: eventData,
-          severity: eventType === "tab_switch" ? "warning" : "info",
+          severity: eventType === 'tab_switch' ? 'warning' : 'info',
         }),
       });
 
-      if (eventType === "tab_switch" && !examData.session.allow_web_usage) {
-        toast.warning("Tab switching detected. This has been recorded.");
+      if (eventType === 'tab_switch' && !examData.session.allow_web_usage) {
+        toast.warning('Tab switching detected. This has been recorded.');
       }
     } catch (error) {
-      console.error("Error recording monitoring event:", error);
+      console.error('Error recording monitoring event:', error);
     }
   };
 
   const handleFaceVerificationComplete = async (success: boolean) => {
     setShowFaceVerification(false);
-    
+
     if (!success && examData?.session.require_face_verification) {
-      toast.error("Face verification failed. This has been recorded.");
-      
+      toast.error('Face verification failed. This has been recorded.');
+
       // Record failed verification
-      await handleWebUsageDetected("face_verification_failed", {
+      await handleWebUsageDetected('face_verification_failed', {
         timestamp: new Date().toISOString(),
-        reason: "verification_failed",
+        reason: 'verification_failed',
       });
     }
   };
@@ -318,9 +326,7 @@ export default function TakeExamPage() {
           <AlertTriangle className="h-12 w-12 mx-auto text-red-500 mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Unable to load exam</h2>
           <p className="text-gray-600 mb-4">There was an error loading the exam data.</p>
-          <Button onClick={() => router.push("/exams")}>
-            Back to Exams
-          </Button>
+          <Button onClick={() => router.push('/exams')}>Back to Exams</Button>
         </div>
       </div>
     );
@@ -358,36 +364,37 @@ export default function TakeExamPage() {
                 {examData.session.exam_title}
               </h1>
               <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
-                <span>Question {currentQuestionIndex + 1} of {examData.questions.length}</span>
+                <span>
+                  Question {currentQuestionIndex + 1} of {examData.questions.length}
+                </span>
                 <span>•</span>
                 <span>{answeredCount} answered</span>
                 {testMode && (
                   <>
                     <span>•</span>
-                    <span className="text-blue-600 font-medium">Practice Mode - No scores saved</span>
+                    <span className="text-blue-600 font-medium">
+                      Practice Mode - No scores saved
+                    </span>
                   </>
                 )}
               </div>
             </div>
-            
+
             <div className="flex items-center gap-4">
               {timeRemaining !== null && (
-                <ExamTimer 
-                  timeRemaining={timeRemaining} 
-                  onTimeUp={submitExam}
-                />
+                <ExamTimer timeRemaining={timeRemaining} onTimeUp={submitExam} />
               )}
-              
-              <Button 
-                onClick={submitExam} 
+
+              <Button
+                onClick={submitExam}
                 disabled={submitting}
                 className="bg-green-600 hover:bg-green-700"
               >
-                {submitting ? <LoadingSpinner size="sm" /> : "Submit Exam"}
+                {submitting ? <LoadingSpinner size="sm" /> : 'Submit Exam'}
               </Button>
             </div>
           </div>
-          
+
           <div className="mt-4">
             <Progress value={progress} className="h-2" />
           </div>
@@ -400,12 +407,10 @@ export default function TakeExamPage() {
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">
-                  Question {currentQuestionIndex + 1}
-                </CardTitle>
+                <CardTitle className="text-lg">Question {currentQuestionIndex + 1}</CardTitle>
                 <div className="flex items-center gap-2">
                   <Badge variant="outline">
-                    {currentQuestion.points} {currentQuestion.points === 1 ? "point" : "points"}
+                    {currentQuestion.points} {currentQuestion.points === 1 ? 'point' : 'points'}
                   </Badge>
                   {currentQuestion.time_limit_seconds && (
                     <Badge variant="secondary">
@@ -413,13 +418,11 @@ export default function TakeExamPage() {
                       {Math.floor(currentQuestion.time_limit_seconds / 60)}m
                     </Badge>
                   )}
-                  {currentQuestion.is_required && (
-                    <Badge variant="destructive">Required</Badge>
-                  )}
+                  {currentQuestion.is_required && <Badge variant="destructive">Required</Badge>}
                 </div>
               </div>
             </CardHeader>
-            
+
             <CardContent className="space-y-6">
               <ExamQuestion
                 question={currentQuestion}
@@ -449,18 +452,16 @@ export default function TakeExamPage() {
                     onClick={() => navigateToQuestion(index)}
                     className={`w-8 h-8 rounded-full text-xs font-medium transition-colors ${
                       index === currentQuestionIndex
-                        ? "bg-blue-600 text-white"
+                        ? 'bg-blue-600 text-white'
                         : answers[examData.questions[index].id]
-                        ? "bg-green-100 text-green-700 border border-green-300"
-                        : "bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200"
+                          ? 'bg-green-100 text-green-700 border border-green-300'
+                          : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
                     }`}
                   >
                     {index + 1}
                   </button>
                 ))}
-                {examData.questions.length > 10 && (
-                  <span className="text-gray-500 px-2">...</span>
-                )}
+                {examData.questions.length > 10 && <span className="text-gray-500 px-2">...</span>}
               </div>
             </div>
 

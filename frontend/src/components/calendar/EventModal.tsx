@@ -1,16 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  X,
-  MapPin,
-  Users,
-  Video,
-  Phone,
-  Trash2,
-  Save,
-  AlertCircle
-} from 'lucide-react';
+import { X, MapPin, Users, Video, Phone, Trash2, Save, AlertCircle } from 'lucide-react';
 import type { CalendarEvent } from '@/types/interview';
 import type { EventModalProps, EventFormData } from '@/types/components';
 
@@ -21,7 +12,7 @@ export default function EventModal({
   selectedDate,
   isCreateMode,
   onSave,
-  onDelete
+  onDelete,
 }: EventModalProps) {
   const [formData, setFormData] = useState<EventFormData>({
     title: '',
@@ -32,7 +23,7 @@ export default function EventModal({
     isAllDay: false,
     attendees: [],
     status: 'tentative',
-    timezone: 'UTC'
+    timezone: 'UTC',
   });
 
   const [attendeeInput, setAttendeeInput] = useState('');
@@ -44,11 +35,12 @@ export default function EventModal({
   const isInterviewEvent = eventId.startsWith('interview-');
   const isCalendarEvent = /^\d+$/.test(eventId);
   const canDeleteEvent = !isCreateMode && !!event && (isCalendarEvent || isTodoEvent);
-  const deleteHelperMessage = !isCreateMode && event && !canDeleteEvent
-    ? (isInterviewEvent
+  const deleteHelperMessage =
+    !isCreateMode && event && !canDeleteEvent
+      ? isInterviewEvent
         ? 'Interviews must be cancelled from the interview workflow.'
-        : 'This event cannot be deleted from this view.')
-    : null;
+        : 'This event cannot be deleted from this view.'
+      : null;
 
   // Safe date parsing helper
   const safeParseDate = (dateString: string | null | undefined): Date | null => {
@@ -58,10 +50,13 @@ export default function EventModal({
   };
 
   // Safe date to datetime-local format
-  const safeDateToLocalString = useCallback((dateString: string | null | undefined, fallback: Date = new Date()): string => {
-    const date = safeParseDate(dateString);
-    return (date || fallback).toISOString().slice(0, 16);
-  }, []);
+  const safeDateToLocalString = useCallback(
+    (dateString: string | null | undefined, fallback: Date = new Date()): string => {
+      const date = safeParseDate(dateString);
+      return (date || fallback).toISOString().slice(0, 16);
+    },
+    []
+  );
 
   // Initialize form data
   useEffect(() => {
@@ -80,7 +75,7 @@ export default function EventModal({
           isAllDay: false,
           attendees: [],
           status: 'tentative',
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
         });
       } else if (event) {
         const currentTime = new Date();
@@ -95,7 +90,7 @@ export default function EventModal({
           isAllDay: event.isAllDay,
           attendees: event.attendees,
           status: event.status || 'tentative',
-          timezone: event.timezone || 'UTC'
+          timezone: event.timezone || 'UTC',
         });
       }
       setErrors({});
@@ -154,7 +149,7 @@ export default function EventModal({
         organizerEmail: undefined, // Will be set by backend
         isRecurring: false,
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
 
       await onSave(eventData);
@@ -183,9 +178,9 @@ export default function EventModal({
   const addAttendee = () => {
     const email = attendeeInput.trim();
     if (email && !formData.attendees.includes(email)) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        attendees: [...prev.attendees, email]
+        attendees: [...prev.attendees, email],
       }));
       setAttendeeInput('');
     }
@@ -193,9 +188,9 @@ export default function EventModal({
 
   // Remove attendee
   const removeAttendee = (email: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      attendees: prev.attendees.filter(a => a !== email)
+      attendees: prev.attendees.filter((a) => a !== email),
     }));
   };
 
@@ -204,21 +199,22 @@ export default function EventModal({
     { name: 'Interview', icon: Video, duration: 60, location: 'Video Call' },
     { name: 'Phone Screening', icon: Phone, duration: 30, location: 'Phone' },
     { name: 'Team Meeting', icon: Users, duration: 60, location: 'Conference Room' },
-    { name: 'One-on-One', icon: Users, duration: 30, location: 'Office' }
+    { name: 'One-on-One', icon: Users, duration: 30, location: 'Office' },
   ];
 
   // Apply template
-  const applyTemplate = (template: typeof eventTemplates[0]) => {
-    const startSource = formData.startDatetime || (selectedDate ? selectedDate.toISOString() : null);
+  const applyTemplate = (template: (typeof eventTemplates)[0]) => {
+    const startSource =
+      formData.startDatetime || (selectedDate ? selectedDate.toISOString() : null);
     const start = safeParseDate(startSource) || new Date();
     const end = new Date(start);
     end.setMinutes(start.getMinutes() + template.duration);
 
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       title: template.name,
       location: template.location,
-      endDatetime: end.toISOString().slice(0, 16)
+      endDatetime: end.toISOString().slice(0, 16),
     }));
   };
 
@@ -235,10 +231,7 @@ export default function EventModal({
             <h2 className="text-xl font-semibold text-gray-900">
               {isCreateMode ? 'Create Event' : 'Edit Event'}
             </h2>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-lg text-gray-400 hover:text-gray-600"
-            >
+            <button onClick={onClose} className="p-2 rounded-lg text-gray-400 hover:text-gray-600">
               <X className="h-5 w-5" />
             </button>
           </div>
@@ -275,7 +268,7 @@ export default function EventModal({
                 <input
                   type="text"
                   value={formData.title}
-                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                     errors.title ? 'border-red-300' : 'border-gray-300'
                   }`}
@@ -298,7 +291,9 @@ export default function EventModal({
                   <input
                     type="datetime-local"
                     value={formData.startDatetime}
-                    onChange={(e) => setFormData(prev => ({ ...prev, startDatetime: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, startDatetime: e.target.value }))
+                    }
                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                       errors.startDatetime ? 'border-red-300' : 'border-gray-300'
                     }`}
@@ -309,13 +304,13 @@ export default function EventModal({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    End Time *
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">End Time *</label>
                   <input
                     type="datetime-local"
                     value={formData.endDatetime}
-                    onChange={(e) => setFormData(prev => ({ ...prev, endDatetime: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, endDatetime: e.target.value }))
+                    }
                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                       errors.endDatetime ? 'border-red-300' : 'border-gray-300'
                     }`}
@@ -332,7 +327,7 @@ export default function EventModal({
                   type="checkbox"
                   id="allDay"
                   checked={formData.isAllDay}
-                  onChange={(e) => setFormData(prev => ({ ...prev, isAllDay: e.target.checked }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, isAllDay: e.target.checked }))}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
                 <label htmlFor="allDay" className="ml-2 text-sm text-gray-700">
@@ -342,15 +337,13 @@ export default function EventModal({
 
               {/* Location */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Location
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                   <input
                     type="text"
                     value={formData.location}
-                    onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, location: e.target.value }))}
                     className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Enter location or video link"
                   />
@@ -359,12 +352,12 @@ export default function EventModal({
 
               {/* Description */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
                 <textarea
                   value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, description: e.target.value }))
+                  }
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter event description"
@@ -373,18 +366,16 @@ export default function EventModal({
 
               {/* Status */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Status
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
                 <select
                   value={formData.status}
-                  onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, status: e.target.value }))}
                   className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
                   style={{
                     backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                     backgroundPosition: 'right 12px center',
                     backgroundRepeat: 'no-repeat',
-                    backgroundSize: '16px'
+                    backgroundSize: '16px',
                   }}
                 >
                   <option value="tentative">Tentative</option>
@@ -395,9 +386,7 @@ export default function EventModal({
 
               {/* Attendees */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Attendees
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Attendees</label>
                 <div className="space-y-2">
                   <div className="flex space-x-2">
                     <input
@@ -419,7 +408,10 @@ export default function EventModal({
                   {formData.attendees.length > 0 && (
                     <div className="space-y-1">
                       {formData.attendees.map((email, index) => (
-                        <div key={index} className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-lg">
+                        <div
+                          key={index}
+                          className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-lg"
+                        >
                           <span className="text-sm text-gray-700">{email}</span>
                           <button
                             type="button"

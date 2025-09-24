@@ -93,7 +93,6 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
   }
 }
 
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
@@ -102,7 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     dispatch({ type: 'LOGOUT' });
-    
+
     // Redirect to login page
     if (typeof window !== 'undefined') {
       window.location.href = '/auth/login';
@@ -135,8 +134,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         type: 'AUTH_SUCCESS',
         payload: {
           ...response.data!,
-          user: userData
-        }
+          user: userData,
+        },
       });
       return response.data!;
     } catch (error) {
@@ -152,7 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setAuthHandler({
       logout: forceLogout,
-      refreshAuth: refreshAuth
+      refreshAuth: refreshAuth,
     });
   }, []);
 
@@ -212,27 +211,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'AUTH_START' });
     try {
       const response = await authApi.login(credentials);
-      
+
       // Check if 2FA is required
       if (response.data!.require_2fa && response.data!.user) {
-        dispatch({ 
-          type: 'REQUIRE_2FA', 
-          payload: { 
+        dispatch({
+          type: 'REQUIRE_2FA',
+          payload: {
             userId: response.data!.user.id,
-            email: response.data!.user.email
-          }
+            email: response.data!.user.email,
+          },
         });
         // Redirect will be handled by the component using this context
         return;
       }
-      
+
       // Store tokens for successful login
       localStorage.setItem('accessToken', response.data!.access_token);
       localStorage.setItem('refreshToken', response.data!.refresh_token);
-      
+
       dispatch({ type: 'AUTH_SUCCESS', payload: response.data! });
     } catch (error: unknown) {
-      const errorMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Login failed';
+      const errorMessage =
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        'Login failed';
       dispatch({ type: 'AUTH_ERROR', payload: errorMessage });
       throw error;
     }
@@ -242,11 +243,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'AUTH_START' });
     try {
       const response = await authApi.register(data);
-      
+
       // Store tokens
       localStorage.setItem('accessToken', response.data!.access_token);
       localStorage.setItem('refreshToken', response.data!.refresh_token);
-      
+
       dispatch({ type: 'AUTH_SUCCESS', payload: response.data! });
     } catch (error: unknown) {
       console.error('Registration error:', error);
@@ -254,7 +255,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Handle different error response formats
       if (error && typeof error === 'object') {
-        const err = error as { response?: { data?: { detail?: string; message?: string } }; message?: string };
+        const err = error as {
+          response?: { data?: { detail?: string; message?: string } };
+          message?: string;
+        };
         if (err.response?.data?.detail) {
           errorMessage = err.response.data.detail;
         } else if (err.response?.data?.message) {
@@ -275,19 +279,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!state.pendingUserId) {
         throw new Error('No pending 2FA verification');
       }
-      
-      const response = await authApi.verifyTwoFactor({ 
+
+      const response = await authApi.verifyTwoFactor({
         user_id: state.pendingUserId,
-        code 
+        code,
       });
-      
+
       // Store tokens
       localStorage.setItem('accessToken', response.data!.access_token);
       localStorage.setItem('refreshToken', response.data!.refresh_token);
-      
+
       dispatch({ type: 'AUTH_SUCCESS', payload: response.data! });
     } catch (error: unknown) {
-      const errorMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || '2FA verification failed';
+      const errorMessage =
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        '2FA verification failed';
       dispatch({ type: 'AUTH_ERROR', payload: errorMessage });
       throw error;
     }
@@ -296,16 +302,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
-    
+
     // Call logout API if token exists
     if (state.accessToken) {
       authApi.logout(state.accessToken).catch(() => {
         // Ignore errors on logout
       });
     }
-    
+
     dispatch({ type: 'LOGOUT' });
-    
+
     // Redirect to login page after logout
     if (typeof window !== 'undefined') {
       window.location.href = '/auth/login';
@@ -331,11 +337,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearError,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

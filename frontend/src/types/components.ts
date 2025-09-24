@@ -37,7 +37,15 @@ export interface CardDescriptionProps {
 // Badge Component Types
 export interface BadgeProps {
   children: ReactNode;
-  variant?: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'destructive' | 'default' | 'outline';
+  variant?:
+    | 'primary'
+    | 'secondary'
+    | 'success'
+    | 'warning'
+    | 'error'
+    | 'destructive'
+    | 'default'
+    | 'outline';
   size?: 'sm' | 'md' | 'lg';
   className?: string;
 }
@@ -216,11 +224,7 @@ export interface CalendarSidebarProps {
     status: string;
     search: string;
   };
-  onFiltersChange: (filters: {
-    eventType: string;
-    status: string;
-    search: string;
-  }) => void;
+  onFiltersChange: (filters: { eventType: string; status: string; search: string }) => void;
   userRole: string;
 }
 

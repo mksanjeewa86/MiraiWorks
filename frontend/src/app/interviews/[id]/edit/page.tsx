@@ -19,7 +19,7 @@ function EditInterviewContent() {
   // Check if user can edit interviews (not a candidate)
   const canEditInterviews = () => {
     if (!user || !user.roles) return false;
-    const isCandidate = user.roles.some(userRole => userRole.role.name === 'candidate');
+    const isCandidate = user.roles.some((userRole) => userRole.role.name === 'candidate');
     return !isCandidate && user.roles.length > 0;
   };
 
@@ -28,7 +28,6 @@ function EditInterviewContent() {
     if (user && !canEditInterviews()) {
       router.push('/interviews');
     }
-   
   }, [user, router]);
 
   const [originalInterview, setOriginalInterview] = useState<Interview | null>(null);
@@ -44,7 +43,7 @@ function EditInterviewContent() {
     meeting_url: '',
     notes: '',
     preparation_notes: '',
-    status: 'scheduled'
+    status: 'scheduled',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -91,7 +90,7 @@ function EditInterviewContent() {
           meeting_url: interview.meeting_url || '',
           notes: interview.notes || '',
           preparation_notes: interview.preparation_notes || '',
-          status: interview.status || 'scheduled'
+          status: interview.status || 'scheduled',
         });
       } catch (err) {
         console.error('Error fetching interview:', err);
@@ -104,13 +103,15 @@ function EditInterviewContent() {
     fetchInterview();
   }, [interviewId]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
 
     // Clear error when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+      setErrors((prev) => ({ ...prev, [name]: '' }));
     }
 
     // Auto-adjust end time when start time changes
@@ -118,21 +119,22 @@ function EditInterviewContent() {
       const startTime = new Date(value);
       if (formData.scheduled_end) {
         const currentEndTime = new Date(formData.scheduled_end);
-        const currentDuration = currentEndTime.getTime() - new Date(formData.scheduled_start).getTime();
+        const currentDuration =
+          currentEndTime.getTime() - new Date(formData.scheduled_start).getTime();
 
         // If there's an existing duration, maintain it
         if (currentDuration > 0) {
           const newEndTime = new Date(startTime.getTime() + currentDuration);
-          setFormData(prev => ({
+          setFormData((prev) => ({
             ...prev,
-            scheduled_end: newEndTime.toISOString().slice(0, 16)
+            scheduled_end: newEndTime.toISOString().slice(0, 16),
           }));
         } else {
           // Default to 1 hour duration
           const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
-          setFormData(prev => ({
+          setFormData((prev) => ({
             ...prev,
-            scheduled_end: endTime.toISOString().slice(0, 16)
+            scheduled_end: endTime.toISOString().slice(0, 16),
           }));
         }
       }
@@ -195,7 +197,7 @@ function EditInterviewContent() {
         meeting_url: formData.meeting_url.trim() || undefined,
         notes: formData.notes.trim() || undefined,
         preparation_notes: formData.preparation_notes.trim() || undefined,
-        status: formData.status
+        status: formData.status,
       };
 
       await interviewsApi.update(originalInterview.id, updateData);
@@ -203,7 +205,7 @@ function EditInterviewContent() {
       showToast({
         type: 'success',
         title: 'Interview Updated',
-        message: 'The interview has been successfully updated'
+        message: 'The interview has been successfully updated',
       });
 
       router.push(`/interviews/${originalInterview.id}`);
@@ -212,7 +214,7 @@ function EditInterviewContent() {
       showToast({
         type: 'error',
         title: 'Error',
-        message: error instanceof Error ? error.message : 'Failed to update interview'
+        message: error instanceof Error ? error.message : 'Failed to update interview',
       });
     } finally {
       setSaving(false);
@@ -237,7 +239,9 @@ function EditInterviewContent() {
           <div className="text-center">
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-gray-900 mb-2">Interview Not Found</h2>
-            <p className="text-gray-600 mb-4">{error || 'The interview you are trying to edit could not be found.'}</p>
+            <p className="text-gray-600 mb-4">
+              {error || 'The interview you are trying to edit could not be found.'}
+            </p>
             <button
               onClick={() => router.back()}
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg inline-flex items-center gap-2"
@@ -310,9 +314,7 @@ function EditInterviewContent() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Status
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
                 <select
                   name="status"
                   value={formData.status}
@@ -322,7 +324,7 @@ function EditInterviewContent() {
                     backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                     backgroundPosition: 'right 12px center',
                     backgroundRepeat: 'no-repeat',
-                    backgroundSize: '16px'
+                    backgroundSize: '16px',
                   }}
                 >
                   <option value="pending_schedule">Pending Schedule</option>
@@ -344,7 +346,7 @@ function EditInterviewContent() {
                 {[
                   { value: 'video', label: 'Video Call', icon: Video },
                   { value: 'phone', label: 'Phone Call', icon: Phone },
-                  { value: 'in_person', label: 'In-Person', icon: Users }
+                  { value: 'in_person', label: 'In-Person', icon: Users },
                 ].map((type) => (
                   <label key={type.value} className="relative">
                     <input
@@ -355,11 +357,13 @@ function EditInterviewContent() {
                       onChange={handleInputChange}
                       className="sr-only"
                     />
-                    <div className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                      formData.interview_type === type.value
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}>
+                    <div
+                      className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                        formData.interview_type === type.value
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
                       <type.icon className="h-6 w-6 mx-auto mb-2 text-gray-600" />
                       <p className="text-sm font-medium text-center text-gray-900">{type.label}</p>
                     </div>
@@ -371,9 +375,7 @@ function EditInterviewContent() {
             {/* Schedule */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Start Time *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Start Time *</label>
                 <input
                   type="datetime-local"
                   name="scheduled_start"
@@ -389,9 +391,7 @@ function EditInterviewContent() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  End Time *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">End Time *</label>
                 <input
                   type="datetime-local"
                   name="scheduled_end"
@@ -431,9 +431,7 @@ function EditInterviewContent() {
 
             {formData.interview_type === 'in_person' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Location *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Location *</label>
                 <input
                   type="text"
                   name="location"
@@ -444,9 +442,7 @@ function EditInterviewContent() {
                   }`}
                   placeholder="Office address or meeting room"
                 />
-                {errors.location && (
-                  <p className="mt-1 text-sm text-red-600">{errors.location}</p>
-                )}
+                {errors.location && <p className="mt-1 text-sm text-red-600">{errors.location}</p>}
               </div>
             )}
 
@@ -468,9 +464,7 @@ function EditInterviewContent() {
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
               <textarea
                 name="description"
                 value={formData.description}

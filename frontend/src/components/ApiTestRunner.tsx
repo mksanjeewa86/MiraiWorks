@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { authApi } from '@/api/auth';
-import { dashboardApi } from "@/api/dashboard";
-import { messagesApi } from "@/api/messages";
-import { resumesApi } from "@/api/resumes";
+import { dashboardApi } from '@/api/dashboard';
+import { messagesApi } from '@/api/messages';
+import { resumesApi } from '@/api/resumes';
 import { API_CONFIG } from '@/api/config';
 import type { TestResult, TestSuite } from '@/types/components';
 
@@ -12,16 +12,14 @@ const ApiTestRunner: React.FC = () => {
   const [accessToken, setAccessToken] = useState<string>('');
 
   const updateTestResult = (suiteName: string, testName: string, result: Partial<TestResult>) => {
-    setTestSuites(prev => 
-      prev.map(suite => 
-        suite.name === suiteName 
+    setTestSuites((prev) =>
+      prev.map((suite) =>
+        suite.name === suiteName
           ? {
               ...suite,
-              tests: suite.tests.map(test => 
-                test.name === testName 
-                  ? { ...test, ...result }
-                  : test
-              )
+              tests: suite.tests.map((test) =>
+                test.name === testName ? { ...test, ...result } : test
+              ),
             }
           : suite
       )
@@ -29,22 +27,18 @@ const ApiTestRunner: React.FC = () => {
   };
 
   const addTestSuite = (name: string, testNames: string[]) => {
-    const tests = testNames.map(name => ({
+    const tests = testNames.map((name) => ({
       name,
       status: 'pending' as const,
-      details: ''
+      details: '',
     }));
-    
-    setTestSuites(prev => [...prev, { name, tests, completed: false }]);
+
+    setTestSuites((prev) => [...prev, { name, tests, completed: false }]);
   };
 
   const markSuiteCompleted = (suiteName: string) => {
-    setTestSuites(prev =>
-      prev.map(suite =>
-        suite.name === suiteName
-          ? { ...suite, completed: true }
-          : suite
-      )
+    setTestSuites((prev) =>
+      prev.map((suite) => (suite.name === suiteName ? { ...suite, completed: true } : suite))
     );
   };
 
@@ -57,7 +51,7 @@ const ApiTestRunner: React.FC = () => {
         name: testName,
         status: 'pass',
         details: 'Success',
-        duration
+        duration,
       };
     } catch (error) {
       const duration = Date.now() - start;
@@ -65,52 +59,41 @@ const ApiTestRunner: React.FC = () => {
         name: testName,
         status: 'fail',
         details: error instanceof Error ? error.message : 'Unknown error',
-        duration
+        duration,
       };
     }
   };
 
   const runAuthTests = async () => {
     const suiteName = 'Authentication API';
-    const testNames = [
-      'Login with valid credentials',
-      'Get current user profile',
-      'Refresh token'
-    ];
-    
+    const testNames = ['Login with valid credentials', 'Get current user profile', 'Refresh token'];
+
     addTestSuite(suiteName, testNames);
 
     // Test login
-    const loginResult = await runTest(
-      'Login with valid credentials',
-      async () => {
-        const response = await authApi.login({
-          email: 'admin@miraiworks.com',
-          password: 'admin123'
-        });
-        if (response.data && response.data.access_token) {
-          setAccessToken(response.data.access_token);
-          return response;
-        }
-        throw new Error('No access token received');
+    const loginResult = await runTest('Login with valid credentials', async () => {
+      const response = await authApi.login({
+        email: 'admin@miraiworks.com',
+        password: 'admin123',
+      });
+      if (response.data && response.data.access_token) {
+        setAccessToken(response.data.access_token);
+        return response;
       }
-    );
+      throw new Error('No access token received');
+    });
     updateTestResult(suiteName, 'Login with valid credentials', loginResult);
 
     // Test get current user (requires token)
     if (accessToken || loginResult.status === 'pass') {
       const token = accessToken || 'test-token';
-      const meResult = await runTest(
-        'Get current user profile',
-        () => authApi.me(token)
-      );
+      const meResult = await runTest('Get current user profile', () => authApi.me(token));
       updateTestResult(suiteName, 'Get current user profile', meResult);
     }
 
     // Test refresh token (will likely fail without proper refresh token)
-    const refreshResult = await runTest(
-      'Refresh token',
-      () => authApi.refreshToken('invalid-token')
+    const refreshResult = await runTest('Refresh token', () =>
+      authApi.refreshToken('invalid-token')
     );
     updateTestResult(suiteName, 'Refresh token', refreshResult);
 
@@ -119,18 +102,15 @@ const ApiTestRunner: React.FC = () => {
 
   const runDashboardTests = async () => {
     const suiteName = 'Dashboard API';
-    const testNames = [
-      'Get dashboard statistics',
-      'Get activity feed'
-    ];
-    
+    const testNames = ['Get dashboard statistics', 'Get activity feed'];
+
     addTestSuite(suiteName, testNames);
 
     if (!accessToken) {
-      testNames.forEach(testName => {
+      testNames.forEach((testName) => {
         updateTestResult(suiteName, testName, {
           status: 'fail',
-          details: 'No access token available'
+          details: 'No access token available',
         });
       });
       markSuiteCompleted(suiteName);
@@ -138,16 +118,14 @@ const ApiTestRunner: React.FC = () => {
     }
 
     // Test dashboard stats
-    const statsResult = await runTest(
-      'Get dashboard statistics',
-      () => dashboardApi.getStats(accessToken)
+    const statsResult = await runTest('Get dashboard statistics', () =>
+      dashboardApi.getStats(accessToken)
     );
     updateTestResult(suiteName, 'Get dashboard statistics', statsResult);
 
     // Test activity feed
-    const activityResult = await runTest(
-      'Get activity feed',
-      () => dashboardApi.getRecentActivity(10, accessToken)
+    const activityResult = await runTest('Get activity feed', () =>
+      dashboardApi.getRecentActivity(10, accessToken)
     );
     updateTestResult(suiteName, 'Get activity feed', activityResult);
 
@@ -156,18 +134,15 @@ const ApiTestRunner: React.FC = () => {
 
   const runMessagingTests = async () => {
     const suiteName = 'Messaging API';
-    const testNames = [
-      'Get conversations',
-      'Mark conversation as read'
-    ];
-    
+    const testNames = ['Get conversations', 'Mark conversation as read'];
+
     addTestSuite(suiteName, testNames);
 
     if (!accessToken) {
-      testNames.forEach(testName => {
+      testNames.forEach((testName) => {
         updateTestResult(suiteName, testName, {
           status: 'fail',
-          details: 'No access token available'
+          details: 'No access token available',
         });
       });
       markSuiteCompleted(suiteName);
@@ -175,16 +150,14 @@ const ApiTestRunner: React.FC = () => {
     }
 
     // Test get conversations
-    const conversationsResult = await runTest(
-      'Get conversations',
-      () => messagesApi.getConversations(accessToken)
+    const conversationsResult = await runTest('Get conversations', () =>
+      messagesApi.getConversations(accessToken)
     );
     updateTestResult(suiteName, 'Get conversations', conversationsResult);
 
     // Test mark as read
-    const markReadResult = await runTest(
-      'Mark conversation as read',
-      () => messagesApi.markConversationAsRead(1, accessToken)
+    const markReadResult = await runTest('Mark conversation as read', () =>
+      messagesApi.markConversationAsRead(1, accessToken)
     );
     updateTestResult(suiteName, 'Mark conversation as read', markReadResult);
 
@@ -193,18 +166,15 @@ const ApiTestRunner: React.FC = () => {
 
   const runResumeTests = async () => {
     const suiteName = 'Resume API';
-    const testNames = [
-      'Get resumes list',
-      'Get resume statistics'
-    ];
-    
+    const testNames = ['Get resumes list', 'Get resume statistics'];
+
     addTestSuite(suiteName, testNames);
 
     if (!accessToken) {
-      testNames.forEach(testName => {
+      testNames.forEach((testName) => {
         updateTestResult(suiteName, testName, {
           status: 'fail',
-          details: 'No access token available'
+          details: 'No access token available',
         });
       });
       markSuiteCompleted(suiteName);
@@ -212,41 +182,35 @@ const ApiTestRunner: React.FC = () => {
     }
 
     // Test get resumes
-    const resumesResult = await runTest(
-      'Get resumes list',
-      async () => {
-        // Temporarily store token in localStorage for API call
-        const oldToken = localStorage.getItem('accessToken');
-        localStorage.setItem('accessToken', accessToken);
-        try {
-          return await resumesApi.getAll();
-        } finally {
-          if (oldToken) {
-            localStorage.setItem('accessToken', oldToken);
-          } else {
-            localStorage.removeItem('accessToken');
-          }
+    const resumesResult = await runTest('Get resumes list', async () => {
+      // Temporarily store token in localStorage for API call
+      const oldToken = localStorage.getItem('accessToken');
+      localStorage.setItem('accessToken', accessToken);
+      try {
+        return await resumesApi.getAll();
+      } finally {
+        if (oldToken) {
+          localStorage.setItem('accessToken', oldToken);
+        } else {
+          localStorage.removeItem('accessToken');
         }
       }
-    );
+    });
     updateTestResult(suiteName, 'Get resumes list', resumesResult);
 
     // Test resume stats (API endpoint might not exist yet)
-    const statsResult = await runTest(
-      'Get resume statistics',
-      async () => {
-        const response = await fetch(`${API_CONFIG.BASE_URL}/api/resumes/stats`, {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-        });
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
+    const statsResult = await runTest('Get resume statistics', async () => {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/resumes/stats`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    );
+      return response.json();
+    });
     updateTestResult(suiteName, 'Get resume statistics', statsResult);
 
     markSuiteCompleted(suiteName);
@@ -268,11 +232,11 @@ const ApiTestRunner: React.FC = () => {
   };
 
   const getTotalStats = () => {
-    const allTests = testSuites.flatMap(suite => suite.tests);
-    const passed = allTests.filter(test => test.status === 'pass').length;
-    const failed = allTests.filter(test => test.status === 'fail').length;
+    const allTests = testSuites.flatMap((suite) => suite.tests);
+    const passed = allTests.filter((test) => test.status === 'pass').length;
+    const failed = allTests.filter((test) => test.status === 'fail').length;
     const total = allTests.length;
-    
+
     return { passed, failed, total };
   };
 
@@ -298,8 +262,8 @@ const ApiTestRunner: React.FC = () => {
 
         {stats.total > 0 && (
           <div className="text-sm text-gray-600">
-            Total: {stats.total} | Passed: {stats.passed} | Failed: {stats.failed} | 
-            Success Rate: {((stats.passed / stats.total) * 100).toFixed(1)}%
+            Total: {stats.total} | Passed: {stats.passed} | Failed: {stats.failed} | Success Rate:{' '}
+            {((stats.passed / stats.total) * 100).toFixed(1)}%
           </div>
         )}
       </div>
@@ -313,32 +277,44 @@ const ApiTestRunner: React.FC = () => {
             {suite.tests.map((test) => (
               <div
                 key={test.name}
-                className={`flex items-center justify-between py-2 px-3 rounded mb-2 ${{
-                  pass: 'bg-green-50 border-green-200',
-                  fail: 'bg-red-50 border-red-200',
-                  pending: 'bg-gray-50 border-gray-200'
-                }[test.status]} border`}
+                className={`flex items-center justify-between py-2 px-3 rounded mb-2 ${
+                  {
+                    pass: 'bg-green-50 border-green-200',
+                    fail: 'bg-red-50 border-red-200',
+                    pending: 'bg-gray-50 border-gray-200',
+                  }[test.status]
+                } border`}
               >
                 <div className="flex items-center gap-3">
-                  <div className={`w-3 h-3 rounded-full ${{
-                    pass: 'bg-green-500',
-                    fail: 'bg-red-500',
-                    pending: 'bg-gray-400'
-                  }[test.status]}`} />
+                  <div
+                    className={`w-3 h-3 rounded-full ${
+                      {
+                        pass: 'bg-green-500',
+                        fail: 'bg-red-500',
+                        pending: 'bg-gray-400',
+                      }[test.status]
+                    }`}
+                  />
                   <span className="font-medium">{test.name}</span>
                 </div>
                 <div className="text-sm text-gray-600 flex items-center gap-2">
                   {test.duration && <span>{test.duration}ms</span>}
-                  <span className={`font-medium ${{
-                    pass: 'text-green-700',
-                    fail: 'text-red-700',
-                    pending: 'text-gray-500'
-                  }[test.status]}`}>
-                    {{
-                      pass: 'PASS',
-                      fail: 'FAIL',
-                      pending: 'PENDING'
-                    }[test.status]}
+                  <span
+                    className={`font-medium ${
+                      {
+                        pass: 'text-green-700',
+                        fail: 'text-red-700',
+                        pending: 'text-gray-500',
+                      }[test.status]
+                    }`}
+                  >
+                    {
+                      {
+                        pass: 'PASS',
+                        fail: 'FAIL',
+                        pending: 'PENDING',
+                      }[test.status]
+                    }
                   </span>
                 </div>
               </div>

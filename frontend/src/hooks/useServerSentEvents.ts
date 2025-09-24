@@ -6,14 +6,14 @@ export const useServerSentEvents = ({
   token,
   onMessage,
   onConnect,
-  onError
+  onError,
 }: UseSSEOptions) => {
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   const connect = useCallback(() => {
     if (!token || eventSourceRef.current) return;
-    
+
     try {
       // Create SSE connection with token
       const sseUrl = `${url}?token=${encodeURIComponent(token)}`;
@@ -35,13 +35,13 @@ export const useServerSentEvents = ({
       eventSourceRef.current.onerror = (error) => {
         console.error('SSE error:', error);
         onError?.(error);
-        
+
         // Clean up and attempt to reconnect after 5 seconds
         if (eventSourceRef.current) {
           eventSourceRef.current.close();
           eventSourceRef.current = null;
         }
-        
+
         reconnectTimeoutRef.current = setTimeout(() => {
           connect();
         }, 5000);
@@ -56,7 +56,7 @@ export const useServerSentEvents = ({
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = null;
     }
-    
+
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
@@ -75,6 +75,6 @@ export const useServerSentEvents = ({
 
   return {
     isConnected: eventSourceRef.current?.readyState === EventSource.OPEN,
-    disconnect
+    disconnect,
   };
 };

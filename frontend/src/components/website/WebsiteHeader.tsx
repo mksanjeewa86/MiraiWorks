@@ -26,32 +26,32 @@ const WebsiteHeader = () => {
           {/* Desktop Navigation */}
           <nav className="hidden md:block">
             <div className="ml-10 flex items-center space-x-8">
-              <Link 
-                href="/" 
+              <Link
+                href="/"
                 className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
               >
                 Home
               </Link>
-              <Link 
-                href="/jobs" 
+              <Link
+                href="/jobs"
                 className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
               >
                 Browse Jobs
               </Link>
-              <Link 
-                href="/about" 
+              <Link
+                href="/about"
                 className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
               >
                 About
               </Link>
-              <Link 
-                href="/services" 
+              <Link
+                href="/services"
                 className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
               >
                 Services
               </Link>
-              <Link 
-                href="/contact" 
+              <Link
+                href="/contact"
                 className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
               >
                 Contact
@@ -62,7 +62,7 @@ const WebsiteHeader = () => {
           {/* Desktop Action Buttons */}
           <div className="hidden md:block">
             <div className="flex items-center space-x-4">
-              <Link 
+              <Link
                 href="/auth/login"
                 className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
               >
@@ -85,7 +85,15 @@ const WebsiteHeader = () => {
               className="text-gray-600 hover:text-gray-900 p-2 transition-colors"
               aria-label="Toggle menu"
             >
-              <svg className="h-6 w-6" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+              <svg
+                className="h-6 w-6"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
                 {isMenuOpen ? (
                   <path d="M6 18L18 6M6 6l12 12" />
                 ) : (
@@ -100,35 +108,35 @@ const WebsiteHeader = () => {
         {isMenuOpen && (
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 border-t border-gray-200">
-              <Link 
+              <Link
                 href="/"
                 className="text-gray-600 hover:text-gray-900 block px-3 py-2 text-base font-medium transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Home
               </Link>
-              <Link 
+              <Link
                 href="/jobs"
                 className="text-gray-600 hover:text-gray-900 block px-3 py-2 text-base font-medium transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Browse Jobs
               </Link>
-              <Link 
+              <Link
                 href="/about"
                 className="text-gray-600 hover:text-gray-900 block px-3 py-2 text-base font-medium transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 About
               </Link>
-              <Link 
+              <Link
                 href="/services"
                 className="text-gray-600 hover:text-gray-900 block px-3 py-2 text-base font-medium transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Services
               </Link>
-              <Link 
+              <Link
                 href="/contact"
                 className="text-gray-600 hover:text-gray-900 block px-3 py-2 text-base font-medium transition-colors"
                 onClick={() => setIsMenuOpen(false)}
@@ -136,7 +144,7 @@ const WebsiteHeader = () => {
                 Contact
               </Link>
               <div className="pt-4 pb-3 border-t border-gray-200">
-                <Link 
+                <Link
                   href="/auth/login"
                   className="text-gray-600 hover:text-gray-900 block px-3 py-2 text-base font-medium transition-colors"
                   onClick={() => setIsMenuOpen(false)}

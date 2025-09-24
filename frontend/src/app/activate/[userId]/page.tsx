@@ -76,7 +76,6 @@ export default function ActivateAccountPage() {
       setTimeout(() => {
         router.push('/dashboard');
       }, 2000);
-
     } catch (err) {
       console.error('Activation error:', err);
       setError(err instanceof Error ? err.message : 'Failed to activate account');
@@ -136,7 +135,10 @@ export default function ActivateAccountPage() {
 
           <div className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
                 Email Address
               </label>
               <input
@@ -144,7 +146,7 @@ export default function ActivateAccountPage() {
                 type="email"
                 required
                 value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                 placeholder="Enter your email address"
                 autoComplete="off"
@@ -152,16 +154,21 @@ export default function ActivateAccountPage() {
             </div>
 
             <div>
-              <label htmlFor="temporaryPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label
+                htmlFor="temporaryPassword"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
                 Temporary Password
               </label>
               <div className="relative">
                 <input
                   id="temporaryPassword"
-                  type={showTemporaryPassword ? "text" : "password"}
+                  type={showTemporaryPassword ? 'text' : 'password'}
                   required
                   value={formData.temporaryPassword}
-                  onChange={(e) => setFormData(prev => ({ ...prev, temporaryPassword: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, temporaryPassword: e.target.value }))
+                  }
                   className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   placeholder="Enter temporary password from email"
                   autoComplete="off"
@@ -173,7 +180,7 @@ export default function ActivateAccountPage() {
                   type="button"
                   onClick={() => setShowTemporaryPassword(!showTemporaryPassword)}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                  title={showTemporaryPassword ? "Hide password" : "Show password"}
+                  title={showTemporaryPassword ? 'Hide password' : 'Show password'}
                 >
                   {showTemporaryPassword ? (
                     <EyeOff className="h-5 w-5" />
@@ -183,22 +190,28 @@ export default function ActivateAccountPage() {
                 </button>
               </div>
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                Tip: Use the eye icon to show your password and verify each character matches your email
+                Tip: Use the eye icon to show your password and verify each character matches your
+                email
               </p>
             </div>
 
             <div>
-              <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label
+                htmlFor="newPassword"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
                 New Password
               </label>
               <div className="relative">
                 <input
                   id="newPassword"
-                  type={showNewPassword ? "text" : "password"}
+                  type={showNewPassword ? 'text' : 'password'}
                   required
                   minLength={8}
                   value={formData.newPassword}
-                  onChange={(e) => setFormData(prev => ({ ...prev, newPassword: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, newPassword: e.target.value }))
+                  }
                   className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   placeholder="Enter your new password (min 8 characters)"
                   autoComplete="off"
@@ -211,26 +224,27 @@ export default function ActivateAccountPage() {
                   onClick={() => setShowNewPassword(!showNewPassword)}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 >
-                  {showNewPassword ? (
-                    <EyeOff className="h-5 w-5" />
-                  ) : (
-                    <Eye className="h-5 w-5" />
-                  )}
+                  {showNewPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label
+                htmlFor="confirmPassword"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
                 Confirm New Password
               </label>
               <div className="relative">
                 <input
                   id="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
+                  type={showConfirmPassword ? 'text' : 'password'}
                   required
                   value={formData.confirmPassword}
-                  onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, confirmPassword: e.target.value }))
+                  }
                   className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   placeholder="Confirm your new password"
                   autoComplete="off"

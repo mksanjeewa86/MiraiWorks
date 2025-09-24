@@ -4,7 +4,7 @@ import type {
   UserSettings,
   UserProfile,
   UserSettingsUpdate,
-  UserProfileUpdate
+  UserProfileUpdate,
 } from '@/types/userSettings';
 
 export const userSettingsApi = {

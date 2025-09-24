@@ -7,23 +7,23 @@ interface MBTITypeAvatarProps {
   showLabel?: boolean;
 }
 
-const MBTITypeAvatar: React.FC<MBTITypeAvatarProps> = ({ 
-  type, 
+const MBTITypeAvatar: React.FC<MBTITypeAvatarProps> = ({
+  type,
   size = 'md',
-  showLabel = false 
+  showLabel = false,
 }) => {
   const sizeClasses = {
     sm: 'w-12 h-12 text-sm',
     md: 'w-16 h-16 text-base',
     lg: 'w-24 h-24 text-lg',
-    xl: 'w-32 h-32 text-xl'
+    xl: 'w-32 h-32 text-xl',
   };
 
   const iconSizes = {
     sm: 24,
     md: 32,
     lg: 48,
-    xl: 64
+    xl: 64,
   };
 
   const color = MBTI_TYPE_COLORS[type] || '#6B7280';
@@ -45,7 +45,12 @@ const MBTITypeAvatar: React.FC<MBTITypeAvatarProps> = ({
         return (
           <svg viewBox="0 0 100 100" width={iconSize} height={iconSize} fill="currentColor">
             <circle cx="50" cy="50" r="35" fill="none" stroke="currentColor" strokeWidth="3" />
-            <path d="M30 50 Q50 20 70 50 Q50 80 30 50" strokeWidth="2" stroke="currentColor" fill="none" />
+            <path
+              d="M30 50 Q50 20 70 50 Q50 80 30 50"
+              strokeWidth="2"
+              stroke="currentColor"
+              fill="none"
+            />
             <circle cx="50" cy="50" r="8" />
           </svg>
         );
@@ -69,7 +74,10 @@ const MBTITypeAvatar: React.FC<MBTITypeAvatarProps> = ({
       case 'INFJ':
         return (
           <svg viewBox="0 0 100 100" width={iconSize} height={iconSize} fill="currentColor">
-            <path d="M50 15 C30 15 20 35 20 50 C20 65 30 85 50 85 C70 85 80 65 80 50 C80 35 70 15 50 15 Z" opacity="0.3" />
+            <path
+              d="M50 15 C30 15 20 35 20 50 C20 65 30 85 50 85 C70 85 80 65 80 50 C80 35 70 15 50 15 Z"
+              opacity="0.3"
+            />
             <path d="M50 25 L60 45 L50 65 L40 45 Z" />
             <circle cx="50" cy="50" r="8" fill="white" />
             <circle cx="50" cy="50" r="4" />
@@ -185,7 +193,7 @@ const MBTITypeAvatar: React.FC<MBTITypeAvatarProps> = ({
 
   return (
     <div className="inline-flex flex-col items-center">
-      <div 
+      <div
         className={`${sizeClasses[size]} rounded-full flex items-center justify-center`}
         style={{ backgroundColor: `${color}20`, color }}
       >

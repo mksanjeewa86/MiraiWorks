@@ -2,7 +2,17 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Save, Video, Phone, Users, AlertCircle, Search, ChevronDown, X } from 'lucide-react';
+import {
+  ArrowLeft,
+  Save,
+  Video,
+  Phone,
+  Users,
+  AlertCircle,
+  Search,
+  ChevronDown,
+  X,
+} from 'lucide-react';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
@@ -20,7 +30,7 @@ function ScheduleInterviewContent() {
   // Check if user can create interviews (not a candidate)
   const canCreateInterviews = () => {
     if (!user || !user.roles) return false;
-    const isCandidate = user.roles.some(userRole => userRole.role.name === 'candidate');
+    const isCandidate = user.roles.some((userRole) => userRole.role.name === 'candidate');
     return !isCandidate && user.roles.length > 0;
   };
 
@@ -29,7 +39,6 @@ function ScheduleInterviewContent() {
     if (user && !canCreateInterviews()) {
       router.push('/interviews');
     }
-   
   }, [user, router]);
 
   const [formData, setFormData] = useState<InterviewFormData>({
@@ -45,7 +54,7 @@ function ScheduleInterviewContent() {
     meeting_url: '',
     video_call_type: 'system_generated',
     notes: '',
-    preparation_notes: ''
+    preparation_notes: '',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -62,10 +71,10 @@ function ScheduleInterviewContent() {
     const startTime = new Date(now.getTime() + 60 * 60 * 1000); // 1 hour from now
     const endTime = new Date(startTime.getTime() + 60 * 60 * 1000); // 1 hour duration
 
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       scheduled_start: startTime.toISOString().slice(0, 16),
-      scheduled_end: endTime.toISOString().slice(0, 16)
+      scheduled_end: endTime.toISOString().slice(0, 16),
     }));
   }, []);
 
@@ -76,7 +85,7 @@ function ScheduleInterviewContent() {
         setCandidatesLoading(true);
         const response = await candidatesApi.getCandidates({
           is_active: true,
-          size: 100 // Get up to 100 candidates
+          size: 100, // Get up to 100 candidates
         });
 
         if (response.success && response.data) {
@@ -87,7 +96,7 @@ function ScheduleInterviewContent() {
         showToast({
           type: 'error',
           title: 'Error',
-          message: 'Failed to load candidates list'
+          message: 'Failed to load candidates list',
         });
       } finally {
         setCandidatesLoading(false);
@@ -95,13 +104,15 @@ function ScheduleInterviewContent() {
     };
 
     fetchCandidates();
-   
   }, []);
 
   // Handle click outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (candidateDropdownRef.current && !candidateDropdownRef.current.contains(event.target as Node)) {
+      if (
+        candidateDropdownRef.current &&
+        !candidateDropdownRef.current.contains(event.target as Node)
+      ) {
         setShowCandidateDropdown(false);
       }
     };
@@ -113,7 +124,7 @@ function ScheduleInterviewContent() {
   }, []);
 
   // Filter candidates based on search
-  const filteredCandidates = candidates.filter(candidate => {
+  const filteredCandidates = candidates.filter((candidate) => {
     const searchLower = candidateSearch.toLowerCase();
     const fullName = `${candidate.first_name} ${candidate.last_name}`.toLowerCase();
     const email = candidate.email.toLowerCase();
@@ -122,59 +133,61 @@ function ScheduleInterviewContent() {
 
   // Handle candidate selection
   const handleCandidateSelect = (candidate: UserManagement) => {
-    setFormData(prev => ({ ...prev, candidate_id: candidate.id.toString() }));
+    setFormData((prev) => ({ ...prev, candidate_id: candidate.id.toString() }));
     setCandidateSearch(`${candidate.first_name} ${candidate.last_name} (${candidate.email})`);
     setShowCandidateDropdown(false);
 
     // Clear error when user selects
     if (errors.candidate_id) {
-      setErrors(prev => ({ ...prev, candidate_id: '' }));
+      setErrors((prev) => ({ ...prev, candidate_id: '' }));
     }
   };
 
   // Handle clear selection
   const handleClearCandidate = () => {
-    setFormData(prev => ({ ...prev, candidate_id: '' }));
+    setFormData((prev) => ({ ...prev, candidate_id: '' }));
     setCandidateSearch('');
     setShowCandidateDropdown(false);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
 
     // Clear error when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+      setErrors((prev) => ({ ...prev, [name]: '' }));
     }
 
     // Auto-adjust end time when start time changes
     if (name === 'scheduled_start' && value) {
       const startTime = new Date(value);
       const endTime = new Date(startTime.getTime() + 60 * 60 * 1000); // 1 hour duration
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        scheduled_end: endTime.toISOString().slice(0, 16)
+        scheduled_end: endTime.toISOString().slice(0, 16),
       }));
     }
 
     // Clear meeting URL when switching to system generated
     if (name === 'video_call_type' && value === 'system_generated') {
-      setFormData(prev => ({ ...prev, meeting_url: '' }));
+      setFormData((prev) => ({ ...prev, meeting_url: '' }));
       if (errors.meeting_url) {
-        setErrors(prev => ({ ...prev, meeting_url: '' }));
+        setErrors((prev) => ({ ...prev, meeting_url: '' }));
       }
     }
 
     // Reset video call type when changing from video to other interview types
     if (name === 'interview_type' && value !== 'video') {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         video_call_type: 'system_generated',
-        meeting_url: ''
+        meeting_url: '',
       }));
       if (errors.meeting_url) {
-        setErrors(prev => ({ ...prev, meeting_url: '' }));
+        setErrors((prev) => ({ ...prev, meeting_url: '' }));
       }
     }
   };
@@ -206,7 +219,11 @@ function ScheduleInterviewContent() {
       }
     }
 
-    if (formData.interview_type === 'video' && formData.video_call_type === 'custom_url' && !formData.meeting_url.trim()) {
+    if (
+      formData.interview_type === 'video' &&
+      formData.video_call_type === 'custom_url' &&
+      !formData.meeting_url.trim()
+    ) {
       newErrors.meeting_url = 'Meeting URL is required when using custom URL option';
     }
 
@@ -230,7 +247,7 @@ function ScheduleInterviewContent() {
       showToast({
         type: 'error',
         title: 'Error',
-        message: 'User session not found. Please refresh and try again.'
+        message: 'User session not found. Please refresh and try again.',
       });
       return;
     }
@@ -264,7 +281,7 @@ function ScheduleInterviewContent() {
         video_call_type: formData.interview_type === 'video' ? formData.video_call_type : undefined,
         notes: formData.notes.trim() || undefined,
         preparation_notes: formData.preparation_notes.trim() || undefined,
-        status: 'scheduled'
+        status: 'scheduled',
       };
 
       await interviewsApi.create(interviewData);
@@ -272,7 +289,7 @@ function ScheduleInterviewContent() {
       showToast({
         type: 'success',
         title: 'Interview Scheduled',
-        message: 'The interview has been successfully scheduled'
+        message: 'The interview has been successfully scheduled',
       });
 
       router.push('/interviews');
@@ -281,7 +298,7 @@ function ScheduleInterviewContent() {
       showToast({
         type: 'error',
         title: 'Error',
-        message: error instanceof Error ? error.message : 'Failed to schedule interview'
+        message: error instanceof Error ? error.message : 'Failed to schedule interview',
       });
     } finally {
       setLoading(false);
@@ -348,7 +365,9 @@ function ScheduleInterviewContent() {
                         setShowCandidateDropdown(true);
                       }}
                       onFocus={() => setShowCandidateDropdown(true)}
-                      placeholder={candidatesLoading ? 'Loading candidates...' : 'Search candidates...'}
+                      placeholder={
+                        candidatesLoading ? 'Loading candidates...' : 'Search candidates...'
+                      }
                       disabled={candidatesLoading}
                       className={`w-full pl-10 pr-16 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                         errors.candidate_id ? 'border-red-300' : 'border-gray-300'
@@ -364,7 +383,9 @@ function ScheduleInterviewContent() {
                           <X className="h-4 w-4" />
                         </button>
                       )}
-                      <ChevronDown className={`text-gray-400 h-4 w-4 transition-transform ${showCandidateDropdown ? 'rotate-180' : ''}`} />
+                      <ChevronDown
+                        className={`text-gray-400 h-4 w-4 transition-transform ${showCandidateDropdown ? 'rotate-180' : ''}`}
+                      />
                     </div>
                   </div>
 
@@ -373,7 +394,9 @@ function ScheduleInterviewContent() {
                     <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                       {filteredCandidates.length === 0 ? (
                         <div className="px-4 py-3 text-sm text-gray-500">
-                          {candidateSearch ? 'No candidates found matching your search' : 'No candidates available'}
+                          {candidateSearch
+                            ? 'No candidates found matching your search'
+                            : 'No candidates available'}
                         </div>
                       ) : (
                         filteredCandidates.map((candidate) => (
@@ -385,7 +408,8 @@ function ScheduleInterviewContent() {
                             <div className="flex items-center">
                               <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                                 <span className="text-sm font-medium text-blue-600">
-                                  {candidate.first_name.charAt(0)}{candidate.last_name.charAt(0)}
+                                  {candidate.first_name.charAt(0)}
+                                  {candidate.last_name.charAt(0)}
                                 </span>
                               </div>
                               <div className="ml-3">
@@ -440,7 +464,7 @@ function ScheduleInterviewContent() {
                 {[
                   { value: 'video', label: 'Video Call', icon: Video },
                   { value: 'phone', label: 'Phone Call', icon: Phone },
-                  { value: 'in_person', label: 'In-Person', icon: Users }
+                  { value: 'in_person', label: 'In-Person', icon: Users },
                 ].map((type) => (
                   <label key={type.value} className="relative">
                     <input
@@ -451,11 +475,13 @@ function ScheduleInterviewContent() {
                       onChange={handleInputChange}
                       className="sr-only"
                     />
-                    <div className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                      formData.interview_type === type.value
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}>
+                    <div
+                      className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                        formData.interview_type === type.value
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
                       <type.icon className="h-6 w-6 mx-auto mb-2 text-gray-600" />
                       <p className="text-sm font-medium text-center text-gray-900">{type.label}</p>
                     </div>
@@ -488,11 +514,13 @@ function ScheduleInterviewContent() {
                           onChange={handleInputChange}
                           className="sr-only"
                         />
-                        <div className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                          formData.video_call_type === 'system_generated'
-                            ? 'border-purple-500 bg-purple-50'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}>
+                        <div
+                          className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                            formData.video_call_type === 'system_generated'
+                              ? 'border-purple-500 bg-purple-50'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
                           <div className="flex items-center">
                             <div className="flex-shrink-0">
                               <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
@@ -516,15 +544,21 @@ function ScheduleInterviewContent() {
                           onChange={handleInputChange}
                           className="sr-only"
                         />
-                        <div className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                          formData.video_call_type === 'custom_url'
-                            ? 'border-purple-500 bg-purple-50'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}>
+                        <div
+                          className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                            formData.video_call_type === 'custom_url'
+                              ? 'border-purple-500 bg-purple-50'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
                           <div className="flex items-center">
                             <div className="flex-shrink-0">
                               <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                                <svg className="h-4 w-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                <svg
+                                  className="h-4 w-4 text-blue-600"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                >
                                   <path d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5z" />
                                   <path d="M7.414 15.414a2 2 0 01-2.828-2.828l3-3a2 2 0 012.828 0 1 1 0 001.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5z" />
                                 </svg>
@@ -573,14 +607,25 @@ function ScheduleInterviewContent() {
                     <div className="bg-white border border-gray-200 rounded-lg p-4">
                       <div className="flex items-start">
                         <div className="flex-shrink-0">
-                          <svg className="h-5 w-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          <svg
+                            className="h-5 w-5 text-green-500"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                         </div>
                         <div className="ml-3">
-                          <h4 className="text-sm font-medium text-gray-900">Auto-Generated Meeting Room</h4>
+                          <h4 className="text-sm font-medium text-gray-900">
+                            Auto-Generated Meeting Room
+                          </h4>
                           <p className="text-sm text-gray-600 mt-1">
-                            A secure video call room will be automatically created. Both interviewer and candidate will receive the meeting link.
+                            A secure video call room will be automatically created. Both interviewer
+                            and candidate will receive the meeting link.
                           </p>
                           <div className="mt-2 text-xs text-gray-500">
                             Features: Screen sharing, Recording, Real-time transcription
@@ -596,9 +641,7 @@ function ScheduleInterviewContent() {
             {/* Schedule */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Start Time *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Start Time *</label>
                 <input
                   type="datetime-local"
                   name="scheduled_start"
@@ -614,9 +657,7 @@ function ScheduleInterviewContent() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  End Time *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">End Time *</label>
                 <input
                   type="datetime-local"
                   name="scheduled_end"
@@ -636,9 +677,7 @@ function ScheduleInterviewContent() {
 
             {formData.interview_type === 'in_person' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Location *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Location *</label>
                 <input
                   type="text"
                   name="location"
@@ -649,9 +688,7 @@ function ScheduleInterviewContent() {
                   }`}
                   placeholder="Office address or meeting room"
                 />
-                {errors.location && (
-                  <p className="mt-1 text-sm text-red-600">{errors.location}</p>
-                )}
+                {errors.location && <p className="mt-1 text-sm text-red-600">{errors.location}</p>}
               </div>
             )}
 
@@ -673,9 +710,7 @@ function ScheduleInterviewContent() {
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
               <textarea
                 name="description"
                 value={formData.description}

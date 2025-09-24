@@ -10,7 +10,7 @@ export default function ProtectedRoute({
   children,
   allowedRoles,
   fallback,
-  redirectTo = '/auth/login'
+  redirectTo = '/auth/login',
 }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
@@ -37,9 +37,7 @@ export default function ProtectedRoute({
     }
 
     // Check if user has any of the allowed roles
-    return user.roles.some(userRole =>
-      allowedRoles.includes(userRole.role.name)
-    );
+    return user.roles.some((userRole) => allowedRoles.includes(userRole.role.name));
   };
 
   // Show loading while auth is being determined
@@ -69,9 +67,7 @@ export default function ProtectedRoute({
         <div className="text-center">
           <div className="text-6xl mb-4">🚫</div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
-          <p className="text-gray-600 mb-4">
-            You don&apos;t have permission to access this page.
-          </p>
+          <p className="text-gray-600 mb-4">You don&apos;t have permission to access this page.</p>
           <button
             onClick={() => router.back()}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"

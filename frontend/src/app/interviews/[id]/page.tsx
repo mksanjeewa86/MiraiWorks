@@ -18,7 +18,7 @@ import {
   CheckCircle,
   XCircle,
   Clock4,
-  Copy
+  Copy,
 } from 'lucide-react';
 import Link from 'next/link';
 import AppLayout from '@/components/layout/AppLayout';
@@ -108,27 +108,34 @@ function InterviewDetailsContent() {
         if (interview.interview_type === 'video') {
           try {
             // Try to get existing video call
-            const videoCallResponse = await apiClient.get<VideoCall>(`/api/interviews/${interviewId}/video-call`);
+            const videoCallResponse = await apiClient.get<VideoCall>(
+              `/api/interviews/${interviewId}/video-call`
+            );
             setVideoCall(videoCallResponse.data);
           } catch (videoCallError: unknown) {
-            const errorMessage = videoCallError instanceof Error ? videoCallError.message : 'Unknown error';
+            const errorMessage =
+              videoCallError instanceof Error ? videoCallError.message : 'Unknown error';
             console.log('Video call not found, creating new one:', errorMessage);
 
             // If video call doesn't exist (404), create one
-            if (errorMessage.includes('404') ||
-                errorMessage.toLowerCase().includes('not found') ||
-                errorMessage.includes('No video call found')) {
-
+            if (
+              errorMessage.includes('404') ||
+              errorMessage.toLowerCase().includes('not found') ||
+              errorMessage.includes('No video call found')
+            ) {
               const videoCallData = {
                 candidate_id: interview.candidate?.id || interview.candidate_id,
                 scheduled_at: interview.scheduled_start || new Date().toISOString(),
                 transcription_enabled: true,
-                transcription_language: "ja"
+                transcription_language: 'ja',
               };
 
               console.log('Creating video call with data:', videoCallData);
 
-              const newVideoCall = await apiClient.post<VideoCall>(`/api/interviews/${interviewId}/video-call`, videoCallData);
+              const newVideoCall = await apiClient.post<VideoCall>(
+                `/api/interviews/${interviewId}/video-call`,
+                videoCallData
+              );
               setVideoCall(newVideoCall.data);
             } else {
               console.error('Video call error:', videoCallError);
@@ -147,7 +154,12 @@ function InterviewDetailsContent() {
   }, [interviewId]);
 
   const handleDelete = async () => {
-    if (!interview || !window.confirm('Are you sure you want to delete this interview? This action cannot be undone.')) {
+    if (
+      !interview ||
+      !window.confirm(
+        'Are you sure you want to delete this interview? This action cannot be undone.'
+      )
+    ) {
       return;
     }
 
@@ -156,7 +168,7 @@ function InterviewDetailsContent() {
       showToast({
         type: 'success',
         title: 'Interview Deleted',
-        message: 'The interview has been successfully deleted'
+        message: 'The interview has been successfully deleted',
       });
       router.push('/interviews');
     } catch (err) {
@@ -164,11 +176,10 @@ function InterviewDetailsContent() {
       showToast({
         type: 'error',
         title: 'Error',
-        message: err instanceof Error ? err.message : 'Failed to delete interview'
+        message: err instanceof Error ? err.message : 'Failed to delete interview',
       });
     }
   };
-
 
   const formatDateTime = (dateTime: string) => {
     const date = new Date(dateTime);
@@ -177,13 +188,13 @@ function InterviewDetailsContent() {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
-        day: 'numeric'
+        day: 'numeric',
       }),
       time: date.toLocaleTimeString('en-US', {
         hour: 'numeric',
         minute: '2-digit',
-        hour12: true
-      })
+        hour12: true,
+      }),
     };
   };
 
@@ -205,7 +216,9 @@ function InterviewDetailsContent() {
           <div className="text-center">
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-gray-900 mb-2">Interview Not Found</h2>
-            <p className="text-gray-600 mb-4">{error || 'The interview you are looking for could not be found.'}</p>
+            <p className="text-gray-600 mb-4">
+              {error || 'The interview you are looking for could not be found.'}
+            </p>
             <Link
               href="/interviews"
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg inline-flex items-center gap-2"
@@ -248,8 +261,8 @@ function InterviewDetailsContent() {
 
           {/* Action Buttons */}
           <div className="flex flex-wrap items-center gap-3">
-            {interview.interview_type === 'video' && (
-              videoCall ? (
+            {interview.interview_type === 'video' &&
+              (videoCall ? (
                 <Link
                   href={`/room/${videoCall.room_id}`}
                   className="group bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
@@ -262,8 +275,7 @@ function InterviewDetailsContent() {
                   <Video className="h-5 w-5" />
                   <span className="font-medium">Setting up video call...</span>
                 </div>
-              )
-            )}
+              ))}
             <Link
               href={`/interviews/${interview.id}/edit`}
               className="group bg-white/80 backdrop-blur-sm hover:bg-white text-gray-700 hover:text-gray-900 border border-gray-200 hover:border-gray-300 px-6 py-3 rounded-xl flex items-center gap-2 shadow-sm hover:shadow-md transition-all duration-200"
@@ -284,7 +296,6 @@ function InterviewDetailsContent() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 relative z-10 pb-16">
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
@@ -301,15 +312,21 @@ function InterviewDetailsContent() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-600 uppercase tracking-wide">Status</label>
-                  <div className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium ${getStatusStyle(interview.status)} shadow-sm`}>
+                  <label className="block text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                    Status
+                  </label>
+                  <div
+                    className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium ${getStatusStyle(interview.status)} shadow-sm`}
+                  >
                     {getStatusIcon(interview.status)}
                     {interview.status.replace('_', ' ').toUpperCase()}
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-600 uppercase tracking-wide">Type</label>
+                  <label className="block text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                    Type
+                  </label>
                   <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 text-indigo-800 rounded-xl text-sm font-medium shadow-sm">
                     {getTypeIcon(interview.interview_type)}
                     {interview.interview_type.replace('_', ' ').toUpperCase()}
@@ -318,7 +335,9 @@ function InterviewDetailsContent() {
 
                 {interview.position_title && (
                   <div className="md:col-span-2 space-y-2">
-                    <label className="block text-sm font-semibold text-gray-600 uppercase tracking-wide">Position</label>
+                    <label className="block text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                      Position
+                    </label>
                     <p className="text-lg font-medium text-gray-900 bg-gradient-to-r from-gray-50 to-gray-100/50 px-4 py-3 rounded-xl border border-gray-200">
                       {interview.position_title}
                     </p>
@@ -327,21 +346,31 @@ function InterviewDetailsContent() {
 
                 {interview.description && (
                   <div className="md:col-span-2 space-y-2">
-                    <label className="block text-sm font-semibold text-gray-600 uppercase tracking-wide">Description</label>
+                    <label className="block text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                      Description
+                    </label>
                     <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-xl p-4 border border-gray-200">
-                      <p className="text-gray-900 whitespace-pre-wrap leading-relaxed">{interview.description}</p>
+                      <p className="text-gray-900 whitespace-pre-wrap leading-relaxed">
+                        {interview.description}
+                      </p>
                     </div>
                   </div>
                 )}
 
                 {interview.interview_type === 'video' && videoCall && (
                   <div className="md:col-span-2 space-y-2">
-                    <label className="block text-sm font-semibold text-gray-600 uppercase tracking-wide">Video Room Code</label>
+                    <label className="block text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                      Video Room Code
+                    </label>
                     <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-4 border border-purple-200">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-2xl font-mono font-bold text-purple-800 tracking-wider">{videoCall.room_id}</p>
-                          <p className="text-sm text-purple-600 mt-1">Share this code with participants to join the video call</p>
+                          <p className="text-2xl font-mono font-bold text-purple-800 tracking-wider">
+                            {videoCall.room_id}
+                          </p>
+                          <p className="text-sm text-purple-600 mt-1">
+                            Share this code with participants to join the video call
+                          </p>
                         </div>
                         <button
                           onClick={() => {
@@ -349,7 +378,7 @@ function InterviewDetailsContent() {
                             showToast({
                               type: 'success',
                               title: 'Copied!',
-                              message: 'Room code copied to clipboard'
+                              message: 'Room code copied to clipboard',
                             });
                           }}
                           className="bg-purple-100 hover:bg-purple-200 text-purple-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
@@ -379,7 +408,9 @@ function InterviewDetailsContent() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {startTime && (
                     <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-gray-600 uppercase tracking-wide">Start Time</label>
+                      <label className="block text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                        Start Time
+                      </label>
                       <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-4 border border-emerald-200">
                         <p className="text-lg font-bold text-gray-900">{startTime.date}</p>
                         <p className="text-emerald-700 font-medium">{startTime.time}</p>
@@ -389,7 +420,9 @@ function InterviewDetailsContent() {
 
                   {endTime && (
                     <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-gray-600 uppercase tracking-wide">End Time</label>
+                      <label className="block text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                        End Time
+                      </label>
                       <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-4 border border-orange-200">
                         <p className="text-lg font-bold text-gray-900">{endTime.date}</p>
                         <p className="text-orange-700 font-medium">{endTime.time}</p>
@@ -399,19 +432,25 @@ function InterviewDetailsContent() {
 
                   {interview.timezone && (
                     <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-gray-600 uppercase tracking-wide">Timezone</label>
+                      <label className="block text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                        Timezone
+                      </label>
                       <p className="text-lg font-medium text-gray-900 bg-gradient-to-r from-gray-50 to-gray-100/50 px-4 py-3 rounded-xl border border-gray-200">
                         {interview.timezone}
                       </p>
                     </div>
                   )}
 
-                  {(interview.duration_minutes) && (
+                  {interview.duration_minutes && (
                     <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-gray-600 uppercase tracking-wide">Duration</label>
+                      <label className="block text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                        Duration
+                      </label>
                       <div className="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-3 rounded-xl border border-blue-200">
                         <Clock className="h-5 w-5 text-blue-600" />
-                        <span className="text-lg font-medium text-gray-900">{interview.duration_minutes} minutes</span>
+                        <span className="text-lg font-medium text-gray-900">
+                          {interview.duration_minutes} minutes
+                        </span>
                       </div>
                     </div>
                   )}
@@ -434,7 +473,9 @@ function InterviewDetailsContent() {
                 <div className="space-y-6">
                   {interview.location && (
                     <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-gray-600 uppercase tracking-wide">Location</label>
+                      <label className="block text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                        Location
+                      </label>
                       <div className="flex items-center gap-3 bg-gradient-to-r from-orange-50 to-red-50 px-4 py-3 rounded-xl border border-orange-200">
                         <MapPin className="h-5 w-5 text-orange-600" />
                         <p className="text-lg font-medium text-gray-900">{interview.location}</p>
@@ -444,7 +485,9 @@ function InterviewDetailsContent() {
 
                   {interview.meeting_url && (
                     <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-gray-600 uppercase tracking-wide">Meeting URL</label>
+                      <label className="block text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                        Meeting URL
+                      </label>
                       <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
                         <a
                           href={interview.meeting_url}
@@ -456,8 +499,7 @@ function InterviewDetailsContent() {
                           <span className="font-medium break-all group-hover:underline">
                             {interview.meeting_url.length > 50
                               ? `${interview.meeting_url.substring(0, 50)}...`
-                              : interview.meeting_url
-                            }
+                              : interview.meeting_url}
                           </span>
                         </a>
                       </div>
@@ -482,18 +524,26 @@ function InterviewDetailsContent() {
                 <div className="space-y-6">
                   {interview.notes && (
                     <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-gray-600 uppercase tracking-wide">General Notes</label>
+                      <label className="block text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                        General Notes
+                      </label>
                       <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-200">
-                        <p className="text-gray-900 whitespace-pre-wrap leading-relaxed font-medium">{interview.notes}</p>
+                        <p className="text-gray-900 whitespace-pre-wrap leading-relaxed font-medium">
+                          {interview.notes}
+                        </p>
                       </div>
                     </div>
                   )}
 
                   {interview.preparation_notes && (
                     <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-gray-600 uppercase tracking-wide">Preparation Notes</label>
+                      <label className="block text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                        Preparation Notes
+                      </label>
                       <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl p-6 border border-amber-200">
-                        <p className="text-gray-900 whitespace-pre-wrap leading-relaxed font-medium">{interview.preparation_notes}</p>
+                        <p className="text-gray-900 whitespace-pre-wrap leading-relaxed font-medium">
+                          {interview.preparation_notes}
+                        </p>
                       </div>
                     </div>
                   )}
@@ -502,10 +552,7 @@ function InterviewDetailsContent() {
             )}
 
             {/* Private Notes */}
-            <InterviewNotes
-              interviewId={interview.id}
-              className="mt-6"
-            />
+            <InterviewNotes interviewId={interview.id} className="mt-6" />
           </div>
 
           {/* Sidebar */}
@@ -524,7 +571,9 @@ function InterviewDetailsContent() {
               <div className="space-y-4">
                 {interview.candidate && (
                   <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
-                    <label className="block text-xs font-bold text-blue-600 uppercase tracking-wide mb-2">Candidate</label>
+                    <label className="block text-xs font-bold text-blue-600 uppercase tracking-wide mb-2">
+                      Candidate
+                    </label>
                     <div className="flex items-center space-x-3">
                       <div className="h-10 w-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
                         <User className="h-5 w-5 text-white" />
@@ -533,7 +582,9 @@ function InterviewDetailsContent() {
                         <p className="text-sm font-bold text-gray-900">
                           {interview.candidate.full_name || interview.candidate.email}
                         </p>
-                        <p className="text-sm text-gray-600 font-medium">{interview.candidate.email}</p>
+                        <p className="text-sm text-gray-600 font-medium">
+                          {interview.candidate.email}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -541,7 +592,9 @@ function InterviewDetailsContent() {
 
                 {interview.recruiter && (
                   <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-4 border border-emerald-200">
-                    <label className="block text-xs font-bold text-emerald-600 uppercase tracking-wide mb-2">Recruiter</label>
+                    <label className="block text-xs font-bold text-emerald-600 uppercase tracking-wide mb-2">
+                      Recruiter
+                    </label>
                     <div className="flex items-center space-x-3">
                       <div className="h-10 w-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-md">
                         <User className="h-5 w-5 text-white" />
@@ -550,7 +603,9 @@ function InterviewDetailsContent() {
                         <p className="text-sm font-bold text-gray-900">
                           {interview.recruiter.full_name || interview.recruiter.email}
                         </p>
-                        <p className="text-sm text-gray-600 font-medium">{interview.recruiter.email}</p>
+                        <p className="text-sm text-gray-600 font-medium">
+                          {interview.recruiter.email}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -558,12 +613,16 @@ function InterviewDetailsContent() {
 
                 {interview.employer_company_name && (
                   <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200">
-                    <label className="block text-xs font-bold text-amber-600 uppercase tracking-wide mb-2">Company</label>
+                    <label className="block text-xs font-bold text-amber-600 uppercase tracking-wide mb-2">
+                      Company
+                    </label>
                     <div className="flex items-center space-x-3">
                       <div className="h-10 w-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-md">
                         <Users className="h-5 w-5 text-white" />
                       </div>
-                      <p className="text-sm font-bold text-gray-900">{interview.employer_company_name}</p>
+                      <p className="text-sm font-bold text-gray-900">
+                        {interview.employer_company_name}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -583,7 +642,7 @@ function InterviewDetailsContent() {
                       month: 'long',
                       day: 'numeric',
                       hour: 'numeric',
-                      minute: '2-digit'
+                      minute: '2-digit',
                     })}
                   </p>
                 </div>
@@ -596,7 +655,7 @@ function InterviewDetailsContent() {
                       month: 'long',
                       day: 'numeric',
                       hour: 'numeric',
-                      minute: '2-digit'
+                      minute: '2-digit',
                     })}
                   </p>
                 </div>
@@ -610,7 +669,7 @@ function InterviewDetailsContent() {
                         month: 'long',
                         day: 'numeric',
                         hour: 'numeric',
-                        minute: '2-digit'
+                        minute: '2-digit',
                       })}
                     </p>
                   </div>
@@ -625,7 +684,7 @@ function InterviewDetailsContent() {
                         month: 'long',
                         day: 'numeric',
                         hour: 'numeric',
-                        minute: '2-digit'
+                        minute: '2-digit',
                       })}
                     </p>
                     {interview.cancellation_reason && (
@@ -644,13 +703,20 @@ function InterviewDetailsContent() {
                   {interview.proposals.map((proposal) => (
                     <div key={proposal.id} className="p-3 bg-gray-50 rounded-lg">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-gray-900">{proposal.proposer_name}</span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          proposal.status === 'accepted' ? 'bg-green-100 text-green-800' :
-                          proposal.status === 'declined' ? 'bg-red-100 text-red-800' :
-                          proposal.status === 'expired' ? 'bg-gray-100 text-gray-800' :
-                          'bg-yellow-100 text-yellow-800'
-                        }`}>
+                        <span className="text-sm font-medium text-gray-900">
+                          {proposal.proposer_name}
+                        </span>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            proposal.status === 'accepted'
+                              ? 'bg-green-100 text-green-800'
+                              : proposal.status === 'declined'
+                                ? 'bg-red-100 text-red-800'
+                                : proposal.status === 'expired'
+                                  ? 'bg-gray-100 text-gray-800'
+                                  : 'bg-yellow-100 text-yellow-800'
+                          }`}
+                        >
                           {proposal.status.charAt(0).toUpperCase() + proposal.status.slice(1)}
                         </span>
                       </div>
@@ -658,7 +724,7 @@ function InterviewDetailsContent() {
                         {new Date(proposal.start_datetime).toLocaleDateString()} at{' '}
                         {new Date(proposal.start_datetime).toLocaleTimeString('en-US', {
                           hour: 'numeric',
-                          minute: '2-digit'
+                          minute: '2-digit',
                         })}
                       </p>
                       {proposal.notes && (

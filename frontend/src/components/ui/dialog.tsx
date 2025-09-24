@@ -37,9 +37,7 @@ const Dialog = ({ open, defaultOpen = false, onOpenChange, children }: DialogPro
   };
 
   return (
-    <DialogContext.Provider value={{ open: isOpen, setOpen }}>
-      {children}
-    </DialogContext.Provider>
+    <DialogContext.Provider value={{ open: isOpen, setOpen }}>{children}</DialogContext.Provider>
   );
 };
 
@@ -110,10 +108,7 @@ const DialogOverlay = forwardRef<HTMLDivElement, DialogOverlayProps>(
     return (
       <div
         ref={ref}
-        className={clsx(
-          'fixed inset-0 z-50 bg-black/50 backdrop-blur-sm',
-          className
-        )}
+        className={clsx('fixed inset-0 z-50 bg-black/50 backdrop-blur-sm', className)}
         onClick={() => setOpen(false)}
         {...props}
       />
@@ -132,7 +127,10 @@ interface DialogContentProps {
 }
 
 const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
-  ({ children, className, closeButton = true, onEscapeKeyDown, onPointerDownOutside, ...props }, ref) => {
+  (
+    { children, className, closeButton = true, onEscapeKeyDown, onPointerDownOutside, ...props },
+    ref
+  ) => {
     const { open, setOpen } = useDialog();
 
     useEffect(() => {
@@ -193,7 +191,9 @@ interface DialogFooterProps {
 
 const DialogFooter = ({ children, className }: DialogFooterProps) => {
   return (
-    <div className={clsx('flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2', className)}>
+    <div
+      className={clsx('flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2', className)}
+    >
       {children}
     </div>
   );
@@ -228,11 +228,7 @@ interface DialogDescriptionProps {
 const DialogDescription = forwardRef<HTMLParagraphElement, DialogDescriptionProps>(
   ({ children, className, ...props }, ref) => {
     return (
-      <p
-        ref={ref}
-        className={clsx('text-sm text-gray-500', className)}
-        {...props}
-      >
+      <p ref={ref} className={clsx('text-sm text-gray-500', className)} {...props}>
         {children}
       </p>
     );

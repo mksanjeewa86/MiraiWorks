@@ -10,7 +10,7 @@ const ExtensionRequestModal: React.FC<ExtensionRequestModalProps> = ({
   isOpen,
   onClose,
   todo,
-  onSuccess
+  onSuccess,
 }) => {
   const [requestedDate, setRequestedDate] = useState('');
   const [reason, setReason] = useState('');
@@ -23,7 +23,7 @@ const ExtensionRequestModal: React.FC<ExtensionRequestModalProps> = ({
   useEffect(() => {
     if (isOpen && todo.due_date) {
       const tomorrow = addDays(parseISO(todo.due_date), 1);
-      setRequestedDate(format(tomorrow, 'yyyy-MM-dd\'T\'HH:mm'));
+      setRequestedDate(format(tomorrow, "yyyy-MM-dd'T'HH:mm"));
     }
   }, [isOpen, todo.due_date]);
 
@@ -36,10 +36,10 @@ const ExtensionRequestModal: React.FC<ExtensionRequestModalProps> = ({
 
   const validateExtension = async () => {
     if (!requestedDate) return;
-    
+
     setIsValidating(true);
     setError(null);
-    
+
     try {
       const result = await todoExtensionsApi.validateExtensionRequest(
         todo.id,
@@ -56,7 +56,7 @@ const ExtensionRequestModal: React.FC<ExtensionRequestModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validation?.can_request_extension) {
       setError('Extension request is not valid');
       return;
@@ -73,17 +73,16 @@ const ExtensionRequestModal: React.FC<ExtensionRequestModalProps> = ({
     try {
       await todoExtensionsApi.createExtensionRequest(todo.id, {
         requested_due_date: new Date(requestedDate).toISOString(),
-        reason: reason.trim()
+        reason: reason.trim(),
       });
-      
+
       onSuccess();
       onClose();
-      
+
       // Reset form
       setRequestedDate('');
       setReason('');
       setValidation(null);
-      
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to create extension request');
     } finally {
@@ -104,9 +103,9 @@ const ExtensionRequestModal: React.FC<ExtensionRequestModalProps> = ({
   }
 
   const currentDueDate = parseISO(todo.due_date);
-  const maxAllowedDate = validation?.max_allowed_due_date ? 
-    parseISO(validation.max_allowed_due_date) : 
-    addDays(currentDueDate, 3);
+  const maxAllowedDate = validation?.max_allowed_due_date
+    ? parseISO(validation.max_allowed_due_date)
+    : addDays(currentDueDate, 3);
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
@@ -139,10 +138,7 @@ const ExtensionRequestModal: React.FC<ExtensionRequestModalProps> = ({
                   <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
                     Request Extension
                   </Dialog.Title>
-                  <button
-                    onClick={handleClose}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
+                  <button onClick={handleClose} className="text-gray-400 hover:text-gray-600">
                     <XMarkIcon className="h-5 w-5" />
                   </button>
                 </div>
@@ -151,14 +147,17 @@ const ExtensionRequestModal: React.FC<ExtensionRequestModalProps> = ({
                   <h4 className="font-medium text-gray-900 mb-1">{todo.title}</h4>
                   <div className="flex items-center text-sm text-gray-600">
                     <CalendarIcon className="h-4 w-4 mr-1" />
-                    Current due: {format(currentDueDate, 'MMM dd, yyyy \'at\' h:mm a')}
+                    Current due: {format(currentDueDate, "MMM dd, yyyy 'at' h:mm a")}
                   </div>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   {/* Requested Date */}
                   <div>
-                    <label htmlFor="requestedDate" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="requestedDate"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       New Due Date
                     </label>
                     <input
@@ -166,8 +165,8 @@ const ExtensionRequestModal: React.FC<ExtensionRequestModalProps> = ({
                       id="requestedDate"
                       value={requestedDate}
                       onChange={(e) => setRequestedDate(e.target.value)}
-                      min={format(addDays(currentDueDate, 1), 'yyyy-MM-dd\'T\'HH:mm')}
-                      max={format(maxAllowedDate, 'yyyy-MM-dd\'T\'HH:mm')}
+                      min={format(addDays(currentDueDate, 1), "yyyy-MM-dd'T'HH:mm")}
+                      max={format(maxAllowedDate, "yyyy-MM-dd'T'HH:mm")}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       required
                     />
@@ -198,7 +197,10 @@ const ExtensionRequestModal: React.FC<ExtensionRequestModalProps> = ({
 
                   {/* Reason */}
                   <div>
-                    <label htmlFor="reason" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="reason"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Reason for Extension <span className="text-red-500">*</span>
                     </label>
                     <textarea
@@ -236,9 +238,9 @@ const ExtensionRequestModal: React.FC<ExtensionRequestModalProps> = ({
                     <button
                       type="submit"
                       disabled={
-                        isSubmitting || 
-                        isValidating || 
-                        !validation?.can_request_extension || 
+                        isSubmitting ||
+                        isValidating ||
+                        !validation?.can_request_extension ||
                         reason.trim().length < 10
                       }
                       className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"

@@ -3,38 +3,38 @@ import type { User } from './auth';
 // Meeting Types
 export const MeetingType = {
   CASUAL: 'casual' as const,
-  MAIN: 'main' as const
+  MAIN: 'main' as const,
 } as const;
 
-export type MeetingTypeValue = typeof MeetingType[keyof typeof MeetingType];
+export type MeetingTypeValue = (typeof MeetingType)[keyof typeof MeetingType];
 
 export const MeetingStatus = {
   SCHEDULED: 'scheduled' as const,
-  STARTING: 'starting' as const, 
+  STARTING: 'starting' as const,
   IN_PROGRESS: 'in_progress' as const,
   COMPLETED: 'completed' as const,
   CANCELLED: 'cancelled' as const,
-  FAILED: 'failed' as const
+  FAILED: 'failed' as const,
 } as const;
 
-export type MeetingStatusValue = typeof MeetingStatus[keyof typeof MeetingStatus];
+export type MeetingStatusValue = (typeof MeetingStatus)[keyof typeof MeetingStatus];
 
 export const ParticipantRole = {
   HOST: 'host' as const,
   PARTICIPANT: 'participant' as const,
-  OBSERVER: 'observer' as const
+  OBSERVER: 'observer' as const,
 } as const;
 
-export type ParticipantRoleValue = typeof ParticipantRole[keyof typeof ParticipantRole];
+export type ParticipantRoleValue = (typeof ParticipantRole)[keyof typeof ParticipantRole];
 
 export const ParticipantStatus = {
   INVITED: 'invited' as const,
   JOINED: 'joined' as const,
   LEFT: 'left' as const,
-  DISCONNECTED: 'disconnected' as const
+  DISCONNECTED: 'disconnected' as const,
 } as const;
 
-export type ParticipantStatusValue = typeof ParticipantStatus[keyof typeof ParticipantStatus];
+export type ParticipantStatusValue = (typeof ParticipantStatus)[keyof typeof ParticipantStatus];
 
 export interface MeetingParticipant {
   id: number;

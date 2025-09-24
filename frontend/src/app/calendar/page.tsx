@@ -26,7 +26,7 @@ function CalendarPageContent() {
   const [filters, setFilters] = useState({
     eventType: 'all',
     status: 'all',
-    search: ''
+    search: '',
   });
 
   // Load events
@@ -55,7 +55,7 @@ function CalendarPageContent() {
         // Load calendar events
         const calendarResponse = await calendarApi.getEvents({
           startDate: startDate.toISOString(),
-          endDate: endDate.toISOString()
+          endDate: endDate.toISOString(),
         });
 
         // Robust response format handling
@@ -96,7 +96,7 @@ function CalendarPageContent() {
         } else {
           const interviewResponse = await interviewsApi.getAll({
             recruiter_id: user.id,
-            employer_company_id: user.company_id
+            employer_company_id: user.company_id,
           });
           let interviews: Interview[] = [];
 
@@ -129,22 +129,29 @@ function CalendarPageContent() {
           // Safely process interviews array
           if (Array.isArray(interviews) && interviews.length > 0) {
             const interviewEvents: CalendarEvent[] = interviews
-              .filter(interview => interview && interview.scheduled_start)
-              .map(interview => ({
+              .filter((interview) => interview && interview.scheduled_start)
+              .map((interview) => ({
                 id: `interview-${interview.id}`,
                 title: `Interview: ${interview.position_title || interview.title || 'Untitled Interview'}`,
                 description: interview.description || '',
                 location: interview.location || interview.meeting_url || '',
                 startDatetime: interview.scheduled_start!,
-                endDatetime: interview.scheduled_end || new Date(new Date(interview.scheduled_start!).getTime() + (interview.duration_minutes || 60) * 60000).toISOString(),
+                endDatetime:
+                  interview.scheduled_end ||
+                  new Date(
+                    new Date(interview.scheduled_start!).getTime() +
+                      (interview.duration_minutes || 60) * 60000
+                  ).toISOString(),
                 timezone: interview.timezone || 'UTC',
                 isAllDay: false,
                 isRecurring: false,
                 organizerEmail: interview.recruiter?.email || '',
-                attendees: [interview.candidate?.email, interview.recruiter?.email].filter(Boolean) as string[],
+                attendees: [interview.candidate?.email, interview.recruiter?.email].filter(
+                  Boolean
+                ) as string[],
                 status: interview.status || 'tentative',
                 createdAt: interview.created_at || new Date().toISOString(),
-                updatedAt: interview.updated_at || new Date().toISOString()
+                updatedAt: interview.updated_at || new Date().toISOString(),
               }));
             allEvents = [...allEvents, ...interviewEvents];
           }
@@ -173,43 +180,49 @@ function CalendarPageContent() {
   }, [currentDate, viewType, loadEvents]);
 
   // Filter events based on current filters
-  const filteredEvents = Array.isArray(events) ? events.filter(event => {
-    // Ensure event has required properties
-    if (!event || !event.title || !event.id) {
-      return false;
-    }
+  const filteredEvents = Array.isArray(events)
+    ? events.filter((event) => {
+        // Ensure event has required properties
+        if (!event || !event.title || !event.id) {
+          return false;
+        }
 
-    // Search filter
-    if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
-      const titleMatch = event.title.toLowerCase().includes(searchLower);
-      const descriptionMatch = event.description?.toLowerCase().includes(searchLower) || false;
-      if (!titleMatch && !descriptionMatch) {
-        return false;
-      }
-    }
+        // Search filter
+        if (filters.search) {
+          const searchLower = filters.search.toLowerCase();
+          const titleMatch = event.title.toLowerCase().includes(searchLower);
+          const descriptionMatch = event.description?.toLowerCase().includes(searchLower) || false;
+          if (!titleMatch && !descriptionMatch) {
+            return false;
+          }
+        }
 
-    // Event type filter
-    if (filters.eventType !== 'all') {
-      const eventId = event.id ? event.id.toString() : '';
-      const eventTitle = event.title ? event.title.toLowerCase() : '';
+        // Event type filter
+        if (filters.eventType !== 'all') {
+          const eventId = event.id ? event.id.toString() : '';
+          const eventTitle = event.title ? event.title.toLowerCase() : '';
 
-      const eventType = eventId.startsWith('interview-') ? 'interview' :
-                        eventTitle.includes('meeting') ? 'meeting' :
-                        eventTitle.includes('call') ? 'call' : 'other';
+          const eventType = eventId.startsWith('interview-')
+            ? 'interview'
+            : eventTitle.includes('meeting')
+              ? 'meeting'
+              : eventTitle.includes('call')
+                ? 'call'
+                : 'other';
 
-      if (eventType !== filters.eventType && filters.eventType !== 'other') {
-        return false;
-      }
-    }
+          if (eventType !== filters.eventType && filters.eventType !== 'other') {
+            return false;
+          }
+        }
 
-    // Status filter
-    if (filters.status !== 'all' && event.status !== filters.status) {
-      return false;
-    }
+        // Status filter
+        if (filters.status !== 'all' && event.status !== filters.status) {
+          return false;
+        }
 
-    return true;
-  }) : [];
+        return true;
+      })
+    : [];
 
   const handleEventClick = (event: CalendarEvent) => {
     setSelectedEvent(event);
@@ -291,7 +304,7 @@ function CalendarPageContent() {
                     weekday: 'long',
                     month: 'long',
                     day: 'numeric',
-                    year: 'numeric'
+                    year: 'numeric',
                   })}
                 </div>
               </div>

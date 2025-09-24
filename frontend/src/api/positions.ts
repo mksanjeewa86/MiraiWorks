@@ -21,12 +21,18 @@ const buildQueryString = (filters?: PositionFilters): string => {
 
 export const positionsApi = {
   // Public endpoints (no authentication required)
-  async getPublic(filters?: PositionFilters): Promise<ApiResponse<{ positions: Position[]; total: number; has_more?: boolean }>> {
+  async getPublic(
+    filters?: PositionFilters
+  ): Promise<ApiResponse<{ positions: Position[]; total: number; has_more?: boolean }>> {
     const publicFilters = { ...filters, status: 'published' };
     const query = buildQueryString(publicFilters);
     const url = query ? `${API_ENDPOINTS.POSITIONS.BASE}?${query}` : API_ENDPOINTS.POSITIONS.BASE;
 
-    const response = await publicApiClient.get<{ positions: Position[]; total: number; has_more?: boolean }>(url);
+    const response = await publicApiClient.get<{
+      positions: Position[];
+      total: number;
+      has_more?: boolean;
+    }>(url);
     return { data: response.data, success: true };
   },
 
@@ -56,11 +62,17 @@ export const positionsApi = {
   },
 
   // Admin endpoints (authentication required)
-  async getAll(filters?: PositionFilters): Promise<ApiResponse<{ positions: Position[]; total: number; has_more?: boolean }>> {
+  async getAll(
+    filters?: PositionFilters
+  ): Promise<ApiResponse<{ positions: Position[]; total: number; has_more?: boolean }>> {
     const query = buildQueryString(filters);
     const url = query ? `${API_ENDPOINTS.POSITIONS.BASE}?${query}` : API_ENDPOINTS.POSITIONS.BASE;
 
-    const response = await apiClient.get<{ positions: Position[]; total: number; has_more?: boolean }>(url);
+    const response = await apiClient.get<{
+      positions: Position[];
+      total: number;
+      has_more?: boolean;
+    }>(url);
     return { data: response.data, success: true };
   },
 
@@ -75,13 +87,18 @@ export const positionsApi = {
   },
 
   async updateStatus(id: number, status: string): Promise<ApiResponse<Position>> {
-    const response = await apiClient.patch<Position>(API_ENDPOINTS.POSITIONS.STATUS(id), { status });
+    const response = await apiClient.patch<Position>(API_ENDPOINTS.POSITIONS.STATUS(id), {
+      status,
+    });
     return { data: response.data, success: true };
   },
 
   async bulkUpdateStatus(positionIds: number[], status: string): Promise<ApiResponse<Position[]>> {
     const payload = { position_ids: positionIds, status };
-    const response = await apiClient.patch<Position[]>(API_ENDPOINTS.POSITIONS.BULK_STATUS, payload);
+    const response = await apiClient.patch<Position[]>(
+      API_ENDPOINTS.POSITIONS.BULK_STATUS,
+      payload
+    );
     return { data: response.data, success: true };
   },
 
@@ -90,7 +107,11 @@ export const positionsApi = {
     return { data: undefined, success: true };
   },
 
-  async getCompanyPositions(companyId: number, skip = 0, limit = 100): Promise<ApiResponse<Position[]>> {
+  async getCompanyPositions(
+    companyId: number,
+    skip = 0,
+    limit = 100
+  ): Promise<ApiResponse<Position[]>> {
     const query = `skip=${skip}&limit=${limit}`;
     const url = `${API_ENDPOINTS.POSITIONS.COMPANY(companyId)}?${query}`;
     const response = await apiClient.get<Position[]>(url);
@@ -105,7 +126,9 @@ export const positionsApi = {
   },
 
   async getStatistics(): Promise<ApiResponse<Record<string, unknown>>> {
-    const response = await apiClient.get<Record<string, unknown>>(API_ENDPOINTS.POSITIONS.STATISTICS);
+    const response = await apiClient.get<Record<string, unknown>>(
+      API_ENDPOINTS.POSITIONS.STATISTICS
+    );
     return { data: response.data, success: true };
   },
 };

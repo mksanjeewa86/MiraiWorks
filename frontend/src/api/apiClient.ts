@@ -22,11 +22,11 @@ const getAuthToken = (): string | null => {
 
 // Enhanced request handler with automatic auth error handling
 export const makeAuthenticatedRequest = async <T>(
-  url: string, 
+  url: string,
   options: RequestInit = {}
 ): Promise<{ data: T }> => {
   const token = getAuthToken();
-  
+
   const makeRequest = async (authToken: string | null) => {
     const isFormData = options.body instanceof FormData;
     const response = await fetch(`${API_CONFIG.BASE_URL}${url}`, {
@@ -52,7 +52,7 @@ export const makeAuthenticatedRequest = async <T>(
         try {
           await authHandlerRef.refreshAuth();
           const newToken = getAuthToken();
-          
+
           // Retry the request with new token
           response = await makeRequest(newToken);
         } catch {
@@ -78,18 +78,23 @@ export const makeAuthenticatedRequest = async <T>(
       try {
         const errorData = await response.json();
         if (errorData.message) {
-          errorMessage = typeof errorData.message === 'string'
-            ? errorData.message
-            : JSON.stringify(errorData.message);
+          errorMessage =
+            typeof errorData.message === 'string'
+              ? errorData.message
+              : JSON.stringify(errorData.message);
         } else if (errorData.detail) {
           // Handle both string and array/object details
           if (typeof errorData.detail === 'string') {
             errorMessage = errorData.detail;
           } else if (Array.isArray(errorData.detail)) {
             // Handle validation errors array
-            errorMessage = errorData.detail.map((error: unknown) =>
-              typeof error === 'string' ? error : (error as { msg?: string }).msg || JSON.stringify(error)
-            ).join(', ');
+            errorMessage = errorData.detail
+              .map((error: unknown) =>
+                typeof error === 'string'
+                  ? error
+                  : (error as { msg?: string }).msg || JSON.stringify(error)
+              )
+              .join(', ');
           } else {
             errorMessage = JSON.stringify(errorData.detail);
           }
@@ -111,7 +116,7 @@ export const makeAuthenticatedRequest = async <T>(
     if (error instanceof TypeError && error.message.includes('fetch')) {
       throw new Error('Network error. Please check your connection and try again.');
     }
-    
+
     // Re-throw other errors
     throw error;
   }
@@ -136,18 +141,23 @@ export const makePublicRequest = async <T>(
     try {
       const errorData = await response.json();
       if (errorData.message) {
-        errorMessage = typeof errorData.message === 'string'
-          ? errorData.message
-          : JSON.stringify(errorData.message);
+        errorMessage =
+          typeof errorData.message === 'string'
+            ? errorData.message
+            : JSON.stringify(errorData.message);
       } else if (errorData.detail) {
         // Handle both string and array/object details
         if (typeof errorData.detail === 'string') {
           errorMessage = errorData.detail;
         } else if (Array.isArray(errorData.detail)) {
           // Handle validation errors array
-          errorMessage = errorData.detail.map((error: unknown) =>
-            typeof error === 'string' ? error : (error as { msg?: string }).msg || JSON.stringify(error)
-          ).join(', ');
+          errorMessage = errorData.detail
+            .map((error: unknown) =>
+              typeof error === 'string'
+                ? error
+                : (error as { msg?: string }).msg || JSON.stringify(error)
+            )
+            .join(', ');
         } else {
           errorMessage = JSON.stringify(errorData.detail);
         }
@@ -174,8 +184,8 @@ export const apiClient = {
     const isFormData = data instanceof FormData;
     const options: RequestInit = {
       method: 'POST',
-      body: isFormData ? data : (data ? JSON.stringify(data) : undefined),
-      ...(config?.headers && { headers: config.headers })
+      body: isFormData ? data : data ? JSON.stringify(data) : undefined,
+      ...(config?.headers && { headers: config.headers }),
     };
 
     return makeAuthenticatedRequest<T>(url, options);
@@ -184,13 +194,13 @@ export const apiClient = {
   put: <T>(url: string, data?: unknown) =>
     makeAuthenticatedRequest<T>(url, {
       method: 'PUT',
-      body: data ? JSON.stringify(data) : undefined
+      body: data ? JSON.stringify(data) : undefined,
     }),
 
   patch: <T>(url: string, data?: unknown) =>
     makeAuthenticatedRequest<T>(url, {
       method: 'PATCH',
-      body: data ? JSON.stringify(data) : undefined
+      body: data ? JSON.stringify(data) : undefined,
     }),
 
   delete: <T>(url: string) => makeAuthenticatedRequest<T>(url, { method: 'DELETE' }),
@@ -203,6 +213,6 @@ export const publicApiClient = {
   post: <T>(url: string, data?: unknown) =>
     makePublicRequest<T>(url, {
       method: 'POST',
-      body: data ? JSON.stringify(data) : undefined
+      body: data ? JSON.stringify(data) : undefined,
     }),
 };

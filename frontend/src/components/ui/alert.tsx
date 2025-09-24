@@ -16,22 +16,18 @@ const variantClasses = {
 
 export function Alert({ variant = 'default', children, className }: AlertProps) {
   return (
-    <div
-      className={clsx(
-        'rounded-lg border p-4',
-        variantClasses[variant],
-        className
-      )}
-    >
+    <div className={clsx('rounded-lg border p-4', variantClasses[variant], className)}>
       {children}
     </div>
   );
 }
 
-export function AlertDescription({ children, className }: { children: ReactNode; className?: string }) {
-  return (
-    <div className={clsx('text-sm', className)}>
-      {children}
-    </div>
-  );
+export function AlertDescription({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return <div className={clsx('text-sm', className)}>{children}</div>;
 }

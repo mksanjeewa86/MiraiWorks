@@ -12,7 +12,7 @@ interface MBTITestButtonProps {
 const MBTITestButton: React.FC<MBTITestButtonProps> = ({
   onStartTest,
   className = '',
-  language = 'ja'
+  language = 'ja',
 }) => {
   const [progress, setProgress] = useState<MBTITestProgress | null>(null);
   const [loading, setLoading] = useState(true);
@@ -32,7 +32,7 @@ const MBTITestButton: React.FC<MBTITestButtonProps> = ({
         status: 'not_taken',
         completion_percentage: 0,
         total_questions: 60,
-        started_at: undefined
+        started_at: undefined,
       });
     } finally {
       setLoading(false);
@@ -53,9 +53,10 @@ const MBTITestButton: React.FC<MBTITestButtonProps> = ({
       onStartTest();
     } catch (error) {
       console.error('Failed to start MBTI test:', error);
-      alert(language === 'ja'
-        ? 'テストの開始に失敗しました。しばらく時間をおいて再度お試しください。'
-        : 'Failed to start test. Please try again later.'
+      alert(
+        language === 'ja'
+          ? 'テストの開始に失敗しました。しばらく時間をおいて再度お試しください。'
+          : 'Failed to start test. Please try again later.'
       );
     } finally {
       setLoading(false);
@@ -79,7 +80,7 @@ const MBTITestButton: React.FC<MBTITestButtonProps> = ({
       case 'not_taken':
         return language === 'ja' ? 'MBTI診断を開始' : 'Start MBTI Test';
       case 'in_progress':
-        return language === 'ja' 
+        return language === 'ja'
           ? `診断を続ける (${progress.completion_percentage}%)`
           : `Continue Test (${progress.completion_percentage}%)`;
       case 'completed':
@@ -123,15 +124,14 @@ const MBTITestButton: React.FC<MBTITestButtonProps> = ({
         {getIcon()}
         <span>{getButtonText()}</span>
       </button>
-      
+
       {progress && progress.status === 'in_progress' && (
         <div className="mt-2">
           <div className="flex justify-between text-xs text-gray-600 mb-1">
+            <span>{language === 'ja' ? '進捗' : 'Progress'}</span>
             <span>
-              {language === 'ja' ? '進捗' : 'Progress'}
-            </span>
-            <span>
-              {progress.current_question && `${progress.current_question}/${progress.total_questions}`}
+              {progress.current_question &&
+                `${progress.current_question}/${progress.total_questions}`}
             </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
@@ -142,13 +142,12 @@ const MBTITestButton: React.FC<MBTITestButtonProps> = ({
           </div>
         </div>
       )}
-      
+
       {progress && progress.status === 'completed' && (
         <p className="mt-2 text-sm text-green-600">
-          {language === 'ja' 
+          {language === 'ja'
             ? '診断が完了しました！結果をプロフィールで確認できます。'
-            : 'Test completed! View your results in your profile.'
-          }
+            : 'Test completed! View your results in your profile.'}
         </p>
       )}
     </div>

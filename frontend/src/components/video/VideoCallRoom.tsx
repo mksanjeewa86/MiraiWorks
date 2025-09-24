@@ -45,10 +45,7 @@ export const VideoCallRoom: React.FC<VideoCallRoomProps> = ({ callId: propCallId
     joinCall,
     endCall,
     recordConsent,
-  } = useVideoCall(
-    roomCode || callId,
-    { type: roomCode ? 'roomCode' : 'id' }
-  );
+  } = useVideoCall(roomCode || callId, { type: roomCode ? 'roomCode' : 'id' });
 
   const {
     localStream,
@@ -85,7 +82,7 @@ export const VideoCallRoom: React.FC<VideoCallRoomProps> = ({ callId: propCallId
       timestamp: new Date(),
       type: type as 'text' | 'link' | 'code' | 'file',
     };
-    setChatMessages(prev => [...prev, newMessage]);
+    setChatMessages((prev) => [...prev, newMessage]);
   };
 
   // Set up local video stream
@@ -107,7 +104,6 @@ export const VideoCallRoom: React.FC<VideoCallRoomProps> = ({ callId: propCallId
     if (videoCall && !hasJoinedCall && !isConnected) {
       handleJoinCall();
     }
-   
   }, [videoCall, hasJoinedCall, isConnected]);
 
   // Show consent modal when call starts
@@ -115,7 +111,6 @@ export const VideoCallRoom: React.FC<VideoCallRoomProps> = ({ callId: propCallId
     if (videoCall && videoCall.status === 'in_progress' && !consentCompleted && !showConsentModal) {
       setShowConsentModal(true);
     }
-   
   }, [videoCall?.status, consentCompleted, showConsentModal]);
 
   const handleJoinCall = async () => {
@@ -173,9 +168,7 @@ export const VideoCallRoom: React.FC<VideoCallRoomProps> = ({ callId: propCallId
           <h2 className="text-xl font-semibold text-red-600 mb-4">
             {callError || 'Video call not found'}
           </h2>
-          <Button onClick={() => router.push('/interviews')}>
-            Return to Interviews
-          </Button>
+          <Button onClick={() => router.push('/interviews')}>Return to Interviews</Button>
         </Card>
       </div>
     );
@@ -292,7 +285,7 @@ export const VideoCallRoom: React.FC<VideoCallRoomProps> = ({ callId: propCallId
                   callId={callId}
                 />
               )}
-              
+
               {showChat && !showTranscription && (
                 <ChatPanel
                   messages={chatMessages}

@@ -2,7 +2,7 @@ export interface UserSettings {
   // Profile settings
   job_title?: string;
   bio?: string;
-  
+
   // Notification preferences
   email_notifications: boolean;
   push_notifications: boolean;
@@ -10,12 +10,12 @@ export interface UserSettings {
   interview_reminders: boolean;
   application_updates: boolean;
   message_notifications: boolean;
-  
+
   // UI preferences
   language: string;
   timezone: string;
   date_format: string;
-  
+
   // Security settings
   require_2fa: boolean;
 }
@@ -36,7 +36,7 @@ export interface UserSettingsUpdate {
   // Profile settings
   job_title?: string;
   bio?: string;
-  
+
   // Notification preferences
   email_notifications?: boolean;
   push_notifications?: boolean;
@@ -44,12 +44,12 @@ export interface UserSettingsUpdate {
   interview_reminders?: boolean;
   application_updates?: boolean;
   message_notifications?: boolean;
-  
+
   // UI preferences
   language?: string;
   timezone?: string;
   date_format?: string;
-  
+
   // Security settings
   require_2fa?: boolean;
 }

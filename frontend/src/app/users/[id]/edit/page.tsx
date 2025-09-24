@@ -11,7 +11,7 @@ import {
   UserCheck,
   Key,
   Mail,
-  AlertTriangle
+  AlertTriangle,
 } from 'lucide-react';
 import { usersApi } from '@/api/users';
 import { UserManagement as UserType } from '@/types/user';
@@ -42,7 +42,7 @@ function EditUserContent() {
   const [submitting, setSubmitting] = useState(false);
   const [actionState, setActionState] = useState<ActionState>({
     loading: false,
-    type: null
+    type: null,
   });
   const [error, setError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -82,9 +82,9 @@ function EditUserContent() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
     }));
   };
 
@@ -116,13 +116,13 @@ function EditUserContent() {
       switch (action) {
         case 'suspend':
           await usersApi.suspendUser(parseInt(userId));
-          setUser((prev: UserType | null) => prev ? { ...prev, is_suspended: true } : null);
+          setUser((prev: UserType | null) => (prev ? { ...prev, is_suspended: true } : null));
           showToast({ type: 'success', title: 'User suspended successfully' });
           break;
 
         case 'unsuspend':
           await usersApi.unsuspendUser(parseInt(userId));
-          setUser((prev: UserType | null) => prev ? { ...prev, is_suspended: false } : null);
+          setUser((prev: UserType | null) => (prev ? { ...prev, is_suspended: false } : null));
           showToast({ type: 'success', title: 'User unsuspended successfully' });
           break;
 
@@ -249,7 +249,10 @@ function EditUserContent() {
               <form onSubmit={handleSubmit} className="px-6 py-4 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="first_name" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="first_name"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       First Name
                     </label>
                     <input
@@ -264,7 +267,10 @@ function EditUserContent() {
                   </div>
 
                   <div>
-                    <label htmlFor="last_name" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="last_name"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Last Name
                     </label>
                     <input
@@ -294,7 +300,6 @@ function EditUserContent() {
                   />
                   <p className="mt-1 text-sm text-gray-500">Email address cannot be changed</p>
                 </div>
-
 
                 <div className="flex justify-end pt-6 border-t border-gray-200">
                   <button
@@ -326,7 +331,9 @@ function EditUserContent() {
                     className="w-full flex items-center justify-center px-4 py-2 border border-green-300 rounded-md text-green-700 bg-green-50 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
                   >
                     <UserCheck className="h-4 w-4 mr-2" />
-                    {actionState.loading && actionState.type === 'unsuspend' ? 'Unsuspending...' : 'Unsuspend User'}
+                    {actionState.loading && actionState.type === 'unsuspend'
+                      ? 'Unsuspending...'
+                      : 'Unsuspend User'}
                   </button>
                 ) : (
                   <button
@@ -335,7 +342,9 @@ function EditUserContent() {
                     className="w-full flex items-center justify-center px-4 py-2 border border-orange-300 rounded-md text-orange-700 bg-orange-50 hover:bg-orange-100 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
                   >
                     <UserX className="h-4 w-4 mr-2" />
-                    {actionState.loading && actionState.type === 'suspend' ? 'Suspending...' : 'Suspend User'}
+                    {actionState.loading && actionState.type === 'suspend'
+                      ? 'Suspending...'
+                      : 'Suspend User'}
                   </button>
                 )}
 
@@ -346,7 +355,9 @@ function EditUserContent() {
                   className="w-full flex items-center justify-center px-4 py-2 border border-blue-300 rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                 >
                   <Key className="h-4 w-4 mr-2" />
-                  {actionState.loading && actionState.type === 'reset-password' ? 'Sending...' : 'Reset Password'}
+                  {actionState.loading && actionState.type === 'reset-password'
+                    ? 'Sending...'
+                    : 'Reset Password'}
                 </button>
 
                 {/* Resend Activation (only for inactive users) */}
@@ -357,7 +368,9 @@ function EditUserContent() {
                     className="w-full flex items-center justify-center px-4 py-2 border border-purple-300 rounded-md text-purple-700 bg-purple-50 hover:bg-purple-100 focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50"
                   >
                     <Mail className="h-4 w-4 mr-2" />
-                    {actionState.loading && actionState.type === 'resend-activation' ? 'Sending...' : 'Resend Activation'}
+                    {actionState.loading && actionState.type === 'resend-activation'
+                      ? 'Sending...'
+                      : 'Resend Activation'}
                   </button>
                 )}
               </div>
@@ -395,7 +408,9 @@ function EditUserContent() {
                         disabled={actionState.loading && actionState.type === 'delete'}
                         className="flex-1 px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
                       >
-                        {actionState.loading && actionState.type === 'delete' ? 'Deleting...' : 'Delete'}
+                        {actionState.loading && actionState.type === 'delete'
+                          ? 'Deleting...'
+                          : 'Delete'}
                       </button>
                     </div>
                   </div>

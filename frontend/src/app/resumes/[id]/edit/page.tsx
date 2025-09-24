@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
@@ -6,8 +6,18 @@ import AppLayout from '@/components/layout/AppLayout';
 import Card from '@/components/ui/card';
 import Button from '@/components/ui/button';
 import LoadingSpinner from '@/components/ui/loading-spinner';
-import { ArrowLeft, FileText, Upload, X, Plus, Trash2, Edit } from 'lucide-react';
-import { Resume, ResumeFormat, ResumeLanguage, ResumeStatus, ResumeVisibility, WorkExperience, Education, Skill, Project, Certification, Language } from '@/types/resume';
+import { ArrowLeft, FileText, Upload, X, Edit } from 'lucide-react';
+import {
+  Resume,
+  ResumeFormat,
+  ResumeLanguage,
+  WorkExperience,
+  Education,
+  Skill,
+  Project,
+  Certification,
+  Language,
+} from '@/types/resume';
 import { resumesApi } from '@/api/resumes';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
@@ -24,7 +34,7 @@ function EditResumePageContent() {
   const router = useRouter();
   const params = useParams();
   const resumeId = params.id as string;
-  
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [resume, setResume] = useState<ExtendedResume | null>(null);
@@ -40,13 +50,13 @@ function EditResumePageContent() {
     try {
       setLoading(true);
       const response = await resumesApi.getById(parseInt(resumeId));
-      
+
       if (!response.data) {
         throw new Error('Failed to fetch resume');
       }
 
       setResume(response.data);
-      
+
       if (response.data.photo_path) {
         setPhotoPreview(response.data.photo_path);
       }
@@ -59,27 +69,30 @@ function EditResumePageContent() {
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value, type } = e.target;
-    
+
     if (!resume) return;
 
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
-      setResume(prev => prev ? { ...prev, [name]: checked } : null);
+      setResume((prev) => (prev ? { ...prev, [name]: checked } : null));
     } else {
-      setResume(prev => prev ? { ...prev, [name]: value } : null);
+      setResume((prev) => (prev ? { ...prev, [name]: value } : null));
     }
   };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      if (file.size > 5 * 1024 * 1024) {
+        // 5MB limit
         alert('Photo size must be less than 5MB');
         return;
       }
-      
+
       if (!file.type.startsWith('image/')) {
         alert('Please select a valid image file');
         return;
@@ -98,19 +111,19 @@ function EditResumePageContent() {
     if (resume?.photo_path) {
       try {
         await resumesApi.removePhoto(parseInt(resumeId));
-        setResume(prev => prev ? { ...prev, photo_path: undefined } : null);
+        setResume((prev) => (prev ? { ...prev, photo_path: undefined } : null));
       } catch (error) {
         console.error('Error removing photo:', error);
       }
     }
-    
+
     setPhotoFile(null);
     setPhotoPreview(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!resume || !resume.title.trim() || !resume.full_name?.trim()) {
       alert('Please fill in the required fields: Title and Full Name');
       return;
@@ -157,17 +170,18 @@ function EditResumePageContent() {
         <div className="flex flex-col items-center justify-center h-64">
           <div className="text-6xl mb-4">❌</div>
           <h3 className="text-xl font-bold text-gray-900 mb-2">Resume Not Found</h3>
-          <p className="text-gray-600 mb-6">The resume you're looking for doesn't exist or you don't have permission to edit it.</p>
-          <Button onClick={() => router.push('/resumes')}>
-            Back to Resumes
-          </Button>
+          <p className="text-gray-600 mb-6">
+            The resume you're looking for doesn't exist or you don't have permission to edit it.
+          </p>
+          <Button onClick={() => router.push('/resumes')}>Back to Resumes</Button>
         </div>
       </AppLayout>
     );
   }
 
-  const isJapaneseFormat = resume.resume_format === ResumeFormat.RIREKISHO || 
-                          resume.resume_format === ResumeFormat.SHOKUMU_KEIREKISHO;
+  const isJapaneseFormat =
+    resume.resume_format === ResumeFormat.RIREKISHO ||
+    resume.resume_format === ResumeFormat.SHOKUMU_KEIREKISHO;
 
   const tabs = [
     { id: 'basic', label: 'Basic Info', icon: FileText },
@@ -182,11 +196,7 @@ function EditResumePageContent() {
       <div className="p-6 max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex items-center mb-8">
-          <Button 
-            variant="ghost" 
-            onClick={() => router.back()}
-            className="mr-4"
-          >
+          <Button variant="ghost" onClick={() => router.back()} className="mr-4">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
@@ -195,22 +205,19 @@ function EditResumePageContent() {
               Edit Resume
             </h1>
             <p className="mt-1" style={{ color: 'var(--text-secondary)' }}>
-              {resume.title} - {resume.resume_format === ResumeFormat.RIREKISHO ? '履歴書' : 
-                               resume.resume_format === ResumeFormat.SHOKUMU_KEIREKISHO ? '職務経歴書' :
-                               resume.resume_format}
+              {resume.title} -{' '}
+              {resume.resume_format === ResumeFormat.RIREKISHO
+                ? '履歴書'
+                : resume.resume_format === ResumeFormat.SHOKUMU_KEIREKISHO
+                  ? '職務経歴書'
+                  : resume.resume_format}
             </p>
           </div>
           <div className="flex gap-2">
-            <Button 
-              variant="outline"
-              onClick={() => router.push(`/resumes/${resumeId}/preview`)}
-            >
+            <Button variant="outline" onClick={() => router.push(`/resumes/${resumeId}/preview`)}>
               Preview
             </Button>
-            <Button 
-              onClick={handleSubmit}
-              disabled={saving}
-            >
+            <Button onClick={handleSubmit} disabled={saving}>
               {saving ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
@@ -251,8 +258,10 @@ function EditResumePageContent() {
                     <div>
                       <div className="font-medium">
                         {resume.resume_format === ResumeFormat.RIREKISHO && '履歴書 (Rirekisho)'}
-                        {resume.resume_format === ResumeFormat.SHOKUMU_KEIREKISHO && '職務経歴書 (Shokumu Keirekisho)'}
-                        {resume.resume_format === ResumeFormat.INTERNATIONAL && 'International Format'}
+                        {resume.resume_format === ResumeFormat.SHOKUMU_KEIREKISHO &&
+                          '職務経歴書 (Shokumu Keirekisho)'}
+                        {resume.resume_format === ResumeFormat.INTERNATIONAL &&
+                          'International Format'}
                         {resume.resume_format === ResumeFormat.MODERN && 'Modern Format'}
                       </div>
                       <div className="text-sm text-gray-600">
@@ -270,7 +279,10 @@ function EditResumePageContent() {
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+                    <label
+                      className="block text-sm font-medium mb-2"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
                       Resume Title *
                     </label>
                     <input
@@ -284,7 +296,10 @@ function EditResumePageContent() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+                    <label
+                      className="block text-sm font-medium mb-2"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
                       Language
                     </label>
                     <select
@@ -300,7 +315,10 @@ function EditResumePageContent() {
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+                    <label
+                      className="block text-sm font-medium mb-2"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
                       Description
                     </label>
                     <textarea
@@ -321,7 +339,10 @@ function EditResumePageContent() {
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+                    <label
+                      className="block text-sm font-medium mb-2"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
                       Full Name *
                     </label>
                     <input
@@ -336,7 +357,10 @@ function EditResumePageContent() {
 
                   {isJapaneseFormat && (
                     <div>
-                      <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+                      <label
+                        className="block text-sm font-medium mb-2"
+                        style={{ color: 'var(--text-primary)' }}
+                      >
                         Furigana (フリガナ)
                       </label>
                       <input
@@ -350,7 +374,10 @@ function EditResumePageContent() {
                   )}
 
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+                    <label
+                      className="block text-sm font-medium mb-2"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
                       Email
                     </label>
                     <input
@@ -363,7 +390,10 @@ function EditResumePageContent() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+                    <label
+                      className="block text-sm font-medium mb-2"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
                       Phone
                     </label>
                     <input
@@ -376,7 +406,10 @@ function EditResumePageContent() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+                    <label
+                      className="block text-sm font-medium mb-2"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
                       Location
                     </label>
                     <input
@@ -391,20 +424,30 @@ function EditResumePageContent() {
                   {isJapaneseFormat && (
                     <>
                       <div>
-                        <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+                        <label
+                          className="block text-sm font-medium mb-2"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
                           Birth Date (生年月日)
                         </label>
                         <input
                           type="date"
                           name="birth_date"
-                          value={resume.birth_date ? new Date(resume.birth_date).toISOString().split('T')[0] : ''}
+                          value={
+                            resume.birth_date
+                              ? new Date(resume.birth_date).toISOString().split('T')[0]
+                              : ''
+                          }
                           onChange={handleInputChange}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+                        <label
+                          className="block text-sm font-medium mb-2"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
                           Gender (性別)
                         </label>
                         <select
@@ -423,7 +466,10 @@ function EditResumePageContent() {
                   )}
 
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+                    <label
+                      className="block text-sm font-medium mb-2"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
                       Website
                     </label>
                     <input
@@ -436,7 +482,10 @@ function EditResumePageContent() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+                    <label
+                      className="block text-sm font-medium mb-2"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
                       LinkedIn URL
                     </label>
                     <input
@@ -453,12 +502,18 @@ function EditResumePageContent() {
               {/* Photo Upload */}
               {isJapaneseFormat && (
                 <Card className="p-6">
-                  <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+                  <h2
+                    className="text-xl font-semibold mb-4"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
                     Profile Photo (証明写真)
                   </h2>
                   <div className="flex items-start gap-6">
                     <div className="flex-1">
-                      <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+                      <label
+                        className="block text-sm font-medium mb-2"
+                        style={{ color: 'var(--text-primary)' }}
+                      >
                         Upload Photo (Max 5MB)
                       </label>
                       <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
@@ -477,7 +532,7 @@ function EditResumePageContent() {
                         </label>
                       </div>
                     </div>
-                    
+
                     {photoPreview && (
                       <div className="relative">
                         <img
@@ -505,7 +560,10 @@ function EditResumePageContent() {
                 </h2>
                 <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+                    <label
+                      className="block text-sm font-medium mb-2"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
                       Professional Summary
                     </label>
                     <textarea
@@ -519,7 +577,10 @@ function EditResumePageContent() {
 
                   {resume.resume_format === ResumeFormat.SHOKUMU_KEIREKISHO && (
                     <div>
-                      <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+                      <label
+                        className="block text-sm font-medium mb-2"
+                        style={{ color: 'var(--text-primary)' }}
+                      >
                         Self-PR (自己PR)
                       </label>
                       <textarea

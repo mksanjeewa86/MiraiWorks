@@ -12,7 +12,7 @@ import type {
   InterviewListItem,
   InterviewStatusFilter,
   InterviewTypeFilter,
-  InterviewSortField
+  InterviewSortField,
 } from '@/types/interview';
 
 function InterviewsPageContent() {
@@ -26,7 +26,7 @@ function InterviewsPageContent() {
     }
 
     // Check if user is NOT a candidate (anyone other than candidate can create interviews)
-    const isCandidate = user.roles.some(userRole => userRole.role.name === 'candidate');
+    const isCandidate = user.roles.some((userRole) => userRole.role.name === 'candidate');
     return !isCandidate && user.roles.length > 0;
   };
 
@@ -37,7 +37,7 @@ function InterviewsPageContent() {
     }
 
     // Check if user is NOT a candidate (anyone other than candidate can edit/delete interviews)
-    const isCandidate = user.roles.some(userRole => userRole.role.name === 'candidate');
+    const isCandidate = user.roles.some((userRole) => userRole.role.name === 'candidate');
     return !isCandidate && user.roles.length > 0;
   };
 
@@ -66,7 +66,6 @@ function InterviewsPageContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-
   // Fetch interviews from API
   useEffect(() => {
     const fetchInterviews = async () => {
@@ -83,41 +82,48 @@ function InterviewsPageContent() {
         // The backend automatically filters interviews based on the authenticated user
         const response = await interviewsApi.getMyInterviews({
           status: statusFilter !== 'all' ? statusFilter : undefined,
-          limit: 100 // Get more interviews to handle frontend filtering/sorting
+          limit: 100, // Get more interviews to handle frontend filtering/sorting
         });
 
         // Map API response to local Interview interface
-        const interviewsData = response.data?.interviews?.map(interview => ({
-          id: interview.id,
-          title: interview.title,
-          candidate_name: interview.candidate?.full_name || 'Unknown Candidate',
-          recruiter_name: interview.recruiter?.full_name || 'Unknown Recruiter',
-          company_name: interview.employer_company_name || 'Unknown Company',
-          scheduled_date: interview.scheduled_start ? new Date(interview.scheduled_start).toISOString().split('T')[0] : '',
-          start_time: interview.scheduled_start ? new Date(interview.scheduled_start).toTimeString().split(' ')[0].slice(0, 5) : '',
-          end_time: interview.scheduled_end ? new Date(interview.scheduled_end).toTimeString().split(' ')[0].slice(0, 5) : '',
-          location: interview.location || 'TBD',
-          type: (interview.interview_type as 'phone' | 'video' | 'in_person') || 'video',
-          status: (() => {
-            // Map API status to display status
-            switch (interview.status) {
-              case 'pending_schedule':
-              case 'scheduled':
-              case 'confirmed':
-                return 'scheduled' as const;
-              case 'completed':
-                return 'completed' as const;
-              case 'cancelled':
-                return 'cancelled' as const;
-              case 'in_progress':
-                return 'scheduled' as const; // Show as scheduled when in progress
-              default:
-                return 'scheduled' as const;
-            }
-          })() as InterviewListItem['status'],
-          notes: interview.notes || '',
-          created_at: interview.created_at
-        })) || [];
+        const interviewsData =
+          response.data?.interviews?.map((interview) => ({
+            id: interview.id,
+            title: interview.title,
+            candidate_name: interview.candidate?.full_name || 'Unknown Candidate',
+            recruiter_name: interview.recruiter?.full_name || 'Unknown Recruiter',
+            company_name: interview.employer_company_name || 'Unknown Company',
+            scheduled_date: interview.scheduled_start
+              ? new Date(interview.scheduled_start).toISOString().split('T')[0]
+              : '',
+            start_time: interview.scheduled_start
+              ? new Date(interview.scheduled_start).toTimeString().split(' ')[0].slice(0, 5)
+              : '',
+            end_time: interview.scheduled_end
+              ? new Date(interview.scheduled_end).toTimeString().split(' ')[0].slice(0, 5)
+              : '',
+            location: interview.location || 'TBD',
+            type: (interview.interview_type as 'phone' | 'video' | 'in_person') || 'video',
+            status: (() => {
+              // Map API status to display status
+              switch (interview.status) {
+                case 'pending_schedule':
+                case 'scheduled':
+                case 'confirmed':
+                  return 'scheduled' as const;
+                case 'completed':
+                  return 'completed' as const;
+                case 'cancelled':
+                  return 'cancelled' as const;
+                case 'in_progress':
+                  return 'scheduled' as const; // Show as scheduled when in progress
+                default:
+                  return 'scheduled' as const;
+              }
+            })() as InterviewListItem['status'],
+            notes: interview.notes || '',
+            created_at: interview.created_at,
+          })) || [];
 
         setInterviews(interviewsData);
       } catch (err) {
@@ -136,7 +142,7 @@ function InterviewsPageContent() {
   // Filter and sort interviews
   const filteredInterviews = interviews
     .slice()
-    .filter(interview => {
+    .filter((interview) => {
       const matchesSearch =
         interview.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         interview.candidate_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -170,9 +176,9 @@ function InterviewsPageContent() {
       }
 
       return 0;
-    })
+    });
 
-// Pagination
+  // Pagination
   const totalPages = Math.ceil(filteredInterviews.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedInterviews = filteredInterviews.slice(startIndex, startIndex + itemsPerPage);
@@ -183,11 +189,13 @@ function InterviewsPageContent() {
       in_progress: 'bg-purple-100 text-purple-800',
       completed: 'bg-green-100 text-green-800',
       cancelled: 'bg-red-100 text-red-800',
-      rescheduled: 'bg-yellow-100 text-yellow-800'
+      rescheduled: 'bg-yellow-100 text-yellow-800',
     };
 
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusClasses[status as keyof typeof statusClasses]}`}>
+      <span
+        className={`px-2 py-1 rounded-full text-xs font-medium ${statusClasses[status as keyof typeof statusClasses]}`}
+      >
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
     );
@@ -197,17 +205,19 @@ function InterviewsPageContent() {
     const typeClasses: Record<InterviewListItem['type'], string> = {
       phone: 'bg-gray-100 text-gray-800',
       video: 'bg-purple-100 text-purple-800',
-      in_person: 'bg-indigo-100 text-indigo-800'
+      in_person: 'bg-indigo-100 text-indigo-800',
     };
 
     const typeLabels: Record<InterviewListItem['type'], string> = {
       phone: 'Phone',
       video: 'Video',
-      in_person: 'In-Person'
+      in_person: 'In-Person',
     };
 
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${typeClasses[type as keyof typeof typeClasses]}`}>
+      <span
+        className={`px-2 py-1 rounded-full text-xs font-medium ${typeClasses[type as keyof typeof typeClasses]}`}
+      >
         {typeLabels[type]}
       </span>
     );
@@ -221,12 +231,12 @@ function InterviewsPageContent() {
     if (confirmed) {
       try {
         await interviewsApi.delete(id);
-        setInterviews(prev => prev.filter(interview => interview.id !== id));
+        setInterviews((prev) => prev.filter((interview) => interview.id !== id));
 
         showToast({
           type: 'success',
           title: 'Interview Deleted',
-          message: `"${title}" has been successfully deleted`
+          message: `"${title}" has been successfully deleted`,
         });
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to delete interview';
@@ -236,7 +246,7 @@ function InterviewsPageContent() {
         showToast({
           type: 'error',
           title: 'Delete Failed',
-          message: errorMessage
+          message: errorMessage,
         });
       }
     }
@@ -303,7 +313,7 @@ function InterviewsPageContent() {
                   backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                   backgroundPosition: 'right 12px center',
                   backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px'
+                  backgroundSize: '16px',
                 }}
               >
                 <option value="all">All Statuses</option>
@@ -322,7 +332,7 @@ function InterviewsPageContent() {
                   backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                   backgroundPosition: 'right 12px center',
                   backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px'
+                  backgroundSize: '16px',
                 }}
               >
                 <option value="all">All Types</option>
@@ -344,7 +354,7 @@ function InterviewsPageContent() {
                   backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                   backgroundPosition: 'right 12px center',
                   backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px'
+                  backgroundSize: '16px',
                 }}
               >
                 <option value="scheduled_date_asc">Date (Earliest)</option>
@@ -359,7 +369,9 @@ function InterviewsPageContent() {
           {/* Results Count */}
           <div className="mb-4">
             <p className="text-gray-600">
-              Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredInterviews.length)} of {filteredInterviews.length} interviews
+              Showing {startIndex + 1}-
+              {Math.min(startIndex + itemsPerPage, filteredInterviews.length)} of{' '}
+              {filteredInterviews.length} interviews
             </p>
           </div>
 
@@ -374,18 +386,20 @@ function InterviewsPageContent() {
                     ? 'Try adjusting your filters to see more results.'
                     : canCreateInterviews()
                       ? 'Get started by scheduling your first interview.'
-                      : 'No interviews have been scheduled for you yet.'
-                  }
+                      : 'No interviews have been scheduled for you yet.'}
                 </p>
-                {(!searchTerm && statusFilter === 'all' && typeFilter === 'all' && canCreateInterviews()) && (
-                  <Link
-                    href="/interviews/new"
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg inline-flex items-center gap-2 transition-colors"
-                  >
-                    <Plus size={20} />
-                    Schedule Interview
-                  </Link>
-                )}
+                {!searchTerm &&
+                  statusFilter === 'all' &&
+                  typeFilter === 'all' &&
+                  canCreateInterviews() && (
+                    <Link
+                      href="/interviews/new"
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg inline-flex items-center gap-2 transition-colors"
+                    >
+                      <Plus size={20} />
+                      Schedule Interview
+                    </Link>
+                  )}
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -414,14 +428,14 @@ function InterviewsPageContent() {
                       <tr key={interview.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
-                            <div className="text-sm font-medium text-gray-900">{interview.title}</div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {interview.title}
+                            </div>
                             <div className="text-sm text-gray-500 flex items-center gap-2 mt-1">
                               <MapPin size={14} />
                               {interview.location}
                             </div>
-                            <div className="mt-1">
-                              {getTypeBadge(interview.type)}
-                            </div>
+                            <div className="mt-1">{getTypeBadge(interview.type)}</div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -433,9 +447,7 @@ function InterviewsPageContent() {
                             <div className="text-sm text-gray-500">
                               Recruiter: {interview.recruiter_name}
                             </div>
-                            <div className="text-sm text-gray-500">
-                              {interview.company_name}
-                            </div>
+                            <div className="text-sm text-gray-500">{interview.company_name}</div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -554,4 +566,3 @@ export default function InterviewsPage() {
     </ProtectedRoute>
   );
 }
-

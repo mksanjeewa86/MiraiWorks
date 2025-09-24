@@ -62,7 +62,9 @@ function VideoCallRoomContent() {
             <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-white mb-2">Room Not Found</h2>
             <p className="text-gray-300 mb-4">
-              {error || callError || 'The room code you entered is invalid or the meeting has ended.'}
+              {error ||
+                callError ||
+                'The room code you entered is invalid or the meeting has ended.'}
             </p>
             <p className="text-gray-400 text-sm mb-4">Room Code: {roomCode}</p>
             <Link
@@ -89,10 +91,7 @@ function VideoCallRoomContent() {
         <div className="bg-gray-800 border-b border-gray-700 px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Link
-                href="/dashboard"
-                className="text-gray-400 hover:text-white p-1 rounded"
-              >
+              <Link href="/dashboard" className="text-gray-400 hover:text-white p-1 rounded">
                 <ArrowLeft className="h-5 w-5" />
               </Link>
               <div>
@@ -108,18 +107,13 @@ function VideoCallRoomContent() {
                 </p>
               </div>
             </div>
-            <div className="text-gray-400 text-sm">
-              Room: {roomCode}
-            </div>
+            <div className="text-gray-400 text-sm">Room: {roomCode}</div>
           </div>
         </div>
 
         {/* Video Call Room */}
         <div className="h-full">
-          <VideoCallRoom
-            callId={videoCall.id.toString()}
-            roomCode={roomCode || undefined}
-          />
+          <VideoCallRoom callId={videoCall.id.toString()} roomCode={roomCode || undefined} />
         </div>
       </div>
     </AppLayout>

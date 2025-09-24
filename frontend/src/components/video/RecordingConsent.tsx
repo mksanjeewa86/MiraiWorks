@@ -1,21 +1,14 @@
 import React, { useState } from 'react';
 import Button from '../ui/button';
 import Card from '../ui/card';
-import { 
-  VideoCameraIcon,
-  MicrophoneIcon,
-  DocumentTextIcon,
-} from '@heroicons/react/24/outline';
+import { VideoCameraIcon, MicrophoneIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
 
 interface RecordingConsentProps {
   onSubmit: (consented: boolean) => void;
   onClose: () => void;
 }
 
-export const RecordingConsent: React.FC<RecordingConsentProps> = ({
-  onSubmit,
-  onClose,
-}) => {
+export const RecordingConsent: React.FC<RecordingConsentProps> = ({ onSubmit, onClose }) => {
   const [hasRead, setHasRead] = useState(false);
 
   const handleConsent = (consented: boolean) => {
@@ -29,12 +22,8 @@ export const RecordingConsent: React.FC<RecordingConsentProps> = ({
           <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
             <VideoCameraIcon className="h-8 w-8 text-blue-600" />
           </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            録画と転写の同意
-          </h2>
-          <p className="text-gray-600">
-            この面接の録画と転写について同意をお願いします
-          </p>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">録画と転写の同意</h2>
+          <p className="text-gray-600">この面接の録画と転写について同意をお願いします</p>
         </div>
 
         <div className="space-y-4 mb-6">
@@ -100,28 +89,17 @@ export const RecordingConsent: React.FC<RecordingConsentProps> = ({
 
         {/* Action Buttons */}
         <div className="flex space-x-3">
-          <Button
-            variant="outline"
-            onClick={() => handleConsent(false)}
-            className="flex-1"
-          >
+          <Button variant="outline" onClick={() => handleConsent(false)} className="flex-1">
             同意しない
           </Button>
-          <Button
-            onClick={() => handleConsent(true)}
-            disabled={!hasRead}
-            className="flex-1"
-          >
+          <Button onClick={() => handleConsent(true)} disabled={!hasRead} className="flex-1">
             同意する
           </Button>
         </div>
 
         {/* Skip Option */}
         <div className="text-center mt-4">
-          <button
-            onClick={onClose}
-            className="text-sm text-gray-500 hover:text-gray-700"
-          >
+          <button onClick={onClose} className="text-sm text-gray-500 hover:text-gray-700">
             後で決定する
           </button>
         </div>

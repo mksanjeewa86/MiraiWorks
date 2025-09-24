@@ -41,10 +41,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={onClose} />
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
@@ -62,23 +59,13 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 
           {/* Header */}
           <div className="flex items-center space-x-3 mb-4">
-            {icon && (
-              <div className="flex-shrink-0">
-                {icon}
-              </div>
-            )}
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-              {title}
-            </h3>
+            {icon && <div className="flex-shrink-0">{icon}</div>}
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white">{title}</h3>
           </div>
 
           {/* Message */}
           <div className="mb-6 text-sm text-gray-600 dark:text-gray-300">
-            {typeof message === 'string' ? (
-              <p>{message}</p>
-            ) : (
-              message
-            )}
+            {typeof message === 'string' ? <p>{message}</p> : message}
           </div>
 
           {/* Actions */}

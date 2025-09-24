@@ -8,7 +8,7 @@ export const dashboardApi = {
     if (token) {
       const response = await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.DASHBOARD.STATS}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -33,7 +33,7 @@ export const dashboardApi = {
 
       const response = await fetch(url.toString(), {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -46,7 +46,9 @@ export const dashboardApi = {
       return { data, success: true };
     }
 
-    const url = limit ? `${API_ENDPOINTS.DASHBOARD.ACTIVITY}?limit=${limit}` : API_ENDPOINTS.DASHBOARD.ACTIVITY;
+    const url = limit
+      ? `${API_ENDPOINTS.DASHBOARD.ACTIVITY}?limit=${limit}`
+      : API_ENDPOINTS.DASHBOARD.ACTIVITY;
     const response = await apiClient.get<ActivityItem[]>(url);
     return { data: response.data, success: true };
   },

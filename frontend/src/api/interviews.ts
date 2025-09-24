@@ -4,7 +4,10 @@ import type { ApiResponse } from '@/types';
 import type { Interview, InterviewsListResponse } from '@/types/interview';
 
 export const interviewsApi = {
-  async getAll(params: { recruiter_id: number; employer_company_id: number }): Promise<ApiResponse<InterviewsListResponse<Interview>>> {
+  async getAll(params: {
+    recruiter_id: number;
+    employer_company_id: number;
+  }): Promise<ApiResponse<InterviewsListResponse<Interview>>> {
     let url = API_ENDPOINTS.INTERVIEWS.BASE;
 
     const searchParams = new URLSearchParams();
@@ -22,7 +25,7 @@ export const interviewsApi = {
     start_date?: string;
     end_date?: string;
     limit?: number;
-    offset?: number
+    offset?: number;
   }): Promise<ApiResponse<InterviewsListResponse<Interview>>> {
     let url = API_ENDPOINTS.INTERVIEWS.BASE;
 
@@ -54,7 +57,10 @@ export const interviewsApi = {
   },
 
   async update(id: number, interviewData: Partial<Interview>): Promise<ApiResponse<Interview>> {
-    const response = await apiClient.put<Interview>(API_ENDPOINTS.INTERVIEWS.BY_ID(id), interviewData);
+    const response = await apiClient.put<Interview>(
+      API_ENDPOINTS.INTERVIEWS.BY_ID(id),
+      interviewData
+    );
     return { data: response.data, success: true };
   },
 
@@ -64,17 +70,25 @@ export const interviewsApi = {
   },
 
   async updateStatus(id: number, status: string): Promise<ApiResponse<Interview>> {
-    const response = await apiClient.put<Interview>(API_ENDPOINTS.INTERVIEWS.STATUS(id), { status });
+    const response = await apiClient.put<Interview>(API_ENDPOINTS.INTERVIEWS.STATUS(id), {
+      status,
+    });
     return { data: response.data, success: true };
   },
 
-  async schedule(id: number, scheduleData: {
-    scheduledAt: string;
-    duration: number;
-    location?: string;
-    meetingLink?: string;
-  }): Promise<ApiResponse<Interview>> {
-    const response = await apiClient.put<Interview>(API_ENDPOINTS.INTERVIEWS.SCHEDULE(id), scheduleData);
+  async schedule(
+    id: number,
+    scheduleData: {
+      scheduledAt: string;
+      duration: number;
+      location?: string;
+      meetingLink?: string;
+    }
+  ): Promise<ApiResponse<Interview>> {
+    const response = await apiClient.put<Interview>(
+      API_ENDPOINTS.INTERVIEWS.SCHEDULE(id),
+      scheduleData
+    );
     return { data: response.data, success: true };
   },
 };

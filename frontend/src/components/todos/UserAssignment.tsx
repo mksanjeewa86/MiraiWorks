@@ -1,10 +1,16 @@
 import React, { useState, useMemo } from 'react';
-import { ChevronDownIcon, UserIcon, XMarkIcon, EyeIcon, PlusIcon } from '@heroicons/react/24/outline';
-import type { 
-  AssignableUser, 
-  TodoVisibility, 
+import {
+  ChevronDownIcon,
+  UserIcon,
+  XMarkIcon,
+  EyeIcon,
+  PlusIcon,
+} from '@heroicons/react/24/outline';
+import type {
+  AssignableUser,
+  TodoVisibility,
   UserAssignmentProps,
-  TodoWithAssignedUser
+  TodoWithAssignedUser,
 } from '@/types/todo';
 
 const UserAssignment: React.FC<UserAssignmentProps> = ({
@@ -12,28 +18,28 @@ const UserAssignment: React.FC<UserAssignmentProps> = ({
   assignableUsers,
   onAssign,
   onUpdateViewers,
-  isLoading = false
+  isLoading = false,
 }) => {
   const [isAssignmentOpen, setIsAssignmentOpen] = useState(false);
   const [isViewersOpen, setIsViewersOpen] = useState(false);
-  
-  const selectedUser = useMemo(() => 
-    assignableUsers.find(user => user.id === todo.assigned_user_id) || null,
+
+  const selectedUser = useMemo(
+    () => assignableUsers.find((user) => user.id === todo.assigned_user_id) || null,
     [assignableUsers, todo.assigned_user_id]
   );
-  
+
   const selectedViewers = useMemo(() => {
     const todoWithViewers = todo as TodoWithAssignedUser;
     return todoWithViewers.viewers || [];
   }, [todo]);
-  
+
   const [selectedVisibility, setSelectedVisibility] = useState<TodoVisibility>(todo.visibility);
 
   const handleAssign = (user: AssignableUser | null, visibility: TodoVisibility) => {
     setSelectedVisibility(visibility);
     onAssign({
       assigned_user_id: user?.id || null,
-      visibility: visibility
+      visibility: visibility,
     });
     setIsAssignmentOpen(false);
   };
@@ -44,11 +50,11 @@ const UserAssignment: React.FC<UserAssignmentProps> = ({
 
   const handleAddViewer = (user: AssignableUser) => {
     if (!onUpdateViewers) return;
-    
-    const currentViewerIds = selectedViewers.map(v => v.user_id);
+
+    const currentViewerIds = selectedViewers.map((v) => v.user_id);
     if (!currentViewerIds.includes(user.id)) {
       onUpdateViewers({
-        viewer_ids: [...currentViewerIds, user.id]
+        viewer_ids: [...currentViewerIds, user.id],
       });
     }
     setIsViewersOpen(false);
@@ -56,20 +62,20 @@ const UserAssignment: React.FC<UserAssignmentProps> = ({
 
   const handleRemoveViewer = (userId: number) => {
     if (!onUpdateViewers) return;
-    
-    const currentViewerIds = selectedViewers.map(v => v.user_id);
+
+    const currentViewerIds = selectedViewers.map((v) => v.user_id);
     onUpdateViewers({
-      viewer_ids: currentViewerIds.filter(id => id !== userId)
+      viewer_ids: currentViewerIds.filter((id) => id !== userId),
     });
   };
 
   // Get available users for viewing (exclude assigned user and current viewers)
   const availableViewers = useMemo(() => {
     const assignedUserId = todo.assigned_user_id;
-    const viewerUserIds = selectedViewers.map(v => v.user_id);
-    
-    return assignableUsers.filter(user => 
-      user.id !== assignedUserId && !viewerUserIds.includes(user.id)
+    const viewerUserIds = selectedViewers.map((v) => v.user_id);
+
+    return assignableUsers.filter(
+      (user) => user.id !== assignedUserId && !viewerUserIds.includes(user.id)
     );
   }, [assignableUsers, todo.assigned_user_id, selectedViewers]);
 
@@ -77,23 +83,21 @@ const UserAssignment: React.FC<UserAssignmentProps> = ({
     {
       value: 'public',
       label: 'Full Access',
-      description: 'Can view, edit, and interact with the todo'
+      description: 'Can view, edit, and interact with the todo',
     },
     {
       value: 'viewer',
       label: 'View Only',
-      description: 'Can view the todo but cannot make changes'
-    }
+      description: 'Can view the todo but cannot make changes',
+    },
   ];
 
   return (
     <div className="relative space-y-4">
       {/* Assignment Section */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Assign To
-        </label>
-        
+        <label className="block text-sm font-medium text-gray-700 mb-2">Assign To</label>
+
         {/* Current Assignment Display */}
         <div className="flex items-center space-x-2 mb-2">
           {selectedUser ? (
@@ -137,68 +141,65 @@ const UserAssignment: React.FC<UserAssignmentProps> = ({
           </button>
 
           {isAssignmentOpen && (
-          <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-96 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-            {/* Unassign Option */}
-            {selectedUser && (
-              <>
-                <button
-                  onClick={handleUnassign}
-                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
-                >
-                  <XMarkIcon className="h-4 w-4" />
-                  <span>Unassign</span>
-                </button>
-                <div className="border-t border-gray-100 my-1"></div>
-              </>
-            )}
+            <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-96 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+              {/* Unassign Option */}
+              {selectedUser && (
+                <>
+                  <button
+                    onClick={handleUnassign}
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
+                  >
+                    <XMarkIcon className="h-4 w-4" />
+                    <span>Unassign</span>
+                  </button>
+                  <div className="border-t border-gray-100 my-1"></div>
+                </>
+              )}
 
-            {/* User List */}
-            {assignableUsers.length === 0 ? (
-              <div className="px-4 py-2 text-sm text-gray-500">
-                No users available for assignment
-              </div>
-            ) : (
-              assignableUsers.map((user) => (
-                <div key={user.id} className="border-b border-gray-50 last:border-b-0">
-                  <div className="px-4 py-2">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <UserIcon className="h-4 w-4 text-gray-400" />
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {user.first_name} {user.last_name}
+              {/* User List */}
+              {assignableUsers.length === 0 ? (
+                <div className="px-4 py-2 text-sm text-gray-500">
+                  No users available for assignment
+                </div>
+              ) : (
+                assignableUsers.map((user) => (
+                  <div key={user.id} className="border-b border-gray-50 last:border-b-0">
+                    <div className="px-4 py-2">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <UserIcon className="h-4 w-4 text-gray-400" />
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {user.first_name} {user.last_name}
+                          </div>
+                          <div className="text-xs text-gray-500">{user.email}</div>
                         </div>
-                        <div className="text-xs text-gray-500">{user.email}</div>
+                      </div>
+
+                      {/* Visibility Options for this user */}
+                      <div className="ml-6 space-y-1">
+                        {visibilityOptions.map((option) => (
+                          <button
+                            key={option.value}
+                            onClick={() => handleAssign(user, option.value)}
+                            className="w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-50 flex flex-col"
+                          >
+                            <span className="font-medium text-gray-700">{option.label}</span>
+                            <span className="text-gray-500">{option.description}</span>
+                          </button>
+                        ))}
                       </div>
                     </div>
-                    
-                    {/* Visibility Options for this user */}
-                    <div className="ml-6 space-y-1">
-                      {visibilityOptions.map((option) => (
-                        <button
-                          key={option.value}
-                          onClick={() => handleAssign(user, option.value)}
-                          className="w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-50 flex flex-col"
-                        >
-                          <span className="font-medium text-gray-700">{option.label}</span>
-                          <span className="text-gray-500">{option.description}</span>
-                        </button>
-                      ))}
-                    </div>
                   </div>
-                </div>
-              ))
-            )}
-          </div>
-        )}
-        
-        {/* Click outside to close assignment dropdown */}
-        {isAssignmentOpen && (
-          <div
-            className="fixed inset-0 z-0"
-            onClick={() => setIsAssignmentOpen(false)}
-          />
-        )}
-      </div>
+                ))
+              )}
+            </div>
+          )}
+
+          {/* Click outside to close assignment dropdown */}
+          {isAssignmentOpen && (
+            <div className="fixed inset-0 z-0" onClick={() => setIsAssignmentOpen(false)} />
+          )}
+        </div>
       </div>
 
       {/* Viewers Section */}
@@ -207,12 +208,15 @@ const UserAssignment: React.FC<UserAssignmentProps> = ({
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Additional Viewers (View Only)
           </label>
-          
+
           {/* Current Viewers Display */}
           <div className="space-y-2 mb-2">
             {selectedViewers.length > 0 ? (
               selectedViewers.map((viewer) => (
-                <div key={viewer.id} className="flex items-center space-x-2 bg-green-50 px-3 py-2 rounded-lg border border-green-200">
+                <div
+                  key={viewer.id}
+                  className="flex items-center space-x-2 bg-green-50 px-3 py-2 rounded-lg border border-green-200"
+                >
                   <EyeIcon className="h-4 w-4 text-green-600" />
                   <span className="text-sm font-medium text-green-900">
                     {viewer.user.first_name} {viewer.user.last_name}
@@ -274,13 +278,10 @@ const UserAssignment: React.FC<UserAssignmentProps> = ({
                 ))}
               </div>
             )}
-            
+
             {/* Click outside to close viewers dropdown */}
             {isViewersOpen && (
-              <div
-                className="fixed inset-0 z-0"
-                onClick={() => setIsViewersOpen(false)}
-              />
+              <div className="fixed inset-0 z-0" onClick={() => setIsViewersOpen(false)} />
             )}
           </div>
         </div>

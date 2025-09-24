@@ -1,7 +1,10 @@
 import type { Todo, TodoPermissions, TodoWithAssignedUser } from '@/types/todo';
 import type { User } from '@/types/auth';
 
-export const getTodoPermissions = (todo: Todo | TodoWithAssignedUser, user: User | null): TodoPermissions => {
+export const getTodoPermissions = (
+  todo: Todo | TodoWithAssignedUser,
+  user: User | null
+): TodoPermissions => {
   if (!user) {
     return {
       canView: false,

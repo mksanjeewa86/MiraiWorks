@@ -26,9 +26,7 @@ const DropdownMenu = ({ children, className }: DropdownMenuProps) => {
 
   return (
     <DropdownMenuContext.Provider value={{ open, setOpen }}>
-      <div className={clsx('relative inline-block text-left', className)}>
-        {children}
-      </div>
+      <div className={clsx('relative inline-block text-left', className)}>{children}</div>
     </DropdownMenuContext.Provider>
   );
 };
@@ -109,10 +107,7 @@ const DropdownMenuContent = forwardRef<HTMLDivElement, DropdownMenuContentProps>
     return (
       <>
         {/* Backdrop */}
-        <div
-          className="fixed inset-0 z-10"
-          onClick={() => setOpen(false)}
-        />
+        <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
 
         {/* Content */}
         <div
@@ -194,11 +189,7 @@ interface DropdownMenuSeparatorProps {
 
 const DropdownMenuSeparator = forwardRef<HTMLDivElement, DropdownMenuSeparatorProps>(
   ({ className, ...props }, ref) => (
-    <div
-      ref={ref}
-      className={clsx('my-1 h-px bg-gray-200', className)}
-      {...props}
-    />
+    <div ref={ref} className={clsx('my-1 h-px bg-gray-200', className)} {...props} />
   )
 );
 
@@ -213,10 +204,7 @@ const DropdownMenuLabel = forwardRef<HTMLDivElement, DropdownMenuLabelProps>(
   ({ children, className, ...props }, ref) => (
     <div
       ref={ref}
-      className={clsx(
-        'px-4 py-2 text-sm font-semibold text-gray-900',
-        className
-      )}
+      className={clsx('px-4 py-2 text-sm font-semibold text-gray-900', className)}
       {...props}
     >
       {children}

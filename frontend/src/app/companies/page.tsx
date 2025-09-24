@@ -76,7 +76,7 @@ function CompaniesPageContent() {
   // Debounce search term to avoid API calls on every keystroke
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      setFilters(prev => ({ ...prev, search: searchTerm, page: 1 }));
+      setFilters((prev) => ({ ...prev, search: searchTerm, page: 1 }));
     }, 300);
 
     return () => clearTimeout(timeoutId);
@@ -102,16 +102,15 @@ function CompaniesPageContent() {
 
   const handleTypeFilter = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
-    setFilters(prev => ({ 
-      ...prev, 
-      company_type: value === '' ? undefined : value as CompanyType,
-      page: 1 
+    setFilters((prev) => ({
+      ...prev,
+      company_type: value === '' ? undefined : (value as CompanyType),
+      page: 1,
     }));
   };
 
-
   const handlePageChange = (page: number) => {
-    setFilters(prev => ({ ...prev, page }));
+    setFilters((prev) => ({ ...prev, page }));
   };
 
   const handleSelectCompany = (companyId: number) => {
@@ -128,7 +127,7 @@ function CompaniesPageContent() {
     if (selectedCompanies.size === companies.length) {
       setSelectedCompanies(new Set());
     } else {
-      setSelectedCompanies(new Set(companies.map(company => company.id)));
+      setSelectedCompanies(new Set(companies.map((company) => company.id)));
     }
   };
 
@@ -136,8 +135,10 @@ function CompaniesPageContent() {
     if (selectedCompanies.size === 0) return;
 
     try {
-      const selectedCompanyObjects = companies.filter(company => selectedCompanies.has(company.id));
-      const inactiveCompanies = selectedCompanyObjects.filter(company => !company.is_active);
+      const selectedCompanyObjects = companies.filter((company) =>
+        selectedCompanies.has(company.id)
+      );
+      const inactiveCompanies = selectedCompanyObjects.filter((company) => !company.is_active);
 
       for (const company of inactiveCompanies) {
         await companiesApi.updateCompany(company.id, { is_active: true });
@@ -155,8 +156,10 @@ function CompaniesPageContent() {
     if (selectedCompanies.size === 0) return;
 
     try {
-      const selectedCompanyObjects = companies.filter(company => selectedCompanies.has(company.id));
-      const activeCompanies = selectedCompanyObjects.filter(company => company.is_active);
+      const selectedCompanyObjects = companies.filter((company) =>
+        selectedCompanies.has(company.id)
+      );
+      const activeCompanies = selectedCompanyObjects.filter((company) => company.is_active);
 
       for (const company of activeCompanies) {
         await companiesApi.updateCompany(company.id, { is_active: false });
@@ -173,9 +176,13 @@ function CompaniesPageContent() {
   const handleBulkDelete = async () => {
     if (selectedCompanies.size === 0) return;
 
-    const selectedCompanyObjects = companies.filter(company => selectedCompanies.has(company.id));
+    const selectedCompanyObjects = companies.filter((company) => selectedCompanies.has(company.id));
 
-    if (!confirm(`Are you sure you want to delete ${selectedCompanies.size} companies? This action cannot be undone.`)) {
+    if (
+      !confirm(
+        `Are you sure you want to delete ${selectedCompanies.size} companies? This action cannot be undone.`
+      )
+    ) {
       return;
     }
 
@@ -211,10 +218,7 @@ function CompaniesPageContent() {
               <AlertTriangle className="h-4 w-4 mr-2" />
               {error}
             </div>
-            <button
-              onClick={() => setError(null)}
-              className="text-red-500 hover:text-red-700"
-            >
+            <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700">
               <X className="h-4 w-4" />
             </button>
           </div>
@@ -262,9 +266,15 @@ function CompaniesPageContent() {
               </div>
               <div className="flex items-center space-x-2">
                 {(() => {
-                  const selectedCompanyObjects = companies.filter(company => selectedCompanies.has(company.id));
-                  const hasInactiveCompanies = selectedCompanyObjects.some(company => !company.is_active);
-                  const hasActiveCompanies = selectedCompanyObjects.some(company => company.is_active);
+                  const selectedCompanyObjects = companies.filter((company) =>
+                    selectedCompanies.has(company.id)
+                  );
+                  const hasInactiveCompanies = selectedCompanyObjects.some(
+                    (company) => !company.is_active
+                  );
+                  const hasActiveCompanies = selectedCompanyObjects.some(
+                    (company) => company.is_active
+                  );
 
                   return (
                     <>
@@ -325,7 +335,7 @@ function CompaniesPageContent() {
                   backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                   backgroundPosition: 'right 12px center',
                   backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px'
+                  backgroundSize: '16px',
                 }}
               >
                 <option value="">All Types</option>
@@ -350,13 +360,33 @@ function CompaniesPageContent() {
                 onChange={(e) => {
                   const value = e.target.value;
                   if (value === 'demo') {
-                    setFilters(prev => ({ ...prev, is_demo: true, is_active: undefined, page: 1 }));
+                    setFilters((prev) => ({
+                      ...prev,
+                      is_demo: true,
+                      is_active: undefined,
+                      page: 1,
+                    }));
                   } else if (value === 'true') {
-                    setFilters(prev => ({ ...prev, is_active: true, is_demo: undefined, page: 1 }));
+                    setFilters((prev) => ({
+                      ...prev,
+                      is_active: true,
+                      is_demo: undefined,
+                      page: 1,
+                    }));
                   } else if (value === 'false') {
-                    setFilters(prev => ({ ...prev, is_active: false, is_demo: undefined, page: 1 }));
+                    setFilters((prev) => ({
+                      ...prev,
+                      is_active: false,
+                      is_demo: undefined,
+                      page: 1,
+                    }));
                   } else {
-                    setFilters(prev => ({ ...prev, is_active: undefined, is_demo: undefined, page: 1 }));
+                    setFilters((prev) => ({
+                      ...prev,
+                      is_active: undefined,
+                      is_demo: undefined,
+                      page: 1,
+                    }));
                   }
                 }}
                 className="w-full px-3 py-2 pr-8 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white appearance-none bg-white"
@@ -364,7 +394,7 @@ function CompaniesPageContent() {
                   backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                   backgroundPosition: 'right 12px center',
                   backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px'
+                  backgroundSize: '16px',
                 }}
               >
                 <option value="">All Status</option>
@@ -380,14 +410,19 @@ function CompaniesPageContent() {
                   id="include_deleted"
                   type="checkbox"
                   checked={filters.include_deleted || false}
-                  onChange={(e) => setFilters(prev => ({
-                    ...prev,
-                    include_deleted: e.target.checked,
-                    page: 1
-                  }))}
+                  onChange={(e) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      include_deleted: e.target.checked,
+                      page: 1,
+                    }))
+                  }
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
-                <label htmlFor="include_deleted" className="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label
+                  htmlFor="include_deleted"
+                  className="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
                   Include deleted companies
                 </label>
               </div>
@@ -399,8 +434,12 @@ function CompaniesPageContent() {
           {companies.length === 0 ? (
             <div className="p-8 text-center">
               <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No companies found</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">Get started by creating your first company.</p>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                No companies found
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                Get started by creating your first company.
+              </p>
               <Link
                 href="/companies/add"
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 inline-flex items-center space-x-2"
@@ -417,7 +456,9 @@ function CompaniesPageContent() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-12">
                       <input
                         type="checkbox"
-                        checked={companies.length > 0 && selectedCompanies.size === companies.length}
+                        checked={
+                          companies.length > 0 && selectedCompanies.size === companies.length
+                        }
                         onChange={handleSelectAll}
                         className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                       />
@@ -437,8 +478,7 @@ function CompaniesPageContent() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -472,18 +512,21 @@ function CompaniesPageContent() {
                             </div>
                             {(company.prefecture || company.city) && (
                               <div className="text-sm text-gray-500 dark:text-gray-400">
-                                {company.prefecture}{company.city}
+                                {company.prefecture}
+                                {company.city}
                               </div>
                             )}
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          company.type === 'employer' 
-                            ? 'bg-blue-100 text-blue-800' 
-                            : 'bg-green-100 text-green-800'
-                        }`}>
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            company.type === 'employer'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-green-100 text-green-800'
+                          }`}
+                        >
                           {company.type === 'employer' ? 'Employer' : 'Recruiter'}
                         </span>
                       </td>
@@ -522,11 +565,13 @@ function CompaniesPageContent() {
                               Deleted
                             </span>
                           ) : (
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              company.is_active
-                                ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300'
-                                : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300'
-                            }`}>
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                company.is_active
+                                  ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300'
+                                  : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300'
+                              }`}
+                            >
                               {company.is_active ? 'Active' : 'Inactive'}
                             </span>
                           )}
@@ -538,7 +583,10 @@ function CompaniesPageContent() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
+                        <div
+                          className="flex items-center justify-end"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <Link
                             href={`/companies/${company.id}/edit`}
                             className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 flex items-center space-x-1"
@@ -559,7 +607,9 @@ function CompaniesPageContent() {
             <div className="bg-white dark:bg-gray-800 px-4 py-3 border-t border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between">
                 <div className="text-sm text-gray-700 dark:text-gray-300">
-                  Showing {((pagination.page - 1) * pagination.size) + 1} to {Math.min(pagination.page * pagination.size, pagination.total)} of {pagination.total} results
+                  Showing {(pagination.page - 1) * pagination.size + 1} to{' '}
+                  {Math.min(pagination.page * pagination.size, pagination.total)} of{' '}
+                  {pagination.total} results
                 </div>
                 <div className="flex items-center space-x-2">
                   <button

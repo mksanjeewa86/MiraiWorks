@@ -26,9 +26,7 @@ export default function PlaceholderPage({
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          {primaryAction && (
-            <Button onClick={primaryAction.onClick}>{primaryAction.label}</Button>
-          )}
+          {primaryAction && <Button onClick={primaryAction.onClick}>{primaryAction.label}</Button>}
           {actions}
         </div>
       </Card>

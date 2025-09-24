@@ -1,4 +1,3 @@
-
 // Interview Types
 export interface Interview {
   id: number;
@@ -8,7 +7,13 @@ export interface Interview {
   title: string;
   description?: string;
   position_title?: string;
-  status: 'pending_schedule' | 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
+  status:
+    | 'pending_schedule'
+    | 'scheduled'
+    | 'confirmed'
+    | 'in_progress'
+    | 'completed'
+    | 'cancelled';
   interview_type: 'video' | 'phone' | 'in_person';
   scheduled_start?: string;
   scheduled_end?: string;

@@ -5,12 +5,20 @@ import type { InterviewNote, InterviewNoteUpdate } from '@/types/interviewNote';
 
 export const interviewNotesApi = {
   async getNote(interviewId: number): Promise<ApiResponse<InterviewNote>> {
-    const response = await apiClient.get<InterviewNote>(API_ENDPOINTS.INTERVIEWS.NOTES(interviewId));
+    const response = await apiClient.get<InterviewNote>(
+      API_ENDPOINTS.INTERVIEWS.NOTES(interviewId)
+    );
     return { data: response.data, success: true };
   },
 
-  async updateNote(interviewId: number, noteData: InterviewNoteUpdate): Promise<ApiResponse<InterviewNote>> {
-    const response = await apiClient.put<InterviewNote>(API_ENDPOINTS.INTERVIEWS.NOTES(interviewId), noteData);
+  async updateNote(
+    interviewId: number,
+    noteData: InterviewNoteUpdate
+  ): Promise<ApiResponse<InterviewNote>> {
+    const response = await apiClient.put<InterviewNote>(
+      API_ENDPOINTS.INTERVIEWS.NOTES(interviewId),
+      noteData
+    );
     return { data: response.data, success: true };
   },
 

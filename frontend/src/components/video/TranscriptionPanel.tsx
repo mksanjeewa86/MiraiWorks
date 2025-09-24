@@ -3,11 +3,7 @@ import Button from '../ui/button';
 import Input from '../ui/input';
 import { LanguageSelector } from './LanguageSelector';
 import { apiClient } from '../../api/apiClient';
-import {
-  MagnifyingGlassIcon,
-  ArrowDownTrayIcon,
-  XMarkIcon,
-} from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, ArrowDownTrayIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 interface TranscriptionSegment {
   id: number;
@@ -50,10 +46,8 @@ export const TranscriptionPanel: React.FC<TranscriptionPanelProps> = ({
   useEffect(() => {
     if (searchQuery.trim()) {
       const matchingSegments = segments
-        .filter(segment =>
-          segment.segment_text.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-        .map(segment => segment.id);
+        .filter((segment) => segment.segment_text.toLowerCase().includes(searchQuery.toLowerCase()))
+        .map((segment) => segment.id);
       setHighlightedSegments(matchingSegments);
     } else {
       setHighlightedSegments([]);
@@ -83,7 +77,9 @@ export const TranscriptionPanel: React.FC<TranscriptionPanelProps> = ({
 
   const handleExport = async (format: 'txt' | 'pdf' | 'srt') => {
     try {
-      const response = await apiClient.get<{ download_url: string }>(`/api/video-calls/${callId}/transcript/download?format=${format}`);
+      const response = await apiClient.get<{ download_url: string }>(
+        `/api/video-calls/${callId}/transcript/download?format=${format}`
+      );
       window.open(response.data.download_url, '_blank');
     } catch (error) {
       console.error('Failed to export transcript:', error);
@@ -108,10 +104,7 @@ export const TranscriptionPanel: React.FC<TranscriptionPanelProps> = ({
 
         {/* Language Selector */}
         <div className="mb-3">
-          <LanguageSelector
-            value={language}
-            onChange={onLanguageChange}
-          />
+          <LanguageSelector value={language} onChange={onLanguageChange} />
         </div>
 
         {/* Search */}
@@ -187,9 +180,7 @@ export const TranscriptionPanel: React.FC<TranscriptionPanelProps> = ({
                 <span className="text-sm font-medium text-gray-700">
                   {segment.speaker_name || `話者 ${segment.speaker_id}`}
                 </span>
-                <span className="text-xs text-gray-500">
-                  {formatTime(segment.start_time)}
-                </span>
+                <span className="text-xs text-gray-500">{formatTime(segment.start_time)}</span>
               </div>
 
               {/* Transcript Text */}
@@ -221,9 +212,7 @@ export const TranscriptionPanel: React.FC<TranscriptionPanelProps> = ({
       <div className="p-3 border-t border-gray-200 bg-gray-50">
         <div className="flex items-center justify-between text-sm text-gray-600">
           <span>{segments.length} セグメント</span>
-          {searchQuery && (
-            <span>{highlightedSegments.length} 件の検索結果</span>
-          )}
+          {searchQuery && <span>{highlightedSegments.length} 件の検索結果</span>}
         </div>
       </div>
     </div>

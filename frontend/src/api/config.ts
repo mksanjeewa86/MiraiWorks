@@ -144,11 +144,11 @@ export const API_ENDPOINTS = {
     ATTACHMENTS: {
       BASE: (todoId: number | string) => `/api/todos/${todoId}/attachments`,
       UPLOAD: (todoId: number | string) => `/api/todos/${todoId}/attachments/upload`,
-      BY_ID: (todoId: number | string, attachmentId: number | string) => 
+      BY_ID: (todoId: number | string, attachmentId: number | string) =>
         `/api/todos/${todoId}/attachments/${attachmentId}`,
-      DOWNLOAD: (todoId: number | string, attachmentId: number | string) => 
+      DOWNLOAD: (todoId: number | string, attachmentId: number | string) =>
         `/api/todos/${todoId}/attachments/${attachmentId}/download`,
-      PREVIEW: (todoId: number | string, attachmentId: number | string) => 
+      PREVIEW: (todoId: number | string, attachmentId: number | string) =>
         `/api/todos/${todoId}/attachments/${attachmentId}/preview`,
       BULK_DELETE: (todoId: number | string) => `/api/todos/${todoId}/attachments/bulk-delete`,
       STATS: (todoId: number | string) => `/api/todos/${todoId}/attachments/stats`,

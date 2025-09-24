@@ -53,34 +53,40 @@ function VideoCallContent() {
         try {
           try {
             // Try to get existing video call
-            const videoCallResponse = await apiClient.get<VideoCall>(`/api/interviews/${interviewId}/video-call`);
+            const videoCallResponse = await apiClient.get<VideoCall>(
+              `/api/interviews/${interviewId}/video-call`
+            );
             setVideoCallId(videoCallResponse.data.id.toString());
           } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             console.log('Video call not found, creating new one:', errorMessage);
 
             // If video call doesn't exist (404), create one
-            if (errorMessage.includes('404') ||
-                errorMessage.toLowerCase().includes('not found') ||
-                errorMessage.includes('No video call found')) {
-
+            if (
+              errorMessage.includes('404') ||
+              errorMessage.toLowerCase().includes('not found') ||
+              errorMessage.includes('No video call found')
+            ) {
               const videoCallData = {
                 candidate_id: interview.candidate?.id || interview.candidate_id,
                 scheduled_at: interview.scheduled_start || new Date().toISOString(),
                 transcription_enabled: true,
-                transcription_language: "ja"
+                transcription_language: 'ja',
               };
 
               console.log('Creating video call with data:', videoCallData);
               console.log('Interview data:', interview);
 
-              const newVideoCall = await apiClient.post<VideoCall>(`/api/interviews/${interviewId}/video-call`, videoCallData);
+              const newVideoCall = await apiClient.post<VideoCall>(
+                `/api/interviews/${interviewId}/video-call`,
+                videoCallData
+              );
 
               setVideoCallId(newVideoCall.data.id.toString());
               showToast({
                 type: 'success',
                 title: 'Video Call Created',
-                message: 'Video call session has been created for this interview'
+                message: 'Video call session has been created for this interview',
               });
             } else {
               throw new Error(`Failed to access video call: ${errorMessage}`);
@@ -88,14 +94,16 @@ function VideoCallContent() {
           }
         } catch (videoCallError) {
           console.error('Video call error:', videoCallError);
-          const errorMessage = videoCallError instanceof Error ? videoCallError.message : 'Failed to initialize video call';
+          const errorMessage =
+            videoCallError instanceof Error
+              ? videoCallError.message
+              : 'Failed to initialize video call';
           showToast({
             type: 'error',
             title: 'Video Call Error',
-            message: errorMessage
+            message: errorMessage,
           });
         }
-
       } catch (err) {
         console.error('Error fetching interview:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch interview details');
@@ -127,7 +135,9 @@ function VideoCallContent() {
           <div className="text-center">
             <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-white mb-2">Cannot Start Video Call</h2>
-            <p className="text-gray-300 mb-4">{error || 'Unable to initialize video call for this interview.'}</p>
+            <p className="text-gray-300 mb-4">
+              {error || 'Unable to initialize video call for this interview.'}
+            </p>
             <Link
               href={interviewId ? `/interviews/${interviewId}` : '/interviews'}
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg inline-flex items-center gap-2"

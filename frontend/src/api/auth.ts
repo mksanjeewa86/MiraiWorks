@@ -1,21 +1,21 @@
 import { API_ENDPOINTS, API_CONFIG } from './config';
 import { publicApiClient } from './apiClient';
-import type {
-  ApiResponse,
-  AuthResponse,
-  LoginCredentials,
-  RegisterData,
-  User
-} from '@/types';
+import type { ApiResponse, AuthResponse, LoginCredentials, RegisterData, User } from '@/types';
 
 export const authApi = {
   async login(credentials: LoginCredentials): Promise<ApiResponse<AuthResponse>> {
-    const response = await publicApiClient.post<AuthResponse>(API_ENDPOINTS.AUTH.LOGIN, credentials);
+    const response = await publicApiClient.post<AuthResponse>(
+      API_ENDPOINTS.AUTH.LOGIN,
+      credentials
+    );
     return { data: response.data, success: true };
   },
 
   async register(registerData: RegisterData): Promise<ApiResponse<AuthResponse>> {
-    const response = await publicApiClient.post<AuthResponse>(API_ENDPOINTS.AUTH.REGISTER, registerData);
+    const response = await publicApiClient.post<AuthResponse>(
+      API_ENDPOINTS.AUTH.REGISTER,
+      registerData
+    );
     return { data: response.data, success: true };
   },
 
@@ -23,7 +23,7 @@ export const authApi = {
     // For this method we need to pass token manually since it's called before auth context is set up
     const response = await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.AUTH.ME}`, {
       headers: {
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
     });
@@ -38,11 +38,16 @@ export const authApi = {
   },
 
   async refreshToken(refreshToken: string): Promise<ApiResponse<AuthResponse>> {
-    const response = await publicApiClient.post<AuthResponse>(API_ENDPOINTS.AUTH.REFRESH, { refresh_token: refreshToken });
+    const response = await publicApiClient.post<AuthResponse>(API_ENDPOINTS.AUTH.REFRESH, {
+      refresh_token: refreshToken,
+    });
     return { data: response.data, success: true };
   },
 
-  async verifyTwoFactor(data: { user_id: number; code: string }): Promise<ApiResponse<AuthResponse>> {
+  async verifyTwoFactor(data: {
+    user_id: number;
+    code: string;
+  }): Promise<ApiResponse<AuthResponse>> {
     const response = await publicApiClient.post<AuthResponse>(API_ENDPOINTS.AUTH.VERIFY_2FA, data);
     return { data: response.data, success: true };
   },
@@ -53,7 +58,7 @@ export const authApi = {
       await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.AUTH.LOGOUT}`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -69,5 +74,5 @@ export const authApi = {
 
   async resetPassword(token: string, password: string): Promise<void> {
     await publicApiClient.post<void>(API_ENDPOINTS.AUTH.RESET_PASSWORD, { token, password });
-  }
+  },
 };

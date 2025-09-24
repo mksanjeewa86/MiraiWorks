@@ -8,7 +8,11 @@ import Button from '@/components/ui/button';
 import type { ResetPasswordFormProps } from '@/types/components';
 import { resetPasswordSchema, type ResetPasswordFormData } from '@/types/forms';
 
-export default function ResetPasswordForm({ onSubmit, isLoading = false, error }: ResetPasswordFormProps) {
+export default function ResetPasswordForm({
+  onSubmit,
+  isLoading = false,
+  error,
+}: ResetPasswordFormProps) {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -37,7 +41,10 @@ export default function ResetPasswordForm({ onSubmit, isLoading = false, error }
   if (isSubmitted) {
     return (
       <div className="text-center space-y-6">
-        <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)' }}>
+        <div
+          className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+          style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)' }}
+        >
           <CheckCircle className="h-8 w-8 text-green-500" />
         </div>
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
@@ -68,7 +75,10 @@ export default function ResetPasswordForm({ onSubmit, isLoading = false, error }
       )}
 
       <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+        <label
+          htmlFor="password"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2"
+        >
           New Password
         </label>
         <div className="relative">
@@ -82,9 +92,10 @@ export default function ResetPasswordForm({ onSubmit, isLoading = false, error }
               w-full pl-10 pr-12 py-3 bg-gray-50 dark:bg-gray-800 border rounded-2xl text-sm 
               focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent 
               transition-colors placeholder-muted-400 dark:placeholder-muted-500
-              ${errors.password 
-                ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20' 
-                : 'border-gray-200 dark:border-gray-700'
+              ${
+                errors.password
+                  ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20'
+                  : 'border-gray-200 dark:border-gray-700'
               }
             `}
             placeholder="Enter your new password"
@@ -93,7 +104,7 @@ export default function ResetPasswordForm({ onSubmit, isLoading = false, error }
             type="button"
             onClick={() => setShowPassword(!showPassword)}
             className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-500 hover:text-muted-600 transition-colors"
-            aria-label={showPassword ? "Hide password" : "Show password"}
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
           >
             {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
           </button>
@@ -104,7 +115,10 @@ export default function ResetPasswordForm({ onSubmit, isLoading = false, error }
       </div>
 
       <div>
-        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+        <label
+          htmlFor="confirmPassword"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2"
+        >
           Confirm Password
         </label>
         <div className="relative">
@@ -118,9 +132,10 @@ export default function ResetPasswordForm({ onSubmit, isLoading = false, error }
               w-full pl-10 pr-12 py-3 bg-gray-50 dark:bg-gray-800 border rounded-2xl text-sm 
               focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent 
               transition-colors placeholder-muted-400 dark:placeholder-muted-500
-              ${errors.confirmPassword 
-                ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20' 
-                : 'border-gray-200 dark:border-gray-700'
+              ${
+                errors.confirmPassword
+                  ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20'
+                  : 'border-gray-200 dark:border-gray-700'
               }
             `}
             placeholder="Confirm your new password"
@@ -129,13 +144,15 @@ export default function ResetPasswordForm({ onSubmit, isLoading = false, error }
             type="button"
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
             className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-500 hover:text-muted-600 transition-colors"
-            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+            aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
           >
             {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
           </button>
         </div>
         {errors.confirmPassword && (
-          <p className="mt-2 text-sm text-red-600 dark:text-red-400">{errors.confirmPassword.message}</p>
+          <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+            {errors.confirmPassword.message}
+          </p>
         )}
       </div>
 

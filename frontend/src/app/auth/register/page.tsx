@@ -10,20 +10,25 @@ import { z } from 'zod';
 import { useAuth } from '@/contexts/AuthContext';
 import Brand from '@/components/common/Brand';
 
-const registerSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string()
-    .min(8, 'Password must be at least 8 characters')
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
-      'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'),
-  confirmPassword: z.string(),
-  first_name: z.string().min(1, 'First name is required'),
-  last_name: z.string().min(1, 'Last name is required'),
-  phone: z.string().optional(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+const registerSchema = z
+  .object({
+    email: z.string().email('Invalid email address'),
+    password: z
+      .string()
+      .min(8, 'Password must be at least 8 characters')
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
+        'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
+      ),
+    confirmPassword: z.string(),
+    first_name: z.string().min(1, 'First name is required'),
+    last_name: z.string().min(1, 'Last name is required'),
+    phone: z.string().optional(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
 
@@ -78,12 +83,12 @@ export default function RegisterPage() {
 
     try {
       // Remove confirmPassword from data before sending to API
-       
+
       const { confirmPassword, ...formData } = data;
       const submitData = {
         ...formData,
         company_name: 'Default Company', // TODO: Add company fields to form
-        company_domain: 'default.com'
+        company_domain: 'default.com',
       };
       await registerUser(submitData);
 
@@ -135,7 +140,11 @@ export default function RegisterPage() {
             {/* Personal Information */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label htmlFor="first_name" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+                <label
+                  htmlFor="first_name"
+                  className="block text-sm font-medium mb-2"
+                  style={{ color: 'var(--text-primary)' }}
+                >
                   First Name
                 </label>
                 <div className="relative">
@@ -155,7 +164,11 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label htmlFor="last_name" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+                <label
+                  htmlFor="last_name"
+                  className="block text-sm font-medium mb-2"
+                  style={{ color: 'var(--text-primary)' }}
+                >
                   Last Name
                 </label>
                 <div className="relative">
@@ -177,7 +190,11 @@ export default function RegisterPage() {
 
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium mb-2"
+                style={{ color: 'var(--text-primary)' }}
+              >
                 Email
               </label>
               <div className="relative">
@@ -192,14 +209,16 @@ export default function RegisterPage() {
                   autoComplete="email"
                 />
               </div>
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-              )}
+              {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>}
             </div>
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium mb-2"
+                style={{ color: 'var(--text-primary)' }}
+              >
                 Password
               </label>
               <div className="relative">
@@ -208,7 +227,7 @@ export default function RegisterPage() {
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   {...register('password', {
-                    onChange: (e) => setPassword(e.target.value)
+                    onChange: (e) => setPassword(e.target.value),
                   })}
                   className="input w-full"
                   style={{ paddingLeft: '3rem', paddingRight: '3rem' }}
@@ -233,40 +252,64 @@ export default function RegisterPage() {
                 <div className="mt-2">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-xs font-medium text-gray-600">Password strength:</span>
-                    <span className={`text-xs font-medium ${
-                      getPasswordStrength(password) === 'weak' ? 'text-red-600' :
-                      getPasswordStrength(password) === 'medium' ? 'text-yellow-600' :
-                      getPasswordStrength(password) === 'strong' ? 'text-green-600' : 'text-gray-400'
-                    }`}>
+                    <span
+                      className={`text-xs font-medium ${
+                        getPasswordStrength(password) === 'weak'
+                          ? 'text-red-600'
+                          : getPasswordStrength(password) === 'medium'
+                            ? 'text-yellow-600'
+                            : getPasswordStrength(password) === 'strong'
+                              ? 'text-green-600'
+                              : 'text-gray-400'
+                      }`}
+                    >
                       {getPasswordStrength(password)}
                     </span>
                   </div>
                   <div className="flex gap-1">
-                    <div className={`h-1 w-full rounded ${
-                      password.length >= 8 ? 'bg-green-500' : 'bg-gray-200'
-                    }`}></div>
-                    <div className={`h-1 w-full rounded ${
-                      /[A-Z]/.test(password) && /[a-z]/.test(password) ? 'bg-green-500' : 'bg-gray-200'
-                    }`}></div>
-                    <div className={`h-1 w-full rounded ${
-                      /\d/.test(password) ? 'bg-green-500' : 'bg-gray-200'
-                    }`}></div>
-                    <div className={`h-1 w-full rounded ${
-                      /[@$!%*?&]/.test(password) ? 'bg-green-500' : 'bg-gray-200'
-                    }`}></div>
+                    <div
+                      className={`h-1 w-full rounded ${
+                        password.length >= 8 ? 'bg-green-500' : 'bg-gray-200'
+                      }`}
+                    ></div>
+                    <div
+                      className={`h-1 w-full rounded ${
+                        /[A-Z]/.test(password) && /[a-z]/.test(password)
+                          ? 'bg-green-500'
+                          : 'bg-gray-200'
+                      }`}
+                    ></div>
+                    <div
+                      className={`h-1 w-full rounded ${
+                        /\d/.test(password) ? 'bg-green-500' : 'bg-gray-200'
+                      }`}
+                    ></div>
+                    <div
+                      className={`h-1 w-full rounded ${
+                        /[@$!%*?&]/.test(password) ? 'bg-green-500' : 'bg-gray-200'
+                      }`}
+                    ></div>
                   </div>
                   <div className="mt-1 text-xs text-gray-500">
                     <ul className="space-y-1">
                       <li className={password.length >= 8 ? 'text-green-600' : 'text-gray-500'}>
                         ✓ At least 8 characters
                       </li>
-                      <li className={/[A-Z]/.test(password) && /[a-z]/.test(password) ? 'text-green-600' : 'text-gray-500'}>
+                      <li
+                        className={
+                          /[A-Z]/.test(password) && /[a-z]/.test(password)
+                            ? 'text-green-600'
+                            : 'text-gray-500'
+                        }
+                      >
                         ✓ Upper and lowercase letters
                       </li>
                       <li className={/\d/.test(password) ? 'text-green-600' : 'text-gray-500'}>
                         ✓ At least one number
                       </li>
-                      <li className={/[@$!%*?&]/.test(password) ? 'text-green-600' : 'text-gray-500'}>
+                      <li
+                        className={/[@$!%*?&]/.test(password) ? 'text-green-600' : 'text-gray-500'}
+                      >
                         ✓ At least one special character (@$!%*?&)
                       </li>
                     </ul>
@@ -281,7 +324,11 @@ export default function RegisterPage() {
 
             {/* Confirm Password */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+              <label
+                htmlFor="confirmPassword"
+                className="block text-sm font-medium mb-2"
+                style={{ color: 'var(--text-primary)' }}
+              >
                 Confirm Password
               </label>
               <div className="relative">
@@ -290,7 +337,7 @@ export default function RegisterPage() {
                   id="confirmPassword"
                   type={showConfirmPassword ? 'text' : 'password'}
                   {...register('confirmPassword', {
-                    onChange: (e) => setConfirmPassword(e.target.value)
+                    onChange: (e) => setConfirmPassword(e.target.value),
                   })}
                   className="input w-full"
                   style={{ paddingLeft: '3rem', paddingRight: '3rem' }}
@@ -315,19 +362,29 @@ export default function RegisterPage() {
                 <div className="mt-2">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-xs font-medium text-gray-600">Password match:</span>
-                    <span className={`text-xs font-medium ${
-                      getPasswordMatchStatus() === 'matching' ? 'text-green-600' :
-                      getPasswordMatchStatus() === 'not-matching' ? 'text-red-600' : 'text-gray-400'
-                    }`}>
+                    <span
+                      className={`text-xs font-medium ${
+                        getPasswordMatchStatus() === 'matching'
+                          ? 'text-green-600'
+                          : getPasswordMatchStatus() === 'not-matching'
+                            ? 'text-red-600'
+                            : 'text-gray-400'
+                      }`}
+                    >
                       {getPasswordMatchStatus() === 'matching' && '✓ Passwords match'}
                       {getPasswordMatchStatus() === 'not-matching' && '✗ Passwords do not match'}
                     </span>
                   </div>
                   <div className="flex gap-1">
-                    <div className={`h-1 w-full rounded ${
-                      getPasswordMatchStatus() === 'matching' ? 'bg-green-500' :
-                      getPasswordMatchStatus() === 'not-matching' ? 'bg-red-500' : 'bg-gray-200'
-                    }`}></div>
+                    <div
+                      className={`h-1 w-full rounded ${
+                        getPasswordMatchStatus() === 'matching'
+                          ? 'bg-green-500'
+                          : getPasswordMatchStatus() === 'not-matching'
+                            ? 'bg-red-500'
+                            : 'bg-gray-200'
+                      }`}
+                    ></div>
                   </div>
                 </div>
               )}
@@ -339,7 +396,11 @@ export default function RegisterPage() {
 
             {/* Phone (Optional) */}
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+              <label
+                htmlFor="phone"
+                className="block text-sm font-medium mb-2"
+                style={{ color: 'var(--text-primary)' }}
+              >
                 Phone Number (Optional)
               </label>
               <div className="relative">
@@ -356,13 +417,8 @@ export default function RegisterPage() {
               </div>
             </div>
 
-
             {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn btn-primary w-full"
-            >
+            <button type="submit" disabled={loading} className="btn btn-primary w-full">
               {loading ? (
                 <>
                   <Loader2 className="animate-spin h-4 w-4 mr-2" />

@@ -1,17 +1,17 @@
 import { API_ENDPOINTS } from './config';
 import { apiClient } from './apiClient';
-import type { 
+import type {
   TodoExtensionValidation,
   TodoExtensionRequestCreate,
   TodoExtensionRequestResponse,
   TodoExtensionRequest,
   TodoExtensionRequestList,
-  ExtensionRequestStatus
+  ExtensionRequestStatus,
 } from '@/types/todo';
 
 export const todoExtensionsApi = {
   async validateExtensionRequest(
-    todoId: number, 
+    todoId: number,
     requestedDueDate: string
   ): Promise<TodoExtensionValidation> {
     const params = new URLSearchParams({ requested_due_date: requestedDueDate });
@@ -21,22 +21,22 @@ export const todoExtensionsApi = {
   },
 
   async createExtensionRequest(
-    todoId: number, 
+    todoId: number,
     request: TodoExtensionRequestCreate
   ): Promise<TodoExtensionRequest> {
     const response = await apiClient.post<TodoExtensionRequest>(
-      API_ENDPOINTS.TODOS.EXTENSIONS.CREATE(todoId), 
+      API_ENDPOINTS.TODOS.EXTENSIONS.CREATE(todoId),
       request
     );
     return response.data;
   },
 
   async respondToExtensionRequest(
-    requestId: number, 
+    requestId: number,
     response: TodoExtensionRequestResponse
   ): Promise<TodoExtensionRequest> {
     const apiResponse = await apiClient.put<TodoExtensionRequest>(
-      API_ENDPOINTS.TODOS.EXTENSIONS.RESPOND(requestId), 
+      API_ENDPOINTS.TODOS.EXTENSIONS.RESPOND(requestId),
       response
     );
     return apiResponse.data;
@@ -48,7 +48,7 @@ export const todoExtensionsApi = {
     offset?: number;
   }): Promise<TodoExtensionRequestList> {
     const searchParams = new URLSearchParams();
-    
+
     if (params?.status) {
       searchParams.set('status_filter', params.status);
     }
@@ -58,12 +58,12 @@ export const todoExtensionsApi = {
     if (params?.offset) {
       searchParams.set('offset', String(params.offset));
     }
-    
+
     const query = searchParams.toString();
-    const url = query ? 
-      `${API_ENDPOINTS.TODOS.EXTENSIONS.MY_REQUESTS}?${query}` : 
-      API_ENDPOINTS.TODOS.EXTENSIONS.MY_REQUESTS;
-    
+    const url = query
+      ? `${API_ENDPOINTS.TODOS.EXTENSIONS.MY_REQUESTS}?${query}`
+      : API_ENDPOINTS.TODOS.EXTENSIONS.MY_REQUESTS;
+
     const response = await apiClient.get<TodoExtensionRequestList>(url);
     return response.data;
   },
@@ -74,7 +74,7 @@ export const todoExtensionsApi = {
     offset?: number;
   }): Promise<TodoExtensionRequestList> {
     const searchParams = new URLSearchParams();
-    
+
     if (params?.status) {
       searchParams.set('status_filter', params.status);
     }
@@ -84,12 +84,12 @@ export const todoExtensionsApi = {
     if (params?.offset) {
       searchParams.set('offset', String(params.offset));
     }
-    
+
     const query = searchParams.toString();
-    const url = query ? 
-      `${API_ENDPOINTS.TODOS.EXTENSIONS.TO_REVIEW}?${query}` : 
-      API_ENDPOINTS.TODOS.EXTENSIONS.TO_REVIEW;
-    
+    const url = query
+      ? `${API_ENDPOINTS.TODOS.EXTENSIONS.TO_REVIEW}?${query}`
+      : API_ENDPOINTS.TODOS.EXTENSIONS.TO_REVIEW;
+
     const response = await apiClient.get<TodoExtensionRequestList>(url);
     return response.data;
   },
@@ -99,5 +99,5 @@ export const todoExtensionsApi = {
       API_ENDPOINTS.TODOS.EXTENSIONS.BY_ID(requestId)
     );
     return response.data;
-  }
+  },
 };

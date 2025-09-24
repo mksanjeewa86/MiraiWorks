@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
@@ -15,7 +15,7 @@ function PreviewResumePageContent() {
   const router = useRouter();
   const params = useParams();
   const resumeId = params.id as string;
-  
+
   const [loading, setLoading] = useState(true);
   const [resume, setResume] = useState<Resume | null>(null);
   const [previewHtml, setPreviewHtml] = useState<string>('');
@@ -61,12 +61,12 @@ function PreviewResumePageContent() {
 
     try {
       setGeneratingPdf(true);
-      
+
       const response = await resumesApi.generatePdf(parseInt(resumeId), {
         format: 'A4',
         include_contact_info: true,
       });
-      
+
       // Create download link
       const link = document.createElement('a');
       link.href = response.data?.pdf_url || '';
@@ -91,14 +91,14 @@ function PreviewResumePageContent() {
       const makePublic = confirm(
         'This resume is currently private. Would you like to make it public to share it?'
       );
-      
+
       if (makePublic) {
         try {
           const response = await resumesApi.togglePublic(parseInt(resumeId));
-          
+
           if (response.data) {
             setResume(response.data);
-            
+
             if (response.data.public_url_slug) {
               copyShareLink(response.data.public_url_slug);
             }
@@ -115,7 +115,7 @@ function PreviewResumePageContent() {
 
   const copyShareLink = async (slug: string) => {
     const shareUrl = `${window.location.origin}/public/resume/${slug}`;
-    
+
     try {
       await navigator.clipboard.writeText(shareUrl);
       alert('Share link copied to clipboard!');
@@ -149,9 +149,7 @@ function PreviewResumePageContent() {
           <div className="text-6xl mb-4">❌</div>
           <h3 className="text-xl font-bold text-gray-900 mb-2">Resume Not Found</h3>
           <p className="text-gray-600 mb-6">The resume you're looking for doesn't exist.</p>
-          <Button onClick={() => router.push('/resumes')}>
-            Back to Resumes
-          </Button>
+          <Button onClick={() => router.push('/resumes')}>Back to Resumes</Button>
         </div>
       </AppLayout>
     );
@@ -178,11 +176,7 @@ function PreviewResumePageContent() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center">
-            <Button 
-              variant="ghost" 
-              onClick={() => router.back()}
-              className="mr-4"
-            >
+            <Button variant="ghost" onClick={() => router.back()} className="mr-4">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
             </Button>
@@ -195,23 +189,17 @@ function PreviewResumePageContent() {
               </p>
             </div>
           </div>
-          
+
           <div className="flex gap-2">
-            <Button 
-              variant="outline"
-              onClick={() => router.push(`/resumes/${resumeId}/edit`)}
-            >
+            <Button variant="outline" onClick={() => router.push(`/resumes/${resumeId}/edit`)}>
               <Edit className="h-4 w-4 mr-2" />
               Edit
             </Button>
-            <Button 
-              variant="outline"
-              onClick={handleShare}
-            >
+            <Button variant="outline" onClick={handleShare}>
               <Share2 className="h-4 w-4 mr-2" />
               Share
             </Button>
-            <Button 
+            <Button
               onClick={handleDownloadPdf}
               disabled={generatingPdf || !resume.can_download_pdf}
             >
@@ -236,7 +224,7 @@ function PreviewResumePageContent() {
               </div>
             </div>
           </Card>
-          
+
           <Card className="p-4">
             <div className="flex items-center gap-3">
               {resume.is_public ? (
@@ -252,7 +240,7 @@ function PreviewResumePageContent() {
               </div>
             </div>
           </Card>
-          
+
           <Card className="p-4">
             <div className="flex items-center gap-3">
               <Eye className="h-8 w-8 text-blue-600" />
@@ -262,7 +250,7 @@ function PreviewResumePageContent() {
               </div>
             </div>
           </Card>
-          
+
           <Card className="p-4">
             <div className="flex items-center gap-3">
               <Download className="h-8 w-8 text-purple-600" />
@@ -284,15 +272,15 @@ function PreviewResumePageContent() {
               This is how your resume will appear when viewed or downloaded as PDF
             </p>
           </div>
-          
+
           <div className="bg-white">
             {previewHtml ? (
-              <div 
+              <div
                 className="resume-preview"
                 dangerouslySetInnerHTML={{ __html: previewHtml }}
                 style={{
                   fontFamily: resume.font_family || 'Inter',
-                  ['--theme-color' as any]: resume.theme_color || '#2563eb'
+                  ['--theme-color' as any]: resume.theme_color || '#2563eb',
                 }}
               />
             ) : (
@@ -316,10 +304,7 @@ function PreviewResumePageContent() {
                   {`${window.location.origin}/public/resume/${resume.public_url_slug}`}
                 </code>
               </div>
-              <Button 
-                variant="outline" 
-                onClick={() => copyShareLink(resume.public_url_slug!)}
-              >
+              <Button variant="outline" onClick={() => copyShareLink(resume.public_url_slug!)}>
                 Copy Link
               </Button>
             </div>
@@ -335,7 +320,7 @@ function PreviewResumePageContent() {
           max-width: 210mm;
           margin: 0 auto;
           background: white;
-          box-shadow: 0 0 10px rgba(0,0,0,0.1);
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
           min-height: 297mm;
         }
 

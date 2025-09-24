@@ -15,6 +15,7 @@ from app.models.resume import (
     ResumeSection,
     ResumeShare,
     ResumeTemplate,
+    ResumeMessageAttachment,
     Skill,
     WorkExperience,
 )
@@ -26,6 +27,7 @@ from app.schemas.resume import (
     WorkExperienceCreate,
 )
 from app.utils.constants import ResumeStatus, ResumeVisibility
+from app.crud.resume import resume as resume_crud
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +40,10 @@ class ResumeService:
         try:
             # Generate unique slug
             slug = await self._generate_unique_slug(db, resume_data.title, user_id)
+
+            # Set status-based visibility and public settings
+            status = getattr(resume_data, 'status', ResumeStatus.DRAFT)
+            is_published = status == ResumeStatus.PUBLISHED
 
             # Create resume
             resume = Resume(
@@ -58,6 +64,12 @@ class ResumeService:
                 font_family=resume_data.font_family or "Inter",
                 slug=slug,
                 share_token=self._generate_share_token(),
+                # Status-based settings
+                status=status,
+                visibility=ResumeVisibility.PUBLIC if is_published else ResumeVisibility.PRIVATE,
+                is_public=is_published,
+                can_download_pdf=is_published,
+                public_url_slug=slug if is_published else None,
             )
 
             db.add(resume)
@@ -76,34 +88,7 @@ class ResumeService:
         self, db: AsyncSession, resume_id: int, user_id: int
     ) -> Optional[Resume]:
         """Get a resume by ID (with user ownership check)."""
-        result = await db.execute(
-            select(Resume)
-            .where(and_(Resume.id == resume_id, Resume.user_id == user_id))
-            .options(
-                # Eager load all related data
-                *[
-                    getattr(Resume, rel).load_only(
-                        *[
-                            c.name
-                            for c in getattr(
-                                Resume, rel
-                            ).property.mapper.class_.__table__.columns
-                        ]
-                    )
-                    for rel in [
-                        "sections",
-                        "experiences",
-                        "educations",
-                        "skills",
-                        "projects",
-                        "certifications",
-                        "languages",
-                        "references",
-                    ]
-                ]
-            )
-        )
-        return result.scalars().first()
+        return await resume_crud.get_with_details(db, id=resume_id, user_id=user_id)
 
     async def get_resume_by_slug(self, db: AsyncSession, slug: str) -> Optional[Resume]:
         """Get a resume by slug (public access)."""
@@ -135,15 +120,9 @@ class ResumeService:
         status: Optional[ResumeStatus] = None,
     ) -> list[Resume]:
         """Get all resumes for a user."""
-        query = select(Resume).where(Resume.user_id == user_id)
-
-        if status:
-            query = query.where(Resume.status == status)
-
-        query = query.order_by(Resume.updated_at.desc()).limit(limit).offset(offset)
-
-        result = await db.execute(query)
-        return result.scalars().all()
+        return await resume_crud.get_by_user(
+            db, user_id=user_id, skip=offset, limit=limit, status=status
+        )
 
     async def update_resume(
         self, db: AsyncSession, resume_id: int, user_id: int, update_data: ResumeUpdate
@@ -159,6 +138,16 @@ class ResumeService:
             for field, value in update_dict.items():
                 if hasattr(resume, field):
                     setattr(resume, field, value)
+
+            # Auto-update visibility settings if status changed
+            if 'status' in update_dict:
+                is_published = update_dict['status'] == ResumeStatus.PUBLISHED
+                resume.visibility = ResumeVisibility.PUBLIC if is_published else ResumeVisibility.PRIVATE
+                resume.is_public = is_published
+                resume.can_download_pdf = is_published
+                # Set public URL slug when publishing
+                if is_published and not resume.public_url_slug:
+                    resume.public_url_slug = resume.slug
 
             # Update slug if title changed
             if "title" in update_dict:
@@ -651,3 +640,101 @@ class ResumeService:
         """Validate resume data structure."""
         required_fields = ["title", "full_name", "email"]
         return all(field in resume_data for field in required_fields)
+
+    async def update_public_settings(
+        self,
+        db: AsyncSession,
+        resume_id: int,
+        user_id: int,
+        is_public: bool,
+        custom_slug: Optional[str] = None,
+        can_download_pdf: bool = True
+    ) -> Optional[Resume]:
+        """Update public sharing settings for a resume."""
+        try:
+            return await resume_crud.update_public_settings(
+                db,
+                resume_id=resume_id,
+                user_id=user_id,
+                is_public=is_public,
+                custom_slug=custom_slug,
+                can_download_pdf=can_download_pdf
+            )
+        except Exception as e:
+            logger.error(f"Error updating public settings: {str(e)}")
+            raise
+
+    async def get_public_resume(self, db: AsyncSession, slug: str) -> Optional[Resume]:
+        """Get public resume by slug."""
+        try:
+            return await resume_crud.get_public_by_slug(db, slug=slug)
+        except Exception as e:
+            logger.error(f"Error getting public resume: {str(e)}")
+            raise
+
+    async def increment_download_count(self, db: AsyncSession, resume_id: int) -> bool:
+        """Increment download count for a resume."""
+        try:
+            return await resume_crud.increment_download(db, resume_id=resume_id)
+        except Exception as e:
+            logger.error(f"Error incrementing download count: {str(e)}")
+            raise
+
+    async def send_resume_email(
+        self,
+        db: AsyncSession,
+        resume: Resume,
+        recipient_emails: list[str],
+        subject: str,
+        message: str,
+        include_pdf: bool = True,
+        sender_name: Optional[str] = None
+    ) -> bool:
+        """Send resume via email (background task)."""
+        try:
+            # Import email service (would need to be implemented)
+            # from app.services.email_service import email_service
+
+            logger.info(f"Sending resume {resume.id} to {len(recipient_emails)} recipients")
+
+            # For now, just log the action
+            # In a real implementation, this would:
+            # 1. Generate PDF if include_pdf is True
+            # 2. Compose email with resume content
+            # 3. Send via email service (SMTP, SendGrid, etc.)
+
+            return True
+        except Exception as e:
+            logger.error(f"Error sending resume email: {str(e)}")
+            return False
+
+    async def attach_to_message(
+        self,
+        db: AsyncSession,
+        resume_id: int,
+        message_id: int,
+        include_pdf: bool = True,
+        auto_attach: bool = False
+    ) -> ResumeMessageAttachment:
+        """Attach resume to a message."""
+        try:
+            attachment_format = "pdf" if include_pdf else "json"
+
+            attachment = ResumeMessageAttachment(
+                resume_id=resume_id,
+                message_id=message_id,
+                auto_attached=auto_attach,
+                attachment_format=attachment_format
+            )
+
+            db.add(attachment)
+            await db.commit()
+            await db.refresh(attachment)
+
+            logger.info(f"Attached resume {resume_id} to message {message_id}")
+            return attachment
+
+        except Exception as e:
+            logger.error(f"Error attaching resume to message: {str(e)}")
+            await db.rollback()
+            raise

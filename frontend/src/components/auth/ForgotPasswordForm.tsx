@@ -8,7 +8,11 @@ import Button from '@/components/ui/button';
 import type { ForgotPasswordFormProps } from '@/types/components';
 import { forgotPasswordSchema, type ForgotPasswordFormData } from '@/types/forms';
 
-export default function ForgotPasswordForm({ onSubmit, isLoading = false, error }: ForgotPasswordFormProps) {
+export default function ForgotPasswordForm({
+  onSubmit,
+  isLoading = false,
+  error,
+}: ForgotPasswordFormProps) {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -36,7 +40,10 @@ export default function ForgotPasswordForm({ onSubmit, isLoading = false, error 
   if (isSubmitted) {
     return (
       <div className="text-center space-y-6">
-        <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)' }}>
+        <div
+          className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+          style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)' }}
+        >
           <CheckCircle className="h-8 w-8 text-green-500" />
         </div>
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
@@ -73,7 +80,10 @@ export default function ForgotPasswordForm({ onSubmit, isLoading = false, error 
       )}
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+        <label
+          htmlFor="email"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2"
+        >
           Email address
         </label>
         <div className="relative">
@@ -87,9 +97,10 @@ export default function ForgotPasswordForm({ onSubmit, isLoading = false, error 
               w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border rounded-2xl text-sm 
               focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent 
               transition-colors placeholder-muted-400 dark:placeholder-muted-500
-              ${errors.email 
-                ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20' 
-                : 'border-gray-200 dark:border-gray-700'
+              ${
+                errors.email
+                  ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20'
+                  : 'border-gray-200 dark:border-gray-700'
               }
             `}
             placeholder="Enter your email address"

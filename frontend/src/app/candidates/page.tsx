@@ -1,13 +1,26 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, Search, Mail, Phone, MapPin, Edit, Trash2, Eye, User, Star, Calendar, Download, Upload } from 'lucide-react';
+import {
+  Plus,
+  Search,
+  Mail,
+  Phone,
+  MapPin,
+  Edit,
+  Trash2,
+  Eye,
+  User,
+  Star,
+  Calendar,
+  Download,
+  Upload,
+} from 'lucide-react';
 import Link from 'next/link';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { candidatesApi } from '@/api/candidates';
 import type { Candidate, CandidateApiFilters } from '@/types/candidate';
-
 
 function CandidatesPageContent() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -25,89 +38,92 @@ function CandidatesPageContent() {
   const [totalPages, setTotalPages] = useState(0);
 
   // Mock data for development
-   
-  const mockCandidates: Candidate[] = useMemo(() => [
-    {
-      id: 1,
-      first_name: 'John',
-      last_name: 'Smith',
-      email: 'john.smith@email.com',
-      phone: '+1-555-0123',
-      location: 'San Francisco, CA',
-      title: 'Senior Software Engineer',
-      company: 'Tech Corp',
-      experience_years: 8,
-      skills: ['React', 'Node.js', 'TypeScript', 'Python', 'AWS'],
-      status: 'interviewing',
-      rating: 4.5,
-      source: 'linkedin',
-      applied_positions: 2,
-      last_activity: '2025-01-20T10:00:00Z',
-      resume_url: '/resumes/john-smith.pdf',
-      notes: 'Strong technical background, good communication skills',
-      created_at: '2025-01-15T09:00:00Z'
-    },
-    {
-      id: 2,
-      first_name: 'Emily',
-      last_name: 'Chen',
-      email: 'emily.chen@email.com',
-      phone: '+1-555-0124',
-      location: 'New York, NY',
-      title: 'Product Manager',
-      company: 'Innovation Ltd',
-      experience_years: 6,
-      skills: ['Product Strategy', 'Agile', 'Analytics', 'SQL', 'Figma'],
-      status: 'active',
-      rating: 4.8,
-      source: 'website',
-      applied_positions: 1,
-      last_activity: '2025-01-21T14:30:00Z',
-      resume_url: '/resumes/emily-chen.pdf',
-      notes: 'Excellent product sense, proven track record',
-      created_at: '2025-01-18T11:15:00Z'
-    },
-    {
-      id: 3,
-      first_name: 'David',
-      last_name: 'Brown',
-      email: 'david.brown@email.com',
-      phone: '+1-555-0125',
-      location: 'Austin, TX',
-      title: 'DevOps Engineer',
-      company: 'Cloud Solutions',
-      experience_years: 5,
-      skills: ['Docker', 'Kubernetes', 'AWS', 'Terraform', 'Jenkins'],
-      status: 'hired',
-      rating: 4.2,
-      source: 'referral',
-      applied_positions: 1,
-      last_activity: '2025-01-19T16:45:00Z',
-      resume_url: '/resumes/david-brown.pdf',
-      notes: 'Recently hired for DevOps Engineer position',
-      created_at: '2025-01-10T13:20:00Z'
-    },
-    {
-      id: 4,
-      first_name: 'Sarah',
-      last_name: 'Wilson',
-      email: 'sarah.wilson@email.com',
-      phone: '+1-555-0126',
-      location: 'Seattle, WA',
-      title: 'UX Designer',
-      company: 'Design Studio',
-      experience_years: 4,
-      skills: ['Figma', 'Sketch', 'User Research', 'Prototyping', 'CSS'],
-      status: 'rejected',
-      rating: 3.5,
-      source: 'agency',
-      applied_positions: 1,
-      last_activity: '2025-01-17T12:10:00Z',
-      resume_url: '/resumes/sarah-wilson.pdf',
-      notes: 'Good design skills but not the right fit for this role',
-      created_at: '2025-01-12T08:45:00Z'
-    }
-  ], []);
+
+  const mockCandidates: Candidate[] = useMemo(
+    () => [
+      {
+        id: 1,
+        first_name: 'John',
+        last_name: 'Smith',
+        email: 'john.smith@email.com',
+        phone: '+1-555-0123',
+        location: 'San Francisco, CA',
+        title: 'Senior Software Engineer',
+        company: 'Tech Corp',
+        experience_years: 8,
+        skills: ['React', 'Node.js', 'TypeScript', 'Python', 'AWS'],
+        status: 'interviewing',
+        rating: 4.5,
+        source: 'linkedin',
+        applied_positions: 2,
+        last_activity: '2025-01-20T10:00:00Z',
+        resume_url: '/resumes/john-smith.pdf',
+        notes: 'Strong technical background, good communication skills',
+        created_at: '2025-01-15T09:00:00Z',
+      },
+      {
+        id: 2,
+        first_name: 'Emily',
+        last_name: 'Chen',
+        email: 'emily.chen@email.com',
+        phone: '+1-555-0124',
+        location: 'New York, NY',
+        title: 'Product Manager',
+        company: 'Innovation Ltd',
+        experience_years: 6,
+        skills: ['Product Strategy', 'Agile', 'Analytics', 'SQL', 'Figma'],
+        status: 'active',
+        rating: 4.8,
+        source: 'website',
+        applied_positions: 1,
+        last_activity: '2025-01-21T14:30:00Z',
+        resume_url: '/resumes/emily-chen.pdf',
+        notes: 'Excellent product sense, proven track record',
+        created_at: '2025-01-18T11:15:00Z',
+      },
+      {
+        id: 3,
+        first_name: 'David',
+        last_name: 'Brown',
+        email: 'david.brown@email.com',
+        phone: '+1-555-0125',
+        location: 'Austin, TX',
+        title: 'DevOps Engineer',
+        company: 'Cloud Solutions',
+        experience_years: 5,
+        skills: ['Docker', 'Kubernetes', 'AWS', 'Terraform', 'Jenkins'],
+        status: 'hired',
+        rating: 4.2,
+        source: 'referral',
+        applied_positions: 1,
+        last_activity: '2025-01-19T16:45:00Z',
+        resume_url: '/resumes/david-brown.pdf',
+        notes: 'Recently hired for DevOps Engineer position',
+        created_at: '2025-01-10T13:20:00Z',
+      },
+      {
+        id: 4,
+        first_name: 'Sarah',
+        last_name: 'Wilson',
+        email: 'sarah.wilson@email.com',
+        phone: '+1-555-0126',
+        location: 'Seattle, WA',
+        title: 'UX Designer',
+        company: 'Design Studio',
+        experience_years: 4,
+        skills: ['Figma', 'Sketch', 'User Research', 'Prototyping', 'CSS'],
+        status: 'rejected',
+        rating: 3.5,
+        source: 'agency',
+        applied_positions: 1,
+        last_activity: '2025-01-17T12:10:00Z',
+        resume_url: '/resumes/sarah-wilson.pdf',
+        notes: 'Good design skills but not the right fit for this role',
+        created_at: '2025-01-12T08:45:00Z',
+      },
+    ],
+    []
+  );
 
   // Fetch candidates from API
   useEffect(() => {
@@ -120,32 +136,33 @@ function CandidatesPageContent() {
           page: currentPage,
           size: itemsPerPage,
           search: searchTerm || undefined,
-          role: 'candidate' as const
+          role: 'candidate' as const,
         };
 
         const response = await candidatesApi.getCandidates(filters);
 
         // Map users to candidates format
-        const candidatesData = response.data?.users?.map(user => ({
-          id: user.id,
-          first_name: user.first_name,
-          last_name: user.last_name,
-          email: user.email,
-          phone: user.phone || '',
-          location: '', // Not available in User type
-          title: 'Job Seeker', // Not available in User type
-          company: user.company_name || '',
-          experience_years: 0, // Not available in User type
-          skills: [], // Not available in User type
-          status: 'active' as const,
-          rating: 0,
-          source: 'website' as const,
-          applied_positions: 0,
-          last_activity: user.updated_at || user.created_at,
-          resume_url: '',
-          notes: '', // Not available in User type
-          created_at: user.created_at
-        })) || [];
+        const candidatesData =
+          response.data?.users?.map((user) => ({
+            id: user.id,
+            first_name: user.first_name,
+            last_name: user.last_name,
+            email: user.email,
+            phone: user.phone || '',
+            location: '', // Not available in User type
+            title: 'Job Seeker', // Not available in User type
+            company: user.company_name || '',
+            experience_years: 0, // Not available in User type
+            skills: [], // Not available in User type
+            status: 'active' as const,
+            rating: 0,
+            source: 'website' as const,
+            applied_positions: 0,
+            last_activity: user.updated_at || user.created_at,
+            resume_url: '',
+            notes: '', // Not available in User type
+            created_at: user.created_at,
+          })) || [];
 
         setCandidates(candidatesData);
         setTotalCandidates(response.data?.total || 0);
@@ -165,7 +182,7 @@ function CandidatesPageContent() {
 
   // Apply client-side filters (search is handled server-side)
   const filteredCandidates = candidates
-    .filter(candidate => {
+    .filter((candidate) => {
       const matchesStatus = statusFilter === 'all' || candidate.status === statusFilter;
       const matchesSource = sourceFilter === 'all' || candidate.source === sourceFilter;
 
@@ -219,11 +236,13 @@ function CandidatesPageContent() {
       interviewing: 'bg-blue-100 text-blue-800',
       hired: 'bg-purple-100 text-purple-800',
       rejected: 'bg-red-100 text-red-800',
-      withdrawn: 'bg-gray-100 text-gray-800'
+      withdrawn: 'bg-gray-100 text-gray-800',
     };
 
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusClasses[status as keyof typeof statusClasses]}`}>
+      <span
+        className={`px-2 py-1 rounded-full text-xs font-medium ${statusClasses[status as keyof typeof statusClasses]}`}
+      >
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
     );
@@ -236,7 +255,7 @@ function CandidatesPageContent() {
       linkedin: 'bg-indigo-100 text-indigo-800',
       agency: 'bg-orange-100 text-orange-800',
       event: 'bg-purple-100 text-purple-800',
-      other: 'bg-gray-100 text-gray-800'
+      other: 'bg-gray-100 text-gray-800',
     };
 
     const sourceLabels = {
@@ -245,11 +264,13 @@ function CandidatesPageContent() {
       linkedin: 'LinkedIn',
       agency: 'Agency',
       event: 'Event',
-      other: 'Other'
+      other: 'Other',
     };
 
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${sourceClasses[source as keyof typeof sourceClasses]}`}>
+      <span
+        className={`px-2 py-1 rounded-full text-xs font-medium ${sourceClasses[source as keyof typeof sourceClasses]}`}
+      >
         {sourceLabels[source as keyof typeof sourceLabels]}
       </span>
     );
@@ -278,8 +299,8 @@ function CandidatesPageContent() {
     if (window.confirm('Are you sure you want to delete this candidate?')) {
       try {
         await candidatesApi.deleteCandidate(id);
-        setCandidates(candidates.filter(candidate => candidate.id !== id));
-        setTotalCandidates(prev => prev - 1);
+        setCandidates(candidates.filter((candidate) => candidate.id !== id));
+        setTotalCandidates((prev) => prev - 1);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to delete candidate';
         setError(errorMessage);
@@ -312,7 +333,9 @@ function CandidatesPageContent() {
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Candidates</h1>
-              <p className="text-gray-600 mt-1">Manage your talent pipeline and candidate relationships</p>
+              <p className="text-gray-600 mt-1">
+                Manage your talent pipeline and candidate relationships
+              </p>
               {error && (
                 <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
                   <p className="text-sm text-red-600">⚠️ {error}</p>
@@ -358,7 +381,7 @@ function CandidatesPageContent() {
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">Interviewing</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {candidates.filter(c => c.status === 'interviewing').length}
+                    {candidates.filter((c) => c.status === 'interviewing').length}
                   </p>
                 </div>
               </div>
@@ -371,7 +394,7 @@ function CandidatesPageContent() {
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">Hired</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {candidates.filter(c => c.status === 'hired').length}
+                    {candidates.filter((c) => c.status === 'hired').length}
                   </p>
                 </div>
               </div>
@@ -384,12 +407,16 @@ function CandidatesPageContent() {
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">This Month</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {candidates.filter(c => {
-                      const candidateDate = new Date(c.created_at);
-                      const now = new Date();
-                      return candidateDate.getMonth() === now.getMonth() &&
-                             candidateDate.getFullYear() === now.getFullYear();
-                    }).length}
+                    {
+                      candidates.filter((c) => {
+                        const candidateDate = new Date(c.created_at);
+                        const now = new Date();
+                        return (
+                          candidateDate.getMonth() === now.getMonth() &&
+                          candidateDate.getFullYear() === now.getFullYear()
+                        );
+                      }).length
+                    }
                   </p>
                 </div>
               </div>
@@ -420,7 +447,7 @@ function CandidatesPageContent() {
                   backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                   backgroundPosition: 'right 12px center',
                   backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px'
+                  backgroundSize: '16px',
                 }}
               >
                 <option value="all">All Statuses</option>
@@ -440,7 +467,7 @@ function CandidatesPageContent() {
                   backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                   backgroundPosition: 'right 12px center',
                   backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px'
+                  backgroundSize: '16px',
                 }}
               >
                 <option value="all">All Sources</option>
@@ -461,7 +488,7 @@ function CandidatesPageContent() {
                   backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                   backgroundPosition: 'right 12px center',
                   backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px'
+                  backgroundSize: '16px',
                 }}
               >
                 <option value="all">All Experience</option>
@@ -483,7 +510,7 @@ function CandidatesPageContent() {
                   backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                   backgroundPosition: 'right 12px center',
                   backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px'
+                  backgroundSize: '16px',
                 }}
               >
                 <option value="last_activity_desc">Recent Activity</option>
@@ -499,7 +526,9 @@ function CandidatesPageContent() {
           {/* Results Count */}
           <div className="mb-4">
             <p className="text-gray-600">
-              Showing {startIndex + 1}-{Math.min(startIndex + paginatedCandidates.length, startIndex + itemsPerPage)} of {totalCandidates} candidates
+              Showing {startIndex + 1}-
+              {Math.min(startIndex + paginatedCandidates.length, startIndex + itemsPerPage)} of{' '}
+              {totalCandidates} candidates
               {filteredCandidates.length !== candidates.length && (
                 <span className="text-gray-500"> (filtered from {candidates.length})</span>
               )}
@@ -513,20 +542,25 @@ function CandidatesPageContent() {
                 <User className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No candidates found</h3>
                 <p className="text-gray-600 mb-4">
-                  {searchTerm || statusFilter !== 'all' || sourceFilter !== 'all' || experienceFilter !== 'all'
+                  {searchTerm ||
+                  statusFilter !== 'all' ||
+                  sourceFilter !== 'all' ||
+                  experienceFilter !== 'all'
                     ? 'Try adjusting your filters to see more results.'
-                    : 'Get started by adding your first candidate.'
-                  }
+                    : 'Get started by adding your first candidate.'}
                 </p>
-                {(!searchTerm && statusFilter === 'all' && sourceFilter === 'all' && experienceFilter === 'all') && (
-                  <Link
-                    href="/candidates/new"
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg inline-flex items-center gap-2 transition-colors"
-                  >
-                    <Plus size={20} />
-                    Add Candidate
-                  </Link>
-                )}
+                {!searchTerm &&
+                  statusFilter === 'all' &&
+                  sourceFilter === 'all' &&
+                  experienceFilter === 'all' && (
+                    <Link
+                      href="/candidates/new"
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg inline-flex items-center gap-2 transition-colors"
+                    >
+                      <Plus size={20} />
+                      Add Candidate
+                    </Link>
+                  )}
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -561,7 +595,8 @@ function CandidatesPageContent() {
                             <div className="flex-shrink-0 h-10 w-10">
                               <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                                 <span className="text-blue-600 font-medium text-sm">
-                                  {candidate.first_name[0]}{candidate.last_name[0]}
+                                  {candidate.first_name[0]}
+                                  {candidate.last_name[0]}
                                 </span>
                               </div>
                             </div>
@@ -614,15 +649,11 @@ function CandidatesPageContent() {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="mb-2">
-                            {getStatusBadge(candidate.status)}
-                          </div>
+                          <div className="mb-2">{getStatusBadge(candidate.status)}</div>
                           {renderRating(candidate.rating)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="mb-2">
-                            {getSourceBadge(candidate.source)}
-                          </div>
+                          <div className="mb-2">{getSourceBadge(candidate.source)}</div>
                           <div className="text-sm text-gray-500">
                             {new Date(candidate.last_activity).toLocaleDateString()}
                           </div>

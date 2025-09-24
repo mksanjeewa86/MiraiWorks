@@ -15,17 +15,24 @@ export const notificationsApi = {
   },
 
   async getUnreadCount(): Promise<UnreadCountResponse> {
-    const response = await apiClient.get<UnreadCountResponse>(API_ENDPOINTS.NOTIFICATIONS.UNREAD_COUNT);
+    const response = await apiClient.get<UnreadCountResponse>(
+      API_ENDPOINTS.NOTIFICATIONS.UNREAD_COUNT
+    );
     return response.data;
   },
 
   async markNotificationsRead(notificationIds: number[]): Promise<{ message: string }> {
-    const response = await apiClient.put<{ message: string }>(API_ENDPOINTS.NOTIFICATIONS.MARK_READ, notificationIds);
+    const response = await apiClient.put<{ message: string }>(
+      API_ENDPOINTS.NOTIFICATIONS.MARK_READ,
+      notificationIds
+    );
     return response.data;
   },
 
   async markAllNotificationsRead(): Promise<{ message: string }> {
-    const response = await apiClient.put<{ message: string }>(API_ENDPOINTS.NOTIFICATIONS.MARK_ALL_READ);
+    const response = await apiClient.put<{ message: string }>(
+      API_ENDPOINTS.NOTIFICATIONS.MARK_ALL_READ
+    );
     return response.data;
-  }
+  },
 };

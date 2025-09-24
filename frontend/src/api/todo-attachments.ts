@@ -2,22 +2,21 @@
 
 import { API_ENDPOINTS, API_CONFIG } from './config';
 import { apiClient } from './apiClient';
-import { 
-  TodoAttachment, 
-  TodoAttachmentList, 
-  FileUploadResponse, 
+import {
+  TodoAttachment,
+  TodoAttachmentList,
+  FileUploadResponse,
   AttachmentStats,
-  BulkDeleteResponse 
+  BulkDeleteResponse,
 } from '../types/todo-attachment';
 
 class TodoAttachmentAPI {
-  
   /**
    * Upload a file attachment to a todo
    */
   async uploadFile(
-    todoId: number, 
-    file: File, 
+    todoId: number,
+    file: File,
     description?: string,
     onProgress?: (progress: number) => void
   ): Promise<FileUploadResponse> {
@@ -67,7 +66,7 @@ class TodoAttachmentAPI {
       });
 
       xhr.open('POST', `${API_CONFIG.BASE_URL}${API_ENDPOINTS.TODOS.ATTACHMENTS.UPLOAD(todoId)}`);
-      
+
       // Add authorization header if available
       const token = localStorage.getItem('accessToken');
       if (token) {
@@ -83,13 +82,13 @@ class TodoAttachmentAPI {
    * Get all attachments for a todo
    */
   async getAttachments(
-    todoId: number, 
-    skip: number = 0, 
+    todoId: number,
+    skip: number = 0,
     limit: number = 100
   ): Promise<TodoAttachmentList> {
     const params = new URLSearchParams({
       skip: skip.toString(),
-      limit: limit.toString()
+      limit: limit.toString(),
     });
 
     const url = `${API_ENDPOINTS.TODOS.ATTACHMENTS.BASE(todoId)}?${params}`;
@@ -112,7 +111,7 @@ class TodoAttachmentAPI {
   async downloadFile(todoId: number, attachmentId: number): Promise<void> {
     const token = localStorage.getItem('accessToken');
     const headers: Record<string, string> = {};
-    
+
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
@@ -129,7 +128,7 @@ class TodoAttachmentAPI {
     // Get filename from Content-Disposition header or use default
     const contentDisposition = response.headers.get('Content-Disposition');
     let filename = 'download';
-    
+
     if (contentDisposition) {
       const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
       if (matches != null && matches[1]) {
@@ -162,8 +161,8 @@ class TodoAttachmentAPI {
    * Update attachment description
    */
   async updateAttachment(
-    todoId: number, 
-    attachmentId: number, 
+    todoId: number,
+    attachmentId: number,
     description?: string
   ): Promise<TodoAttachment> {
     const formData = new FormData();
@@ -174,7 +173,7 @@ class TodoAttachmentAPI {
     // Use fetch directly for FormData to avoid JSON serialization
     const token = localStorage.getItem('accessToken');
     const headers: Record<string, string> = {};
-    
+
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
@@ -184,7 +183,7 @@ class TodoAttachmentAPI {
       {
         method: 'PUT',
         headers,
-        body: formData
+        body: formData,
       }
     );
 
@@ -208,12 +207,12 @@ class TodoAttachmentAPI {
    * Delete multiple attachments
    */
   async bulkDeleteAttachments(
-    todoId: number, 
+    todoId: number,
     attachmentIds: number[]
   ): Promise<BulkDeleteResponse> {
     const url = API_ENDPOINTS.TODOS.ATTACHMENTS.BULK_DELETE(todoId);
-    const response = await apiClient.post<BulkDeleteResponse>(url, { 
-      attachment_ids: attachmentIds 
+    const response = await apiClient.post<BulkDeleteResponse>(url, {
+      attachment_ids: attachmentIds,
     });
     return response.data;
   }
@@ -233,7 +232,7 @@ class TodoAttachmentAPI {
   async getMyUploads(skip: number = 0, limit: number = 100): Promise<TodoAttachment[]> {
     const params = new URLSearchParams({
       skip: skip.toString(),
-      limit: limit.toString()
+      limit: limit.toString(),
     });
 
     const url = `${API_ENDPOINTS.TODOS.ATTACHMENTS.MY_UPLOADS}?${params}`;

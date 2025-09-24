@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
-import { XMarkIcon, ChevronLeftIcon, ChevronRightIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import {
+  XMarkIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  CheckCircleIcon,
+} from '@heroicons/react/24/outline';
 import { mbtiApi } from '@/api/mbti';
 import type { MBTIQuestion, MBTITestResult, MBTITestModalProps } from '@/types/mbti';
 
-const MBTITestModal: React.FC<MBTITestModalProps> = ({
-  isOpen,
-  onClose,
-  onComplete
-}) => {
+const MBTITestModal: React.FC<MBTITestModalProps> = ({ isOpen, onClose, onComplete }) => {
   const [questions, setQuestions] = useState<MBTIQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, 'A' | 'B'>>({});
@@ -32,38 +33,42 @@ const MBTITestModal: React.FC<MBTITestModalProps> = ({
       setQuestions(questionsData);
     } catch (err) {
       console.error('Failed to load questions:', err);
-      const errorMessage = language === 'ja'
-        ? 'MBTI質問の読み込みに失敗しました。管理者がまだMBTI質問を設定していない可能性があります。'
-        : 'Failed to load MBTI questions. The administrator may not have set up MBTI questions yet.';
+      const errorMessage =
+        language === 'ja'
+          ? 'MBTI質問の読み込みに失敗しました。管理者がまだMBTI質問を設定していない可能性があります。'
+          : 'Failed to load MBTI questions. The administrator may not have set up MBTI questions yet.';
       setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAnswer = useCallback((answer: 'A' | 'B') => {
-    if (!questions[currentQuestionIndex]) return;
-    
-    const questionId = questions[currentQuestionIndex].id;
-    setAnswers(prev => ({ ...prev, [questionId]: answer }));
+  const handleAnswer = useCallback(
+    (answer: 'A' | 'B') => {
+      if (!questions[currentQuestionIndex]) return;
 
-    // Auto-advance to next question after a short delay
-    setTimeout(() => {
-      if (currentQuestionIndex < questions.length - 1) {
-        setCurrentQuestionIndex(prev => prev + 1);
-      }
-    }, 300);
-  }, [currentQuestionIndex, questions]);
+      const questionId = questions[currentQuestionIndex].id;
+      setAnswers((prev) => ({ ...prev, [questionId]: answer }));
+
+      // Auto-advance to next question after a short delay
+      setTimeout(() => {
+        if (currentQuestionIndex < questions.length - 1) {
+          setCurrentQuestionIndex((prev) => prev + 1);
+        }
+      }, 300);
+    },
+    [currentQuestionIndex, questions]
+  );
 
   const handlePrevious = () => {
     if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(prev => prev - 1);
+      setCurrentQuestionIndex((prev) => prev - 1);
     }
   };
 
   const handleNext = () => {
     if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(prev => prev + 1);
+      setCurrentQuestionIndex((prev) => prev + 1);
     }
   };
 
@@ -76,17 +81,17 @@ const MBTITestModal: React.FC<MBTITestModalProps> = ({
     try {
       setSubmitting(true);
       setError(null);
-      
+
       // Submit all answers
       const result = await mbtiApi.submitTest({ answers });
-      
+
       // Notify parent component
       onComplete(result);
-      
+
       // Reset state
       setAnswers({});
       setCurrentQuestionIndex(0);
-      
+
       // Close modal
       onClose();
     } catch (err) {
@@ -97,12 +102,12 @@ const MBTITestModal: React.FC<MBTITestModalProps> = ({
     }
   };
 
-  const progress = questions.length > 0 
-    ? Math.round((Object.keys(answers).length / questions.length) * 100)
-    : 0;
+  const progress =
+    questions.length > 0 ? Math.round((Object.keys(answers).length / questions.length) * 100) : 0;
 
   const currentQuestion = questions[currentQuestionIndex];
-  const allQuestionsAnswered = questions.length > 0 && Object.keys(answers).length === questions.length;
+  const allQuestionsAnswered =
+    questions.length > 0 && Object.keys(answers).length === questions.length;
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
@@ -142,9 +147,7 @@ const MBTITestModal: React.FC<MBTITestModalProps> = ({
                       <button
                         onClick={() => setLanguage('ja')}
                         className={`px-3 py-1 rounded ${
-                          language === 'ja' 
-                            ? 'bg-blue-600 text-white' 
-                            : 'bg-gray-200 text-gray-700'
+                          language === 'ja' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
                         }`}
                       >
                         日本語
@@ -152,18 +155,13 @@ const MBTITestModal: React.FC<MBTITestModalProps> = ({
                       <button
                         onClick={() => setLanguage('en')}
                         className={`px-3 py-1 rounded ${
-                          language === 'en' 
-                            ? 'bg-blue-600 text-white' 
-                            : 'bg-gray-200 text-gray-700'
+                          language === 'en' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
                         }`}
                       >
                         English
                       </button>
                     </div>
-                    <button
-                      onClick={onClose}
-                      className="text-gray-400 hover:text-gray-500"
-                    >
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-500">
                       <XMarkIcon className="h-6 w-6" />
                     </button>
                   </div>
@@ -176,10 +174,9 @@ const MBTITestModal: React.FC<MBTITestModalProps> = ({
                       {language === 'ja' ? '進捗' : 'Progress'}: {progress}%
                     </span>
                     <span>
-                      {language === 'ja' 
+                      {language === 'ja'
                         ? `${Object.keys(answers).length} / ${questions.length} 問完了`
-                        : `${Object.keys(answers).length} / ${questions.length} Completed`
-                      }
+                        : `${Object.keys(answers).length} / ${questions.length} Completed`}
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
@@ -210,10 +207,9 @@ const MBTITestModal: React.FC<MBTITestModalProps> = ({
                     {/* Question */}
                     <div className="text-center py-6">
                       <p className="text-sm text-gray-500 mb-2">
-                        {language === 'ja' 
+                        {language === 'ja'
                           ? `質問 ${currentQuestionIndex + 1} / ${questions.length}`
-                          : `Question ${currentQuestionIndex + 1} / ${questions.length}`
-                        }
+                          : `Question ${currentQuestionIndex + 1} / ${questions.length}`}
                       </p>
                       <h3 className="text-xl font-semibold text-gray-900">
                         {currentQuestion.question_text}
@@ -234,9 +230,7 @@ const MBTITestModal: React.FC<MBTITestModalProps> = ({
                           <span className="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-semibold mr-4">
                             A
                           </span>
-                          <span className="text-gray-900">
-                            {currentQuestion.option_a}
-                          </span>
+                          <span className="text-gray-900">{currentQuestion.option_a}</span>
                           {answers[currentQuestion.id] === 'A' && (
                             <CheckCircleIcon className="h-5 w-5 text-blue-600 ml-auto" />
                           )}
@@ -255,9 +249,7 @@ const MBTITestModal: React.FC<MBTITestModalProps> = ({
                           <span className="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-semibold mr-4">
                             B
                           </span>
-                          <span className="text-gray-900">
-                            {currentQuestion.option_b}
-                          </span>
+                          <span className="text-gray-900">{currentQuestion.option_b}</span>
                           {answers[currentQuestion.id] === 'B' && (
                             <CheckCircleIcon className="h-5 w-5 text-blue-600 ml-auto" />
                           )}
@@ -288,18 +280,25 @@ const MBTITestModal: React.FC<MBTITestModalProps> = ({
                         >
                           <CheckCircleIcon className="h-5 w-5" />
                           <span>
-                            {submitting 
-                              ? (language === 'ja' ? '提出中...' : 'Submitting...')
-                              : (language === 'ja' ? '診断を完了' : 'Complete Test')
-                            }
+                            {submitting
+                              ? language === 'ja'
+                                ? '提出中...'
+                                : 'Submitting...'
+                              : language === 'ja'
+                                ? '診断を完了'
+                                : 'Complete Test'}
                           </span>
                         </button>
                       ) : (
                         <button
                           onClick={handleNext}
-                          disabled={currentQuestionIndex === questions.length - 1 || !isQuestionAnswered(currentQuestionIndex)}
+                          disabled={
+                            currentQuestionIndex === questions.length - 1 ||
+                            !isQuestionAnswered(currentQuestionIndex)
+                          }
                           className={`flex items-center space-x-2 px-4 py-2 rounded ${
-                            currentQuestionIndex === questions.length - 1 || !isQuestionAnswered(currentQuestionIndex)
+                            currentQuestionIndex === questions.length - 1 ||
+                            !isQuestionAnswered(currentQuestionIndex)
                               ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                               : 'bg-blue-600 text-white hover:bg-blue-700'
                           }`}
@@ -320,8 +319,8 @@ const MBTITestModal: React.FC<MBTITestModalProps> = ({
                             index === currentQuestionIndex
                               ? 'bg-blue-600 text-white'
                               : isQuestionAnswered(index)
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-gray-200 text-gray-600'
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-gray-200 text-gray-600'
                           }`}
                         >
                           {index + 1}

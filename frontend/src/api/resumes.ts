@@ -34,13 +34,25 @@ export const resumesApi = {
   },
 
   // Work Experience endpoints
-  async addExperience(resumeId: number, experience: Partial<WorkExperience>): Promise<ApiResponse<WorkExperience>> {
-    const response = await apiClient.post<WorkExperience>(API_ENDPOINTS.RESUMES.EXPERIENCES(resumeId), experience);
+  async addExperience(
+    resumeId: number,
+    experience: Partial<WorkExperience>
+  ): Promise<ApiResponse<WorkExperience>> {
+    const response = await apiClient.post<WorkExperience>(
+      API_ENDPOINTS.RESUMES.EXPERIENCES(resumeId),
+      experience
+    );
     return { data: response.data, success: true };
   },
 
-  async updateExperience(experienceId: number, experience: Partial<WorkExperience>): Promise<ApiResponse<WorkExperience>> {
-    const response = await apiClient.put<WorkExperience>(API_ENDPOINTS.RESUMES.EXPERIENCE_BY_ID(experienceId), experience);
+  async updateExperience(
+    experienceId: number,
+    experience: Partial<WorkExperience>
+  ): Promise<ApiResponse<WorkExperience>> {
+    const response = await apiClient.put<WorkExperience>(
+      API_ENDPOINTS.RESUMES.EXPERIENCE_BY_ID(experienceId),
+      experience
+    );
     return { data: response.data, success: true };
   },
 
@@ -50,8 +62,14 @@ export const resumesApi = {
   },
 
   // Education endpoints
-  async addEducation(resumeId: number, education: Partial<Education>): Promise<ApiResponse<Education>> {
-    const response = await apiClient.post<Education>(API_ENDPOINTS.RESUMES.EDUCATION(resumeId), education);
+  async addEducation(
+    resumeId: number,
+    education: Partial<Education>
+  ): Promise<ApiResponse<Education>> {
+    const response = await apiClient.post<Education>(
+      API_ENDPOINTS.RESUMES.EDUCATION(resumeId),
+      education
+    );
     return { data: response.data, success: true };
   },
 
@@ -67,8 +85,15 @@ export const resumesApi = {
     return { data: response.data, success: true };
   },
 
-  async generatePdf(id: number, options?: { format?: string; include_contact_info?: boolean }): Promise<ApiResponse<{ pdf_url: string; file_size: number; expires_at: string }>> {
-    const response = await apiClient.post<{ pdf_url: string; file_size: number; expires_at: string }>(API_ENDPOINTS.RESUMES.GENERATE_PDF(id), options || {});
+  async generatePdf(
+    id: number,
+    options?: { format?: string; include_contact_info?: boolean }
+  ): Promise<ApiResponse<{ pdf_url: string; file_size: number; expires_at: string }>> {
+    const response = await apiClient.post<{
+      pdf_url: string;
+      file_size: number;
+      expires_at: string;
+    }>(API_ENDPOINTS.RESUMES.GENERATE_PDF(id), options || {});
     return { data: response.data, success: true };
   },
 
@@ -76,7 +101,10 @@ export const resumesApi = {
   async uploadPhoto(id: number, photoFile: File): Promise<ApiResponse<{ photo_path: string }>> {
     const formData = new FormData();
     formData.append('photo', photoFile);
-    const response = await apiClient.post<{ photo_path: string }>(API_ENDPOINTS.RESUMES.UPLOAD_PHOTO(id), formData);
+    const response = await apiClient.post<{ photo_path: string }>(
+      API_ENDPOINTS.RESUMES.UPLOAD_PHOTO(id),
+      formData
+    );
     return { data: response.data, success: true };
   },
 
@@ -92,7 +120,9 @@ export const resumesApi = {
   },
 
   async getPublicResume(slug: string): Promise<ApiResponse<{ resume: Resume; html: string }>> {
-    const response = await publicApiClient.get<{ resume: Resume; html: string }>(API_ENDPOINTS.RESUMES.BY_SLUG(slug));
+    const response = await publicApiClient.get<{ resume: Resume; html: string }>(
+      API_ENDPOINTS.RESUMES.BY_SLUG(slug)
+    );
     return { data: response.data, success: true };
   },
 
@@ -102,7 +132,9 @@ export const resumesApi = {
   },
 
   async downloadPublicPdf(slug: string): Promise<ApiResponse<{ pdf_url: string }>> {
-    const response = await publicApiClient.post<{ pdf_url: string }>(API_ENDPOINTS.RESUMES.PUBLIC_DOWNLOAD(slug));
+    const response = await publicApiClient.post<{ pdf_url: string }>(
+      API_ENDPOINTS.RESUMES.PUBLIC_DOWNLOAD(slug)
+    );
     return { data: response.data, success: true };
   },
 
@@ -118,7 +150,15 @@ export const resumesApi = {
   },
 
   // Email functionality
-  async sendByEmail(id: number, emailData: { recipient_emails: string[]; subject?: string; message?: string; include_pdf: boolean }): Promise<ApiResponse<void>> {
+  async sendByEmail(
+    id: number,
+    emailData: {
+      recipient_emails: string[];
+      subject?: string;
+      message?: string;
+      include_pdf: boolean;
+    }
+  ): Promise<ApiResponse<void>> {
     await apiClient.post(API_ENDPOINTS.RESUMES.SEND_EMAIL(id), emailData);
     return { data: undefined, success: true };
   },

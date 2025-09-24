@@ -31,13 +31,13 @@ const InterviewNotes: React.FC<InterviewNotesProps> = ({ interviewId, className 
       showToast({
         type: 'success',
         title: 'Note Saved',
-        message: 'Your private note has been saved successfully.'
+        message: 'Your private note has been saved successfully.',
       });
     } catch {
       showToast({
         type: 'error',
         title: 'Save Failed',
-        message: 'Failed to save your note. Please try again.'
+        message: 'Failed to save your note. Please try again.',
       });
     }
   };
@@ -48,7 +48,11 @@ const InterviewNotes: React.FC<InterviewNotesProps> = ({ interviewId, className 
   };
 
   const handleDelete = async () => {
-    if (window.confirm('Are you sure you want to delete your private note? This action cannot be undone.')) {
+    if (
+      window.confirm(
+        'Are you sure you want to delete your private note? This action cannot be undone.'
+      )
+    ) {
       try {
         await deleteNote();
         setEditContent('');
@@ -56,13 +60,13 @@ const InterviewNotes: React.FC<InterviewNotesProps> = ({ interviewId, className 
         showToast({
           type: 'success',
           title: 'Note Deleted',
-          message: 'Your private note has been deleted.'
+          message: 'Your private note has been deleted.',
         });
       } catch {
         showToast({
           type: 'error',
           title: 'Delete Failed',
-          message: 'Failed to delete your note. Please try again.'
+          message: 'Failed to delete your note. Please try again.',
         });
       }
     }
@@ -90,9 +94,7 @@ const InterviewNotes: React.FC<InterviewNotesProps> = ({ interviewId, className 
       >
         <div className="flex items-center gap-2">
           <StickyNote className="h-5 w-5 text-yellow-600" />
-          <span className="text-sm font-medium text-yellow-800">
-            My Private Notes
-          </span>
+          <span className="text-sm font-medium text-yellow-800">My Private Notes</span>
           {hasContent && (
             <span className="text-xs bg-yellow-200 text-yellow-700 px-2 py-0.5 rounded-full">
               Note saved
@@ -125,9 +127,7 @@ const InterviewNotes: React.FC<InterviewNotesProps> = ({ interviewId, className 
               </button>
             </>
           )}
-          <span className="text-yellow-600">
-            {isExpanded ? '−' : '+'}
-          </span>
+          <span className="text-yellow-600">{isExpanded ? '−' : '+'}</span>
         </div>
       </div>
 
@@ -135,7 +135,8 @@ const InterviewNotes: React.FC<InterviewNotesProps> = ({ interviewId, className 
       {isExpanded && (
         <div className="px-4 pb-4">
           <div className="text-xs text-yellow-700 mb-2">
-            📝 Only you can see and edit this note. It&apos;s private to you and won&apos;t be visible to other participants.
+            📝 Only you can see and edit this note. It&apos;s private to you and won&apos;t be
+            visible to other participants.
           </div>
 
           {isEditing ? (

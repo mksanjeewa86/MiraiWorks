@@ -1,8 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { AppNotification } from "@/types/notification";
-import { notificationsApi } from "@/api/notifications";
+import { AppNotification } from '@/types/notification';
+import { notificationsApi } from '@/api/notifications';
 import { useAuth } from './AuthContext';
 import type { NotificationsContextType, NotificationsProviderProps } from '@/types/contexts';
 
@@ -28,7 +28,7 @@ export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({ ch
     if (window.Notification && Notification.permission === 'granted') {
       new window.Notification(title, {
         body: message,
-        icon: '/favicon.ico'
+        icon: '/favicon.ico',
       });
     }
   };
@@ -67,16 +67,16 @@ export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({ ch
   const markAsRead = async (notificationIds: number[]) => {
     try {
       await notificationsApi.markNotificationsRead(notificationIds);
-      
+
       // Update local state
-      setNotifications(prev => 
-        prev.map(notification => 
+      setNotifications((prev) =>
+        prev.map((notification) =>
           notificationIds.includes(notification.id)
             ? { ...notification, is_read: true, read_at: new Date().toISOString() }
             : notification
         )
       );
-      
+
       await refreshUnreadCount();
     } catch (error) {
       console.error('Failed to mark notifications as read:', error);
@@ -87,16 +87,16 @@ export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({ ch
   const markAllAsRead = async () => {
     try {
       await notificationsApi.markAllNotificationsRead();
-      
+
       // Update local state
-      setNotifications(prev => 
-        prev.map(notification => ({ 
-          ...notification, 
-          is_read: true, 
-          read_at: new Date().toISOString() 
+      setNotifications((prev) =>
+        prev.map((notification) => ({
+          ...notification,
+          is_read: true,
+          read_at: new Date().toISOString(),
         }))
       );
-      
+
       setUnreadCount(0);
     } catch (error) {
       console.error('Failed to mark all notifications as read:', error);
@@ -135,14 +135,14 @@ export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({ ch
           } else if (newestNotificationId > lastNotificationId) {
             // We have new notifications
             const newNotifications = latestNotifications.filter(
-              notif => notif.id > lastNotificationId
+              (notif) => notif.id > lastNotificationId
             );
 
             // Add new notifications to the state
-            setNotifications(prev => [...newNotifications, ...prev]);
+            setNotifications((prev) => [...newNotifications, ...prev]);
 
             // Show browser notifications for new ones
-            newNotifications.forEach(notif => {
+            newNotifications.forEach((notif) => {
               showNotification(notif.title, notif.message);
             });
 
@@ -204,9 +204,5 @@ export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({ ch
     refreshUnreadCount,
   };
 
-  return (
-    <NotificationsContext.Provider value={value}>
-      {children}
-    </NotificationsContext.Provider>
-  );
+  return <NotificationsContext.Provider value={value}>{children}</NotificationsContext.Provider>;
 };

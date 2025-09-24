@@ -3,7 +3,7 @@
 // Authentication & User types
 export * from './auth';
 
-// Company & Job types  
+// Company & Job types
 export * from './company';
 
 // Message types

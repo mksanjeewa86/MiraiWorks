@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { UserCircleIcon, EnvelopeIcon, PhoneIcon, MapPinIcon, CalendarIcon } from '@heroicons/react/24/outline';
+import {
+  UserCircleIcon,
+  EnvelopeIcon,
+  PhoneIcon,
+  MapPinIcon,
+  CalendarIcon,
+} from '@heroicons/react/24/outline';
 import Card from '@/components/ui/card';
 import Badge from '@/components/ui/badge';
 import Button from '@/components/ui/button';
@@ -27,7 +33,7 @@ const CandidateProfile: React.FC<CandidateProfileProps> = ({ userId, isPublic = 
   const loadProfileData = async () => {
     try {
       setLoading(true);
-      
+
       // Load MBTI results if it's the user's own profile or public
       if (!userId || userId === user?.id) {
         try {
@@ -67,15 +73,11 @@ const CandidateProfile: React.FC<CandidateProfileProps> = ({ userId, isPublic = 
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                   {user?.full_name || 'Candidate Name'}
                 </h1>
-                <p className="text-lg text-gray-600 dark:text-gray-400 mt-1">
-                  Software Developer
-                </p>
+                <p className="text-lg text-gray-600 dark:text-gray-400 mt-1">Software Developer</p>
                 <div className="flex flex-wrap gap-2 mt-4">
                   <Badge variant="primary">Active</Badge>
                   <Badge variant="secondary">Available</Badge>
-                  {mbtiSummary && (
-                    <Badge variant="outline">{mbtiSummary.mbti_type}</Badge>
-                  )}
+                  {mbtiSummary && <Badge variant="outline">{mbtiSummary.mbti_type}</Badge>}
                 </div>
               </div>
             </div>
@@ -170,11 +172,7 @@ const CandidateProfile: React.FC<CandidateProfileProps> = ({ userId, isPublic = 
                   </button>
                 </div>
               </div>
-              <MBTIResultCard
-                summary={mbtiSummary}
-                language={language}
-                showDetails={true}
-              />
+              <MBTIResultCard summary={mbtiSummary} language={language} showDetails={true} />
             </div>
           )}
 
@@ -207,8 +205,12 @@ const CandidateProfile: React.FC<CandidateProfileProps> = ({ userId, isPublic = 
               <h2 className="text-xl font-semibold mb-4">Actions</h2>
               <div className="space-y-3">
                 <Button className="w-full">Edit Profile</Button>
-                <Button variant="outline" className="w-full">Update Resume</Button>
-                <Button variant="outline" className="w-full">Privacy Settings</Button>
+                <Button variant="outline" className="w-full">
+                  Update Resume
+                </Button>
+                <Button variant="outline" className="w-full">
+                  Privacy Settings
+                </Button>
               </div>
             </Card>
           )}

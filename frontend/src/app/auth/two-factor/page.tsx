@@ -52,10 +52,7 @@ function TwoFactorContent() {
               <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
                 Your session has expired. Please log in again.
               </p>
-              <Link
-                href="/auth/login"
-                className="btn btn-primary w-full"
-              >
+              <Link href="/auth/login" className="btn btn-primary w-full">
                 Back to Login
               </Link>
             </div>
@@ -108,20 +105,22 @@ function TwoFactorContent() {
 
 export default function TwoFactorPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-950">
-        <div className="max-w-md w-full">
-          <div className="text-center">
-            <Brand className="justify-center mb-8" />
-            <div className="card p-8">
-              <div className="animate-pulse">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-950">
+          <div className="max-w-md w-full">
+            <div className="text-center">
+              <Brand className="justify-center mb-8" />
+              <div className="card p-8">
+                <div className="animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <TwoFactorContent />
     </Suspense>
   );

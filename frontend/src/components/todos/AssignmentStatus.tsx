@@ -1,10 +1,5 @@
 import React from 'react';
-import { 
-  UserIcon, 
-  EyeIcon, 
-  PencilSquareIcon,
-  LockClosedIcon 
-} from '@heroicons/react/24/outline';
+import { UserIcon, EyeIcon, PencilSquareIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 import type { AssignmentStatusProps } from '@/types/todo';
 
 const AssignmentStatus: React.FC<AssignmentStatusProps> = ({ todo, permissions }) => {
@@ -66,7 +61,9 @@ const AssignmentStatus: React.FC<AssignmentStatusProps> = ({ todo, permissions }
       </div>
 
       {/* Visibility Status */}
-      <div className={`inline-flex items-center space-x-1 px-2 py-1 rounded-lg border text-xs font-medium ${getVisibilityColor()}`}>
+      <div
+        className={`inline-flex items-center space-x-1 px-2 py-1 rounded-lg border text-xs font-medium ${getVisibilityColor()}`}
+      >
         {getVisibilityIcon()}
         <span>{getVisibilityLabel()}</span>
       </div>

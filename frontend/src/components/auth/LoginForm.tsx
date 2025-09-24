@@ -24,10 +24,10 @@ export default function LoginForm({ onSuccess, onForgotPassword }: LoginFormProp
 
   const onSubmit = async (data: LoginFormData) => {
     if (isSubmitting) return;
-    
+
     setIsSubmitting(true);
     clearError();
-    
+
     try {
       await login(data);
       onSuccess?.();
@@ -44,19 +44,18 @@ export default function LoginForm({ onSuccess, onForgotPassword }: LoginFormProp
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-4">
           <div className="flex">
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
-                Sign in failed
-              </h3>
-              <div className="mt-2 text-sm text-red-700 dark:text-red-300">
-                {error}
-              </div>
+              <h3 className="text-sm font-medium text-red-800 dark:text-red-200">Sign in failed</h3>
+              <div className="mt-2 text-sm text-red-700 dark:text-red-300">{error}</div>
             </div>
           </div>
         </div>
       )}
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+        <label
+          htmlFor="email"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2"
+        >
           Email address
         </label>
         <div className="relative">
@@ -70,9 +69,10 @@ export default function LoginForm({ onSuccess, onForgotPassword }: LoginFormProp
               w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border rounded-2xl text-sm 
               focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent 
               transition-colors placeholder-muted-400 dark:placeholder-muted-500
-              ${errors.email 
-                ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20' 
-                : 'border-gray-200 dark:border-gray-700'
+              ${
+                errors.email
+                  ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20'
+                  : 'border-gray-200 dark:border-gray-700'
               }
             `}
             placeholder="Enter your email"
@@ -84,7 +84,10 @@ export default function LoginForm({ onSuccess, onForgotPassword }: LoginFormProp
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+        <label
+          htmlFor="password"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2"
+        >
           Password
         </label>
         <div className="relative">
@@ -98,9 +101,10 @@ export default function LoginForm({ onSuccess, onForgotPassword }: LoginFormProp
               w-full pl-10 pr-12 py-3 bg-gray-50 dark:bg-gray-800 border rounded-2xl text-sm 
               focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent 
               transition-colors placeholder-muted-400 dark:placeholder-muted-500
-              ${errors.password 
-                ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20' 
-                : 'border-gray-200 dark:border-gray-700'
+              ${
+                errors.password
+                  ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20'
+                  : 'border-gray-200 dark:border-gray-700'
               }
             `}
             placeholder="Enter your password"
@@ -109,7 +113,7 @@ export default function LoginForm({ onSuccess, onForgotPassword }: LoginFormProp
             type="button"
             onClick={() => setShowPassword(!showPassword)}
             className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-500 hover:text-muted-600 transition-colors"
-            aria-label={showPassword ? "Hide password" : "Show password"}
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
           >
             {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
           </button>

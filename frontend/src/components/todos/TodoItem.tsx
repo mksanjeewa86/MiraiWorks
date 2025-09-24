@@ -32,25 +32,25 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   const isCompleted = todo.status === 'completed';
   const isOverdue = todo.due_date && new Date(todo.due_date) < new Date() && !isCompleted;
   const assignedUser = 'assigned_user' in todo ? todo.assigned_user : null;
-  
+
   const formatDueDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffTime = date.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 0) return 'Due today';
     if (diffDays === 1) return 'Due tomorrow';
     if (diffDays === -1) return 'Due yesterday';
     if (diffDays < 0) return `Overdue by ${Math.abs(diffDays)} days`;
     if (diffDays <= 7) return `Due in ${diffDays} days`;
-    
+
     return date.toLocaleDateString();
   };
 
   const getPriorityColor = (priority?: string) => {
     if (!priority) return 'bg-gray-100 text-gray-600';
-    
+
     switch (priority.toLowerCase()) {
       case 'high':
         return 'bg-red-100 text-red-700';
@@ -103,9 +103,10 @@ export const TodoItem: React.FC<TodoItemProps> = ({
             onClick={() => onToggleComplete?.(todo)}
             className={`
               flex-shrink-0 mt-1 p-1 rounded-full transition-colors
-              ${isCompleted 
-                ? 'text-green-600 hover:text-green-700' 
-                : 'text-gray-400 hover:text-green-600'
+              ${
+                isCompleted
+                  ? 'text-green-600 hover:text-green-700'
+                  : 'text-gray-400 hover:text-green-600'
               }
             `}
           >
@@ -128,21 +129,18 @@ export const TodoItem: React.FC<TodoItemProps> = ({
         {/* Content */}
         <div className="flex-1 min-w-0">
           {/* Title */}
-          <h3 className={`
+          <h3
+            className={`
             text-sm font-medium transition-all
-            ${isCompleted 
-              ? 'line-through text-gray-500' 
-              : 'text-gray-900'
-            }
-          `}>
+            ${isCompleted ? 'line-through text-gray-500' : 'text-gray-900'}
+          `}
+          >
             {todo.title}
           </h3>
 
           {/* Description */}
           {todo.description && (
-            <p className="mt-1 text-xs text-gray-600 line-clamp-2">
-              {todo.description}
-            </p>
+            <p className="mt-1 text-xs text-gray-600 line-clamp-2">{todo.description}</p>
           )}
 
           {/* Meta Information */}
@@ -157,7 +155,11 @@ export const TodoItem: React.FC<TodoItemProps> = ({
                 <div className="flex items-center space-x-1 ml-1">
                   {getVisibilityIcon()}
                   <span className="text-xs" title={getVisibilityLabel()}>
-                    {todo.visibility === 'public' ? 'Full' : todo.visibility === 'viewer' ? 'View' : 'Private'}
+                    {todo.visibility === 'public'
+                      ? 'Full'
+                      : todo.visibility === 'viewer'
+                        ? 'View'
+                        : 'Private'}
                   </span>
                 </div>
               </div>
@@ -165,10 +167,12 @@ export const TodoItem: React.FC<TodoItemProps> = ({
 
             {/* Due Date */}
             {todo.due_date && (
-              <div className={`
+              <div
+                className={`
                 flex items-center space-x-1
                 ${isOverdue ? 'text-red-600' : ''}
-              `}>
+              `}
+              >
                 {isOverdue ? (
                   <ExclamationTriangleIcon className="h-3 w-3" />
                 ) : (
@@ -180,10 +184,12 @@ export const TodoItem: React.FC<TodoItemProps> = ({
 
             {/* Priority */}
             {todo.priority && (
-              <span className={`
+              <span
+                className={`
                 px-2 py-1 rounded-full text-xs font-medium
                 ${getPriorityColor(todo.priority)}
-              `}>
+              `}
+              >
                 {todo.priority}
               </span>
             )}
@@ -198,9 +204,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
                 <span>
                   {attachmentCount} file{attachmentCount !== 1 ? 's' : ''}
                   {totalAttachmentSize > 0 && (
-                    <span className="text-gray-400">
-                      {' '}• {formatFileSize(totalAttachmentSize)}
-                    </span>
+                    <span className="text-gray-400"> • {formatFileSize(totalAttachmentSize)}</span>
                   )}
                 </span>
               </button>
@@ -209,9 +213,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
             {/* Created Date */}
             <div className="flex items-center space-x-1">
               <ClockIcon className="h-3 w-3" />
-              <span>
-                {new Date(todo.created_at).toLocaleDateString()}
-              </span>
+              <span>{new Date(todo.created_at).toLocaleDateString()}</span>
             </div>
           </div>
 
@@ -224,10 +226,12 @@ export const TodoItem: React.FC<TodoItemProps> = ({
         </div>
 
         {/* Actions */}
-        <div className={`
+        <div
+          className={`
           flex items-center space-x-1 transition-opacity
           ${isHovered ? 'opacity-100' : 'opacity-0'}
-        `}>
+        `}
+        >
           {permissions.canEdit && (
             <button
               onClick={() => onEdit(todo)}
@@ -237,7 +241,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
               <PencilIcon className="h-4 w-4" />
             </button>
           )}
-          
+
           {attachmentCount > 0 && onViewAttachments && permissions.canView && (
             <button
               onClick={() => onViewAttachments(todo)}
@@ -247,7 +251,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
               <PaperClipIcon className="h-4 w-4" />
             </button>
           )}
-          
+
           {permissions.canDelete && (
             <button
               onClick={() => onDelete(todo)}

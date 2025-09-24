@@ -1,17 +1,17 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { 
-  CloudArrowUpIcon, 
-  DocumentIcon, 
+import {
+  CloudArrowUpIcon,
+  DocumentIcon,
   XMarkIcon,
-  ExclamationTriangleIcon 
+  ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
-import { 
-  TodoAttachment, 
-  FileUploadProgress, 
-  validateFile, 
-  formatFileSize, 
+import {
+  TodoAttachment,
+  FileUploadProgress,
+  validateFile,
+  formatFileSize,
   DEFAULT_UPLOAD_CONFIG,
-  FileUploadProps
+  FileUploadProps,
 } from '../../types/todo-attachment';
 import { todoAttachmentAPI } from '../../api/todo-attachments';
 
@@ -20,7 +20,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   onUploadSuccess,
   onUploadError,
   className = '',
-  disabled = false
+  disabled = false,
 }) => {
   const [dragActive, setDragActive] = useState(false);
   const [uploads, setUploads] = useState<FileUploadProgress[]>([]);
@@ -38,65 +38,70 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   }, []);
 
   // Handle drop event
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setDragActive(false);
 
-    if (disabled) return;
+      if (disabled) return;
 
-    const files = Array.from(e.dataTransfer.files);
-    handleFiles(files);
-  }, [disabled]);
+      const files = Array.from(e.dataTransfer.files);
+      handleFiles(files);
+    },
+    [disabled]
+  );
 
   // Handle file input change
-  const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (disabled) return;
-    
-    const files = Array.from(e.target.files || []);
-    handleFiles(files);
-    
-    // Reset input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  }, [disabled]);
+  const handleFileInput = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (disabled) return;
+
+      const files = Array.from(e.target.files || []);
+      handleFiles(files);
+
+      // Reset input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    },
+    [disabled]
+  );
 
   // Process selected files
-  const handleFiles = useCallback(async (files: File[]) => {
-    if (files.length === 0) return;
+  const handleFiles = useCallback(
+    async (files: File[]) => {
+      if (files.length === 0) return;
 
-    // Validate and create upload progress entries
-    const newUploads: FileUploadProgress[] = files.map(file => {
-      const validation = validateFile(file, DEFAULT_UPLOAD_CONFIG);
-      return {
-        file,
-        progress: 0,
-        status: validation.valid ? 'pending' : 'error',
-        error: validation.valid ? undefined : validation.errors.join(', ')
-      };
-    });
+      // Validate and create upload progress entries
+      const newUploads: FileUploadProgress[] = files.map((file) => {
+        const validation = validateFile(file, DEFAULT_UPLOAD_CONFIG);
+        return {
+          file,
+          progress: 0,
+          status: validation.valid ? 'pending' : 'error',
+          error: validation.valid ? undefined : validation.errors.join(', '),
+        };
+      });
 
-    setUploads(prev => [...prev, ...newUploads]);
+      setUploads((prev) => [...prev, ...newUploads]);
 
-    // Upload valid files
-    for (const upload of newUploads) {
-      if (upload.status === 'pending') {
-        await uploadFile(upload);
+      // Upload valid files
+      for (const upload of newUploads) {
+        if (upload.status === 'pending') {
+          await uploadFile(upload);
+        }
       }
-    }
-  }, [todoId, onUploadSuccess, onUploadError]);
+    },
+    [todoId, onUploadSuccess, onUploadError]
+  );
 
   // Upload individual file
   const uploadFile = async (upload: FileUploadProgress) => {
     try {
       // Update status to uploading
-      setUploads(prev => 
-        prev.map(u => 
-          u.file === upload.file 
-            ? { ...u, status: 'uploading', progress: 0 }
-            : u
-        )
+      setUploads((prev) =>
+        prev.map((u) => (u.file === upload.file ? { ...u, status: 'uploading', progress: 0 } : u))
       );
 
       const response = await todoAttachmentAPI.uploadFile(
@@ -105,25 +110,19 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         undefined, // description
         (progress) => {
           // Update progress
-          setUploads(prev => 
-            prev.map(u => 
-              u.file === upload.file 
-                ? { ...u, progress }
-                : u
-            )
-          );
+          setUploads((prev) => prev.map((u) => (u.file === upload.file ? { ...u, progress } : u)));
         }
       );
 
       // Update status to success
-      setUploads(prev => 
-        prev.map(u => 
-          u.file === upload.file 
-            ? { 
-                ...u, 
-                status: 'success', 
+      setUploads((prev) =>
+        prev.map((u) =>
+          u.file === upload.file
+            ? {
+                ...u,
+                status: 'success',
                 progress: 100,
-                attachment: response.attachment 
+                attachment: response.attachment,
               }
             : u
         )
@@ -133,18 +132,15 @@ export const FileUpload: React.FC<FileUploadProps> = ({
 
       // Remove successful upload after delay
       setTimeout(() => {
-        setUploads(prev => prev.filter(u => u.file !== upload.file));
+        setUploads((prev) => prev.filter((u) => u.file !== upload.file));
       }, 3000);
-
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Upload failed';
-      
+
       // Update status to error
-      setUploads(prev => 
-        prev.map(u => 
-          u.file === upload.file 
-            ? { ...u, status: 'error', error: errorMessage }
-            : u
+      setUploads((prev) =>
+        prev.map((u) =>
+          u.file === upload.file ? { ...u, status: 'error', error: errorMessage } : u
         )
       );
 
@@ -154,7 +150,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
 
   // Remove upload from list
   const removeUpload = useCallback((file: File) => {
-    setUploads(prev => prev.filter(u => u.file !== file));
+    setUploads((prev) => prev.filter((u) => u.file !== file));
   }, []);
 
   // Open file picker
@@ -170,10 +166,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         className={`
           relative border-2 border-dashed rounded-lg p-6 text-center
           transition-colors duration-200 cursor-pointer
-          ${dragActive 
-            ? 'border-blue-400 bg-blue-50' 
-            : 'border-gray-300 hover:border-gray-400'
-          }
+          ${dragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300 hover:border-gray-400'}
           ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
         `}
         onDragEnter={handleDrag}
@@ -190,11 +183,10 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           className="hidden"
           disabled={disabled}
         />
-        
+
         <CloudArrowUpIcon className="mx-auto h-12 w-12 text-gray-400" />
         <p className="mt-2 text-sm text-gray-600">
-          <span className="font-medium text-blue-600">Click to upload files</span>
-          {' '}or drag and drop
+          <span className="font-medium text-blue-600">Click to upload files</span> or drag and drop
         </p>
         <p className="text-xs text-gray-500">
           Any file type • Maximum 25MB per file • No file limit
@@ -204,10 +196,8 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       {/* Upload Progress */}
       {uploads.length > 0 && (
         <div className="space-y-2">
-          <h4 className="text-sm font-medium text-gray-900">
-            Uploading Files ({uploads.length})
-          </h4>
-          
+          <h4 className="text-sm font-medium text-gray-900">Uploading Files ({uploads.length})</h4>
+
           {uploads.map((upload, index) => (
             <div
               key={`${upload.file.name}-${index}`}
@@ -224,12 +214,8 @@ export const FileUpload: React.FC<FileUploadProps> = ({
 
               {/* File Info */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
-                  {upload.file.name}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {formatFileSize(upload.file.size)}
-                </p>
+                <p className="text-sm font-medium text-gray-900 truncate">{upload.file.name}</p>
+                <p className="text-xs text-gray-500">{formatFileSize(upload.file.size)}</p>
 
                 {/* Progress Bar */}
                 {upload.status === 'uploading' && (
@@ -248,16 +234,12 @@ export const FileUpload: React.FC<FileUploadProps> = ({
 
                 {/* Error Message */}
                 {upload.status === 'error' && upload.error && (
-                  <p className="text-xs text-red-600 mt-1">
-                    {upload.error}
-                  </p>
+                  <p className="text-xs text-red-600 mt-1">{upload.error}</p>
                 )}
 
                 {/* Success Message */}
                 {upload.status === 'success' && (
-                  <p className="text-xs text-green-600 mt-1">
-                    ✓ Upload complete
-                  </p>
+                  <p className="text-xs text-green-600 mt-1">✓ Upload complete</p>
                 )}
               </div>
 

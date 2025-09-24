@@ -109,4 +109,3 @@ export interface PositionUpdate {
   seo_description?: string;
   social_image_url?: string;
 }
-

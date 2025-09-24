@@ -33,8 +33,14 @@ export const candidatesApi = {
     return { success: true, data: undefined };
   },
 
-  async updateCandidate(id: string | number, updates: Partial<UserManagement>): Promise<ApiResponse<UserManagement>> {
-    const response = await apiClient.put<UserManagement>(API_ENDPOINTS.ADMIN.USER_BY_ID(id), updates);
+  async updateCandidate(
+    id: string | number,
+    updates: Partial<UserManagement>
+  ): Promise<ApiResponse<UserManagement>> {
+    const response = await apiClient.put<UserManagement>(
+      API_ENDPOINTS.ADMIN.USER_BY_ID(id),
+      updates
+    );
     return { data: response.data, success: true };
   },
 };

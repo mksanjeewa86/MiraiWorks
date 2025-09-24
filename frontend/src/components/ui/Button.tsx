@@ -68,11 +68,7 @@ function Button({
   }
 
   return (
-    <button
-      className={buttonClasses}
-      disabled={isDisabled}
-      {...props}
-    >
+    <button className={buttonClasses} disabled={isDisabled} {...props}>
       {buttonContent}
     </button>
   );

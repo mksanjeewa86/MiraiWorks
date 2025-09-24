@@ -1,6 +1,6 @@
 import React from 'react';
-import { 
-  SignalIcon, 
+import {
+  SignalIcon,
   WifiIcon,
   ExclamationTriangleIcon,
   UserGroupIcon,
@@ -74,9 +74,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
         {/* Connection Quality */}
         <div className="flex items-center space-x-2">
           {getQualityIcon()}
-          <span className="text-sm font-medium">
-            {getStatusText()}
-          </span>
+          <span className="text-sm font-medium">{getStatusText()}</span>
         </div>
 
         {/* Divider */}

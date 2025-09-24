@@ -26,7 +26,7 @@ describe('MBTI Integration Tests', () => {
   describe('🌐 API Integration Tests', () => {
     const mockAuthToken = 'mock-auth-token';
     const mockHeaders = {
-      'Authorization': `Bearer ${mockAuthToken}`,
+      Authorization: `Bearer ${mockAuthToken}`,
       'Content-Type': 'application/json',
     };
 
@@ -35,7 +35,7 @@ describe('MBTI Integration Tests', () => {
         status: 'in_progress',
         completion_percentage: 0,
         total_questions: 60,
-        started_at: '2023-01-01T00:00:00Z'
+        started_at: '2023-01-01T00:00:00Z',
       };
 
       mockFetch.mockResolvedValueOnce({
@@ -70,7 +70,7 @@ describe('MBTI Integration Tests', () => {
         completion_percentage: 35,
         current_question: 21,
         total_questions: 60,
-        started_at: '2023-01-01T00:00:00Z'
+        started_at: '2023-01-01T00:00:00Z',
       };
 
       mockFetch.mockResolvedValueOnce({
@@ -105,7 +105,7 @@ describe('MBTI Integration Tests', () => {
           dimension: 'E_I',
           question_text: 'Do you prefer working in groups?',
           option_a: 'Yes, I love collaboration',
-          option_b: 'No, I prefer working alone'
+          option_b: 'No, I prefer working alone',
         },
         {
           id: 2,
@@ -113,8 +113,8 @@ describe('MBTI Integration Tests', () => {
           dimension: 'S_N',
           question_text: 'Do you focus on details?',
           option_a: 'Yes, details are important',
-          option_b: 'No, I prefer the big picture'
-        }
+          option_b: 'No, I prefer the big picture',
+        },
       ];
 
       mockFetch.mockResolvedValueOnce({
@@ -147,7 +147,7 @@ describe('MBTI Integration Tests', () => {
         status: 'in_progress',
         completion_percentage: 2,
         current_question: 2,
-        total_questions: 60
+        total_questions: 60,
       };
 
       mockFetch.mockResolvedValueOnce({
@@ -158,7 +158,7 @@ describe('MBTI Integration Tests', () => {
 
       const answerData = {
         question_id: 1,
-        answer: 'A'
+        answer: 'A',
       };
 
       const response = await fetch(`${BACKEND_URL}/api/mbti/answer`, {
@@ -189,8 +189,8 @@ describe('MBTI Integration Tests', () => {
           name_ja: '建築家',
           description_en: 'Strategic thinkers with a plan for everything.',
           description_ja: '戦略的な思考の持ち主で、あらゆることに対して計画を持っています。',
-          temperament: 'NT'
-        }
+          temperament: 'NT',
+        },
       ];
 
       mockFetch.mockResolvedValueOnce({
@@ -241,7 +241,7 @@ describe('MBTI Integration Tests', () => {
       const response = await fetch(`${BACKEND_URL}/api/mbti/start`, {
         method: 'POST',
         headers: {
-          'Authorization': 'Bearer employer-token',
+          Authorization: 'Bearer employer-token',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ language: 'ja' }),
@@ -257,7 +257,7 @@ describe('MBTI Integration Tests', () => {
     it('should complete full MBTI workflow', async () => {
       const mockAuthToken = 'candidate-auth-token';
       const mockHeaders = {
-        'Authorization': `Bearer ${mockAuthToken}`,
+        Authorization: `Bearer ${mockAuthToken}`,
         'Content-Type': 'application/json',
       };
 
@@ -268,7 +268,7 @@ describe('MBTI Integration Tests', () => {
         json: async () => ({
           status: 'not_taken',
           completion_percentage: 0,
-          total_questions: 60
+          total_questions: 60,
         }),
       } as Response);
 
@@ -287,7 +287,7 @@ describe('MBTI Integration Tests', () => {
           status: 'in_progress',
           completion_percentage: 0,
           total_questions: 60,
-          started_at: '2023-01-01T00:00:00Z'
+          started_at: '2023-01-01T00:00:00Z',
         }),
       } as Response);
 
@@ -310,8 +310,8 @@ describe('MBTI Integration Tests', () => {
             dimension: 'E_I',
             question_text: 'Sample question 1',
             option_a: 'Option A',
-            option_b: 'Option B'
-          }
+            option_b: 'Option B',
+          },
         ],
       } as Response);
 
@@ -330,7 +330,7 @@ describe('MBTI Integration Tests', () => {
           status: 'in_progress',
           completion_percentage: 2,
           current_question: 2,
-          total_questions: 60
+          total_questions: 60,
         }),
       } as Response);
 
@@ -339,7 +339,7 @@ describe('MBTI Integration Tests', () => {
         headers: mockHeaders,
         body: JSON.stringify({
           question_id: 1,
-          answer: 'A'
+          answer: 'A',
         }),
       });
       const answerData = await answerResponse.json();
@@ -353,7 +353,7 @@ describe('MBTI Integration Tests', () => {
           status: 'in_progress',
           completion_percentage: 2,
           current_question: 2,
-          total_questions: 60
+          total_questions: 60,
         }),
       } as Response);
 
@@ -377,7 +377,7 @@ describe('MBTI Integration Tests', () => {
         await fetch(`${BACKEND_URL}/api/mbti/progress`, {
           method: 'GET',
           headers: {
-            'Authorization': 'Bearer test-token',
+            Authorization: 'Bearer test-token',
             'Content-Type': 'application/json',
           },
         });
@@ -396,16 +396,16 @@ describe('MBTI Integration Tests', () => {
             {
               loc: ['body', 'language'],
               msg: 'string does not match regex "^(en|ja)$"',
-              type: 'value_error.str.regex'
-            }
-          ]
+              type: 'value_error.str.regex',
+            },
+          ],
         }),
       } as Response);
 
       const response = await fetch(`${BACKEND_URL}/api/mbti/start`, {
         method: 'POST',
         headers: {
-          'Authorization': 'Bearer test-token',
+          Authorization: 'Bearer test-token',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ language: 'fr' }), // Invalid language
@@ -427,7 +427,7 @@ describe('MBTI Integration Tests', () => {
       const response = await fetch(`${BACKEND_URL}/api/mbti/result`, {
         method: 'GET',
         headers: {
-          'Authorization': 'Bearer test-token',
+          Authorization: 'Bearer test-token',
           'Content-Type': 'application/json',
         },
       });
@@ -448,15 +448,15 @@ describe('MBTI Integration Tests', () => {
             id: 1,
             question_text: '日本語の質問',
             option_a: '選択肢A',
-            option_b: '選択肢B'
-          }
+            option_b: '選択肢B',
+          },
         ],
       } as Response);
 
       const response = await fetch(`${BACKEND_URL}/api/mbti/questions?language=ja`, {
         method: 'GET',
         headers: {
-          'Authorization': 'Bearer test-token',
+          Authorization: 'Bearer test-token',
           'Content-Type': 'application/json',
         },
       });
@@ -476,15 +476,15 @@ describe('MBTI Integration Tests', () => {
             id: 1,
             question_text: 'English question',
             option_a: 'Option A',
-            option_b: 'Option B'
-          }
+            option_b: 'Option B',
+          },
         ],
       } as Response);
 
       const response = await fetch(`${BACKEND_URL}/api/mbti/questions?language=en`, {
         method: 'GET',
         headers: {
-          'Authorization': 'Bearer test-token',
+          Authorization: 'Bearer test-token',
           'Content-Type': 'application/json',
         },
       });

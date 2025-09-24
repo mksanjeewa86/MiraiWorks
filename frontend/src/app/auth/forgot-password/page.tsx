@@ -54,11 +54,7 @@ export default function ForgotPasswordPage() {
 
         {/* Forgot Password Form */}
         <div className="card p-8">
-          <ForgotPasswordForm
-            onSubmit={handleForgotPassword}
-            isLoading={isLoading}
-            error={error}
-          />
+          <ForgotPasswordForm onSubmit={handleForgotPassword} isLoading={isLoading} error={error} />
 
           {/* Back to Login */}
           <div className="mt-6 text-center">

@@ -19,21 +19,9 @@ const sizeClasses = {
   lg: 'px-3 py-1 text-sm',
 };
 
-function Badge({
-  children,
-  variant = 'secondary',
-  size = 'md',
-  className
-}: BadgeProps) {
+function Badge({ children, variant = 'secondary', size = 'md', className }: BadgeProps) {
   return (
-    <span
-      className={clsx(
-        'badge',
-        variantClasses[variant],
-        sizeClasses[size],
-        className
-      )}
-    >
+    <span className={clsx('badge', variantClasses[variant], sizeClasses[size], className)}>
       {children}
     </span>
   );

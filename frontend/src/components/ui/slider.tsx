@@ -150,7 +150,8 @@ const Slider = forwardRef<HTMLDivElement, SliderProps>(
             className={clsx(
               'absolute w-5 h-5 bg-white border-2 border-blue-600 rounded-full shadow-md',
               'transform -translate-x-1/2 -translate-y-1/2',
-              !disabled && 'hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+              !disabled &&
+                'hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
               isDragging && 'shadow-lg'
             )}
             style={{

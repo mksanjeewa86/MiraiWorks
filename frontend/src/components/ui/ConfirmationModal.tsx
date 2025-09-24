@@ -10,7 +10,7 @@ export default function ConfirmationModal({
   confirmText = 'Confirm',
   cancelText = 'Cancel',
   confirmButtonClass = 'bg-red-600 hover:bg-red-700',
-  icon
+  icon,
 }: ConfirmationModalProps) {
   if (!isOpen) return null;
 
@@ -27,9 +27,7 @@ export default function ConfirmationModal({
         <div className="flex items-center justify-between p-6 pb-4">
           <div className="flex items-center space-x-3">
             {icon || <AlertTriangle className="h-6 w-6 text-yellow-500" />}
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              {title}
-            </h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
           </div>
           <button
             onClick={onClose}
@@ -41,9 +39,7 @@ export default function ConfirmationModal({
 
         {/* Content */}
         <div className="px-6 pb-4">
-          <div className="text-gray-600 dark:text-gray-300">
-            {message}
-          </div>
+          <div className="text-gray-600 dark:text-gray-300">{message}</div>
         </div>
 
         {/* Actions */}

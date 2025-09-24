@@ -140,10 +140,10 @@ export const roleColorSchemes: Record<string, ColorScheme> = {
     statusIndicator: 'bg-cyan-400',
     statusIndicatorShadow: 'shadow-cyan-400/50',
   },
-}
+};
 
 // Default color scheme (fallback)
-export const defaultColorScheme: ColorScheme = roleColorSchemes.candidate
+export const defaultColorScheme: ColorScheme = roleColorSchemes.candidate;
 
 /**
  * Get the color scheme for a specific user role
@@ -152,23 +152,23 @@ export const defaultColorScheme: ColorScheme = roleColorSchemes.candidate
  */
 export function getRoleColorScheme(userRoles?: Array<{ role: { name: string } }>): ColorScheme {
   if (!userRoles || userRoles.length === 0) {
-    return defaultColorScheme
+    return defaultColorScheme;
   }
 
   // Priority order for roles (highest to lowest)
-  const rolePriority = ['super_admin', 'company_admin', 'recruiter', 'employer', 'candidate']
+  const rolePriority = ['super_admin', 'company_admin', 'recruiter', 'employer', 'candidate'];
 
   // Find the highest priority role
   for (const priority of rolePriority) {
-    const hasRole = userRoles.some(userRole => userRole.role.name === priority)
+    const hasRole = userRoles.some((userRole) => userRole.role.name === priority);
     if (hasRole && roleColorSchemes[priority]) {
-      return roleColorSchemes[priority]
+      return roleColorSchemes[priority];
     }
   }
 
   // Fallback to the first role if no priority match
-  const firstRole = userRoles[0]?.role?.name
-  return roleColorSchemes[firstRole] || defaultColorScheme
+  const firstRole = userRoles[0]?.role?.name;
+  return roleColorSchemes[firstRole] || defaultColorScheme;
 }
 
 /**
@@ -178,11 +178,11 @@ export function getRoleColorScheme(userRoles?: Array<{ role: { name: string } }>
  */
 export function getRoleDisplayName(userRoles?: Array<{ role: { name: string } }>): string {
   if (!userRoles || userRoles.length === 0) {
-    return 'USER'
+    return 'USER';
   }
 
-  const primaryRole = userRoles[0]?.role?.name || 'user'
-  return primaryRole.replace('_', ' ').toUpperCase()
+  const primaryRole = userRoles[0]?.role?.name || 'user';
+  return primaryRole.replace('_', ' ').toUpperCase();
 }
 
 /**
@@ -191,6 +191,6 @@ export function getRoleDisplayName(userRoles?: Array<{ role: { name: string } }>
  * @returns CSS class for brand icon background
  */
 export function getRoleBrandBackground(userRoles?: Array<{ role: { name: string } }>): string {
-  const scheme = getRoleColorScheme(userRoles)
-  return scheme.brandBackground
+  const scheme = getRoleColorScheme(userRoles);
+  return scheme.brandBackground;
 }

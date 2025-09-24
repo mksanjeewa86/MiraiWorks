@@ -1,101 +1,100 @@
 // Base message types
 export interface Message {
-    id: string;
-    type: MessageType;
-    content: string;
-    senderId: string;
-    receiverId: string;
-    timestamp: number;
-    status: MessageStatus;
-    metadata?: MessageMetadata;
+  id: string;
+  type: MessageType;
+  content: string;
+  senderId: string;
+  receiverId: string;
+  timestamp: number;
+  status: MessageStatus;
+  metadata?: MessageMetadata;
 }
 
 export type MessageType = 'text' | 'file' | 'image' | 'system';
 export type MessageStatus = 'pending' | 'sent' | 'delivered' | 'read' | 'failed';
 
 export interface MessageMetadata {
-    fileType?: string;
-    fileSize?: number;
-    thumbnailUrl?: string;
-    fileUrl?: string;
-    fileName?: string;
+  fileType?: string;
+  fileSize?: number;
+  thumbnailUrl?: string;
+  fileUrl?: string;
+  fileName?: string;
 }
 
 // Queue types
 export interface QueuedMessage extends Message {
-    retryCount: number;
-    lastRetryTime?: number;
+  retryCount: number;
+  lastRetryTime?: number;
 }
 
 // Edit types
 export interface EditHistory {
-    timestamp: number;
-    content: string;
-    editorId: string;
+  timestamp: number;
+  content: string;
+  editorId: string;
 }
 
 export interface EditedMessage extends Message {
-    editHistory: EditHistory[];
-    lastEditedAt?: number;
-    editedBy?: string;
+  editHistory: EditHistory[];
+  lastEditedAt?: number;
+  editedBy?: string;
 }
 
 // Thread types
 export interface Thread {
-    id: string;
-    parentMessageId: string;
-    lastReplyAt: number;
-    replyCount: number;
-    participants: string[];
+  id: string;
+  parentMessageId: string;
+  lastReplyAt: number;
+  replyCount: number;
+  participants: string[];
 }
 
 export interface ThreadMessage extends Message {
-    threadId?: string;
-    replyTo?: string;
+  threadId?: string;
+  replyTo?: string;
 }
 
 export interface ThreadUpdate {
-    threadId: string;
-    messageId: string;
-    type: 'new_reply' | 'reply_deleted';
-    timestamp: number;
+  threadId: string;
+  messageId: string;
+  type: 'new_reply' | 'reply_deleted';
+  timestamp: number;
 }
 
 // Reaction types
 export interface MessageReaction {
-    emoji: string;
-    userId: string;
-    timestamp: number;
-    removed?: boolean;
+  emoji: string;
+  userId: string;
+  timestamp: number;
+  removed?: boolean;
 }
 
 export interface ReactionUpdate {
-    messageId: string;
-    reaction: MessageReaction;
+  messageId: string;
+  reaction: MessageReaction;
 }
 
 // Status types
 export interface MessageStatusUpdate {
-    messageId: string;
-    status: MessageStatus;
-    timestamp: number;
-    userId?: string;
+  messageId: string;
+  status: MessageStatus;
+  timestamp: number;
+  userId?: string;
 }
 
 // Forward types
 export interface ForwardedMessage extends Message {
-    originalMessageId: string;
-    originalSenderId: string;
-    forwardedBy: string;
-    forwardedAt: number;
+  originalMessageId: string;
+  originalSenderId: string;
+  forwardedBy: string;
+  forwardedAt: number;
 }
 
 // File validation types
 export interface ValidationResult {
-    isValid: boolean;
-    errors: string[];
+  isValid: boolean;
+  errors: string[];
 }
-
 
 // Legacy Message Types from API
 export interface LegacyMessage {

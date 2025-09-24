@@ -25,7 +25,7 @@ import {
   TrendingUp,
   Briefcase,
   Globe,
-  X
+  X,
 } from 'lucide-react';
 
 // Types
@@ -88,20 +88,14 @@ const getDefaultFormData = (): NewPositionFormData => {
   };
 };
 
-const PREFECTURE_LOCATION_OPTIONS = PREFECTURES.map(prefecture => ({
+const PREFECTURE_LOCATION_OPTIONS = PREFECTURES.map((prefecture) => ({
   label: prefecture.nameEn,
   value: `${prefecture.nameEn}, Japan`,
 }));
 
-const LOCATION_OPTIONS = [
-  ...PREFECTURE_LOCATION_OPTIONS,
-  { label: 'Remote', value: 'Remote' },
-];
+const LOCATION_OPTIONS = [...PREFECTURE_LOCATION_OPTIONS, { label: 'Remote', value: 'Remote' }];
 
-const FILTER_LOCATION_OPTIONS = [
-  { label: 'All Locations', value: 'all' },
-  ...LOCATION_OPTIONS,
-];
+const FILTER_LOCATION_OPTIONS = [{ label: 'All Locations', value: 'all' }, ...LOCATION_OPTIONS];
 // Helper function to map API data to frontend format
 const mapApiPositionToLocal = (apiPosition: ApiPosition): Position => {
   return {
@@ -117,7 +111,8 @@ const mapApiPositionToLocal = (apiPosition: ApiPosition): Position => {
     remote: apiPosition.remote_type === 'remote' || apiPosition.remote_type === 'hybrid',
     urgent: apiPosition.is_urgent || false,
     type: (apiPosition.job_type?.replace('_', '-') || 'full-time') as Position['type'],
-    level: (apiPosition.experience_level?.replace('_level', '').replace('_', '') || 'mid') as Position['level'],
+    level: (apiPosition.experience_level?.replace('_level', '').replace('_', '') ||
+      'mid') as Position['level'],
   };
 };
 
@@ -132,7 +127,9 @@ function PositionsPageContent() {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [levelFilter, setLevelFilter] = useState<string>('all');
   const [locationFilter, setLocationFilter] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<'title' | 'postedDate' | 'applications' | 'deadline'>('postedDate');
+  const [sortBy, setSortBy] = useState<'title' | 'postedDate' | 'applications' | 'deadline'>(
+    'postedDate'
+  );
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -151,7 +148,7 @@ function PositionsPageContent() {
         setError(null);
         // Pass user's company_id as a filter to only show positions from their company
         const response = await positionsApi.getAll({
-          company_id: user.company_id
+          company_id: user.company_id,
         });
         if (response.success && response.data) {
           const mappedPositions = response.data.positions.map(mapApiPositionToLocal);
@@ -172,10 +169,11 @@ function PositionsPageContent() {
 
   // Apply filters and search
   useEffect(() => {
-    const filtered = positions.filter(position => {
-      const matchesSearch = position.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          position.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          (position.department || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const filtered = positions.filter((position) => {
+      const matchesSearch =
+        position.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        position.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (position.department || '').toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === 'all' || position.status === statusFilter;
       const matchesType = typeFilter === 'all' || position.type === typeFilter;
       const matchesLevel = levelFilter === 'all' || position.level === levelFilter;
@@ -217,7 +215,16 @@ function PositionsPageContent() {
     });
     setFilteredPositions(filtered);
     setCurrentPage(1);
-  }, [positions, searchTerm, statusFilter, typeFilter, levelFilter, locationFilter, sortBy, sortOrder]);
+  }, [
+    positions,
+    searchTerm,
+    statusFilter,
+    typeFilter,
+    levelFilter,
+    locationFilter,
+    sortBy,
+    sortOrder,
+  ]);
   // Pagination
   const totalPages = Math.ceil(filteredPositions.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -226,18 +233,17 @@ function PositionsPageContent() {
   // Statistics
   const stats = {
     total: positions.length,
-    published: positions.filter(p => p.status === 'published').length,
+    published: positions.filter((p) => p.status === 'published').length,
     applications: positions.reduce((sum, p) => sum + p.applications, 0),
-    avgViews: Math.round(positions.reduce((sum, p) => sum + p.views, 0) / positions.length) || 0
+    avgViews: Math.round(positions.reduce((sum, p) => sum + p.views, 0) / positions.length) || 0,
   };
   const handleCreatePosition = async (formData: NewPositionFormData) => {
     try {
-      const parseMultiline = (value: string) => (
+      const parseMultiline = (value: string) =>
         value
           .split('\n')
-          .map(item => item.trim())
-          .filter(Boolean)
-      );
+          .map((item) => item.trim())
+          .filter(Boolean);
 
       const positionData: PositionCreate = {
         title: formData.title.trim(),
@@ -259,7 +265,7 @@ function PositionsPageContent() {
       const response = await positionsApi.create(positionData);
       if (response.success && response.data) {
         const newPosition = mapApiPositionToLocal(response.data);
-        setPositions(prev => [newPosition, ...prev]);
+        setPositions((prev) => [newPosition, ...prev]);
         setIsNewPositionOpen(false);
         setCurrentPage(1);
       } else {
@@ -277,7 +283,7 @@ function PositionsPageContent() {
       published: 'bg-green-100 text-green-800 border-green-200',
       paused: 'bg-yellow-100 text-yellow-800 border-yellow-200',
       closed: 'bg-red-100 text-red-800 border-red-200',
-      archived: 'bg-gray-100 text-gray-800 border-gray-200'
+      archived: 'bg-gray-100 text-gray-800 border-gray-200',
     };
     return styles[status] || styles.draft;
   };
@@ -285,19 +291,19 @@ function PositionsPageContent() {
     const styles = {
       'full-time': 'bg-blue-50 text-blue-700 border-blue-200',
       'part-time': 'bg-purple-50 text-purple-700 border-purple-200',
-      'contract': 'bg-orange-50 text-orange-700 border-orange-200',
-      'internship': 'bg-pink-50 text-pink-700 border-pink-200',
-      'freelance': 'bg-green-50 text-green-700 border-green-200',
-      'temporary': 'bg-yellow-50 text-yellow-700 border-yellow-200'
+      contract: 'bg-orange-50 text-orange-700 border-orange-200',
+      internship: 'bg-pink-50 text-pink-700 border-pink-200',
+      freelance: 'bg-green-50 text-green-700 border-green-200',
+      temporary: 'bg-yellow-50 text-yellow-700 border-yellow-200',
     };
     return styles[type] || styles['full-time'];
   };
   const getLevelBadge = (level: Position['level']) => {
     const styles = {
-      'entry': 'bg-green-50 text-green-700 border-green-200',
-      'mid': 'bg-blue-50 text-blue-700 border-blue-200',
-      'senior': 'bg-purple-50 text-purple-700 border-purple-200',
-      'executive': 'bg-red-50 text-red-700 border-red-200'
+      entry: 'bg-green-50 text-green-700 border-green-200',
+      mid: 'bg-blue-50 text-blue-700 border-blue-200',
+      senior: 'bg-purple-50 text-purple-700 border-purple-200',
+      executive: 'bg-red-50 text-red-700 border-red-200',
     };
     return styles[level] || styles['mid'];
   };
@@ -307,17 +313,17 @@ function PositionsPageContent() {
   };
   const formatDate = (dateString: string) => {
     try {
-      if (!dateString) return "Recently";
+      if (!dateString) return 'Recently';
       const date = new Date(dateString);
-      if (isNaN(date.getTime())) return "Recently";
+      if (isNaN(date.getTime())) return 'Recently';
 
       return date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
       });
     } catch {
-      return "Recently";
+      return 'Recently';
     }
   };
   const handleSort = (field: typeof sortBy) => {
@@ -340,7 +346,10 @@ function PositionsPageContent() {
     return (
       <AppLayout>
         <div className="flex items-center justify-center min-h-64">
-          <div className="loading-spinner border-gray-300 border-t-brand-primary h-8 w-8" aria-label="Loading"></div>
+          <div
+            className="loading-spinner border-gray-300 border-t-brand-primary h-8 w-8"
+            aria-label="Loading"
+          ></div>
         </div>
       </AppLayout>
     );
@@ -361,7 +370,9 @@ function PositionsPageContent() {
               <BriefcaseBusiness className="h-6 w-6" style={{ color: 'var(--brand-primary)' }} />
               Positions Management
             </h1>
-            <p className="text-gray-600 mt-1">Manage job postings, track applications, and oversee hiring workflows</p>
+            <p className="text-gray-600 mt-1">
+              Manage job postings, track applications, and oversee hiring workflows
+            </p>
           </div>
           <div className="flex items-center gap-3">
             <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
@@ -387,7 +398,10 @@ function PositionsPageContent() {
                 <p className="text-sm font-medium text-gray-600">Total Positions</p>
                 <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
               </div>
-              <div className="p-3 rounded-full" style={{ backgroundColor: 'var(--brand-primary-light)' }}>
+              <div
+                className="p-3 rounded-full"
+                style={{ backgroundColor: 'var(--brand-primary-light)' }}
+              >
                 <Briefcase className="h-6 w-6" style={{ color: 'var(--brand-primary)' }} />
               </div>
             </div>
@@ -449,13 +463,15 @@ function PositionsPageContent() {
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                  backgroundPosition: 'right 12px center',
-                  backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px',
-                  '--tw-ring-color': 'var(--brand-primary)'
-                } as CSSProperties}
+                style={
+                  {
+                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                    backgroundPosition: 'right 12px center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '16px',
+                    '--tw-ring-color': 'var(--brand-primary)',
+                  } as CSSProperties
+                }
               >
                 <option value="all">All Status</option>
                 <option value="draft">Draft</option>
@@ -468,13 +484,15 @@ function PositionsPageContent() {
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
                 className="pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                  backgroundPosition: 'right 12px center',
-                  backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px',
-                  '--tw-ring-color': 'var(--brand-primary)'
-                } as CSSProperties}
+                style={
+                  {
+                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                    backgroundPosition: 'right 12px center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '16px',
+                    '--tw-ring-color': 'var(--brand-primary)',
+                  } as CSSProperties
+                }
               >
                 <option value="all">All Types</option>
                 <option value="full-time">Full-time</option>
@@ -486,13 +504,15 @@ function PositionsPageContent() {
                 value={levelFilter}
                 onChange={(e) => setLevelFilter(e.target.value)}
                 className="pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                  backgroundPosition: 'right 12px center',
-                  backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px',
-                  '--tw-ring-color': 'var(--brand-primary)'
-                } as CSSProperties}
+                style={
+                  {
+                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                    backgroundPosition: 'right 12px center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '16px',
+                    '--tw-ring-color': 'var(--brand-primary)',
+                  } as CSSProperties
+                }
               >
                 <option value="all">All Levels</option>
                 <option value="entry">Entry</option>
@@ -504,13 +524,15 @@ function PositionsPageContent() {
                 value={locationFilter}
                 onChange={(e) => setLocationFilter(e.target.value)}
                 className="pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                  backgroundPosition: 'right 12px center',
-                  backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px',
-                  '--tw-ring-color': 'var(--brand-primary)'
-                } as CSSProperties}
+                style={
+                  {
+                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                    backgroundPosition: 'right 12px center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '16px',
+                    '--tw-ring-color': 'var(--brand-primary)',
+                  } as CSSProperties
+                }
               >
                 {FILTER_LOCATION_OPTIONS.map(({ label, value }) => (
                   <option key={value} value={value}>
@@ -533,7 +555,11 @@ function PositionsPageContent() {
             <div className="flex items-center gap-2">
               <div className="text-red-600">
                 <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </div>
               <p className="text-red-800 font-medium">{error}</p>
@@ -547,8 +573,10 @@ function PositionsPageContent() {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                      onClick={() => handleSort('title')}>
+                  <th
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('title')}
+                  >
                     <div className="flex items-center gap-1">
                       Position
                       {sortBy === 'title' && (
@@ -565,8 +593,10 @@ function PositionsPageContent() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Salary
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                      onClick={() => handleSort('applications')}>
+                  <th
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('applications')}
+                  >
                     <div className="flex items-center gap-1">
                       Applications
                       {sortBy === 'applications' && (
@@ -574,8 +604,10 @@ function PositionsPageContent() {
                       )}
                     </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                      onClick={() => handleSort('deadline')}>
+                  <th
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('deadline')}
+                  >
                     <div className="flex items-center gap-1">
                       Timeline
                       {sortBy === 'deadline' && (
@@ -605,7 +637,9 @@ function PositionsPageContent() {
                         <BriefcaseBusiness className="h-12 w-12 text-gray-400" />
                         <div>
                           <p className="text-gray-900 font-medium">No positions found</p>
-                          <p className="text-gray-500 text-sm">Try adjusting your search or filters</p>
+                          <p className="text-gray-500 text-sm">
+                            Try adjusting your search or filters
+                          </p>
                         </div>
                       </div>
                     </td>
@@ -624,13 +658,19 @@ function PositionsPageContent() {
                             )}
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusBadge(position.status)}`}>
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusBadge(position.status)}`}
+                            >
                               {position.status}
                             </span>
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getTypeBadge(position.type)}`}>
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getTypeBadge(position.type)}`}
+                            >
                               {position.type}
                             </span>
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getLevelBadge(position.level)}`}>
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getLevelBadge(position.level)}`}
+                            >
                               {position.level}
                             </span>
                           </div>
@@ -640,7 +680,9 @@ function PositionsPageContent() {
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center gap-1">
                             <Building className="h-3 w-3 text-gray-400" />
-                            <span className="text-sm font-medium text-gray-900">{position.company}</span>
+                            <span className="text-sm font-medium text-gray-900">
+                              {position.company}
+                            </span>
                           </div>
                           <span className="text-sm text-gray-600">{position.department}</span>
                         </div>
@@ -665,13 +707,17 @@ function PositionsPageContent() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-1">
                           <DollarSign className="h-3 w-3 text-gray-400" />
-                          <span className="text-sm text-gray-900">{formatSalary(position.salaryMin, position.salaryMax)}</span>
+                          <span className="text-sm text-gray-900">
+                            {formatSalary(position.salaryMin, position.salaryMax)}
+                          </span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-1">
                           <Users className="h-3 w-3 text-gray-400" />
-                          <span className="text-sm font-medium text-gray-900">{position.applications}</span>
+                          <span className="text-sm font-medium text-gray-900">
+                            {position.applications}
+                          </span>
                           <span className="text-sm text-gray-600">applicants</span>
                         </div>
                       </td>
@@ -679,11 +725,15 @@ function PositionsPageContent() {
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center gap-1">
                             <Calendar className="h-3 w-3 text-gray-400" />
-                            <span className="text-sm text-gray-600">Posted {formatDate(position.postedDate)}</span>
+                            <span className="text-sm text-gray-600">
+                              Posted {formatDate(position.postedDate)}
+                            </span>
                           </div>
                           <div className="flex items-center gap-1">
                             <Clock className="h-3 w-3 text-gray-400" />
-                            <span className="text-sm text-gray-600">Ends {formatDate(position.deadline)}</span>
+                            <span className="text-sm text-gray-600">
+                              Ends {formatDate(position.deadline)}
+                            </span>
                           </div>
                         </div>
                       </td>
@@ -720,11 +770,12 @@ function PositionsPageContent() {
             <div className="px-6 py-3 border-t border-gray-200">
               <div className="flex items-center justify-between">
                 <div className="text-sm text-gray-700">
-                  Showing {startIndex + 1} to {Math.min(endIndex, filteredPositions.length)} of {filteredPositions.length} positions
+                  Showing {startIndex + 1} to {Math.min(endIndex, filteredPositions.length)} of{' '}
+                  {filteredPositions.length} positions
                 </div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
                     className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
@@ -734,7 +785,7 @@ function PositionsPageContent() {
                     Page {currentPage} of {totalPages}
                   </span>
                   <button
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
                     className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
@@ -748,14 +799,12 @@ function PositionsPageContent() {
       </div>
     </AppLayout>
   );
-
 }
 
 interface NewPositionModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: NewPositionFormData) => void;
-
 }
 
 function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) {
@@ -785,13 +834,15 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
     };
   }, [isOpen, onClose]);
   if (!isOpen) return null;
-  const handleInputChange = (event: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    event: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = event.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
   const handleCheckboxChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = event.target;
-    setFormData(prev => ({ ...prev, [name]: checked }));
+    setFormData((prev) => ({ ...prev, [name]: checked }));
   };
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -827,7 +878,9 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
       >
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
           <div>
-            <h2 id="new-position-modal-title" className="text-lg font-semibold text-gray-900">Create New Position</h2>
+            <h2 id="new-position-modal-title" className="text-lg font-semibold text-gray-900">
+              Create New Position
+            </h2>
             <p className="text-sm text-gray-500">Add a new job posting to your positions list.</p>
           </div>
           <button
@@ -860,7 +913,7 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
                   backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                   backgroundPosition: 'right 12px center',
                   backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px'
+                  backgroundSize: '16px',
                 }}
               />
             </div>
@@ -879,7 +932,7 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
                   backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                   backgroundPosition: 'right 12px center',
                   backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px'
+                  backgroundSize: '16px',
                 }}
               />
             </div>
@@ -897,10 +950,12 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
                   backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                   backgroundPosition: 'right 12px center',
                   backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px'
+                  backgroundSize: '16px',
                 }}
               >
-                <option value="" disabled>Select location</option>
+                <option value="" disabled>
+                  Select location
+                </option>
                 {LOCATION_OPTIONS.map(({ label, value }) => (
                   <option key={value} value={value}>
                     {label}
@@ -909,7 +964,9 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="job_type">Type</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="job_type">
+                Type
+              </label>
               <select
                 id="job_type"
                 name="job_type"
@@ -920,7 +977,7 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
                   backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                   backgroundPosition: 'right 12px center',
                   backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px'
+                  backgroundSize: '16px',
                 }}
               >
                 <option value="full_time">Full-time</option>
@@ -932,7 +989,12 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="experience_level">Level</label>
+              <label
+                className="mb-1 block text-sm font-medium text-gray-700"
+                htmlFor="experience_level"
+              >
+                Level
+              </label>
               <select
                 id="experience_level"
                 name="experience_level"
@@ -943,7 +1005,7 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
                   backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                   backgroundPosition: 'right 12px center',
                   backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px'
+                  backgroundSize: '16px',
                 }}
               >
                 <option value="entry_level">Entry Level</option>
@@ -954,7 +1016,9 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="status">Status</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="status">
+                Status
+              </label>
               <select
                 id="status"
                 name="status"
@@ -965,7 +1029,7 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
                   backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                   backgroundPosition: 'right 12px center',
                   backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px'
+                  backgroundSize: '16px',
                 }}
               >
                 <option value="draft">Draft</option>
@@ -976,7 +1040,9 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="remote_type">Remote Work</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="remote_type">
+                Remote Work
+              </label>
               <select
                 id="remote_type"
                 name="remote_type"
@@ -987,7 +1053,7 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
                   backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                   backgroundPosition: 'right 12px center',
                   backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px'
+                  backgroundSize: '16px',
                 }}
               >
                 <option value="on_site">On-site</option>
@@ -996,7 +1062,9 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="postedDate">Posted Date</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="postedDate">
+                Posted Date
+              </label>
               <input
                 id="postedDate"
                 name="postedDate"
@@ -1008,12 +1076,14 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
                   backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                   backgroundPosition: 'right 12px center',
                   backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px'
+                  backgroundSize: '16px',
                 }}
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="deadline">Application Deadline</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="deadline">
+                Application Deadline
+              </label>
               <input
                 id="deadline"
                 name="deadline"
@@ -1025,12 +1095,14 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
                   backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                   backgroundPosition: 'right 12px center',
                   backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px'
+                  backgroundSize: '16px',
                 }}
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="salaryMin">Salary Min (¥)</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="salaryMin">
+                Salary Min (¥)
+              </label>
               <input
                 id="salaryMin"
                 name="salaryMin"
@@ -1043,7 +1115,9 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="salaryMax">Salary Max (¥)</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="salaryMax">
+                Salary Max (¥)
+              </label>
               <input
                 id="salaryMax"
                 name="salaryMax"
@@ -1058,7 +1132,9 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="md:col-span-2">
-              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="description">Position Description</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="description">
+                Position Description
+              </label>
               <textarea
                 id="description"
                 name="description"
@@ -1071,12 +1147,17 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
                   backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                   backgroundPosition: 'right 12px center',
                   backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px'
+                  backgroundSize: '16px',
                 }}
               ></textarea>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="requirements">Requirements</label>
+              <label
+                className="mb-1 block text-sm font-medium text-gray-700"
+                htmlFor="requirements"
+              >
+                Requirements
+              </label>
               <textarea
                 id="requirements"
                 name="requirements"
@@ -1089,12 +1170,14 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
                   backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                   backgroundPosition: 'right 12px center',
                   backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px'
+                  backgroundSize: '16px',
                 }}
               ></textarea>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="benefits">Benefits</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="benefits">
+                Benefits
+              </label>
               <textarea
                 id="benefits"
                 name="benefits"
@@ -1138,7 +1221,6 @@ function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) 
       </div>
     </div>
   );
-
 }
 
 export default function PositionsPage() {
@@ -1147,5 +1229,4 @@ export default function PositionsPage() {
       <PositionsPageContent />
     </ProtectedRoute>
   );
-
 }

@@ -51,7 +51,11 @@ interface SelectItemProps {
 }
 
 const SelectItem = ({ children, value, className }: SelectItemProps) => {
-  return <option value={value} className={clsx('select-item', className)}>{children}</option>;
+  return (
+    <option value={value} className={clsx('select-item', className)}>
+      {children}
+    </option>
+  );
 };
 
 interface SelectTriggerProps {
@@ -80,12 +84,6 @@ const SelectValue = ({ placeholder, className }: SelectValueProps) => {
   return <span className={clsx('select-value', className)}>{placeholder}</span>;
 };
 
-export {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-};
+export { Select, SelectContent, SelectItem, SelectTrigger, SelectValue };
 
 export default Select;

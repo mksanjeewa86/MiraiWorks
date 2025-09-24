@@ -29,11 +29,7 @@ function DashboardPageContent() {
     }
   };
 
-  return (
-    <AppLayout>
-      {renderDashboard()}
-    </AppLayout>
-  );
+  return <AppLayout>{renderDashboard()}</AppLayout>;
 }
 
 export default function DashboardPage() {

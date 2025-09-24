@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useState, useRef, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Camera, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { toast } from "sonner";
+import { useState, useRef, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Camera, AlertTriangle } from 'lucide-react';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { toast } from 'sonner';
 
 interface FaceVerificationProps {
   sessionId: number;
@@ -34,32 +34,32 @@ export function FaceVerification({ sessionId, onComplete }: FaceVerificationProp
         video: {
           width: { ideal: 640 },
           height: { ideal: 480 },
-          facingMode: "user"
-        }
+          facingMode: 'user',
+        },
       });
-      
+
       setStream(mediaStream);
-      
+
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
       }
     } catch (error) {
-      console.error("Error accessing camera:", error);
+      console.error('Error accessing camera:', error);
       setPermissionDenied(true);
-      toast.error("Camera access is required for face verification");
+      toast.error('Camera access is required for face verification');
     }
   };
 
   const stopCamera = () => {
     if (stream) {
-      stream.getTracks().forEach(track => track.stop());
+      stream.getTracks().forEach((track) => track.stop());
       setStream(null);
     }
   };
 
   const captureAndVerify = async () => {
     if (!videoRef.current || !canvasRef.current || !stream) {
-      toast.error("Camera not ready");
+      toast.error('Camera not ready');
       return;
     }
 
@@ -69,10 +69,10 @@ export function FaceVerification({ sessionId, onComplete }: FaceVerificationProp
     try {
       const canvas = canvasRef.current;
       const video = videoRef.current;
-      const context = canvas.getContext("2d");
+      const context = canvas.getContext('2d');
 
       if (!context) {
-        throw new Error("Canvas context not available");
+        throw new Error('Canvas context not available');
       }
 
       // Set canvas dimensions to match video
@@ -83,43 +83,43 @@ export function FaceVerification({ sessionId, onComplete }: FaceVerificationProp
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       // Convert to base64
-      const imageData = canvas.toDataURL("image/jpeg", 0.8);
-      
+      const imageData = canvas.toDataURL('image/jpeg', 0.8);
+
       // Submit for verification
       const response = await fetch(`/api/exam/sessions/${sessionId}/face-verification`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
         },
         body: JSON.stringify({
           session_id: sessionId,
-          image_data: imageData.split(",")[1], // Remove data:image/jpeg;base64, prefix
+          image_data: imageData.split(',')[1], // Remove data:image/jpeg;base64, prefix
           timestamp: new Date().toISOString(),
-          verification_type: "periodic",
+          verification_type: 'periodic',
         }),
       });
 
       if (!response.ok) {
-        throw new Error("Verification request failed");
+        throw new Error('Verification request failed');
       }
 
       const result = await response.json();
-      
+
       if (result.verified) {
-        toast.success("Face verification successful");
+        toast.success('Face verification successful');
         setIsOpen(false);
         onComplete(true);
       } else {
-        toast.error(result.message || "Face verification failed");
+        toast.error(result.message || 'Face verification failed');
         if (result.requires_human_review) {
-          toast.info("Your verification will be reviewed manually");
+          toast.info('Your verification will be reviewed manually');
         }
         onComplete(false);
       }
     } catch (error) {
-      console.error("Error during face verification:", error);
-      toast.error("Face verification failed");
+      console.error('Error during face verification:', error);
+      toast.error('Face verification failed');
       onComplete(false);
     } finally {
       setCapturing(false);
@@ -129,7 +129,7 @@ export function FaceVerification({ sessionId, onComplete }: FaceVerificationProp
   };
 
   const skipVerification = () => {
-    toast.warning("Face verification skipped - this has been recorded");
+    toast.warning('Face verification skipped - this has been recorded');
     setIsOpen(false);
     onComplete(false);
     stopCamera();
@@ -147,8 +147,8 @@ export function FaceVerification({ sessionId, onComplete }: FaceVerificationProp
 
         <div className="space-y-4">
           <div className="text-sm text-gray-600">
-            Please capture a clear photo of your face for identity verification. 
-            Make sure you are in a well-lit area and looking directly at the camera.
+            Please capture a clear photo of your face for identity verification. Make sure you are
+            in a well-lit area and looking directly at the camera.
           </div>
 
           {permissionDenied ? (
@@ -173,7 +173,7 @@ export function FaceVerification({ sessionId, onComplete }: FaceVerificationProp
                   muted
                   className="w-full h-64 object-cover"
                 />
-                
+
                 {/* Overlay guide */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="w-48 h-60 border-2 border-white rounded-full opacity-50" />
@@ -214,12 +214,8 @@ export function FaceVerification({ sessionId, onComplete }: FaceVerificationProp
                     </>
                   )}
                 </Button>
-                
-                <Button
-                  onClick={skipVerification}
-                  variant="outline"
-                  disabled={verifying}
-                >
+
+                <Button onClick={skipVerification} variant="outline" disabled={verifying}>
                   Skip
                 </Button>
               </div>

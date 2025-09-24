@@ -8,16 +8,13 @@ import type {
   MBTITestResult,
   MBTITestSummary,
   MBTITestProgress,
-  MBTITypeInfo
+  MBTITypeInfo,
 } from '@/types/mbti';
 
 export const mbtiApi = {
   // Test lifecycle
   async startTest(testData: MBTITestStart): Promise<MBTITestProgress> {
-    const response = await apiClient.post<MBTITestProgress>(
-      API_ENDPOINTS.MBTI.START,
-      testData
-    );
+    const response = await apiClient.post<MBTITestProgress>(API_ENDPOINTS.MBTI.START, testData);
     return response.data;
   },
 
@@ -30,26 +27,18 @@ export const mbtiApi = {
   },
 
   async submitAnswer(answer: MBTIAnswerSubmit): Promise<MBTITestProgress> {
-    const response = await apiClient.post<MBTITestProgress>(
-      API_ENDPOINTS.MBTI.ANSWER,
-      answer
-    );
+    const response = await apiClient.post<MBTITestProgress>(API_ENDPOINTS.MBTI.ANSWER, answer);
     return response.data;
   },
 
   async submitTest(submission: MBTITestSubmit): Promise<MBTITestResult> {
-    const response = await apiClient.post<MBTITestResult>(
-      API_ENDPOINTS.MBTI.SUBMIT,
-      submission
-    );
+    const response = await apiClient.post<MBTITestResult>(API_ENDPOINTS.MBTI.SUBMIT, submission);
     return response.data;
   },
 
   // Results
   async getResult(): Promise<MBTITestResult> {
-    const response = await apiClient.get<MBTITestResult>(
-      API_ENDPOINTS.MBTI.RESULT
-    );
+    const response = await apiClient.get<MBTITestResult>(API_ENDPOINTS.MBTI.RESULT);
     return response.data;
   },
 
@@ -62,24 +51,18 @@ export const mbtiApi = {
   },
 
   async getProgress(): Promise<MBTITestProgress> {
-    const response = await apiClient.get<MBTITestProgress>(
-      API_ENDPOINTS.MBTI.PROGRESS
-    );
+    const response = await apiClient.get<MBTITestProgress>(API_ENDPOINTS.MBTI.PROGRESS);
     return response.data;
   },
 
   // Type information
   async getAllTypes(): Promise<MBTITypeInfo[]> {
-    const response = await apiClient.get<MBTITypeInfo[]>(
-      API_ENDPOINTS.MBTI.TYPES
-    );
+    const response = await apiClient.get<MBTITypeInfo[]>(API_ENDPOINTS.MBTI.TYPES);
     return response.data;
   },
 
   async getTypeDetails(type: string): Promise<MBTITypeInfo> {
-    const response = await apiClient.get<MBTITypeInfo>(
-      API_ENDPOINTS.MBTI.TYPE_DETAILS(type)
-    );
+    const response = await apiClient.get<MBTITypeInfo>(API_ENDPOINTS.MBTI.TYPE_DETAILS(type));
     return response.data;
-  }
+  },
 };

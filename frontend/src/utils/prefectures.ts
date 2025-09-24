@@ -47,5 +47,5 @@ export const PREFECTURES: PrefectureOption[] = [
   { code: 'oita', nameJa: '大分県', nameEn: 'Oita' },
   { code: 'miyazaki', nameJa: '宮崎県', nameEn: 'Miyazaki' },
   { code: 'kagoshima', nameJa: '鹿児島県', nameEn: 'Kagoshima' },
-  { code: 'okinawa', nameJa: '沖縄県', nameEn: 'Okinawa' }
+  { code: 'okinawa', nameJa: '沖縄県', nameEn: 'Okinawa' },
 ];

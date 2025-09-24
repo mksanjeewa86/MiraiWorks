@@ -1,5 +1,11 @@
 import { clsx } from 'clsx';
-import type { CardProps, CardHeaderProps, CardContentProps, CardTitleProps, CardDescriptionProps } from '@/types/components';
+import type {
+  CardProps,
+  CardHeaderProps,
+  CardContentProps,
+  CardTitleProps,
+  CardDescriptionProps,
+} from '@/types/components';
 
 const paddingClasses = {
   none: '',
@@ -15,21 +21,9 @@ const shadowClasses = {
   lg: 'shadow-lg',
 };
 
-function Card({
-  children,
-  className,
-  padding = 'md',
-  shadow = 'sm'
-}: CardProps) {
+function Card({ children, className, padding = 'md', shadow = 'sm' }: CardProps) {
   return (
-    <div
-      className={clsx(
-        'card',
-        paddingClasses[padding],
-        shadowClasses[shadow],
-        className
-      )}
-    >
+    <div className={clsx('card', paddingClasses[padding], shadowClasses[shadow], className)}>
       {children}
     </div>
   );
@@ -39,19 +33,11 @@ export { Card };
 export default Card;
 
 export function CardHeader({ children, className }: CardHeaderProps) {
-  return (
-    <div className={clsx('card-header', className)}>
-      {children}
-    </div>
-  );
+  return <div className={clsx('card-header', className)}>{children}</div>;
 }
 
 export function CardContent({ children, className }: CardContentProps) {
-  return (
-    <div className={clsx('card-content', className)}>
-      {children}
-    </div>
-  );
+  return <div className={clsx('card-content', className)}>{children}</div>;
 }
 
 export function CardTitle({ children, className }: CardTitleProps) {
@@ -63,9 +49,5 @@ export function CardTitle({ children, className }: CardTitleProps) {
 }
 
 export function CardDescription({ children, className }: CardDescriptionProps) {
-  return (
-    <p className={clsx('text-sm text-gray-500 dark:text-gray-400', className)}>
-      {children}
-    </p>
-  );
+  return <p className={clsx('text-sm text-gray-500 dark:text-gray-400', className)}>{children}</p>;
 }

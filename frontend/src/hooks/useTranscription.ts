@@ -12,7 +12,7 @@ interface UseTranscriptionResult extends TranscriptionState {
 }
 
 export const useTranscription = (
-  callId?: string, 
+  callId?: string,
   enabled: boolean = true
 ): UseTranscriptionResult => {
   const [state, setState] = useState<TranscriptionState>({
@@ -35,7 +35,7 @@ export const useTranscription = (
 
     websocket.current.onopen = () => {
       console.log('Connected to transcription service');
-      setState(prev => ({ ...prev, isTranscribing: true }));
+      setState((prev) => ({ ...prev, isTranscribing: true }));
     };
 
     websocket.current.onmessage = (event) => {
@@ -45,17 +45,29 @@ export const useTranscription = (
 
     websocket.current.onclose = () => {
       console.log('Disconnected from transcription service');
-      setState(prev => ({ ...prev, isTranscribing: false }));
+      setState((prev) => ({ ...prev, isTranscribing: false }));
     };
 
     websocket.current.onerror = (error) => {
       console.error('Transcription WebSocket error:', error);
-      setState(prev => ({ ...prev, isTranscribing: false }));
+      setState((prev) => ({ ...prev, isTranscribing: false }));
     };
   };
 
   const handleTranscriptionMessage = (data: unknown) => {
-    const message = data as { type?: string; segment?: { video_call_id: number; speaker_id: number; segment_text: string; start_time: number; end_time: number; confidence?: number }; status?: string; message?: string };
+    const message = data as {
+      type?: string;
+      segment?: {
+        video_call_id: number;
+        speaker_id: number;
+        segment_text: string;
+        start_time: number;
+        end_time: number;
+        confidence?: number;
+      };
+      status?: string;
+      message?: string;
+    };
     switch (message.type) {
       case 'segment':
         if (message.segment) {
@@ -73,7 +85,7 @@ export const useTranscription = (
 
       case 'error':
         console.error('Transcription error:', message.message);
-        setState(prev => ({ ...prev, isTranscribing: false }));
+        setState((prev) => ({ ...prev, isTranscribing: false }));
         break;
     }
   };
@@ -84,20 +96,20 @@ export const useTranscription = (
 
       // Initialize audio context for processing
       audioContext.current = new AudioContext();
-      
+
       // Start audio capture for transcription
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           channelCount: 1,
           sampleRate: 16000,
           echoCancellation: true,
-          noiseSuppression: true
-        }
+          noiseSuppression: true,
+        },
       });
 
       // Set up media recorder for audio chunks
       mediaRecorder.current = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus'
+        mimeType: 'audio/webm;codecs=opus',
       });
 
       mediaRecorder.current.ondataavailable = (event) => {
@@ -105,12 +117,14 @@ export const useTranscription = (
           // Send audio chunk to transcription service
           const reader = new FileReader();
           reader.onload = () => {
-            websocket.current?.send(JSON.stringify({
-              type: 'audio_chunk',
-              data: reader.result,
-              language: state.language,
-              timestamp: Date.now()
-            }));
+            websocket.current?.send(
+              JSON.stringify({
+                type: 'audio_chunk',
+                data: reader.result,
+                language: state.language,
+                timestamp: Date.now(),
+              })
+            );
           };
           reader.readAsArrayBuffer(event.data);
         }
@@ -121,7 +135,6 @@ export const useTranscription = (
 
       // Connect to transcription WebSocket
       connectTranscriptionWS();
-
     } catch (error) {
       console.error('Failed to start transcription:', error);
     }
@@ -145,18 +158,20 @@ export const useTranscription = (
       websocket.current = null;
     }
 
-    setState(prev => ({ ...prev, isTranscribing: false }));
+    setState((prev) => ({ ...prev, isTranscribing: false }));
   };
 
   const setTranscriptionLanguage = (language: string) => {
-    setState(prev => ({ ...prev, language }));
-    
+    setState((prev) => ({ ...prev, language }));
+
     // Notify transcription service of language change
     if (websocket.current?.readyState === WebSocket.OPEN) {
-      websocket.current.send(JSON.stringify({
-        type: 'language_change',
-        language
-      }));
+      websocket.current.send(
+        JSON.stringify({
+          type: 'language_change',
+          language,
+        })
+      );
     }
   };
 
@@ -167,9 +182,9 @@ export const useTranscription = (
       created_at: new Date().toISOString(),
     };
 
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
-      segments: [...prev.segments, newSegment]
+      segments: [...prev.segments, newSegment],
     }));
 
     // Also save to backend
@@ -191,13 +206,11 @@ export const useTranscription = (
   };
 
   const searchTranscript = (query: string) => {
-    setState(prev => {
-      const highlighted = query.trim() 
+    setState((prev) => {
+      const highlighted = query.trim()
         ? prev.segments
-            .filter(segment => 
-              segment.segment_text.toLowerCase().includes(query.toLowerCase())
-            )
-            .map(segment => segment.id)
+            .filter((segment) => segment.segment_text.toLowerCase().includes(query.toLowerCase()))
+            .map((segment) => segment.id)
         : [];
 
       return {
@@ -210,7 +223,9 @@ export const useTranscription = (
 
   const exportTranscript = async (format: 'txt' | 'pdf' | 'srt'): Promise<string | null> => {
     try {
-      const response = await apiClient.get<{ download_url: string }>(`/api/video-calls/${callId}/transcript/download?format=${format}`);
+      const response = await apiClient.get<{ download_url: string }>(
+        `/api/video-calls/${callId}/transcript/download?format=${format}`
+      );
       return response.data.download_url;
     } catch (error) {
       console.error('Error exporting transcript:', error);
@@ -223,14 +238,15 @@ export const useTranscription = (
     if (callId && enabled) {
       loadExistingSegments();
     }
-   
   }, [callId, enabled]);
 
   const loadExistingSegments = async () => {
     try {
-      const response = await apiClient.get<{ segments: TranscriptionSegment[] }>(`/api/video-calls/${callId}/transcript`);
+      const response = await apiClient.get<{ segments: TranscriptionSegment[] }>(
+        `/api/video-calls/${callId}/transcript`
+      );
       if (response.data.segments) {
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           segments: response.data.segments,
         }));
@@ -238,10 +254,14 @@ export const useTranscription = (
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : '';
       // It's normal for new video calls to not have existing transcripts
-      if (errorMessage.includes('Transcript not available') ||
-          errorMessage.includes('404') ||
-          errorMessage.includes('not found')) {
-        console.log('No existing transcript found for this video call - this is normal for new calls');
+      if (
+        errorMessage.includes('Transcript not available') ||
+        errorMessage.includes('404') ||
+        errorMessage.includes('not found')
+      ) {
+        console.log(
+          'No existing transcript found for this video call - this is normal for new calls'
+        );
       } else {
         console.error('Error loading existing segments:', error);
       }

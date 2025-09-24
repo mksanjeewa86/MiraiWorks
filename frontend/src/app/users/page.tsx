@@ -91,7 +91,7 @@ function UsersPageContent() {
   // Debounce search term to avoid API calls on every keystroke
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      setFilters(prev => ({ ...prev, search: searchTerm, page: 1 }));
+      setFilters((prev) => ({ ...prev, search: searchTerm, page: 1 }));
     }, 300);
 
     return () => clearTimeout(timeoutId);
@@ -107,31 +107,34 @@ function UsersPageContent() {
 
   const handleStatusFilter = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
       page: 1,
       // Reset all status-related filters
       is_active: value === 'active' ? true : value === 'inactive' ? false : undefined,
-      is_suspended: value === 'suspended' ? true : value === 'active' || value === 'inactive' || value === '2fa_active' ? false : undefined,
+      is_suspended:
+        value === 'suspended'
+          ? true
+          : value === 'active' || value === 'inactive' || value === '2fa_active'
+            ? false
+            : undefined,
       require_2fa: value === '2fa_active' ? true : undefined,
       status_filter: value || undefined,
     }));
   };
 
-
   const handleRoleFilter = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
-    setFilters(prev => ({ 
-      ...prev, 
+    setFilters((prev) => ({
+      ...prev,
       role: value === '' ? undefined : value,
-      page: 1 
+      page: 1,
     }));
   };
 
   const handlePageChange = (page: number) => {
-    setFilters(prev => ({ ...prev, page }));
+    setFilters((prev) => ({ ...prev, page }));
   };
-
 
   const handleSelectUser = (userId: number) => {
     const newSelected = new Set(selectedUsers);
@@ -147,19 +150,20 @@ function UsersPageContent() {
     if (selectedUsers.size === users.length) {
       setSelectedUsers(new Set());
     } else {
-      setSelectedUsers(new Set(users.map(user => user.id)));
+      setSelectedUsers(new Set(users.map((user) => user.id)));
     }
   };
 
   const handleBulkDelete = async () => {
     if (selectedUsers.size === 0) return;
 
-    const selectedUserObjects = users.filter(user => selectedUsers.has(user.id));
+    const selectedUserObjects = users.filter((user) => selectedUsers.has(user.id));
 
     const message = (
       <div>
         <p className="mb-3">
-          Are you sure you want to delete the following {selectedUsers.size} user(s)? This action cannot be undone.
+          Are you sure you want to delete the following {selectedUsers.size} user(s)? This action
+          cannot be undone.
         </p>
         <ul className="list-none space-y-2 max-h-48 overflow-y-auto bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 p-4 rounded-lg">
           {selectedUserObjects.map((user) => (
@@ -189,19 +193,20 @@ function UsersPageContent() {
           console.error('Bulk delete error:', err);
           setError(err instanceof Error ? err.message : 'Failed to delete users');
         }
-      }
+      },
     });
   };
 
   const handleBulkResetPassword = async () => {
     if (selectedUsers.size === 0) return;
 
-    const selectedUserObjects = users.filter(user => selectedUsers.has(user.id));
+    const selectedUserObjects = users.filter((user) => selectedUsers.has(user.id));
 
     const message = (
       <div>
         <p className="mb-3">
-          Reset passwords for the following {selectedUsers.size} user(s)? Temporary passwords will be generated and sent via email.
+          Reset passwords for the following {selectedUsers.size} user(s)? Temporary passwords will
+          be generated and sent via email.
         </p>
         <ul className="list-none space-y-2 max-h-48 overflow-y-auto bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 p-4 rounded-lg">
           {selectedUserObjects.map((user) => (
@@ -230,14 +235,14 @@ function UsersPageContent() {
           console.error('Bulk reset password error:', err);
           setError(err instanceof Error ? err.message : 'Failed to reset passwords');
         }
-      }
+      },
     });
   };
 
   const handleBulkResendActivation = async () => {
     if (selectedUsers.size === 0) return;
 
-    const selectedUserObjects = users.filter(user => selectedUsers.has(user.id));
+    const selectedUserObjects = users.filter((user) => selectedUsers.has(user.id));
 
     const message = (
       <div>
@@ -271,15 +276,15 @@ function UsersPageContent() {
           console.error('Bulk resend activation error:', err);
           setError(err instanceof Error ? err.message : 'Failed to send activation emails');
         }
-      }
+      },
     });
   };
 
   const handleBulkSuspend = async () => {
     if (selectedUsers.size === 0) return;
 
-    const selectedUserObjects = users.filter(user => selectedUsers.has(user.id));
-    const targetUsers = selectedUserObjects.filter(user => !user.is_suspended);
+    const selectedUserObjects = users.filter((user) => selectedUsers.has(user.id));
+    const targetUsers = selectedUserObjects.filter((user) => !user.is_suspended);
 
     if (targetUsers.length === 0) {
       setError('No active users selected to suspend.');
@@ -289,7 +294,8 @@ function UsersPageContent() {
     const message = (
       <div>
         <p className="mb-3">
-          Are you sure you want to suspend the following {targetUsers.length} user(s)? They will not be able to login until unsuspended.
+          Are you sure you want to suspend the following {targetUsers.length} user(s)? They will not
+          be able to login until unsuspended.
         </p>
         <ul className="list-none space-y-2 max-h-48 overflow-y-auto p-4 rounded-lg bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20">
           {targetUsers.map((user) => (
@@ -319,15 +325,15 @@ function UsersPageContent() {
           console.error('Bulk suspend error:', err);
           setError(err instanceof Error ? err.message : 'Failed to suspend users');
         }
-      }
+      },
     });
   };
 
   const handleBulkUnsuspend = async () => {
     if (selectedUsers.size === 0) return;
 
-    const selectedUserObjects = users.filter(user => selectedUsers.has(user.id));
-    const targetUsers = selectedUserObjects.filter(user => user.is_suspended);
+    const selectedUserObjects = users.filter((user) => selectedUsers.has(user.id));
+    const targetUsers = selectedUserObjects.filter((user) => user.is_suspended);
 
     if (targetUsers.length === 0) {
       setError('No suspended users selected to unsuspend.');
@@ -337,7 +343,8 @@ function UsersPageContent() {
     const message = (
       <div>
         <p className="mb-3">
-          Are you sure you want to unsuspend the following {targetUsers.length} user(s)? They will be able to login again.
+          Are you sure you want to unsuspend the following {targetUsers.length} user(s)? They will
+          be able to login again.
         </p>
         <ul className="list-none space-y-2 max-h-48 overflow-y-auto p-4 rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20">
           {targetUsers.map((user) => (
@@ -367,7 +374,7 @@ function UsersPageContent() {
           console.error('Bulk unsuspend error:', err);
           setError(err instanceof Error ? err.message : 'Failed to unsuspend users');
         }
-      }
+      },
     });
   };
 
@@ -404,10 +411,7 @@ function UsersPageContent() {
               <AlertTriangle className="h-4 w-4 mr-2" />
               {error}
             </div>
-            <button
-              onClick={() => setError(null)}
-              className="text-red-500 hover:text-red-700"
-            >
+            <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700">
               <X className="h-4 w-4" />
             </button>
           </div>
@@ -455,9 +459,9 @@ function UsersPageContent() {
               </div>
               <div className="flex items-center space-x-2">
                 {(() => {
-                  const selectedUserObjects = users.filter(user => selectedUsers.has(user.id));
-                  const hasSuspendedUsers = selectedUserObjects.some(user => user.is_suspended);
-                  const hasActiveUsers = selectedUserObjects.some(user => !user.is_suspended);
+                  const selectedUserObjects = users.filter((user) => selectedUsers.has(user.id));
+                  const hasSuspendedUsers = selectedUserObjects.some((user) => user.is_suspended);
+                  const hasActiveUsers = selectedUserObjects.some((user) => !user.is_suspended);
 
                   return (
                     <>
@@ -532,7 +536,7 @@ function UsersPageContent() {
                   backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                   backgroundPosition: 'right 12px center',
                   backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px'
+                  backgroundSize: '16px',
                 }}
               >
                 <option value="">All Status</option>
@@ -552,7 +556,7 @@ function UsersPageContent() {
                   backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                   backgroundPosition: 'right 12px center',
                   backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px'
+                  backgroundSize: '16px',
                 }}
               >
                 <option value="">All Roles</option>
@@ -569,14 +573,19 @@ function UsersPageContent() {
                   id="include_deleted"
                   type="checkbox"
                   checked={filters.include_deleted || false}
-                  onChange={(e) => setFilters(prev => ({
-                    ...prev,
-                    include_deleted: e.target.checked,
-                    page: 1
-                  }))}
+                  onChange={(e) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      include_deleted: e.target.checked,
+                      page: 1,
+                    }))
+                  }
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
-                <label htmlFor="include_deleted" className="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label
+                  htmlFor="include_deleted"
+                  className="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
                   Include deleted users
                 </label>
               </div>
@@ -588,8 +597,12 @@ function UsersPageContent() {
           {users.length === 0 ? (
             <div className="p-8 text-center">
               <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No users found</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">Get started by creating your first user.</p>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                No users found
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                Get started by creating your first user.
+              </p>
               <Link
                 href="/users/add"
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 inline-flex items-center space-x-2"
@@ -626,8 +639,7 @@ function UsersPageContent() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -700,7 +712,10 @@ function UsersPageContent() {
                             </span>
                           )}
                           {user.roles.map((role: string) => (
-                            <span key={role} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            <span
+                              key={role}
+                              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                            >
                               {role.replace('_', ' ')}
                             </span>
                           ))}
@@ -727,11 +742,13 @@ function UsersPageContent() {
                               </span>
                             </>
                           ) : (
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              user.is_active
-                                ? 'bg-green-100 text-green-800'
-                                : 'bg-red-100 text-red-800'
-                            }`}>
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                user.is_active
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}
+                            >
                               {user.is_active ? (
                                 <>
                                   <UserCheck className="h-3 w-3 mr-1" />
@@ -754,7 +771,10 @@ function UsersPageContent() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
+                        <div
+                          className="flex items-center justify-end"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <Link
                             href={`/users/${user.id}/edit`}
                             className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 flex items-center space-x-1"
@@ -775,7 +795,9 @@ function UsersPageContent() {
             <div className="bg-white dark:bg-gray-800 px-4 py-3 border-t border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between">
                 <div className="text-sm text-gray-700 dark:text-gray-300">
-                  Showing {((pagination.page - 1) * pagination.size) + 1} to {Math.min(pagination.page * pagination.size, pagination.total)} of {pagination.total} results
+                  Showing {(pagination.page - 1) * pagination.size + 1} to{' '}
+                  {Math.min(pagination.page * pagination.size, pagination.total)} of{' '}
+                  {pagination.total} results
                 </div>
                 <div className="flex items-center space-x-2">
                   <button

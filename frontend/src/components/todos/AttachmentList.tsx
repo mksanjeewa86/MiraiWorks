@@ -20,7 +20,7 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
   onAttachmentDeleted,
   onAttachmentUpdated,
   className = '',
-  showActions = true
+  showActions = true,
 }) => {
   const [editingDescription, setEditingDescription] = useState<number | null>(null);
   const [tempDescription, setTempDescription] = useState('');
@@ -28,8 +28,8 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
 
   // Get appropriate icon for file type
   const getFileIcon = (attachment: TodoAttachment) => {
-    const iconClass = "h-6 w-6";
-    
+    const iconClass = 'h-6 w-6';
+
     switch (attachment.file_category) {
       case 'image':
         return <PhotoIcon className={`${iconClass} text-blue-500`} />;
@@ -57,7 +57,7 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
   // Handle file preview
   const handlePreview = async (attachment: TodoAttachment) => {
     if (!attachment.preview_url) return;
-    
+
     try {
       const url = await todoAttachmentAPI.getPreviewUrl(todoId, attachment.id);
       window.open(url, '_blank');
@@ -76,8 +76,8 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
   const saveDescription = async (attachmentId: number) => {
     try {
       const updated = await todoAttachmentAPI.updateAttachment(
-        todoId, 
-        attachmentId, 
+        todoId,
+        attachmentId,
         tempDescription
       );
       onAttachmentUpdated(updated);
@@ -101,7 +101,7 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
     }
 
     setIsDeleting(attachmentId);
-    
+
     try {
       await todoAttachmentAPI.deleteAttachment(todoId, attachmentId);
       onAttachmentDeleted(attachmentId);
@@ -115,10 +115,14 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
   // Format upload date
   const formatUploadDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    });
+    return (
+      date.toLocaleDateString() +
+      ' ' +
+      date.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    );
   };
 
   if (attachments.length === 0) {
@@ -138,9 +142,7 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
           className="flex items-start space-x-3 p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-shadow"
         >
           {/* File Icon */}
-          <div className="flex-shrink-0 mt-1">
-            {getFileIcon(attachment)}
-          </div>
+          <div className="flex-shrink-0 mt-1">{getFileIcon(attachment)}</div>
 
           {/* File Info */}
           <div className="flex-1 min-w-0">
@@ -149,7 +151,7 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
                 <h4 className="text-sm font-medium text-gray-900 truncate">
                   {attachment.original_filename}
                 </h4>
-                
+
                 <div className="mt-1 flex items-center space-x-4 text-xs text-gray-500">
                   <span>{formatFileSize(attachment.file_size)}</span>
                   <span className="capitalize">{attachment.file_category}</span>

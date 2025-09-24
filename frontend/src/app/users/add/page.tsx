@@ -42,13 +42,12 @@ function AddUserPageContent() {
   const isCompanyAdmin = userRole === 'company_admin';
   const isSuperAdmin = userRole === 'super_admin';
 
-
   // Filter companies based on search
   useEffect(() => {
     if (companySearch.trim() === '') {
       setFilteredCompanies(companies);
     } else {
-      const filtered = companies.filter(company =>
+      const filtered = companies.filter((company) =>
         company.name.toLowerCase().includes(companySearch.toLowerCase())
       );
       setFilteredCompanies(filtered);
@@ -63,20 +62,20 @@ function AddUserPageContent() {
         { value: 'recruiter', label: 'Recruiter' },
         { value: 'employer', label: 'Employer' },
         { value: 'company_admin', label: 'Company Admin' },
-        { value: 'super_admin', label: 'Super Admin' }
+        { value: 'super_admin', label: 'Super Admin' },
       ];
     } else if (isCompanyAdmin) {
       return [
         { value: 'candidate', label: 'Candidate' },
         { value: 'recruiter', label: 'Recruiter' },
         { value: 'employer', label: 'Employer' },
-        { value: 'company_admin', label: 'Company Admin' }
+        { value: 'company_admin', label: 'Company Admin' },
       ];
     } else {
       return [
         { value: 'candidate', label: 'Candidate' },
         { value: 'recruiter', label: 'Recruiter' },
-        { value: 'employer', label: 'Employer' }
+        { value: 'employer', label: 'Employer' },
       ];
     }
   };
@@ -85,10 +84,10 @@ function AddUserPageContent() {
   useEffect(() => {
     if (user && isCompanyAdmin && user.company) {
       // Always set company and role for company admins on initial load
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         company_id: user.company.id.toString(),
-        role: user.company.type === 'employer' ? 'employer' : 'recruiter'
+        role: user.company.type === 'employer' ? 'employer' : 'recruiter',
       }));
     }
   }, [user, isCompanyAdmin]);
@@ -96,10 +95,10 @@ function AddUserPageContent() {
   // Auto-set default role based on selected company type (for super admins)
   useEffect(() => {
     if (isSuperAdmin && formData.company_id && !formData.role) {
-      const selectedCompany = companies.find(c => c.id.toString() === formData.company_id);
+      const selectedCompany = companies.find((c) => c.id.toString() === formData.company_id);
       if (selectedCompany) {
         const role = selectedCompany.type === 'employer' ? 'employer' : 'recruiter';
-        setFormData(prev => ({ ...prev, role }));
+        setFormData((prev) => ({ ...prev, role }));
       }
     }
   }, [formData.company_id, formData.role, companies, isSuperAdmin]);
@@ -163,7 +162,7 @@ function AddUserPageContent() {
       showToast({
         type: 'success',
         title: 'User created successfully!',
-        message: `${formData.first_name} ${formData.last_name} has been created. An activation email has been sent to ${formData.email}.`
+        message: `${formData.first_name} ${formData.last_name} has been created. An activation email has been sent to ${formData.email}.`,
       });
       router.push('/users');
     } catch (err) {
@@ -209,7 +208,7 @@ function AddUserPageContent() {
                   type="text"
                   required
                   value={formData.first_name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, first_name: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, first_name: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   placeholder="Enter first name"
                 />
@@ -224,7 +223,7 @@ function AddUserPageContent() {
                   type="text"
                   required
                   value={formData.last_name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, last_name: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, last_name: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   placeholder="Enter last name"
                 />
@@ -239,7 +238,7 @@ function AddUserPageContent() {
                   type="email"
                   required
                   value={formData.email}
-                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   placeholder="user@example.com"
                 />
@@ -253,7 +252,7 @@ function AddUserPageContent() {
                 <input
                   type="tel"
                   value={formData.phone}
-                  onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   placeholder="03-1234-5678"
                 />
@@ -261,82 +260,101 @@ function AddUserPageContent() {
 
               {/* Company - Select with Search (Only for Super Admin) */}
               {isSuperAdmin && (
-              <div className="md:col-span-2 relative">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Company
-                </label>
-                <div className="relative">
-                  {/* Select-like button */}
-                  <button
-                    type="button"
-                    onClick={() => setShowCompanyDropdown(!showCompanyDropdown)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-left flex items-center justify-between"
-                    disabled={loadingCompanies}
-                  >
-                    <span className={formData.company_id ? 'text-gray-900 dark:text-white' : 'text-gray-500'}>
-                      {formData.company_id
-                        ? companies.find(c => c.id.toString() === formData.company_id)?.name || 'Select a company...'
-                        : 'Select a company...'
-                      }
-                    </span>
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-
-                  {loadingCompanies && (
-                    <p className="text-sm text-gray-500 mt-1">Loading companies...</p>
-                  )}
-
-                  {/* Dropdown with search */}
-                  {showCompanyDropdown && !loadingCompanies && (
-                    <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-hidden">
-                      {/* Search input as first option */}
-                      <div className="p-2 border-b border-gray-200 dark:border-gray-600">
-                        <input
-                          type="text"
-                          value={companySearch}
-                          onChange={(e) => setCompanySearch(e.target.value)}
-                          placeholder="Search companies..."
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
-                          autoFocus
+                <div className="md:col-span-2 relative">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Company
+                  </label>
+                  <div className="relative">
+                    {/* Select-like button */}
+                    <button
+                      type="button"
+                      onClick={() => setShowCompanyDropdown(!showCompanyDropdown)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-left flex items-center justify-between"
+                      disabled={loadingCompanies}
+                    >
+                      <span
+                        className={
+                          formData.company_id ? 'text-gray-900 dark:text-white' : 'text-gray-500'
+                        }
+                      >
+                        {formData.company_id
+                          ? companies.find((c) => c.id.toString() === formData.company_id)?.name ||
+                            'Select a company...'
+                          : 'Select a company...'}
+                      </span>
+                      <svg
+                        className="w-5 h-5 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
                         />
-                      </div>
+                      </svg>
+                    </button>
 
-                      {/* Company options */}
-                      <div className="max-h-48 overflow-y-auto">
-                        {filteredCompanies.length > 0 ? (
-                          filteredCompanies.map((company) => (
-                            <button
-                              key={company.id}
-                              type="button"
-                              onClick={() => {
-                                setFormData(prev => ({ ...prev, company_id: company.id.toString() }));
-                                setCompanySearch('');
-                                setShowCompanyDropdown(false);
-                              }}
-                              className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none"
-                            >
-                              <div className="font-medium">{company.name}</div>
-                              <div className="text-sm text-gray-500">({company.type})</div>
-                            </button>
-                          ))
-                        ) : (
-                          <div className="px-3 py-2 text-gray-500 text-sm">No companies found</div>
-                        )}
+                    {loadingCompanies && (
+                      <p className="text-sm text-gray-500 mt-1">Loading companies...</p>
+                    )}
+
+                    {/* Dropdown with search */}
+                    {showCompanyDropdown && !loadingCompanies && (
+                      <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-hidden">
+                        {/* Search input as first option */}
+                        <div className="p-2 border-b border-gray-200 dark:border-gray-600">
+                          <input
+                            type="text"
+                            value={companySearch}
+                            onChange={(e) => setCompanySearch(e.target.value)}
+                            placeholder="Search companies..."
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
+                            autoFocus
+                          />
+                        </div>
+
+                        {/* Company options */}
+                        <div className="max-h-48 overflow-y-auto">
+                          {filteredCompanies.length > 0 ? (
+                            filteredCompanies.map((company) => (
+                              <button
+                                key={company.id}
+                                type="button"
+                                onClick={() => {
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    company_id: company.id.toString(),
+                                  }));
+                                  setCompanySearch('');
+                                  setShowCompanyDropdown(false);
+                                }}
+                                className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none"
+                              >
+                                <div className="font-medium">{company.name}</div>
+                                <div className="text-sm text-gray-500">({company.type})</div>
+                              </button>
+                            ))
+                          ) : (
+                            <div className="px-3 py-2 text-gray-500 text-sm">
+                              No companies found
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    )}
+                  </div>
+
+                  {/* Click outside to close dropdown */}
+                  {showCompanyDropdown && (
+                    <div
+                      className="fixed inset-0 z-5"
+                      onClick={() => setShowCompanyDropdown(false)}
+                    />
                   )}
                 </div>
-
-                {/* Click outside to close dropdown */}
-                {showCompanyDropdown && (
-                  <div
-                    className="fixed inset-0 z-5"
-                    onClick={() => setShowCompanyDropdown(false)}
-                  />
-                )}
-              </div>
               )}
             </div>
 
@@ -344,10 +362,12 @@ function AddUserPageContent() {
             {isCompanyAdmin && user?.company && (
               <div className="md:col-span-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Creating user for: <strong className="text-gray-900 dark:text-white">{user.company.name}</strong>
+                  Creating user for:{' '}
+                  <strong className="text-gray-900 dark:text-white">{user.company.name}</strong>
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                  New users will be assigned the {user.company.type === 'employer' ? 'employer' : 'recruiter'} role
+                  New users will be assigned the{' '}
+                  {user.company.type === 'employer' ? 'employer' : 'recruiter'} role
                 </p>
               </div>
             )}
@@ -361,11 +381,11 @@ function AddUserPageContent() {
                 <select
                   required
                   value={formData.role}
-                  onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, role: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                 >
                   <option value="">Select a role...</option>
-                  {getAvailableRoles().map(role => (
+                  {getAvailableRoles().map((role) => (
                     <option key={role.value} value={role.value}>
                       {role.label}
                     </option>
@@ -376,8 +396,6 @@ function AddUserPageContent() {
                 </p>
               </div>
             )}
-
-
 
             {/* Submit Buttons */}
             <div className="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
@@ -390,7 +408,14 @@ function AddUserPageContent() {
               </button>
               <button
                 type="submit"
-                disabled={submitting || !formData.first_name || !formData.last_name || !formData.email || !formData.company_id || !formData.role}
+                disabled={
+                  submitting ||
+                  !formData.first_name ||
+                  !formData.last_name ||
+                  !formData.email ||
+                  !formData.company_id ||
+                  !formData.role
+                }
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
               >
                 <Save className="h-4 w-4" />

@@ -49,7 +49,15 @@ function formatRelativeTime(input?: string | null): string {
   return `${abs} day${abs === 1 ? '' : 's'} overdue`;
 }
 
-function TodoItem({ todo, onEdit, onComplete, onReopen, onDelete, onRestore, loadingId }: TodoItemProps) {
+function TodoItem({
+  todo,
+  onEdit,
+  onComplete,
+  onReopen,
+  onDelete,
+  onRestore,
+  loadingId,
+}: TodoItemProps) {
   const isProcessing = loadingId === todo.id;
   const showExpired = todo.status === 'expired' || todo.is_expired;
   const showCompleteAction = !todo.is_deleted && todo.status !== 'completed';
@@ -60,30 +68,36 @@ function TodoItem({ todo, onEdit, onComplete, onReopen, onDelete, onRestore, loa
   const statusAccentClass = isDeleted
     ? 'bg-red-500/20 text-red-700 dark:bg-red-500/25 dark:text-red-300'
     : showExpired
-    ? 'bg-red-500/20 text-red-600 dark:bg-red-500/25 dark:text-red-200'
-    : isCompleted
-    ? 'bg-emerald-500/20 text-emerald-600 dark:bg-emerald-500/25 dark:text-emerald-200'
-    : 'bg-blue-500/20 text-blue-600 dark:bg-blue-500/25 dark:text-blue-200';
+      ? 'bg-red-500/20 text-red-600 dark:bg-red-500/25 dark:text-red-200'
+      : isCompleted
+        ? 'bg-emerald-500/20 text-emerald-600 dark:bg-emerald-500/25 dark:text-emerald-200'
+        : 'bg-blue-500/20 text-blue-600 dark:bg-blue-500/25 dark:text-blue-200';
 
   const gradientClass = isDeleted
     ? 'from-red-500/20'
     : showExpired
-    ? 'from-red-500/20'
-    : isCompleted
-    ? 'from-emerald-500/20'
-    : 'from-blue-500/20';
+      ? 'from-red-500/20'
+      : isCompleted
+        ? 'from-emerald-500/20'
+        : 'from-blue-500/20';
 
   return (
-    <div className={`group relative overflow-hidden rounded-xl shadow-sm transition-all duration-200 ${
-      isDeleted
-        ? 'border border-red-200/80 bg-red-50/50 hover:shadow-xl hover:border-red-300/80 dark:border-red-700/50 dark:bg-red-900/10 dark:hover:border-red-600/70'
-        : 'border border-gray-200/60 bg-white hover:shadow-xl hover:border-gray-300/80 dark:border-gray-700/50 dark:bg-gray-800 dark:hover:border-gray-600/70'
-    }`}>
-      <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${gradientClass} via-transparent to-transparent opacity-50`} />
+    <div
+      className={`group relative overflow-hidden rounded-xl shadow-sm transition-all duration-200 ${
+        isDeleted
+          ? 'border border-red-200/80 bg-red-50/50 hover:shadow-xl hover:border-red-300/80 dark:border-red-700/50 dark:bg-red-900/10 dark:hover:border-red-600/70'
+          : 'border border-gray-200/60 bg-white hover:shadow-xl hover:border-gray-300/80 dark:border-gray-700/50 dark:bg-gray-800 dark:hover:border-gray-600/70'
+      }`}
+    >
+      <div
+        className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${gradientClass} via-transparent to-transparent opacity-50`}
+      />
       <div className="relative flex flex-col gap-4 p-6">
         <div className="space-y-4">
           <div className="flex items-start gap-4">
-            <div className={`flex h-12 w-12 items-center justify-center rounded-full ${statusAccentClass} ring-2 ring-white/50 dark:ring-gray-800/50`}>
+            <div
+              className={`flex h-12 w-12 items-center justify-center rounded-full ${statusAccentClass} ring-2 ring-white/50 dark:ring-gray-800/50`}
+            >
               {isDeleted ? (
                 <Trash2 className="h-6 w-6" />
               ) : isCompleted ? (
@@ -96,9 +110,12 @@ function TodoItem({ todo, onEdit, onComplete, onReopen, onDelete, onRestore, loa
             </div>
             <div className="min-w-0 flex-1 space-y-3">
               <div>
-                <h3 className={`text-lg font-semibold leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2 ${
-                  isDeleted ? 'line-through opacity-70' : ''
-                }`} style={{ color: 'var(--text-primary)' }}>
+                <h3
+                  className={`text-lg font-semibold leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2 ${
+                    isDeleted ? 'line-through opacity-70' : ''
+                  }`}
+                  style={{ color: 'var(--text-primary)' }}
+                >
                   {todo.title}
                 </h3>
                 <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -115,9 +132,12 @@ function TodoItem({ todo, onEdit, onComplete, onReopen, onDelete, onRestore, loa
                 </div>
               </div>
               {todo.description && (
-                <p className={`text-sm leading-relaxed line-clamp-2 ${
-                  isDeleted ? 'opacity-60' : ''
-                }`} style={{ color: 'var(--text-secondary)' }}>
+                <p
+                  className={`text-sm leading-relaxed line-clamp-2 ${
+                    isDeleted ? 'opacity-60' : ''
+                  }`}
+                  style={{ color: 'var(--text-secondary)' }}
+                >
                   {todo.description}
                 </p>
               )}
@@ -125,7 +145,10 @@ function TodoItem({ todo, onEdit, onComplete, onReopen, onDelete, onRestore, loa
           </div>
 
           <div className="space-y-3">
-            <div className="grid grid-cols-1 gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
+            <div
+              className="grid grid-cols-1 gap-2 text-sm"
+              style={{ color: 'var(--text-secondary)' }}
+            >
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-blue-500" />
@@ -297,7 +320,7 @@ function TodosPageContent() {
       const listResponse = await todosApi.list({
         includeCompleted: true,
         includeDeleted: viewFilter === 'deleted',
-        limit: 200
+        limit: 200,
       });
       setTodos(listResponse.items);
       setError(null);
@@ -316,32 +339,41 @@ function TodosPageContent() {
 
   const stats = useMemo(() => {
     const nonDeletedTodos = todos.filter((todo) => !todo.is_deleted);
-    const pendingCount = nonDeletedTodos.filter((todo) => !['completed', 'expired'].includes(todo.status)).length;
+    const pendingCount = nonDeletedTodos.filter(
+      (todo) => !['completed', 'expired'].includes(todo.status)
+    ).length;
     const completedCount = nonDeletedTodos.filter((todo) => todo.status === 'completed').length;
-    const expiredCount = nonDeletedTodos.filter((todo) => todo.status === 'expired' || todo.is_expired).length;
+    const expiredCount = nonDeletedTodos.filter(
+      (todo) => todo.status === 'expired' || todo.is_expired
+    ).length;
     const deletedCount = todos.filter((todo) => todo.is_deleted).length;
-    return { pendingCount, completedCount, expiredCount, deletedCount, total: nonDeletedTodos.length };
+    return {
+      pendingCount,
+      completedCount,
+      expiredCount,
+      deletedCount,
+      total: nonDeletedTodos.length,
+    };
   }, [todos]);
 
   const activeTodos = useMemo(
-    () => todos.filter((todo) => !todo.is_deleted && !['completed', 'expired'].includes(todo.status)),
-    [todos],
+    () =>
+      todos.filter((todo) => !todo.is_deleted && !['completed', 'expired'].includes(todo.status)),
+    [todos]
   );
 
   const expiredTodos = useMemo(
-    () => todos.filter((todo) => !todo.is_deleted && (todo.status === 'expired' || todo.is_expired)),
-    [todos],
+    () =>
+      todos.filter((todo) => !todo.is_deleted && (todo.status === 'expired' || todo.is_expired)),
+    [todos]
   );
 
   const completedTodos = useMemo(
     () => todos.filter((todo) => !todo.is_deleted && todo.status === 'completed'),
-    [todos],
+    [todos]
   );
 
-  const deletedTodos = useMemo(
-    () => todos.filter((todo) => todo.is_deleted),
-    [todos],
-  );
+  const deletedTodos = useMemo(() => todos.filter((todo) => todo.is_deleted), [todos]);
 
   const dueTodayCount = useMemo(() => {
     const today = new Date();
@@ -409,7 +441,10 @@ function TodosPageContent() {
   }, [todos, activeTodos, completedTodos, expiredTodos, deletedTodos, viewFilter, searchQuery]);
 
   // Confirmation modal helpers
-  const openConfirmationModal = (todo: Todo, action: 'delete' | 'restore' | 'complete' | 'reopen') => {
+  const openConfirmationModal = (
+    todo: Todo,
+    action: 'delete' | 'restore' | 'complete' | 'reopen'
+  ) => {
     setConfirmationModal({ isOpen: true, todo, action });
   };
 
@@ -483,7 +518,8 @@ function TodosPageContent() {
       label: 'Completed',
       value: stats.completedCount,
       icon: <CheckCircle2 className="h-5 w-5" />,
-      accentClass: 'bg-emerald-500/20 text-emerald-700 dark:bg-emerald-500/25 dark:text-emerald-200',
+      accentClass:
+        'bg-emerald-500/20 text-emerald-700 dark:bg-emerald-500/25 dark:text-emerald-200',
     },
     {
       label: 'Overdue',
@@ -521,7 +557,10 @@ function TodosPageContent() {
       await loadTodos();
     } catch (err) {
       console.error(err);
-      showToast({ type: 'error', title: err instanceof Error ? err.message : 'Failed to complete todo' });
+      showToast({
+        type: 'error',
+        title: err instanceof Error ? err.message : 'Failed to complete todo',
+      });
     } finally {
       setActionLoadingId(null);
     }
@@ -539,7 +578,10 @@ function TodosPageContent() {
       await loadTodos();
     } catch (err) {
       console.error(err);
-      showToast({ type: 'error', title: err instanceof Error ? err.message : 'Failed to reopen todo' });
+      showToast({
+        type: 'error',
+        title: err instanceof Error ? err.message : 'Failed to reopen todo',
+      });
     } finally {
       setActionLoadingId(null);
     }
@@ -557,7 +599,10 @@ function TodosPageContent() {
       await loadTodos();
     } catch (err) {
       console.error(err);
-      showToast({ type: 'error', title: err instanceof Error ? err.message : 'Failed to delete todo' });
+      showToast({
+        type: 'error',
+        title: err instanceof Error ? err.message : 'Failed to delete todo',
+      });
     } finally {
       setActionLoadingId(null);
     }
@@ -575,7 +620,10 @@ function TodosPageContent() {
       await loadTodos();
     } catch (err) {
       console.error(err);
-      showToast({ type: 'error', title: err instanceof Error ? err.message : 'Failed to restore todo' });
+      showToast({
+        type: 'error',
+        title: err instanceof Error ? err.message : 'Failed to restore todo',
+      });
     } finally {
       setActionLoadingId(null);
     }
@@ -723,15 +771,25 @@ function TodosPageContent() {
                 <Sparkles className="h-4 w-4" /> Focus mode
               </span>
               <div>
-                <h1 className="text-3xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+                <h1
+                  className="text-3xl font-bold tracking-tight"
+                  style={{ color: 'var(--text-primary)' }}
+                >
                   My Todos
                 </h1>
               </div>
               <div className="flex flex-wrap items-center gap-3">
-                <Button leftIcon={<Plus className="h-4 w-4" />} onClick={handleOpenModal} className="shadow-md">
+                <Button
+                  leftIcon={<Plus className="h-4 w-4" />}
+                  onClick={handleOpenModal}
+                  className="shadow-md"
+                >
                   Add new task
                 </Button>
-                <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-muted)' }}>
+                <div
+                  className="flex items-center gap-2 text-sm"
+                  style={{ color: 'var(--text-muted)' }}
+                >
                   <CalendarCheck className="h-4 w-4" />
                   {heroMeta}
                 </div>
@@ -743,10 +801,15 @@ function TodosPageContent() {
                   key={stat.label}
                   className="rounded-xl border border-gray-200/70 bg-white/70 p-3 shadow-sm dark:border-gray-800/60 dark:bg-gray-900/60"
                 >
-                  <div className={`mb-2 inline-flex h-8 w-8 items-center justify-center rounded-lg ${stat.accentClass}`}>
+                  <div
+                    className={`mb-2 inline-flex h-8 w-8 items-center justify-center rounded-lg ${stat.accentClass}`}
+                  >
                     {stat.icon}
                   </div>
-                  <p className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
+                  <p
+                    className="text-xs font-medium uppercase tracking-wide"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
                     {stat.label}
                   </p>
                   <p className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>
@@ -782,7 +845,8 @@ function TodosPageContent() {
                     const isActive = viewFilter === filter.value;
                     const baseClasses =
                       'relative rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transform hover:scale-105';
-                    const activeClasses = 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/25 ring-2 ring-blue-200/50 dark:from-blue-500 dark:to-blue-600 dark:ring-blue-400/30';
+                    const activeClasses =
+                      'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/25 ring-2 ring-blue-200/50 dark:from-blue-500 dark:to-blue-600 dark:ring-blue-400/30';
                     const inactiveClasses =
                       'text-gray-600 hover:bg-gradient-to-r hover:from-gray-100 hover:to-gray-50 hover:text-gray-900 hover:shadow-md dark:text-gray-300 dark:hover:from-gray-700 dark:hover:to-gray-800 dark:hover:text-white';
                     return (
@@ -821,7 +885,9 @@ function TodosPageContent() {
                     {hasSearch ? 'No tasks match your search' : emptyStateCopy[viewFilter].title}
                   </h3>
                   <p className="mt-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
-                    {hasSearch ? 'Try a different keyword or clear the filters.' : emptyStateCopy[viewFilter].description}
+                    {hasSearch
+                      ? 'Try a different keyword or clear the filters.'
+                      : emptyStateCopy[viewFilter].description}
                   </p>
                 </div>
               ) : (

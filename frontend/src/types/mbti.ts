@@ -1,10 +1,22 @@
 // MBTI personality test types
 
-export type MBTIType = 
-  | 'INTJ' | 'INTP' | 'ENTJ' | 'ENTP'  // Analysts (NT)
-  | 'INFJ' | 'INFP' | 'ENFJ' | 'ENFP'  // Diplomats (NF)
-  | 'ISTJ' | 'ISFJ' | 'ESTJ' | 'ESFJ'  // Sentinels (SJ)
-  | 'ISTP' | 'ISFP' | 'ESTP' | 'ESFP'; // Explorers (SP)
+export type MBTIType =
+  | 'INTJ'
+  | 'INTP'
+  | 'ENTJ'
+  | 'ENTP' // Analysts (NT)
+  | 'INFJ'
+  | 'INFP'
+  | 'ENFJ'
+  | 'ENFP' // Diplomats (NF)
+  | 'ISTJ'
+  | 'ISFJ'
+  | 'ESTJ'
+  | 'ESFJ' // Sentinels (SJ)
+  | 'ISTP'
+  | 'ISFP'
+  | 'ESTP'
+  | 'ESFP'; // Explorers (SP)
 
 export type MBTITestStatus = 'not_taken' | 'in_progress' | 'completed';
 
@@ -106,33 +118,36 @@ export interface MBTIProgressProps {
 // MBTI Type Colors and Icons
 export const MBTI_TYPE_COLORS: Record<string, string> = {
   // Analysts (NT) - Purple
-  'INTJ': '#8B5CF6',
-  'INTP': '#A855F7', 
-  'ENTJ': '#7C3AED',
-  'ENTP': '#9333EA',
-  
+  INTJ: '#8B5CF6',
+  INTP: '#A855F7',
+  ENTJ: '#7C3AED',
+  ENTP: '#9333EA',
+
   // Diplomats (NF) - Green
-  'INFJ': '#10B981',
-  'INFP': '#14B8A6',
-  'ENFJ': '#059669',
-  'ENFP': '#0D9488',
-  
+  INFJ: '#10B981',
+  INFP: '#14B8A6',
+  ENFJ: '#059669',
+  ENFP: '#0D9488',
+
   // Sentinels (SJ) - Blue
-  'ISTJ': '#3B82F6',
-  'ISFJ': '#60A5FA',
-  'ESTJ': '#2563EB',
-  'ESFJ': '#1D4ED8',
-  
+  ISTJ: '#3B82F6',
+  ISFJ: '#60A5FA',
+  ESTJ: '#2563EB',
+  ESFJ: '#1D4ED8',
+
   // Explorers (SP) - Orange/Yellow
-  'ISTP': '#F59E0B',
-  'ISFP': '#FBBF24',
-  'ESTP': '#D97706',
-  'ESFP': '#F97316'
+  ISTP: '#F59E0B',
+  ISFP: '#FBBF24',
+  ESTP: '#D97706',
+  ESFP: '#F97316',
 };
 
-export const MBTI_TEMPERAMENTS: Record<string, { name_en: string; name_ja: string; color: string }> = {
-  'NT': { name_en: 'Analysts', name_ja: '分析家', color: '#8B5CF6' },
-  'NF': { name_en: 'Diplomats', name_ja: '外交官', color: '#10B981' },
-  'SJ': { name_en: 'Sentinels', name_ja: '番人', color: '#3B82F6' },
-  'SP': { name_en: 'Explorers', name_ja: '探検家', color: '#F59E0B' }
+export const MBTI_TEMPERAMENTS: Record<
+  string,
+  { name_en: string; name_ja: string; color: string }
+> = {
+  NT: { name_en: 'Analysts', name_ja: '分析家', color: '#8B5CF6' },
+  NF: { name_en: 'Diplomats', name_ja: '外交官', color: '#10B981' },
+  SJ: { name_en: 'Sentinels', name_ja: '番人', color: '#3B82F6' },
+  SP: { name_en: 'Explorers', name_ja: '探検家', color: '#F59E0B' },
 };

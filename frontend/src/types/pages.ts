@@ -1,4 +1,13 @@
-import type { Resume, CalendarEvent, UserProfile, UserSettings, Conversation, LegacyMessage as Message, MessageInfo, CompanyType } from '@/types';
+import type {
+  Resume,
+  CalendarEvent,
+  UserProfile,
+  UserSettings,
+  Conversation,
+  LegacyMessage as Message,
+  MessageInfo,
+  CompanyType,
+} from '@/types';
 
 // ====================
 // PAGE INFO & METADATA
@@ -132,7 +141,16 @@ export interface ProfileData {
 // ====================
 
 export interface ResumeBuilderState {
-  activeSection: 'template' | 'personal' | 'experience' | 'education' | 'skills' | 'certifications' | 'projects' | 'languages' | 'preview';
+  activeSection:
+    | 'template'
+    | 'personal'
+    | 'experience'
+    | 'education'
+    | 'skills'
+    | 'certifications'
+    | 'projects'
+    | 'languages'
+    | 'preview';
   resume: Partial<Resume>;
   saving: boolean;
   errors: Record<string, string>;

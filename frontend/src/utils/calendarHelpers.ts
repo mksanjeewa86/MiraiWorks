@@ -89,9 +89,10 @@ export const interviewToCalendarEvent = (interview: Interview): CalendarEvent =>
   const endDate = safeParseDate(interview.scheduled_end);
 
   // Calculate end date if not provided
-  const calculatedEndDate = !endDate && startDate
-    ? new Date(startDate.getTime() + (interview.duration_minutes || 60) * 60000)
-    : endDate;
+  const calculatedEndDate =
+    !endDate && startDate
+      ? new Date(startDate.getTime() + (interview.duration_minutes || 60) * 60000)
+      : endDate;
 
   return {
     id: `interview-${interview.id}`,
@@ -116,12 +117,13 @@ export const interviewToCalendarEvent = (interview: Interview): CalendarEvent =>
  */
 export const todoToCalendarEvent = (todo: Todo): CalendarEvent => {
   const getEventTitle = () => {
-    const statusIcon = {
-      pending: '📋',
-      in_progress: '🔄',
-      completed: '✅',
-      expired: '⏰'
-    }[todo.status] || '📋';
+    const statusIcon =
+      {
+        pending: '📋',
+        in_progress: '🔄',
+        completed: '✅',
+        expired: '⏰',
+      }[todo.status] || '📋';
 
     const priorityText = todo.priority ? ` [${todo.priority}]` : '';
     return `${statusIcon} ${todo.title}${priorityText}`;
@@ -207,11 +209,11 @@ export const mergeCalendarAndInterviews = (
   const safeTodos = Array.isArray(todos) ? todos : [];
 
   const interviewEvents = safeInterviews
-    .filter(interview => interview.scheduled_start || interview.scheduled_at)
+    .filter((interview) => interview.scheduled_start || interview.scheduled_at)
     .map(interviewToCalendarEvent);
 
   const todoEvents = safeTodos
-    .filter(todo => todo.due_date) // Only show todos with due dates
+    .filter((todo) => todo.due_date) // Only show todos with due dates
     .map(todoToCalendarEvent);
 
   return [...safeCalendarEvents, ...interviewEvents, ...todoEvents];
@@ -228,9 +230,10 @@ export const filterEvents = (
     search: string;
   }
 ): CalendarEvent[] => {
-  return events.filter(event => {
+  return events.filter((event) => {
     // Search filter
-    const matchesSearch = filters.search === '' ||
+    const matchesSearch =
+      filters.search === '' ||
       event.title.toLowerCase().includes(filters.search.toLowerCase()) ||
       event.description?.toLowerCase().includes(filters.search.toLowerCase()) ||
       event.location?.toLowerCase().includes(filters.search.toLowerCase());
@@ -243,20 +246,23 @@ export const filterEvents = (
     if (filters.eventType !== 'all') {
       switch (filters.eventType) {
         case 'interview':
-          matchesType = event.id.toString().startsWith('interview-') ||
-                       event.title.toLowerCase().includes('interview');
+          matchesType =
+            event.id.toString().startsWith('interview-') ||
+            event.title.toLowerCase().includes('interview');
           break;
         case 'meeting':
           matchesType = event.title.toLowerCase().includes('meeting');
           break;
         case 'call':
-          matchesType = event.title.toLowerCase().includes('call') ||
-                       event.title.toLowerCase().includes('phone');
+          matchesType =
+            event.title.toLowerCase().includes('call') ||
+            event.title.toLowerCase().includes('phone');
           break;
         case 'personal':
-          matchesType = !event.id.toString().startsWith('interview-') &&
-                       !event.title.toLowerCase().includes('interview') &&
-                       !event.title.toLowerCase().includes('meeting');
+          matchesType =
+            !event.id.toString().startsWith('interview-') &&
+            !event.title.toLowerCase().includes('interview') &&
+            !event.title.toLowerCase().includes('meeting');
           break;
         case 'screening':
           matchesType = event.title.toLowerCase().includes('screening');
@@ -275,17 +281,20 @@ export const filterEvents = (
  * Groups events by date for display
  */
 export const groupEventsByDate = (events: CalendarEvent[]): Record<string, CalendarEvent[]> => {
-  return events.reduce((groups, event) => {
-    const eventDate = safeParseDate(event.startDatetime);
-    if (!eventDate) return groups; // Skip events with invalid dates
+  return events.reduce(
+    (groups, event) => {
+      const eventDate = safeParseDate(event.startDatetime);
+      if (!eventDate) return groups; // Skip events with invalid dates
 
-    const dateString = eventDate.toDateString();
-    if (!groups[dateString]) {
-      groups[dateString] = [];
-    }
-    groups[dateString].push(event);
-    return groups;
-  }, {} as Record<string, CalendarEvent[]>);
+      const dateString = eventDate.toDateString();
+      if (!groups[dateString]) {
+        groups[dateString] = [];
+      }
+      groups[dateString].push(event);
+      return groups;
+    },
+    {} as Record<string, CalendarEvent[]>
+  );
 };
 
 /**
@@ -296,7 +305,7 @@ export const getAvailableTimeSlots = (
   date: Date,
   duration: number = 60
 ): Array<{ startTime: string; endTime: string }> => {
-  const dayEvents = events.filter(event => {
+  const dayEvents = events.filter((event) => {
     const eventDate = safeParseDate(event.startDatetime);
     return eventDate && eventDate.toDateString() === date.toDateString() && !event.isAllDay;
   });
@@ -312,7 +321,7 @@ export const getAvailableTimeSlots = (
   const slots = [];
   const workingHours = {
     start: 9, // 9 AM
-    end: 17    // 5 PM
+    end: 17, // 5 PM
   };
 
   // Generate potential slots
@@ -324,18 +333,18 @@ export const getAvailableTimeSlots = (
       const slotEnd = new Date(slotStart.getTime() + duration * 60000);
 
       // Check if this slot conflicts with any existing events
-      const hasConflict = dayEvents.some(event => {
+      const hasConflict = dayEvents.some((event) => {
         const eventStart = safeParseDate(event.startDatetime);
         const eventEnd = safeParseDate(event.endDatetime);
 
         if (!eventStart || !eventEnd) return false;
-        return (slotStart < eventEnd && slotEnd > eventStart);
+        return slotStart < eventEnd && slotEnd > eventStart;
       });
 
       if (!hasConflict && slotEnd.getHours() <= workingHours.end) {
         slots.push({
           startTime: slotStart.toISOString(),
-          endTime: slotEnd.toISOString()
+          endTime: slotEnd.toISOString(),
         });
       }
     }
@@ -363,7 +372,7 @@ export const formatEventTime = (startTime: string, endTime: string, isAllDay: bo
     return date.toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
-      hour12: true
+      hour12: true,
     });
   };
 
@@ -375,7 +384,10 @@ export const formatEventTime = (startTime: string, endTime: string, isAllDay: bo
  */
 export const getEventColorScheme = (event: CalendarEvent): string => {
   // Interview events
-  if (event.id.toString().startsWith('interview-') || event.title.toLowerCase().includes('interview')) {
+  if (
+    event.id.toString().startsWith('interview-') ||
+    event.title.toLowerCase().includes('interview')
+  ) {
     if (event.status === 'cancelled') return 'bg-red-100 text-red-700 border-red-200';
     if (event.status === 'confirmed') return 'bg-purple-100 text-purple-700 border-purple-200';
     return 'bg-purple-100 text-purple-700 border-purple-200';

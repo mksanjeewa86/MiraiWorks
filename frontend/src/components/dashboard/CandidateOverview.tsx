@@ -9,7 +9,7 @@ import {
   TrendingUp,
   Clock,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
 } from 'lucide-react';
 import StatCard from '@/components/common/StatCard';
 import { SimpleLineChart, SimpleBarChart } from './Charts';
@@ -32,7 +32,7 @@ export default function CandidateOverview() {
         // Fetch dashboard stats from API
         const [statsResponse, activityResponse] = await Promise.all([
           dashboardApi.getStats(),
-          dashboardApi.getRecentActivity(10)
+          dashboardApi.getRecentActivity(10),
         ]);
 
         // Map API response to CandidateStats interface
@@ -44,7 +44,7 @@ export default function CandidateOverview() {
           resumeCompleteness: 85, // This might come from user profile
           totalApplications: dashboardStats?.totalUsers || 0,
           interviewsCompleted: dashboardStats?.totalInterviews || 0,
-          offersReceived: 0 // This needs to be added to backend
+          offersReceived: 0, // This needs to be added to backend
         });
 
         // Generate activity chart data from recent activity
@@ -56,42 +56,43 @@ export default function CandidateOverview() {
           months.push({
             name: monthName,
             applications: Math.floor(Math.random() * 20) + 5, // TODO: Get real data from API
-            interviews: Math.floor(Math.random() * 10) + 1
+            interviews: Math.floor(Math.random() * 10) + 1,
           });
         }
         setActivityData(months);
 
         // Map API activity to RecentActivity format
-        const activities = activityResponse.data?.map((item, index) => {
-          // Map API activity types to UI activity types
-          let mappedType: 'application' | 'interview' | 'message' | 'offer';
-          switch (item.type) {
-            case 'interview':
-              mappedType = 'interview';
-              break;
-            case 'message':
-              mappedType = 'message';
-              break;
-            case 'user':
-            case 'resume':
-              mappedType = 'application';
-              break;
-            case 'company':
-              mappedType = 'offer';
-              break;
-            default:
-              mappedType = 'application';
-          }
+        const activities =
+          activityResponse.data?.map((item, index) => {
+            // Map API activity types to UI activity types
+            let mappedType: 'application' | 'interview' | 'message' | 'offer';
+            switch (item.type) {
+              case 'interview':
+                mappedType = 'interview';
+                break;
+              case 'message':
+                mappedType = 'message';
+                break;
+              case 'user':
+              case 'resume':
+                mappedType = 'application';
+                break;
+              case 'company':
+                mappedType = 'offer';
+                break;
+              default:
+                mappedType = 'application';
+            }
 
-          return {
-            id: parseInt(item.id) || index + 1,
-            type: mappedType,
-            title: item.title,
-            description: item.description,
-            time: new Date(item.timestamp).toLocaleDateString(),
-            status: 'pending' as const
-          };
-        }) || [];
+            return {
+              id: parseInt(item.id) || index + 1,
+              type: mappedType,
+              title: item.title,
+              description: item.description,
+              time: new Date(item.timestamp).toLocaleDateString(),
+              status: 'pending' as const,
+            };
+          }) || [];
 
         setRecentActivity(activities);
       } catch (err) {
@@ -107,7 +108,7 @@ export default function CandidateOverview() {
           resumeCompleteness: 0,
           totalApplications: 0,
           interviewsCompleted: 0,
-          offersReceived: 0
+          offersReceived: 0,
         });
         setActivityData([]);
         setRecentActivity([]);
@@ -134,7 +135,6 @@ export default function CandidateOverview() {
     }
   };
 
-
   return (
     <div className="space-y-6">
       {/* Welcome Header */}
@@ -147,9 +147,7 @@ export default function CandidateOverview() {
         </p>
         {error && (
           <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-600">
-              ⚠️ {error}
-            </p>
+            <p className="text-sm text-red-600">⚠️ {error}</p>
           </div>
         )}
       </div>
@@ -204,12 +202,12 @@ export default function CandidateOverview() {
             </div>
             <TrendingUp className="text-brand-primary" style={{ width: '20px', height: '20px' }} />
           </div>
-          
+
           {loading ? (
             <div className="loading-skeleton" style={{ height: '250px' }} />
           ) : (
             <SimpleLineChart
-              data={activityData.map(item => ({ ...item, value: item.applications }))}
+              data={activityData.map((item) => ({ ...item, value: item.applications }))}
               dataKey="applications"
               height={250}
               color="var(--brand-primary)"
@@ -230,7 +228,7 @@ export default function CandidateOverview() {
             </div>
             <Calendar style={{ color: '#3B82F6', width: '20px', height: '20px' }} />
           </div>
-          
+
           {loading ? (
             <div className="loading-skeleton" style={{ height: '250px' }} />
           ) : (
@@ -240,7 +238,7 @@ export default function CandidateOverview() {
                 { name: 'Screening', value: 8 },
                 { name: 'Interview', value: 5 },
                 { name: 'Final', value: 3 },
-                { name: 'Offer', value: 2 }
+                { name: 'Offer', value: 2 },
               ]}
               height={250}
               color="#3B82F6"
@@ -266,8 +264,15 @@ export default function CandidateOverview() {
         {loading ? (
           <div className="space-y-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="flex items-center p-4 rounded-xl" style={{ gap: '16px', backgroundColor: 'var(--bg-secondary)' }}>
-                <div className="loading-skeleton" style={{ width: '40px', height: '40px', borderRadius: '50%' }} />
+              <div
+                key={i}
+                className="flex items-center p-4 rounded-xl"
+                style={{ gap: '16px', backgroundColor: 'var(--bg-secondary)' }}
+              >
+                <div
+                  className="loading-skeleton"
+                  style={{ width: '40px', height: '40px', borderRadius: '50%' }}
+                />
                 <div className="flex-1 space-y-2">
                   <div className="loading-skeleton" style={{ height: '16px', width: '75%' }} />
                   <div className="loading-skeleton" style={{ height: '12px', width: '50%' }} />
@@ -278,24 +283,32 @@ export default function CandidateOverview() {
         ) : (
           <div className="space-y-4">
             {recentActivity.map((activity) => (
-              <div 
-                key={activity.id} 
+              <div
+                key={activity.id}
                 className="flex items-center p-4 rounded-xl transition-all cursor-pointer"
                 style={{ gap: '16px' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-secondary)'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.backgroundColor = 'var(--bg-secondary)')
+                }
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
               >
-                <div 
+                <div
                   className="flex items-center justify-center rounded-full"
-                  style={{ 
-                    width: '40px', 
+                  style={{
+                    width: '40px',
                     height: '40px',
-                    backgroundColor: activity.status === 'completed' ? 'rgba(34, 197, 94, 0.1)' :
-                                    activity.status === 'scheduled' ? 'rgba(59, 130, 246, 0.1)' :
-                                    'rgba(245, 158, 11, 0.1)',
-                    color: activity.status === 'completed' ? 'var(--brand-accent)' :
-                           activity.status === 'scheduled' ? '#3B82F6' :
-                           '#F59E0B'
+                    backgroundColor:
+                      activity.status === 'completed'
+                        ? 'rgba(34, 197, 94, 0.1)'
+                        : activity.status === 'scheduled'
+                          ? 'rgba(59, 130, 246, 0.1)'
+                          : 'rgba(245, 158, 11, 0.1)',
+                    color:
+                      activity.status === 'completed'
+                        ? 'var(--brand-accent)'
+                        : activity.status === 'scheduled'
+                          ? '#3B82F6'
+                          : '#F59E0B',
                   }}
                 >
                   {getActivityIcon(activity.type)}
@@ -304,7 +317,15 @@ export default function CandidateOverview() {
                   <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
                     {activity.title}
                   </p>
-                  <p className="text-sm" style={{ color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <p
+                    className="text-sm"
+                    style={{
+                      color: 'var(--text-secondary)',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
                     {activity.description}
                   </p>
                 </div>

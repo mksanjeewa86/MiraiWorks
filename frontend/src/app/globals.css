@@ -1,18 +1,18 @@
 /* Import Inter Font */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* CSS Custom Properties for Brand Colors */
 :root {
   /* MiraiWorks Brand Colors */
-  --brand-primary: #6C63FF;
-  --brand-primary-light: #8E86FF;
+  --brand-primary: #6c63ff;
+  --brand-primary-light: #8e86ff;
   --brand-primary-dark: #5b52e6;
-  --brand-accent: #22C55E;
+  --brand-accent: #22c55e;
   --brand-accent-dark: #16a34a;
-  --brand-muted: #64748B;
-  
+  --brand-muted: #64748b;
+
   /* Light theme */
   --bg-primary: #ffffff;
   --bg-secondary: #f8fafc;
@@ -22,7 +22,7 @@
   --text-muted: #64748b;
   --border-color: #e2e8f0;
   --border-light: #f1f5f9;
-  
+
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
@@ -31,7 +31,7 @@
 }
 
 /* Dark theme */
-[data-theme="dark"] {
+[data-theme='dark'] {
   --bg-primary: #0f172a;
   --bg-secondary: #1e293b;
   --bg-tertiary: #334155;
@@ -42,7 +42,8 @@
   --border-light: #475569;
 }
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   font-family: 'Inter', system-ui, sans-serif;
@@ -55,7 +56,9 @@ html, body {
 body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
 }
 
 /* Modern Button Styles */
@@ -76,7 +79,9 @@ body {
 }
 
 .btn:focus {
-  box-shadow: 0 0 0 2px var(--brand-primary), 0 0 0 4px rgba(108, 99, 255, 0.1);
+  box-shadow:
+    0 0 0 2px var(--brand-primary),
+    0 0 0 4px rgba(108, 99, 255, 0.1);
 }
 
 .btn:disabled {
@@ -140,7 +145,7 @@ body {
   border-color: rgba(108, 99, 255, 0.2);
 }
 
-[data-theme="dark"] .card-gradient {
+[data-theme='dark'] .card-gradient {
   background: linear-gradient(135deg, #1f1a80 0%, #322999 100%);
   border-color: rgba(108, 99, 255, 0.3);
 }
@@ -193,12 +198,22 @@ body {
 }
 
 /* Utility Classes */
-.text-brand-primary { color: var(--brand-primary); }
-.text-brand-accent { color: var(--brand-accent); }
-.text-brand-muted { color: var(--brand-muted); }
+.text-brand-primary {
+  color: var(--brand-primary);
+}
+.text-brand-accent {
+  color: var(--brand-accent);
+}
+.text-brand-muted {
+  color: var(--brand-muted);
+}
 
-.bg-brand-primary { background-color: var(--brand-primary); }
-.bg-brand-accent { background-color: var(--brand-accent); }
+.bg-brand-primary {
+  background-color: var(--brand-primary);
+}
+.bg-brand-accent {
+  background-color: var(--brand-accent);
+}
 
 /* Gradient Text */
 .gradient-text {
@@ -216,7 +231,9 @@ body {
 }
 
 @keyframes pulse {
-  50% { opacity: 0.5; }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 /* Modern Animations */
@@ -269,7 +286,8 @@ body {
 }
 
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0px);
   }
   50% {
@@ -278,7 +296,8 @@ body {
 }
 
 @keyframes glow {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 20px rgba(108, 99, 255, 0.3);
   }
   50% {
@@ -378,7 +397,7 @@ body {
   height: 100%;
 }
 
-[data-theme="dark"] .gradient-border-content {
+[data-theme='dark'] .gradient-border-content {
   background: #1e293b;
 }
 
@@ -395,7 +414,9 @@ body {
 }
 
 .text-shadow-md {
-  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08);
+  text-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.12),
+    0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 /* Responsive Animation Controls */

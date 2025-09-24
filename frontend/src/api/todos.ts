@@ -1,14 +1,14 @@
 ﻿import { API_ENDPOINTS } from './config';
 import { apiClient } from './apiClient';
-import type { 
-  Todo, 
-  TodoListResponse, 
-  TodoPayload, 
+import type {
+  Todo,
+  TodoListResponse,
+  TodoPayload,
   TodoListParams,
   AssignableUser,
   TodoWithAssignedUser,
   TodoAssignmentUpdate,
-  TodoViewersUpdate
+  TodoViewersUpdate,
 } from '@/types/todo';
 
 export const todosApi = {

@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, Users, BookOpen, Play, Eye } from "lucide-react";
-import { useAuth } from "@/contexts/auth-context";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { toast } from "sonner";
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Calendar, Clock, Users, BookOpen, Play, Eye } from 'lucide-react';
+import { useAuth } from '@/contexts/auth-context';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { toast } from 'sonner';
 
 interface ExamAssignment {
   id: number;
@@ -32,23 +32,23 @@ interface ExamAssignment {
 }
 
 const ExamStatus = {
-  NOT_STARTED: "not_started",
-  IN_PROGRESS: "in_progress",
-  COMPLETED: "completed",
-  EXPIRED: "expired",
-  SUSPENDED: "suspended",
+  NOT_STARTED: 'not_started',
+  IN_PROGRESS: 'in_progress',
+  COMPLETED: 'completed',
+  EXPIRED: 'expired',
+  SUSPENDED: 'suspended',
 } as const;
 
 const ExamType = {
-  APTITUDE: "aptitude",
-  SKILL: "skill", 
-  KNOWLEDGE: "knowledge",
-  PERSONALITY: "personality",
-  CUSTOM: "custom",
+  APTITUDE: 'aptitude',
+  SKILL: 'skill',
+  KNOWLEDGE: 'knowledge',
+  PERSONALITY: 'personality',
+  CUSTOM: 'custom',
 } as const;
 
 export default function ExamsPage() {
-  const { user } = useAuth();
+  const {} = useAuth();
   const [assignments, setAssignments] = useState<ExamAssignment[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -58,21 +58,21 @@ export default function ExamsPage() {
 
   const fetchAssignments = async () => {
     try {
-      const response = await fetch("/api/exam/my-assignments", {
+      const response = await fetch('/api/exam/my-assignments', {
         headers: {
-          "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
+          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
         },
       });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch assignments");
+        throw new Error('Failed to fetch assignments');
       }
 
       const data = await response.json();
       setAssignments(data);
     } catch (error) {
-      console.error("Error fetching assignments:", error);
-      toast.error("Failed to load exam assignments");
+      console.error('Error fetching assignments:', error);
+      toast.error('Failed to load exam assignments');
     } finally {
       setLoading(false);
     }
@@ -80,46 +80,50 @@ export default function ExamsPage() {
 
   const getExamTypeLabel = (type: string) => {
     const labels = {
-      [ExamType.APTITUDE]: "適性検査",
-      [ExamType.SKILL]: "Skill Test",
-      [ExamType.KNOWLEDGE]: "Knowledge Test",
-      [ExamType.PERSONALITY]: "Personality Test",
-      [ExamType.CUSTOM]: "Custom Test",
+      [ExamType.APTITUDE]: '適性検査',
+      [ExamType.SKILL]: 'Skill Test',
+      [ExamType.KNOWLEDGE]: 'Knowledge Test',
+      [ExamType.PERSONALITY]: 'Personality Test',
+      [ExamType.CUSTOM]: 'Custom Test',
     };
     return labels[type as keyof typeof labels] || type;
   };
 
   const getStatusColor = (assignment: ExamAssignment) => {
     if (assignment.completed) {
-      return assignment.latest_session?.passed ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800";
+      return assignment.latest_session?.passed
+        ? 'bg-green-100 text-green-800'
+        : 'bg-red-100 text-red-800';
     }
     if (assignment.latest_session?.status === ExamStatus.IN_PROGRESS) {
-      return "bg-yellow-100 text-yellow-800";
+      return 'bg-yellow-100 text-yellow-800';
     }
     if (assignment.due_date && new Date(assignment.due_date) < new Date()) {
-      return "bg-red-100 text-red-800";
+      return 'bg-red-100 text-red-800';
     }
-    return "bg-blue-100 text-blue-800";
+    return 'bg-blue-100 text-blue-800';
   };
 
   const getStatusText = (assignment: ExamAssignment) => {
     if (assignment.completed) {
-      return assignment.latest_session?.passed ? "Passed" : "Failed";
+      return assignment.latest_session?.passed ? 'Passed' : 'Failed';
     }
     if (assignment.latest_session?.status === ExamStatus.IN_PROGRESS) {
-      return "In Progress";
+      return 'In Progress';
     }
     if (assignment.due_date && new Date(assignment.due_date) < new Date()) {
-      return "Overdue";
+      return 'Overdue';
     }
-    return "Pending";
+    return 'Pending';
   };
 
   const canStartExam = (assignment: ExamAssignment) => {
-    return assignment.is_active && 
-           !assignment.completed && 
-           assignment.latest_session?.status !== ExamStatus.IN_PROGRESS &&
-           (!assignment.due_date || new Date(assignment.due_date) > new Date());
+    return (
+      assignment.is_active &&
+      !assignment.completed &&
+      assignment.latest_session?.status !== ExamStatus.IN_PROGRESS &&
+      (!assignment.due_date || new Date(assignment.due_date) > new Date())
+    );
   };
 
   const canResumeExam = (assignment: ExamAssignment) => {
@@ -167,12 +171,10 @@ export default function ExamsPage() {
                       </Badge>
                     </CardDescription>
                   </div>
-                  <Badge className={getStatusColor(assignment)}>
-                    {getStatusText(assignment)}
-                  </Badge>
+                  <Badge className={getStatusColor(assignment)}>{getStatusText(assignment)}</Badge>
                 </div>
               </CardHeader>
-              
+
               <CardContent className="space-y-4">
                 <div className="space-y-2 text-sm text-gray-600">
                   {assignment.due_date && (
@@ -181,14 +183,14 @@ export default function ExamsPage() {
                       <span>Due: {new Date(assignment.due_date).toLocaleDateString()}</span>
                     </div>
                   )}
-                  
+
                   {assignment.custom_time_limit_minutes && (
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4" />
                       <span>Time Limit: {assignment.custom_time_limit_minutes} minutes</span>
                     </div>
                   )}
-                  
+
                   {assignment.custom_max_attempts && (
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4" />
@@ -217,7 +219,7 @@ export default function ExamsPage() {
                       </Link>
                     </Button>
                   )}
-                  
+
                   {canStartExam(assignment) && (
                     <Button asChild className="flex-1">
                       <Link href={`/exams/take/${assignment.exam_id}?assignment=${assignment.id}`}>
@@ -226,7 +228,7 @@ export default function ExamsPage() {
                       </Link>
                     </Button>
                   )}
-                  
+
                   {canViewResults(assignment) && (
                     <Button asChild variant="outline" className="flex-1">
                       <Link href={`/exams/results/${assignment.latest_session?.id}`}>

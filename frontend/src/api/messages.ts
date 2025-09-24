@@ -20,12 +20,15 @@ export const messagesApi = {
   async getConversations(token?: string): Promise<ApiResponse<Conversation[]>> {
     // Handle optional token for special auth cases
     if (token) {
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.MESSAGES.CONVERSATIONS}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(
+        `${API_CONFIG.BASE_URL}${API_ENDPOINTS.MESSAGES.CONVERSATIONS}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -35,20 +38,25 @@ export const messagesApi = {
       return { data: responseData.conversations || [], success: true };
     }
 
-    const response = await apiClient.get<{ conversations: Conversation[] }>(API_ENDPOINTS.MESSAGES.CONVERSATIONS);
+    const response = await apiClient.get<{ conversations: Conversation[] }>(
+      API_ENDPOINTS.MESSAGES.CONVERSATIONS
+    );
     return { data: response.data.conversations || [], success: true };
   },
 
   async markConversationAsRead(otherUserId: number, token?: string): Promise<ApiResponse<unknown>> {
     // Handle optional token for special auth cases
     if (token) {
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.MESSAGES.MARK_READ(otherUserId)}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(
+        `${API_CONFIG.BASE_URL}${API_ENDPOINTS.MESSAGES.MARK_READ(otherUserId)}`,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -63,17 +71,27 @@ export const messagesApi = {
   },
 
   async getConversation(otherUserId: number): Promise<ApiResponse<Conversation>> {
-    const response = await apiClient.get<Conversation>(API_ENDPOINTS.MESSAGES.WITH_USER(otherUserId));
+    const response = await apiClient.get<Conversation>(
+      API_ENDPOINTS.MESSAGES.WITH_USER(otherUserId)
+    );
     return { data: response.data, success: true };
   },
 
-  async getMessages(otherUserId: number, limit = 50, beforeId?: number): Promise<ApiResponse<{
-    messages: Message[];
-    total: number;
-    has_more: boolean;
-  }>> {
+  async getMessages(
+    otherUserId: number,
+    limit = 50,
+    beforeId?: number
+  ): Promise<
+    ApiResponse<{
+      messages: Message[];
+      total: number;
+      has_more: boolean;
+    }>
+  > {
     const query = buildQueryString({ limit, before_id: beforeId });
-    const url = query ? `${API_ENDPOINTS.MESSAGES.WITH_USER(otherUserId)}?${query}` : API_ENDPOINTS.MESSAGES.WITH_USER(otherUserId);
+    const url = query
+      ? `${API_ENDPOINTS.MESSAGES.WITH_USER(otherUserId)}?${query}`
+      : API_ENDPOINTS.MESSAGES.WITH_USER(otherUserId);
 
     const response = await apiClient.get<{
       messages: Message[];
@@ -83,15 +101,18 @@ export const messagesApi = {
     return { data: response.data, success: true };
   },
 
-  async sendMessage(recipientId: number, messageData: {
-    content: string;
-    type?: 'text' | 'file' | 'system';
-    reply_to_id?: number;
-    file_url?: string;
-    file_name?: string;
-    file_size?: number;
-    file_type?: string;
-  }): Promise<ApiResponse<Message>> {
+  async sendMessage(
+    recipientId: number,
+    messageData: {
+      content: string;
+      type?: 'text' | 'file' | 'system';
+      reply_to_id?: number;
+      file_url?: string;
+      file_name?: string;
+      file_size?: number;
+      file_type?: string;
+    }
+  ): Promise<ApiResponse<Message>> {
     const requestBody = {
       recipient_id: recipientId,
       content: messageData.content,
@@ -117,9 +138,14 @@ export const messagesApi = {
     return { data: undefined, success: true };
   },
 
-  async searchMessages(query: string, withUserId?: number): Promise<ApiResponse<{
-    messages: MessageInfo[];
-  }>> {
+  async searchMessages(
+    query: string,
+    withUserId?: number
+  ): Promise<
+    ApiResponse<{
+      messages: MessageInfo[];
+    }>
+  > {
     const requestBody = {
       query,
       with_user_id: withUserId,
@@ -127,28 +153,37 @@ export const messagesApi = {
       offset: 0,
     };
 
-    const response = await apiClient.post<{ messages: MessageInfo[] }>(API_ENDPOINTS.MESSAGES.SEARCH, requestBody);
+    const response = await apiClient.post<{ messages: MessageInfo[] }>(
+      API_ENDPOINTS.MESSAGES.SEARCH,
+      requestBody
+    );
     return { data: { messages: response.data.messages || [] }, success: true };
   },
 
-  async searchParticipants(query?: string): Promise<ApiResponse<{
-    participants: Array<{
-      id: number;
-      email: string;
-      full_name: string;
-      company_name?: string;
-      is_online?: boolean;
-    }>;
-  }>> {
-    try {
-      const url = query ? `${API_ENDPOINTS.MESSAGES.PARTICIPANTS}?query=${encodeURIComponent(query)}` : API_ENDPOINTS.MESSAGES.PARTICIPANTS;
-      const response = await apiClient.get<{ participants?: Array<{
+  async searchParticipants(query?: string): Promise<
+    ApiResponse<{
+      participants: Array<{
         id: number;
         email: string;
         full_name: string;
         company_name?: string;
         is_online?: boolean;
-      }> }>(url);
+      }>;
+    }>
+  > {
+    try {
+      const url = query
+        ? `${API_ENDPOINTS.MESSAGES.PARTICIPANTS}?query=${encodeURIComponent(query)}`
+        : API_ENDPOINTS.MESSAGES.PARTICIPANTS;
+      const response = await apiClient.get<{
+        participants?: Array<{
+          id: number;
+          email: string;
+          full_name: string;
+          company_name?: string;
+          is_online?: boolean;
+        }>;
+      }>(url);
       return { data: { participants: response.data.participants || [] }, success: true };
     } catch (error) {
       console.error('Error in searchParticipants:', error);
@@ -156,12 +191,14 @@ export const messagesApi = {
     }
   },
 
-  async uploadFile(file: File): Promise<ApiResponse<{
-    file_url: string;
-    file_name: string;
-    file_size: number;
-    file_type: string;
-  }>> {
+  async uploadFile(file: File): Promise<
+    ApiResponse<{
+      file_url: string;
+      file_name: string;
+      file_size: number;
+      file_type: string;
+    }>
+  > {
     // File upload needs special handling with FormData
     const token = localStorage.getItem('accessToken');
     const formData = new FormData();
@@ -170,7 +207,7 @@ export const messagesApi = {
     const response = await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.FILES.UPLOAD}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
       body: formData,
     });

@@ -13,7 +13,7 @@ import {
   CalendarX,
   Video,
   Phone,
-  MessageSquare
+  MessageSquare,
 } from 'lucide-react';
 import type { CalendarEvent } from '@/types/interview';
 import type { CalendarSidebarProps } from '@/types/components';
@@ -25,26 +25,32 @@ export default function CalendarSidebar({
   onEventClick,
   filters,
   onFiltersChange,
-  userRole
+  userRole,
 }: CalendarSidebarProps) {
   // Group events by date
-  const groupedEvents = events.reduce((groups, event) => {
-    const date = new Date(event.startDatetime).toDateString();
-    if (!groups[date]) {
-      groups[date] = [];
-    }
-    groups[date].push(event);
-    return groups;
-  }, {} as Record<string, CalendarEvent[]>);
+  const groupedEvents = events.reduce(
+    (groups, event) => {
+      const date = new Date(event.startDatetime).toDateString();
+      if (!groups[date]) {
+        groups[date] = [];
+      }
+      groups[date].push(event);
+      return groups;
+    },
+    {} as Record<string, CalendarEvent[]>
+  );
 
   // Sort dates
-  const sortedDates = Object.keys(groupedEvents).sort((a, b) =>
-    new Date(a).getTime() - new Date(b).getTime()
+  const sortedDates = Object.keys(groupedEvents).sort(
+    (a, b) => new Date(a).getTime() - new Date(b).getTime()
   );
 
   // Get event icon based on type
   const getEventIcon = (event: CalendarEvent) => {
-    if (event.id.toString().startsWith('interview-') || event.title.toLowerCase().includes('interview')) {
+    if (
+      event.id.toString().startsWith('interview-') ||
+      event.title.toLowerCase().includes('interview')
+    ) {
       return <Video className="h-4 w-4 text-purple-600" />;
     }
     if (event.title.toLowerCase().includes('meeting')) {
@@ -96,18 +102,17 @@ export default function CalendarSidebar({
     <>
       {/* Mobile Overlay */}
       {isOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
-          onClick={onClose}
-        />
+        <div className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden" onClick={onClose} />
       )}
 
       {/* Sidebar */}
-      <div className={`
+      <div
+        className={`
         fixed left-0 top-0 z-50 h-full w-80 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
         lg:static lg:transform-none lg:shadow-none lg:z-auto lg:h-full lg:w-full
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-      `}>
+      `}
+      >
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-100">
@@ -136,9 +141,7 @@ export default function CalendarSidebar({
 
             {/* Event Type Filter */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
-                Event Type
-              </label>
+              <label className="block text-sm font-semibold text-gray-700 mb-3">Event Type</label>
               <select
                 value={filters.eventType}
                 onChange={(e) => onFiltersChange({ ...filters, eventType: e.target.value })}
@@ -147,10 +150,10 @@ export default function CalendarSidebar({
                   backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                   backgroundPosition: 'right 12px center',
                   backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px'
+                  backgroundSize: '16px',
                 }}
               >
-                {eventTypeOptions.map(option => (
+                {eventTypeOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -160,9 +163,7 @@ export default function CalendarSidebar({
 
             {/* Status Filter */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
-                Status
-              </label>
+              <label className="block text-sm font-semibold text-gray-700 mb-3">Status</label>
               <select
                 value={filters.status}
                 onChange={(e) => onFiltersChange({ ...filters, status: e.target.value })}
@@ -171,7 +172,7 @@ export default function CalendarSidebar({
                   backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                   backgroundPosition: 'right 12px center',
                   backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px'
+                  backgroundSize: '16px',
                 }}
               >
                 <option value="all">All Status</option>
@@ -194,24 +195,31 @@ export default function CalendarSidebar({
               </div>
             ) : (
               <div className="p-6 space-y-8">
-                {sortedDates.map(date => {
+                {sortedDates.map((date) => {
                   const dateEvents = groupedEvents[date];
                   const dateObj = new Date(date);
                   const isToday = dateObj.toDateString() === new Date().toDateString();
-                  const isTomorrow = dateObj.toDateString() === new Date(Date.now() + 86400000).toDateString();
+                  const isTomorrow =
+                    dateObj.toDateString() === new Date(Date.now() + 86400000).toDateString();
 
                   return (
                     <div key={date}>
                       {/* Date Header */}
                       <div className="flex items-center space-x-3 mb-4">
-                        <h3 className={`text-sm font-bold ${
-                          isToday ? 'text-blue-600' : 'text-gray-900'
-                        }`}>
-                          {isToday ? 'Today' : isTomorrow ? 'Tomorrow' : dateObj.toLocaleDateString('en-US', {
-                            weekday: 'short',
-                            month: 'short',
-                            day: 'numeric'
-                          })}
+                        <h3
+                          className={`text-sm font-bold ${
+                            isToday ? 'text-blue-600' : 'text-gray-900'
+                          }`}
+                        >
+                          {isToday
+                            ? 'Today'
+                            : isTomorrow
+                              ? 'Tomorrow'
+                              : dateObj.toLocaleDateString('en-US', {
+                                  weekday: 'short',
+                                  month: 'short',
+                                  day: 'numeric',
+                                })}
                         </h3>
                         <div className="flex-1 h-px bg-gray-200"></div>
                         <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full font-medium">
@@ -228,9 +236,7 @@ export default function CalendarSidebar({
                             onClick={() => onEventClick(event)}
                           >
                             <div className="flex items-start space-x-3">
-                              <div className="flex-shrink-0 mt-0.5">
-                                {getEventIcon(event)}
-                              </div>
+                              <div className="flex-shrink-0 mt-0.5">{getEventIcon(event)}</div>
 
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between">
@@ -246,14 +252,14 @@ export default function CalendarSidebar({
                                   <Clock className="h-3 w-3 mr-1" />
                                   {new Date(event.startDatetime).toLocaleTimeString('en-US', {
                                     hour: 'numeric',
-                                    minute: '2-digit'
+                                    minute: '2-digit',
                                   })}
                                   {!event.isAllDay && (
                                     <>
                                       {' - '}
                                       {new Date(event.endDatetime).toLocaleTimeString('en-US', {
                                         hour: 'numeric',
-                                        minute: '2-digit'
+                                        minute: '2-digit',
                                       })}
                                     </>
                                   )}
@@ -269,7 +275,8 @@ export default function CalendarSidebar({
                                 {event.attendees.length > 0 && (
                                   <div className="mt-1 flex items-center text-xs text-gray-500">
                                     <Users className="h-3 w-3 mr-1" />
-                                    {event.attendees.length} attendee{event.attendees.length !== 1 ? 's' : ''}
+                                    {event.attendees.length} attendee
+                                    {event.attendees.length !== 1 ? 's' : ''}
                                   </div>
                                 )}
 
@@ -294,22 +301,26 @@ export default function CalendarSidebar({
           <div className="p-6 border-t border-gray-100 bg-gradient-to-br from-gray-50 to-gray-100/50">
             <div className="grid grid-cols-3 gap-4 text-center">
               <div className="bg-white rounded-xl p-4 shadow-sm">
-                <div className="text-2xl font-bold text-gray-900">
-                  {events.length}
+                <div className="text-2xl font-bold text-gray-900">{events.length}</div>
+                <div className="text-xs text-gray-500 font-medium uppercase tracking-wide">
+                  Total
                 </div>
-                <div className="text-xs text-gray-500 font-medium uppercase tracking-wide">Total</div>
               </div>
               <div className="bg-white rounded-xl p-4 shadow-sm">
                 <div className="text-2xl font-bold text-green-600">
-                  {events.filter(e => e.status === 'confirmed').length}
+                  {events.filter((e) => e.status === 'confirmed').length}
                 </div>
-                <div className="text-xs text-gray-500 font-medium uppercase tracking-wide">Confirmed</div>
+                <div className="text-xs text-gray-500 font-medium uppercase tracking-wide">
+                  Confirmed
+                </div>
               </div>
               <div className="bg-white rounded-xl p-4 shadow-sm">
                 <div className="text-2xl font-bold text-yellow-600">
-                  {events.filter(e => e.status === 'tentative').length}
+                  {events.filter((e) => e.status === 'tentative').length}
                 </div>
-                <div className="text-xs text-gray-500 font-medium uppercase tracking-wide">Pending</div>
+                <div className="text-xs text-gray-500 font-medium uppercase tracking-wide">
+                  Pending
+                </div>
               </div>
             </div>
           </div>

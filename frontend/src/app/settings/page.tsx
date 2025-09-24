@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { userSettingsApi } from "@/api/userSettings";
-import { calendarApi } from "@/api/calendar";
-import { UserSettings, CalendarConnection } from "@/types";
+import { userSettingsApi } from '@/api/userSettings';
+import { calendarApi } from '@/api/calendar';
+import { UserSettings, CalendarConnection } from '@/types';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import Card from '@/components/ui/card';
@@ -12,11 +12,11 @@ import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
 import LoadingSpinner from '@/components/ui/loading-spinner';
 import Toggle from '@/components/ui/toggle';
-import { 
-  Save, 
-  Shield, 
-  Bell, 
-  User, 
+import {
+  Save,
+  Shield,
+  Bell,
+  User,
   Eye,
   EyeOff,
   Smartphone,
@@ -27,13 +27,13 @@ import {
   RefreshCw,
   AlertCircle,
   CheckCircle,
-  ExternalLink
+  ExternalLink,
 } from 'lucide-react';
 import type { SettingsState } from '@/types/pages';
 
 function SettingsPageContent() {
   const { user } = useAuth();
-  
+
   const [state, setState] = useState<SettingsState>({
     activeSection: 'account',
     loading: true,
@@ -45,21 +45,21 @@ function SettingsPageContent() {
     security: {
       current_password: '',
       new_password: '',
-      confirm_password: ''
-    }
+      confirm_password: '',
+    },
   });
 
   const [calendarState, setCalendarState] = useState({
     connections: [] as CalendarConnection[],
     loading: false,
     connecting: false,
-    error: null as string | null
+    error: null as string | null,
   });
 
   const [showPasswords, setShowPasswords] = useState({
     current: false,
     new: false,
-    confirm: false
+    confirm: false,
   });
 
   const [debounceTimers, setDebounceTimers] = useState<{ [key: string]: NodeJS.Timeout }>({});
@@ -67,26 +67,26 @@ function SettingsPageContent() {
   useEffect(() => {
     const loadUserData = async () => {
       try {
-        setState(prev => ({ ...prev, loading: true, error: null }));
-        
+        setState((prev) => ({ ...prev, loading: true, error: null }));
+
         // Load user profile and settings in parallel
         const [profileResponse, settingsResponse] = await Promise.all([
           userSettingsApi.getProfile(),
-          userSettingsApi.getSettings()
+          userSettingsApi.getSettings(),
         ]);
-        
-        setState(prev => ({
+
+        setState((prev) => ({
           ...prev,
           profile: profileResponse.data,
           settings: settingsResponse.data,
-          loading: false
+          loading: false,
         }));
       } catch (error) {
         console.error('Failed to load user data:', error);
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           error: 'Failed to load user data',
-          loading: false
+          loading: false,
         }));
       }
     };
@@ -105,137 +105,148 @@ function SettingsPageContent() {
 
   const loadCalendarConnections = async () => {
     try {
-      setCalendarState(prev => ({ ...prev, loading: true, error: null }));
+      setCalendarState((prev) => ({ ...prev, loading: true, error: null }));
       const response = await calendarApi.getConnections();
-      setCalendarState(prev => ({
+      setCalendarState((prev) => ({
         ...prev,
         connections: response.data || [],
-        loading: false
+        loading: false,
       }));
     } catch (error) {
       console.error('Failed to load calendar connections:', error);
-      setCalendarState(prev => ({
+      setCalendarState((prev) => ({
         ...prev,
         error: 'Failed to load calendar connections',
-        loading: false
+        loading: false,
       }));
     }
   };
 
   const updateProfile = (field: string, value: string) => {
     // Update local state immediately
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
-      profile: prev.profile ? { ...prev.profile, [field]: value } : null
+      profile: prev.profile ? { ...prev.profile, [field]: value } : null,
     }));
-    
+
     // Clear existing debounce timer for this field
     if (debounceTimers[field]) {
       clearTimeout(debounceTimers[field]);
     }
-    
+
     // Set new debounce timer
     const timer = setTimeout(() => {
       autoSaveProfile(field, value);
     }, 1000); // 1 second delay
-    
-    setDebounceTimers(prev => ({
+
+    setDebounceTimers((prev) => ({
       ...prev,
-      [field]: timer
+      [field]: timer,
     }));
   };
 
   const autoSaveProfile = async (field: string, value: string) => {
     if (!state.profile) return;
-    
+
     try {
-      setState(prev => ({ ...prev, autoSaving: true, error: null }));
-      
+      setState((prev) => ({ ...prev, autoSaving: true, error: null }));
+
       const updatedProfile = { ...state.profile, [field]: value };
       await userSettingsApi.updateProfile({
         first_name: updatedProfile.first_name,
         last_name: updatedProfile.last_name,
         phone: updatedProfile.phone,
         job_title: updatedProfile.job_title,
-        bio: updatedProfile.bio
+        bio: updatedProfile.bio,
       });
-      
-      setState(prev => ({ ...prev, autoSaving: false }));
+
+      setState((prev) => ({ ...prev, autoSaving: false }));
     } catch (error) {
       console.error('Failed to auto-save profile:', error);
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         error: 'Failed to save changes',
-        autoSaving: false
+        autoSaving: false,
       }));
     }
   };
 
   const updateSecurity = async (field: string, value: string | boolean) => {
     if (field === 'require_2fa') {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
-        settings: prev.settings ? { ...prev.settings, require_2fa: value as boolean } : null
+        settings: prev.settings ? { ...prev.settings, require_2fa: value as boolean } : null,
       }));
-      
+
       // Auto-save 2FA setting
       await autoSaveSettings('require_2fa', value as boolean);
     } else {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
-        security: { ...prev.security, [field]: value }
+        security: { ...prev.security, [field]: value },
       }));
     }
   };
 
   const updateNotifications = async (field: string, value: boolean) => {
     // Special handling for SMS notifications
-    if (field === 'sms_notifications' && value && (!state.profile?.phone || !state.profile.phone.trim())) {
-      setState(prev => ({ ...prev, error: 'SMS notifications require a phone number. Please add your phone number in your profile first.' }));
+    if (
+      field === 'sms_notifications' &&
+      value &&
+      (!state.profile?.phone || !state.profile.phone.trim())
+    ) {
+      setState((prev) => ({
+        ...prev,
+        error:
+          'SMS notifications require a phone number. Please add your phone number in your profile first.',
+      }));
       return;
     }
 
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       settings: prev.settings ? { ...prev.settings, [field]: value } : null,
-      error: null // Clear any previous errors
+      error: null, // Clear any previous errors
     }));
-    
+
     // Auto-save notification setting
     await autoSaveSettings(field, value);
   };
 
   const updatePreferences = async (field: string, value: string) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
-      settings: prev.settings ? { ...prev.settings, [field]: value } : null
+      settings: prev.settings ? { ...prev.settings, [field]: value } : null,
     }));
-    
+
     // Auto-save preference setting
     await autoSaveSettings(field, value);
   };
 
   const autoSaveSettings = async (field: string, value: string | boolean) => {
     if (!state.settings) return;
-    
+
     try {
-      setState(prev => ({ ...prev, autoSaving: true, error: null }));
-      
+      setState((prev) => ({ ...prev, autoSaving: true, error: null }));
+
       const updatedSettings = { ...state.settings, [field]: value };
       await userSettingsApi.updateSettings(updatedSettings);
-      
-      setState(prev => ({ ...prev, autoSaving: false }));
+
+      setState((prev) => ({ ...prev, autoSaving: false }));
     } catch (error) {
       console.error('Failed to auto-save settings:', error);
-      const errorMessage = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Failed to save changes';
-      setState(prev => ({
+      const errorMessage =
+        (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+        'Failed to save changes';
+      setState((prev) => ({
         ...prev,
         error: errorMessage,
         autoSaving: false,
         // If it was SMS notification and failed, revert the setting
-        settings: field === 'sms_notifications' && errorMessage.includes('phone number') 
-          ? { ...prev.settings!, sms_notifications: false }
-          : prev.settings
+        settings:
+          field === 'sms_notifications' && errorMessage.includes('phone number')
+            ? { ...prev.settings!, sms_notifications: false }
+            : prev.settings,
       }));
     }
   };
@@ -243,126 +254,125 @@ function SettingsPageContent() {
   // Calendar functions
   const handleConnectCalendar = async (provider: 'google' | 'outlook') => {
     try {
-      setCalendarState(prev => ({ ...prev, connecting: true, error: null }));
-      
-      const authResponse = provider === 'google' 
-        ? await calendarApi.getGoogleAuthUrl()
-        : await calendarApi.getOutlookAuthUrl();
-      
+      setCalendarState((prev) => ({ ...prev, connecting: true, error: null }));
+
+      const authResponse =
+        provider === 'google'
+          ? await calendarApi.getGoogleAuthUrl()
+          : await calendarApi.getOutlookAuthUrl();
+
       // Open auth URL in new window
       if (authResponse.data?.auth_url) {
         window.open(authResponse.data.auth_url, '_blank', 'width=500,height=600');
       } else {
         throw new Error('No auth URL received');
       }
-      
-      setCalendarState(prev => ({ ...prev, connecting: false }));
-      
+
+      setCalendarState((prev) => ({ ...prev, connecting: false }));
+
       // Refresh connections after a delay to allow for OAuth completion
       setTimeout(() => {
         loadCalendarConnections();
       }, 3000);
-      
     } catch (error) {
       console.error(`Failed to connect ${provider} calendar:`, error);
-      setCalendarState(prev => ({
+      setCalendarState((prev) => ({
         ...prev,
         error: `Failed to connect ${provider} calendar`,
-        connecting: false
+        connecting: false,
       }));
     }
   };
 
   const handleDisconnectCalendar = async (connectionId: number) => {
     try {
-      setCalendarState(prev => ({ ...prev, loading: true, error: null }));
+      setCalendarState((prev) => ({ ...prev, loading: true, error: null }));
       await calendarApi.deleteConnection(connectionId);
       await loadCalendarConnections();
     } catch (error) {
       console.error('Failed to disconnect calendar:', error);
-      setCalendarState(prev => ({
+      setCalendarState((prev) => ({
         ...prev,
         error: 'Failed to disconnect calendar',
-        loading: false
+        loading: false,
       }));
     }
   };
 
   const handleSyncCalendar = async (connectionId: number) => {
     try {
-      setCalendarState(prev => ({ ...prev, error: null }));
+      setCalendarState((prev) => ({ ...prev, error: null }));
       await calendarApi.syncCalendar(connectionId);
       await loadCalendarConnections();
     } catch (error) {
       console.error('Failed to sync calendar:', error);
-      setCalendarState(prev => ({
+      setCalendarState((prev) => ({
         ...prev,
-        error: 'Failed to sync calendar'
+        error: 'Failed to sync calendar',
       }));
     }
   };
 
   const handleUpdateConnection = async (connectionId: number, updates: Record<string, unknown>) => {
     try {
-      setCalendarState(prev => ({ ...prev, error: null }));
+      setCalendarState((prev) => ({ ...prev, error: null }));
       await calendarApi.updateConnection(connectionId, updates);
       await loadCalendarConnections();
     } catch (error) {
       console.error('Failed to update calendar connection:', error);
-      setCalendarState(prev => ({
+      setCalendarState((prev) => ({
         ...prev,
-        error: 'Failed to update calendar connection'
+        error: 'Failed to update calendar connection',
       }));
     }
   };
 
   const handlePasswordSave = async () => {
     const { current_password, new_password, confirm_password } = state.security;
-    
+
     // Validation
     if (!current_password || !new_password || !confirm_password) {
-      setState(prev => ({ ...prev, error: 'All password fields are required' }));
+      setState((prev) => ({ ...prev, error: 'All password fields are required' }));
       return;
     }
-    
+
     if (new_password !== confirm_password) {
-      setState(prev => ({ ...prev, error: 'New passwords do not match' }));
+      setState((prev) => ({ ...prev, error: 'New passwords do not match' }));
       return;
     }
-    
+
     if (new_password.length < 8) {
-      setState(prev => ({ ...prev, error: 'New password must be at least 8 characters' }));
+      setState((prev) => ({ ...prev, error: 'New password must be at least 8 characters' }));
       return;
     }
-    
+
     try {
-      setState(prev => ({ ...prev, passwordSaving: true, error: null }));
-      
+      setState((prev) => ({ ...prev, passwordSaving: true, error: null }));
+
       // TODO: Add password change API endpoint
       // await userSettingsApi.changePassword({
       //   current_password,
       //   new_password
       // });
-      
+
       // Clear password fields on success
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         passwordSaving: false,
         security: {
           current_password: '',
           new_password: '',
-          confirm_password: ''
-        }
+          confirm_password: '',
+        },
       }));
-      
+
       console.log('Password changed successfully');
-      
     } catch (error) {
       console.error('Failed to change password:', error);
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         error: 'Failed to change password',
-        passwordSaving: false
+        passwordSaving: false,
       }));
     }
   };
@@ -370,15 +380,32 @@ function SettingsPageContent() {
   const sections = [
     { id: 'account', name: 'Account', icon: User, description: 'Personal information and profile' },
     { id: 'security', name: 'Security', icon: Shield, description: 'Password and authentication' },
-    { id: 'notifications', name: 'Notifications', icon: Bell, description: 'Email, push, and SMS preferences' },
-    { id: 'calendar', name: 'Calendar', icon: Calendar, description: 'Calendar integrations and sync' },
-    { id: 'preferences', name: 'Preferences', icon: Globe, description: 'Theme, language, and display' }
+    {
+      id: 'notifications',
+      name: 'Notifications',
+      icon: Bell,
+      description: 'Email, push, and SMS preferences',
+    },
+    {
+      id: 'calendar',
+      name: 'Calendar',
+      icon: Calendar,
+      description: 'Calendar integrations and sync',
+    },
+    {
+      id: 'preferences',
+      name: 'Preferences',
+      icon: Globe,
+      description: 'Theme, language, and display',
+    },
   ];
 
   const renderAccountSection = () => (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Account Settings</h2>
+        <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+          Account Settings
+        </h2>
         <p style={{ color: 'var(--text-secondary)' }}>
           Update your personal information and profile details
         </p>
@@ -411,7 +438,7 @@ function SettingsPageContent() {
           onChange={(e) => updateProfile('phone', e.target.value)}
         />
       </div>
-      
+
       <Input
         label="Job Title"
         value={state.profile?.job_title || ''}
@@ -437,7 +464,9 @@ function SettingsPageContent() {
   const renderSecuritySection = () => (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Security Settings</h2>
+        <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+          Security Settings
+        </h2>
         <p style={{ color: 'var(--text-secondary)' }}>
           Manage your password and authentication settings
         </p>
@@ -447,7 +476,7 @@ function SettingsPageContent() {
         <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
           Change Password
         </h3>
-        
+
         <div className="space-y-4">
           <div>
             <Input
@@ -458,14 +487,18 @@ function SettingsPageContent() {
               rightIcon={
                 <button
                   type="button"
-                  onClick={() => setShowPasswords(prev => ({ ...prev, current: !prev.current }))}
+                  onClick={() => setShowPasswords((prev) => ({ ...prev, current: !prev.current }))}
                 >
-                  {showPasswords.current ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPasswords.current ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               }
             />
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
               label="New Password"
@@ -475,7 +508,7 @@ function SettingsPageContent() {
               rightIcon={
                 <button
                   type="button"
-                  onClick={() => setShowPasswords(prev => ({ ...prev, new: !prev.new }))}
+                  onClick={() => setShowPasswords((prev) => ({ ...prev, new: !prev.new }))}
                 >
                   {showPasswords.new ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -489,19 +522,34 @@ function SettingsPageContent() {
               rightIcon={
                 <button
                   type="button"
-                  onClick={() => setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))}
+                  onClick={() => setShowPasswords((prev) => ({ ...prev, confirm: !prev.confirm }))}
                 >
-                  {showPasswords.confirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPasswords.confirm ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               }
             />
           </div>
-          
+
           <div className="flex justify-end">
             <Button
               onClick={handlePasswordSave}
-              disabled={state.passwordSaving || !state.security.current_password || !state.security.new_password || !state.security.confirm_password}
-              leftIcon={state.passwordSaving ? <LoadingSpinner className="w-4 h-4" /> : <Save className="h-4 w-4" />}
+              disabled={
+                state.passwordSaving ||
+                !state.security.current_password ||
+                !state.security.new_password ||
+                !state.security.confirm_password
+              }
+              leftIcon={
+                state.passwordSaving ? (
+                  <LoadingSpinner className="w-4 h-4" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )
+              }
             >
               {state.passwordSaving ? 'Changing Password...' : 'Change Password'}
             </Button>
@@ -513,7 +561,7 @@ function SettingsPageContent() {
         <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
           Two-Factor Authentication
         </h3>
-        
+
         <div className="flex items-center justify-between">
           <div>
             <p className="font-medium" style={{ color: 'var(--text-primary)' }}>
@@ -535,7 +583,7 @@ function SettingsPageContent() {
             </span>
           </div>
         </div>
-        
+
         {state.settings?.require_2fa && (
           <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
             <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
@@ -554,7 +602,9 @@ function SettingsPageContent() {
   const renderNotificationsSection = () => (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Notification Settings</h2>
+        <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+          Notification Settings
+        </h2>
         <p style={{ color: 'var(--text-secondary)' }}>
           Choose how you want to receive notifications
         </p>
@@ -564,29 +614,61 @@ function SettingsPageContent() {
         <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
           Notification Channels
         </h3>
-        
+
         <div className="space-y-4">
           {[
-            { key: 'email_notifications', label: 'Email Notifications', icon: Mail, description: 'Receive notifications via email' },
-            { key: 'push_notifications', label: 'Push Notifications', icon: Bell, description: 'Browser push notifications' },
-            { key: 'sms_notifications', label: 'SMS Notifications', icon: Smartphone, description: 'Text message notifications' }
+            {
+              key: 'email_notifications',
+              label: 'Email Notifications',
+              icon: Mail,
+              description: 'Receive notifications via email',
+            },
+            {
+              key: 'push_notifications',
+              label: 'Push Notifications',
+              icon: Bell,
+              description: 'Browser push notifications',
+            },
+            {
+              key: 'sms_notifications',
+              label: 'SMS Notifications',
+              icon: Smartphone,
+              description: 'Text message notifications',
+            },
           ].map(({ key, label, icon: Icon, description }) => {
-            const isSmsWithoutPhone = key === 'sms_notifications' && (!state.profile?.phone || !state.profile.phone.trim());
-            const displayDescription = isSmsWithoutPhone 
-              ? 'Requires phone number (add in profile first)' 
+            const isSmsWithoutPhone =
+              key === 'sms_notifications' && (!state.profile?.phone || !state.profile.phone.trim());
+            const displayDescription = isSmsWithoutPhone
+              ? 'Requires phone number (add in profile first)'
               : description;
-            
+
             return (
-              <div key={key} className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700 last:border-b-0">
+              <div
+                key={key}
+                className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700 last:border-b-0"
+              >
                 <div className="flex items-center gap-3">
-                  <Icon className={`h-5 w-5 ${isSmsWithoutPhone ? 'opacity-50' : ''}`} style={{ color: 'var(--text-muted)' }} />
+                  <Icon
+                    className={`h-5 w-5 ${isSmsWithoutPhone ? 'opacity-50' : ''}`}
+                    style={{ color: 'var(--text-muted)' }}
+                  />
                   <div>
-                    <p className={`font-medium ${isSmsWithoutPhone ? 'opacity-50' : ''}`} style={{ color: 'var(--text-primary)' }}>{label}</p>
-                    <p className={`text-sm ${isSmsWithoutPhone ? 'opacity-50 text-orange-600 dark:text-orange-400' : ''}`} style={{ color: isSmsWithoutPhone ? undefined : 'var(--text-secondary)' }}>{displayDescription}</p>
+                    <p
+                      className={`font-medium ${isSmsWithoutPhone ? 'opacity-50' : ''}`}
+                      style={{ color: 'var(--text-primary)' }}
+                    >
+                      {label}
+                    </p>
+                    <p
+                      className={`text-sm ${isSmsWithoutPhone ? 'opacity-50 text-orange-600 dark:text-orange-400' : ''}`}
+                      style={{ color: isSmsWithoutPhone ? undefined : 'var(--text-secondary)' }}
+                    >
+                      {displayDescription}
+                    </p>
                   </div>
                 </div>
                 <Toggle
-                  checked={state.settings?.[key as keyof UserSettings] as boolean || false}
+                  checked={(state.settings?.[key as keyof UserSettings] as boolean) || false}
                   onChange={(checked) => updateNotifications(key, checked)}
                   disabled={isSmsWithoutPhone}
                   size="md"
@@ -601,20 +683,39 @@ function SettingsPageContent() {
         <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
           Event Notifications
         </h3>
-        
+
         <div className="space-y-4">
           {[
-            { key: 'interview_reminders', label: 'Interview Reminders', description: 'Get notified before scheduled interviews' },
-            { key: 'application_updates', label: 'Application Updates', description: 'Updates on job applications and status changes' },
-            { key: 'message_notifications', label: 'New Messages', description: 'Notifications for new messages and conversations' }
+            {
+              key: 'interview_reminders',
+              label: 'Interview Reminders',
+              description: 'Get notified before scheduled interviews',
+            },
+            {
+              key: 'application_updates',
+              label: 'Application Updates',
+              description: 'Updates on job applications and status changes',
+            },
+            {
+              key: 'message_notifications',
+              label: 'New Messages',
+              description: 'Notifications for new messages and conversations',
+            },
           ].map(({ key, label, description }) => (
-            <div key={key} className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700 last:border-b-0">
+            <div
+              key={key}
+              className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700 last:border-b-0"
+            >
               <div>
-                <p className="font-medium" style={{ color: 'var(--text-primary)' }}>{label}</p>
-                <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{description}</p>
+                <p className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                  {label}
+                </p>
+                <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                  {description}
+                </p>
               </div>
               <Toggle
-                checked={state.settings?.[key as keyof UserSettings] as boolean || false}
+                checked={(state.settings?.[key as keyof UserSettings] as boolean) || false}
                 onChange={(checked) => updateNotifications(key, checked)}
                 size="md"
               />
@@ -628,21 +729,25 @@ function SettingsPageContent() {
   const renderPreferencesSection = () => (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Preferences</h2>
+        <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+          Preferences
+        </h2>
         <p style={{ color: 'var(--text-secondary)' }}>
           Customize your experience and display settings
         </p>
       </div>
 
-
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
           Localization
         </h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+            <label
+              className="block text-sm font-medium mb-2"
+              style={{ color: 'var(--text-primary)' }}
+            >
               Language
             </label>
             <select
@@ -654,7 +759,7 @@ function SettingsPageContent() {
                 backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                 backgroundPosition: 'right 12px center',
                 backgroundRepeat: 'no-repeat',
-                backgroundSize: '16px'
+                backgroundSize: '16px',
               }}
             >
               <option value="en">English</option>
@@ -664,9 +769,12 @@ function SettingsPageContent() {
               <option value="ja">Japanese</option>
             </select>
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+            <label
+              className="block text-sm font-medium mb-2"
+              style={{ color: 'var(--text-primary)' }}
+            >
               Timezone
             </label>
             <select
@@ -678,7 +786,7 @@ function SettingsPageContent() {
                 backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                 backgroundPosition: 'right 12px center',
                 backgroundRepeat: 'no-repeat',
-                backgroundSize: '16px'
+                backgroundSize: '16px',
               }}
             >
               <option value="America/New_York">Eastern Time (ET)</option>
@@ -690,9 +798,12 @@ function SettingsPageContent() {
             </select>
           </div>
         </div>
-        
+
         <div className="mt-4">
-          <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+          <label
+            className="block text-sm font-medium mb-2"
+            style={{ color: 'var(--text-primary)' }}
+          >
             Date Format
           </label>
           <select
@@ -704,7 +815,7 @@ function SettingsPageContent() {
               backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
               backgroundPosition: 'right 12px center',
               backgroundRepeat: 'no-repeat',
-              backgroundSize: '16px'
+              backgroundSize: '16px',
             }}
           >
             <option value="MM/DD/YYYY">MM/DD/YYYY</option>
@@ -719,7 +830,9 @@ function SettingsPageContent() {
   const renderCalendarSection = () => (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Calendar Integration</h2>
+        <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+          Calendar Integration
+        </h2>
         <p style={{ color: 'var(--text-secondary)' }}>
           Connect your Google Calendar or Outlook Calendar to sync events and meetings
         </p>
@@ -739,7 +852,7 @@ function SettingsPageContent() {
         <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
           Connected Calendars
         </h3>
-        
+
         {calendarState.loading ? (
           <div className="flex items-center justify-center py-8">
             <LoadingSpinner className="w-6 h-6" />
@@ -747,21 +860,32 @@ function SettingsPageContent() {
         ) : calendarState.connections.length > 0 ? (
           <div className="space-y-4">
             {calendarState.connections.map((connection) => (
-              <div key={connection.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+              <div
+                key={connection.id}
+                className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className={`w-3 h-3 rounded-full ${
-                      connection.status === 'connected' ? 'bg-green-500' :
-                      connection.status === 'error' ? 'bg-red-500' :
-                      connection.status === 'expired' ? 'bg-yellow-500' :
-                      'bg-gray-400'
-                    }`} />
+                    <div
+                      className={`w-3 h-3 rounded-full ${
+                        connection.status === 'connected'
+                          ? 'bg-green-500'
+                          : connection.status === 'error'
+                            ? 'bg-red-500'
+                            : connection.status === 'expired'
+                              ? 'bg-yellow-500'
+                              : 'bg-gray-400'
+                      }`}
+                    />
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
                           {connection.display_name || connection.provider_email}
                         </span>
-                        <span className="text-sm px-2 py-1 rounded-md bg-gray-100 dark:bg-gray-800" style={{ color: 'var(--text-secondary)' }}>
+                        <span
+                          className="text-sm px-2 py-1 rounded-md bg-gray-100 dark:bg-gray-800"
+                          style={{ color: 'var(--text-secondary)' }}
+                        >
                           {connection.provider}
                         </span>
                       </div>
@@ -780,7 +904,7 @@ function SettingsPageContent() {
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
@@ -802,7 +926,7 @@ function SettingsPageContent() {
                     </Button>
                   </div>
                 </div>
-                
+
                 {/* Connection Settings */}
                 <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                   <h4 className="text-sm font-medium mb-3" style={{ color: 'var(--text-primary)' }}>
@@ -815,7 +939,9 @@ function SettingsPageContent() {
                       </label>
                       <Toggle
                         checked={connection.sync_events}
-                        onChange={(checked) => handleUpdateConnection(connection.id, { sync_events: checked })}
+                        onChange={(checked) =>
+                          handleUpdateConnection(connection.id, { sync_events: checked })
+                        }
                         size="sm"
                       />
                     </div>
@@ -825,7 +951,9 @@ function SettingsPageContent() {
                       </label>
                       <Toggle
                         checked={connection.sync_reminders}
-                        onChange={(checked) => handleUpdateConnection(connection.id, { sync_reminders: checked })}
+                        onChange={(checked) =>
+                          handleUpdateConnection(connection.id, { sync_reminders: checked })
+                        }
                         size="sm"
                       />
                     </div>
@@ -835,7 +963,9 @@ function SettingsPageContent() {
                       </label>
                       <Toggle
                         checked={connection.auto_create_meetings}
-                        onChange={(checked) => handleUpdateConnection(connection.id, { auto_create_meetings: checked })}
+                        onChange={(checked) =>
+                          handleUpdateConnection(connection.id, { auto_create_meetings: checked })
+                        }
                         size="sm"
                       />
                     </div>
@@ -845,7 +975,9 @@ function SettingsPageContent() {
                       </label>
                       <Toggle
                         checked={connection.is_enabled}
-                        onChange={(checked) => handleUpdateConnection(connection.id, { is_enabled: checked })}
+                        onChange={(checked) =>
+                          handleUpdateConnection(connection.id, { is_enabled: checked })
+                        }
                         size="sm"
                       />
                     </div>
@@ -872,7 +1004,7 @@ function SettingsPageContent() {
         <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
           Connect Calendar
         </h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Button
             onClick={() => handleConnectCalendar('google')}
@@ -918,7 +1050,7 @@ function SettingsPageContent() {
             )}
           </Button>
         </div>
-        
+
         <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
           <div className="flex items-start gap-2">
             <CheckCircle className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5" />
@@ -972,11 +1104,9 @@ function SettingsPageContent() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div></div>
-          
+
           <div className="flex items-center gap-4">
-            {state.error && (
-              <p className="text-red-600 text-sm">{state.error}</p>
-            )}
+            {state.error && <p className="text-red-600 text-sm">{state.error}</p>}
             {state.autoSaving && (
               <div className="flex items-center gap-2 text-green-600 text-sm">
                 <LoadingSpinner className="w-4 h-4" />
@@ -992,11 +1122,21 @@ function SettingsPageContent() {
             {sections.map((section) => {
               const IconComponent = section.icon;
               const isActive = state.activeSection === section.id;
-              
+
               return (
                 <button
                   key={section.id}
-                  onClick={() => setState(prev => ({ ...prev, activeSection: section.id as 'account' | 'security' | 'notifications' | 'calendar' | 'preferences' }))}
+                  onClick={() =>
+                    setState((prev) => ({
+                      ...prev,
+                      activeSection: section.id as
+                        | 'account'
+                        | 'security'
+                        | 'notifications'
+                        | 'calendar'
+                        | 'preferences',
+                    }))
+                  }
                   className={`w-full text-left p-3 rounded-lg transition-colors flex items-center gap-3 ${
                     isActive
                       ? 'bg-brand-primary text-white'
@@ -1017,9 +1157,7 @@ function SettingsPageContent() {
 
           {/* Main Content */}
           <div className="lg:col-span-3">
-            <Card className="p-8">
-              {renderCurrentSection()}
-            </Card>
+            <Card className="p-8">{renderCurrentSection()}</Card>
           </div>
         </div>
       </div>

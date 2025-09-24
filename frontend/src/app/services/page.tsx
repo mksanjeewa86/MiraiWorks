@@ -5,76 +5,82 @@ export default function ServicesPage() {
   const services = [
     {
       title: 'Job Matching Platform',
-      description: 'Our AI-powered platform connects job seekers with relevant opportunities based on skills, experience, and preferences.',
+      description:
+        'Our AI-powered platform connects job seekers with relevant opportunities based on skills, experience, and preferences.',
       features: [
         'Smart job recommendations',
         'Skills-based matching',
         'Preference filtering',
-        'Real-time notifications'
+        'Real-time notifications',
       ],
       icon: '🎯',
-      category: 'For Job Seekers'
+      category: 'For Job Seekers',
     },
     {
       title: 'Talent Acquisition',
-      description: 'Help companies find, attract, and hire the best talent with our comprehensive recruitment solutions.',
+      description:
+        'Help companies find, attract, and hire the best talent with our comprehensive recruitment solutions.',
       features: [
         'Candidate sourcing',
         'Advanced filtering',
         'Interview scheduling',
-        'Applicant tracking'
+        'Applicant tracking',
       ],
       icon: '🏢',
-      category: 'For Employers'
+      category: 'For Employers',
     },
     {
       title: 'Resume Builder',
-      description: 'Create professional resumes with our intuitive builder featuring multiple templates and industry-specific guidance.',
+      description:
+        'Create professional resumes with our intuitive builder featuring multiple templates and industry-specific guidance.',
       features: [
         'Multiple templates',
         'ATS-friendly formats',
         'Industry recommendations',
-        'Real-time preview'
+        'Real-time preview',
       ],
       icon: '📄',
-      category: 'For Job Seekers'
+      category: 'For Job Seekers',
     },
     {
       title: 'Interview Management',
-      description: 'Streamline your interview process with scheduling tools, video interviews, and candidate evaluation features.',
+      description:
+        'Streamline your interview process with scheduling tools, video interviews, and candidate evaluation features.',
       features: [
         'Calendar integration',
         'Video interviewing',
         'Candidate scoring',
-        'Interview feedback'
+        'Interview feedback',
       ],
       icon: '🎤',
-      category: 'For Employers'
+      category: 'For Employers',
     },
     {
       title: 'Career Coaching',
-      description: 'Professional career guidance to help job seekers navigate their career path and achieve their goals.',
+      description:
+        'Professional career guidance to help job seekers navigate their career path and achieve their goals.',
       features: [
         '1-on-1 coaching sessions',
         'Career path planning',
         'Skill development',
-        'Interview preparation'
+        'Interview preparation',
       ],
       icon: '🎓',
-      category: 'Premium Service'
+      category: 'Premium Service',
     },
     {
       title: 'Company Branding',
-      description: 'Build your employer brand and attract top talent with our comprehensive branding and recruitment marketing services.',
+      description:
+        'Build your employer brand and attract top talent with our comprehensive branding and recruitment marketing services.',
       features: [
         'Company profile optimization',
         'Recruitment marketing',
         'Employee testimonials',
-        'Social media presence'
+        'Social media presence',
       ],
       icon: '🚀',
-      category: 'For Employers'
-    }
+      category: 'For Employers',
+    },
   ];
 
   const pricingPlans = [
@@ -87,10 +93,10 @@ export default function ServicesPage() {
         'Resume builder',
         'Job alerts',
         'Basic profile',
-        'Mobile app access'
+        'Mobile app access',
       ],
       cta: 'Get Started',
-      popular: false
+      popular: false,
     },
     {
       name: 'Professional',
@@ -101,10 +107,10 @@ export default function ServicesPage() {
         'Priority job matching',
         'Advanced analytics',
         'Career coaching session',
-        'Premium templates'
+        'Premium templates',
       ],
       cta: 'Upgrade Now',
-      popular: true
+      popular: true,
     },
     {
       name: 'Enterprise',
@@ -115,11 +121,11 @@ export default function ServicesPage() {
         'Dedicated support',
         'Advanced analytics',
         'Custom branding',
-        'API access'
+        'API access',
       ],
       cta: 'Contact Sales',
-      popular: false
-    }
+      popular: false,
+    },
   ];
 
   return (
@@ -145,8 +151,8 @@ export default function ServicesPage() {
               </span>
             </h1>
             <p className="text-xl md:text-2xl text-purple-100 max-w-4xl mx-auto leading-relaxed">
-              Advanced recruitment technology designed to connect exceptional talent with opportunity
-              and help organizations build world-class teams.
+              Advanced recruitment technology designed to connect exceptional talent with
+              opportunity and help organizations build world-class teams.
             </p>
           </div>
         </div>
@@ -190,8 +196,16 @@ export default function ServicesPage() {
                     {service.features.map((feature, featureIndex) => (
                       <li key={featureIndex} className="flex items-center text-sm text-gray-600">
                         <div className="w-5 h-5 bg-gradient-to-r from-green-400 to-blue-400 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                          <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          <svg
+                            className="w-3 h-3 text-white"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                         </div>
                         {feature}
@@ -204,8 +218,18 @@ export default function ServicesPage() {
                     className="group/btn block w-full text-center px-6 py-4 font-bold rounded-2xl text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg"
                   >
                     Learn More
-                    <svg className="inline-block ml-2 w-4 h-4 group-hover/btn:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    <svg
+                      className="inline-block ml-2 w-4 h-4 group-hover/btn:translate-x-1 transition-transform"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M17 8l4 4m0 0l-4 4m4-4H3"
+                      />
                     </svg>
                   </Link>
                 </div>
@@ -239,7 +263,9 @@ export default function ServicesPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
             {/* For Job Seekers */}
             <div>
-              <h3 className="text-3xl font-bold text-white mb-8 text-center bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">For Job Seekers</h3>
+              <h3 className="text-3xl font-bold text-white mb-8 text-center bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                For Job Seekers
+              </h3>
               <div className="space-y-6">
                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 hover:bg-white/20 transition-all duration-300 group">
                   <div className="flex items-start gap-4">
@@ -247,8 +273,13 @@ export default function ServicesPage() {
                       1
                     </div>
                     <div>
-                      <h4 className="text-xl font-semibold text-white mb-2 group-hover:text-blue-200 transition-colors">Create Your Profile</h4>
-                      <p className="text-purple-200 leading-relaxed">Build a comprehensive profile showcasing your skills, experience, and career goals.</p>
+                      <h4 className="text-xl font-semibold text-white mb-2 group-hover:text-blue-200 transition-colors">
+                        Create Your Profile
+                      </h4>
+                      <p className="text-purple-200 leading-relaxed">
+                        Build a comprehensive profile showcasing your skills, experience, and career
+                        goals.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -259,8 +290,13 @@ export default function ServicesPage() {
                       2
                     </div>
                     <div>
-                      <h4 className="text-xl font-semibold text-white mb-2 group-hover:text-purple-200 transition-colors">Get Matched</h4>
-                      <p className="text-purple-200 leading-relaxed">Our AI analyzes your profile and matches you with relevant job opportunities.</p>
+                      <h4 className="text-xl font-semibold text-white mb-2 group-hover:text-purple-200 transition-colors">
+                        Get Matched
+                      </h4>
+                      <p className="text-purple-200 leading-relaxed">
+                        Our AI analyzes your profile and matches you with relevant job
+                        opportunities.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -271,8 +307,12 @@ export default function ServicesPage() {
                       3
                     </div>
                     <div>
-                      <h4 className="text-xl font-semibold text-white mb-2 group-hover:text-green-200 transition-colors">Apply & Interview</h4>
-                      <p className="text-purple-200 leading-relaxed">Apply to jobs with one click and schedule interviews through our platform.</p>
+                      <h4 className="text-xl font-semibold text-white mb-2 group-hover:text-green-200 transition-colors">
+                        Apply & Interview
+                      </h4>
+                      <p className="text-purple-200 leading-relaxed">
+                        Apply to jobs with one click and schedule interviews through our platform.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -283,8 +323,12 @@ export default function ServicesPage() {
                       4
                     </div>
                     <div>
-                      <h4 className="text-xl font-semibold text-white mb-2 group-hover:text-yellow-200 transition-colors">Land Your Dream Job</h4>
-                      <p className="text-purple-200 leading-relaxed">Get hired and start your new career journey with ongoing support.</p>
+                      <h4 className="text-xl font-semibold text-white mb-2 group-hover:text-yellow-200 transition-colors">
+                        Land Your Dream Job
+                      </h4>
+                      <p className="text-purple-200 leading-relaxed">
+                        Get hired and start your new career journey with ongoing support.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -293,7 +337,9 @@ export default function ServicesPage() {
 
             {/* For Employers */}
             <div>
-              <h3 className="text-3xl font-bold text-white mb-8 text-center bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">For Employers</h3>
+              <h3 className="text-3xl font-bold text-white mb-8 text-center bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                For Employers
+              </h3>
               <div className="space-y-6">
                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 hover:bg-white/20 transition-all duration-300 group">
                   <div className="flex items-start gap-4">
@@ -301,8 +347,13 @@ export default function ServicesPage() {
                       1
                     </div>
                     <div>
-                      <h4 className="text-xl font-semibold text-white mb-2 group-hover:text-indigo-200 transition-colors">Post Your Job</h4>
-                      <p className="text-purple-200 leading-relaxed">Create detailed job postings with requirements, benefits, and company culture.</p>
+                      <h4 className="text-xl font-semibold text-white mb-2 group-hover:text-indigo-200 transition-colors">
+                        Post Your Job
+                      </h4>
+                      <p className="text-purple-200 leading-relaxed">
+                        Create detailed job postings with requirements, benefits, and company
+                        culture.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -313,8 +364,12 @@ export default function ServicesPage() {
                       2
                     </div>
                     <div>
-                      <h4 className="text-xl font-semibold text-white mb-2 group-hover:text-pink-200 transition-colors">Review Applications</h4>
-                      <p className="text-purple-200 leading-relaxed">Use our filtering tools to find candidates that match your requirements.</p>
+                      <h4 className="text-xl font-semibold text-white mb-2 group-hover:text-pink-200 transition-colors">
+                        Review Applications
+                      </h4>
+                      <p className="text-purple-200 leading-relaxed">
+                        Use our filtering tools to find candidates that match your requirements.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -325,8 +380,12 @@ export default function ServicesPage() {
                       3
                     </div>
                     <div>
-                      <h4 className="text-xl font-semibold text-white mb-2 group-hover:text-cyan-200 transition-colors">Schedule Interviews</h4>
-                      <p className="text-purple-200 leading-relaxed">Coordinate interviews with integrated calendar and video conferencing tools.</p>
+                      <h4 className="text-xl font-semibold text-white mb-2 group-hover:text-cyan-200 transition-colors">
+                        Schedule Interviews
+                      </h4>
+                      <p className="text-purple-200 leading-relaxed">
+                        Coordinate interviews with integrated calendar and video conferencing tools.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -337,8 +396,12 @@ export default function ServicesPage() {
                       4
                     </div>
                     <div>
-                      <h4 className="text-xl font-semibold text-white mb-2 group-hover:text-emerald-200 transition-colors">Make Great Hires</h4>
-                      <p className="text-purple-200 leading-relaxed">Extend offers and onboard your new team members seamlessly.</p>
+                      <h4 className="text-xl font-semibold text-white mb-2 group-hover:text-emerald-200 transition-colors">
+                        Make Great Hires
+                      </h4>
+                      <p className="text-purple-200 leading-relaxed">
+                        Extend offers and onboard your new team members seamlessly.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -369,17 +432,21 @@ export default function ServicesPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {pricingPlans.map((plan, index) => (
               <div key={index} className="group relative">
-                <div className={`absolute inset-0 rounded-3xl blur-lg opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200 ${
-                  plan.popular
-                    ? 'bg-gradient-to-r from-purple-400 to-pink-400'
-                    : 'bg-gradient-to-r from-blue-400 to-cyan-400'
-                }`}></div>
+                <div
+                  className={`absolute inset-0 rounded-3xl blur-lg opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200 ${
+                    plan.popular
+                      ? 'bg-gradient-to-r from-purple-400 to-pink-400'
+                      : 'bg-gradient-to-r from-blue-400 to-cyan-400'
+                  }`}
+                ></div>
 
-                <div className={`relative rounded-3xl overflow-hidden shadow-xl border transition-all duration-500 transform group-hover:-translate-y-2 ${
-                  plan.popular
-                    ? 'border-purple-200 ring-2 ring-purple-400 bg-gradient-to-br from-white to-purple-50'
-                    : 'border-gray-100 bg-white hover:shadow-2xl'
-                }`}>
+                <div
+                  className={`relative rounded-3xl overflow-hidden shadow-xl border transition-all duration-500 transform group-hover:-translate-y-2 ${
+                    plan.popular
+                      ? 'border-purple-200 ring-2 ring-purple-400 bg-gradient-to-br from-white to-purple-50'
+                      : 'border-gray-100 bg-white hover:shadow-2xl'
+                  }`}
+                >
                   {plan.popular && (
                     <div className="absolute top-0 right-0 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-2 text-sm font-bold rounded-bl-2xl">
                       Most Popular
@@ -390,11 +457,13 @@ export default function ServicesPage() {
                     <div className="text-center mb-8">
                       <h3 className="text-3xl font-bold text-gray-900 mb-2">{plan.name}</h3>
                       <div className="mb-4">
-                        <span className={`text-5xl font-bold ${
-                          plan.popular
-                            ? 'bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent'
-                            : 'text-gray-900'
-                        }`}>
+                        <span
+                          className={`text-5xl font-bold ${
+                            plan.popular
+                              ? 'bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent'
+                              : 'text-gray-900'
+                          }`}
+                        >
                           {plan.price}
                         </span>
                         {plan.price !== 'Free' && plan.price !== 'Custom' && (
@@ -408,8 +477,16 @@ export default function ServicesPage() {
                       {plan.features.map((feature, featureIndex) => (
                         <li key={featureIndex} className="flex items-center text-gray-700">
                           <div className="w-6 h-6 bg-gradient-to-r from-green-400 to-blue-400 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            <svg
+                              className="w-4 h-4 text-white"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clipRule="evenodd"
+                              />
                             </svg>
                           </div>
                           {feature}
@@ -426,8 +503,18 @@ export default function ServicesPage() {
                       }`}
                     >
                       {plan.cta}
-                      <svg className="inline-block ml-2 w-4 h-4 group-hover/btn:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      <svg
+                        className="inline-block ml-2 w-4 h-4 group-hover/btn:translate-x-1 transition-transform"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M17 8l4 4m0 0l-4 4m4-4H3"
+                        />
                       </svg>
                     </Link>
                   </div>
@@ -456,8 +543,8 @@ export default function ServicesPage() {
               </span>
             </h2>
             <p className="text-xl text-purple-100 mb-12 leading-relaxed">
-              Join thousands of companies and job seekers who trust MiraiWorks for their career success.
-              Experience the future of recruitment today.
+              Join thousands of companies and job seekers who trust MiraiWorks for their career
+              success. Experience the future of recruitment today.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <Link
@@ -465,8 +552,18 @@ export default function ServicesPage() {
                 className="group inline-flex items-center px-10 py-5 text-xl font-bold rounded-2xl text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-xl"
               >
                 Get Started Today
-                <svg className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                <svg
+                  className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M17 8l4 4m0 0l-4 4m4-4H3"
+                  />
                 </svg>
               </Link>
               <Link

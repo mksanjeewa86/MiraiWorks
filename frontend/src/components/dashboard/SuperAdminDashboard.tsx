@@ -1,23 +1,23 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { dashboardApi } from "@/api/dashboard";
+import { dashboardApi } from '@/api/dashboard';
 import Card from '@/components/ui/card';
 import Badge from '@/components/ui/badge';
 import LoadingSpinner from '@/components/ui/loading-spinner';
 import Button from '@/components/ui/button';
-import { 
-  Building2, 
-  Users, 
-  Activity, 
-  Shield, 
-  Database, 
-  Server, 
+import {
+  Building2,
+  Users,
+  Activity,
+  Shield,
+  Database,
+  Server,
   AlertTriangle,
   TrendingUp,
   BarChart3,
   Settings,
-  UserCog
+  UserCog,
 } from 'lucide-react';
 import { SuperAdminStats } from '@/types/dashboard';
 
@@ -71,7 +71,7 @@ export default function SuperAdminDashboard() {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 
@@ -87,7 +87,9 @@ export default function SuperAdminDashboard() {
     return (
       <div className="p-6">
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-          <h2 className="text-lg font-semibold text-red-800 dark:text-red-200">Error Loading Dashboard</h2>
+          <h2 className="text-lg font-semibold text-red-800 dark:text-red-200">
+            Error Loading Dashboard
+          </h2>
           <p className="text-red-600 dark:text-red-400 mt-2">{error}</p>
           <Button onClick={loadDashboardData} className="mt-4">
             Try Again
@@ -104,10 +106,17 @@ export default function SuperAdminDashboard() {
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Total Companies</p>
-              <p className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>{stats?.total_companies || 0}</p>
+              <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+                Total Companies
+              </p>
+              <p className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                {stats?.total_companies || 0}
+              </p>
             </div>
-            <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)' }}>
+            <div
+              className="w-12 h-12 rounded-lg flex items-center justify-center"
+              style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)' }}
+            >
               <Building2 className="h-6 w-6 text-green-600" />
             </div>
           </div>
@@ -116,10 +125,17 @@ export default function SuperAdminDashboard() {
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Total Users</p>
-              <p className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>{stats?.total_users || 0}</p>
+              <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+                Total Users
+              </p>
+              <p className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                {stats?.total_users || 0}
+              </p>
             </div>
-            <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }}>
+            <div
+              className="w-12 h-12 rounded-lg flex items-center justify-center"
+              style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }}
+            >
               <Users className="h-6 w-6 text-blue-600" />
             </div>
           </div>
@@ -128,10 +144,17 @@ export default function SuperAdminDashboard() {
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Total Positions</p>
-              <p className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>{stats?.total_positions || 0}</p>
+              <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+                Total Positions
+              </p>
+              <p className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                {stats?.total_positions || 0}
+              </p>
             </div>
-            <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(168, 85, 247, 0.1)' }}>
+            <div
+              className="w-12 h-12 rounded-lg flex items-center justify-center"
+              style={{ backgroundColor: 'rgba(168, 85, 247, 0.1)' }}
+            >
               <BarChart3 className="h-6 w-6 text-purple-600" />
             </div>
           </div>
@@ -140,10 +163,17 @@ export default function SuperAdminDashboard() {
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Total Applications</p>
-              <p className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>{stats?.total_applications || 0}</p>
+              <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+                Total Applications
+              </p>
+              <p className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                {stats?.total_applications || 0}
+              </p>
             </div>
-            <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(251, 146, 60, 0.1)' }}>
+            <div
+              className="w-12 h-12 rounded-lg flex items-center justify-center"
+              style={{ backgroundColor: 'rgba(251, 146, 60, 0.1)' }}
+            >
               <TrendingUp className="h-6 w-6 text-orange-600" />
             </div>
           </div>
@@ -153,7 +183,9 @@ export default function SuperAdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* System Health */}
         <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>System Health</h3>
+          <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+            System Health
+          </h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
@@ -196,7 +228,9 @@ export default function SuperAdminDashboard() {
 
         {/* Platform Metrics */}
         <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Platform Metrics</h3>
+          <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+            Platform Metrics
+          </h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span>Daily Signups</span>
@@ -228,14 +262,17 @@ export default function SuperAdminDashboard() {
 
       {/* Recent System Logs */}
       <Card className="p-6 mb-8">
-        <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Recent System Logs</h3>
+        <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+          Recent System Logs
+        </h3>
         <div className="space-y-3">
           {stats?.recent_system_logs?.length ? (
             stats.recent_system_logs.slice(0, 6).map((log) => (
-              <div key={log.id} className="flex items-start space-x-3 py-3 border-b border-gray-100 dark:border-gray-800 last:border-b-0">
-                <div className="flex-shrink-0 mt-1">
-                  {getLogIcon(log.level)}
-                </div>
+              <div
+                key={log.id}
+                className="flex items-start space-x-3 py-3 border-b border-gray-100 dark:border-gray-800 last:border-b-0"
+              >
+                <div className="flex-shrink-0 mt-1">{getLogIcon(log.level)}</div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
                     {log.message}
@@ -244,7 +281,15 @@ export default function SuperAdminDashboard() {
                     {log.source} • {formatDate(log.timestamp)}
                   </p>
                 </div>
-                <Badge variant={log.level === 'error' ? 'error' : log.level === 'warning' ? 'warning' : 'secondary'}>
+                <Badge
+                  variant={
+                    log.level === 'error'
+                      ? 'error'
+                      : log.level === 'warning'
+                        ? 'warning'
+                        : 'secondary'
+                  }
+                >
                   {log.level}
                 </Badge>
               </div>
@@ -260,7 +305,9 @@ export default function SuperAdminDashboard() {
 
       {/* Quick Actions */}
       <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Quick Actions</h3>
+        <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+          Quick Actions
+        </h3>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Button className="flex items-center justify-center gap-2 p-4">
             <Building2 className="h-4 w-4" />

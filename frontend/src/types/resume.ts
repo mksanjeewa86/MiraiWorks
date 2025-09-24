@@ -6,41 +6,41 @@
 // ============================================================================
 
 export enum ResumeStatus {
-  DRAFT = "draft",
-  PUBLISHED = "published", 
-  ARCHIVED = "archived",
+  DRAFT = 'draft',
+  PUBLISHED = 'published',
+  ARCHIVED = 'archived',
 }
 
 export enum ResumeVisibility {
-  PRIVATE = "private",
-  PUBLIC = "public",
-  UNLISTED = "unlisted",
+  PRIVATE = 'private',
+  PUBLIC = 'public',
+  UNLISTED = 'unlisted',
 }
 
 export enum ResumeFormat {
-  RIREKISHO = "rirekisho",           // 履歴書 - Traditional Japanese resume
-  SHOKUMU_KEIREKISHO = "shokumu_keirekisho", // 職務経歴書 - Career history
-  INTERNATIONAL = "international",    // Standard international resume
-  MODERN = "modern",                 // Modern format
-  CREATIVE = "creative",             // Creative format
+  RIREKISHO = 'rirekisho', // 履歴書 - Traditional Japanese resume
+  SHOKUMU_KEIREKISHO = 'shokumu_keirekisho', // 職務経歴書 - Career history
+  INTERNATIONAL = 'international', // Standard international resume
+  MODERN = 'modern', // Modern format
+  CREATIVE = 'creative', // Creative format
 }
 
 export enum ResumeLanguage {
-  JAPANESE = "ja",
-  ENGLISH = "en", 
-  BILINGUAL = "bilingual",
+  JAPANESE = 'ja',
+  ENGLISH = 'en',
+  BILINGUAL = 'bilingual',
 }
 
 export enum SectionType {
-  SUMMARY = "summary",
-  EXPERIENCE = "experience",
-  EDUCATION = "education",
-  SKILLS = "skills",
-  PROJECTS = "projects",
-  CERTIFICATIONS = "certifications",
-  LANGUAGES = "languages",
-  REFERENCES = "references",
-  CUSTOM = "custom",
+  SUMMARY = 'summary',
+  EXPERIENCE = 'experience',
+  EDUCATION = 'education',
+  SKILLS = 'skills',
+  PROJECTS = 'projects',
+  CERTIFICATIONS = 'certifications',
+  LANGUAGES = 'languages',
+  REFERENCES = 'references',
+  CUSTOM = 'custom',
 }
 
 // ============================================================================
@@ -50,11 +50,11 @@ export enum SectionType {
 export interface Resume {
   id: number;
   user_id: number;
-  
+
   // Basic info
   title: string;
   description?: string;
-  
+
   // Personal information
   full_name?: string;
   email?: string;
@@ -63,11 +63,11 @@ export interface Resume {
   website?: string;
   linkedin_url?: string;
   github_url?: string;
-  
+
   // Professional summary
   professional_summary?: string;
   objective?: string;
-  
+
   // Template and styling
   template_id: string;
   resume_format: ResumeFormat;
@@ -75,21 +75,21 @@ export interface Resume {
   theme_color: string;
   font_family: string;
   custom_css?: string;
-  
+
   // Japanese-specific fields
-  furigana_name?: string;     // フリガナ
-  birth_date?: string;        // 生年月日
-  gender?: string;            // 性別
-  nationality?: string;       // 国籍
-  marital_status?: string;    // 婚姻状況
+  furigana_name?: string; // フリガナ
+  birth_date?: string; // 生年月日
+  gender?: string; // 性別
+  nationality?: string; // 国籍
+  marital_status?: string; // 婚姻状況
   emergency_contact?: Record<string, any>; // 緊急連絡先
-  photo_path?: string;        // Profile photo
-  
+  photo_path?: string; // Profile photo
+
   // Status and visibility
   status: ResumeStatus;
   visibility: ResumeVisibility;
   is_primary: boolean;
-  
+
   // Enhanced sharing and public access
   is_public: boolean;
   public_url_slug?: string;
@@ -97,20 +97,20 @@ export interface Resume {
   can_download_pdf: boolean;
   can_edit: boolean;
   can_delete: boolean;
-  
+
   // Metadata
   view_count: number;
   download_count: number;
   last_viewed_at?: string;
-  
+
   // File attachments
   pdf_file_path?: string;
   pdf_generated_at?: string;
-  
+
   // Timestamps
   created_at: string;
   updated_at: string;
-  
+
   // Related data
   sections?: ResumeSection[];
   experiences?: WorkExperience[];
@@ -125,7 +125,16 @@ export interface Resume {
 export interface ResumeSection {
   id: number;
   resumeId: number;
-  sectionType: 'summary' | 'experience' | 'education' | 'skills' | 'projects' | 'certifications' | 'languages' | 'references' | 'custom';
+  sectionType:
+    | 'summary'
+    | 'experience'
+    | 'education'
+    | 'skills'
+    | 'projects'
+    | 'certifications'
+    | 'languages'
+    | 'references'
+    | 'custom';
   title: string;
   content?: string;
   isVisible: boolean;
@@ -283,14 +292,14 @@ export interface RirekishoData {
     department?: string;
     entrance_date: string;
     graduation_date?: string;
-    status: "卒業" | "在学中" | "中退";
+    status: '卒業' | '在学中' | '中退';
   }>;
   work_history: Array<{
     company_name: string;
     position: string;
     start_date: string;
     end_date?: string;
-    employment_type: "正社員" | "契約社員" | "アルバイト" | "派遣";
+    employment_type: '正社員' | '契約社員' | 'アルバイト' | '派遣';
   }>;
   qualifications: Array<{
     name: string;
@@ -299,7 +308,7 @@ export interface RirekishoData {
   }>;
   motivation?: string;
   commute_time?: string;
-  spouse?: "有" | "無";
+  spouse?: '有' | '無';
   dependents?: string;
 }
 
@@ -347,7 +356,7 @@ export interface PublicResumeInfo {
   view_count: number;
   last_viewed_at?: string;
   can_download_pdf: boolean;
-  
+
   // Limited related data
   experiences: WorkExperience[];
   educations: Education[];
@@ -396,7 +405,7 @@ export interface ResumeMessageAttachment {
 
 export interface PDFGenerationRequest {
   resume_id: number;
-  format: "A4" | "Letter";
+  format: 'A4' | 'Letter';
   include_contact_info: boolean;
   watermark?: string;
 }
@@ -436,7 +445,7 @@ export interface ResumeStats {
 export interface ResumeFormData {
   title: string;
   description?: string;
-  
+
   // Personal information
   full_name?: string;
   email?: string;
@@ -445,18 +454,18 @@ export interface ResumeFormData {
   website?: string;
   linkedin_url?: string;
   github_url?: string;
-  
+
   // Professional summary
   professional_summary?: string;
   objective?: string;
-  
+
   // Template and styling
   template_id?: string;
   resume_format?: ResumeFormat;
   resume_language?: ResumeLanguage;
   theme_color?: string;
   font_family?: string;
-  
+
   // Japanese-specific fields
   furigana_name?: string;
   birth_date?: string;
@@ -464,7 +473,7 @@ export interface ResumeFormData {
   nationality?: string;
   marital_status?: string;
   emergency_contact?: Record<string, any>;
-  
+
   // Settings
   visibility?: ResumeVisibility;
   is_public?: boolean;
@@ -506,7 +515,7 @@ export interface ResumeBuilderProps {
   resume?: Resume;
   onSave: (resume: Resume) => void;
   onCancel: () => void;
-  mode: "create" | "edit";
+  mode: 'create' | 'edit';
 }
 
 export interface ResumePreviewProps {
@@ -532,21 +541,21 @@ export type ResumeLanguageType = keyof typeof ResumeLanguage;
 export type SectionTypeType = keyof typeof SectionType;
 
 // Form validation types
-export type ResumeFormStep = 
-  | "basic_info"
-  | "personal_details"
-  | "experience"
-  | "education"
-  | "skills"
-  | "projects"
-  | "certifications"
-  | "languages"
-  | "template_settings"
-  | "preview";
+export type ResumeFormStep =
+  | 'basic_info'
+  | 'personal_details'
+  | 'experience'
+  | 'education'
+  | 'skills'
+  | 'projects'
+  | 'certifications'
+  | 'languages'
+  | 'template_settings'
+  | 'preview';
 
 // Bulk operations
 export interface BulkResumeAction {
-  action: "delete" | "archive" | "publish" | "make_private" | "make_public";
+  action: 'delete' | 'archive' | 'publish' | 'make_private' | 'make_public';
   resume_ids: number[];
 }
 

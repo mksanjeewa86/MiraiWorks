@@ -83,7 +83,17 @@ export interface PositionApplication {
   position_id: number;
   user_id: number;
   candidate_id?: number;
-  status: 'applied' | 'under_review' | 'phone_screen' | 'interview' | 'technical_test' | 'final_interview' | 'offer_sent' | 'hired' | 'rejected' | 'withdrawn';
+  status:
+    | 'applied'
+    | 'under_review'
+    | 'phone_screen'
+    | 'interview'
+    | 'technical_test'
+    | 'final_interview'
+    | 'offer_sent'
+    | 'hired'
+    | 'rejected'
+    | 'withdrawn';
   cover_letter?: string;
   application_answers?: Record<string, unknown>[];
   resume_id?: number;
@@ -95,4 +105,3 @@ export interface PositionApplication {
   position?: import('./position').Position;
   applicant?: import('./auth').User;
 }
-

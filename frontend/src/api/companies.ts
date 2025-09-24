@@ -23,9 +23,12 @@ export const companiesApi = {
     if (filters?.company_type) params.set('company_type', filters.company_type);
     if (filters?.is_active !== undefined) params.set('is_active', filters.is_active.toString());
     if (filters?.is_demo !== undefined) params.set('is_demo', filters.is_demo.toString());
-    if (filters?.include_deleted !== undefined) params.set('include_deleted', filters.include_deleted.toString());
+    if (filters?.include_deleted !== undefined)
+      params.set('include_deleted', filters.include_deleted.toString());
 
-    const url = params.toString() ? `${API_ENDPOINTS.COMPANIES.BASE}?${params.toString()}` : API_ENDPOINTS.COMPANIES.BASE;
+    const url = params.toString()
+      ? `${API_ENDPOINTS.COMPANIES.BASE}?${params.toString()}`
+      : API_ENDPOINTS.COMPANIES.BASE;
     const response = await apiClient.get<CompanyListResponse>(url);
     return { data: response.data, success: true };
   },
@@ -40,7 +43,10 @@ export const companiesApi = {
   },
 
   async updateCompany(id: number, companyData: Partial<Company>): Promise<ApiResponse<Company>> {
-    const response = await apiClient.put<Company>(API_ENDPOINTS.COMPANIES.BY_ID(id.toString()), companyData);
+    const response = await apiClient.put<Company>(
+      API_ENDPOINTS.COMPANIES.BY_ID(id.toString()),
+      companyData
+    );
     return { data: response.data, success: true };
   },
 

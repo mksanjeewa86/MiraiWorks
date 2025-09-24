@@ -11,7 +11,7 @@ export interface TodoAttachment {
   uploaded_by?: number;
   uploaded_at: string;
   updated_at: string;
-  
+
   // Computed properties
   file_size_mb: number;
   file_category: 'image' | 'document' | 'video' | 'audio' | 'other';
@@ -87,20 +87,20 @@ export interface UploadConfig {
 // File category icons mapping
 export const FILE_CATEGORY_ICONS = {
   image: 'PhotoIcon',
-  document: 'DocumentTextIcon', 
+  document: 'DocumentTextIcon',
   video: 'VideoCameraIcon',
   audio: 'SpeakerWaveIcon',
-  other: 'DocumentIcon'
+  other: 'DocumentIcon',
 } as const;
 
 // File size formatting utility
 export const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return '0 Bytes';
-  
+
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
+
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 };
 
@@ -119,7 +119,7 @@ export const isDocumentFile = (mimeType: string): boolean => {
     'application/vnd.ms-powerpoint',
     'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     'text/plain',
-    'text/csv'
+    'text/csv',
   ];
   return documentTypes.includes(mimeType);
 };
@@ -145,7 +145,7 @@ export const validateFile = (file: File, config: UploadConfig): FileValidationRe
   const result: FileValidationResult = {
     valid: true,
     errors: [],
-    warnings: []
+    warnings: [],
   };
 
   // Check file size
@@ -170,7 +170,8 @@ export const validateFile = (file: File, config: UploadConfig): FileValidationRe
   }
 
   // Add warnings for large files
-  if (file.size > 10 * 1024 * 1024) { // 10MB
+  if (file.size > 10 * 1024 * 1024) {
+    // 10MB
     result.warnings.push('Large file may take longer to upload');
   }
 
@@ -181,7 +182,7 @@ export const validateFile = (file: File, config: UploadConfig): FileValidationRe
 export const DEFAULT_UPLOAD_CONFIG: UploadConfig = {
   maxFileSize: 25 * 1024 * 1024, // 25MB
   allowedTypes: [], // All types allowed
-  maxFiles: undefined // No limit
+  maxFiles: undefined, // No limit
 };
 
 // Component Props Interfaces

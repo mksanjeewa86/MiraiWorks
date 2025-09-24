@@ -39,57 +39,64 @@ export const useWebRTC = (roomId?: string, userId?: number): UseWebRTCResult => 
 
     // Handle remote stream
     peerConnection.current.ontrack = (event) => {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
-        remoteStream: event.streams[0]
+        remoteStream: event.streams[0],
       }));
     };
 
     // Handle ICE candidates
     peerConnection.current.onicecandidate = (event) => {
       if (event.candidate && websocket.current?.readyState === WebSocket.OPEN) {
-        websocket.current.send(JSON.stringify({
-          type: 'ice-candidate',
-          candidate: event.candidate,
-          roomId
-        }));
+        websocket.current.send(
+          JSON.stringify({
+            type: 'ice-candidate',
+            candidate: event.candidate,
+            roomId,
+          })
+        );
       }
     };
 
     // Monitor connection state
     peerConnection.current.onconnectionstatechange = () => {
       const connectionState = peerConnection.current?.connectionState;
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isConnected: connectionState === 'connected',
-        connectionQuality: getQualityFromState(connectionState)
+        connectionQuality: getQualityFromState(connectionState),
       }));
     };
-   
   }, [roomId]);
 
   const getQualityFromState = (state: string | undefined): ConnectionQuality => {
     switch (state) {
-      case 'connected': return 'excellent';
-      case 'connecting': return 'good';
-      case 'disconnected': return 'poor';
-      default: return 'fair';
+      case 'connected':
+        return 'excellent';
+      case 'connecting':
+        return 'good';
+      case 'disconnected':
+        return 'poor';
+      default:
+        return 'fair';
     }
   };
 
   const getUserMedia = async (video: boolean = true): Promise<MediaStream> => {
     try {
       return await navigator.mediaDevices.getUserMedia({
-        video: video ? {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          facingMode: 'user'
-        } : false,
+        video: video
+          ? {
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+              facingMode: 'user',
+            }
+          : false,
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          autoGainControl: true
-        }
+          autoGainControl: true,
+        },
       });
     } catch (error) {
       console.error('Error accessing media devices:', error);
@@ -104,23 +111,22 @@ export const useWebRTC = (roomId?: string, userId?: number): UseWebRTCResult => 
       // Get user media
       const stream = await getUserMedia();
       localStreamRef.current = stream;
-      
-      setState(prev => ({
+
+      setState((prev) => ({
         ...prev,
-        localStream: stream
+        localStream: stream,
       }));
 
       // Initialize peer connection
       initializePeerConnection();
 
       // Add local stream to peer connection
-      stream.getTracks().forEach(track => {
+      stream.getTracks().forEach((track) => {
         peerConnection.current?.addTrack(track, stream);
       });
 
       // Connect to signaling server
       await connectSignaling();
-
     } catch (error) {
       console.error('Failed to connect:', error);
       throw error;
@@ -154,7 +160,7 @@ export const useWebRTC = (roomId?: string, userId?: number): UseWebRTCResult => 
 
       websocket.current.onclose = () => {
         console.log('Disconnected from signaling server');
-        setState(prev => ({ ...prev, isConnected: false }));
+        setState((prev) => ({ ...prev, isConnected: false }));
       };
     });
   };
@@ -162,24 +168,35 @@ export const useWebRTC = (roomId?: string, userId?: number): UseWebRTCResult => 
   const handleSignalingMessage = async (data: unknown) => {
     if (!peerConnection.current) return;
 
-    const message = data as { type?: string; offer?: RTCSessionDescriptionInit; answer?: RTCSessionDescriptionInit; candidate?: RTCIceCandidateInit };
+    const message = data as {
+      type?: string;
+      offer?: RTCSessionDescriptionInit;
+      answer?: RTCSessionDescriptionInit;
+      candidate?: RTCIceCandidateInit;
+    };
     switch (message.type) {
       case 'offer':
         if (message.offer) {
-          await peerConnection.current.setRemoteDescription(new RTCSessionDescription(message.offer));
+          await peerConnection.current.setRemoteDescription(
+            new RTCSessionDescription(message.offer)
+          );
           const answer = await peerConnection.current.createAnswer();
           await peerConnection.current.setLocalDescription(answer);
-          websocket.current?.send(JSON.stringify({
-            type: 'answer',
-            answer,
-            roomId
-          }));
+          websocket.current?.send(
+            JSON.stringify({
+              type: 'answer',
+              answer,
+              roomId,
+            })
+          );
         }
         break;
 
       case 'answer':
         if (message.answer) {
-          await peerConnection.current.setRemoteDescription(new RTCSessionDescription(message.answer));
+          await peerConnection.current.setRemoteDescription(
+            new RTCSessionDescription(message.answer)
+          );
         }
         break;
 
@@ -193,11 +210,13 @@ export const useWebRTC = (roomId?: string, userId?: number): UseWebRTCResult => 
         // Create offer for new user
         const offer = await peerConnection.current.createOffer();
         await peerConnection.current.setLocalDescription(offer);
-        websocket.current?.send(JSON.stringify({
-          type: 'offer',
-          offer,
-          roomId
-        }));
+        websocket.current?.send(
+          JSON.stringify({
+            type: 'offer',
+            offer,
+            roomId,
+          })
+        );
         break;
     }
   };
@@ -208,8 +227,8 @@ export const useWebRTC = (roomId?: string, userId?: number): UseWebRTCResult => 
     peerConnection.current = null;
 
     // Stop local streams
-    localStreamRef.current?.getTracks().forEach(track => track.stop());
-    screenStreamRef.current?.getTracks().forEach(track => track.stop());
+    localStreamRef.current?.getTracks().forEach((track) => track.stop());
+    screenStreamRef.current?.getTracks().forEach((track) => track.stop());
 
     // Close websocket
     websocket.current?.close();
@@ -230,7 +249,7 @@ export const useWebRTC = (roomId?: string, userId?: number): UseWebRTCResult => 
       const audioTrack = localStreamRef.current.getAudioTracks()[0];
       if (audioTrack) {
         audioTrack.enabled = !audioTrack.enabled;
-        setState(prev => ({ ...prev, isMuted: !audioTrack.enabled }));
+        setState((prev) => ({ ...prev, isMuted: !audioTrack.enabled }));
       }
     }
   };
@@ -240,7 +259,7 @@ export const useWebRTC = (roomId?: string, userId?: number): UseWebRTCResult => 
       const videoTrack = localStreamRef.current.getVideoTracks()[0];
       if (videoTrack) {
         videoTrack.enabled = !videoTrack.enabled;
-        setState(prev => ({ ...prev, isVideoOn: videoTrack.enabled }));
+        setState((prev) => ({ ...prev, isVideoOn: videoTrack.enabled }));
       }
     }
   };
@@ -249,17 +268,15 @@ export const useWebRTC = (roomId?: string, userId?: number): UseWebRTCResult => 
     try {
       const screenStream = await navigator.mediaDevices.getDisplayMedia({
         video: true,
-        audio: true
+        audio: true,
       });
 
       screenStreamRef.current = screenStream;
 
       // Replace video track in peer connection
       if (peerConnection.current) {
-        const sender = peerConnection.current.getSenders().find(s => 
-          s.track?.kind === 'video'
-        );
-        
+        const sender = peerConnection.current.getSenders().find((s) => s.track?.kind === 'video');
+
         if (sender) {
           await sender.replaceTrack(screenStream.getVideoTracks()[0]);
         }
@@ -270,12 +287,11 @@ export const useWebRTC = (roomId?: string, userId?: number): UseWebRTCResult => 
         stopScreenShare();
       };
 
-      setState(prev => ({ 
-        ...prev, 
+      setState((prev) => ({
+        ...prev,
         isScreenSharing: true,
-        localStream: screenStream
+        localStream: screenStream,
       }));
-
     } catch (error) {
       console.error('Failed to start screen share:', error);
       throw error;
@@ -284,7 +300,7 @@ export const useWebRTC = (roomId?: string, userId?: number): UseWebRTCResult => 
 
   const stopScreenShare = async () => {
     if (screenStreamRef.current) {
-      screenStreamRef.current.getTracks().forEach(track => track.stop());
+      screenStreamRef.current.getTracks().forEach((track) => track.stop());
       screenStreamRef.current = null;
     }
 
@@ -295,21 +311,18 @@ export const useWebRTC = (roomId?: string, userId?: number): UseWebRTCResult => 
 
       // Replace track in peer connection
       if (peerConnection.current) {
-        const sender = peerConnection.current.getSenders().find(s => 
-          s.track?.kind === 'video'
-        );
-        
+        const sender = peerConnection.current.getSenders().find((s) => s.track?.kind === 'video');
+
         if (sender) {
           await sender.replaceTrack(cameraStream.getVideoTracks()[0]);
         }
       }
 
-      setState(prev => ({ 
-        ...prev, 
+      setState((prev) => ({
+        ...prev,
         isScreenSharing: false,
-        localStream: cameraStream
+        localStream: cameraStream,
       }));
-
     } catch (error) {
       console.error('Failed to restore camera:', error);
     }

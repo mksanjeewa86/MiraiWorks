@@ -1,13 +1,10 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   output: 'standalone', // Required for Docker
   experimental: {
-    optimizePackageImports: [
-      'lucide-react',
-      '@headlessui/react'
-    ]
+    optimizePackageImports: ['lucide-react', '@headlessui/react'],
   },
   webpack: (config, { dev }) => {
     if (dev) {

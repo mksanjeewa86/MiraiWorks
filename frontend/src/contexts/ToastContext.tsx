@@ -8,7 +8,7 @@ import {
   ToastContextType,
   ToastProviderProps,
   ToastContainerProps,
-  ToastItemProps
+  ToastItemProps,
 } from '../types/context';
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
@@ -21,25 +21,27 @@ export function useToast() {
   return context;
 }
 
-
 export function ToastProvider({ children }: ToastProviderProps) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const hideToast = useCallback((id: string) => {
-    setToasts(prev => prev.filter(toast => toast.id !== id));
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
   }, []);
 
-  const showToast = useCallback((toast: Omit<Toast, 'id'>) => {
-    const id = Math.random().toString(36).substr(2, 9);
-    const newToast = { ...toast, id };
+  const showToast = useCallback(
+    (toast: Omit<Toast, 'id'>) => {
+      const id = Math.random().toString(36).substr(2, 9);
+      const newToast = { ...toast, id };
 
-    setToasts(prev => [...prev, newToast]);
+      setToasts((prev) => [...prev, newToast]);
 
-    // Auto remove toast after duration (default 5 seconds)
-    setTimeout(() => {
-      hideToast(id);
-    }, toast.duration || 5000);
-  }, [hideToast]);
+      // Auto remove toast after duration (default 5 seconds)
+      setTimeout(() => {
+        hideToast(id);
+      }, toast.duration || 5000);
+    },
+    [hideToast]
+  );
 
   return (
     <ToastContext.Provider value={{ toasts, showToast, hideToast }}>
@@ -48,7 +50,6 @@ export function ToastProvider({ children }: ToastProviderProps) {
     </ToastContext.Provider>
   );
 }
-
 
 function ToastContainer({ toasts, onHide }: ToastContainerProps) {
   if (toasts.length === 0) return null;
@@ -61,7 +62,6 @@ function ToastContainer({ toasts, onHide }: ToastContainerProps) {
     </div>
   );
 }
-
 
 function ToastItem({ toast, onHide }: ToastItemProps) {
   const getIcon = (type: ToastType) => {
@@ -103,17 +103,11 @@ function ToastItem({ toast, onHide }: ToastItemProps) {
       `}
     >
       <div className="flex items-start">
-        <div className="flex-shrink-0">
-          {getIcon(toast.type)}
-        </div>
+        <div className="flex-shrink-0">{getIcon(toast.type)}</div>
         <div className="ml-3 flex-1">
-          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-            {toast.title}
-          </p>
+          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{toast.title}</p>
           {toast.message && (
-            <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">
-              {toast.message}
-            </p>
+            <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">{toast.message}</p>
           )}
         </div>
         <div className="ml-4 flex-shrink-0">

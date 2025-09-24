@@ -7,26 +7,26 @@ export default function AboutPage() {
       name: 'Alex Thompson',
       role: 'CEO & Founder',
       image: '👨‍💼',
-      bio: 'Passionate about connecting talent with opportunities. Former VP at top tech companies.'
+      bio: 'Passionate about connecting talent with opportunities. Former VP at top tech companies.',
     },
     {
       name: 'Sarah Chen',
       role: 'CTO',
       image: '👩‍💻',
-      bio: 'Full-stack engineer with 10+ years building scalable platforms. AI and ML enthusiast.'
+      bio: 'Full-stack engineer with 10+ years building scalable platforms. AI and ML enthusiast.',
     },
     {
       name: 'Michael Rodriguez',
       role: 'Head of Product',
       image: '👨‍🎯',
-      bio: 'Product strategist focused on user experience and market-driven solutions.'
+      bio: 'Product strategist focused on user experience and market-driven solutions.',
     },
     {
       name: 'Emily Johnson',
       role: 'VP of Marketing',
       image: '👩‍📊',
-      bio: 'Growth marketing expert helping companies and candidates find each other.'
-    }
+      bio: 'Growth marketing expert helping companies and candidates find each other.',
+    },
   ];
 
   return (
@@ -88,8 +88,18 @@ export default function AboutPage() {
                 className="group inline-flex items-center px-8 py-4 text-lg font-semibold rounded-2xl text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg"
               >
                 Get in Touch
-                <svg className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                <svg
+                  className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M17 8l4 4m0 0l-4 4m4-4H3"
+                  />
                 </svg>
               </Link>
             </div>
@@ -138,8 +148,8 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-4">Trust & Transparency</h3>
                 <p className="text-gray-600 leading-relaxed">
-                  We build trust through honest communication, transparent processes,
-                  and reliable service that both job seekers and employers can count on.
+                  We build trust through honest communication, transparent processes, and reliable
+                  service that both job seekers and employers can count on.
                 </p>
               </div>
             </div>
@@ -152,8 +162,8 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-4">Innovation</h3>
                 <p className="text-gray-600 leading-relaxed">
-                  We continuously evolve our platform with the latest technology,
-                  from AI-powered matching to seamless user experiences.
+                  We continuously evolve our platform with the latest technology, from AI-powered
+                  matching to seamless user experiences.
                 </p>
               </div>
             </div>
@@ -166,8 +176,8 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-4">Quality Matches</h3>
                 <p className="text-gray-600 leading-relaxed">
-                  We focus on quality over quantity, ensuring that every connection
-                  we facilitate has the potential for long-term success.
+                  We focus on quality over quantity, ensuring that every connection we facilitate
+                  has the potential for long-term success.
                 </p>
               </div>
             </div>
@@ -199,11 +209,17 @@ export default function AboutPage() {
                 <div className="relative mb-6">
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full blur-lg opacity-25 group-hover:opacity-40 transition duration-300"></div>
                   <div className="relative bg-gradient-to-br from-white to-gray-50 rounded-full w-40 h-40 flex items-center justify-center mx-auto border-4 border-white shadow-xl group-hover:shadow-2xl transition-all duration-300 transform group-hover:scale-105">
-                    <span className="text-6xl transform group-hover:scale-110 transition-transform duration-300">{member.image}</span>
+                    <span className="text-6xl transform group-hover:scale-110 transition-transform duration-300">
+                      {member.image}
+                    </span>
                   </div>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-purple-600 transition-colors">{member.name}</h3>
-                <p className="text-purple-600 font-semibold mb-3 bg-purple-100 px-3 py-1 rounded-full inline-block text-sm">{member.role}</p>
+                <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-purple-600 transition-colors">
+                  {member.name}
+                </h3>
+                <p className="text-purple-600 font-semibold mb-3 bg-purple-100 px-3 py-1 rounded-full inline-block text-sm">
+                  {member.role}
+                </p>
                 <p className="text-sm text-gray-600 leading-relaxed">{member.bio}</p>
               </div>
             ))}
@@ -286,8 +302,18 @@ export default function AboutPage() {
                 className="group inline-flex items-center px-10 py-5 text-xl font-bold rounded-2xl text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-xl"
               >
                 Browse Jobs
-                <svg className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                <svg
+                  className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M17 8l4 4m0 0l-4 4m4-4H3"
+                  />
                 </svg>
               </Link>
               <Link

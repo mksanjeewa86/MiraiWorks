@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import WebsiteLayout from '@/components/website/WebsiteLayout';
-import { positionsApi } from "@/api/positions";
+import { positionsApi } from '@/api/positions';
 import { PREFECTURES } from '@/utils/prefectures';
 import type { Position } from '@/types';
 
@@ -54,10 +54,11 @@ function PositionsPageContent() {
           location: selectedPrefecture !== 'all' ? selectedPrefecture : undefined,
           salary_min: salary_min,
           salary_max: salary_max,
-          days_since_posted: selectedDateFilter !== 'all' ? parseInt(selectedDateFilter) : undefined,
+          days_since_posted:
+            selectedDateFilter !== 'all' ? parseInt(selectedDateFilter) : undefined,
           search: searchQuery || undefined,
           limit: positionsPerPage,
-          skip: (currentPage - 1) * positionsPerPage
+          skip: (currentPage - 1) * positionsPerPage,
         };
 
         const response = await positionsApi.getPublic(filters);
@@ -77,12 +78,27 @@ function PositionsPageContent() {
     };
 
     fetchPositions();
-  }, [searchQuery, selectedCategory, selectedType, selectedPrefecture, selectedSalaryRange, selectedDateFilter, currentPage]);
+  }, [
+    searchQuery,
+    selectedCategory,
+    selectedType,
+    selectedPrefecture,
+    selectedSalaryRange,
+    selectedDateFilter,
+    currentPage,
+  ]);
 
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedCategory, selectedType, selectedPrefecture, selectedSalaryRange, selectedDateFilter]);
+  }, [
+    searchQuery,
+    selectedCategory,
+    selectedType,
+    selectedPrefecture,
+    selectedSalaryRange,
+    selectedDateFilter,
+  ]);
 
   const categories = [
     { value: 'all', label: 'All Categories' },
@@ -91,7 +107,7 @@ function PositionsPageContent() {
     { value: 'design', label: 'Design' },
     { value: 'sales', label: 'Sales' },
     { value: 'finance', label: 'Finance' },
-    { value: 'healthcare', label: 'Healthcare' }
+    { value: 'healthcare', label: 'Healthcare' },
   ];
 
   const jobTypes = [
@@ -101,16 +117,16 @@ function PositionsPageContent() {
     { value: 'contract', label: 'Contract' },
     { value: 'temporary', label: 'Temporary' },
     { value: 'internship', label: 'Internship' },
-    { value: 'freelance', label: 'Freelance' }
+    { value: 'freelance', label: 'Freelance' },
   ];
 
   const prefectureOptions = [
     { value: 'all', label: 'All Locations' },
-    ...PREFECTURES.map(pref => ({
+    ...PREFECTURES.map((pref) => ({
       value: pref.nameJa,
-      label: `${pref.nameEn} (${pref.nameJa})`
+      label: `${pref.nameEn} (${pref.nameJa})`,
     })),
-    { value: 'リモート', label: 'Remote' }
+    { value: 'リモート', label: 'Remote' },
   ];
 
   const salaryRanges = [
@@ -119,7 +135,7 @@ function PositionsPageContent() {
     { value: '5000000-7000000', label: '¥5M - ¥7M' },
     { value: '7000000-10000000', label: '¥7M - ¥10M' },
     { value: '10000000-15000000', label: '¥10M - ¥15M' },
-    { value: '15000000+', label: '¥15M+' }
+    { value: '15000000+', label: '¥15M+' },
   ];
 
   const dateFilters = [
@@ -127,7 +143,7 @@ function PositionsPageContent() {
     { value: '1', label: 'Last 24 hours' },
     { value: '3', label: 'Last 3 days' },
     { value: '7', label: 'Last week' },
-    { value: '30', label: 'Last month' }
+    { value: '30', label: 'Last month' },
   ];
 
   // Calculate pagination info
@@ -137,13 +153,20 @@ function PositionsPageContent() {
 
   const getPositionTypeColor = (type: string) => {
     switch (type) {
-      case 'full_time': return 'bg-green-100 text-green-800';
-      case 'part_time': return 'bg-blue-100 text-blue-800';
-      case 'contract': return 'bg-purple-100 text-purple-800';
-      case 'temporary': return 'bg-orange-100 text-orange-800';
-      case 'internship': return 'bg-pink-100 text-pink-800';
-      case 'freelance': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'full_time':
+        return 'bg-green-100 text-green-800';
+      case 'part_time':
+        return 'bg-blue-100 text-blue-800';
+      case 'contract':
+        return 'bg-purple-100 text-purple-800';
+      case 'temporary':
+        return 'bg-orange-100 text-orange-800';
+      case 'internship':
+        return 'bg-pink-100 text-pink-800';
+      case 'freelance':
+        return 'bg-yellow-100 text-yellow-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -170,8 +193,8 @@ function PositionsPageContent() {
               </span>
             </h1>
             <p className="text-xl md:text-2xl text-indigo-100 max-w-4xl mx-auto leading-relaxed">
-              Discover thousands of opportunities from top companies in Japan.
-              Filter by prefecture, salary range, posting date and more - no account required to explore!
+              Discover thousands of opportunities from top companies in Japan. Filter by prefecture,
+              salary range, posting date and more - no account required to explore!
             </p>
           </div>
 
@@ -201,10 +224,10 @@ function PositionsPageContent() {
                       backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                       backgroundPosition: 'right 12px center',
                       backgroundRepeat: 'no-repeat',
-                      backgroundSize: '16px'
+                      backgroundSize: '16px',
                     }}
                   >
-                    {categories.map(category => (
+                    {categories.map((category) => (
                       <option key={category.value} value={category.value} className="text-gray-900">
                         {category.label}
                       </option>
@@ -220,10 +243,10 @@ function PositionsPageContent() {
                       backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                       backgroundPosition: 'right 12px center',
                       backgroundRepeat: 'no-repeat',
-                      backgroundSize: '16px'
+                      backgroundSize: '16px',
                     }}
                   >
-                    {jobTypes.map(type => (
+                    {jobTypes.map((type) => (
                       <option key={type.value} value={type.value} className="text-gray-900">
                         {type.label}
                       </option>
@@ -239,11 +262,15 @@ function PositionsPageContent() {
                       backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                       backgroundPosition: 'right 12px center',
                       backgroundRepeat: 'no-repeat',
-                      backgroundSize: '16px'
+                      backgroundSize: '16px',
                     }}
                   >
-                    {prefectureOptions.map(prefecture => (
-                      <option key={prefecture.value} value={prefecture.value} className="text-gray-900">
+                    {prefectureOptions.map((prefecture) => (
+                      <option
+                        key={prefecture.value}
+                        value={prefecture.value}
+                        className="text-gray-900"
+                      >
                         {prefecture.label}
                       </option>
                     ))}
@@ -258,10 +285,10 @@ function PositionsPageContent() {
                       backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                       backgroundPosition: 'right 12px center',
                       backgroundRepeat: 'no-repeat',
-                      backgroundSize: '16px'
+                      backgroundSize: '16px',
                     }}
                   >
-                    {salaryRanges.map(range => (
+                    {salaryRanges.map((range) => (
                       <option key={range.value} value={range.value} className="text-gray-900">
                         {range.label}
                       </option>
@@ -277,10 +304,10 @@ function PositionsPageContent() {
                       backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                       backgroundPosition: 'right 12px center',
                       backgroundRepeat: 'no-repeat',
-                      backgroundSize: '16px'
+                      backgroundSize: '16px',
                     }}
                   >
-                    {dateFilters.map(filter => (
+                    {dateFilters.map((filter) => (
                       <option key={filter.value} value={filter.value} className="text-gray-900">
                         {filter.label}
                       </option>
@@ -297,7 +324,12 @@ function PositionsPageContent() {
       <section className="py-12 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Active Filters Summary */}
-          {(selectedCategory !== 'all' || selectedType !== 'all' || selectedPrefecture !== 'all' || selectedSalaryRange !== 'all' || selectedDateFilter !== 'all' || searchQuery) && (
+          {(selectedCategory !== 'all' ||
+            selectedType !== 'all' ||
+            selectedPrefecture !== 'all' ||
+            selectedSalaryRange !== 'all' ||
+            selectedDateFilter !== 'all' ||
+            searchQuery) && (
             <div className="mb-6 p-4 bg-indigo-50 rounded-xl border border-indigo-200">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-semibold text-indigo-900">Active Filters:</h3>
@@ -329,7 +361,7 @@ function PositionsPageContent() {
                 )}
                 {selectedCategory !== 'all' && (
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                    Category: {categories.find(c => c.value === selectedCategory)?.label}
+                    Category: {categories.find((c) => c.value === selectedCategory)?.label}
                     <button
                       onClick={() => setSelectedCategory('all')}
                       className="ml-1 text-indigo-600 hover:text-indigo-800"
@@ -340,7 +372,7 @@ function PositionsPageContent() {
                 )}
                 {selectedType !== 'all' && (
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                    Type: {jobTypes.find(t => t.value === selectedType)?.label}
+                    Type: {jobTypes.find((t) => t.value === selectedType)?.label}
                     <button
                       onClick={() => setSelectedType('all')}
                       className="ml-1 text-indigo-600 hover:text-indigo-800"
@@ -351,7 +383,7 @@ function PositionsPageContent() {
                 )}
                 {selectedPrefecture !== 'all' && (
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                    Location: {prefectureOptions.find(p => p.value === selectedPrefecture)?.label}
+                    Location: {prefectureOptions.find((p) => p.value === selectedPrefecture)?.label}
                     <button
                       onClick={() => setSelectedPrefecture('all')}
                       className="ml-1 text-indigo-600 hover:text-indigo-800"
@@ -362,7 +394,7 @@ function PositionsPageContent() {
                 )}
                 {selectedSalaryRange !== 'all' && (
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                    Salary: {salaryRanges.find(s => s.value === selectedSalaryRange)?.label}
+                    Salary: {salaryRanges.find((s) => s.value === selectedSalaryRange)?.label}
                     <button
                       onClick={() => setSelectedSalaryRange('all')}
                       className="ml-1 text-indigo-600 hover:text-indigo-800"
@@ -373,7 +405,7 @@ function PositionsPageContent() {
                 )}
                 {selectedDateFilter !== 'all' && (
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                    Posted: {dateFilters.find(d => d.value === selectedDateFilter)?.label}
+                    Posted: {dateFilters.find((d) => d.value === selectedDateFilter)?.label}
                     <button
                       onClick={() => setSelectedDateFilter('all')}
                       className="ml-1 text-indigo-600 hover:text-indigo-800"
@@ -390,7 +422,9 @@ function PositionsPageContent() {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">
-                {loading ? 'Loading...' : `${totalPositions} Position${totalPositions !== 1 ? 's' : ''} Found`}
+                {loading
+                  ? 'Loading...'
+                  : `${totalPositions} Position${totalPositions !== 1 ? 's' : ''} Found`}
               </h2>
               {!loading && totalPositions > 0 && (
                 <p className="text-gray-600 mt-1">
@@ -434,17 +468,26 @@ function PositionsPageContent() {
           {!loading && !error && positions.length > 0 && (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                {positions.map(job => (
+                {positions.map((job) => (
                   <div
                     key={job.id}
                     className={`bg-white rounded-xl shadow-sm border hover:shadow-lg transition-all duration-300 p-6 ${
-                      job.is_featured ? 'ring-2 ring-indigo-500 border-indigo-200' : 'border-gray-200'
+                      job.is_featured
+                        ? 'ring-2 ring-indigo-500 border-indigo-200'
+                        : 'border-gray-200'
                     }`}
                   >
                     {/* Card Header */}
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2 overflow-hidden" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                        <h3
+                          className="text-lg font-semibold text-gray-900 mb-2 overflow-hidden"
+                          style={{
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                          }}
+                        >
                           {job.title}
                         </h3>
                         <p className="text-sm text-indigo-600 font-medium">
@@ -460,10 +503,10 @@ function PositionsPageContent() {
 
                     {/* Location and Job Type */}
                     <div className="flex items-center gap-4 mb-3 text-sm text-gray-600">
-                      <span className="flex items-center gap-1">
-                        📍 {job.location || 'Remote'}
-                      </span>
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPositionTypeColor(job.job_type)}`}>
+                      <span className="flex items-center gap-1">📍 {job.location || 'Remote'}</span>
+                      <span
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${getPositionTypeColor(job.job_type)}`}
+                      >
                         {job.job_type.replace('_', ' ')}
                       </span>
                     </div>
@@ -472,14 +515,22 @@ function PositionsPageContent() {
                     {job.salary_min && job.salary_max && job.show_salary && (
                       <div className="mb-3">
                         <span className="text-sm font-medium text-green-600">
-                          $${(job.salary_min / 100).toLocaleString()} - $${(job.salary_max / 100).toLocaleString()}
+                          $${(job.salary_min / 100).toLocaleString()} - $$
+                          {(job.salary_max / 100).toLocaleString()}
                         </span>
                         <span className="text-xs text-gray-500 ml-1">/ year</span>
                       </div>
                     )}
 
                     {/* Description */}
-                    <p className="text-sm text-gray-600 mb-4 overflow-hidden" style={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' }}>
+                    <p
+                      className="text-sm text-gray-600 mb-4 overflow-hidden"
+                      style={{
+                        display: '-webkit-box',
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: 'vertical',
+                      }}
+                    >
                       {job.description}
                     </p>
 
@@ -513,7 +564,8 @@ function PositionsPageContent() {
                     {/* Posted Date */}
                     <div className="mt-3 pt-3 border-t border-gray-100">
                       <span className="text-xs text-gray-500">
-                        Posted {(() => {
+                        Posted{' '}
+                        {(() => {
                           const dateStr = job.published_at || job.created_at;
                           if (!dateStr) return 'Recently';
                           try {
@@ -606,11 +658,10 @@ function PositionsPageContent() {
       {/* CTA Section */}
       <section className="py-16 bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">
-            Don&apos;t See the Right Position?
-          </h2>
+          <h2 className="text-3xl font-bold text-white mb-4">Don&apos;t See the Right Position?</h2>
           <p className="text-xl text-gray-300 mb-8">
-            Create a profile and let employers find you, or set up job alerts to never miss an opportunity.
+            Create a profile and let employers find you, or set up job alerts to never miss an
+            opportunity.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link

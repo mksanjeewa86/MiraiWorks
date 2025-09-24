@@ -1,29 +1,27 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { 
-  Trophy, 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
-  AlertTriangle, 
-  Eye, 
+import { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import {
+  Trophy,
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+  Eye,
   EyeOff,
   ArrowLeft,
   Calendar,
-  User,
   BookOpen,
   Target,
-  TrendingUp
-} from "lucide-react";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { toast } from "sonner";
+} from 'lucide-react';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { toast } from 'sonner';
 
 interface Question {
   id: number;
@@ -101,22 +99,22 @@ export default function ExamResultsPage() {
     try {
       const response = await fetch(`/api/exam/sessions/${sessionId}/results`, {
         headers: {
-          "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
+          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
         },
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.detail || "Failed to fetch results");
+        throw new Error(error.detail || 'Failed to fetch results');
       }
 
       const data = await response.json();
       setResults(data);
       setShowCorrectAnswers(!!data.questions); // Show if correct answers are available
     } catch (error) {
-      console.error("Error fetching results:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to load results");
-      router.push("/exams");
+      console.error('Error fetching results:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to load results');
+      router.push('/exams');
     } finally {
       setLoading(false);
     }
@@ -132,31 +130,33 @@ export default function ExamResultsPage() {
   };
 
   const getScoreColor = (percentage: number) => {
-    if (percentage >= 80) return "text-green-600";
-    if (percentage >= 60) return "text-yellow-600";
-    return "text-red-600";
+    if (percentage >= 80) return 'text-green-600';
+    if (percentage >= 60) return 'text-yellow-600';
+    return 'text-red-600';
   };
 
   const getPassStatus = (session: SessionInfo) => {
     if (session.passed === null) return null;
-    return session.passed ? {
-      icon: CheckCircle,
-      text: "Passed",
-      color: "bg-green-100 text-green-800 border-green-200"
-    } : {
-      icon: XCircle,
-      text: "Failed", 
-      color: "bg-red-100 text-red-800 border-red-200"
-    };
+    return session.passed
+      ? {
+          icon: CheckCircle,
+          text: 'Passed',
+          color: 'bg-green-100 text-green-800 border-green-200',
+        }
+      : {
+          icon: XCircle,
+          text: 'Failed',
+          color: 'bg-red-100 text-red-800 border-red-200',
+        };
   };
 
   const getQuestionResult = (answer: Answer, question?: Question) => {
     if (answer.is_correct === null) {
-      return { icon: AlertTriangle, color: "text-yellow-600", text: "Pending Review" };
+      return { icon: AlertTriangle, color: 'text-yellow-600', text: 'Pending Review' };
     }
-    return answer.is_correct ? 
-      { icon: CheckCircle, color: "text-green-600", text: "Correct" } :
-      { icon: XCircle, color: "text-red-600", text: "Incorrect" };
+    return answer.is_correct
+      ? { icon: CheckCircle, color: 'text-green-600', text: 'Correct' }
+      : { icon: XCircle, color: 'text-red-600', text: 'Incorrect' };
   };
 
   if (loading) {
@@ -184,9 +184,9 @@ export default function ExamResultsPage() {
 
   const { session, answers, questions, monitoring_events } = results;
   const passStatus = getPassStatus(session);
-  const correctAnswers = answers.filter(a => a.is_correct === true).length;
-  const incorrectAnswers = answers.filter(a => a.is_correct === false).length;
-  const pendingAnswers = answers.filter(a => a.is_correct === null).length;
+  const correctAnswers = answers.filter((a) => a.is_correct === true).length;
+  const incorrectAnswers = answers.filter((a) => a.is_correct === false).length;
+  const pendingAnswers = answers.filter((a) => a.is_correct === null).length;
 
   return (
     <div className="container mx-auto py-6 px-4 max-w-6xl">
@@ -266,14 +266,9 @@ export default function ExamResultsPage() {
                 <span className="text-red-600">Incorrect: {incorrectAnswers}</span>
               </div>
               {pendingAnswers > 0 && (
-                <div className="text-sm text-yellow-600">
-                  Pending Review: {pendingAnswers}
-                </div>
+                <div className="text-sm text-yellow-600">Pending Review: {pendingAnswers}</div>
               )}
-              <Progress 
-                value={(correctAnswers / answers.length) * 100} 
-                className="h-2"
-              />
+              <Progress value={(correctAnswers / answers.length) * 100} className="h-2" />
             </div>
           </CardContent>
         </Card>
@@ -303,7 +298,7 @@ export default function ExamResultsPage() {
                   </Badge>
                 </div>
               )}
-              
+
               {session.face_verification_failed && (
                 <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
                   <div>
@@ -351,39 +346,42 @@ export default function ExamResultsPage() {
         <CardContent>
           <div className="space-y-4">
             {answers.map((answer, index) => {
-              const question = questions?.find(q => q.id === answer.question_id);
+              const question = questions?.find((q) => q.id === answer.question_id);
               const result = getQuestionResult(answer, question);
-              
+
               return (
                 <div key={answer.id} className="border rounded-lg p-4">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <Badge variant="outline">Q{index + 1}</Badge>
-                        <Badge className={`border ${
-                          result.icon === CheckCircle ? "bg-green-100 text-green-800 border-green-200" :
-                          result.icon === XCircle ? "bg-red-100 text-red-800 border-red-200" :
-                          "bg-yellow-100 text-yellow-800 border-yellow-200"
-                        }`}>
+                        <Badge
+                          className={`border ${
+                            result.icon === CheckCircle
+                              ? 'bg-green-100 text-green-800 border-green-200'
+                              : result.icon === XCircle
+                                ? 'bg-red-100 text-red-800 border-red-200'
+                                : 'bg-yellow-100 text-yellow-800 border-yellow-200'
+                          }`}
+                        >
                           <result.icon className="h-3 w-3 mr-1" />
                           {result.text}
                         </Badge>
                       </div>
-                      
+
                       {question && (
-                        <div className="text-gray-900 mb-2">
-                          {question.question_text}
-                        </div>
+                        <div className="text-gray-900 mb-2">{question.question_text}</div>
                       )}
                     </div>
-                    
+
                     <div className="text-right">
                       <div className="font-medium">
                         {answer.points_earned} / {answer.points_possible}
                       </div>
                       {answer.time_spent_seconds && (
                         <div className="text-sm text-gray-500">
-                          {Math.floor(answer.time_spent_seconds / 60)}:{(answer.time_spent_seconds % 60).toString().padStart(2, '0')}
+                          {Math.floor(answer.time_spent_seconds / 60)}:
+                          {(answer.time_spent_seconds % 60).toString().padStart(2, '0')}
                         </div>
                       )}
                     </div>
@@ -395,9 +393,11 @@ export default function ExamResultsPage() {
                     <div className="bg-gray-50 p-3 rounded">
                       {answer.selected_options && answer.selected_options.length > 0 ? (
                         <div className="space-y-1">
-                          {answer.selected_options.map(option => (
+                          {answer.selected_options.map((option) => (
                             <div key={option} className="flex items-center gap-2">
-                              <Badge variant="outline" className="text-xs">{option}</Badge>
+                              <Badge variant="outline" className="text-xs">
+                                {option}
+                              </Badge>
                               {question?.options?.[option] && (
                                 <span className="text-sm">{question.options[option]}</span>
                               )}
@@ -417,16 +417,18 @@ export default function ExamResultsPage() {
                     <div className="space-y-2 mt-3">
                       <div className="text-sm font-medium text-green-700">Correct Answer:</div>
                       <div className="bg-green-50 p-3 rounded border border-green-200">
-                        {question.correct_answers.map(option => (
+                        {question.correct_answers.map((option) => (
                           <div key={option} className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-xs bg-green-100">{option}</Badge>
+                            <Badge variant="outline" className="text-xs bg-green-100">
+                              {option}
+                            </Badge>
                             {question.options?.[option] && (
                               <span className="text-sm">{question.options[option]}</span>
                             )}
                           </div>
                         ))}
                       </div>
-                      
+
                       {question.explanation && (
                         <div className="mt-2">
                           <div className="text-sm font-medium text-gray-700">Explanation:</div>

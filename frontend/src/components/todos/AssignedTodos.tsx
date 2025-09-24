@@ -6,12 +6,14 @@ import LoadingSpinner from '@/components/ui/loading-spinner';
 import { TodoItem } from './TodoItem';
 import { useAuth } from '@/contexts/AuthContext';
 import { getTodoPermissions } from '@/utils/todoPermissions';
-import type { Todo, TodoListResponse, TodoWithAssignedUser, AssignedTodosProps } from '@/types/todo';
+import type {
+  Todo,
+  TodoListResponse,
+  TodoWithAssignedUser,
+  AssignedTodosProps,
+} from '@/types/todo';
 
-const AssignedTodos: React.FC<AssignedTodosProps> = ({
-  onEditTodo,
-  onViewAttachments
-}) => {
+const AssignedTodos: React.FC<AssignedTodosProps> = ({ onEditTodo, onViewAttachments }) => {
   const { showToast } = useToast();
   const { user } = useAuth();
   const [assignedTodos, setAssignedTodos] = useState<Todo[]>([]);
@@ -25,14 +27,14 @@ const AssignedTodos: React.FC<AssignedTodosProps> = ({
       setLoading(true);
       const response: TodoListResponse = await todosApi.listAssignedTodos({
         includeCompleted,
-        limit: 50
+        limit: 50,
       });
       setAssignedTodos(response.items);
     } catch (error) {
       console.error('Failed to load assigned todos:', error);
       showToast({
         type: 'error',
-        title: 'Failed to load assigned todos'
+        title: 'Failed to load assigned todos',
       });
     } finally {
       setLoading(false);
@@ -48,7 +50,7 @@ const AssignedTodos: React.FC<AssignedTodosProps> = ({
     if (!permissions.canChangeStatus) {
       showToast({
         type: 'error',
-        title: 'You don\'t have permission to change this todo\'s status'
+        title: "You don't have permission to change this todo's status",
       });
       return;
     }
@@ -66,7 +68,7 @@ const AssignedTodos: React.FC<AssignedTodosProps> = ({
     } catch (error) {
       showToast({
         type: 'error',
-        title: error instanceof Error ? error.message : 'Failed to update todo'
+        title: error instanceof Error ? error.message : 'Failed to update todo',
       });
     } finally {
       setActionLoading(null);
@@ -78,7 +80,7 @@ const AssignedTodos: React.FC<AssignedTodosProps> = ({
     if (!permissions.canEdit) {
       showToast({
         type: 'error',
-        title: 'You don\'t have permission to edit this todo'
+        title: "You don't have permission to edit this todo",
       });
       return;
     }
@@ -90,7 +92,7 @@ const AssignedTodos: React.FC<AssignedTodosProps> = ({
     if (!permissions.canDelete) {
       showToast({
         type: 'error',
-        title: 'You don\'t have permission to delete this todo'
+        title: "You don't have permission to delete this todo",
       });
       return;
     }
@@ -107,7 +109,7 @@ const AssignedTodos: React.FC<AssignedTodosProps> = ({
     } catch (error) {
       showToast({
         type: 'error',
-        title: error instanceof Error ? error.message : 'Failed to delete todo'
+        title: error instanceof Error ? error.message : 'Failed to delete todo',
       });
     } finally {
       setActionLoading(null);
@@ -130,12 +132,10 @@ const AssignedTodos: React.FC<AssignedTodosProps> = ({
           <UserIcon className="h-6 w-6 text-blue-600" />
           <div>
             <h2 className="text-xl font-semibold text-gray-900">Assigned to Me</h2>
-            <p className="text-sm text-gray-500">
-              Tasks that have been assigned to you by others
-            </p>
+            <p className="text-sm text-gray-500">Tasks that have been assigned to you by others</p>
           </div>
         </div>
-        
+
         {/* Filter Toggle */}
         <div className="flex items-center space-x-2">
           <label className="flex items-center space-x-2 text-sm">
@@ -154,14 +154,11 @@ const AssignedTodos: React.FC<AssignedTodosProps> = ({
       {assignedTodos.length === 0 ? (
         <div className="text-center py-12">
           <InboxIcon className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-4 text-lg font-medium text-gray-900">
-            No assigned todos
-          </h3>
+          <h3 className="mt-4 text-lg font-medium text-gray-900">No assigned todos</h3>
           <p className="mt-2 text-sm text-gray-500">
-            {includeCompleted 
-              ? "You don't have any assigned todos." 
-              : "You don't have any pending assigned todos."
-            }
+            {includeCompleted
+              ? "You don't have any assigned todos."
+              : "You don't have any pending assigned todos."}
           </p>
         </div>
       ) : (
@@ -190,7 +187,8 @@ const AssignedTodos: React.FC<AssignedTodosProps> = ({
       {/* Stats */}
       {assignedTodos.length > 0 && (
         <div className="mt-6 text-center text-sm text-gray-500">
-          {assignedTodos.filter(t => t.status === 'completed').length} of {assignedTodos.length} completed
+          {assignedTodos.filter((t) => t.status === 'completed').length} of {assignedTodos.length}{' '}
+          completed
         </div>
       )}
     </div>

@@ -55,9 +55,10 @@ export const VideoControls: React.FC<VideoControlsProps> = ({
         className={`
           relative w-14 h-14 rounded-full transition-all duration-200 ease-in-out
           flex items-center justify-center group
-          ${isMuted
-            ? 'bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/25'
-            : 'bg-gray-700 hover:bg-gray-600 shadow-lg shadow-black/25'
+          ${
+            isMuted
+              ? 'bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/25'
+              : 'bg-gray-700 hover:bg-gray-600 shadow-lg shadow-black/25'
           }
           hover:scale-105 active:scale-95
         `}
@@ -79,9 +80,10 @@ export const VideoControls: React.FC<VideoControlsProps> = ({
         className={`
           relative w-14 h-14 rounded-full transition-all duration-200 ease-in-out
           flex items-center justify-center group
-          ${!isVideoOn
-            ? 'bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/25'
-            : 'bg-gray-700 hover:bg-gray-600 shadow-lg shadow-black/25'
+          ${
+            !isVideoOn
+              ? 'bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/25'
+              : 'bg-gray-700 hover:bg-gray-600 shadow-lg shadow-black/25'
           }
           hover:scale-105 active:scale-95
         `}
@@ -103,9 +105,10 @@ export const VideoControls: React.FC<VideoControlsProps> = ({
         className={`
           w-14 h-14 rounded-full transition-all duration-200 ease-in-out
           flex items-center justify-center group
-          ${isScreenSharing
-            ? 'bg-blue-500 hover:bg-blue-600 shadow-lg shadow-blue-500/25'
-            : 'bg-gray-700 hover:bg-gray-600 shadow-lg shadow-black/25'
+          ${
+            isScreenSharing
+              ? 'bg-blue-500 hover:bg-blue-600 shadow-lg shadow-blue-500/25'
+              : 'bg-gray-700 hover:bg-gray-600 shadow-lg shadow-black/25'
           }
           hover:scale-105 active:scale-95
         `}
@@ -123,9 +126,10 @@ export const VideoControls: React.FC<VideoControlsProps> = ({
         className={`
           w-12 h-12 rounded-xl transition-all duration-200 ease-in-out
           flex items-center justify-center group
-          ${showTranscription
-            ? 'bg-purple-500 hover:bg-purple-600 shadow-lg shadow-purple-500/25'
-            : 'bg-gray-700/80 hover:bg-gray-600 shadow-md'
+          ${
+            showTranscription
+              ? 'bg-purple-500 hover:bg-purple-600 shadow-lg shadow-purple-500/25'
+              : 'bg-gray-700/80 hover:bg-gray-600 shadow-md'
           }
           hover:scale-105 active:scale-95
         `}
@@ -140,9 +144,10 @@ export const VideoControls: React.FC<VideoControlsProps> = ({
         className={`
           w-12 h-12 rounded-xl transition-all duration-200 ease-in-out
           flex items-center justify-center group
-          ${showChat
-            ? 'bg-green-500 hover:bg-green-600 shadow-lg shadow-green-500/25'
-            : 'bg-gray-700/80 hover:bg-gray-600 shadow-md'
+          ${
+            showChat
+              ? 'bg-green-500 hover:bg-green-600 shadow-lg shadow-green-500/25'
+              : 'bg-gray-700/80 hover:bg-gray-600 shadow-md'
           }
           hover:scale-105 active:scale-95
         `}

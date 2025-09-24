@@ -72,10 +72,7 @@ function ResetPasswordContent() {
               <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
                 The password reset link is invalid or has expired. Please request a new one.
               </p>
-              <Link
-                href="/auth/forgot-password"
-                className="btn btn-primary w-full"
-              >
+              <Link href="/auth/forgot-password" className="btn btn-primary w-full">
                 Request New Reset Link
               </Link>
             </div>
@@ -101,11 +98,7 @@ function ResetPasswordContent() {
 
         {/* Reset Password Form */}
         <div className="card p-8">
-          <ResetPasswordForm
-            onSubmit={handleResetPassword}
-            isLoading={isLoading}
-            error={error}
-          />
+          <ResetPasswordForm onSubmit={handleResetPassword} isLoading={isLoading} error={error} />
 
           {/* Back to Login */}
           <div className="mt-6 text-center">
@@ -125,20 +118,22 @@ function ResetPasswordContent() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-950">
-        <div className="max-w-md w-full">
-          <div className="text-center">
-            <Brand className="justify-center mb-8" />
-            <div className="card p-8">
-              <div className="animate-pulse">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-950">
+          <div className="max-w-md w-full">
+            <div className="text-center">
+              <Brand className="justify-center mb-8" />
+              <div className="card p-8">
+                <div className="animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <ResetPasswordContent />
     </Suspense>
   );

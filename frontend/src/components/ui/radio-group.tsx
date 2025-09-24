@@ -11,12 +11,7 @@ interface RadioGroupProps {
 const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(
   ({ children, className, ...props }, ref) => {
     return (
-      <div
-        ref={ref}
-        className={clsx('grid gap-2', className)}
-        role="radiogroup"
-        {...props}
-      >
+      <div ref={ref} className={clsx('grid gap-2', className)} role="radiogroup" {...props}>
         {children}
       </div>
     );

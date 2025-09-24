@@ -99,8 +99,10 @@ function EditCompanyContent() {
         city: formData.city || undefined,
         description: formData.description || undefined,
         is_demo: formData.is_demo,
-        demo_end_date: formData.is_demo && formData.demo_end_date ? formData.demo_end_date : undefined,
-        demo_features: formData.is_demo && formData.demo_features ? formData.demo_features : undefined,
+        demo_end_date:
+          formData.is_demo && formData.demo_end_date ? formData.demo_end_date : undefined,
+        demo_features:
+          formData.is_demo && formData.demo_features ? formData.demo_features : undefined,
         demo_notes: formData.is_demo && formData.demo_notes ? formData.demo_notes : undefined,
       };
 
@@ -108,7 +110,7 @@ function EditCompanyContent() {
       showToast({
         type: 'success',
         title: 'Company updated successfully!',
-        message: `${formData.name} has been updated.`
+        message: `${formData.name} has been updated.`,
       });
       router.push('/companies');
     } catch (err) {
@@ -128,7 +130,7 @@ function EditCompanyContent() {
       showToast({
         type: 'success',
         title: 'Company deactivated',
-        message: `${company.name} has been deactivated.`
+        message: `${company.name} has been deactivated.`,
       });
       router.push('/companies');
     } catch (err) {
@@ -147,7 +149,7 @@ function EditCompanyContent() {
       showToast({
         type: 'success',
         title: 'Company deleted',
-        message: `${company.name} has been permanently deleted.`
+        message: `${company.name} has been permanently deleted.`,
       });
       router.push('/companies');
     } catch (err) {
@@ -221,7 +223,7 @@ function EditCompanyContent() {
                   type="text"
                   required
                   value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   placeholder="Enter company name"
                 />
@@ -240,7 +242,9 @@ function EditCompanyContent() {
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
                   placeholder="contact@company.com"
                 />
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Email cannot be changed</p>
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Email cannot be changed
+                </p>
               </div>
 
               {/* Type */}
@@ -251,13 +255,15 @@ function EditCompanyContent() {
                 <select
                   required
                   value={formData.type}
-                  onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as CompanyType }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, type: e.target.value as CompanyType }))
+                  }
                   className="w-full px-3 py-2 pr-8 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white appearance-none bg-white"
                   style={{
                     backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                     backgroundPosition: 'right 12px center',
                     backgroundRepeat: 'no-repeat',
-                    backgroundSize: '16px'
+                    backgroundSize: '16px',
                   }}
                 >
                   <option value="employer">Employer</option>
@@ -273,7 +279,7 @@ function EditCompanyContent() {
                 <input
                   type="tel"
                   value={formData.phone}
-                  onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   placeholder="03-1234-5678"
                 />
@@ -287,7 +293,7 @@ function EditCompanyContent() {
                 <input
                   type="url"
                   value={formData.website}
-                  onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, website: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   placeholder="https://company.com"
                 />
@@ -309,7 +315,7 @@ function EditCompanyContent() {
                     if (value.length > 3) {
                       value = value.slice(0, 3) + '-' + value.slice(3, 7);
                     }
-                    setFormData(prev => ({ ...prev, postal_code: value }));
+                    setFormData((prev) => ({ ...prev, postal_code: value }));
                   }}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   placeholder="123-4567"
@@ -324,17 +330,17 @@ function EditCompanyContent() {
                 </label>
                 <select
                   value={formData.prefecture}
-                  onChange={(e) => setFormData(prev => ({ ...prev, prefecture: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, prefecture: e.target.value }))}
                   className="w-full px-3 py-2 pr-8 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white appearance-none bg-white"
                   style={{
                     backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                     backgroundPosition: 'right 12px center',
                     backgroundRepeat: 'no-repeat',
-                    backgroundSize: '16px'
+                    backgroundSize: '16px',
                   }}
                 >
                   <option value="">Select Prefecture</option>
-                  {PREFECTURES.map(prefecture => (
+                  {PREFECTURES.map((prefecture) => (
                     <option key={prefecture.code} value={prefecture.nameJa}>
                       {prefecture.nameJa} ({prefecture.nameEn})
                     </option>
@@ -350,7 +356,7 @@ function EditCompanyContent() {
                 <input
                   type="text"
                   value={formData.city}
-                  onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, city: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   placeholder="渋谷区"
                 />
@@ -364,7 +370,7 @@ function EditCompanyContent() {
               </label>
               <textarea
                 value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
                 rows={4}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none"
                 placeholder="Brief description of the company..."
@@ -385,10 +391,15 @@ function EditCompanyContent() {
                     id="is_demo"
                     type="checkbox"
                     checked={formData.is_demo}
-                    onChange={(e) => setFormData(prev => ({ ...prev, is_demo: e.target.checked }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, is_demo: e.target.checked }))
+                    }
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
-                  <label htmlFor="is_demo" className="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label
+                    htmlFor="is_demo"
+                    className="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
                     This is a demo company
                   </label>
                 </div>
@@ -410,7 +421,9 @@ function EditCompanyContent() {
                       <input
                         type="date"
                         value={formData.demo_end_date}
-                        onChange={(e) => setFormData(prev => ({ ...prev, demo_end_date: e.target.value }))}
+                        onChange={(e) =>
+                          setFormData((prev) => ({ ...prev, demo_end_date: e.target.value }))
+                        }
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                         min={new Date().toISOString().split('T')[0]}
                       />
@@ -424,7 +437,9 @@ function EditCompanyContent() {
                       <input
                         type="text"
                         value={formData.demo_features}
-                        onChange={(e) => setFormData(prev => ({ ...prev, demo_features: e.target.value }))}
+                        onChange={(e) =>
+                          setFormData((prev) => ({ ...prev, demo_features: e.target.value }))
+                        }
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                         placeholder="e.g., Basic Plan, 50 job posts, 100 applications"
                       />
@@ -438,7 +453,9 @@ function EditCompanyContent() {
                     </label>
                     <textarea
                       value={formData.demo_notes}
-                      onChange={(e) => setFormData(prev => ({ ...prev, demo_notes: e.target.value }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, demo_notes: e.target.value }))
+                      }
                       rows={3}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none"
                       placeholder="Internal notes about this demo account..."
@@ -503,8 +520,8 @@ function EditCompanyContent() {
                 </h3>
               </div>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Are you sure you want to permanently delete <strong>{company?.name}</strong>?
-                This action cannot be undone and will remove all associated data.
+                Are you sure you want to permanently delete <strong>{company?.name}</strong>? This
+                action cannot be undone and will remove all associated data.
               </p>
               <div className="flex justify-end space-x-3">
                 <button
@@ -537,8 +554,8 @@ function EditCompanyContent() {
                 </h3>
               </div>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Are you sure you want to deactivate <strong>{company?.name}</strong>?
-                The company will no longer be able to access the system but data will be preserved.
+                Are you sure you want to deactivate <strong>{company?.name}</strong>? The company
+                will no longer be able to access the system but data will be preserved.
               </p>
               <div className="flex justify-end space-x-3">
                 <button

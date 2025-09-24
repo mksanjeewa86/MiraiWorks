@@ -16,7 +16,7 @@ import type {
   TaskFormState,
   TaskModalProps,
   AssignableUser,
-  TodoAssignmentUpdate
+  TodoAssignmentUpdate,
 } from '@/types/todo';
 
 const initialFormState: TaskFormState = {
@@ -61,7 +61,7 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: T
           console.error('Failed to load assignable users:', error);
           showToast({
             type: 'error',
-            title: 'Failed to load users for assignment'
+            title: 'Failed to load users for assignment',
           });
         } finally {
           setLoadingUsers(false);
@@ -84,7 +84,7 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: T
         });
         setAssignment({
           assigned_user_id: editingTodo.assigned_user_id,
-          visibility: editingTodo.visibility
+          visibility: editingTodo.visibility,
         });
       } else {
         setFormState(initialFormState);
@@ -93,11 +93,11 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: T
     }
   }, [isOpen, editingTodo]);
 
-  const handleInputChange = (field: keyof TaskFormState) => (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    setFormState((prev) => ({ ...prev, [field]: event.target.value }));
-  };
+  const handleInputChange =
+    (field: keyof TaskFormState) =>
+    (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      setFormState((prev) => ({ ...prev, [field]: event.target.value }));
+    };
 
   const handleAssignmentChange = (assignmentData: TodoAssignmentUpdate) => {
     setAssignment(assignmentData);
@@ -119,23 +119,25 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: T
       due_date: formState.dueDate ? new Date(formState.dueDate).toISOString() : undefined,
       ...(canAssign && {
         assigned_user_id: assignment.assigned_user_id,
-        visibility: assignment.visibility
-      })
+        visibility: assignment.visibility,
+      }),
     };
 
     setSubmitting(true);
     try {
       if (isEditing && editingTodo) {
         await todosApi.update(editingTodo.id, payload);
-        
+
         // Handle assignment separately if it changed and user can assign
-        if (canAssign && permissions?.canAssign && (
-          assignment.assigned_user_id !== editingTodo.assigned_user_id ||
-          assignment.visibility !== editingTodo.visibility
-        )) {
+        if (
+          canAssign &&
+          permissions?.canAssign &&
+          (assignment.assigned_user_id !== editingTodo.assigned_user_id ||
+            assignment.visibility !== editingTodo.visibility)
+        ) {
           await todosApi.assignTodo(editingTodo.id, assignment);
         }
-        
+
         showToast({ type: 'success', title: 'Task updated successfully' });
       } else {
         await todosApi.create(payload);
@@ -147,7 +149,8 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: T
       console.error(err);
       showToast({
         type: 'error',
-        title: err instanceof Error ? err.message : `Failed to ${isEditing ? 'update' : 'create'} task`
+        title:
+          err instanceof Error ? err.message : `Failed to ${isEditing ? 'update' : 'create'} task`,
       });
     } finally {
       setSubmitting(false);
@@ -264,11 +267,13 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: T
             {canAssign && (
               <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
                 <UserAssignment
-                  todo={{
-                    ...formState,
-                    assigned_user_id: assignment.assigned_user_id,
-                    visibility: assignment.visibility || 'private'
-                  } as any}
+                  todo={
+                    {
+                      ...formState,
+                      assigned_user_id: assignment.assigned_user_id,
+                      visibility: assignment.visibility || 'private',
+                    } as any
+                  }
                   assignableUsers={assignableUsers}
                   onAssign={handleAssignmentChange}
                   isLoading={loadingUsers || submitting}
@@ -278,12 +283,7 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: T
 
             {/* Footer */}
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={handleClose}
-                disabled={submitting}
-              >
+              <Button type="button" variant="ghost" onClick={handleClose} disabled={submitting}>
                 Cancel
               </Button>
               <Button

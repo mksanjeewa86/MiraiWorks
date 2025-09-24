@@ -8,7 +8,12 @@ import Button from '@/components/ui/button';
 import type { TwoFactorFormProps } from '@/types/components';
 import { twoFactorSchema, type TwoFactorFormData } from '@/types/forms';
 
-export default function TwoFactorForm({ onSubmit, onResend, isLoading = false, error }: TwoFactorFormProps) {
+export default function TwoFactorForm({
+  onSubmit,
+  onResend,
+  isLoading = false,
+  error,
+}: TwoFactorFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [codeDigits, setCodeDigits] = useState(['', '', '', '', '', '']);
@@ -81,7 +86,7 @@ export default function TwoFactorForm({ onSubmit, onResend, isLoading = false, e
 
   const handleResend = async () => {
     if (!onResend) return;
-    
+
     setIsResending(true);
     try {
       await onResend();
@@ -95,7 +100,10 @@ export default function TwoFactorForm({ onSubmit, onResend, isLoading = false, e
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
       <div className="text-center">
-        <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: 'rgba(108, 99, 255, 0.1)' }}>
+        <div
+          className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+          style={{ backgroundColor: 'rgba(108, 99, 255, 0.1)' }}
+        >
           <Shield className="h-8 w-8 text-brand-primary" />
         </div>
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
@@ -134,9 +142,10 @@ export default function TwoFactorForm({ onSubmit, onResend, isLoading = false, e
                 w-12 h-12 text-center text-lg font-semibold bg-gray-50 dark:bg-gray-800 
                 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-primary 
                 focus:border-transparent transition-colors
-                ${errors.code 
-                  ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20' 
-                  : 'border-gray-200 dark:border-gray-700'
+                ${
+                  errors.code
+                    ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20'
+                    : 'border-gray-200 dark:border-gray-700'
                 }
               `}
               aria-label={`Digit ${index + 1}`}
@@ -144,7 +153,9 @@ export default function TwoFactorForm({ onSubmit, onResend, isLoading = false, e
           ))}
         </div>
         {errors.code && (
-          <p className="mt-2 text-sm text-red-600 dark:text-red-400 text-center">{errors.code.message}</p>
+          <p className="mt-2 text-sm text-red-600 dark:text-red-400 text-center">
+            {errors.code.message}
+          </p>
         )}
       </div>
 
@@ -163,7 +174,8 @@ export default function TwoFactorForm({ onSubmit, onResend, isLoading = false, e
             type="button"
             onClick={handleResend}
             disabled={isResending}
-            className="inline-flex items-center text-sm hover:text-brand-primary transition-colors disabled:opacity-50" style={{ color: 'var(--text-muted)' }}
+            className="inline-flex items-center text-sm hover:text-brand-primary transition-colors disabled:opacity-50"
+            style={{ color: 'var(--text-muted)' }}
           >
             <RotateCcw className="h-4 w-4 mr-2" />
             {isResending ? 'Sending...' : "Didn't receive a code? Resend"}
