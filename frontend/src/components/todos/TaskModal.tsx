@@ -1,10 +1,11 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { X, Plus, Save, ClipboardList } from 'lucide-react';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
 import Badge from '@/components/ui/badge';
+import DateTimePicker from '@/components/ui/date-time-picker';
 import { useToast } from '@/contexts/ToastContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { todosApi } from '@/api/todos';
@@ -216,17 +217,15 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: T
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Due Date
-                </label>
-                <input
-                  type="datetime-local"
-                  value={formState.dueDate}
-                  onChange={handleInputChange('dueDate')}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                />
-              </div>
+              <DateTimePicker
+                className="w-full"
+                label="Due Date"
+                value={formState.dueDate || null}
+                onChange={(nextValue) =>
+                  setFormState((prev) => ({ ...prev, dueDate: nextValue ?? '' }))
+                }
+                placeholder="Select due date"
+              />
               <div>
                 <Input
                   label="Priority"
@@ -300,3 +299,7 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: T
     </div>
   );
 }
+
+
+
+

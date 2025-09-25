@@ -1,0 +1,25 @@
+﻿.rdp-custom {
+  --rdp-accent-color: var(--color-brand-primary, #2563eb);
+  --rdp-background-color: transparent;
+  --rdp-accent-color-dark: var(--color-brand-primary-dark, #1d4ed8);
+  --rdp-outline: 2px solid var(--color-brand-primary, #2563eb);
+  --rdp-range_start-color: var(--color-brand-primary, #2563eb);
+  --rdp-range_end-color: var(--color-brand-primary-dark, #1d4ed8);
+}
+
+.rdp-custom .rdp-day:hover {
+  background-color: var(--color-brand-primary, #2563eb);
+  color: #fff;
+}
+
+.dark .rdp-custom .rdp-caption,
+.dark .rdp-custom .rdp-weeknumber,
+.dark .rdp-custom .rdp-head_cell,
+.dark .rdp-custom .rdp-day_outside,
+.dark .rdp-custom .rdp-nav_button {
+  color: #cbd5f5;
+}
+
+.dark .rdp-custom .rdp-day:hover {
+  background-color: var(--color-brand-primary-dark, #1d4ed8);
+}

@@ -347,8 +347,8 @@ class Language(BaseModel):
     # Language details
     name = Column(String(50), nullable=False)
     proficiency = Column(
-        String(20), nullable=False
-    )  # e.g., "Native", "Fluent", "Conversational"
+        String(100), nullable=False
+    )  # e.g., "Native", "Fluent", "Conversational", "Professional Working Proficiency (TOEIC 800)"
 
     # Display options
     is_visible = Column(Boolean, default=True)

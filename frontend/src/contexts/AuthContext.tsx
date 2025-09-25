@@ -11,7 +11,7 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 const initialState: AuthState = {
   user: null,
   isAuthenticated: false,
-  isLoading: false, // Set to false initially to prevent immediate redirects
+  isLoading: true, // Set to true initially to prevent redirects while checking auth state
   error: null,
   accessToken: null,
   refreshToken: null,
@@ -199,12 +199,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    // Add a small delay to prevent rapid re-initialization
-    const timeoutId = setTimeout(initAuth, 100);
-
-    return () => {
-      clearTimeout(timeoutId);
-    };
+    // Initialize immediately
+    initAuth();
   }, []);
 
   const login = async (credentials: LoginCredentials) => {

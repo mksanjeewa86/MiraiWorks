@@ -1,7 +1,8 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import DateTimePicker from '@/components/ui/date-time-picker';
 import { ArrowLeft, Save, Video, Phone, Users, AlertCircle } from 'lucide-react';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
@@ -109,36 +110,61 @@ function EditInterviewContent() {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
 
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
 
-    // Auto-adjust end time when start time changes
-    if (name === 'scheduled_start' && value) {
-      const startTime = new Date(value);
-      if (formData.scheduled_end) {
-        const currentEndTime = new Date(formData.scheduled_end);
-        const currentDuration =
-          currentEndTime.getTime() - new Date(formData.scheduled_start).getTime();
-
-        // If there's an existing duration, maintain it
-        if (currentDuration > 0) {
-          const newEndTime = new Date(startTime.getTime() + currentDuration);
-          setFormData((prev) => ({
-            ...prev,
-            scheduled_end: newEndTime.toISOString().slice(0, 16),
-          }));
-        } else {
-          // Default to 1 hour duration
-          const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
-          setFormData((prev) => ({
-            ...prev,
-            scheduled_end: endTime.toISOString().slice(0, 16),
-          }));
-        }
+    if (name === 'video_call_type' && value === 'system_generated') {
+      setFormData((prev) => ({ ...prev, meeting_url: '' }));
+      if (errors.meeting_url) {
+        setErrors((prev) => ({ ...prev, meeting_url: '' }));
       }
     }
+
+    if (name === 'interview_type' && value !== 'video') {
+      setFormData((prev) => ({
+        ...prev,
+        video_call_type: 'system_generated',
+        meeting_url: '',
+      }));
+      if (errors.meeting_url) {
+        setErrors((prev) => ({ ...prev, meeting_url: '' }));
+      }
+    }
+  };
+
+  const handleScheduleChange = (field: 'scheduled_start' | 'scheduled_end') => (value: string | null) => {
+    const normalized = value ?? '';
+    setFormData((prev) => {
+      const next = { ...prev, [field]: normalized };
+
+      if (field === 'scheduled_start' && normalized) {
+        const startTime = new Date(normalized);
+        if (!Number.isNaN(startTime.getTime())) {
+          const previousStart = prev.scheduled_start ? new Date(prev.scheduled_start) : null;
+          const previousEnd = prev.scheduled_end ? new Date(prev.scheduled_end) : null;
+
+          let duration = 60 * 60 * 1000;
+          if (previousStart && !Number.isNaN(previousStart.getTime()) && previousEnd && !Number.isNaN(previousEnd.getTime())) {
+            const diff = previousEnd.getTime() - previousStart.getTime();
+            if (diff > 0) {
+              duration = diff;
+            }
+          }
+
+          const newEnd = new Date(startTime.getTime() + duration);
+          next.scheduled_end = newEnd.toISOString().slice(0, 16);
+        }
+      }
+
+      return next;
+    });
+
+    setErrors((prev) => ({
+      ...prev,
+      [field]: '',
+      ...(field === 'scheduled_start' ? { scheduled_end: '' } : {}),
+    }));
   };
 
   const validateForm = (): boolean => {
@@ -374,39 +400,25 @@ function EditInterviewContent() {
 
             {/* Schedule */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Start Time *</label>
-                <input
-                  type="datetime-local"
-                  name="scheduled_start"
-                  value={formData.scheduled_start}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.scheduled_start ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                />
-                {errors.scheduled_start && (
-                  <p className="mt-1 text-sm text-red-600">{errors.scheduled_start}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">End Time *</label>
-                <input
-                  type="datetime-local"
-                  name="scheduled_end"
-                  value={formData.scheduled_end}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.scheduled_end ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                />
-                {errors.scheduled_end && (
-                  <p className="mt-1 text-sm text-red-600">{errors.scheduled_end}</p>
-                )}
-              </div>
+              <DateTimePicker
+                label="Start Time *"
+                value={formData.scheduled_start || null}
+                onChange={handleScheduleChange('scheduled_start')}
+                error={errors.scheduled_start}
+                placeholder="Select start time"
+                required
+                allowClear={false}
+              />
+              <DateTimePicker
+                label="End Time *"
+                value={formData.scheduled_end || null}
+                onChange={handleScheduleChange('scheduled_end')}
+                error={errors.scheduled_end}
+                placeholder="Select end time"
+                required
+                allowClear={false}
+              />
             </div>
-
             {/* Location/Meeting Details */}
             {formData.interview_type === 'video' && (
               <div>
@@ -542,3 +554,5 @@ export default function EditInterviewPage() {
     </ProtectedRoute>
   );
 }
+
+

@@ -345,7 +345,7 @@ class CertificationInfo(CertificationBase):
 # Language schemas
 class LanguageBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=50)
-    proficiency: str = Field(..., min_length=1, max_length=20)
+    proficiency: str = Field(..., min_length=1, max_length=100)
     display_order: Optional[int] = 0
 
 
@@ -355,7 +355,7 @@ class LanguageCreate(LanguageBase):
 
 class LanguageUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=50)
-    proficiency: Optional[str] = Field(None, min_length=1, max_length=20)
+    proficiency: Optional[str] = Field(None, min_length=1, max_length=100)
     display_order: Optional[int] = None
     is_visible: Optional[bool] = None
 

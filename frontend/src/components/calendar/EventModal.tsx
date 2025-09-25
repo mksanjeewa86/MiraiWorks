@@ -1,7 +1,8 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { X, MapPin, Users, Video, Phone, Trash2, Save, AlertCircle } from 'lucide-react';
+import DateTimePicker from '@/components/ui/date-time-picker';
 import type { CalendarEvent } from '@/types/interview';
 import type { EventModalProps, EventFormData } from '@/types/components';
 
@@ -284,41 +285,28 @@ export default function EventModal({
 
               {/* Date and Time */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Start Time *
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={formData.startDatetime}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, startDatetime: e.target.value }))
-                    }
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.startDatetime ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                  />
-                  {errors.startDatetime && (
-                    <p className="mt-1 text-sm text-red-600">{errors.startDatetime}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">End Time *</label>
-                  <input
-                    type="datetime-local"
-                    value={formData.endDatetime}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, endDatetime: e.target.value }))
-                    }
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.endDatetime ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                  />
-                  {errors.endDatetime && (
-                    <p className="mt-1 text-sm text-red-600">{errors.endDatetime}</p>
-                  )}
-                </div>
+                <DateTimePicker
+                  label="Start Time *"
+                  value={formData.startDatetime || null}
+                  onChange={(nextValue) =>
+                    setFormData((prev) => ({ ...prev, startDatetime: nextValue ?? '' }))
+                  }
+                  error={errors.startDatetime}
+                  placeholder="Pick start time"
+                  required
+                  allowClear={false}
+                />
+                <DateTimePicker
+                  label="End Time *"
+                  value={formData.endDatetime || null}
+                  onChange={(nextValue) =>
+                    setFormData((prev) => ({ ...prev, endDatetime: nextValue ?? '' }))
+                  }
+                  error={errors.endDatetime}
+                  placeholder="Pick end time"
+                  required
+                  allowClear={false}
+                />
               </div>
 
               {/* All Day Toggle */}
@@ -475,3 +463,4 @@ export default function EventModal({
     </div>
   );
 }
+

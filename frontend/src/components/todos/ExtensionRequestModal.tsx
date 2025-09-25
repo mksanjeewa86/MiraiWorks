@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 import { XMarkIcon, ClockIcon, CalendarIcon } from '@heroicons/react/24/outline';
 import { format, addDays, parseISO } from 'date-fns';
+import DateTimePicker from '@/components/ui/date-time-picker';
 import { todoExtensionsApi } from '@/api/todo-extensions';
 import type { ExtensionRequestModalProps, TodoExtensionValidation } from '@/types/todo';
 
@@ -153,27 +154,16 @@ const ExtensionRequestModal: React.FC<ExtensionRequestModalProps> = ({
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   {/* Requested Date */}
-                  <div>
-                    <label
-                      htmlFor="requestedDate"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      New Due Date
-                    </label>
-                    <input
-                      type="datetime-local"
-                      id="requestedDate"
-                      value={requestedDate}
-                      onChange={(e) => setRequestedDate(e.target.value)}
-                      min={format(addDays(currentDueDate, 1), "yyyy-MM-dd'T'HH:mm")}
-                      max={format(maxAllowedDate, "yyyy-MM-dd'T'HH:mm")}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      required
-                    />
-                    <p className="mt-1 text-xs text-gray-500">
-                      Maximum extension: {format(maxAllowedDate, 'MMM dd, yyyy')} (3 days)
-                    </p>
-                  </div>
+                  <DateTimePicker
+                    label="New Due Date"
+                    value={requestedDate || null}
+                    onChange={(nextValue) => setRequestedDate(nextValue ?? '')}
+                    min={format(addDays(currentDueDate, 1), "yyyy-MM-dd'T'HH:mm")}
+                    max={format(maxAllowedDate, "yyyy-MM-dd'T'HH:mm")}
+                    placeholder="Select new due date"
+                    helperText={`Maximum extension: ${format(maxAllowedDate, 'MMM dd, yyyy')} (3 days)`}
+                    required
+                  />
 
                   {/* Validation Feedback */}
                   {isValidating && (
@@ -191,7 +181,7 @@ const ExtensionRequestModal: React.FC<ExtensionRequestModalProps> = ({
 
                   {validation && validation.can_request_extension && (
                     <div className="p-3 bg-green-50 border border-green-200 rounded-md">
-                      <p className="text-sm text-green-600">✓ Extension request is valid</p>
+                      <p className="text-sm text-green-600">笨・Extension request is valid</p>
                     </div>
                   )}
 
@@ -259,3 +249,6 @@ const ExtensionRequestModal: React.FC<ExtensionRequestModalProps> = ({
 };
 
 export default ExtensionRequestModal;
+
+
+

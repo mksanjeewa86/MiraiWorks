@@ -1,7 +1,8 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import DateTimePicker from '@/components/ui/date-time-picker';
 import {
   ArrowLeft,
   Save,
@@ -190,6 +191,26 @@ function ScheduleInterviewContent() {
         setErrors((prev) => ({ ...prev, meeting_url: '' }));
       }
     }
+  };
+
+  const handleScheduleChange = (field: 'scheduled_start' | 'scheduled_end') => (value: string | null) => {
+    const normalized = value ?? '';
+    setFormData((prev) => {
+      const next = { ...prev, [field]: normalized };
+      if (field === 'scheduled_start' && normalized) {
+        const startTime = new Date(normalized);
+        if (!Number.isNaN(startTime.getTime())) {
+          const newEnd = new Date(startTime.getTime() + 60 * 60 * 1000);
+          next.scheduled_end = newEnd.toISOString().slice(0, 16);
+        }
+      }
+      return next;
+    });
+    setErrors((prev) => ({
+      ...prev,
+      [field]: '',
+      ...(field === 'scheduled_start' ? { scheduled_end: '' } : {}),
+    }));
   };
 
   const validateForm = (): boolean => {
@@ -640,37 +661,24 @@ function ScheduleInterviewContent() {
 
             {/* Schedule */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Start Time *</label>
-                <input
-                  type="datetime-local"
-                  name="scheduled_start"
-                  value={formData.scheduled_start}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.scheduled_start ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                />
-                {errors.scheduled_start && (
-                  <p className="mt-1 text-sm text-red-600">{errors.scheduled_start}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">End Time *</label>
-                <input
-                  type="datetime-local"
-                  name="scheduled_end"
-                  value={formData.scheduled_end}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.scheduled_end ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                />
-                {errors.scheduled_end && (
-                  <p className="mt-1 text-sm text-red-600">{errors.scheduled_end}</p>
-                )}
-              </div>
+              <DateTimePicker
+                label="Start Time *"
+                value={formData.scheduled_start || null}
+                onChange={handleScheduleChange('scheduled_start')}
+                error={errors.scheduled_start}
+                placeholder="Select start time"
+                required
+                allowClear={false}
+              />
+              <DateTimePicker
+                label="End Time *"
+                value={formData.scheduled_end || null}
+                onChange={handleScheduleChange('scheduled_end')}
+                error={errors.scheduled_end}
+                placeholder="Select end time"
+                required
+                allowClear={false}
+              />
             </div>
 
             {/* Location/Meeting Details */}
@@ -788,3 +796,4 @@ export default function ScheduleInterviewPage() {
     </ProtectedRoute>
   );
 }
+

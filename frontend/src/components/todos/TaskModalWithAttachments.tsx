@@ -1,10 +1,11 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { X, Plus, Save, ClipboardList, Paperclip } from 'lucide-react';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
 import Badge from '@/components/ui/badge';
+import DateTimePicker from '@/components/ui/date-time-picker';
 import { useToast } from '@/contexts/ToastContext';
 import { todosApi } from '@/api/todos';
 import { todoAttachmentAPI } from '@/api/todo-attachments';
@@ -201,7 +202,7 @@ export default function TaskModalWithAttachments({
                     </Badge>
                     {attachments.length > 0 && (
                       <Badge variant="outline" size="sm">
-                        {attachments.length} file{attachments.length !== 1 ? 's' : ''} •{' '}
+                        {attachments.length} file{attachments.length !== 1 ? 's' : ''} 窶｢{' '}
                         {totalAttachmentSize.toFixed(1)}MB
                       </Badge>
                     )}
@@ -234,17 +235,15 @@ export default function TaskModalWithAttachments({
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Due Date
-                    </label>
-                    <input
-                      type="datetime-local"
-                      value={formState.dueDate}
-                      onChange={handleInputChange('dueDate')}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                    />
-                  </div>
+                  <DateTimePicker
+                    className="w-full"
+                    label="Due Date"
+                    value={formState.dueDate || null}
+                    onChange={(nextValue) =>
+                      setFormState((prev) => ({ ...prev, dueDate: nextValue ?? '' }))
+                    }
+                    placeholder="Select due date"
+                  />
                   <div>
                     <Input
                       label="Priority"
@@ -356,7 +355,7 @@ export default function TaskModalWithAttachments({
                   {!isEditing && (
                     <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                       <p className="text-sm text-blue-700 dark:text-blue-300">
-                        💡 Files can be attached after creating the task
+                        庁 Files can be attached after creating the task
                       </p>
                     </div>
                   )}
@@ -399,3 +398,4 @@ export default function TaskModalWithAttachments({
     </div>
   );
 }
+

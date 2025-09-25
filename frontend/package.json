@@ -19,13 +19,18 @@
     "prepare": "husky install || node -e \"process.exit(0)\""
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
     "@headlessui/react": "^2.2.8",
     "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^5.2.1",
+    "@mui/material": "^7.3.2",
+    "@mui/x-date-pickers": "^8.11.3",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
     "axios": "^1.11.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "dayjs": "^1.11.18",
     "emoji-picker-react": "^4.13.3",
     "lucide-react": "^0.542.0",
     "next": "^15.0.0",
