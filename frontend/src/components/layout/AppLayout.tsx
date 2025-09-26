@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
-import Topbar from './Topbar';
-import Sidebar from './Sidebar';
-import { getPageInfo } from '@/utils/pageInfo';
 import type { AppLayoutProps } from '@/types/components';
+import { getPageInfo } from '@/utils/pageInfo';
+import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import Sidebar from './Sidebar';
+import Topbar from './Topbar';
 
 export default function AppLayout({ children, pageTitle, pageDescription }: AppLayoutProps) {
   const pathname = usePathname();
@@ -35,7 +35,7 @@ export default function AppLayout({ children, pageTitle, pageDescription }: AppL
   useEffect(() => {
     if (isMobile) {
       setSidebarCollapsed(false); // Always expanded when opened on mobile
-      setSidebarOpen(false); // Closed by default on mobile
+      // Don't automatically close sidebar on mobile - let user control it
     } else {
       // Restore desktop sidebar state
       setSidebarOpen(true); // Always open on desktop
