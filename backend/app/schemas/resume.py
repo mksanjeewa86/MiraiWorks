@@ -1,9 +1,23 @@
 from datetime import datetime
 from typing import Any, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
 from app.utils.constants import ResumeStatus, ResumeVisibility, SectionType, ResumeFormat, ResumeLanguage
+
+
+def _normalize_enum(enum_cls, value, field_name: str):
+    if value is None or isinstance(value, enum_cls):
+        return value
+    if isinstance(value, str):
+        candidate = value.strip()
+        if not candidate:
+            return None
+        try:
+            return enum_cls(candidate.upper())
+        except ValueError as exc:  # pragma: no cover - validation ensures clarity
+            raise ValueError(f"Invalid value {value!r} for {field_name}") from exc
+    raise ValueError(f"Invalid type for {field_name}: {type(value).__name__}")
 
 
 # Base schemas
@@ -33,13 +47,13 @@ class ResumeBase(BaseModel):
     custom_css: Optional[str] = None
     
     # Japanese-specific fields
-    furigana_name: Optional[str] = Field(None, max_length=100)  # フリガナ
-    birth_date: Optional[datetime] = None  # 生年月日
-    gender: Optional[str] = Field(None, max_length=10)  # 性別
-    nationality: Optional[str] = Field(None, max_length=50)  # 国籍
-    marital_status: Optional[str] = Field(None, max_length=20)  # 婚姻状況
-    emergency_contact: Optional[dict] = None  # 緊急連絡先
-    
+    furigana_name: Optional[str] = Field(None, max_length=100)  # phonetic name (furigana)
+    birth_date: Optional[datetime] = None  # birth date
+    gender: Optional[str] = Field(None, max_length=10)  # gender
+    nationality: Optional[str] = Field(None, max_length=50)  # nationality
+    marital_status: Optional[str] = Field(None, max_length=20)  # marital status
+    emergency_contact: Optional[dict] = None  # emergency contact info
+    photo_path: Optional[str] = Field(None, max_length=500)  # optional profile photo
     # Public sharing
     is_public: Optional[bool] = False
     can_download_pdf: Optional[bool] = True
@@ -62,6 +76,11 @@ class ResumeBase(BaseModel):
 class ResumeCreate(ResumeBase):
     status: Optional[ResumeStatus] = ResumeStatus.DRAFT
     visibility: Optional[ResumeVisibility] = ResumeVisibility.PRIVATE
+
+    @field_validator('status', mode='before')
+    @classmethod
+    def _validate_status(cls, value):
+        return _normalize_enum(ResumeStatus, value, 'status')
 
 
 class ResumeUpdate(BaseModel):
@@ -90,10 +109,16 @@ class ResumeUpdate(BaseModel):
     nationality: Optional[str] = Field(None, max_length=50)
     marital_status: Optional[str] = Field(None, max_length=20)
     emergency_contact: Optional[dict] = None
+    photo_path: Optional[str] = Field(None, max_length=500)
     
     # Settings
     status: Optional[ResumeStatus] = None
     visibility: Optional[ResumeVisibility] = None
+
+    @field_validator('status', mode='before')
+    @classmethod
+    def _validate_update_status(cls, value):
+        return _normalize_enum(ResumeStatus, value, 'status')
     is_primary: Optional[bool] = None
     is_public: Optional[bool] = None
     can_download_pdf: Optional[bool] = None
@@ -492,6 +517,18 @@ class ResumeInfo(ResumeBase):
     languages: list[LanguageInfo] = []
     references: list[ReferenceInfo] = []
 
+    @field_serializer('status', when_used='json')
+    def _serialize_status(self, status: ResumeStatus) -> str:
+        return status.value.lower()
+
+    @field_serializer('resume_format', when_used='json')
+    def _serialize_resume_format(self, resume_format: ResumeFormat) -> str:
+        return resume_format.value
+
+    @field_serializer('resume_language', when_used='json')
+    def _serialize_resume_language(self, resume_language: ResumeLanguage) -> str:
+        return resume_language.value
+
 
 # List response schemas
 class ResumeListRequest(BaseModel):
@@ -586,7 +623,7 @@ class PDFGenerationResponse(BaseModel):
 
 # Japanese Resume specific schemas
 class RirekishoData(BaseModel):
-    """履歴書 (Rirekisho) specific data structure"""
+    """Rirekisho (traditional Japanese resume) specific data structure"""
     personal_info: dict = Field(..., description="Personal information including photo")
     education_history: list[dict] = Field([], description="Educational background")
     work_history: list[dict] = Field([], description="Work experience") 
@@ -598,7 +635,7 @@ class RirekishoData(BaseModel):
     
     
 class ShokumuKeirekishoData(BaseModel):
-    """職務経歴書 (Shokumu Keirekisho) specific data structure"""
+    """Shokumu Keirekisho (career history) specific data structure"""
     career_summary: str = Field(..., description="Career summary")
     detailed_experience: list[dict] = Field(..., description="Detailed work experience")
     skills_and_expertise: dict = Field(..., description="Technical skills and expertise")
@@ -609,6 +646,7 @@ class ShokumuKeirekishoData(BaseModel):
 # Public Resume schemas
 class PublicResumeInfo(BaseModel):
     """Public resume view (limited information)"""
+    model_config = ConfigDict(from_attributes=True)
     id: int
     title: str
     full_name: Optional[str]
@@ -618,12 +656,21 @@ class PublicResumeInfo(BaseModel):
     view_count: int
     last_viewed_at: Optional[datetime]
     can_download_pdf: bool
+    theme_color: Optional[str]
+    font_family: Optional[str]
     
     # Limited related data
     experiences: list[WorkExperienceInfo] = []
     educations: list[EducationInfo] = []
     skills: list[SkillInfo] = []
 
+    @field_serializer('resume_format', when_used='json')
+    def _serialize_public_format(self, resume_format: ResumeFormat) -> str:
+        return resume_format.value
+
+    @field_serializer('resume_language', when_used='json')
+    def _serialize_public_language(self, resume_language: ResumeLanguage) -> str:
+        return resume_language.value
 
 class EmailResumeRequest(BaseModel):
     """Request to send resume via email"""
@@ -666,3 +713,5 @@ class JapaneseResumeTemplate(BaseModel):
     sections: list[str] = Field(..., description="Required sections for this format")
     field_mappings: dict = Field(..., description="Field mappings for template")
     validation_rules: dict = Field({}, description="Format-specific validation rules")
+
+

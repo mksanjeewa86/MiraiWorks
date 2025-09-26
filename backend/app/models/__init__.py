@@ -40,6 +40,8 @@ from .video_call import (
     TranscriptionSegment,
 )
 from .mbti_model import MBTITest, MBTIQuestion
+from .calendar_integration import ExternalCalendarAccount, SyncedEvent
+from .calendar_connection import CalendarConnection
 from .exam import (
     Exam,
     ExamQuestion,
@@ -96,6 +98,9 @@ __all__ = [
     "TranscriptionSegment",
     "MBTITest",
     "MBTIQuestion",
+    "ExternalCalendarAccount",
+    "SyncedEvent",
+    "CalendarConnection",
     "Exam",
     "ExamQuestion",
     "ExamSession",

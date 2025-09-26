@@ -672,6 +672,18 @@ class ResumeService:
             logger.error(f"Error getting public resume: {str(e)}")
             raise
 
+    async def track_public_view(
+        self,
+        db: AsyncSession,
+        slug: str
+    ) -> bool:
+        """Increment view count for a public resume."""
+        try:
+            return await resume_crud.increment_public_view(db, slug=slug)
+        except Exception as e:
+            logger.error(f"Error tracking public resume view: {str(e)}")
+            raise
+
     async def increment_download_count(self, db: AsyncSession, resume_id: int) -> bool:
         """Increment download count for a resume."""
         try:
@@ -738,3 +750,4 @@ class ResumeService:
             logger.error(f"Error attaching resume to message: {str(e)}")
             await db.rollback()
             raise
+

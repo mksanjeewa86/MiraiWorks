@@ -27,9 +27,9 @@ async def lifespan(app: FastAPI):
     logger.info("Starting MiraiWorks API", component="startup")
 
     try:
-        # Initialize database - TEMPORARILY DISABLED FOR DOCKER ISSUES
-        # await init_db()
-        # logger.info("Database initialized", component="database")
+        # Initialize database
+        await init_db()
+        logger.info("Database initialized", component="database")
 
         # Test Redis connection - TEMPORARILY DISABLED FOR DOCKER ISSUES
         # redis_conn = await get_redis()
@@ -38,7 +38,7 @@ async def lifespan(app: FastAPI):
 
         # TODO: Initialize other services (MinIO, ClamAV check, etc.)
 
-        logger.info("MiraiWorks API started successfully (Database/Redis disabled)", component="startup")
+        logger.info("MiraiWorks API started successfully", component="startup")
         yield
 
     except Exception as e:

@@ -1,4 +1,5 @@
-from typing import  Optional
+from datetime import datetime
+from typing import Optional
 import secrets
 import string
 
@@ -130,13 +131,34 @@ class CRUDResume(CRUDBase[Resume, ResumeCreate, ResumeUpdate]):
         
         result = await db.execute(query)
         resume = result.scalars().first()
-        
-        if resume:
-            # Increment view count
-            resume.increment_view_count()
-            await db.commit()
-            
+
         return resume
+
+    async def increment_public_view(
+        self,
+        db: AsyncSession,
+        *,
+        slug: str
+    ) -> bool:
+        result = await db.execute(
+            update(Resume)
+            .where(
+                and_(
+                    Resume.public_url_slug == slug,
+                    Resume.is_public == True,
+                    Resume.status == ResumeStatus.PUBLISHED
+                )
+            )
+            .values(
+                view_count=Resume.view_count + 1,
+                last_viewed_at=datetime.utcnow()
+            )
+            .returning(Resume.id)
+        )
+
+        updated = result.scalars().first()
+        await db.commit()
+        return updated is not None
 
     async def get_by_share_token(self, db: AsyncSession, *, token: str) -> Optional[Resume]:
         """Get resume by share token"""
@@ -185,9 +207,12 @@ class CRUDResume(CRUDBase[Resume, ResumeCreate, ResumeUpdate]):
             
         resume.is_public = is_public
         resume.can_download_pdf = can_download_pdf
-        
-        # If making private, also update visibility
-        if not is_public:
+
+        if is_public:
+            resume.visibility = ResumeVisibility.PUBLIC
+            if resume.status != ResumeStatus.PUBLISHED:
+                resume.status = ResumeStatus.PUBLISHED
+        else:
             resume.visibility = ResumeVisibility.PRIVATE
             
         await db.commit()
@@ -430,3 +455,4 @@ work_experience = CRUDWorkExperience(WorkExperience)
 education = CRUDEducation(Education)
 skill = CRUDSkill(Skill)
 resume_message_attachment = CRUDResumeMessageAttachment(ResumeMessageAttachment)
+

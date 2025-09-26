@@ -1,11 +1,74 @@
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import PlainTextResponse, Response
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.database import get_db
+from app.schemas.resume import PublicResumeInfo
+from app.services.pdf_service import PDFService
+from app.services.resume_service import ResumeService
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+resume_service = ResumeService()
+pdf_service = PDFService()
+
+
+@router.get("/resume/{slug}")
+async def get_public_resume_detail(
+    slug: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Fetch public resume details and HTML preview."""
+    resume = await resume_service.get_public_resume(db, slug)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Public resume not found")
+
+    try:
+        html_content = await pdf_service.get_resume_as_html(resume, resume.template_id)
+    except Exception as exc:
+        logger.error("Failed to render public resume preview: %s", exc)
+        raise HTTPException(status_code=500, detail="Failed to render resume preview") from exc
+
+    resume_info = PublicResumeInfo.model_validate(resume, from_attributes=True)
+    return {"resume": resume_info.model_dump(), "html": html_content}
+
+
+@router.post("/resume/{slug}/view")
+async def track_public_resume_view(
+    slug: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Record a view for a public resume."""
+    tracked = await resume_service.track_public_view(db, slug)
+    if not tracked:
+        raise HTTPException(status_code=404, detail="Public resume not found")
+    return {"message": "View tracked"}
+
+
+@router.post("/resume/{slug}/download-pdf")
+async def generate_public_resume_pdf(
+    slug: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Generate and return a public resume PDF link."""
+    resume = await resume_service.get_public_resume(db, slug)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Public resume not found")
+
+    try:
+        pdf_result = await pdf_service.generate_pdf(resume)
+        await resume_service.increment_download_count(db, resume.id)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error("Failed to generate public resume PDF: %s", exc)
+        raise HTTPException(status_code=500, detail="Failed to generate PDF") from exc
+
+    return {"pdf_url": pdf_result.get("pdf_url")}
 
 
 @router.get("/stats")
@@ -199,3 +262,4 @@ async def get_positions_rss():
         media_type="application/rss+xml",
         headers={"Content-Type": "application/rss+xml"},
     )
+

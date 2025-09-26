@@ -52,13 +52,13 @@ class Resume(BaseModel):
     custom_css = Column(Text)
     
     # Japanese-specific fields
-    furigana_name = Column(String(100))  # フリガナ for 履歴書
-    birth_date = Column(DateTime)  # 生年月日
-    gender = Column(String(10))  # 性別
-    nationality = Column(String(50))  # 国籍
-    marital_status = Column(String(20))  # 婚姻状況
-    emergency_contact = Column(JSON)  # 緊急連絡先
-    photo_path = Column(String(500))  # Profile photo for 履歴書
+    furigana_name = Column(String(100))  # phonetic name (furigana)
+    birth_date = Column(DateTime)  # birth date
+    gender = Column(String(10))  # gender
+    nationality = Column(String(50))  # nationality
+    marital_status = Column(String(20))  # marital status
+    emergency_contact = Column(JSON)  # emergency contact info
+    photo_path = Column(String(500))  # optional profile photo
 
     # Metadata
     is_primary = Column(Boolean, default=False)
@@ -488,3 +488,4 @@ class ResumeMessageAttachment(BaseModel):
     # Relationships
     resume = relationship("Resume")
     # message relationship will be added to Message model
+

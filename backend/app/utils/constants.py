@@ -37,9 +37,9 @@ class ProposalStatus(str, Enum):
 
 
 class ResumeStatus(str, Enum):
-    DRAFT = "draft"
-    PUBLISHED = "published"
-    ARCHIVED = "archived"
+    DRAFT = "DRAFT"
+    PUBLISHED = "PUBLISHED"
+    ARCHIVED = "ARCHIVED"
 
 
 class ResumeVisibility(str, Enum):
@@ -159,3 +159,4 @@ class MBTITestStatus(str, Enum):
     NOT_TAKEN = "not_taken"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
+

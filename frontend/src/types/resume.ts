@@ -18,8 +18,8 @@ export enum ResumeVisibility {
 }
 
 export enum ResumeFormat {
-  RIREKISHO = 'rirekisho', // 履歴書 - Traditional Japanese resume
-  SHOKUMU_KEIREKISHO = 'shokumu_keirekisho', // 職務経歴書 - Career history
+  RIREKISHO = 'rirekisho', // Rirekisho (traditional Japanese resume)
+  SHOKUMU_KEIREKISHO = 'shokumu_keirekisho', // Shokumu keirekisho (career history resume)
   INTERNATIONAL = 'international', // Standard international resume
   MODERN = 'modern', // Modern format
   CREATIVE = 'creative', // Creative format
@@ -77,13 +77,13 @@ export interface Resume {
   custom_css?: string;
 
   // Japanese-specific fields
-  furigana_name?: string; // フリガナ
-  birth_date?: string; // 生年月日
-  gender?: string; // 性別
-  nationality?: string; // 国籍
-  marital_status?: string; // 婚姻状況
-  emergency_contact?: Record<string, any>; // 緊急連絡先
-  photo_path?: string; // Profile photo
+  furigana_name?: string;
+  birth_date?: string;
+  gender?: string;
+  nationality?: string;
+  marital_status?: string;
+  emergency_contact?: Record<string, any>;
+  photo_path?: string;
 
   // Status and visibility
   status: ResumeStatus;
@@ -292,14 +292,14 @@ export interface RirekishoData {
     department?: string;
     entrance_date: string;
     graduation_date?: string;
-    status: '卒業' | '在学中' | '中退';
+    status: 'graduated' | 'enrolled' | 'withdrawn';
   }>;
   work_history: Array<{
     company_name: string;
     position: string;
     start_date: string;
     end_date?: string;
-    employment_type: '正社員' | '契約社員' | 'アルバイト' | '派遣';
+    employment_type: 'full_time' | 'contract' | 'part_time' | 'dispatch';
   }>;
   qualifications: Array<{
     name: string;
@@ -308,7 +308,7 @@ export interface RirekishoData {
   }>;
   motivation?: string;
   commute_time?: string;
-  spouse?: '有' | '無';
+  spouse?: 'yes' | 'no';
   dependents?: string;
 }
 
@@ -564,3 +564,4 @@ export interface BulkActionResult {
   error_count: number;
   errors: string[];
 }
+

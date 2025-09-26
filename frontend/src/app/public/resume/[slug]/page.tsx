@@ -115,9 +115,9 @@ function PublicResumePageContent() {
   const getFormatDisplayName = (format: ResumeFormat) => {
     switch (format) {
       case ResumeFormat.RIREKISHO:
-        return '履歴書';
+        return 'Rirekisho';
       case ResumeFormat.SHOKUMU_KEIREKISHO:
-        return '職務経歴書';
+        return 'Shokumu Keirekisho';
       case ResumeFormat.INTERNATIONAL:
         return 'International Resume';
       case ResumeFormat.MODERN:
@@ -145,7 +145,11 @@ function PublicResumePageContent() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-8">
           <div className="text-6xl mb-4">
-            {error === 'Resume not found' ? '❌' : error === 'Resume is private' ? '🔒' : '⚠️'}
+            {error === 'Resume not found'
+              ? '404'
+              : error === 'Resume is private'
+                ? 'LOCKED'
+                : 'ERROR'}
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
             {error === 'Resume not found'
@@ -392,3 +396,4 @@ function PublicResumePageContent() {
 export default function PublicResumePage() {
   return <PublicResumePageContent />;
 }
+

@@ -71,11 +71,20 @@ async def list_resumes(
     current_user: User = Depends(get_current_user),
 ):
     """Get user's resumes with pagination and filtering."""
+    from app.utils.constants import ResumeStatus
+
     resume_service = ResumeService()
 
     try:
+        status_enum = None
+        if status:
+            try:
+                status_enum = ResumeStatus(status.upper())
+            except ValueError:
+                raise HTTPException(status_code=400, detail=f"Invalid status: {status}")
+
         resumes = await resume_service.get_user_resumes(
-            db, current_user.id, limit, offset, status
+            db, current_user.id, limit, offset, status_enum
         )
 
         # Get total count for pagination
@@ -692,6 +701,41 @@ async def convert_to_shokumu_keirekisho(
 
 
 # Public Sharing Endpoints
+@router.post("/{resume_id}/toggle-public", response_model=ResumeInfo)
+async def toggle_resume_public(
+    resume_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Toggle public visibility for a resume."""
+    resume_service = ResumeService()
+
+    resume = await resume_service.get_resume(db, resume_id, current_user.id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+
+    new_visibility = not bool(resume.is_public)
+
+    try:
+        updated_resume = await resume_service.update_public_settings(
+            db,
+            resume_id,
+            current_user.id,
+            new_visibility,
+            None,
+            resume.can_download_pdf if resume.can_download_pdf is not None else True,
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error toggling resume visibility: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to update resume visibility")
+
+    if not updated_resume:
+        raise HTTPException(status_code=400, detail="Failed to update resume visibility")
+
+    return updated_resume
+
 @router.put("/{resume_id}/public-settings", response_model=ResumeInfo)
 async def update_public_settings(
     resume_id: int,
@@ -740,6 +784,8 @@ async def get_public_resume(
         view_count=resume.view_count,
         last_viewed_at=resume.last_viewed_at,
         can_download_pdf=resume.can_download_pdf,
+        theme_color=resume.theme_color,
+        font_family=resume.font_family,
         experiences=resume.experiences[:5],  # Limit to first 5
         educations=resume.educations[:3],    # Limit to first 3
         skills=resume.skills[:10]            # Limit to first 10
@@ -894,3 +940,4 @@ async def update_resume_protection(
         "can_edit": resume.can_edit,
         "can_delete": resume.can_delete
     }
+
