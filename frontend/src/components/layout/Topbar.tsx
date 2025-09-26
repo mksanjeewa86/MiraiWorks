@@ -1,12 +1,12 @@
 'use client';
 
-import { Settings, User, LogOut } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { useAuth } from '@/contexts/AuthContext';
 import NotificationDropdown from '@/components/notifications/NotificationDropdown';
+import { useAuth } from '@/contexts/AuthContext';
 import type { TopbarProps } from '@/types/components';
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import { LogOut, Settings, User } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export default function Topbar({ pageTitle, pageDescription }: TopbarProps = {}) {
   const { user, logout } = useAuth();
