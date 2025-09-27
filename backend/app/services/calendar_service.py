@@ -1,7 +1,7 @@
 import os
 import secrets
 from datetime import datetime, timedelta
-from typing import Any, Dict
+from typing import Any
 from urllib.parse import urlencode
 
 import aiohttp
@@ -224,7 +224,7 @@ class CalendarService:
             )
             raise
 
-    async def _exchange_google_code_for_tokens(self, code: str) -> Dict[str, Any]:
+    async def _exchange_google_code_for_tokens(self, code: str) -> dict[str, Any]:
         """Exchange Google OAuth code for access tokens"""
         data = {
             "client_id": self.google_client_id,
@@ -243,7 +243,7 @@ class CalendarService:
                     )
                 return await response.json()
 
-    async def _exchange_outlook_code_for_tokens(self, code: str) -> Dict[str, Any]:
+    async def _exchange_outlook_code_for_tokens(self, code: str) -> dict[str, Any]:
         """Exchange Outlook OAuth code for access tokens"""
         data = {
             "client_id": self.outlook_client_id,
@@ -262,31 +262,29 @@ class CalendarService:
                     )
                 return await response.json()
 
-    async def _get_google_profile(self, access_token: str) -> Dict[str, Any]:
+    async def _get_google_profile(self, access_token: str) -> dict[str, Any]:
         """Get Google user profile"""
         headers = {"Authorization": f"Bearer {access_token}"}
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                "https://www.googleapis.com/oauth2/v2/userinfo", headers=headers
-            ) as response:
-                if response.status != 200:
-                    error_text = await response.text()
-                    raise ValueError(f"Failed to get Google profile: {error_text}")
-                return await response.json()
+        async with aiohttp.ClientSession() as session, session.get(
+            "https://www.googleapis.com/oauth2/v2/userinfo", headers=headers
+        ) as response:
+            if response.status != 200:
+                error_text = await response.text()
+                raise ValueError(f"Failed to get Google profile: {error_text}")
+            return await response.json()
 
-    async def _get_outlook_profile(self, access_token: str) -> Dict[str, Any]:
+    async def _get_outlook_profile(self, access_token: str) -> dict[str, Any]:
         """Get Outlook user profile"""
         headers = {"Authorization": f"Bearer {access_token}"}
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                "https://graph.microsoft.com/v1.0/me", headers=headers
-            ) as response:
-                if response.status != 200:
-                    error_text = await response.text()
-                    raise ValueError(f"Failed to get Outlook profile: {error_text}")
-                return await response.json()
+        async with aiohttp.ClientSession() as session, session.get(
+            "https://graph.microsoft.com/v1.0/me", headers=headers
+        ) as response:
+            if response.status != 200:
+                error_text = await response.text()
+                raise ValueError(f"Failed to get Outlook profile: {error_text}")
+            return await response.json()
 
     async def revoke_tokens(self, connection: CalendarConnection):
         """Revoke OAuth tokens for a connection"""
@@ -321,7 +319,7 @@ class CalendarService:
 
     async def sync_calendar(
         self, connection: CalendarConnection, db: Session
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Sync calendar events (placeholder implementation)"""
         try:
             # This is a placeholder for actual calendar sync implementation

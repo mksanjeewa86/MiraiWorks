@@ -1,7 +1,7 @@
 import hashlib
 import secrets
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any
 
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -36,7 +36,7 @@ class AuthService:
         return self.pwd_context.hash(password)
 
     def create_access_token(
-        self, data: dict[str, Any], expires_delta: Optional[timedelta] = None
+        self, data: dict[str, Any], expires_delta: timedelta | None = None
     ) -> str:
         """Create a JWT access token."""
         to_encode = data.copy()
@@ -51,7 +51,7 @@ class AuthService:
         encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
         return encoded_jwt
 
-    def create_refresh_token(self, data: Optional[dict[str, Any]] = None) -> str:
+    def create_refresh_token(self, data: dict[str, Any] | None = None) -> str:
         """Create a JWT refresh token or random token."""
         if data is not None:
             # Create JWT refresh token with data
@@ -72,7 +72,7 @@ class AuthService:
 
     def verify_token(
         self, token: str, token_type: str = "access"
-    ) -> Optional[dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Verify and decode a JWT token."""
         try:
             payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
@@ -84,7 +84,7 @@ class AuthService:
 
     def decode_token(
         self, token: str, token_type: str = "access"
-    ) -> Optional[dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Alias for verify_token for backward compatibility."""
         return self.verify_token(token, token_type)
 
@@ -121,7 +121,7 @@ class AuthService:
         """Revoke all refresh tokens for a user."""
         result = await db.execute(
             update(RefreshToken)
-            .where(RefreshToken.user_id == user_id, RefreshToken.is_revoked == False)
+            .where(RefreshToken.user_id == user_id, RefreshToken.is_revoked is False)
             .values(is_revoked=True, revoked_at=datetime.utcnow())
         )
 
@@ -130,7 +130,7 @@ class AuthService:
 
     async def verify_refresh_token(
         self, db: AsyncSession, token: str
-    ) -> Optional[User]:
+    ) -> User | None:
         """Verify a refresh token and return the associated user."""
         token_hash = self.hash_token(token)
 
@@ -143,7 +143,7 @@ class AuthService:
             )
             .where(
                 RefreshToken.token_hash == token_hash,
-                RefreshToken.is_revoked == False,
+                RefreshToken.is_revoked is False,
                 RefreshToken.expires_at > datetime.utcnow(),
             )
         )
@@ -156,7 +156,7 @@ class AuthService:
 
     async def authenticate_user(
         self, db: AsyncSession, email: str, password: str
-    ) -> Optional[User]:
+    ) -> User | None:
         """Authenticate a user with email and password."""
         result = await db.execute(
             select(User)
@@ -164,7 +164,7 @@ class AuthService:
                 selectinload(User.company),
                 selectinload(User.user_roles).selectinload(UserRoleModel.role),
             )
-            .where(User.email == email, User.is_deleted == False)
+            .where(User.email == email, User.is_deleted is False)
         )
 
         user = result.scalar_one_or_none()

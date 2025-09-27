@@ -1,4 +1,3 @@
-from typing import Optional
 
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,7 +12,7 @@ class CRUDInterviewNote(CRUDBase[InterviewNote, InterviewNoteCreate, InterviewNo
 
     async def get_by_interview_and_participant(
         self, db: AsyncSession, *, interview_id: int, participant_id: int
-    ) -> Optional[InterviewNote]:
+    ) -> InterviewNote | None:
         """Get interview note for a specific participant in an interview."""
         result = await db.execute(
             select(InterviewNote).where(
@@ -31,7 +30,7 @@ class CRUDInterviewNote(CRUDBase[InterviewNote, InterviewNoteCreate, InterviewNo
         *,
         interview_id: int,
         participant_id: int,
-        content: Optional[str]
+        content: str | None
     ) -> InterviewNote:
         """Create a new note or update existing note for a participant."""
         # Check if note already exists

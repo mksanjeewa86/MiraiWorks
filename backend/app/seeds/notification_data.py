@@ -5,14 +5,14 @@ Creates sample notifications to demonstrate the notification system functionalit
 """
 
 from datetime import datetime, timedelta
-from typing import Any, Dict
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.notification import Notification
 
 
-async def seed_notification_data(db: AsyncSession, auth_result: Dict[str, Any]) -> Dict[str, int]:
+async def seed_notification_data(db: AsyncSession, auth_result: dict[str, Any]) -> dict[str, int]:
     """
     Seed notification data for testing the notification system.
 

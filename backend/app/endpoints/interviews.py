@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime, timedelta
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -295,8 +294,8 @@ async def get_interview_stats(
 @router.get("/calendar/events", response_model=list[InterviewCalendarEvent])
 @requires_permission("interviews.read")
 async def get_interview_calendar_events(
-    start_date: Optional[datetime] = Query(None),
-    end_date: Optional[datetime] = Query(None),
+    start_date: datetime | None = Query(None),
+    end_date: datetime | None = Query(None),
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -479,12 +478,11 @@ async def _check_interview_access(user: User, interview: Interview) -> bool:
         return True
 
     # Company admin has access to interviews in their company
-    if is_company_admin(user):
-        if user.company_id in [
-            interview.employer_company_id,
-            interview.recruiter_company_id,
-        ]:
-            return True
+    if is_company_admin(user) and user.company_id in [
+        interview.employer_company_id,
+        interview.recruiter_company_id,
+    ]:
+        return True
 
     # Employer users have access to interviews with their company
     if user.company_id == interview.employer_company_id:
@@ -510,14 +508,14 @@ async def create_interview_video_call(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Interview not found"
         )
-    
+
     # Check access
     if not await _check_interview_access(current_user, interview):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied to this interview"
         )
-    
+
     # Check if video call already exists
     existing_call = await video_call_crud.get_by_interview_id(db, interview_id=interview_id)
     if existing_call:
@@ -525,26 +523,26 @@ async def create_interview_video_call(
             status_code=status.HTTP_409_CONFLICT,
             detail="Video call already exists for this interview"
         )
-    
+
     # Create video call with interview link
     video_call_data.interview_id = interview_id
     video_call_data.candidate_id = interview.candidate_id
-    
+
     # Use scheduled time from interview if not provided
     if not video_call_data.scheduled_at and interview.scheduled_start:
         video_call_data.scheduled_at = interview.scheduled_start
-    
+
     video_call = await video_call_crud.create_with_interviewer(
         db, obj_in=video_call_data, interviewer_id=interview.recruiter_id
     )
-    
+
     # Update interview with video meeting URL
     await interview_crud.update(
         db,
         db_obj=interview,
         obj_in={"meeting_url": f"/video-calls/{video_call.id}/join"}
     )
-    
+
     return video_call
 
 
@@ -563,14 +561,14 @@ async def get_interview_video_call(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Interview not found"
         )
-    
+
     # Check access
     if not await _check_interview_access(current_user, interview):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied to this interview"
         )
-    
+
     # Get video call
     video_call = await video_call_crud.get_by_interview_id(db, interview_id=interview_id)
     if not video_call:
@@ -578,7 +576,7 @@ async def get_interview_video_call(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No video call found for this interview"
         )
-    
+
     return video_call
 
 
@@ -597,14 +595,14 @@ async def delete_interview_video_call(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Interview not found"
         )
-    
+
     # Check access
     if not await _check_interview_access(current_user, interview):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied to this interview"
         )
-    
+
     # Get video call
     video_call = await video_call_crud.get_by_interview_id(db, interview_id=interview_id)
     if not video_call:
@@ -612,17 +610,17 @@ async def delete_interview_video_call(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No video call found for this interview"
         )
-    
+
     # Check if call is in progress
     if video_call.status == "in_progress":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Cannot delete an active video call"
         )
-    
+
     # Delete video call
     await video_call_crud.remove(db, id=video_call.id)
-    
+
     # Clear meeting URL from interview
     await interview_crud.update(
         db,

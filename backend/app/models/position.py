@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -20,7 +19,7 @@ class Position(Base):
         String(255), nullable=False, unique=True, index=True
     )
     description: Mapped[str] = mapped_column(LONGTEXT, nullable=False)
-    summary: Mapped[Optional[str]] = mapped_column(
+    summary: Mapped[str | None] = mapped_column(
         Text, nullable=True
     )  # Short description for listings
 
@@ -31,14 +30,14 @@ class Position(Base):
         nullable=False,
         index=True,
     )
-    department: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    location: Mapped[Optional[str]] = mapped_column(
+    department: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    location: Mapped[str | None] = mapped_column(
         String(255), nullable=True, index=True
     )
-    country: Mapped[Optional[str]] = mapped_column(
+    country: Mapped[str | None] = mapped_column(
         String(100), nullable=True, index=True
     )
-    city: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, index=True)
+    city: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
 
     # Position details
     job_type: Mapped[str] = mapped_column(
@@ -52,22 +51,22 @@ class Position(Base):
     )
 
     # Requirements and skills
-    requirements: Mapped[Optional[str]] = mapped_column(LONGTEXT, nullable=True)
-    preferred_skills: Mapped[Optional[str]] = mapped_column(
+    requirements: Mapped[str | None] = mapped_column(LONGTEXT, nullable=True)
+    preferred_skills: Mapped[str | None] = mapped_column(
         Text, nullable=True
     )  # JSON array
-    required_skills: Mapped[Optional[str]] = mapped_column(
+    required_skills: Mapped[str | None] = mapped_column(
         Text, nullable=True
     )  # JSON array
 
     # Compensation
-    salary_min: Mapped[Optional[int]] = mapped_column(
+    salary_min: Mapped[int | None] = mapped_column(
         Integer, nullable=True
     )  # In cents
-    salary_max: Mapped[Optional[int]] = mapped_column(
+    salary_max: Mapped[int | None] = mapped_column(
         Integer, nullable=True
     )  # In cents
-    salary_type: Mapped[Optional[str]] = mapped_column(
+    salary_type: Mapped[str | None] = mapped_column(
         String(20), nullable=True, default="annual"
     )
     salary_currency: Mapped[str] = mapped_column(
@@ -76,17 +75,17 @@ class Position(Base):
     show_salary: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     # Benefits and perks
-    benefits: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON array
-    perks: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON array
+    benefits: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON array
+    perks: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON array
 
     # Application settings
-    application_deadline: Mapped[Optional[datetime]] = mapped_column(
+    application_deadline: Mapped[datetime | None] = mapped_column(
         DateTime, nullable=True, index=True
     )
-    external_apply_url: Mapped[Optional[str]] = mapped_column(
+    external_apply_url: Mapped[str | None] = mapped_column(
         String(1000), nullable=True
     )  # If using external ATS
-    application_questions: Mapped[Optional[str]] = mapped_column(
+    application_questions: Mapped[str | None] = mapped_column(
         Text, nullable=True
     )  # JSON array
 
@@ -100,19 +99,19 @@ class Position(Base):
     is_urgent: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     # SEO and social
-    seo_title: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    seo_description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    social_image_url: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
+    seo_title: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    seo_description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    social_image_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
 
     # Analytics
     view_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     application_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     # Publishing dates
-    published_at: Mapped[Optional[datetime]] = mapped_column(
+    published_at: Mapped[datetime | None] = mapped_column(
         DateTime, nullable=True, index=True
     )
-    expires_at: Mapped[Optional[datetime]] = mapped_column(
+    expires_at: Mapped[datetime | None] = mapped_column(
         DateTime, nullable=True, index=True
     )
 
@@ -154,14 +153,14 @@ class Position(Base):
         )
 
     @property
-    def days_since_published(self) -> Optional[int]:
+    def days_since_published(self) -> int | None:
         """Get number of days since job was published"""
         if not self.published_at:
             return None
         return (datetime.utcnow() - self.published_at).days
 
     @property
-    def salary_range_display(self) -> Optional[str]:
+    def salary_range_display(self) -> str | None:
         """Format salary range for display"""
         if not self.show_salary or not (self.salary_min or self.salary_max):
             return None
@@ -206,13 +205,13 @@ class PositionApplication(Base):
     candidate_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    resume_id: Mapped[Optional[int]] = mapped_column(
+    resume_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("resumes.id", ondelete="SET NULL"), nullable=True
     )
 
     # Application data
-    cover_letter: Mapped[Optional[str]] = mapped_column(LONGTEXT, nullable=True)
-    application_answers: Mapped[Optional[str]] = mapped_column(
+    cover_letter: Mapped[str | None] = mapped_column(LONGTEXT, nullable=True)
+    application_answers: Mapped[str | None] = mapped_column(
         Text, nullable=True
     )  # JSON responses to custom questions
 
@@ -223,23 +222,23 @@ class PositionApplication(Base):
     status_updated_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=datetime.utcnow
     )
-    status_updated_by: Mapped[Optional[int]] = mapped_column(
+    status_updated_by: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id"), nullable=True
     )
 
     # Communication
-    last_contacted_at: Mapped[Optional[datetime]] = mapped_column(
+    last_contacted_at: Mapped[datetime | None] = mapped_column(
         DateTime, nullable=True
     )
-    notes: Mapped[Optional[str]] = mapped_column(
+    notes: Mapped[str | None] = mapped_column(
         Text, nullable=True
     )  # Internal recruiter notes
 
     # Source tracking
-    source: Mapped[Optional[str]] = mapped_column(
+    source: Mapped[str | None] = mapped_column(
         String(100), nullable=True
     )  # Where they found the job
-    referrer_id: Mapped[Optional[int]] = mapped_column(
+    referrer_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id"), nullable=True
     )
 
@@ -293,64 +292,64 @@ class CompanyProfile(Base):
     )
 
     # Public profile information
-    tagline: Mapped[Optional[str]] = mapped_column(
+    tagline: Mapped[str | None] = mapped_column(
         String(255), nullable=True
     )  # Short company tagline
-    mission: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    values: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON array
-    culture: Mapped[Optional[str]] = mapped_column(
+    mission: Mapped[str | None] = mapped_column(Text, nullable=True)
+    values: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON array
+    culture: Mapped[str | None] = mapped_column(
         LONGTEXT, nullable=True
     )  # Company culture description
 
     # Media and branding
-    logo_url: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
-    banner_url: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
-    gallery_images: Mapped[Optional[str]] = mapped_column(
+    logo_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    banner_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    gallery_images: Mapped[str | None] = mapped_column(
         Text, nullable=True
     )  # JSON array of image URLs
-    company_video_url: Mapped[Optional[str]] = mapped_column(
+    company_video_url: Mapped[str | None] = mapped_column(
         String(1000), nullable=True
     )
 
     # Contact and social
-    contact_email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    phone: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-    address: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    contact_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    address: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Social media links
-    linkedin_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-    twitter_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-    facebook_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-    instagram_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-    youtube_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    linkedin_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    twitter_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    facebook_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    instagram_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    youtube_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     # Stats and highlights
-    founded_year: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    employee_count: Mapped[Optional[str]] = mapped_column(
+    founded_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    employee_count: Mapped[str | None] = mapped_column(
         String(50), nullable=True
     )  # e.g., "11-50", "201-500"
-    headquarters: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    funding_stage: Mapped[Optional[str]] = mapped_column(
+    headquarters: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    funding_stage: Mapped[str | None] = mapped_column(
         String(100), nullable=True
     )  # Seed, Series A, etc.
 
     # Benefits and perks
-    benefits_summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    perks_highlights: Mapped[Optional[str]] = mapped_column(
+    benefits_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    perks_highlights: Mapped[str | None] = mapped_column(
         Text, nullable=True
     )  # JSON array
 
     # SEO and visibility
     is_public: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    seo_title: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    seo_description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    custom_slug: Mapped[Optional[str]] = mapped_column(
+    seo_title: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    seo_description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    custom_slug: Mapped[str | None] = mapped_column(
         String(100), nullable=True, unique=True
     )
 
     # Analytics
     profile_views: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    last_updated_by: Mapped[Optional[int]] = mapped_column(
+    last_updated_by: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id"), nullable=True
     )
 

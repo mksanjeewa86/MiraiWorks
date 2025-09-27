@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime, timedelta
-from typing import Optional
 
 from fastapi import HTTPException, status
 from sqlalchemy import and_, or_, select, update
@@ -32,18 +31,18 @@ class InterviewService:
         recruiter_id: int,
         employer_company_id: int,
         title: str,
-        description: Optional[str] = None,
-        position_title: Optional[str] = None,
+        description: str | None = None,
+        position_title: str | None = None,
         interview_type: str = "video",
-        created_by: Optional[int] = None,
-        status: Optional[str] = None,
-        scheduled_start: Optional[datetime] = None,
-        scheduled_end: Optional[datetime] = None,
-        timezone: Optional[str] = "UTC",
-        location: Optional[str] = None,
-        meeting_url: Optional[str] = None,
-        video_call_type: Optional[str] = None,
-        notes: Optional[str] = None,
+        created_by: int | None = None,
+        status: str | None = None,
+        scheduled_start: datetime | None = None,
+        scheduled_end: datetime | None = None,
+        timezone: str | None = "UTC",
+        location: str | None = None,
+        meeting_url: str | None = None,
+        video_call_type: str | None = None,
+        notes: str | None = None,
     ) -> Interview:
         """Create a new interview."""
         # Validate participants exist and have correct roles
@@ -115,8 +114,8 @@ class InterviewService:
         start_datetime: datetime,
         end_datetime: datetime,
         timezone: str = "UTC",
-        location: Optional[str] = None,
-        notes: Optional[str] = None,
+        location: str | None = None,
+        notes: str | None = None,
     ) -> InterviewProposal:
         """Create a new interview time proposal."""
         # Get interview with participants
@@ -181,7 +180,7 @@ class InterviewService:
         proposal_id: int,
         response: str,  # "accepted" or "declined"
         responded_by: int,
-        response_notes: Optional[str] = None,
+        response_notes: str | None = None,
     ) -> InterviewProposal:
         """Respond to an interview proposal."""
         # Get proposal with interview
@@ -234,7 +233,7 @@ class InterviewService:
         db: AsyncSession,
         interview_id: int,
         cancelled_by: int,
-        reason: Optional[str] = None,
+        reason: str | None = None,
     ) -> Interview:
         """Cancel an interview."""
         interview_result = await db.execute(
@@ -281,7 +280,7 @@ class InterviewService:
         new_start: datetime,
         new_end: datetime,
         rescheduled_by: int,
-        reason: Optional[str] = None,
+        reason: str | None = None,
     ) -> Interview:
         """Reschedule an interview."""
         interview_result = await db.execute(
@@ -329,9 +328,9 @@ class InterviewService:
         self,
         db: AsyncSession,
         user_id: int,
-        status_filter: Optional[str] = None,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
+        status_filter: str | None = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
         limit: int = 50,
         offset: int = 0,
     ) -> list[Interview]:
@@ -569,8 +568,8 @@ class InterviewService:
             calendar_accounts = await db.execute(
                 select(ExternalCalendarAccount).where(
                     ExternalCalendarAccount.user_id == participant.id,
-                    ExternalCalendarAccount.is_active == True,
-                    ExternalCalendarAccount.sync_enabled == True,
+                    ExternalCalendarAccount.is_active is True,
+                    ExternalCalendarAccount.sync_enabled is True,
                 )
             )
 
@@ -736,7 +735,7 @@ class InterviewService:
         # Implementation would create notifications and send emails
 
     async def _send_cancellation_notifications(
-        self, db: AsyncSession, interview: Interview, reason: Optional[str]
+        self, db: AsyncSession, interview: Interview, reason: str | None
     ):
         """Send notifications about interview cancellation."""
         # Implementation would create notifications and send emails
@@ -746,7 +745,7 @@ class InterviewService:
         db: AsyncSession,
         interview: Interview,
         old_start: datetime,
-        reason: Optional[str],
+        reason: str | None,
     ):
         """Send notifications about interview reschedule."""
         # Implementation would create notifications and send emails
@@ -774,7 +773,7 @@ class InterviewService:
                 logger.error(f"Failed to cancel calendar event {synced_event.id}: {e}")
 
     async def _update_calendar_events(
-        self, db: AsyncSession, interview: Interview, reason: Optional[str]
+        self, db: AsyncSession, interview: Interview, reason: str | None
     ):
         """Update calendar events for rescheduled interview."""
         for synced_event in interview.synced_events:

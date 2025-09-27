@@ -122,7 +122,7 @@ async def _cleanup_attachments_async() -> int:
 
         result = await db.execute(
             select(Attachment)
-            .where(Attachment.is_deleted == True, Attachment.deleted_at < cutoff_date)
+            .where(Attachment.is_deleted is True, Attachment.deleted_at < cutoff_date)
             .limit(100)
         )
 

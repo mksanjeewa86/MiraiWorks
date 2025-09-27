@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from httpx import AsyncClient
@@ -33,7 +33,7 @@ class TestVideoCallEndpoints:
 
         call_data = {
             "candidate_id": candidate.id,
-            "scheduled_at": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat(),
+            "scheduled_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
             "enable_transcription": True,
             "transcription_language": "ja"
         }
@@ -60,10 +60,10 @@ class TestVideoCallEndpoints:
     ):
         """Test video call scheduling without authentication fails."""
         candidate = test_users['candidate']
-        
+
         call_data = {
             "candidate_id": candidate.id,
-            "scheduled_at": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat()
+            "scheduled_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat()
         }
 
         response = await client.post("/api/video-calls/schedule", json=call_data)
@@ -78,7 +78,7 @@ class TestVideoCallEndpoints:
 
         call_data = {
             "candidate_id": 99999,  # Non-existent candidate
-            "scheduled_at": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat()
+            "scheduled_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat()
         }
 
         recruiter_headers = await self._get_auth_headers(client, recruiter)
@@ -112,7 +112,7 @@ class TestVideoCallEndpoints:
     ):
         """Test video call retrieval with non-existent ID."""
         recruiter = test_users['recruiter']
-        
+
         response = await client.get(
             "/api/video-calls/99999",
             headers=await self._get_auth_headers(client, recruiter)
@@ -126,7 +126,7 @@ class TestVideoCallEndpoints:
     ):
         """Test video call retrieval by non-participant."""
         other_user = test_users['other_recruiter']
-        
+
         response = await client.get(
             f"/api/video-calls/{test_video_call.id}",
             headers=await self._get_auth_headers(client, other_user)
@@ -166,7 +166,7 @@ class TestVideoCallEndpoints:
     ):
         """Test video call joining by non-participant."""
         other_user = test_users['other_recruiter']
-        
+
         response = await client.post(
             f"/api/video-calls/{test_video_call.id}/join",
             headers=await self._get_auth_headers(client, other_user)
@@ -191,7 +191,7 @@ class TestVideoCallEndpoints:
         )
 
         assert response.status_code == 200
-        
+
         # Verify call status updated - refresh session to see committed changes
         await db_session.commit()
         updated_call = await video_call_crud.get(db_session, id=test_video_call.id)
@@ -377,7 +377,7 @@ class TestVideoCallEndpoints:
     ):
         """Test listing user's video calls."""
         recruiter = test_users['recruiter']
-        
+
         response = await client.get(
             "/api/video-calls/",
             headers=await self._get_auth_headers(client, recruiter)
@@ -395,31 +395,31 @@ class TestVideoCallEndpoints:
         recruiter = test_users['recruiter']
         candidate1 = test_users['candidate']
         candidate2 = test_users['other_candidate']
-        
+
         # Schedule first call
         call_data1 = {
             "candidate_id": candidate1.id,
-            "scheduled_at": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat()
+            "scheduled_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat()
         }
-        
+
         response1 = await client.post(
             "/api/video-calls/schedule",
             json=call_data1,
             headers=await self._get_auth_headers(client, recruiter)
         )
         assert response1.status_code == 201
-        
+
         # Try to schedule overlapping call
         call_data2 = {
             "candidate_id": candidate2.id,
-            "scheduled_at": (datetime.now(timezone.utc) + timedelta(minutes=30)).isoformat()
+            "scheduled_at": (datetime.now(UTC) + timedelta(minutes=30)).isoformat()
         }
-        
+
         response2 = await client.post(
             "/api/video-calls/schedule",
             json=call_data2,
             headers=await self._get_auth_headers(client, recruiter)
         )
-        
+
         # Should either succeed or fail with appropriate error
         assert response2.status_code in [201, 400, 409]

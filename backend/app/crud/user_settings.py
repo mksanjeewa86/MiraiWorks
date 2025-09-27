@@ -1,4 +1,3 @@
-from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import User, UserSettings
 
 
-async def get_user_settings(db: AsyncSession, user_id: int) -> Optional[UserSettings]:
+async def get_user_settings(db: AsyncSession, user_id: int) -> UserSettings | None:
     """Get user settings by user ID."""
     result = await db.execute(
         select(UserSettings).where(UserSettings.user_id == user_id)
@@ -60,6 +59,6 @@ async def update_user_profile(db: AsyncSession, user: User, profile_data: dict) 
 # Alias for backward compatibility
 async def get_user_settings_by_user_id(
     db: AsyncSession, user_id: int
-) -> Optional[UserSettings]:
+) -> UserSettings | None:
     """Get user settings by user ID (alias for get_user_settings)."""
     return await get_user_settings(db, user_id)

@@ -1,7 +1,7 @@
 import logging
 import uuid
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any
 
 from app.models.resume import Resume
 from app.services.storage_service import get_storage_service
@@ -22,8 +22,8 @@ class PDFService:
         resume: Resume,
         format: str = "A4",
         include_contact_info: bool = True,
-        watermark: Optional[str] = None,
-        custom_css: Optional[str] = None,
+        watermark: str | None = None,
+        custom_css: str | None = None,
     ) -> dict[str, Any]:
         """Generate PDF from resume data."""
         try:
@@ -171,7 +171,7 @@ class PDFService:
         html_content: str,
         format: str,
         include_contact_info: bool,
-        watermark: Optional[str],
+        watermark: str | None,
     ) -> str:
         """Prepare HTML content for PDF generation."""
 
@@ -251,7 +251,7 @@ class PDFService:
         except ImportError:
             return False
 
-    async def get_pdf_preview_image(self, resume: Resume) -> Optional[str]:
+    async def get_pdf_preview_image(self, resume: Resume) -> str | None:
         """Generate a preview image of the PDF."""
         try:
             # This would generate a thumbnail/preview image of the first page
@@ -286,7 +286,7 @@ class PDFService:
             logger.error(f"Error generating PDF preview: {str(e)}")
             return None
 
-    async def _pdf_to_image(self, pdf_data: bytes) -> Optional[bytes]:
+    async def _pdf_to_image(self, pdf_data: bytes) -> bytes | None:
         """Convert first page of PDF to image."""
         try:
             # Using pdf2image library
@@ -352,13 +352,13 @@ class PDFService:
     async def get_resume_as_html(
         self,
         resume: Resume,
-        template_name: Optional[str] = None,
-        custom_css: Optional[str] = None,
+        template_name: str | None = None,
+        custom_css: str | None = None,
     ) -> str:
         """Get resume as HTML (for preview)."""
         # Check if it's a Japanese format and use specialized templates
         from app.utils.constants import ResumeFormat
-        
+
         if resume.resume_format == ResumeFormat.RIREKISHO:
             return await self._generate_rirekisho_html(resume)
         elif resume.resume_format == ResumeFormat.SHOKUMU_KEIREKISHO:
@@ -378,58 +378,58 @@ class PDFService:
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>履歴書 - {{ resume.full_name or 'Untitled' }}</title>
             <style>
-                body { 
-                    font-family: "MS Gothic", "Hiragino Kaku Gothic ProN", "Yu Gothic", monospace; 
-                    font-size: 12px; 
-                    margin: 20px; 
+                body {
+                    font-family: "MS Gothic", "Hiragino Kaku Gothic ProN", "Yu Gothic", monospace;
+                    font-size: 12px;
+                    margin: 20px;
                     line-height: 1.4;
                     color: #000;
                 }
-                .title { 
-                    text-align: center; 
-                    font-size: 20px; 
-                    font-weight: bold; 
-                    margin-bottom: 25px; 
+                .title {
+                    text-align: center;
+                    font-size: 20px;
+                    font-weight: bold;
+                    margin-bottom: 25px;
                     letter-spacing: 2px;
                 }
-                .section { 
-                    margin-bottom: 20px; 
+                .section {
+                    margin-bottom: 20px;
                     page-break-inside: avoid;
                 }
-                .section-title { 
-                    font-weight: bold; 
+                .section-title {
+                    font-weight: bold;
                     font-size: 14px;
-                    border-bottom: 2px solid #000; 
-                    margin-bottom: 10px; 
+                    border-bottom: 2px solid #000;
+                    margin-bottom: 10px;
                     padding-bottom: 2px;
                 }
-                table { 
-                    width: 100%; 
-                    border-collapse: collapse; 
-                    margin-bottom: 15px; 
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-bottom: 15px;
                 }
-                td, th { 
-                    border: 1px solid #000; 
-                    padding: 6px; 
-                    text-align: left; 
+                td, th {
+                    border: 1px solid #000;
+                    padding: 6px;
+                    text-align: left;
                     vertical-align: top;
                 }
-                .label-cell { 
-                    background-color: #f8f8f8; 
-                    font-weight: bold; 
+                .label-cell {
+                    background-color: #f8f8f8;
+                    font-weight: bold;
                     width: 25%;
                 }
-                .photo-cell { 
-                    width: 40mm; 
-                    height: 50mm; 
-                    text-align: center; 
+                .photo-cell {
+                    width: 40mm;
+                    height: 50mm;
+                    text-align: center;
                     vertical-align: middle;
                     background-color: #f0f0f0;
                     font-size: 10px;
                     color: #666;
                 }
-                .date-cell { 
-                    width: 80px; 
+                .date-cell {
+                    width: 80px;
                     text-align: center;
                 }
                 .header-row {
@@ -449,7 +449,7 @@ class PDFService:
         </head>
         <body>
             <div class="title">履歴書</div>
-            
+
             <!-- Personal Information -->
             <div class="section">
                 <table>
@@ -490,7 +490,7 @@ class PDFService:
                     </tr>
                 </table>
             </div>
-            
+
             <!-- Education History -->
             <div class="section">
                 <div class="section-title">学歴</div>
@@ -520,7 +520,7 @@ class PDFService:
                     {% endif %}
                 </table>
             </div>
-            
+
             <!-- Work History -->
             <div class="section">
                 <div class="section-title">職歴</div>
@@ -550,7 +550,7 @@ class PDFService:
                     {% endif %}
                 </table>
             </div>
-            
+
             <!-- Licenses and Certifications -->
             {% if resume.certifications %}
             <div class="section">
@@ -571,7 +571,7 @@ class PDFService:
                 </table>
             </div>
             {% endif %}
-            
+
             <!-- Motivation and Self-PR -->
             <div class="section">
                 <div class="section-title">志望動機・自己PR</div>
@@ -583,7 +583,7 @@ class PDFService:
                     </tr>
                 </table>
             </div>
-            
+
             <!-- Additional Information -->
             <div class="section">
                 <table>
@@ -601,20 +601,20 @@ class PDFService:
                     </tr>
                 </table>
             </div>
-            
+
             <div style="text-align: right; margin-top: 30px; font-size: 11px;">
                 作成日: {{ creation_date }}
             </div>
         </body>
         </html>
         """
-        
+
         from datetime import datetime
 
         from jinja2 import Template
-        
+
         template = Template(html_template)
-        
+
         # Calculate age if birth_date is available
         age = None
         birth_date = ""
@@ -624,18 +624,18 @@ class PDFService:
             age = today.year - resume.birth_date.year
             if today.month < resume.birth_date.month or (today.month == resume.birth_date.month and today.day < resume.birth_date.day):
                 age -= 1
-        
+
         # Get additional info from emergency_contact if available
         emergency_contact = resume.emergency_contact or {}
         commute_time = emergency_contact.get("commute_time", "30")
         dependents = emergency_contact.get("dependents", "0")
         spouse = "有" if resume.marital_status and "既婚" in resume.marital_status else "無"
         spouse_support = "有" if spouse == "有" else "無"
-        
+
         creation_date = datetime.now().strftime('%Y年%m月%d日')
-        
+
         return template.render(
-            resume=resume, 
+            resume=resume,
             birth_date=birth_date,
             age=age,
             commute_time=commute_time,
@@ -655,18 +655,18 @@ class PDFService:
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>職務経歴書 - {{ resume.full_name or 'Untitled' }}</title>
             <style>
-                body { 
-                    font-family: "MS Gothic", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif; 
-                    font-size: 11px; 
-                    margin: 20px; 
-                    line-height: 1.6; 
+                body {
+                    font-family: "MS Gothic", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+                    font-size: 11px;
+                    margin: 20px;
+                    line-height: 1.6;
                     color: #000;
                 }
-                .title { 
-                    text-align: center; 
-                    font-size: 20px; 
-                    font-weight: bold; 
-                    margin-bottom: 20px; 
+                .title {
+                    text-align: center;
+                    font-size: 20px;
+                    font-weight: bold;
+                    margin-bottom: 20px;
                     letter-spacing: 2px;
                 }
                 .header-info {
@@ -674,15 +674,15 @@ class PDFService:
                     margin-bottom: 20px;
                     font-size: 12px;
                 }
-                .section { 
-                    margin-bottom: 25px; 
+                .section {
+                    margin-bottom: 25px;
                     page-break-inside: avoid;
                 }
-                .section-title { 
-                    font-weight: bold; 
+                .section-title {
+                    font-weight: bold;
                     font-size: 14px;
-                    border-bottom: 2px solid #333; 
-                    margin-bottom: 12px; 
+                    border-bottom: 2px solid #333;
+                    margin-bottom: 12px;
                     padding-bottom: 3px;
                     color: #333;
                 }
@@ -692,22 +692,22 @@ class PDFService:
                     padding: 15px;
                     background-color: #fafafa;
                 }
-                .company-header { 
-                    font-weight: bold; 
+                .company-header {
+                    font-weight: bold;
                     font-size: 13px;
-                    margin-bottom: 8px; 
+                    margin-bottom: 8px;
                     color: #333;
                     border-bottom: 1px solid #ccc;
                     padding-bottom: 5px;
                 }
-                .period { 
-                    color: #666; 
-                    margin-bottom: 8px; 
+                .period {
+                    color: #666;
+                    margin-bottom: 8px;
                     font-size: 11px;
                 }
-                .job-detail { 
-                    margin-left: 15px; 
-                    margin-bottom: 10px; 
+                .job-detail {
+                    margin-left: 15px;
+                    margin-bottom: 10px;
                 }
                 .skill-category {
                     margin-bottom: 15px;
@@ -750,12 +750,12 @@ class PDFService:
         </head>
         <body>
             <div class="title">職務経歴書</div>
-            
+
             <div class="header-info">
                 {{ creation_date }}<br>
                 氏名: {{ resume.full_name or '' }}
             </div>
-            
+
             <!-- Career Summary -->
             {% if resume.professional_summary %}
             <div class="section">
@@ -765,21 +765,21 @@ class PDFService:
                 </div>
             </div>
             {% endif %}
-            
+
             <!-- Detailed Work Experience -->
             {% if resume.experiences %}
             <div class="section">
                 <div class="section-title">■ 職務経歴詳細</div>
-                
+
                 {% for exp in resume.experiences %}
                 <div class="company-section">
                     <div class="company-header">【{{ exp.company_name }}】</div>
                     <div class="period">
-                        在籍期間: {{ exp.start_date.strftime('%Y年%m月') if exp.start_date else '' }} ～ 
+                        在籍期間: {{ exp.start_date.strftime('%Y年%m月') if exp.start_date else '' }} ～
                         {{ exp.end_date.strftime('%Y年%m月') if exp.end_date else '現在' }}
                         ({{ calculate_duration(exp.start_date, exp.end_date) }})
                     </div>
-                    
+
                     <table>
                         {% if exp.position_title %}
                         <tr>
@@ -787,14 +787,14 @@ class PDFService:
                             <td>{{ exp.position_title }}</td>
                         </tr>
                         {% endif %}
-                        
+
                         {% if exp.description %}
                         <tr>
                             <td style="background-color: #f0f0f0; font-weight: bold;">業務内容</td>
                             <td>{{ exp.description }}</td>
                         </tr>
                         {% endif %}
-                        
+
                         {% if exp.achievements %}
                         <tr>
                             <td style="background-color: #f0f0f0; font-weight: bold;">主な実績</td>
@@ -807,7 +807,7 @@ class PDFService:
                             </td>
                         </tr>
                         {% endif %}
-                        
+
                         {% if exp.technologies %}
                         <tr>
                             <td style="background-color: #f0f0f0; font-weight: bold;">使用技術</td>
@@ -819,12 +819,12 @@ class PDFService:
                 {% endfor %}
             </div>
             {% endif %}
-            
+
             <!-- Skills and Expertise -->
             {% if resume.skills %}
             <div class="section">
                 <div class="section-title">■ スキル・専門知識</div>
-                
+
                 {% for category, skills in skills_by_category.items() %}
                 <div class="skill-category">
                     <div class="skill-category-title">【{{ category }}】</div>
@@ -833,7 +833,7 @@ class PDFService:
                 {% endfor %}
             </div>
             {% endif %}
-            
+
             <!-- Languages -->
             {% if resume.languages %}
             <div class="section">
@@ -852,7 +852,7 @@ class PDFService:
                 </table>
             </div>
             {% endif %}
-            
+
             <!-- Self-PR -->
             {% if resume.objective %}
             <div class="section">
@@ -862,22 +862,22 @@ class PDFService:
                 </div>
             </div>
             {% endif %}
-            
+
             <!-- Projects -->
             {% if resume.projects %}
             <div class="section">
                 <div class="section-title">■ プロジェクト経験</div>
-                
+
                 {% for project in resume.projects %}
                 <div class="company-section">
                     <div class="company-header">{{ project.name }}</div>
                     {% if project.start_date or project.end_date %}
                     <div class="period">
-                        期間: {{ project.start_date.strftime('%Y年%m月') if project.start_date else '' }} ～ 
+                        期間: {{ project.start_date.strftime('%Y年%m月') if project.start_date else '' }} ～
                         {{ project.end_date.strftime('%Y年%m月') if project.end_date else '現在' }}
                     </div>
                     {% endif %}
-                    
+
                     <table>
                         <tr>
                             <td style="width: 100px; background-color: #f0f0f0; font-weight: bold;">概要</td>
@@ -900,20 +900,20 @@ class PDFService:
                 {% endfor %}
             </div>
             {% endif %}
-            
+
             <div style="text-align: right; margin-top: 30px; font-size: 10px; color: #666;">
                 以上
             </div>
         </body>
         </html>
         """
-        
+
         from datetime import datetime
 
         from jinja2 import Template
-        
+
         template = Template(html_template)
-        
+
         # Group skills by category
         skills_by_category = {}
         if resume.skills:
@@ -922,20 +922,20 @@ class PDFService:
                 if category not in skills_by_category:
                     skills_by_category[category] = []
                 skills_by_category[category].append(skill.name)
-        
+
         def calculate_duration(start_date, end_date):
             """Calculate work duration in Japanese format"""
             if not start_date:
                 return ""
-            
+
             end = end_date or datetime.now()
             years = end.year - start_date.year
             months = end.month - start_date.month
-            
+
             if months < 0:
                 years -= 1
                 months += 12
-            
+
             if years > 0 and months > 0:
                 return f"約{years}年{months}ヶ月"
             elif years > 0:
@@ -944,9 +944,9 @@ class PDFService:
                 return f"約{months}ヶ月"
             else:
                 return "1ヶ月未満"
-        
+
         creation_date = datetime.now().strftime('%Y年%m月%d日')
-        
+
         return template.render(
             resume=resume,
             skills_by_category=skills_by_category,

@@ -1,4 +1,3 @@
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -68,7 +67,7 @@ async def validate_messaging_permission(
 
 @router.get("/conversations", response_model=ConversationListResponse)
 async def get_conversations(
-    search: Optional[str] = None,
+    search: str | None = None,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -86,7 +85,7 @@ async def get_conversations(
 async def get_messages_with_user(
     other_user_id: int,
     limit: int = 50,
-    before_id: Optional[int] = None,
+    before_id: int | None = None,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -241,7 +240,7 @@ async def mark_conversation_as_read(
 
 @router.get("/participants")
 async def get_message_participants(
-    query: Optional[str] = None,
+    query: str | None = None,
     limit: int = 50,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),

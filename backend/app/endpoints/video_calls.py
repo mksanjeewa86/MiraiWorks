@@ -1,5 +1,4 @@
-from datetime import datetime, timezone
-from typing import List
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -40,12 +39,12 @@ async def schedule_video_call(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to schedule interviews with this candidate"
         )
-    
+
     # Create video call
     video_call = await crud.video_call.create_with_interviewer(
         db, obj_in=call_data, interviewer_id=current_user.id
     )
-    
+
     # Get participant details for notifications
     candidate = await user_crud.get(db, id=call_data.candidate_id)
     if candidate:
@@ -53,7 +52,7 @@ async def schedule_video_call(
         await video_notification_service.send_interview_scheduled_notification(
             db, video_call, current_user, candidate
         )
-    
+
     return video_call
 
 
@@ -132,7 +131,7 @@ async def join_video_call_by_room(
     # Update call status to in_progress if it's the first participant
     if video_call.status == "scheduled":
         await crud.video_call.update_call_status(
-            db, db_obj=video_call, status="in_progress", started_at=datetime.now(timezone.utc)
+            db, db_obj=video_call, status="in_progress", started_at=datetime.now(UTC)
         )
 
     # Add participant
@@ -168,13 +167,13 @@ async def join_video_call(
     # Update call status to in_progress if it's the first participant
     print(f"DEBUG: Video call status before check: {video_call.status}")
     if video_call.status == "scheduled":
-        print(f"DEBUG: Updating video call status to in_progress")
+        print("DEBUG: Updating video call status to in_progress")
         await crud.video_call.update_call_status(
-            db, db_obj=video_call, status="in_progress", started_at=datetime.now(timezone.utc)
+            db, db_obj=video_call, status="in_progress", started_at=datetime.now(UTC)
         )
         print(f"DEBUG: Video call status after update: {video_call.status}")
     else:
-        print(f"DEBUG: Video call status is not 'scheduled', no update needed")
+        print("DEBUG: Video call status is not 'scheduled', no update needed")
 
     # Add participant
     await crud.video_call.add_participant(
@@ -217,7 +216,7 @@ async def leave_video_call_by_room(
     if len(active_participants) == 0:
         # Last participant left, end the call
         video_call = await crud.video_call.update_call_status(
-            db, db_obj=video_call, status="completed", ended_at=datetime.now(timezone.utc)
+            db, db_obj=video_call, status="completed", ended_at=datetime.now(UTC)
         )
         return {"message": "Left call and ended session (last participant)", "call_ended": True}
 
@@ -257,7 +256,7 @@ async def leave_video_call(
     if len(active_participants) == 0:
         # Last participant left, end the call
         video_call = await crud.video_call.update_call_status(
-            db, db_obj=video_call, status="completed", ended_at=datetime.now(timezone.utc)
+            db, db_obj=video_call, status="completed", ended_at=datetime.now(UTC)
         )
         return {"message": "Left call and ended session (last participant)", "call_ended": True}
 
@@ -291,7 +290,7 @@ async def end_video_call(
 
     # Update call status
     video_call = await crud.video_call.update_call_status(
-        db, db_obj=video_call, status="completed", ended_at=datetime.now(timezone.utc)
+        db, db_obj=video_call, status="completed", ended_at=datetime.now(UTC)
     )
 
     return video_call
@@ -365,27 +364,27 @@ async def get_video_token(
 ):
     """Get WebRTC token for joining the video call."""
     video_call = await crud.video_call.get(db, id=call_id)
-    
+
     if not video_call:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Video call not found"
         )
-    
+
     # Check if user is participant
     if video_call.interviewer_id != current_user.id and video_call.candidate_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You are not a participant in this video call"
         )
-    
+
     # Generate token using video service
     token_data = await video_service.generate_token(
         room_id=video_call.room_id,
         user_id=current_user.id,
         user_name=current_user.full_name or current_user.email
     )
-    
+
     return token_data
 
 
@@ -397,25 +396,25 @@ async def get_call_transcript(
 ):
     """Get transcript for a completed video call."""
     video_call = await crud.video_call.get(db, id=call_id)
-    
+
     if not video_call:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Video call not found"
         )
-    
+
     # Check if user is participant
     if video_call.interviewer_id != current_user.id and video_call.candidate_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to access this transcript"
         )
-    
+
     transcript = await crud.video_call.get_call_transcription(db, video_call_id=call_id)
 
     if not transcript:
         # Return empty transcript for calls that haven't started transcription yet
-        from datetime import datetime, timezone
+        from datetime import datetime
         return CallTranscriptionInfo(
             id=0,
             video_call_id=call_id,
@@ -424,7 +423,7 @@ async def get_call_transcript(
             language=video_call.transcription_language,
             processing_status=TranscriptionStatus.PENDING,
             word_count=0,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
             processed_at=None,
             segments=[]
         )
@@ -441,31 +440,31 @@ async def save_transcript_segment(
 ):
     """Save a real-time transcription segment during the call."""
     video_call = await crud.video_call.get(db, id=call_id)
-    
+
     if not video_call:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Video call not found"
         )
-    
+
     # Check if user is participant
     if video_call.interviewer_id != current_user.id and video_call.candidate_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You are not a participant in this video call"
         )
-    
+
     # Check if call is in progress
     if video_call.status != "in_progress":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Can only save segments during an active call"
         )
-    
+
     saved_segment = await crud.video_call.save_transcription_segment(
         db, video_call_id=call_id, segment_data=segment.model_dump()
     )
-    
+
     return saved_segment
 
 
@@ -478,38 +477,38 @@ async def download_transcript(
 ):
     """Download transcript in specified format (txt, pdf, srt)."""
     video_call = await crud.video_call.get(db, id=call_id)
-    
+
     if not video_call:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Video call not found"
         )
-    
+
     # Check if user is participant
     if video_call.interviewer_id != current_user.id and video_call.candidate_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to download this transcript"
         )
-    
+
     transcript = await crud.video_call.get_call_transcription(db, video_call_id=call_id)
-    
+
     if not transcript or transcript.processing_status != "completed":
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Transcript not available for download"
         )
-    
+
     # Generate download URL using transcription service
     download_url = await video_service.generate_transcript_download(
         transcript_id=transcript.id,
         format=format
     )
-    
+
     return {"download_url": download_url}
 
 
-@router.get("/", response_model=List[VideoCallInfo])
+@router.get("/", response_model=list[VideoCallInfo])
 async def list_video_calls(
     skip: int = 0,
     limit: int = 100,

@@ -6,7 +6,7 @@ to demonstrate the todo management system functionality.
 """
 
 from datetime import datetime, timedelta
-from typing import Any, Dict
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,7 +14,7 @@ from app.models.todo import Todo
 from app.utils.constants import TodoStatus, TodoVisibility
 
 
-async def seed_todo_data(db: AsyncSession, auth_result: Dict[str, Any]) -> Dict[str, int]:
+async def seed_todo_data(db: AsyncSession, auth_result: dict[str, Any]) -> dict[str, int]:
     """
     Seed todo data for testing the todo management system.
 

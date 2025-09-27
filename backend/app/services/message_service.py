@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from fastapi import HTTPException, status
 from sqlalchemy import and_, desc, func, or_, select
@@ -32,7 +31,7 @@ class MessageService:
         # Verify recipient exists and is active
         recipient = await db.execute(
             select(User).where(
-                User.id == message_data.recipient_id, User.is_active == True
+                User.id == message_data.recipient_id, User.is_active is True
             )
         )
         if not recipient.scalar_one_or_none():
@@ -73,7 +72,7 @@ class MessageService:
         current_user_id: int,
         other_user_id: int,
         limit: int = 50,
-        before_id: Optional[int] = None,
+        before_id: int | None = None,
     ) -> list[Message]:
         """Get messages between current user and another user."""
 
@@ -89,12 +88,12 @@ class MessageService:
                     and_(
                         Message.sender_id == current_user_id,
                         Message.recipient_id == other_user_id,
-                        Message.is_deleted_by_sender == False,
+                        Message.is_deleted_by_sender is False,
                     ),
                     and_(
                         Message.sender_id == other_user_id,
                         Message.recipient_id == current_user_id,
-                        Message.is_deleted_by_recipient == False,
+                        Message.is_deleted_by_recipient is False,
                     ),
                 )
             )
@@ -115,7 +114,7 @@ class MessageService:
         )  # Return in ascending order (oldest first, newest at bottom)
 
     async def get_conversations(
-        self, db: AsyncSession, user_id: int, search_query: Optional[str] = None
+        self, db: AsyncSession, user_id: int, search_query: str | None = None
     ) -> list[ConversationSummary]:
         """Get list of users the current user has exchanged messages with."""
         # SQLite-compatible approach: use CASE statements instead of greatest/least
@@ -194,12 +193,12 @@ class MessageService:
                         and_(
                             Message.sender_id == user_id,
                             Message.recipient_id == other_user_id,
-                            Message.is_deleted_by_sender == False,
+                            Message.is_deleted_by_sender is False,
                         ),
                         and_(
                             Message.sender_id == other_user_id,
                             Message.recipient_id == user_id,
-                            Message.is_deleted_by_recipient == False,
+                            Message.is_deleted_by_recipient is False,
                         ),
                     )
                 )
@@ -213,8 +212,8 @@ class MessageService:
                 select(func.count(Message.id)).where(
                     Message.sender_id == other_user_id,
                     Message.recipient_id == user_id,
-                    Message.is_read == False,
-                    Message.is_deleted_by_recipient == False,
+                    Message.is_read is False,
+                    Message.is_deleted_by_recipient is False,
                 )
             )
             unread_count = unread_result.scalar()
@@ -271,11 +270,11 @@ class MessageService:
                 or_(
                     and_(
                         Message.sender_id == user_id,
-                        Message.is_deleted_by_sender == False,
+                        Message.is_deleted_by_sender is False,
                     ),
                     and_(
                         Message.recipient_id == user_id,
-                        Message.is_deleted_by_recipient == False,
+                        Message.is_deleted_by_recipient is False,
                     ),
                 )
             )
@@ -319,7 +318,7 @@ class MessageService:
             select(Message).where(
                 Message.id.in_(message_ids),
                 Message.recipient_id == user_id,
-                Message.is_read == False,
+                Message.is_read is False,
             )
         )
         messages = result.scalars().all()
@@ -348,8 +347,8 @@ class MessageService:
             select(Message).where(
                 Message.sender_id == other_user_id,
                 Message.recipient_id == user_id,
-                Message.is_read == False,
-                Message.is_deleted_by_recipient == False,
+                Message.is_read is False,
+                Message.is_deleted_by_recipient is False,
             )
         )
         messages = result.scalars().all()

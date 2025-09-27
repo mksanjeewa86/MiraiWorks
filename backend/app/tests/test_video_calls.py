@@ -123,7 +123,7 @@ async def test_video_call_crud_basic():
             # Check if we can query video calls
             result = await session.execute(text("SELECT COUNT(*) FROM video_calls"))
             call_count = result.fetchone()[0]
-            print(f"✅ Database connection successful")
+            print("✅ Database connection successful")
             print(f"📊 Current video calls in database: {call_count}")
 
             # Check if we can query participants
@@ -163,17 +163,17 @@ def show_testing_instructions():
     for step in steps:
         print(f"   {step}")
 
-    print(f"\n🌐 Frontend Integration:")
-    print(f"   • Check if video call components exist in frontend/")
-    print(f"   • Look for WebRTC integration code")
-    print(f"   • Verify video call UI components")
+    print("\n🌐 Frontend Integration:")
+    print("   • Check if video call components exist in frontend/")
+    print("   • Look for WebRTC integration code")
+    print("   • Verify video call UI components")
 
-    print(f"\n🧪 Quick API Test Commands:")
-    print(f"   # Check API docs")
-    print(f"   curl http://localhost:8000/docs")
-    print(f"   ")
-    print(f"   # Get your video calls (requires auth)")
-    print(f"   curl -H 'Authorization: Bearer YOUR_TOKEN' http://localhost:8000/api/video-calls/")
+    print("\n🧪 Quick API Test Commands:")
+    print("   # Check API docs")
+    print("   curl http://localhost:8000/docs")
+    print("   ")
+    print("   # Get your video calls (requires auth)")
+    print("   curl -H 'Authorization: Bearer YOUR_TOKEN' http://localhost:8000/api/video-calls/")
 
     print("=" * 50)
 

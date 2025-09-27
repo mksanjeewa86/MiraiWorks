@@ -466,7 +466,7 @@ class TestPositionEndpoints:
             mock_get.return_value = []
 
             # Employer trying to access different company's positions
-            response = await client.get(
+            await client.get(
                 "/api/positions/company/999", headers=employer_headers
             )
             # Should be handled by permission logic in endpoint

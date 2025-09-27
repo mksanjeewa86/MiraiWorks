@@ -32,13 +32,13 @@ async def _get_todo_or_404(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Todo not found"
         )
-    
+
     # Check if user can view this todo
     if not await TodoPermissionService.can_view_todo(db, current_user.id, todo_obj):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Todo not found"
         )
-    
+
     if not allow_deleted and todo_obj.is_deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Todo not found"
@@ -86,14 +86,14 @@ async def update_todo_viewers(
 ):
     """Update viewers for a todo."""
     todo_obj = await _get_todo_or_404(db, todo_id=todo_id, current_user=current_user, allow_deleted=False)
-    
+
     # Check if user can assign this todo (only creator can manage viewers)
     if not await TodoPermissionService.can_assign_todo(db, current_user.id, todo_obj):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to manage viewers for this todo"
         )
-    
+
     # Validate viewer user IDs exist and are valid
     for user_id in viewers_data.viewer_ids:
         if not await TodoPermissionService.can_assign_to_user(db, current_user.id, user_id):
@@ -101,7 +101,7 @@ async def update_todo_viewers(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Cannot add user {user_id} as viewer"
             )
-    
+
     todo_obj = await todo_crud.update_viewers(
         db, todo=todo_obj, viewers_data=viewers_data, updated_by=current_user.id
     )
@@ -142,14 +142,14 @@ async def update_todo(
 ):
     """Update an existing todo."""
     todo_obj = await _get_todo_or_404(db, todo_id=todo_id, current_user=current_user, allow_deleted=False)
-    
+
     # Check if user can edit this todo
     if not await TodoPermissionService.can_edit_todo(db, current_user.id, todo_obj):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to edit this todo"
         )
-    
+
     todo_obj = await todo_crud.update_todo(
         db, db_obj=todo_obj, obj_in=todo_in, updated_by=current_user.id
     )
@@ -164,14 +164,14 @@ async def complete_todo(
 ):
     """Mark a todo as completed."""
     todo_obj = await _get_todo_or_404(db, todo_id=todo_id, current_user=current_user, allow_deleted=False)
-    
+
     # Check if user can change status
     if not await TodoPermissionService.can_change_status(db, current_user.id, todo_obj):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to change this todo's status"
         )
-    
+
     if todo_obj.status == TodoStatus.COMPLETED.value:
         return todo_obj
     todo_obj = await todo_crud.mark_complete(
@@ -188,14 +188,14 @@ async def reopen_todo(
 ):
     """Reopen a completed or expired todo."""
     todo_obj = await _get_todo_or_404(db, todo_id=todo_id, current_user=current_user, allow_deleted=False)
-    
+
     # Check if user can change status
     if not await TodoPermissionService.can_change_status(db, current_user.id, todo_obj):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to change this todo's status"
         )
-    
+
     if todo_obj.status == TodoStatus.PENDING.value:
         return todo_obj
     todo_obj = await todo_crud.reopen(db, todo=todo_obj, reopened_by=current_user.id)
@@ -267,14 +267,14 @@ async def assign_todo(
 ):
     """Assign a todo to a user with visibility settings."""
     todo_obj = await _get_todo_or_404(db, todo_id=todo_id, current_user=current_user, allow_deleted=False)
-    
+
     # Check if user can assign this todo
     if not await TodoPermissionService.can_assign_todo(db, current_user.id, todo_obj):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to assign this todo"
         )
-    
+
     # If assigning to someone, validate they can be assigned
     if assignment_data.assigned_user_id:
         if not await TodoPermissionService.can_assign_to_user(
@@ -284,7 +284,7 @@ async def assign_todo(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Cannot assign todo to this user"
             )
-    
+
     todo_obj = await todo_crud.assign_todo(
         db, todo=todo_obj, assignment_data=assignment_data, assigned_by=current_user.id
     )

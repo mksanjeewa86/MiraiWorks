@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -9,15 +8,15 @@ class MessageBase(BaseModel):
         ..., min_length=1, description="Message content cannot be empty"
     )
     type: str = "text"
-    file_url: Optional[str] = None
-    file_name: Optional[str] = None
-    file_size: Optional[int] = None
-    file_type: Optional[str] = None
+    file_url: str | None = None
+    file_name: str | None = None
+    file_size: int | None = None
+    file_type: str | None = None
 
 
 class MessageCreate(MessageBase):
     recipient_id: int
-    reply_to_id: Optional[int] = None
+    reply_to_id: int | None = None
 
 
 class MessageInfo(MessageBase):
@@ -29,9 +28,9 @@ class MessageInfo(MessageBase):
     sender_email: str
     recipient_email: str
     is_read: bool
-    reply_to_id: Optional[int] = None
+    reply_to_id: int | None = None
     created_at: datetime
-    read_at: Optional[datetime] = None
+    read_at: datetime | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -42,8 +41,8 @@ class ConversationSummary(BaseModel):
     other_user_id: int
     other_user_name: str
     other_user_email: str
-    other_user_company: Optional[str] = None
-    last_message: Optional[MessageInfo] = None
+    other_user_company: str | None = None
+    last_message: MessageInfo | None = None
     unread_count: int
     last_activity: datetime
 
@@ -51,8 +50,8 @@ class ConversationSummary(BaseModel):
 
 
 class MessageSearchRequest(BaseModel):
-    query: Optional[str] = None  # Search in message content and sender names
-    with_user_id: Optional[int] = None  # Filter messages with specific user
+    query: str | None = None  # Search in message content and sender names
+    with_user_id: int | None = None  # Filter messages with specific user
     limit: int = 50
     offset: int = 0
 

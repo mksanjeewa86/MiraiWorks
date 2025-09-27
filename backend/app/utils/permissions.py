@@ -1,5 +1,4 @@
 from functools import wraps
-from typing import Optional
 
 from fastapi import HTTPException, status
 
@@ -70,7 +69,7 @@ def requires_role(required_roles: list[UserRole]):
     return decorator
 
 
-def check_company_access(user: User, target_company_id: Optional[int]) -> bool:
+def check_company_access(user: User, target_company_id: int | None) -> bool:
     """Check if user has access to the target company."""
     # Super admin has access to all companies
     user_roles = [UserRole(ur.role.name) for ur in user.user_roles]
@@ -144,7 +143,7 @@ def is_company_admin(user: User) -> bool:
     return UserRole.COMPANY_ADMIN in user_roles or UserRole.SUPER_ADMIN in user_roles
 
 
-def can_manage_users(user: User, target_company_id: Optional[int] = None) -> bool:
+def can_manage_users(user: User, target_company_id: int | None = None) -> bool:
     """Check if user can manage users (optionally for a specific company)."""
     if is_super_admin(user):
         return True

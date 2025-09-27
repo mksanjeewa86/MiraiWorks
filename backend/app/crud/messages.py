@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List, Optional
 
 from sqlalchemy import and_, case, desc, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -68,7 +67,7 @@ async def create_message(
 
 async def get_message_by_id(
     db: AsyncSession, message_id: int
-) -> Optional[Message]:
+) -> Message | None:
     """Get message by ID."""
     result = await db.execute(
         select(Message)
@@ -213,8 +212,8 @@ class CRUDMessage(CRUDBase[Message, dict, dict]):
     """Message CRUD operations."""
 
     async def get_users_with_roles(
-        self, db: AsyncSession, user_ids: List[int]
-    ) -> List[User]:
+        self, db: AsyncSession, user_ids: list[int]
+    ) -> list[User]:
         """Get users with their roles by IDs."""
         result = await db.execute(
             select(User)
@@ -227,7 +226,7 @@ class CRUDMessage(CRUDBase[Message, dict, dict]):
 
     async def get_message_with_relationships(
         self, db: AsyncSession, message_id: int
-    ) -> Optional[Message]:
+    ) -> Message | None:
         """Get message with sender and recipient relationships."""
         result = await db.execute(
             select(Message)
@@ -241,17 +240,17 @@ class CRUDMessage(CRUDBase[Message, dict, dict]):
 
     async def search_messages_with_count(
         self, db: AsyncSession, user_id: int, search_request: MessageSearchRequest
-    ) -> tuple[List[Message], int]:
+    ) -> tuple[list[Message], int]:
         """Search messages and get total count."""
         # Base query for messages
         base_conditions = or_(
             and_(
                 Message.sender_id == user_id,
-                Message.is_deleted_by_sender == False,
+                Message.is_deleted_by_sender is False,
             ),
             and_(
                 Message.recipient_id == user_id,
-                Message.is_deleted_by_recipient == False,
+                Message.is_deleted_by_recipient is False,
             ),
         )
 
@@ -309,17 +308,17 @@ class CRUDMessage(CRUDBase[Message, dict, dict]):
         self,
         db: AsyncSession,
         current_user_id: int,
-        current_user_roles: List[str],
-        query: Optional[str] = None,
+        current_user_roles: list[str],
+        query: str | None = None,
         limit: int = 50,
-    ) -> List[User]:
+    ) -> list[User]:
         """Get list of users current user can send messages to based on role restrictions."""
         # Build base query
         query_stmt = (
             select(User)
             .join(User.user_roles)
             .join(UserRole.role)
-            .where(User.is_active == True, User.id != current_user_id)
+            .where(User.is_active is True, User.id != current_user_id)
             .options(
                 selectinload(User.company),
                 selectinload(User.user_roles).selectinload(UserRole.role),

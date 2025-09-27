@@ -1,6 +1,5 @@
 """Todo permission service for role-based access control."""
 
-from typing import List
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,7 +17,7 @@ class TodoPermissionService:
     """Service to handle todo assignment and permission logic."""
 
     @staticmethod
-    async def get_user_roles(db: AsyncSession, user_id: int) -> List[str]:
+    async def get_user_roles(db: AsyncSession, user_id: int) -> list[str]:
         """Get all roles for a user."""
         query = (
             select(Role.name)
@@ -26,7 +25,7 @@ class TodoPermissionService:
             .where(UserRole.user_id == user_id)
         )
         result = await db.execute(query)
-        return [role for role in result.scalars().all()]
+        return list(result.scalars().all())
 
     @staticmethod
     async def is_employer(db: AsyncSession, user_id: int) -> bool:
@@ -64,15 +63,15 @@ class TodoPermissionService:
         # Creator (owner) can always view
         if todo.owner_id == user_id:
             return True
-        
+
         # Assigned user can view if visibility allows (PUBLIC or VIEWER)
         if todo.assigned_user_id == user_id:
             return todo.visibility in [TodoVisibility.PUBLIC.value, TodoVisibility.VIEWER.value]
-        
+
         # Check if user is in viewers list
         if await todo_viewer.is_viewer(db, todo_id=todo.id, user_id=user_id):
             return True
-        
+
         return False
 
     @staticmethod
@@ -81,11 +80,11 @@ class TodoPermissionService:
         # Creator (owner) can always edit
         if todo.owner_id == user_id:
             return True
-        
+
         # Assignee can edit if visibility is PUBLIC (not VIEWER)
         if todo.assigned_user_id == user_id and todo.visibility == TodoVisibility.PUBLIC.value:
             return True
-        
+
         return False
 
     @staticmethod
@@ -100,11 +99,11 @@ class TodoPermissionService:
         # Creator (owner) can always change status
         if todo.owner_id == user_id:
             return True
-        
+
         # Assignee can change status if visibility is PUBLIC (not VIEWER)
         if todo.assigned_user_id == user_id and todo.visibility == TodoVisibility.PUBLIC.value:
             return True
-        
+
         return False
 
     @staticmethod
@@ -113,11 +112,11 @@ class TodoPermissionService:
         # Creator (owner) can always add attachments
         if todo.owner_id == user_id:
             return True
-        
+
         # Assignee can add attachments if visibility is PUBLIC (not VIEWER)
         if todo.assigned_user_id == user_id and todo.visibility == TodoVisibility.PUBLIC.value:
             return True
-        
+
         return False
 
     @staticmethod
@@ -126,42 +125,42 @@ class TodoPermissionService:
         # Any creator can assign to any active user
         query = select(User).where(
             User.id == assignee_id,
-            User.is_active == True,
-            User.is_deleted == False
+            User.is_active is True,
+            User.is_deleted is False
         )
         result = await db.execute(query)
         user = result.scalars().first()
         return user is not None
 
     @staticmethod
-    async def get_assignable_users(db: AsyncSession, assigner_id: int) -> List[User]:
+    async def get_assignable_users(db: AsyncSession, assigner_id: int) -> list[User]:
         """Get list of users that can be assigned todos by the assigner."""
         # Get all active users (any creator can assign to anyone)
         query = (
             select(User)
             .where(
-                User.is_active == True,
-                User.is_deleted == False,
+                User.is_active is True,
+                User.is_deleted is False,
                 User.id != assigner_id  # Don't include the assigner themselves
             )
         )
-        
+
         result = await db.execute(query)
         return list(result.scalars().all())
 
     @staticmethod
     async def filter_todos_by_permission(
-        db: AsyncSession, 
-        user_id: int, 
-        todos: List[Todo]
-    ) -> List[Todo]:
+        db: AsyncSession,
+        user_id: int,
+        todos: list[Todo]
+    ) -> list[Todo]:
         """Filter todos based on user permissions."""
         filtered_todos = []
-        
+
         for todo in todos:
             if await TodoPermissionService.can_view_todo(db, user_id, todo):
                 filtered_todos.append(todo)
-        
+
         return filtered_todos
 
     # Extension request permissions
@@ -171,19 +170,19 @@ class TodoPermissionService:
         # Must be assigned user
         if todo.assigned_user_id != user_id:
             return False
-        
+
         # Todo must have a due date
         if not todo.due_date:
             return False
-        
+
         # Todo must not be completed or deleted
         if todo.status == TodoStatus.COMPLETED.value or todo.is_deleted:
             return False
-        
+
         # Must have PUBLIC visibility (not just VIEWER)
         if todo.visibility != TodoVisibility.PUBLIC.value:
             return False
-        
+
         return True
 
     @staticmethod
@@ -198,13 +197,13 @@ class TodoPermissionService:
         # Creator can always view
         if extension_request.creator_id == user_id:
             return True
-        
+
         # Requester can view their own requests
         if extension_request.requested_by_id == user_id:
             return True
-        
+
         # Check if user is a viewer of the todo
         if await todo_viewer.is_viewer(db, todo_id=extension_request.todo_id, user_id=user_id):
             return True
-        
+
         return False

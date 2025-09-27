@@ -56,7 +56,7 @@ class Resume(BaseModel):
     theme_color = Column(String(7), default="#2563eb")  # Hex color
     font_family = Column(String(50), default="Inter")
     custom_css = Column(Text)
-    
+
     # Japanese-specific fields
     furigana_name = Column(String(100))  # phonetic name (furigana)
     birth_date = Column(DateTime)  # birth date
@@ -76,7 +76,7 @@ class Resume(BaseModel):
     pdf_file_path = Column(String(500))
     pdf_generated_at = Column(DateTime)
     original_file_path = Column(String(500))  # For parsed resumes
-    
+
     # Sharing and public access
     is_public = Column(Boolean, default=False)
     public_url_slug = Column(String(100), unique=True, index=True)
@@ -139,7 +139,7 @@ class Resume(BaseModel):
         result = await db.execute(
             select(cls).where(
                 cls.public_url_slug == slug,
-                cls.is_public == True
+                cls.is_public is True
             )
         )
         return result.scalars().first()
@@ -156,15 +156,15 @@ class Resume(BaseModel):
         """Increment view count."""
         self.view_count = (self.view_count or 0) + 1
         self.last_viewed_at = datetime.utcnow()
-        
+
     def increment_download_count(self):
         """Increment download count."""
         self.download_count = (self.download_count or 0) + 1
-        
+
     def can_be_edited(self) -> bool:
         """Check if resume can be edited."""
         return self.can_edit and self.status != ResumeStatus.ARCHIVED
-        
+
     def can_be_deleted(self) -> bool:
         """Check if resume can be deleted."""
         return self.can_delete and self.status != ResumeStatus.ARCHIVED
@@ -424,9 +424,9 @@ class ResumeTemplate(BaseModel):
         """Get all active templates."""
         from sqlalchemy import select
 
-        query = select(cls).where(cls.is_active == True)
+        query = select(cls).where(cls.is_active is True)
         if not include_premium:
-            query = query.where(cls.is_premium == False)
+            query = query.where(cls.is_premium is False)
         result = await db.execute(query.order_by(cls.usage_count.desc()))
         return result.scalars().all()
 
@@ -484,13 +484,13 @@ class ResumeMessageAttachment(BaseModel):
     id = Column(Integer, primary_key=True, index=True)
     resume_id = Column(Integer, ForeignKey("resumes.id"), nullable=False)
     message_id = Column(Integer, ForeignKey("messages.id"), nullable=False)
-    
+
     # Attachment settings
     auto_attached = Column(Boolean, default=False)  # Automatically attached when contacting
     attachment_format = Column(String(20), default="pdf")  # pdf, json, etc.
-    
+
     created_at = Column(DateTime, default=datetime.utcnow)
-    
+
     # Relationships
     resume = relationship("Resume")
     # message relationship will be added to Message model

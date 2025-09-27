@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -46,26 +46,26 @@ router = APIRouter()
 @router.post("/exams", response_model=ExamInfo)
 async def create_exam(
     exam_data: ExamCreate,
-    questions_data: List[ExamQuestionCreate],
+    questions_data: list[ExamQuestionCreate],
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user_with_company)
 ):
     """Create a new exam with questions."""
     require_roles(current_user, [UserRole.COMPANY_ADMIN, UserRole.COMPANY_RECRUITER])
-    
+
     # Verify company access
     if exam_data.company_id != current_user.company_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Cannot create exam for different company"
         )
-    
+
     if not questions_data:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="At least one question is required"
         )
-    
+
     try:
         exam = await exam_crud.create_with_questions(
             db=db,
@@ -83,7 +83,7 @@ async def create_exam(
 
 @router.get("/exams", response_model=ExamListResponse)
 async def get_company_exams(
-    status_filter: Optional[ExamStatus] = Query(None, alias="status"),
+    status_filter: ExamStatus | None = Query(None, alias="status"),
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
@@ -91,7 +91,7 @@ async def get_company_exams(
 ):
     """Get exams for current user's company."""
     require_roles(current_user, [UserRole.COMPANY_ADMIN, UserRole.COMPANY_RECRUITER])
-    
+
     exams = await exam_crud.get_by_company(
         db=db,
         company_id=current_user.company_id,
@@ -99,9 +99,9 @@ async def get_company_exams(
         skip=skip,
         limit=limit
     )
-    
+
     total = len(exams)  # For simplicity, could be optimized with count query
-    
+
     return ExamListResponse(
         exams=exams,
         total=total,
@@ -119,20 +119,20 @@ async def get_exam_details(
 ):
     """Get detailed exam information."""
     require_roles(current_user, [UserRole.COMPANY_ADMIN, UserRole.COMPANY_RECRUITER])
-    
+
     exam = await exam_crud.get_with_details(db=db, id=exam_id)
     if not exam:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Exam not found"
         )
-    
+
     if exam.company_id != current_user.company_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied"
         )
-    
+
     return exam
 
 
@@ -145,20 +145,20 @@ async def update_exam(
 ):
     """Update exam details."""
     require_roles(current_user, [UserRole.COMPANY_ADMIN, UserRole.COMPANY_RECRUITER])
-    
+
     exam = await exam_crud.get(db=db, id=exam_id)
     if not exam:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Exam not found"
         )
-    
+
     if exam.company_id != current_user.company_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied"
         )
-    
+
     exam = await exam_crud.update(db=db, db_obj=exam, obj_in=exam_data)
     return exam
 
@@ -171,25 +171,25 @@ async def delete_exam(
 ):
     """Delete an exam."""
     require_roles(current_user, [UserRole.COMPANY_ADMIN, UserRole.COMPANY_RECRUITER])
-    
+
     exam = await exam_crud.get(db=db, id=exam_id)
     if not exam:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Exam not found"
         )
-    
+
     if exam.company_id != current_user.company_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied"
         )
-    
+
     await exam_crud.remove(db=db, id=exam_id)
     return {"message": "Exam deleted successfully"}
 
 
-@router.get("/exams/{exam_id}/statistics", response_model=Dict[str, Any])
+@router.get("/exams/{exam_id}/statistics", response_model=dict[str, Any])
 async def get_exam_statistics(
     exam_id: int,
     db: AsyncSession = Depends(get_db),
@@ -197,27 +197,27 @@ async def get_exam_statistics(
 ):
     """Get comprehensive exam statistics."""
     require_roles(current_user, [UserRole.COMPANY_ADMIN, UserRole.COMPANY_RECRUITER])
-    
+
     exam = await exam_crud.get(db=db, id=exam_id)
     if not exam:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Exam not found"
         )
-    
+
     if exam.company_id != current_user.company_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied"
         )
-    
+
     stats = await exam_crud.get_statistics(db=db, exam_id=exam_id)
     return stats
 
 
 # Question management endpoints
 
-@router.get("/exams/{exam_id}/questions", response_model=List[ExamQuestionInfo])
+@router.get("/exams/{exam_id}/questions", response_model=list[ExamQuestionInfo])
 async def get_exam_questions(
     exam_id: int,
     db: AsyncSession = Depends(get_db),
@@ -225,20 +225,20 @@ async def get_exam_questions(
 ):
     """Get all questions for an exam."""
     require_roles(current_user, [UserRole.COMPANY_ADMIN, UserRole.COMPANY_RECRUITER])
-    
+
     exam = await exam_crud.get(db=db, id=exam_id)
     if not exam:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Exam not found"
         )
-    
+
     if exam.company_id != current_user.company_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied"
         )
-    
+
     questions = await exam_question_crud.get_by_exam(db=db, exam_id=exam_id)
     return questions
 
@@ -252,20 +252,20 @@ async def add_exam_question(
 ):
     """Add a new question to an exam."""
     require_roles(current_user, [UserRole.COMPANY_ADMIN, UserRole.COMPANY_RECRUITER])
-    
+
     exam = await exam_crud.get(db=db, id=exam_id)
     if not exam:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Exam not found"
         )
-    
+
     if exam.company_id != current_user.company_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied"
         )
-    
+
     question_data.exam_id = exam_id
     question = await exam_question_crud.create(db=db, obj_in=question_data)
     return question
@@ -280,14 +280,14 @@ async def update_exam_question(
 ):
     """Update an exam question."""
     require_roles(current_user, [UserRole.COMPANY_ADMIN, UserRole.COMPANY_RECRUITER])
-    
+
     question = await exam_question_crud.get(db=db, id=question_id)
     if not question:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Question not found"
         )
-    
+
     # Verify company access through exam
     exam = await exam_crud.get(db=db, id=question.exam_id)
     if not exam or exam.company_id != current_user.company_id:
@@ -295,7 +295,7 @@ async def update_exam_question(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied"
         )
-    
+
     question = await exam_question_crud.update(db=db, db_obj=question, obj_in=question_data)
     return question
 
@@ -308,14 +308,14 @@ async def delete_exam_question(
 ):
     """Delete an exam question."""
     require_roles(current_user, [UserRole.COMPANY_ADMIN, UserRole.COMPANY_RECRUITER])
-    
+
     question = await exam_question_crud.get(db=db, id=question_id)
     if not question:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Question not found"
         )
-    
+
     # Verify company access through exam
     exam = await exam_crud.get(db=db, id=question.exam_id)
     if not exam or exam.company_id != current_user.company_id:
@@ -323,14 +323,14 @@ async def delete_exam_question(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied"
         )
-    
+
     await exam_question_crud.remove(db=db, id=question_id)
     return {"message": "Question deleted successfully"}
 
 
 # Assignment management endpoints
 
-@router.post("/exams/{exam_id}/assignments", response_model=List[ExamAssignmentInfo])
+@router.post("/exams/{exam_id}/assignments", response_model=list[ExamAssignmentInfo])
 async def create_exam_assignments(
     exam_id: int,
     assignment_data: ExamAssignmentCreate,
@@ -339,31 +339,31 @@ async def create_exam_assignments(
 ):
     """Assign exam to candidates."""
     require_roles(current_user, [UserRole.COMPANY_ADMIN, UserRole.COMPANY_RECRUITER])
-    
+
     exam = await exam_crud.get(db=db, id=exam_id)
     if not exam:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Exam not found"
         )
-    
+
     if exam.company_id != current_user.company_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied"
         )
-    
+
     assignment_data.exam_id = exam_id
     assignments = await exam_assignment_crud.create_assignments(
         db=db,
         assignment_data=assignment_data,
         assigned_by_id=current_user.id
     )
-    
+
     return assignments
 
 
-@router.get("/exams/{exam_id}/assignments", response_model=List[ExamAssignmentInfo])
+@router.get("/exams/{exam_id}/assignments", response_model=list[ExamAssignmentInfo])
 async def get_exam_assignments(
     exam_id: int,
     db: AsyncSession = Depends(get_db),
@@ -371,27 +371,27 @@ async def get_exam_assignments(
 ):
     """Get all assignments for an exam."""
     require_roles(current_user, [UserRole.COMPANY_ADMIN, UserRole.COMPANY_RECRUITER])
-    
+
     exam = await exam_crud.get(db=db, id=exam_id)
     if not exam:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Exam not found"
         )
-    
+
     if exam.company_id != current_user.company_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied"
         )
-    
+
     assignments = await exam_assignment_crud.get_by_exam(db=db, exam_id=exam_id)
     return assignments
 
 
 # Candidate endpoints (for taking exams)
 
-@router.get("/my-assignments", response_model=List[ExamAssignmentInfo])
+@router.get("/my-assignments", response_model=list[ExamAssignmentInfo])
 async def get_my_exam_assignments(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
@@ -418,13 +418,13 @@ async def start_exam(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Exam not found"
         )
-    
+
     if exam.status != ExamStatus.ACTIVE:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Exam is not active"
         )
-    
+
     # Check if user has assignment (skip for test mode)
     if take_request.assignment_id and not take_request.test_mode:
         assignment = await exam_assignment_crud.get(db=db, id=take_request.assignment_id)
@@ -433,7 +433,7 @@ async def start_exam(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Invalid assignment"
             )
-    
+
     # Check for existing active session (skip for test mode)
     active_session = None
     if not take_request.test_mode:
@@ -442,7 +442,7 @@ async def start_exam(
             candidate_id=current_user.id,
             exam_id=take_request.exam_id
         )
-    
+
     if active_session:
         # Resume existing session
         session = active_session
@@ -468,11 +468,11 @@ async def start_exam(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=str(e)
             )
-    
+
     # Start session if not already started
     if session.status == SessionStatus.NOT_STARTED:
         session = await exam_session_crud.start_session(db=db, session_id=session.id)
-        
+
         # Update session with browser info
         if take_request.user_agent or take_request.screen_resolution:
             update_data = {}
@@ -480,15 +480,15 @@ async def start_exam(
                 update_data["user_agent"] = take_request.user_agent
             if take_request.screen_resolution:
                 update_data["screen_resolution"] = take_request.screen_resolution
-            
+
             await exam_session_crud.update(db=db, db_obj=session, obj_in=update_data)
-    
+
     # Get questions (randomized if needed)
     if exam.is_randomized:
         questions = await exam_question_crud.get_randomized_questions(db=db, exam_id=exam.id)
     else:
         questions = await exam_question_crud.get_by_exam(db=db, exam_id=exam.id)
-    
+
     # Convert to public format (no correct answers exposed)
     public_questions = []
     for q in questions:
@@ -506,9 +506,9 @@ async def start_exam(
             "rating_scale": q.rating_scale
         }
         public_questions.append(public_q)
-    
+
     current_question = public_questions[session.current_question_index] if public_questions else None
-    
+
     return ExamTakeResponse(
         session=session,
         questions=public_questions,
@@ -532,19 +532,19 @@ async def submit_answer(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Session not found"
         )
-    
+
     if session.candidate_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied"
         )
-    
+
     if session.status not in [SessionStatus.IN_PROGRESS]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Session is not active"
         )
-    
+
     try:
         answer = await exam_answer_crud.submit_answer(
             db=db,
@@ -572,19 +572,19 @@ async def complete_exam(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Session not found"
         )
-    
+
     if session.candidate_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied"
         )
-    
+
     if session.status != SessionStatus.IN_PROGRESS:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Session is not in progress"
         )
-    
+
     try:
         session = await exam_session_crud.complete_session(
             db=db,
@@ -612,36 +612,36 @@ async def get_exam_results(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Session not found"
         )
-    
+
     if session.candidate_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied"
         )
-    
+
     if session.status != SessionStatus.COMPLETED:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Session not completed"
         )
-    
+
     exam = session.exam
     if not exam.show_results_immediately:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Results not available"
         )
-    
+
     result_summary = ExamResultSummary(
         session=session,
         answers=session.answers
     )
-    
+
     # Include questions with correct answers if allowed
     if exam.show_correct_answers:
         questions = await exam_question_crud.get_by_exam(db=db, exam_id=exam.id)
         result_summary.questions = questions
-    
+
     return result_summary
 
 
@@ -661,16 +661,16 @@ async def create_monitoring_event(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Session not found"
         )
-    
+
     if session.candidate_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied"
         )
-    
+
     event_data.session_id = session_id
     event = await exam_monitoring_crud.create_event(db=db, event_data=event_data)
-    
+
     # Update session counters based on event type
     if event_data.event_type == "web_usage":
         session.web_usage_detected = True
@@ -680,7 +680,7 @@ async def create_monitoring_event(
         session.face_verification_failed = True
         session.face_check_count += 1
         await db.commit()
-    
+
     return event
 
 
@@ -698,16 +698,16 @@ async def submit_face_verification(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Session not found"
         )
-    
+
     if session.candidate_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied"
         )
-    
+
     # TODO: Implement actual face recognition logic
     # For now, return a mock response
-    
+
     # Create monitoring event
     monitoring_event = ExamMonitoringEventCreate(
         session_id=session_id,
@@ -719,9 +719,9 @@ async def submit_face_verification(
         },
         severity="info"
     )
-    
+
     await exam_monitoring_crud.create_event(db=db, event_data=monitoring_event)
-    
+
     return FaceVerificationResponse(
         verified=True,  # Mock response
         confidence_score=0.95,
@@ -745,13 +745,13 @@ async def get_session_details(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Session not found"
         )
-    
+
     if session.candidate_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied"
         )
-    
+
     return session
 
 
@@ -765,20 +765,20 @@ async def get_exam_sessions(
 ):
     """Get all sessions for an exam (employer view)."""
     require_roles(current_user, [UserRole.COMPANY_ADMIN, UserRole.COMPANY_RECRUITER])
-    
+
     exam = await exam_crud.get(db=db, id=exam_id)
     if not exam:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Exam not found"
         )
-    
+
     if exam.company_id != current_user.company_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied"
         )
-    
+
     # This would need to be implemented in CRUD
     # For now, return empty list
     return ExamSessionListResponse(

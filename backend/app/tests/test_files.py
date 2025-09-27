@@ -510,7 +510,7 @@ class TestFiles:
         from app.endpoints.files import MAX_FILE_SIZE
 
         # Verify the file size limit is reasonable
-        assert MAX_FILE_SIZE == 10 * 1024 * 1024  # 10MB
+        assert 10 * 1024 * 1024 == MAX_FILE_SIZE  # 10MB
         assert MAX_FILE_SIZE > 0
 
     @pytest.mark.asyncio
@@ -601,7 +601,7 @@ class TestFiles:
 
             # Since file doesn't exist, it should return 404
             response = await client.get(
-                f"/api/files/download/message-attachments/1/2024/test-file.txt",
+                "/api/files/download/message-attachments/1/2024/test-file.txt",
                 headers=sender_headers,
             )
 
@@ -666,7 +666,7 @@ class TestFiles:
 
             # Since file doesn't exist, it should return 404
             response = await client.get(
-                f"/api/files/download/message-attachments/1/2024/test-file.txt",
+                "/api/files/download/message-attachments/1/2024/test-file.txt",
                 headers=recipient_headers,
             )
 

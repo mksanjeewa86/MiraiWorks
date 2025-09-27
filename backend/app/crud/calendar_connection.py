@@ -1,4 +1,3 @@
-from typing import List, Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,7 +17,7 @@ class CRUDCalendarConnection(
 
     async def get_by_user(
         self, db: AsyncSession, user_id: int
-    ) -> List[CalendarConnection]:
+    ) -> list[CalendarConnection]:
         """Get all calendar connections for a user."""
         result = await db.execute(
             select(CalendarConnection).where(CalendarConnection.user_id == user_id)
@@ -27,7 +26,7 @@ class CRUDCalendarConnection(
 
     async def get_by_user_and_id(
         self, db: AsyncSession, user_id: int, connection_id: int
-    ) -> Optional[CalendarConnection]:
+    ) -> CalendarConnection | None:
         """Get a specific calendar connection for a user."""
         result = await db.execute(
             select(CalendarConnection).where(
@@ -39,19 +38,19 @@ class CRUDCalendarConnection(
 
     async def get_enabled_by_user(
         self, db: AsyncSession, user_id: int
-    ) -> List[CalendarConnection]:
+    ) -> list[CalendarConnection]:
         """Get enabled calendar connections for a user."""
         result = await db.execute(
             select(CalendarConnection).where(
                 CalendarConnection.user_id == user_id,
-                CalendarConnection.is_enabled == True,
+                CalendarConnection.is_enabled is True,
             )
         )
         return result.scalars().all()
 
     async def get_by_provider_and_user(
         self, db: AsyncSession, user_id: int, provider: str
-    ) -> Optional[CalendarConnection]:
+    ) -> CalendarConnection | None:
         """Get calendar connection by provider and user."""
         result = await db.execute(
             select(CalendarConnection).where(

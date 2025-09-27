@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from sqlalchemy import and_, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,7 +11,7 @@ from app.schemas.position import PositionCreate, PositionUpdate
 
 
 class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
-    async def get_by_slug(self, db: AsyncSession, *, slug: str) -> Optional[Position]:
+    async def get_by_slug(self, db: AsyncSession, *, slug: str) -> Position | None:
         """Get position by slug."""
         result = await db.execute(
             select(Position).where(Position.slug == slug).options(selectinload(Position.company))
@@ -24,13 +24,13 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
         *,
         skip: int = 0,
         limit: int = 100,
-        location: Optional[str] = None,
-        job_type: Optional[str] = None,
-        salary_min: Optional[int] = None,
-        salary_max: Optional[int] = None,
-        company_id: Optional[int] = None,
-        search: Optional[str] = None,
-    ) -> List[Position]:
+        location: str | None = None,
+        job_type: str | None = None,
+        salary_min: int | None = None,
+        salary_max: int | None = None,
+        company_id: int | None = None,
+        search: str | None = None,
+    ) -> list[Position]:
         """Get published positions with optional filters."""
         query = select(Position).where(Position.status == "published")
 
@@ -76,14 +76,14 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
         *,
         skip: int = 0,
         limit: int = 100,
-        location: Optional[str] = None,
-        job_type: Optional[str] = None,
-        salary_min: Optional[int] = None,
-        salary_max: Optional[int] = None,
-        company_id: Optional[int] = None,
-        search: Optional[str] = None,
-        days_since_posted: Optional[int] = None,
-    ) -> tuple[List[Position], int]:
+        location: str | None = None,
+        job_type: str | None = None,
+        salary_min: int | None = None,
+        salary_max: int | None = None,
+        company_id: int | None = None,
+        search: str | None = None,
+        days_since_posted: int | None = None,
+    ) -> tuple[list[Position], int]:
         """Get published positions with optional filters and total count."""
         # Base query for filtering
         base_query = select(Position).where(Position.status == "published")
@@ -155,7 +155,7 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
 
     async def get_by_company(
         self, db: AsyncSession, *, company_id: int, skip: int = 0, limit: int = 100
-    ) -> List[Position]:
+    ) -> list[Position]:
         """Get positions by company."""
         result = await db.execute(
             select(Position)
@@ -169,7 +169,7 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
 
     async def search_positions(
         self, db: AsyncSession, *, query_text: str, skip: int = 0, limit: int = 100
-    ) -> List[Position]:
+    ) -> list[Position]:
         """Search positions by text."""
         search_filter = or_(
             Position.title.ilike(f"%{query_text}%"),
@@ -190,7 +190,7 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
 
     async def get_positions_by_status(
         self, db: AsyncSession, *, status: str, skip: int = 0, limit: int = 100
-    ) -> List[Position]:
+    ) -> list[Position]:
         """Get positions by status."""
         result = await db.execute(
             select(Position)
@@ -204,7 +204,7 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
 
     async def increment_view_count(
         self, db: AsyncSession, *, position_id: int
-    ) -> Optional[Position]:
+    ) -> Position | None:
         """Increment position view count."""
         position = await self.get(db, id=position_id)
         if position:
@@ -215,14 +215,14 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
 
     async def increment_position_view_count(
         self, db: AsyncSession, *, position_id: int
-    ) -> Optional[Position]:
+    ) -> Position | None:
         """Compatibility wrapper for new naming convention."""
         return await self.increment_view_count(db=db, position_id=position_id)
 
 
     async def get_popular_positions(
         self, db: AsyncSession, *, skip: int = 0, limit: int = 10
-    ) -> List[Position]:
+    ) -> list[Position]:
         """Get most popular positions by view count."""
         result = await db.execute(
             select(Position)
@@ -236,7 +236,7 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
 
     async def get_recent_positions(
         self, db: AsyncSession, *, days: int = 7, skip: int = 0, limit: int = 100
-    ) -> List[Position]:
+    ) -> list[Position]:
         """Get positions posted in the last N days."""
         cutoff_date = datetime.utcnow() - timedelta(days=days)
 
@@ -252,7 +252,7 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
 
     async def get_positions_expiring_soon(
         self, db: AsyncSession, *, days: int = 7, skip: int = 0, limit: int = 100
-    ) -> List[Position]:
+    ) -> list[Position]:
         """Get positions expiring in the next N days."""
         cutoff_date = datetime.utcnow() + timedelta(days=days)
 
@@ -272,7 +272,7 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
         )
         return result.scalars().all()
 
-    async def get_position_statistics(self, db: AsyncSession) -> Dict[str, Any]:
+    async def get_position_statistics(self, db: AsyncSession) -> dict[str, Any]:
         """Get position posting statistics."""
         # Total positions by status
         status_counts = await db.execute(
@@ -338,8 +338,8 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
         return response
 
     async def bulk_update_status(
-        self, db: AsyncSession, *, position_ids: List[int], status: str
-    ) -> List[Position]:
+        self, db: AsyncSession, *, position_ids: list[int], status: str
+    ) -> list[Position]:
         """Bulk update position status."""
         result = await db.execute(select(Position).where(Position.id.in_(position_ids)))
         positions = result.scalars().all()
@@ -355,8 +355,8 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
         return positions
 
     async def bulk_update_position_status(
-        self, db: AsyncSession, *, position_ids: List[int], status: str
-    ) -> List[Position]:
+        self, db: AsyncSession, *, position_ids: list[int], status: str
+    ) -> list[Position]:
         """Compatibility wrapper for new naming convention."""
         return await self.bulk_update_status(db=db, position_ids=position_ids, status=status)
 

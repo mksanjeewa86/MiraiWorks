@@ -1,7 +1,6 @@
 import secrets
 import string
 from datetime import datetime
-from typing import Optional
 
 from sqlalchemy import and_, desc, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -31,18 +30,18 @@ from app.utils.constants import ResumeStatus, ResumeVisibility
 def generate_slug(title: str, max_length: int = 50) -> str:
     """Generate a URL-friendly slug from title"""
     import re
-    
+
     # Convert to lowercase and replace spaces with hyphens
     slug = re.sub(r'[^\w\s-]', '', title.lower())
     slug = re.sub(r'[-\s]+', '-', slug)
-    
+
     # Truncate if too long
     if len(slug) > max_length:
         slug = slug[:max_length].rstrip('-')
-    
+
     # Add random suffix to ensure uniqueness
     random_suffix = ''.join(secrets.choice(string.ascii_lowercase + string.digits) for _ in range(6))
-    
+
     return f"{slug}-{random_suffix}"
 
 
@@ -52,7 +51,7 @@ def generate_share_token() -> str:
 
 
 class CRUDResume(CRUDBase[Resume, ResumeCreate, ResumeUpdate]):
-    
+
     async def create_with_user(
         self, db: AsyncSession, *, obj_in: ResumeCreate, user_id: int
     ) -> Resume:
@@ -61,7 +60,7 @@ class CRUDResume(CRUDBase[Resume, ResumeCreate, ResumeUpdate]):
         obj_data["user_id"] = user_id
         obj_data["public_url_slug"] = generate_slug(obj_data["title"])
         obj_data["share_token"] = generate_share_token()
-        
+
         db_obj = Resume(**obj_data)
         db.add(db_obj)
         await db.commit()
@@ -75,7 +74,7 @@ class CRUDResume(CRUDBase[Resume, ResumeCreate, ResumeUpdate]):
         user_id: int,
         skip: int = 0,
         limit: int = 10,
-        status: Optional[ResumeStatus] = None
+        status: ResumeStatus | None = None
     ) -> list[Resume]:
         """Get resumes by user ID with optional status filter"""
         query = (
@@ -101,7 +100,7 @@ class CRUDResume(CRUDBase[Resume, ResumeCreate, ResumeUpdate]):
         result = await db.execute(query)
         return result.scalars().all()
 
-    async def get_with_details(self, db: AsyncSession, *, id: int, user_id: int) -> Optional[Resume]:
+    async def get_with_details(self, db: AsyncSession, *, id: int, user_id: int) -> Resume | None:
         """Get resume with all related details"""
         query = (
             select(Resume)
@@ -117,11 +116,11 @@ class CRUDResume(CRUDBase[Resume, ResumeCreate, ResumeUpdate]):
             )
             .where(and_(Resume.id == id, Resume.user_id == user_id))
         )
-        
+
         result = await db.execute(query)
         return result.scalars().first()
 
-    async def get_public_by_slug(self, db: AsyncSession, *, slug: str) -> Optional[Resume]:
+    async def get_public_by_slug(self, db: AsyncSession, *, slug: str) -> Resume | None:
         """Get public resume by slug"""
         query = (
             select(Resume)
@@ -136,12 +135,12 @@ class CRUDResume(CRUDBase[Resume, ResumeCreate, ResumeUpdate]):
             .where(
                 and_(
                     Resume.public_url_slug == slug,
-                    Resume.is_public == True,
+                    Resume.is_public is True,
                     Resume.status == ResumeStatus.PUBLISHED
                 )
             )
         )
-        
+
         result = await db.execute(query)
         resume = result.scalars().first()
 
@@ -158,7 +157,7 @@ class CRUDResume(CRUDBase[Resume, ResumeCreate, ResumeUpdate]):
             .where(
                 and_(
                     Resume.public_url_slug == slug,
-                    Resume.is_public == True,
+                    Resume.is_public is True,
                     Resume.status == ResumeStatus.PUBLISHED
                 )
             )
@@ -173,7 +172,7 @@ class CRUDResume(CRUDBase[Resume, ResumeCreate, ResumeUpdate]):
         await db.commit()
         return updated is not None
 
-    async def get_by_share_token(self, db: AsyncSession, *, token: str) -> Optional[Resume]:
+    async def get_by_share_token(self, db: AsyncSession, *, token: str) -> Resume | None:
         """Get resume by share token"""
         query = (
             select(Resume)
@@ -187,37 +186,37 @@ class CRUDResume(CRUDBase[Resume, ResumeCreate, ResumeUpdate]):
             )
             .where(Resume.share_token == token)
         )
-        
+
         result = await db.execute(query)
         resume = result.scalars().first()
-        
+
         if resume:
             resume.increment_view_count()
             await db.commit()
-            
+
         return resume
 
     async def update_public_settings(
-        self, 
-        db: AsyncSession, 
-        *, 
-        resume_id: int, 
+        self,
+        db: AsyncSession,
+        *,
+        resume_id: int,
         user_id: int,
         is_public: bool,
-        custom_slug: Optional[str] = None,
+        custom_slug: str | None = None,
         can_download_pdf: bool = True
-    ) -> Optional[Resume]:
+    ) -> Resume | None:
         """Update public sharing settings"""
         resume = await db.get(Resume, resume_id)
         if not resume or resume.user_id != user_id:
             return None
-            
+
         # Generate new slug if custom one provided
         if custom_slug:
             resume.public_url_slug = generate_slug(custom_slug)
         elif not resume.public_url_slug:
             resume.public_url_slug = generate_slug(resume.title)
-            
+
         resume.is_public = is_public
         resume.can_download_pdf = can_download_pdf
 
@@ -227,12 +226,12 @@ class CRUDResume(CRUDBase[Resume, ResumeCreate, ResumeUpdate]):
                 resume.status = ResumeStatus.PUBLISHED
         else:
             resume.visibility = ResumeVisibility.PRIVATE
-            
+
         await db.commit()
         await db.refresh(resume)
         return resume
 
-    async def set_primary(self, db: AsyncSession, *, resume_id: int, user_id: int) -> Optional[Resume]:
+    async def set_primary(self, db: AsyncSession, *, resume_id: int, user_id: int) -> Resume | None:
         """Set resume as primary (unset others)"""
         # First unset all primary resumes for user
         await db.execute(
@@ -240,7 +239,7 @@ class CRUDResume(CRUDBase[Resume, ResumeCreate, ResumeUpdate]):
             .where(Resume.user_id == user_id)
             .values(is_primary=False)
         )
-        
+
         # Set the specified resume as primary
         result = await db.execute(
             update(Resume)
@@ -248,7 +247,7 @@ class CRUDResume(CRUDBase[Resume, ResumeCreate, ResumeUpdate]):
             .values(is_primary=True)
             .returning(Resume)
         )
-        
+
         await db.commit()
         resume = result.scalars().first()
         if resume:
@@ -260,7 +259,7 @@ class CRUDResume(CRUDBase[Resume, ResumeCreate, ResumeUpdate]):
         total_query = select(func.count(Resume.id)).where(Resume.user_id == user_id)
         total_result = await db.execute(total_query)
         total_resumes = total_result.scalar()
-        
+
         # Get counts by status
         status_query = (
             select(Resume.status, func.count(Resume.id))
@@ -268,17 +267,17 @@ class CRUDResume(CRUDBase[Resume, ResumeCreate, ResumeUpdate]):
             .group_by(Resume.status)
         )
         status_result = await db.execute(status_query)
-        by_status = {status: count for status, count in status_result.fetchall()}
-        
+        by_status = dict(status_result.fetchall())
+
         # Get total views and downloads
         views_query = select(func.sum(Resume.view_count)).where(Resume.user_id == user_id)
         views_result = await db.execute(views_query)
         total_views = views_result.scalar() or 0
-        
+
         downloads_query = select(func.sum(Resume.download_count)).where(Resume.user_id == user_id)
         downloads_result = await db.execute(downloads_query)
         total_downloads = downloads_result.scalar() or 0
-        
+
         return {
             "total_resumes": total_resumes,
             "by_status": by_status,
@@ -296,12 +295,12 @@ class CRUDResume(CRUDBase[Resume, ResumeCreate, ResumeUpdate]):
         await db.commit()
         return result.rowcount > 0
 
-    async def duplicate_resume(self, db: AsyncSession, *, resume_id: int, user_id: int) -> Optional[Resume]:
+    async def duplicate_resume(self, db: AsyncSession, *, resume_id: int, user_id: int) -> Resume | None:
         """Create a copy of existing resume"""
         original = await self.get_with_details(db, id=resume_id, user_id=user_id)
         if not original:
             return None
-            
+
         # Create new resume data
         new_resume_data = {
             "title": f"{original.title} (Copy)",
@@ -333,11 +332,11 @@ class CRUDResume(CRUDBase[Resume, ResumeCreate, ResumeUpdate]):
             "public_url_slug": generate_slug(f"{original.title} (Copy)"),
             "share_token": generate_share_token(),
         }
-        
+
         new_resume = Resume(**new_resume_data)
         db.add(new_resume)
         await db.flush()
-        
+
         # Copy all related data
         for experience in original.experiences:
             new_exp = WorkExperience(
@@ -355,10 +354,10 @@ class CRUDResume(CRUDBase[Resume, ResumeCreate, ResumeUpdate]):
                 display_order=experience.display_order,
             )
             db.add(new_exp)
-            
+
         # Copy education, skills, etc. (similar pattern)
         # ... (truncated for brevity, would include all related models)
-        
+
         await db.commit()
         await db.refresh(new_resume)
         return new_resume
@@ -366,7 +365,7 @@ class CRUDResume(CRUDBase[Resume, ResumeCreate, ResumeUpdate]):
 
 # Related model CRUD classes
 class CRUDWorkExperience(CRUDBase[WorkExperience, WorkExperienceCreate, WorkExperienceUpdate]):
-    
+
     async def create_for_resume(
         self, db: AsyncSession, *, obj_in: WorkExperienceCreate, resume_id: int
     ) -> WorkExperience:
@@ -388,7 +387,7 @@ class CRUDWorkExperience(CRUDBase[WorkExperience, WorkExperienceCreate, WorkExpe
 
 
 class CRUDEducation(CRUDBase[Education, EducationCreate, EducationUpdate]):
-    
+
     async def create_for_resume(
         self, db: AsyncSession, *, obj_in: EducationCreate, resume_id: int
     ) -> Education:
@@ -410,7 +409,7 @@ class CRUDEducation(CRUDBase[Education, EducationCreate, EducationUpdate]):
 
 
 class CRUDSkill(CRUDBase[Skill, SkillCreate, SkillUpdate]):
-    
+
     async def create_for_resume(
         self, db: AsyncSession, *, obj_in: SkillCreate, resume_id: int
     ) -> Skill:
@@ -432,7 +431,7 @@ class CRUDSkill(CRUDBase[Skill, SkillCreate, SkillUpdate]):
 
 
 class CRUDResumeMessageAttachment(CRUDBase[ResumeMessageAttachment, dict, dict]):
-    
+
     async def create_attachment(
         self,
         db: AsyncSession,

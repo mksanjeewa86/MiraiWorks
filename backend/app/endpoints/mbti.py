@@ -1,6 +1,5 @@
 """API endpoints for MBTI personality test."""
 
-from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -44,7 +43,7 @@ async def start_mbti_test(
     await _check_candidate_permission(current_user, db)
 
     # Create or get existing test
-    test = await mbti_test.create_or_get_test(db, user_id=current_user.id, test_data=test_data)
+    await mbti_test.create_or_get_test(db, user_id=current_user.id, test_data=test_data)
 
     # Get progress information
     progress = await mbti_test.get_test_progress(db, user_id=current_user.id)
@@ -52,7 +51,7 @@ async def start_mbti_test(
     return MBTITestProgress(**progress)
 
 
-@router.get("/questions", response_model=List[dict])
+@router.get("/questions", response_model=list[dict])
 async def get_mbti_questions(
     language: str = Query("ja", pattern="^(en|ja)$"),
     db: AsyncSession = Depends(get_db),
@@ -192,7 +191,7 @@ async def get_mbti_progress(
     return MBTITestProgress(**progress)
 
 
-@router.get("/types", response_model=List[MBTITypeInfo])
+@router.get("/types", response_model=list[MBTITypeInfo])
 async def get_all_mbti_types(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
@@ -219,9 +218,9 @@ async def get_mbti_type_details(
 
 
 # Admin endpoints for managing questions
-@router.post("/admin/questions/bulk", response_model=List[MBTIQuestionRead])
+@router.post("/admin/questions/bulk", response_model=list[MBTIQuestionRead])
 async def bulk_create_questions(
-    questions_data: List[dict],
+    questions_data: list[dict],
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):

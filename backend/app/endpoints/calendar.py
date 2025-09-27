@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime, timedelta
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,7 +29,7 @@ logger = logging.getLogger(__name__)
 # OAuth endpoints
 @router.get("/oauth/google/start")
 async def start_google_oauth(
-    current_user: User = Depends(get_current_active_user), state: Optional[str] = None
+    current_user: User = Depends(get_current_active_user), state: str | None = None
 ):
     """Start Google Calendar OAuth flow."""
     try:
@@ -45,8 +44,8 @@ async def start_google_oauth(
 @router.get("/oauth/google/callback")
 async def google_oauth_callback(
     code: str = Query(...),
-    state: Optional[str] = Query(None),
-    error: Optional[str] = Query(None),
+    state: str | None = Query(None),
+    error: str | None = Query(None),
     db: AsyncSession = Depends(get_db),
 ):
     """Handle Google OAuth callback."""
@@ -127,7 +126,7 @@ async def google_oauth_callback(
 
 @router.get("/oauth/microsoft/start")
 async def start_microsoft_oauth(
-    current_user: User = Depends(get_current_active_user), state: Optional[str] = None
+    current_user: User = Depends(get_current_active_user), state: str | None = None
 ):
     """Start Microsoft Calendar OAuth flow."""
     auth_url = microsoft_calendar_service.get_auth_url(current_user.id, state)
@@ -137,8 +136,8 @@ async def start_microsoft_oauth(
 @router.get("/oauth/microsoft/callback")
 async def microsoft_oauth_callback(
     code: str = Query(...),
-    state: Optional[str] = Query(None),
-    error: Optional[str] = Query(None),
+    state: str | None = Query(None),
+    error: str | None = Query(None),
     db: AsyncSession = Depends(get_db),
 ):
     """Handle Microsoft OAuth callback."""
@@ -320,7 +319,7 @@ async def sync_calendar_account(
 
 @router.get("/calendars")
 async def get_calendars(
-    account_id: Optional[int] = Query(None),
+    account_id: int | None = Query(None),
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -369,8 +368,8 @@ async def get_calendars(
 
 @router.get("/events", response_model=EventsListResponse)
 async def get_events(
-    startDate: Optional[str] = Query(None),
-    endDate: Optional[str] = Query(None),
+    startDate: str | None = Query(None),
+    endDate: str | None = Query(None),
     # Temporarily remove auth dependency for testing
     # request: EventsListRequest = Depends(),
     # current_user: User = Depends(get_current_active_user),
@@ -535,7 +534,7 @@ async def google_calendar_webhook(request: Request, db: AsyncSession = Depends(g
 @router.post("/webhooks/microsoft")
 async def microsoft_calendar_webhook(
     webhook_data: CalendarWebhookData,
-    validation_token: Optional[str] = Query(None),
+    validation_token: str | None = Query(None),
     db: AsyncSession = Depends(get_db),
 ):
     """Handle Microsoft Graph webhook notifications."""

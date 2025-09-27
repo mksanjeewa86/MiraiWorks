@@ -3,15 +3,15 @@ Audit service stub for testing purposes.
 This is a minimal implementation to allow tests to run.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 def log_action(
-    user_id: Optional[int] = None,
+    user_id: int | None = None,
     action: str = "",
     resource_type: str = "",
-    resource_id: Optional[int] = None,
-    details: Optional[Dict[str, Any]] = None,
+    resource_id: int | None = None,
+    details: dict[str, Any] | None = None,
     **kwargs,
 ) -> None:
     """

@@ -1,7 +1,6 @@
 """Realistic integration tests for interview endpoints."""
 
 from datetime import datetime, timedelta
-from typing import Dict, Optional, Tuple
 from uuid import uuid4
 
 import pytest
@@ -23,7 +22,7 @@ async def create_user_with_role(
     *,
     email: str,
     role: Role,
-    company_id: Optional[int],
+    company_id: int | None,
     password: str = "password123",
     first_name: str = "Test",
     last_name: str = "User",
@@ -51,12 +50,12 @@ async def create_sample_interview(
     client: AsyncClient,
     db_session: AsyncSession,
     auth_headers: dict,
-    roles_map: Dict[str, Role],
+    roles_map: dict[str, Role],
     employer_user: User,
     candidate_user: User,
     *,
     title: str = "Senior Engineer Interview",
-) -> Tuple[dict, User, dict]:
+) -> tuple[dict, User, dict]:
     """Create a fully populated interview via the API for reuse in tests."""
     recruiter = await create_user_with_role(
         db_session,
@@ -87,12 +86,12 @@ async def create_sample_interview(
 
 async def create_interview_model(
     db_session: AsyncSession,
-    roles_map: Dict[str, Role],
+    roles_map: dict[str, Role],
     employer_user: User,
     candidate_user: User,
     *,
     title: str = "Service Interview",
-) -> Tuple[Interview, User]:
+) -> tuple[Interview, User]:
     """Create an interview directly via the service layer for DB-centric tests."""
     recruiter = await create_user_with_role(
         db_session,
@@ -133,7 +132,7 @@ async def test_create_interview_success(
     client: AsyncClient,
     db_session: AsyncSession,
     auth_headers: dict,
-    test_roles: Dict[str, Role],
+    test_roles: dict[str, Role],
     test_employer_user: User,
     test_candidate_only_user: User,
 ):
@@ -157,7 +156,7 @@ async def test_create_interview_rejects_non_candidate(
     client: AsyncClient,
     db_session: AsyncSession,
     auth_headers: dict,
-    test_roles: Dict[str, Role],
+    test_roles: dict[str, Role],
     test_employer_user: User,
 ):
     recruiter = await create_user_with_role(
@@ -196,7 +195,7 @@ async def test_get_interviews_returns_created_interview(
     client: AsyncClient,
     db_session: AsyncSession,
     auth_headers: dict,
-    test_roles: Dict[str, Role],
+    test_roles: dict[str, Role],
     test_employer_user: User,
     test_candidate_only_user: User,
 ):
@@ -224,7 +223,7 @@ async def test_get_interviews_returns_created_interview(
 @pytest.mark.asyncio
 async def test_update_interview_title(
     db_session: AsyncSession,
-    test_roles: Dict[str, Role],
+    test_roles: dict[str, Role],
     test_employer_user: User,
     test_candidate_only_user: User,
 ):
@@ -246,7 +245,7 @@ async def test_update_interview_title(
 @pytest.mark.asyncio
 async def test_proposal_lifecycle(
     db_session: AsyncSession,
-    test_roles: Dict[str, Role],
+    test_roles: dict[str, Role],
     test_employer_user: User,
     test_candidate_only_user: User,
 ):
@@ -283,7 +282,7 @@ async def test_proposal_lifecycle(
 @pytest.mark.asyncio
 async def test_interview_stats_reflect_confirmed_interview(
     db_session: AsyncSession,
-    test_roles: Dict[str, Role],
+    test_roles: dict[str, Role],
     test_employer_user: User,
     test_candidate_only_user: User,
 ):
@@ -317,7 +316,7 @@ async def test_interview_stats_reflect_confirmed_interview(
 @pytest.mark.asyncio
 async def test_cancel_interview_updates_status(
     db_session: AsyncSession,
-    test_roles: Dict[str, Role],
+    test_roles: dict[str, Role],
     test_employer_user: User,
     test_candidate_only_user: User,
 ):

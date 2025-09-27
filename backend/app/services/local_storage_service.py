@@ -2,7 +2,6 @@ import hashlib
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Tuple
 
 from app.utils.logging import get_logger
 
@@ -52,7 +51,7 @@ class LocalStorageService:
         content_type: str,
         user_id: int,
         folder: str = "attachments",
-    ) -> Tuple[str, str, int]:
+    ) -> tuple[str, str, int]:
         """Upload file data and return (file_path, file_hash, file_size)."""
 
         file_path = self.generate_file_path(user_id, filename, folder)
@@ -92,7 +91,7 @@ class LocalStorageService:
         """Check if file exists."""
         return Path(file_path).exists()
 
-    def get_file_content(self, file_path: str) -> Optional[bytes]:
+    def get_file_content(self, file_path: str) -> bytes | None:
         """Get file content."""
         try:
             with open(file_path, "rb") as f:

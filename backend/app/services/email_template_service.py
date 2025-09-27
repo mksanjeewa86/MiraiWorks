@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict, Tuple
+from typing import Any
 
 try:
     from jinja2 import Environment, FileSystemLoader
@@ -37,7 +37,7 @@ class EmailTemplateService:
         if not full_template_path.exists():
             raise FileNotFoundError(f"Template not found: {full_template_path}")
 
-        with open(full_template_path, "r", encoding="utf-8") as file:
+        with open(full_template_path, encoding="utf-8") as file:
             return file.read()
 
     def _load_base_template(self) -> str:
@@ -47,10 +47,10 @@ class EmailTemplateService:
                 f"Base template not found: {self.base_template_path}"
             )
 
-        with open(self.base_template_path, "r", encoding="utf-8") as file:
+        with open(self.base_template_path, encoding="utf-8") as file:
             return file.read()
 
-    def _render_template(self, template_content: str, context: Dict[str, Any]) -> str:
+    def _render_template(self, template_content: str, context: dict[str, Any]) -> str:
         """Render a template with the given context."""
         if JINJA2_AVAILABLE:
             # Use Jinja2 for proper template rendering
@@ -74,10 +74,10 @@ class EmailTemplateService:
     def render_email_template(
         self,
         template_path: str,
-        context: Dict[str, Any],
+        context: dict[str, Any],
         subject: str,
         header_title: str = "MiraiWorks",
-    ) -> Tuple[str, str]:
+    ) -> tuple[str, str]:
         """
         Render both HTML and text versions of an email template.
 

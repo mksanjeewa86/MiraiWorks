@@ -2,8 +2,7 @@ import base64
 import hashlib
 import hmac
 import json
-from datetime import datetime, timedelta, timezone
-from typing import Optional
+from datetime import UTC, datetime, timedelta
 
 from app.config import settings
 from app.schemas.video_call import VideoCallToken
@@ -21,8 +20,8 @@ class VideoService:
         with your chosen WebRTC provider (Twilio, Agora, Daily.co, etc.)
         """
         # Token expiry time (1 hour)
-        expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
-        
+        expires_at = datetime.now(UTC) + timedelta(hours=1)
+
         # Create token payload
         payload = {
             "room_id": room_id,
@@ -30,7 +29,7 @@ class VideoService:
             "user_name": user_name,
             "exp": int(expires_at.timestamp())
         }
-        
+
         # Generate HMAC signature
         payload_json = json.dumps(payload, sort_keys=True)
         signature = hmac.new(
@@ -38,12 +37,12 @@ class VideoService:
             payload_json.encode(),
             hashlib.sha256
         ).digest()
-        
+
         # Combine payload and signature
         token = base64.b64encode(
             payload_json.encode() + b"." + signature
         ).decode('utf-8')
-        
+
         return VideoCallToken(
             room_id=room_id,
             token=token,
@@ -83,7 +82,7 @@ class VideoService:
             ]
         }
 
-    async def start_recording(self, room_id: str) -> Optional[str]:
+    async def start_recording(self, room_id: str) -> str | None:
         """
         Start recording a video call.
         Returns the recording ID if successful.
@@ -92,7 +91,7 @@ class VideoService:
         # This would typically call your WebRTC provider's recording API
         return f"recording_{room_id}"
 
-    async def stop_recording(self, recording_id: str) -> Optional[str]:
+    async def stop_recording(self, recording_id: str) -> str | None:
         """
         Stop recording and get the recording URL.
         """

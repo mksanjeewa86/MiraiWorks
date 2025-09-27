@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -78,10 +78,10 @@ class Todo(Base):
     assigned_user: Mapped[User | None] = relationship(
         "User", foreign_keys=[assigned_user_id], backref="assigned_todos"
     )
-    viewers: Mapped[List[TodoViewer]] = relationship(
+    viewers: Mapped[list[TodoViewer]] = relationship(
         "TodoViewer", back_populates="todo", cascade="all, delete-orphan"
     )
-    extension_requests: Mapped[List[TodoExtensionRequest]] = relationship(
+    extension_requests: Mapped[list[TodoExtensionRequest]] = relationship(
         "TodoExtensionRequest", back_populates="todo", cascade="all, delete-orphan"
     )
 

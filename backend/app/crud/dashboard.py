@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from typing import List
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,12 +17,12 @@ class CRUDDashboard:
         """Get dashboard statistics."""
         # Get total counts in parallel
         total_users_result = await db.execute(
-            select(func.count(User.id)).where(User.is_active == True)
+            select(func.count(User.id)).where(User.is_active is True)
         )
         total_users = total_users_result.scalar() or 0
 
         total_companies_result = await db.execute(
-            select(func.count(Company.id)).where(Company.is_active == True)
+            select(func.count(Company.id)).where(Company.is_active is True)
         )
         total_companies = total_companies_result.scalar() or 0
 
@@ -50,12 +49,12 @@ class CRUDDashboard:
             "active_conversations": active_conversations,
         }
 
-    async def get_recent_users(self, db: AsyncSession, limit: int = 10) -> List[User]:
+    async def get_recent_users(self, db: AsyncSession, limit: int = 10) -> list[User]:
         """Get recent users (last 7 days)."""
         seven_days_ago = datetime.utcnow() - timedelta(days=7)
         result = await db.execute(
             select(User)
-            .where(User.created_at >= seven_days_ago, User.is_active == True)
+            .where(User.created_at >= seven_days_ago, User.is_active is True)
             .order_by(User.created_at.desc())
             .limit(limit)
         )
@@ -63,7 +62,7 @@ class CRUDDashboard:
 
     async def get_recent_interviews(
         self, db: AsyncSession, limit: int = 10
-    ) -> List[Interview]:
+    ) -> list[Interview]:
         """Get recent interviews (last 7 days)."""
         seven_days_ago = datetime.utcnow() - timedelta(days=7)
         result = await db.execute(
@@ -76,12 +75,12 @@ class CRUDDashboard:
 
     async def get_recent_companies(
         self, db: AsyncSession, limit: int = 10
-    ) -> List[Company]:
+    ) -> list[Company]:
         """Get recent companies (last 7 days)."""
         seven_days_ago = datetime.utcnow() - timedelta(days=7)
         result = await db.execute(
             select(Company)
-            .where(Company.created_at >= seven_days_ago, Company.is_active == True)
+            .where(Company.created_at >= seven_days_ago, Company.is_active is True)
             .order_by(Company.created_at.desc())
             .limit(limit)
         )
@@ -89,7 +88,7 @@ class CRUDDashboard:
 
     async def get_recent_resumes(
         self, db: AsyncSession, limit: int = 10
-    ) -> List[Resume]:
+    ) -> list[Resume]:
         """Get recent resumes (last 7 days)."""
         seven_days_ago = datetime.utcnow() - timedelta(days=7)
         result = await db.execute(

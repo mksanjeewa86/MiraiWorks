@@ -60,8 +60,8 @@ async def create_tables_and_seed_data(db):
     # SQL commands to create tables and seed data
     sql_commands = [
         # Create database and use it
-        f"CREATE DATABASE IF NOT EXISTS miraiworks",
-        f"USE miraiworks",
+        "CREATE DATABASE IF NOT EXISTS miraiworks",
+        "USE miraiworks",
         # Create roles table and seed data
         """
         CREATE TABLE IF NOT EXISTS roles (

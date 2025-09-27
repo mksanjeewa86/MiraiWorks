@@ -1,6 +1,5 @@
 import json
 import logging
-from typing import Dict
 
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,9 +17,9 @@ router = APIRouter()
 class VideoCallConnectionManager:
     def __init__(self):
         # Store active connections: room_id -> {user_id: websocket}
-        self.active_connections: Dict[str, Dict[int, WebSocket]] = {}
+        self.active_connections: dict[str, dict[int, WebSocket]] = {}
         # Store user rooms: user_id -> room_id
-        self.user_rooms: Dict[int, str] = {}
+        self.user_rooms: dict[int, str] = {}
 
     async def connect(self, websocket: WebSocket, room_id: str, user_id: int):
         """Connect a user to a video call room."""

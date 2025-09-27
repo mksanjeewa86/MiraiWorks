@@ -2,7 +2,6 @@ import logging
 import secrets
 import string
 from datetime import datetime, timedelta
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
@@ -34,10 +33,10 @@ async def get_companies(
     db: AsyncSession = Depends(get_db),
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
-    search: Optional[str] = Query(None),
-    company_type: Optional[CompanyType] = Query(None),
-    is_active: Optional[bool] = Query(None),
-    is_demo: Optional[bool] = Query(None),
+    search: str | None = Query(None),
+    company_type: CompanyType | None = Query(None),
+    is_active: bool | None = Query(None),
+    is_demo: bool | None = Query(None),
     include_deleted: bool = Query(False),
 ):
     """Get companies with filtering, pagination and search."""

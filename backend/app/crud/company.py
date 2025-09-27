@@ -1,4 +1,3 @@
-from typing import Optional
 
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -28,7 +27,7 @@ class CRUDCompany(CRUDBase[Company, CompanyCreate, CompanyUpdate]):
         result = await db.execute(query)
         return result.first()
 
-    async def get_by_email(self, db: AsyncSession, email: str) -> Optional[Company]:
+    async def get_by_email(self, db: AsyncSession, email: str) -> Company | None:
         """Get company by email."""
         result = await db.execute(select(Company).where(Company.email == email))
         return result.scalar_one_or_none()
@@ -38,8 +37,8 @@ class CRUDCompany(CRUDBase[Company, CompanyCreate, CompanyUpdate]):
         admin_query = select(func.count(User.id)).where(
             and_(
                 User.company_id == company_id,
-                User.is_admin == True,
-                User.is_deleted == False,
+                User.is_admin is True,
+                User.is_deleted is False,
             )
         )
         result = await db.execute(admin_query)
@@ -50,10 +49,10 @@ async def get_companies(
     db: AsyncSession,
     page: int = 1,
     size: int = 20,
-    search: Optional[str] = None,
-    company_type: Optional[CompanyType] = None,
-    is_active: Optional[bool] = None,
-    is_demo: Optional[bool] = None,
+    search: str | None = None,
+    company_type: CompanyType | None = None,
+    is_active: bool | None = None,
+    is_demo: bool | None = None,
     include_deleted: bool = False,
 ):
     """Get companies with filtering, pagination and search."""
@@ -64,7 +63,7 @@ async def get_companies(
 
     # Handle logical deletion
     if not include_deleted:
-        conditions.append(Company.is_deleted == False)
+        conditions.append(Company.is_deleted is False)
 
     if search:
         search_term = f"%{search}%"
@@ -103,7 +102,7 @@ async def get_companies(
     return companies, total
 
 
-async def get_company_by_id(db: AsyncSession, company_id: int) -> Optional[Company]:
+async def get_company_by_id(db: AsyncSession, company_id: int) -> Company | None:
     """Get company by ID."""
     result = await db.execute(select(Company).where(Company.id == company_id))
     return result.scalar_one_or_none()
@@ -138,7 +137,7 @@ async def delete_company(db: AsyncSession, company: Company) -> bool:
     return True
 
 
-async def get_company_by_email(db: AsyncSession, email: str) -> Optional[Company]:
+async def get_company_by_email(db: AsyncSession, email: str) -> Company | None:
     """Get company by email."""
     result = await db.execute(select(Company).where(Company.email == email))
     return result.scalar_one_or_none()

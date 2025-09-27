@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any
 
 import httpx
 from fastapi import HTTPException, status
@@ -200,8 +200,8 @@ class MicrosoftCalendarService:
         self,
         calendar_account: ExternalCalendarAccount,
         calendar_id: str = None,
-        time_min: Optional[datetime] = None,
-        time_max: Optional[datetime] = None,
+        time_min: datetime | None = None,
+        time_max: datetime | None = None,
         max_results: int = 100,
     ) -> list[dict[str, Any]]:
         """Get events from calendar."""
@@ -369,7 +369,7 @@ class MicrosoftCalendarService:
 
     async def create_webhook_subscription(
         self, calendar_account: ExternalCalendarAccount, calendar_id: str = None
-    ) -> Optional[dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Create webhook subscription for calendar changes."""
         access_token = await self._ensure_valid_token(calendar_account)
 

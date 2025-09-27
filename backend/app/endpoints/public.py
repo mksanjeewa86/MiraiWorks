@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import PlainTextResponse, Response
@@ -92,9 +91,9 @@ async def get_public_stats():
 async def get_public_positions(
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    search: Optional[str] = Query(None),
-    location: Optional[str] = Query(None),
-    category: Optional[str] = Query(None),
+    search: str | None = Query(None),
+    location: str | None = Query(None),
+    category: str | None = Query(None),
 ):
     """Get public position listings."""
     return {
@@ -113,10 +112,10 @@ async def search_public_positions(
     q: str = Query(..., min_length=1),
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    location: Optional[str] = Query(None),
-    salary_min: Optional[int] = Query(None),
-    salary_max: Optional[int] = Query(None),
-    position_type: Optional[str] = Query(None),
+    location: str | None = Query(None),
+    salary_min: int | None = Query(None),
+    salary_max: int | None = Query(None),
+    position_type: str | None = Query(None),
 ):
     """Search public position listings."""
     return {
@@ -140,8 +139,8 @@ async def search_public_positions(
 async def get_public_companies(
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    industry: Optional[str] = Query(None),
-    size: Optional[str] = Query(None),
+    industry: str | None = Query(None),
+    size: str | None = Query(None),
 ):
     """Get public company listings."""
     return {
@@ -160,8 +159,8 @@ async def search_public_companies(
     q: str = Query(..., min_length=1),
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    industry: Optional[str] = Query(None),
-    location: Optional[str] = Query(None),
+    industry: str | None = Query(None),
+    location: str | None = Query(None),
 ):
     """Search public companies."""
     return {

@@ -2,7 +2,6 @@ import logging
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from typing import Optional
 
 from app.config import settings
 from app.services.email_template_service import email_template_service
@@ -22,7 +21,7 @@ class EmailService:
         to_emails: list[str],
         subject: str,
         html_body: str,
-        text_body: Optional[str] = None,
+        text_body: str | None = None,
     ) -> bool:
         """Send an email via SMTP."""
         try:
@@ -258,8 +257,8 @@ Visit: {self.app_base_url}
         email: str,
         first_name: str,
         activation_token: str,
-        temporary_password: Optional[str] = None,
-        user_id: Optional[int] = None,
+        temporary_password: str | None = None,
+        user_id: int | None = None,
     ) -> bool:
         """Send account activation email with activation link and optional temporary password."""
         subject = "Activate your MiraiWorks Account"
@@ -312,7 +311,7 @@ Visit: {self.app_base_url}
             return await self.send_email(
                 [to_email],
                 subject,
-                f"<p>Email notification from MiraiWorks</p>",
+                "<p>Email notification from MiraiWorks</p>",
                 "Email notification from MiraiWorks",
             )
 

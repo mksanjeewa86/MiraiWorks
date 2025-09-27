@@ -128,19 +128,19 @@ class MBTIType(str, Enum):
     INTP = "INTP"  # Thinker
     ENTJ = "ENTJ"  # Commander
     ENTP = "ENTP"  # Debater
-    
+
     # Diplomats (NF)
     INFJ = "INFJ"  # Advocate
     INFP = "INFP"  # Mediator
     ENFJ = "ENFJ"  # Protagonist
     ENFP = "ENFP"  # Campaigner
-    
+
     # Sentinels (SJ)
     ISTJ = "ISTJ"  # Logistician
     ISFJ = "ISFJ"  # Protector
     ESTJ = "ESTJ"  # Executive
     ESFJ = "ESFJ"  # Consul
-    
+
     # Explorers (SP)
     ISTP = "ISTP"  # Virtuoso
     ISFP = "ISFP"  # Adventurer

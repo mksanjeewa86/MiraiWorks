@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any
 
 from app.services.email_template_service import email_template_service
 
@@ -9,7 +9,7 @@ class EmailPreviewService:
     def __init__(self):
         self.sample_data = self._get_sample_data()
 
-    def _get_sample_data(self) -> Dict[str, Dict[str, Any]]:
+    def _get_sample_data(self) -> dict[str, dict[str, Any]]:
         """Get sample data for different email types."""
         return {
             "auth/activation": {
@@ -52,11 +52,11 @@ class EmailPreviewService:
             },
         }
 
-    def get_available_templates(self) -> List[str]:
+    def get_available_templates(self) -> list[str]:
         """Get list of available email templates."""
         return list(self.sample_data.keys())
 
-    def preview_email(self, template_path: str) -> Dict[str, str]:
+    def preview_email(self, template_path: str) -> dict[str, str]:
         """Generate preview for a specific email template."""
         if template_path not in self.sample_data:
             raise ValueError(f"Template '{template_path}' not found")
@@ -80,7 +80,7 @@ class EmailPreviewService:
         except Exception as e:
             raise ValueError(f"Failed to render template '{template_path}': {str(e)}")
 
-    def preview_all_emails(self) -> Dict[str, Dict[str, str]]:
+    def preview_all_emails(self) -> dict[str, dict[str, str]]:
         """Generate previews for all available email templates."""
         previews = {}
         for template_path in self.get_available_templates():

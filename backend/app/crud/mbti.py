@@ -1,7 +1,7 @@
 """CRUD operations for MBTI personality test."""
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,7 +17,7 @@ class CRUDMBTITest(CRUDBase[MBTITest, dict, dict]):
 
     async def get_by_user_id(
         self, db: AsyncSession, *, user_id: int
-    ) -> Optional[MBTITest]:
+    ) -> MBTITest | None:
         """Get MBTI test by user ID."""
         query = select(MBTITest).where(MBTITest.user_id == user_id)
         result = await db.execute(query)
@@ -28,7 +28,7 @@ class CRUDMBTITest(CRUDBase[MBTITest, dict, dict]):
     ) -> MBTITest:
         """Create a new test or get existing one for user."""
         existing_test = await self.get_by_user_id(db, user_id=user_id)
-        
+
         if existing_test:
             # Reset if completed, allow to retake
             if existing_test.status == MBTITestStatus.COMPLETED.value:
@@ -42,14 +42,14 @@ class CRUDMBTITest(CRUDBase[MBTITest, dict, dict]):
                 existing_test.started_at = datetime.utcnow()
                 existing_test.completed_at = None
                 existing_test.updated_at = datetime.utcnow()
-                
+
                 await db.commit()
                 await db.refresh(existing_test)
                 return existing_test
             else:
                 # Return existing in-progress test
                 return existing_test
-        
+
         # Create new test
         test = MBTITest(
             user_id=user_id,
@@ -58,66 +58,66 @@ class CRUDMBTITest(CRUDBase[MBTITest, dict, dict]):
             started_at=datetime.utcnow(),
             test_version="1.0"
         )
-        
+
         db.add(test)
         await db.commit()
         await db.refresh(test)
         return test
 
     async def submit_answer(
-        self, 
-        db: AsyncSession, 
-        *, 
-        test: MBTITest, 
-        question_id: int, 
+        self,
+        db: AsyncSession,
+        *,
+        test: MBTITest,
+        question_id: int,
         answer: str
     ) -> MBTITest:
         """Submit an answer for a question."""
         if not test.answers:
             test.answers = {}
-        
+
         test.answers[str(question_id)] = answer
         test.updated_at = datetime.utcnow()
-        
+
         await db.commit()
         await db.refresh(test)
         return test
 
     async def complete_test(
-        self, db: AsyncSession, *, test: MBTITest, answers: Dict[int, str]
+        self, db: AsyncSession, *, test: MBTITest, answers: dict[int, str]
     ) -> MBTITest:
         """Complete the MBTI test and calculate results."""
         # Update answers
         test.answers = {str(k): v for k, v in answers.items()}
-        
+
         # Calculate dimension scores
         scores = await self._calculate_dimension_scores(db, answers)
-        
+
         test.extraversion_introversion_score = scores["E_I"]
-        test.sensing_intuition_score = scores["S_N"] 
+        test.sensing_intuition_score = scores["S_N"]
         test.thinking_feeling_score = scores["T_F"]
         test.judging_perceiving_score = scores["J_P"]
-        
+
         # Calculate MBTI type
         test.mbti_type = test.calculate_mbti_type()
-        
+
         # Update status and timing
         test.status = MBTITestStatus.COMPLETED.value
         test.completed_at = datetime.utcnow()
         test.updated_at = datetime.utcnow()
-        
+
         await db.commit()
         await db.refresh(test)
         return test
 
     async def _calculate_dimension_scores(
-        self, db: AsyncSession, answers: Dict[int, str]
-    ) -> Dict[str, int]:
+        self, db: AsyncSession, answers: dict[int, str]
+    ) -> dict[str, int]:
         """Calculate dimension scores from answers."""
         # Get all questions using the mbti_question instance
         questions = await mbti_question.get_all_active(db)
         question_map = {q.id: q for q in questions}
-        
+
         # Initialize dimension counts
         dimension_counts = {
             "E_I": {"E": 0, "I": 0},
@@ -125,24 +125,24 @@ class CRUDMBTITest(CRUDBase[MBTITest, dict, dict]):
             "T_F": {"T": 0, "F": 0},
             "J_P": {"J": 0, "P": 0}
         }
-        
+
         # Count answers for each dimension
         for question_id, answer in answers.items():
             question = question_map.get(int(question_id))
             if not question:
                 continue
-            
+
             # Determine which trait this answer represents
             if answer == "A":
                 trait = question.option_a_trait
             else:  # answer == "B"
                 trait = question.option_b_trait
-            
+
             # Increment count for this trait
             dimension = question.dimension
             if dimension in dimension_counts and trait in dimension_counts[dimension]:
                 dimension_counts[dimension][trait] += 1
-        
+
         # Calculate scores (0-100, where higher = second trait)
         scores = {}
         for dimension, counts in dimension_counts.items():
@@ -153,12 +153,12 @@ class CRUDMBTITest(CRUDBase[MBTITest, dict, dict]):
                 # For E_I: I score, for S_N: N score, etc.
                 second_trait = list(counts.keys())[1]  # I, N, F, P
                 scores[dimension] = int((counts[second_trait] / total) * 100)
-        
+
         return scores
 
     async def get_test_progress(
         self, db: AsyncSession, *, user_id: int
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Get test progress for a user."""
         test = await self.get_by_user_id(db, user_id=user_id)
         if not test:
@@ -183,24 +183,24 @@ class CRUDMBTIQuestion(CRUDBase[MBTIQuestion, dict, dict]):
 
     async def get_all_active(
         self, db: AsyncSession, *, version: str = "1.0"
-    ) -> List[MBTIQuestion]:
+    ) -> list[MBTIQuestion]:
         """Get all active questions for a version."""
         query = select(MBTIQuestion).where(
             and_(
-                MBTIQuestion.is_active == True,
+                MBTIQuestion.is_active is True,
                 MBTIQuestion.version == version
             )
         ).order_by(MBTIQuestion.question_number)
-        
+
         result = await db.execute(query)
         return list(result.scalars().all())
 
     async def get_questions_for_test(
         self, db: AsyncSession, *, language: str = "ja", version: str = "1.0"
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get formatted questions for the test interface."""
         questions = await self.get_all_active(db, version=version)
-        
+
         formatted_questions = []
         for q in questions:
             formatted_questions.append({
@@ -211,23 +211,23 @@ class CRUDMBTIQuestion(CRUDBase[MBTIQuestion, dict, dict]):
                 "option_a": q.option_a_ja if language == "ja" else q.option_a_en,
                 "option_b": q.option_b_ja if language == "ja" else q.option_b_en
             })
-        
+
         return formatted_questions
 
     async def bulk_create_questions(
-        self, db: AsyncSession, questions_data: List[Dict[str, Any]]
-    ) -> List[MBTIQuestion]:
+        self, db: AsyncSession, questions_data: list[dict[str, Any]]
+    ) -> list[MBTIQuestion]:
         """Bulk create MBTI questions."""
         questions = []
         for data in questions_data:
             question = MBTIQuestion(**data)
             questions.append(question)
             db.add(question)
-        
+
         await db.commit()
         for question in questions:
             await db.refresh(question)
-        
+
         return questions
 
     async def get_question_count(self, db: AsyncSession, *, version: str = "1.0") -> int:

@@ -1,6 +1,6 @@
 import secrets
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import HTTPException, status
 from sqlalchemy import and_
@@ -236,7 +236,7 @@ class MeetingService:
         return meeting
 
     def join_meeting(
-        self, room_id: str, access_code: Optional[str], current_user: User
+        self, room_id: str, access_code: str | None, current_user: User
     ) -> dict[str, Any]:
         """Join meeting with validation"""
 
@@ -342,7 +342,7 @@ class MeetingService:
         participants: list[MeetingParticipantCreate],
         meeting_type: MeetingType,
         current_user: User,
-        interview: Optional[Interview] = None,
+        interview: Interview | None = None,
     ) -> list[User]:
         """Validate participants based on meeting type and RBAC rules"""
 
@@ -384,7 +384,7 @@ class MeetingService:
         self,
         users: list[User],
         user_roles: dict[int, str],
-        interview: Optional[Interview],
+        interview: Interview | None,
     ):
         """Validate casual meeting: Candidate ↔ Recruiter only"""
 
@@ -417,7 +417,7 @@ class MeetingService:
         self,
         users: list[User],
         user_roles: dict[int, str],
-        interview: Optional[Interview],
+        interview: Interview | None,
     ):
         """Validate main meeting: Candidate ↔ Employer (+ optional recruiter observer)"""
 

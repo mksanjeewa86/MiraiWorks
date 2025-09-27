@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List, Optional
 
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -31,14 +30,14 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
         await db.refresh(db_obj)
         return db_obj
 
-    async def get_by_room_id(self, db: AsyncSession, *, room_id: str) -> Optional[VideoCall]:
+    async def get_by_room_id(self, db: AsyncSession, *, room_id: str) -> VideoCall | None:
         """Get video call by room ID."""
         result = await db.execute(
             select(VideoCall).where(VideoCall.room_id == room_id)
         )
         return result.scalar_one_or_none()
 
-    async def get_by_interview_id(self, db: AsyncSession, *, interview_id: int) -> Optional[VideoCall]:
+    async def get_by_interview_id(self, db: AsyncSession, *, interview_id: int) -> VideoCall | None:
         """Get video call by interview ID."""
         result = await db.execute(
             select(VideoCall)
@@ -49,12 +48,12 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
 
     async def get_user_video_calls(
         self, db: AsyncSession, *, user_id: int, skip: int = 0, limit: int = 100
-    ) -> List[VideoCall]:
+    ) -> list[VideoCall]:
         """Get video calls for a specific user (as interviewer or candidate)."""
         result = await db.execute(
             select(VideoCall)
             .where(
-                (VideoCall.interviewer_id == user_id) | 
+                (VideoCall.interviewer_id == user_id) |
                 (VideoCall.candidate_id == user_id)
             )
             .order_by(VideoCall.scheduled_at.desc())
@@ -65,13 +64,13 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
 
     async def get_upcoming_calls(
         self, db: AsyncSession, *, user_id: int, from_datetime: datetime
-    ) -> List[VideoCall]:
+    ) -> list[VideoCall]:
         """Get upcoming video calls for a user."""
         result = await db.execute(
             select(VideoCall)
             .where(
                 and_(
-                    (VideoCall.interviewer_id == user_id) | 
+                    (VideoCall.interviewer_id == user_id) |
                     (VideoCall.candidate_id == user_id),
                     VideoCall.scheduled_at >= from_datetime,
                     VideoCall.status.in_(["scheduled", "in_progress"])
@@ -89,7 +88,7 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
         return await self.update(db, db_obj=db_obj, obj_in=update_data)
 
     async def add_participant(
-        self, db: AsyncSession, *, video_call_id: int, user_id: int, device_info: Optional[dict] = None
+        self, db: AsyncSession, *, video_call_id: int, user_id: int, device_info: dict | None = None
     ) -> CallParticipant:
         """Add a participant to the video call or return existing participant."""
         # Check if participant already exists
@@ -128,7 +127,7 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
 
     async def update_participant_left(
         self, db: AsyncSession, *, video_call_id: int, user_id: int
-    ) -> Optional[CallParticipant]:
+    ) -> CallParticipant | None:
         """Update participant left time."""
         result = await db.execute(
             select(CallParticipant).where(
@@ -159,7 +158,7 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
             )
         )
         consent = result.scalar_one_or_none()
-        
+
         if consent:
             consent.consented = consented
             consent.consented_at = datetime.utcnow() if consented else None
@@ -171,14 +170,14 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
                 consented_at=datetime.utcnow() if consented else None
             )
             db.add(consent)
-        
+
         await db.commit()
         await db.refresh(consent)
         return consent
 
     async def get_call_consents(
         self, db: AsyncSession, *, video_call_id: int
-    ) -> List[RecordingConsent]:
+    ) -> list[RecordingConsent]:
         """Get all recording consents for a video call."""
         result = await db.execute(
             select(RecordingConsent)
@@ -202,7 +201,7 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
 
     async def get_call_transcription(
         self, db: AsyncSession, *, video_call_id: int
-    ) -> Optional[CallTranscription]:
+    ) -> CallTranscription | None:
         """Get transcription for a video call."""
         result = await db.execute(
             select(CallTranscription)
@@ -213,7 +212,7 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
 
     async def update_transcription_status(
         self, db: AsyncSession, *, video_call_id: int, status: str, **kwargs
-    ) -> Optional[CallTranscription]:
+    ) -> CallTranscription | None:
         """Update transcription processing status."""
         result = await db.execute(
             select(CallTranscription).where(
@@ -221,7 +220,7 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
             )
         )
         transcription = result.scalar_one_or_none()
-        
+
         if not transcription:
             transcription = CallTranscription(
                 video_call_id=video_call_id,
@@ -233,14 +232,14 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
             transcription.processing_status = status
             for key, value in kwargs.items():
                 setattr(transcription, key, value)
-        
+
         await db.commit()
         await db.refresh(transcription)
         return transcription
 
     async def get_active_participants(
         self, db: AsyncSession, *, video_call_id: int
-    ) -> List[CallParticipant]:
+    ) -> list[CallParticipant]:
         """Get active participants (those who haven't left yet)."""
         result = await db.execute(
             select(CallParticipant)

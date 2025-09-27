@@ -2,7 +2,7 @@ import hashlib
 import logging
 import uuid
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import HTTPException, UploadFile, status
 from minio import Minio
@@ -182,7 +182,7 @@ class StorageService:
             logger.error(f"Failed to delete file: {e}")
             return False
 
-    def get_file_info(self, s3_key: str) -> Optional[dict[str, Any]]:
+    def get_file_info(self, s3_key: str) -> dict[str, Any] | None:
         """Get file information from S3."""
         try:
             stat = self.client.stat_object(self.bucket, s3_key)

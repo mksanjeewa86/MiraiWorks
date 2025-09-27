@@ -31,7 +31,7 @@ async def seed_resume_data(db, auth_result):
     print("Creating resume system data...")
 
     users_list = auth_result["users_list"]
-    companies_list = auth_result["companies_list"]
+    auth_result["companies_list"]
 
     # Use first few users for resume creation
     candidate_users = [users_list[1][0], users_list[2][0], users_list[3][0]]  # Skip admin
@@ -44,7 +44,7 @@ async def seed_resume_data(db, auth_result):
 
     await db.commit()
     print(f"   - Created {len(created_resumes)} sample resumes")
-    print(f"   - Formats: 履歴書, 職務経歴書, International, Modern")
+    print("   - Formats: 履歴書, 職務経歴書, International, Modern")
 
     return {
         "resumes": len(created_resumes),
@@ -331,7 +331,7 @@ async def create_modern_resume(db, user, user_index):
         "website": f"https://{creative_names[user_index].lower().replace(' ', '')}.design",
         "linkedin_url": f"https://linkedin.com/in/{creative_names[user_index].lower().replace(' ', '')}",
         "github_url": f"https://github.com/{creative_names[user_index].lower().replace(' ', '')}",
-        "professional_summary": f"""
+        "professional_summary": """
 Creative Full-Stack Developer with a passion for building beautiful, functional web experiences.
 Combining technical expertise with design sensibility to create user-centered solutions.
         """.strip(),

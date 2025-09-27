@@ -31,13 +31,13 @@ async def _get_extension_request_or_404(
     extension_request_obj = await todo_extension_request.get_by_id_with_relationships(
         db, request_id=request_id
     )
-    
+
     if not extension_request_obj:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Extension request not found"
         )
-    
+
     # Check if user can view this extension request
     if not await TodoPermissionService.can_view_extension_request(
         db, current_user.id, extension_request_obj
@@ -46,7 +46,7 @@ async def _get_extension_request_or_404(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Extension request not found"
         )
-    
+
     return extension_request_obj
 
 
@@ -65,14 +65,14 @@ async def create_extension_request(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Todo not found"
         )
-    
+
     # Check basic permission to request extension
     if not await TodoPermissionService.can_request_extension(db, current_user.id, todo_obj):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to request extension for this todo"
         )
-    
+
     # Validate the extension request
     validation = await todo_extension_request.validate_extension_request(
         db,
@@ -80,13 +80,13 @@ async def create_extension_request(
         requested_by_id=current_user.id,
         requested_due_date=request_data.requested_due_date
     )
-    
+
     if not validation.can_request_extension:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=validation.reason or "Extension request is not valid"
         )
-    
+
     # Create the extension request
     extension_request_obj = await todo_extension_request.create_extension_request(
         db,
@@ -94,12 +94,12 @@ async def create_extension_request(
         request_data=request_data,
         requested_by_id=current_user.id
     )
-    
+
     # Send notifications and emails
     await todo_extension_notification_service.notify_extension_request_created(
         db, extension_request_obj
     )
-    
+
     return extension_request_obj
 
 
@@ -112,7 +112,7 @@ async def validate_extension_request(
 ):
     """Validate if an extension request can be made for a todo."""
     from datetime import datetime
-    
+
     # Parse the requested due date
     try:
         requested_date = datetime.fromisoformat(requested_due_date.replace('Z', '+00:00'))
@@ -121,7 +121,7 @@ async def validate_extension_request(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid date format. Use ISO format."
         )
-    
+
     # Get todo
     todo_obj = await todo_crud.get(db, id=todo_id)
     if not todo_obj:
@@ -129,14 +129,14 @@ async def validate_extension_request(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Todo not found"
         )
-    
+
     # Check basic permission to request extension
     if not await TodoPermissionService.can_request_extension(db, current_user.id, todo_obj):
         return TodoExtensionValidation(
             can_request_extension=False,
             reason="You don't have permission to request extension for this todo"
         )
-    
+
     # Validate the extension request
     validation = await todo_extension_request.validate_extension_request(
         db,
@@ -144,7 +144,7 @@ async def validate_extension_request(
         requested_by_id=current_user.id,
         requested_due_date=requested_date
     )
-    
+
     return validation
 
 
@@ -159,7 +159,7 @@ async def respond_to_extension_request(
     extension_request_obj = await _get_extension_request_or_404(
         db, request_id=request_id, current_user=current_user
     )
-    
+
     # Check if user can respond to this request
     if not await TodoPermissionService.can_respond_to_extension(
         db, current_user.id, extension_request_obj
@@ -168,14 +168,14 @@ async def respond_to_extension_request(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to respond to this extension request"
         )
-    
+
     # Check if request is still pending
     if extension_request_obj.status != ExtensionRequestStatus.PENDING.value:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Extension request has already been responded to"
         )
-    
+
     # Respond to the request
     extension_request_obj = await todo_extension_request.respond_to_request(
         db,
@@ -183,12 +183,12 @@ async def respond_to_extension_request(
         response_data=response_data,
         responded_by_id=current_user.id
     )
-    
+
     # Send notifications and emails
     await todo_extension_notification_service.notify_extension_request_responded(
         db, extension_request_obj
     )
-    
+
     return extension_request_obj
 
 
@@ -208,12 +208,12 @@ async def list_my_extension_requests(
         limit=limit,
         offset=offset
     )
-    
+
     # Get statistics
     stats = await todo_extension_request.get_statistics_for_creator(
         db, creator_id=current_user.id
     )
-    
+
     return TodoExtensionRequestList(
         items=requests,
         total=total,
@@ -239,12 +239,12 @@ async def list_extension_requests_to_review(
         limit=limit,
         offset=offset
     )
-    
+
     # Get statistics
     stats = await todo_extension_request.get_statistics_for_creator(
         db, creator_id=current_user.id
     )
-    
+
     return TodoExtensionRequestList(
         items=requests,
         total=total,
@@ -264,5 +264,5 @@ async def get_extension_request(
     extension_request_obj = await _get_extension_request_or_404(
         db, request_id=request_id, current_user=current_user
     )
-    
+
     return extension_request_obj

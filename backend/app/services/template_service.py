@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from jinja2 import BaseLoader, Environment, Template
 
@@ -129,8 +129,8 @@ class TemplateService:
     async def render_resume(
         self,
         resume: Resume,
-        template_name: Optional[str] = None,
-        custom_css: Optional[str] = None,
+        template_name: str | None = None,
+        custom_css: str | None = None,
     ) -> str:
         """Render a resume to HTML using the specified template."""
         try:
@@ -322,8 +322,8 @@ class TemplateService:
     def _combine_css(
         self,
         template_css: str,
-        resume_css: Optional[str],
-        custom_css: Optional[str],
+        resume_css: str | None,
+        custom_css: str | None,
         theme_color: str,
         font_family: str,
     ) -> str:

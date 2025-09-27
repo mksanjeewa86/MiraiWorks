@@ -1,7 +1,6 @@
 """Schemas for todo extension requests."""
 
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -11,12 +10,12 @@ from app.utils.constants import ExtensionRequestStatus
 
 class TodoExtensionRequestCreate(BaseModel):
     """Schema for creating a todo extension request."""
-    
+
     requested_due_date: datetime = Field(
         ..., description="Requested new due date (max 3 days from current due date)"
     )
     reason: str = Field(
-        ..., min_length=10, max_length=1000, 
+        ..., min_length=10, max_length=1000,
         description="Reason for requesting extension"
     )
 
@@ -30,11 +29,11 @@ class TodoExtensionRequestCreate(BaseModel):
 
 class TodoExtensionRequestResponse(BaseModel):
     """Schema for responding to a todo extension request."""
-    
+
     status: ExtensionRequestStatus = Field(
         ..., description="Response status (approved or rejected)"
     )
-    response_reason: Optional[str] = Field(
+    response_reason: str | None = Field(
         None, max_length=1000,
         description="Optional reason for the response"
     )
@@ -56,7 +55,7 @@ class TodoExtensionRequestResponse(BaseModel):
 
 class TodoExtensionRequestRead(BaseModel):
     """Schema for reading todo extension request data."""
-    
+
     id: int
     todo_id: int
     requested_by_id: int
@@ -65,23 +64,23 @@ class TodoExtensionRequestRead(BaseModel):
     requested_due_date: datetime
     reason: str
     status: ExtensionRequestStatus
-    response_reason: Optional[str] = None
-    responded_at: Optional[datetime] = None
-    responded_by_id: Optional[int] = None
+    response_reason: str | None = None
+    responded_at: datetime | None = None
+    responded_by_id: int | None = None
     created_at: datetime
     updated_at: datetime
-    
+
     # Related objects
     requested_by: AssignableUser
     creator: AssignableUser
-    responded_by: Optional[AssignableUser] = None
+    responded_by: AssignableUser | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class TodoExtensionRequestList(BaseModel):
     """Schema for listing todo extension requests."""
-    
+
     items: list[TodoExtensionRequestRead]
     total: int
     pending_count: int
@@ -91,18 +90,18 @@ class TodoExtensionRequestList(BaseModel):
 
 class TodoExtensionValidation(BaseModel):
     """Schema for validating extension request constraints."""
-    
+
     can_request_extension: bool
-    max_allowed_due_date: Optional[datetime] = None
+    max_allowed_due_date: datetime | None = None
     days_extension_allowed: int = 3
-    reason: Optional[str] = None  # Reason why extension cannot be requested
+    reason: str | None = None  # Reason why extension cannot be requested
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class TodoExtensionNotification(BaseModel):
     """Schema for extension request notifications."""
-    
+
     request_id: int
     todo_id: int
     todo_title: str
@@ -112,6 +111,6 @@ class TodoExtensionNotification(BaseModel):
     requested_due_date: datetime
     reason: str
     status: ExtensionRequestStatus
-    response_reason: Optional[str] = None
+    response_reason: str | None = None
 
     model_config = ConfigDict(from_attributes=True)

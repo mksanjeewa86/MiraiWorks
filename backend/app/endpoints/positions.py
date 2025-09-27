@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
@@ -21,7 +21,7 @@ from app.schemas.position import (
 router = APIRouter()
 
 
-def _add_legacy_position_keys(model: BaseModel) -> Dict[str, Any]:
+def _add_legacy_position_keys(model: BaseModel) -> dict[str, Any]:
     payload = model.model_dump() if isinstance(model, BaseModel) else dict(model)
     if "positions" in payload and "jobs" not in payload:
         payload["jobs"] = payload["positions"]
@@ -73,15 +73,15 @@ async def list_positions(
     db: AsyncSession = Depends(get_db),
     skip: int = Query(0, ge=0, description="Number of positions to skip"),
     limit: int = Query(100, ge=1, le=500, description="Number of positions to return"),
-    location: Optional[str] = Query(None, description="Filter by location"),
-    job_type: Optional[str] = Query(None, description="Filter by job type"),
-    salary_min: Optional[int] = Query(None, ge=0, description="Minimum salary filter"),
-    salary_max: Optional[int] = Query(None, ge=0, description="Maximum salary filter"),
-    company_id: Optional[int] = Query(None, description="Filter by company"),
-    search: Optional[str] = Query(None, description="Search in title, description, requirements"),
-    days_since_posted: Optional[int] = Query(None, ge=1, description="Filter positions posted within last N days"),
-    status: Optional[str] = Query("published", description="Position status filter"),
-    current_user: Optional[User] = Depends(get_optional_current_user),
+    location: str | None = Query(None, description="Filter by location"),
+    job_type: str | None = Query(None, description="Filter by job type"),
+    salary_min: int | None = Query(None, ge=0, description="Minimum salary filter"),
+    salary_max: int | None = Query(None, ge=0, description="Maximum salary filter"),
+    company_id: int | None = Query(None, description="Filter by company"),
+    search: str | None = Query(None, description="Search in title, description, requirements"),
+    days_since_posted: int | None = Query(None, ge=1, description="Filter positions posted within last N days"),
+    status: str | None = Query("published", description="Position status filter"),
+    current_user: User | None = Depends(get_optional_current_user),
 ) -> Any:
     """Retrieve positions with optional filtering, adjusting visibility based on the caller."""
     is_admin_access = bool(current_user and (current_user.is_admin or current_user.company_id))
@@ -100,7 +100,7 @@ async def list_positions(
             days_since_posted=days_since_posted,
         )
 
-        sanitized: List[PositionInfo] = []
+        sanitized: list[PositionInfo] = []
         for pos in positions:
             info = PositionInfo.model_validate(pos, from_attributes=True)
             updates = {
@@ -150,7 +150,7 @@ async def list_positions(
         )
 
     # Convert positions to PositionInfo with company names
-    position_infos: List[PositionInfo] = []
+    position_infos: list[PositionInfo] = []
     for pos in positions:
         info = PositionInfo.model_validate(pos, from_attributes=True)
         # Populate company_name from relationship
@@ -172,7 +172,7 @@ async def list_positions(
 # Use the main endpoint with search parameter instead
 
 
-@router.get("/popular", response_model=List[PositionInfo])
+@router.get("/popular", response_model=list[PositionInfo])
 async def get_popular_positions(
     db: AsyncSession = Depends(get_db),
     limit: int = Query(10, ge=1, le=50, description="Number of popular positions to return"),
@@ -184,7 +184,7 @@ async def get_popular_positions(
     return positions
 
 
-@router.get("/recent", response_model=List[PositionInfo])
+@router.get("/recent", response_model=list[PositionInfo])
 async def get_recent_positions(
     db: AsyncSession = Depends(get_db),
     days: int = Query(7, ge=1, le=30, description="Positions posted in the last N days"),
@@ -197,7 +197,7 @@ async def get_recent_positions(
     return positions
 
 
-@router.get("/expiring", response_model=List[PositionInfo])
+@router.get("/expiring", response_model=list[PositionInfo])
 async def get_expiring_positions(
     db: AsyncSession = Depends(get_db),
     days: int = Query(7, ge=1, le=30, description="Positions expiring in the next N days"),
@@ -234,7 +234,7 @@ async def get_position_statistics(
     return PositionStatsResponse(**stats)
 
 
-@router.get("/company/{company_id}", response_model=List[PositionInfo])
+@router.get("/company/{company_id}", response_model=list[PositionInfo])
 async def get_company_positions(
     *,
     db: AsyncSession = Depends(get_db),
@@ -313,12 +313,11 @@ async def update_position(
         )
 
     # Check permissions
-    if not current_user.is_admin:
-        if current_user.company_id != position.company_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Can only update positions for your own company",
-            )
+    if not current_user.is_admin and current_user.company_id != position.company_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Can only update positions for your own company",
+        )
 
     if position_in.salary_min is not None and position_in.salary_max is not None:
         if position_in.salary_max <= position_in.salary_min:
@@ -331,7 +330,7 @@ async def update_position(
     return position
 
 
-@router.patch("/bulk/status", response_model=List[PositionInfo])
+@router.patch("/bulk/status", response_model=list[PositionInfo])
 async def bulk_update_position_status(
     *,
     db: AsyncSession = Depends(get_db),

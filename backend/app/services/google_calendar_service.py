@@ -1,13 +1,13 @@
 """
 Google Calendar Service for webhook integration compatibility.
 
-This service provides compatibility with existing webhook handlers while 
+This service provides compatibility with existing webhook handlers while
 delegating actual functionality to the CalendarService class.
 """
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any
 
 from app.services.calendar_service import CalendarService
 
@@ -25,15 +25,15 @@ class GoogleCalendarService:
     def __init__(self):
         self.calendar_service = CalendarService()
 
-    async def get_auth_url(self, user_id: int, state: Optional[str] = None) -> str:
+    async def get_auth_url(self, user_id: int, state: str | None = None) -> str:
         """Generate Google Calendar OAuth authorization URL."""
         return await self.calendar_service.get_google_auth_url(user_id)
 
-    async def exchange_code_for_tokens(self, code: str) -> Dict[str, Any]:
+    async def exchange_code_for_tokens(self, code: str) -> dict[str, Any]:
         """Exchange OAuth code for access tokens."""
         return await self.calendar_service._exchange_google_code_for_tokens(code)
 
-    async def get_user_info(self, access_token: str) -> Dict[str, Any]:
+    async def get_user_info(self, access_token: str) -> dict[str, Any]:
         """Get Google user profile information."""
         return await self.calendar_service._get_google_profile(access_token)
 
@@ -41,11 +41,11 @@ class GoogleCalendarService:
         self,
         access_token: str,
         calendar_id: str,
-        sync_token: Optional[str] = None,
-        time_min: Optional[datetime] = None,
-        time_max: Optional[datetime] = None,
+        sync_token: str | None = None,
+        time_min: datetime | None = None,
+        time_max: datetime | None = None,
         max_results: int = 100,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         List events from Google Calendar.
 
@@ -77,7 +77,7 @@ class GoogleCalendarService:
 
     async def get_event(
         self, access_token: str, calendar_id: str, event_id: str
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """
         Get a specific event from Google Calendar.
 

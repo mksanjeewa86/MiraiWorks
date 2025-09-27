@@ -186,8 +186,8 @@ class TestDashboard:
         # Verify that inactive users and companies are not counted
         # (We can't check exact counts since there might be other test data,
         # but we can verify the structure and data types)
-        assert all(isinstance(data[key], int) for key in data.keys())
-        assert all(data[key] >= 0 for key in data.keys())
+        assert all(isinstance(data[key], int) for key in data)
+        assert all(data[key] >= 0 for key in data)
 
     @pytest.mark.asyncio
     async def test_get_dashboard_stats_with_old_conversations(
@@ -314,7 +314,7 @@ class TestDashboard:
         for i in range(15):
             user = User(
                 email=f"user{i}@test.com",
-                first_name=f"User",
+                first_name="User",
                 last_name=f"{i}",
                 company_id=test_company.id,
                 hashed_password="hashedpass",

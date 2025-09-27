@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List, Optional
 
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,14 +14,14 @@ from app.utils.constants import UserRole as UserRoleEnum
 class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     """User CRUD operations."""
 
-    async def get_by_email(self, db: AsyncSession, email: str) -> Optional[User]:
+    async def get_by_email(self, db: AsyncSession, email: str) -> User | None:
         """Get user by email."""
         result = await db.execute(select(User).where(User.email == email))
         return result.scalar_one_or_none()
 
     async def get_with_company_and_roles(
         self, db: AsyncSession, user_id: int
-    ) -> Optional[User]:
+    ) -> User | None:
         """Get user with company and roles loaded."""
         result = await db.execute(
             select(User)
@@ -39,22 +38,22 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         db: AsyncSession,
         page: int = 1,
         size: int = 20,
-        search: Optional[str] = None,
-        company_id: Optional[int] = None,
-        is_active: Optional[bool] = None,
-        is_admin: Optional[bool] = None,
-        is_suspended: Optional[bool] = None,
-        require_2fa: Optional[bool] = None,
-        role: Optional[UserRoleEnum] = None,
+        search: str | None = None,
+        company_id: int | None = None,
+        is_active: bool | None = None,
+        is_admin: bool | None = None,
+        is_suspended: bool | None = None,
+        require_2fa: bool | None = None,
+        role: UserRoleEnum | None = None,
         include_deleted: bool = False,
-        current_user_id: Optional[int] = None,
+        current_user_id: int | None = None,
     ):
         """Get paginated list of users with filters."""
         query_conditions = []
 
         # Handle logical deletion
         if not include_deleted:
-            query_conditions.append(User.is_deleted == False)
+            query_conditions.append(User.is_deleted is False)
 
         # Apply filters
         if company_id is not None:
@@ -127,16 +126,16 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         admin_query = select(func.count(User.id)).where(
             and_(
                 User.company_id == company_id,
-                User.is_admin == True,
-                User.is_deleted == False,
+                User.is_admin is True,
+                User.is_deleted is False,
             )
         )
         result = await db.execute(admin_query)
         return result.scalar() or 0
 
     async def bulk_delete(
-        self, db: AsyncSession, user_ids: List[int], deleted_by: int
-    ) -> tuple[int, List[str]]:
+        self, db: AsyncSession, user_ids: list[int], deleted_by: int
+    ) -> tuple[int, list[str]]:
         """Soft delete multiple users."""
         deleted_count = 0
         errors = []
@@ -161,8 +160,8 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         return deleted_count, errors
 
     async def bulk_suspend(
-        self, db: AsyncSession, user_ids: List[int], suspended_by: int
-    ) -> tuple[int, List[str]]:
+        self, db: AsyncSession, user_ids: list[int], suspended_by: int
+    ) -> tuple[int, list[str]]:
         """Suspend multiple users."""
         suspended_count = 0
         errors = []
@@ -187,8 +186,8 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         return suspended_count, errors
 
     async def bulk_unsuspend(
-        self, db: AsyncSession, user_ids: List[int]
-    ) -> tuple[int, List[str]]:
+        self, db: AsyncSession, user_ids: list[int]
+    ) -> tuple[int, list[str]]:
         """Unsuspend multiple users."""
         unsuspended_count = 0
         errors = []
@@ -213,7 +212,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         return unsuspended_count, errors
 
     async def assign_roles(
-        self, db: AsyncSession, user_id: int, roles: List[UserRoleEnum]
+        self, db: AsyncSession, user_id: int, roles: list[UserRoleEnum]
     ):
         """Assign roles to user."""
         # Remove existing roles

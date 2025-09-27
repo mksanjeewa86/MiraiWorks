@@ -16,7 +16,7 @@ class RegisterRequest(BaseModel):
     password: str
     first_name: str
     last_name: str
-    phone: Optional[str] = None
+    phone: str | None = None
 
     @field_validator("password")
     @classmethod
@@ -36,10 +36,10 @@ class RegisterRequest(BaseModel):
 class RegisterResponse(BaseModel):
     message: str
     success: bool = True
-    access_token: Optional[str] = None
-    refresh_token: Optional[str] = None
+    access_token: str | None = None
+    refresh_token: str | None = None
     token_type: str = "bearer"
-    expires_in: Optional[int] = None
+    expires_in: int | None = None
     user: Optional["UserInfo"] = None
 
 
@@ -120,10 +120,10 @@ class ActivateAccountRequest(BaseModel):
 class ActivateAccountResponse(BaseModel):
     message: str
     success: bool = True
-    access_token: Optional[str] = None
-    refresh_token: Optional[str] = None
+    access_token: str | None = None
+    refresh_token: str | None = None
     token_type: str = "bearer"
-    expires_in: Optional[int] = None
+    expires_in: int | None = None
     user: Optional["UserInfo"] = None
 
 
@@ -132,7 +132,7 @@ class RoleInfo(BaseModel):
 
     id: int
     name: str
-    description: Optional[str] = None
+    description: str | None = None
 
 
 class UserRoleInfo(BaseModel):
@@ -163,11 +163,11 @@ class UserInfo(BaseModel):
     first_name: str
     last_name: str
     full_name: str
-    company_id: Optional[int]
-    company: Optional[CompanyInfo] = None
+    company_id: int | None
+    company: CompanyInfo | None = None
     roles: list[UserRoleInfo]
     is_active: bool
-    last_login: Optional[datetime]
+    last_login: datetime | None
 
 
 class PasswordResetRequestInfo(BaseModel):
@@ -178,8 +178,8 @@ class PasswordResetRequestInfo(BaseModel):
     user_email: str
     user_name: str
     is_used: bool
-    approved_by: Optional[int]
-    approved_at: Optional[datetime]
+    approved_by: int | None
+    approved_at: datetime | None
     created_at: datetime
 
 

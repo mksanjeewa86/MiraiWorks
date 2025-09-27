@@ -20,13 +20,13 @@ class VideoCall(Base):
     __tablename__ = "video_calls"
 
     id = Column(Integer, primary_key=True, index=True)
-    
+
     # Related entities
     job_id = Column(Integer, ForeignKey("positions.id", ondelete="CASCADE"), nullable=True, index=True)
     interview_id = Column(Integer, ForeignKey("interviews.id", ondelete="CASCADE"), nullable=True, index=True)
     interviewer_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     candidate_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    
+
     # Call details
     scheduled_at = Column(DateTime(timezone=True), nullable=False)
     started_at = Column(DateTime(timezone=True), nullable=True)
@@ -34,15 +34,15 @@ class VideoCall(Base):
     status = Column(String(20), nullable=False, default="scheduled")
     room_id = Column(String(255), unique=True, nullable=False)
     recording_url = Column(String(255), nullable=True)
-    
+
     # Transcription settings
     transcription_enabled = Column(Boolean, default=True)
     transcription_language = Column(String(10), default="ja")
-    
+
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
-    
+
     # Relationships
     job = relationship("Position", foreign_keys=[job_id], lazy="noload")
     interview = relationship("Interview", foreign_keys=[interview_id], lazy="noload")
@@ -52,7 +52,7 @@ class VideoCall(Base):
     recording_consents = relationship("RecordingConsent", back_populates="video_call", cascade="all, delete-orphan")
     transcriptions = relationship("CallTranscription", back_populates="video_call", cascade="all, delete-orphan")
     transcription_segments = relationship("TranscriptionSegment", back_populates="video_call", cascade="all, delete-orphan")
-    
+
     # Indexes
     __table_args__ = (
         Index("idx_video_calls_scheduled_at", "scheduled_at"),
@@ -62,25 +62,25 @@ class VideoCall(Base):
 
 class CallParticipant(Base):
     __tablename__ = "call_participants"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     video_call_id = Column(Integer, ForeignKey("video_calls.id", ondelete="CASCADE"), nullable=False, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    
+
     # Participation details
     joined_at = Column(DateTime(timezone=True), nullable=True)
     left_at = Column(DateTime(timezone=True), nullable=True)
     connection_quality = Column(String(20), nullable=True)
     device_info = Column(JSON, nullable=True)
-    
+
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
-    
+
     # Relationships
     video_call = relationship("VideoCall", back_populates="participants")
     user = relationship("User", lazy="noload")
-    
+
     # Indexes
     __table_args__ = (
         Index("idx_call_participants_video_call_user", "video_call_id", "user_id", unique=True),
@@ -89,22 +89,22 @@ class CallParticipant(Base):
 
 class RecordingConsent(Base):
     __tablename__ = "recording_consents"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     video_call_id = Column(Integer, ForeignKey("video_calls.id", ondelete="CASCADE"), nullable=False, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    
+
     # Consent details
     consented = Column(Boolean, default=False)
     consented_at = Column(DateTime(timezone=True), nullable=True)
-    
+
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    
+
     # Relationships
     video_call = relationship("VideoCall", back_populates="recording_consents")
     user = relationship("User", lazy="noload")
-    
+
     # Indexes
     __table_args__ = (
         Index("idx_recording_consents_video_call_user", "video_call_id", "user_id", unique=True),
@@ -113,45 +113,45 @@ class RecordingConsent(Base):
 
 class CallTranscription(Base):
     __tablename__ = "call_transcriptions"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     video_call_id = Column(Integer, ForeignKey("video_calls.id", ondelete="CASCADE"), nullable=False, unique=True, index=True)
-    
+
     # Transcription data
     transcript_url = Column(String(255), nullable=True)
     transcript_text = Column(Text, nullable=True)
     language = Column(String(10), default="ja")
     processing_status = Column(String(20), nullable=False, default="pending")
     word_count = Column(Integer, nullable=True)
-    
+
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     processed_at = Column(DateTime(timezone=True), nullable=True)
-    
+
     # Relationships
     video_call = relationship("VideoCall", back_populates="transcriptions")
 
 
 class TranscriptionSegment(Base):
     __tablename__ = "transcription_segments"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     video_call_id = Column(Integer, ForeignKey("video_calls.id", ondelete="CASCADE"), nullable=False, index=True)
     speaker_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    
+
     # Segment data
     segment_text = Column(Text, nullable=False)
     start_time = Column(Float, nullable=False)
     end_time = Column(Float, nullable=False)
     confidence = Column(Float, nullable=True)
-    
+
     # Timestamp
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    
+
     # Relationships
     video_call = relationship("VideoCall", back_populates="transcription_segments")
     speaker = relationship("User", lazy="noload")
-    
+
     # Indexes
     __table_args__ = (
         Index("idx_transcription_segments_video_call_time", "video_call_id", "start_time"),

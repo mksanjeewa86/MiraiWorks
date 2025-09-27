@@ -1,6 +1,5 @@
 import os
 from pathlib import Path, PurePosixPath
-from typing import Optional
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy import or_, select
@@ -275,7 +274,7 @@ async def upload_file(
 @router.get("/download/{s3_key:path}")
 async def download_file(
     s3_key: str,
-    download: Optional[str] = None,  # Add query parameter to control download behavior
+    download: str | None = None,  # Add query parameter to control download behavior
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ):

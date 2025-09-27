@@ -3,7 +3,6 @@ import re
 import secrets
 import string
 from datetime import datetime, timedelta
-from typing import Optional
 
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -86,11 +85,11 @@ class ResumeService:
 
     async def get_resume(
         self, db: AsyncSession, resume_id: int, user_id: int
-    ) -> Optional[Resume]:
+    ) -> Resume | None:
         """Get a resume by ID (with user ownership check)."""
         return await resume_crud.get_with_details(db, id=resume_id, user_id=user_id)
 
-    async def get_resume_by_slug(self, db: AsyncSession, slug: str) -> Optional[Resume]:
+    async def get_resume_by_slug(self, db: AsyncSession, slug: str) -> Resume | None:
         """Get a resume by slug (public access)."""
         result = await db.execute(
             select(Resume).where(
@@ -117,7 +116,7 @@ class ResumeService:
         user_id: int,
         limit: int = 10,
         offset: int = 0,
-        status: Optional[ResumeStatus] = None,
+        status: ResumeStatus | None = None,
     ) -> list[Resume]:
         """Get all resumes for a user."""
         return await resume_crud.get_by_user(
@@ -126,7 +125,7 @@ class ResumeService:
 
     async def update_resume(
         self, db: AsyncSession, resume_id: int, user_id: int, update_data: ResumeUpdate
-    ) -> Optional[Resume]:
+    ) -> Resume | None:
         """Update a resume."""
         try:
             resume = await self.get_resume(db, resume_id, user_id)
@@ -189,7 +188,7 @@ class ResumeService:
 
     async def duplicate_resume(
         self, db: AsyncSession, resume_id: int, user_id: int
-    ) -> Optional[Resume]:
+    ) -> Resume | None:
         """Duplicate an existing resume."""
         try:
             original = await self.get_resume(db, resume_id, user_id)
@@ -276,7 +275,7 @@ class ResumeService:
         resume_id: int,
         user_id: int,
         exp_data: WorkExperienceCreate,
-    ) -> Optional[WorkExperience]:
+    ) -> WorkExperience | None:
         """Add work experience to a resume."""
         try:
             # Verify ownership
@@ -316,7 +315,7 @@ class ResumeService:
         exp_id: int,
         user_id: int,
         exp_data: WorkExperienceCreate,
-    ) -> Optional[WorkExperience]:
+    ) -> WorkExperience | None:
         """Update work experience."""
         try:
             # Get experience and verify ownership
@@ -348,7 +347,7 @@ class ResumeService:
     # Similar methods for Education, Skills, etc.
     async def add_education(
         self, db: AsyncSession, resume_id: int, user_id: int, edu_data: EducationCreate
-    ) -> Optional[Education]:
+    ) -> Education | None:
         """Add education to a resume."""
         try:
             resume = await self.get_resume(db, resume_id, user_id)
@@ -384,7 +383,7 @@ class ResumeService:
 
     async def add_skill(
         self, db: AsyncSession, resume_id: int, user_id: int, skill_data: SkillCreate
-    ) -> Optional[Skill]:
+    ) -> Skill | None:
         """Add skill to a resume."""
         try:
             resume = await self.get_resume(db, resume_id, user_id)
@@ -417,11 +416,11 @@ class ResumeService:
         db: AsyncSession,
         resume_id: int,
         user_id: int,
-        recipient_email: Optional[str] = None,
-        password: Optional[str] = None,
-        expires_in_days: Optional[int] = None,
-        max_views: Optional[int] = None,
-    ) -> Optional[str]:
+        recipient_email: str | None = None,
+        password: str | None = None,
+        expires_in_days: int | None = None,
+        max_views: int | None = None,
+    ) -> str | None:
         """Create a shareable link for a resume."""
         try:
             resume = await self.get_resume(db, resume_id, user_id)
@@ -453,8 +452,8 @@ class ResumeService:
             raise
 
     async def get_shared_resume(
-        self, db: AsyncSession, share_token: str, password: Optional[str] = None
-    ) -> Optional[Resume]:
+        self, db: AsyncSession, share_token: str, password: str | None = None
+    ) -> Resume | None:
         """Get a resume via share token."""
         try:
             share = await ResumeShare.get_by_token(db, share_token)
@@ -494,7 +493,7 @@ class ResumeService:
 
     async def apply_template(
         self, db: AsyncSession, resume_id: int, user_id: int, template_id: str
-    ) -> Optional[Resume]:
+    ) -> Resume | None:
         """Apply a template to a resume."""
         try:
             resume = await self.get_resume(db, resume_id, user_id)
@@ -528,7 +527,7 @@ class ResumeService:
         db: AsyncSession,
         title: str,
         user_id: int,
-        exclude_id: Optional[int] = None,
+        exclude_id: int | None = None,
     ) -> str:
         """Generate a unique slug for a resume."""
         base_slug = self._slugify(title)
@@ -647,9 +646,9 @@ class ResumeService:
         resume_id: int,
         user_id: int,
         is_public: bool,
-        custom_slug: Optional[str] = None,
+        custom_slug: str | None = None,
         can_download_pdf: bool = True
-    ) -> Optional[Resume]:
+    ) -> Resume | None:
         """Update public sharing settings for a resume."""
         try:
             return await resume_crud.update_public_settings(
@@ -664,7 +663,7 @@ class ResumeService:
             logger.error(f"Error updating public settings: {str(e)}")
             raise
 
-    async def get_public_resume(self, db: AsyncSession, slug: str) -> Optional[Resume]:
+    async def get_public_resume(self, db: AsyncSession, slug: str) -> Resume | None:
         """Get public resume by slug."""
         try:
             return await resume_crud.get_public_by_slug(db, slug=slug)
@@ -700,7 +699,7 @@ class ResumeService:
         subject: str,
         message: str,
         include_pdf: bool = True,
-        sender_name: Optional[str] = None
+        sender_name: str | None = None
     ) -> bool:
         """Send resume via email (background task)."""
         try:

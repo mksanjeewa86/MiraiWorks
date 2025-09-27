@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime
-from typing import Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -64,7 +63,7 @@ async def create_resume(
 
 @router.get("/", response_model=ResumeListResponse)
 async def list_resumes(
-    status: Optional[str] = None,
+    status: str | None = None,
     limit: int = Query(10, ge=1, le=100),
     offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_db),
@@ -157,7 +156,7 @@ async def get_resume_statistics(
 # Search and filtering - MUST be before /{resume_id} routes
 @router.get("/search")
 async def search_resumes(
-    q: Optional[str] = Query(None),
+    q: str | None = Query(None),
     limit: int = Query(10, ge=1, le=50),
     offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_db),
@@ -376,7 +375,7 @@ async def apply_template(
 @router.get("/{resume_id}/preview", response_class=HTMLResponse)
 async def preview_resume(
     resume_id: int,
-    template_id: Optional[str] = None,
+    template_id: str | None = None,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -470,7 +469,7 @@ async def create_share_link(
 @router.get("/shared/{share_token}", response_class=HTMLResponse)
 async def view_shared_resume(
     share_token: str,
-    password: Optional[str] = Query(None),
+    password: str | None = Query(None),
     download: bool = Query(False),
     db: AsyncSession = Depends(get_db),
 ):
@@ -642,17 +641,17 @@ async def convert_to_rirekisho(
 ):
     """Convert existing resume to 履歴書 format."""
     resume_service = ResumeService()
-    
+
     resume = await resume_service.get_resume(db, resume_id, current_user.id)
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
-    
+
     # Convert to Rirekisho format
     from app.utils.constants import ResumeFormat, ResumeLanguage
     updated_resume = await resume_service.update_resume(
-        db, 
-        resume_id, 
-        current_user.id, 
+        db,
+        resume_id,
+        current_user.id,
         ResumeUpdate(
             resume_format=ResumeFormat.RIREKISHO,
             resume_language=ResumeLanguage.JAPANESE,
@@ -665,7 +664,7 @@ async def convert_to_rirekisho(
             emergency_contact=rirekisho_data.personal_info.get("emergency_contact")
         )
     )
-    
+
     return updated_resume
 
 
@@ -678,17 +677,17 @@ async def convert_to_shokumu_keirekisho(
 ):
     """Convert existing resume to 職務経歴書 format."""
     resume_service = ResumeService()
-    
+
     resume = await resume_service.get_resume(db, resume_id, current_user.id)
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
-    
+
     # Convert to Shokumu Keirekisho format
     from app.utils.constants import ResumeFormat, ResumeLanguage
     updated_resume = await resume_service.update_resume(
-        db, 
-        resume_id, 
-        current_user.id, 
+        db,
+        resume_id,
+        current_user.id,
         ResumeUpdate(
             resume_format=ResumeFormat.SHOKUMU_KEIREKISHO,
             resume_language=ResumeLanguage.JAPANESE,
@@ -696,7 +695,7 @@ async def convert_to_shokumu_keirekisho(
             objective=shokumu_data.self_pr
         )
     )
-    
+
     return updated_resume
 
 
@@ -745,19 +744,19 @@ async def update_public_settings(
 ):
     """Update public sharing settings for a resume."""
     resume_service = ResumeService()
-    
+
     resume = await resume_service.update_public_settings(
-        db, 
-        resume_id, 
-        current_user.id, 
+        db,
+        resume_id,
+        current_user.id,
         settings.is_public,
         settings.custom_slug,
         settings.allow_pdf_download
     )
-    
+
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
-    
+
     return resume
 
 
@@ -768,11 +767,11 @@ async def get_public_resume(
 ):
     """Get public resume by slug (limited information)."""
     resume_service = ResumeService()
-    
+
     resume = await resume_service.get_public_resume(db, slug)
     if not resume:
         raise HTTPException(status_code=404, detail="Public resume not found")
-    
+
     # Return limited public information
     return PublicResumeInfo(
         id=resume.id,
@@ -800,18 +799,18 @@ async def download_public_resume_pdf(
     """Download public resume as PDF."""
     resume_service = ResumeService()
     pdf_service = PDFService()
-    
+
     resume = await resume_service.get_public_resume(db, slug)
     if not resume:
         raise HTTPException(status_code=404, detail="Public resume not found")
-    
+
     if not resume.can_download_pdf:
         raise HTTPException(status_code=403, detail="PDF download not allowed")
-    
+
     try:
         # Increment download count
         await resume_service.increment_download_count(db, resume.id)
-        
+
         # Generate PDF
         result = await pdf_service.generate_pdf(resume)
         return RedirectResponse(url=result["pdf_url"])
@@ -831,11 +830,11 @@ async def send_resume_by_email(
 ):
     """Send resume via email."""
     resume_service = ResumeService()
-    
+
     resume = await resume_service.get_resume(db, resume_id, current_user.id)
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
-    
+
     try:
         # Queue email sending as background task
         background_tasks.add_task(
@@ -848,7 +847,7 @@ async def send_resume_by_email(
             email_request.include_pdf,
             email_request.sender_name or current_user.full_name
         )
-        
+
         return {"message": f"Resume email queued for {len(email_request.recipient_emails)} recipients"}
     except Exception as e:
         logger.error(f"Error sending resume email: {str(e)}")
@@ -865,11 +864,11 @@ async def attach_resume_to_message(
 ):
     """Attach resume to a message."""
     resume_service = ResumeService()
-    
+
     resume = await resume_service.get_resume(db, resume_id, current_user.id)
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
-    
+
     try:
         attachment = await resume_service.attach_to_message(
             db,
@@ -878,7 +877,7 @@ async def attach_resume_to_message(
             attachment_request.include_pdf,
             attachment_request.auto_attach
         )
-        
+
         return {
             "message": "Resume attached to message successfully",
             "attachment_id": attachment.id,
@@ -898,14 +897,14 @@ async def update_auto_attach_settings(
 ):
     """Enable/disable automatic attachment of resume to messages."""
     resume_service = ResumeService()
-    
+
     resume = await resume_service.get_resume(db, resume_id, current_user.id)
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
-    
+
     # Update auto-attach settings (would be stored in user preferences or resume settings)
     # Implementation would update a setting that controls automatic attachment
-    
+
     return {
         "message": f"Auto-attach {'enabled' if auto_attach else 'disabled'} for resume",
         "resume_id": resume_id,
@@ -924,17 +923,17 @@ async def update_resume_protection(
 ):
     """Update resume protection settings (prevent edit/delete)."""
     resume_service = ResumeService()
-    
+
     resume = await resume_service.update_resume(
         db,
         resume_id,
         current_user.id,
         ResumeUpdate(can_edit=can_edit, can_delete=can_delete)
     )
-    
+
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
-    
+
     return {
         "message": "Resume protection settings updated",
         "can_edit": resume.can_edit,

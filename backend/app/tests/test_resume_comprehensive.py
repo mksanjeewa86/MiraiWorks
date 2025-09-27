@@ -467,7 +467,7 @@ class TestResumeComprehensive:
             is_current=True,
             description="Full-stack development"
         )
-        experience = await resume_service.add_work_experience(db, resume.id, test_user.id, exp_data)
+        await resume_service.add_work_experience(db, resume.id, test_user.id, exp_data)
 
         # Add education
         edu_data = EducationCreate(
@@ -478,7 +478,7 @@ class TestResumeComprehensive:
             end_date=datetime(2020, 5, 31),
             gpa="3.8/4.0"
         )
-        education = await resume_service.add_education(db, resume.id, test_user.id, edu_data)
+        await resume_service.add_education(db, resume.id, test_user.id, edu_data)
 
         # Add skills
         skill_data = SkillCreate(
@@ -487,7 +487,7 @@ class TestResumeComprehensive:
             proficiency_level=5,
             proficiency_label="Expert"
         )
-        skill = await resume_service.add_skill(db, resume.id, test_user.id, skill_data)
+        await resume_service.add_skill(db, resume.id, test_user.id, skill_data)
 
         # Verify all sections
         complete_resume = await resume_service.get_resume(db, resume.id, test_user.id)

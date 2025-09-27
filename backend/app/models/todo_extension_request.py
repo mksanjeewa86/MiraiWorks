@@ -31,24 +31,24 @@ class TodoExtensionRequest(Base):
     creator_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    
+
     # Extension details
     current_due_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     requested_due_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     reason: Mapped[str] = mapped_column(Text, nullable=False)
-    
+
     # Request status and workflow
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default=ExtensionRequestStatus.PENDING.value, index=True
     )
-    
+
     # Response details
     response_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     responded_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     responded_by_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
-    
+
     # Audit fields
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=datetime.utcnow

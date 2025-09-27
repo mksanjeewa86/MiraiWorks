@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import Select, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -26,7 +26,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
 
     async def auto_mark_expired(self, db: AsyncSession, owner_id: int) -> None:
         """Automatically mark overdue todos as expired."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         await db.execute(
             update(Todo)
             .where(
@@ -65,9 +65,9 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
 
         # Filter by deleted status
         if include_deleted:
-            query = query.where(Todo.is_deleted == True)
+            query = query.where(Todo.is_deleted is True)
         else:
-            query = query.where(Todo.is_deleted == False)
+            query = query.where(Todo.is_deleted is False)
 
         if status:
             query = query.where(Todo.status == status)
@@ -76,7 +76,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
 
         total_query = select(func.count()).select_from(query.subquery())
         total_result = await db.execute(total_query)
-        total = total_result.scalar() or 0
+        total_result.scalar() or 0
 
         query = query.order_by(
             Todo.due_date.is_(None), Todo.due_date.asc(), Todo.created_at.desc()
@@ -85,12 +85,12 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
 
         result = await db.execute(query)
         all_todos = result.scalars().all()
-        
+
         # Filter based on permissions
         filtered_todos = await TodoPermissionService.filter_todos_by_permission(
             db, user_id, all_todos
         )
-        
+
         return filtered_todos, len(filtered_todos)
 
     async def list_recent(
@@ -99,7 +99,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         await self.auto_mark_expired(db, owner_id)
         result = await db.execute(
             select(Todo)
-            .where(Todo.owner_id == owner_id, Todo.is_deleted == False)
+            .where(Todo.owner_id == owner_id, Todo.is_deleted is False)
             .order_by(Todo.updated_at.desc())
             .limit(limit)
         )
@@ -114,9 +114,9 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         data["created_by"] = created_by
         data["last_updated_by"] = created_by
 
-        if data.get("due_date") and data["due_date"] < datetime.now(timezone.utc):
+        if data.get("due_date") and data["due_date"] < datetime.now(UTC):
             data["status"] = TodoStatus.EXPIRED.value
-            data["expired_at"] = datetime.now(timezone.utc)
+            data["expired_at"] = datetime.now(UTC)
 
         db_obj = Todo(**data)
         db.add(db_obj)
@@ -134,7 +134,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
     ) -> Todo:
         update_data = obj_in.model_dump(exclude_unset=True)
         if update_data.get("status") == TodoStatus.COMPLETED.value:
-            update_data.setdefault("completed_at", datetime.now(timezone.utc))
+            update_data.setdefault("completed_at", datetime.now(UTC))
             update_data.pop("expired_at", None)
         elif update_data.get("status") == TodoStatus.PENDING.value:
             update_data.setdefault("completed_at", None)
@@ -203,11 +203,11 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         """Assign a todo to a user with visibility settings."""
         update_data = assignment_data.model_dump(exclude_unset=True)
         update_data["last_updated_by"] = assigned_by
-        
+
         # If assigning to someone, set default visibility to PUBLIC
         if update_data.get("assigned_user_id") and not update_data.get("visibility"):
             update_data["visibility"] = TodoVisibility.PUBLIC.value
-        
+
         # If unassigning, set visibility to PRIVATE
         if update_data.get("assigned_user_id") is None:
             update_data["visibility"] = TodoVisibility.PRIVATE.value
@@ -233,7 +233,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
             .options(selectinload(Todo.owner), selectinload(Todo.assigned_user))
             .where(
                 Todo.assigned_user_id == assigned_user_id,
-                Todo.is_deleted == False,
+                Todo.is_deleted is False,
                 Todo.visibility.in_([TodoVisibility.PUBLIC.value, TodoVisibility.VIEWER.value])
             )
         )
@@ -265,59 +265,59 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         """Update viewers for a todo."""
         # Update viewers
         await todo_viewer.add_viewers(
-            db, 
-            todo_id=todo.id, 
+            db,
+            todo_id=todo.id,
             viewer_ids=viewers_data.viewer_ids,
             added_by=updated_by
         )
-        
+
         # Update last_updated_by
         todo.last_updated_by = updated_by
         db.add(todo)
         await db.commit()
         await db.refresh(todo)
-        
+
         return todo
 
     async def create_with_viewers(
-        self, 
-        db: AsyncSession, 
-        *, 
-        owner_id: int, 
-        created_by: int, 
+        self,
+        db: AsyncSession,
+        *,
+        owner_id: int,
+        created_by: int,
         obj_in: TodoCreate
     ) -> Todo:
         """Create a todo with viewers."""
         # Extract viewer_ids from the input
         viewer_ids = obj_in.viewer_ids or []
         obj_data = obj_in.model_dump(exclude={'viewer_ids'})
-        
+
         # Create the todo first
         obj_data.setdefault("status", TodoStatus.PENDING.value)
         obj_data["owner_id"] = owner_id
         obj_data["created_by"] = created_by
         obj_data["last_updated_by"] = created_by
 
-        if obj_data.get("due_date") and obj_data["due_date"] < datetime.now(timezone.utc):
+        if obj_data.get("due_date") and obj_data["due_date"] < datetime.now(UTC):
             obj_data["status"] = TodoStatus.EXPIRED.value
-            obj_data["expired_at"] = datetime.now(timezone.utc)
+            obj_data["expired_at"] = datetime.now(UTC)
 
         db_obj = Todo(**obj_data)
         db.add(db_obj)
         await db.commit()
         await db.refresh(db_obj)
-        
+
         # Add viewers if any
         if viewer_ids:
             await todo_viewer.add_viewers(
-                db, 
-                todo_id=db_obj.id, 
+                db,
+                todo_id=db_obj.id,
                 viewer_ids=viewer_ids,
                 added_by=created_by
             )
             # Refresh to get viewers
             await db.refresh(db_obj)
-        
+
         return db_obj
 
     async def create_with_owner(

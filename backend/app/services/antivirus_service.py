@@ -2,7 +2,6 @@ import logging
 import socket
 import struct
 from datetime import datetime
-from typing import Optional
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -41,7 +40,7 @@ class AntivirusService:
             logger.error(f"File scan failed for {s3_key}: {e}")
             return VirusStatus.ERROR, f"Scan error: {str(e)}"
 
-    async def _download_file_from_s3(self, s3_key: str) -> Optional[bytes]:
+    async def _download_file_from_s3(self, s3_key: str) -> bytes | None:
         """Download file data from S3."""
         try:
             # Get presigned URL and download

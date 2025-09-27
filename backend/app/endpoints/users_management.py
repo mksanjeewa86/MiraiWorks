@@ -1,7 +1,6 @@
 import logging
 import secrets
 import string
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import and_, func, select
@@ -34,13 +33,13 @@ logger = logging.getLogger(__name__)
 async def get_users(
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
-    search: Optional[str] = Query(None),
-    company_id: Optional[int] = Query(None),
-    is_active: Optional[bool] = Query(None),
-    is_admin: Optional[bool] = Query(None),
-    is_suspended: Optional[bool] = Query(None),
-    require_2fa: Optional[bool] = Query(None),
-    role: Optional[UserRoleEnum] = Query(None),
+    search: str | None = Query(None),
+    company_id: int | None = Query(None),
+    is_active: bool | None = Query(None),
+    is_admin: bool | None = Query(None),
+    is_suspended: bool | None = Query(None),
+    require_2fa: bool | None = Query(None),
+    role: UserRoleEnum | None = Query(None),
     include_deleted: bool = Query(False),
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
@@ -153,8 +152,8 @@ async def create_user(
             existing_admin_query = select(func.count(User.id)).where(
                 and_(
                     User.company_id == current_user.company_id,
-                    User.is_admin == True,
-                    User.is_deleted == False,
+                    User.is_admin is True,
+                    User.is_deleted is False,
                     User.id != current_user.id,  # Exclude current user
                 )
             )
@@ -202,8 +201,8 @@ async def create_user(
         existing_admin_query = select(func.count(User.id)).where(
             and_(
                 User.company_id == user_data.company_id,
-                User.is_admin == True,
-                User.is_deleted == False,
+                User.is_admin is True,
+                User.is_deleted is False,
             )
         )
         existing_admin_result = await db.execute(existing_admin_query)
@@ -311,7 +310,7 @@ async def bulk_delete_users(
 
     for user_id in operation.user_ids:
         if user_id == current_user.id:
-            errors.append(f"Cannot delete your own account")
+            errors.append("Cannot delete your own account")
             continue
 
         user = await user_crud.user.get(db, user_id)
@@ -507,7 +506,7 @@ async def bulk_suspend_users(
 
     for user_id in operation.user_ids:
         if user_id == current_user.id:
-            errors.append(f"Cannot suspend your own account")
+            errors.append("Cannot suspend your own account")
             continue
 
         user = await user_crud.user.get(db, user_id)

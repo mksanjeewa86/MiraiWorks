@@ -24,6 +24,7 @@ except ImportError:
 
 os.environ["ENVIRONMENT"] = "test"
 
+import contextlib
 import subprocess
 
 # Test database configuration - optimized for speed
@@ -100,15 +101,13 @@ def start_test_database():
         pass
 
     # Only clean up if not healthy
-    try:
+    with contextlib.suppress(subprocess.CalledProcessError, subprocess.TimeoutExpired):
         subprocess.run(
             ["docker-compose", "-f", "docker-compose.test.yml", "down"],
             cwd=str(BACKEND_DIR.parent),
             capture_output=True,
             timeout=10
         )
-    except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
-        pass
 
     # Start the test database
     try:
@@ -235,16 +234,15 @@ async def setup_database_schema():
         print(f"Database schema setup failed: {e}")
         raise
 
-@pytest_asyncio.fixture(autouse=True)
-async def setup_database():
-    """Fast data cleanup for each test."""
-    # Clear data before each test
+@pytest_asyncio.fixture(scope="function")
+async def clean_database():
+    """Clean database before test setup."""
+    # Clear data before test fixtures run
     await fast_clear_data()
     yield
-    # Data will be cleared before next test
 
 @pytest_asyncio.fixture
-async def db_session():
+async def db_session(clean_database):
     """Get database session for tests."""
     session = None
     try:
@@ -252,10 +250,8 @@ async def db_session():
         yield session
     finally:
         if session:
-            try:
+            with contextlib.suppress(Exception):
                 await session.close()
-            except Exception:
-                pass
 
 @pytest_asyncio.fixture
 async def client():
@@ -298,10 +294,10 @@ async def test_company(db_session):
     """Create test company."""
     company = Company(
         name="Test Company",
-        type=CompanyType.RECRUITER,
+        type=CompanyType.RECRUITER.value,
         email="test@company.com",
         phone="123-456-7890",
-        is_active="1",
+        is_active=True,
     )
     db_session.add(company)
     await db_session.commit()
@@ -517,7 +513,7 @@ async def super_admin_auth_headers(client, test_super_admin):
 
         return {"Authorization": f"Bearer {token_data['access_token']}"}
 
-    except Exception as e:
+    except Exception:
         # Return a dummy header to prevent further crashes
         return {"Authorization": "Bearer dummy_token_for_testing"}
 
@@ -561,12 +557,13 @@ def test_users(test_user, test_admin_user, test_employer_user, test_candidate_on
 @pytest_asyncio.fixture
 async def test_todo_with_attachments(db_session, test_user):
     """Fixture providing a todo with test attachments."""
+    import os
+    import tempfile
+
     from app.crud.todo import todo as todo_crud
     from app.crud.todo_attachment import todo_attachment as attachment_crud
     from app.schemas.todo import TodoCreate
     from app.schemas.todo_attachment import TodoAttachmentCreate
-    import tempfile
-    import os
 
     # Create a test todo
     todo_data = TodoCreate(

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -24,7 +24,7 @@ class MBTITest(Base):
     user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True, index=True
     )
-    
+
     # Test status and results
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default=MBTITestStatus.NOT_TAKEN.value, index=True
@@ -32,25 +32,25 @@ class MBTITest(Base):
     mbti_type: Mapped[str | None] = mapped_column(
         String(4), nullable=True, index=True
     )  # e.g., "INTJ"
-    
+
     # Dimension scores (0-100, higher means second trait)
     # E/I: 0 = strong E, 100 = strong I
-    # S/N: 0 = strong S, 100 = strong N  
+    # S/N: 0 = strong S, 100 = strong N
     # T/F: 0 = strong T, 100 = strong F
     # J/P: 0 = strong J, 100 = strong P
     extraversion_introversion_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
     sensing_intuition_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
     thinking_feeling_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
     judging_perceiving_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    
+
     # Test answers and metadata
-    answers: Mapped[Dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    answers: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     test_version: Mapped[str | None] = mapped_column(String(10), nullable=True, default="1.0")
-    
+
     # Timing information
     started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    
+
     # Audit fields
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=datetime.utcnow
@@ -83,28 +83,28 @@ class MBTITest(Base):
             return 0
 
     @property
-    def dimension_preferences(self) -> Dict[str, str]:
+    def dimension_preferences(self) -> dict[str, str]:
         """Get the preferred trait for each dimension."""
         if not self.is_completed:
             return {}
-        
+
         return {
             "E_I": "I" if self.extraversion_introversion_score > 50 else "E",
-            "S_N": "N" if self.sensing_intuition_score > 50 else "S", 
+            "S_N": "N" if self.sensing_intuition_score > 50 else "S",
             "T_F": "F" if self.thinking_feeling_score > 50 else "T",
             "J_P": "P" if self.judging_perceiving_score > 50 else "J"
         }
 
     @property
-    def strength_scores(self) -> Dict[str, int]:
+    def strength_scores(self) -> dict[str, int]:
         """Get strength scores for each preference (0-50 scale)."""
         if not self.is_completed:
             return {}
-        
+
         return {
             "E_I": abs(self.extraversion_introversion_score - 50),
             "S_N": abs(self.sensing_intuition_score - 50),
-            "T_F": abs(self.thinking_feeling_score - 50), 
+            "T_F": abs(self.thinking_feeling_score - 50),
             "J_P": abs(self.judging_perceiving_score - 50)
         }
 
@@ -117,7 +117,7 @@ class MBTITest(Base):
             self.judging_perceiving_score is not None
         ]):
             raise ValueError("All dimension scores must be set to calculate MBTI type")
-        
+
         prefs = self.dimension_preferences
         return f"{prefs['E_I']}{prefs['S_N']}{prefs['T_F']}{prefs['J_P']}"
 
@@ -131,30 +131,30 @@ class MBTIQuestion(Base):
     __tablename__ = "mbti_questions"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    
+
     # Question details
     question_number: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     dimension: Mapped[str] = mapped_column(String(4), nullable=False, index=True)  # E_I, S_N, T_F, J_P
-    direction: Mapped[str] = mapped_column(String(1), nullable=False)  # "+" or "-" 
-    
+    direction: Mapped[str] = mapped_column(String(1), nullable=False)  # "+" or "-"
+
     # Question text in multiple languages
     question_text_en: Mapped[str] = mapped_column(Text, nullable=False)
     question_text_ja: Mapped[str] = mapped_column(Text, nullable=False)
-    
+
     # Answer options
     option_a_en: Mapped[str] = mapped_column(Text, nullable=False)
     option_a_ja: Mapped[str] = mapped_column(Text, nullable=False)
     option_b_en: Mapped[str] = mapped_column(Text, nullable=False)
     option_b_ja: Mapped[str] = mapped_column(Text, nullable=False)
-    
+
     # Scoring (which option corresponds to which trait)
     option_a_trait: Mapped[str] = mapped_column(String(1), nullable=False)  # E, I, S, N, T, F, J, P
     option_b_trait: Mapped[str] = mapped_column(String(1), nullable=False)
-    
+
     # Question metadata
     version: Mapped[str] = mapped_column(String(10), nullable=False, default="1.0")
     is_active: Mapped[bool] = mapped_column(Integer, nullable=False, default=True)
-    
+
     # Audit fields
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=datetime.utcnow

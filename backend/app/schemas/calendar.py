@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -21,28 +21,28 @@ class CalendarAccountInfo(BaseModel):
     id: int
     provider: str
     email: str
-    display_name: Optional[str]
-    calendar_id: Optional[str]
-    calendar_timezone: Optional[str]
+    display_name: str | None
+    calendar_id: str | None
+    calendar_timezone: str | None
     is_active: bool
     sync_enabled: bool
-    last_sync_at: Optional[datetime]
+    last_sync_at: datetime | None
     created_at: datetime
 
 
 class CalendarInfo(BaseModel):
     id: str
     name: str
-    description: Optional[str]
+    description: str | None
     primary: bool = False
-    timezone: Optional[str]
-    access_role: Optional[str]  # owner, writer, reader
+    timezone: str | None
+    access_role: str | None  # owner, writer, reader
 
 
 class EventCreate(BaseModel):
     title: str
-    description: Optional[str] = None
-    location: Optional[str] = None
+    description: str | None = None
+    location: str | None = None
     start_datetime: datetime = Field(alias="startDatetime")
     end_datetime: datetime = Field(alias="endDatetime")
     timezone: str = "UTC"
@@ -70,13 +70,13 @@ class EventCreate(BaseModel):
 
 
 class EventUpdate(BaseModel):
-    title: Optional[str] = None
-    description: Optional[str] = None
-    location: Optional[str] = None
-    start_datetime: Optional[datetime] = None
-    end_datetime: Optional[datetime] = None
-    timezone: Optional[str] = None
-    attendees: Optional[list[str]] = None
+    title: str | None = None
+    description: str | None = None
+    location: str | None = None
+    start_datetime: datetime | None = None
+    end_datetime: datetime | None = None
+    timezone: str | None = None
+    attendees: list[str] | None = None
 
     @field_validator("title")
     @classmethod
@@ -91,22 +91,22 @@ class EventInfo(BaseModel):
 
     id: str
     title: str
-    description: Optional[str]
-    location: Optional[str]
+    description: str | None
+    location: str | None
     start_datetime: datetime = Field(alias="startDatetime")
     end_datetime: datetime = Field(alias="endDatetime")
-    timezone: Optional[str]
+    timezone: str | None
     is_all_day: bool = Field(alias="isAllDay")
     is_recurring: bool = Field(alias="isRecurring")
-    organizer_email: Optional[str] = Field(alias="organizerEmail")
+    organizer_email: str | None = Field(alias="organizerEmail")
     attendees: list[str]
-    status: Optional[str]
+    status: str | None
     created_at: datetime = Field(alias="createdAt")
     updated_at: datetime = Field(alias="updatedAt")
 
 
 class CalendarSyncRequest(BaseModel):
-    calendar_ids: Optional[list[str]] = None  # Specific calendars to sync
+    calendar_ids: list[str] | None = None  # Specific calendars to sync
     full_sync: bool = False  # Full sync vs incremental
 
 
@@ -114,15 +114,15 @@ class CalendarSyncResponse(BaseModel):
     success: bool
     synced_events: int
     errors: list[str] = []
-    last_sync_token: Optional[str] = None
+    last_sync_token: str | None = None
 
 
 class EventsListRequest(BaseModel):
-    calendar_id: Optional[str] = None  # Default calendar if not specified
-    start_date: Optional[datetime] = None
-    end_date: Optional[datetime] = None
+    calendar_id: str | None = None  # Default calendar if not specified
+    start_date: datetime | None = None
+    end_date: datetime | None = None
     max_results: int = 100
-    search_query: Optional[str] = None
+    search_query: str | None = None
 
     @field_validator("max_results")
     @classmethod
@@ -134,7 +134,7 @@ class EventsListRequest(BaseModel):
 
 class EventsListResponse(BaseModel):
     events: list[EventInfo]
-    next_sync_token: Optional[str] = None
+    next_sync_token: str | None = None
     has_more: bool = False
 
 
@@ -186,13 +186,13 @@ class AvailabilityResponse(BaseModel):
 
 
 class WebhookVerification(BaseModel):
-    challenge: Optional[str] = None
-    validation_token: Optional[str] = None
+    challenge: str | None = None
+    validation_token: str | None = None
 
 
 class CalendarWebhookData(BaseModel):
     resource: str
     change_type: str
-    client_state: Optional[str] = None
-    subscription_id: Optional[str] = None
-    resource_data: Optional[dict[str, Any]] = None
+    client_state: str | None = None
+    subscription_id: str | None = None
+    resource_data: dict[str, Any] | None = None

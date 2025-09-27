@@ -1,17 +1,13 @@
 import asyncio
 import logging
-from datetime import datetime, timedelta
 
 from celery import Celery
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.config import settings
-# Note: ExternalCalendarAccount import removed - methods don't exist on model
 from app.models.interview import Interview
-from app.services.google_calendar_service import GoogleCalendarService
 from app.services.interview_service import InterviewService
-from app.services.microsoft_calendar_service import MicrosoftCalendarService
 
 # Initialize Celery
 celery_app = Celery(
@@ -104,114 +100,26 @@ async def _sync_calendar_events(
     calendar_integration_id: int, force_full_sync: bool = False
 ):
     """Internal async function to sync calendar events."""
-    async with AsyncSessionLocal() as db:
-        try:
-            # TODO: Fix ExternalCalendarAccount model methods
-            # calendar_integration = await ExternalCalendarAccount.get(
-            #     db, calendar_integration_id
-            # )
-            logger.warning("Calendar integration methods not implemented")
-            return
-            if not calendar_integration or not calendar_integration.is_active:
-                logger.warning(
-                    f"Calendar integration {calendar_integration_id} not found or inactive"
-                )
-                return {"status": "skipped", "reason": "integration not active"}
+    try:
+        # ExternalCalendarAccount model methods not implemented
+        logger.warning("Calendar integration methods not implemented")
+        return {"status": "skipped", "reason": "not implemented"}
 
-            if calendar_integration.provider == "google":
-                service = GoogleCalendarService()
-                sync_token = (
-                    None if force_full_sync else calendar_integration.sync_token
-                )
-
-                events = await service.list_events(
-                    calendar_integration.access_token,
-                    calendar_integration.calendar_id,
-                    sync_token=sync_token,
-                )
-
-                synced_count = 0
-                for event_data in events.get("items", []):
-                    await _process_calendar_event(
-                        db, calendar_integration, event_data, "google"
-                    )
-                    synced_count += 1
-
-                # Update sync token
-                next_sync_token = events.get("nextSyncToken")
-                if next_sync_token:
-                    calendar_integration.sync_token = next_sync_token
-
-            elif calendar_integration.provider == "microsoft":
-                service = MicrosoftCalendarService()
-
-                # For Microsoft, we'll get events from the last sync time
-                start_time = None
-                if not force_full_sync and calendar_integration.last_sync_at:
-                    start_time = calendar_integration.last_sync_at
-
-                events = await service.list_events(
-                    calendar_integration.access_token, start_time=start_time
-                )
-
-                synced_count = 0
-                for event_data in events.get("value", []):
-                    await _process_calendar_event(
-                        db, calendar_integration, event_data, "microsoft"
-                    )
-                    synced_count += 1
-
-            # Update last sync time
-            calendar_integration.last_sync_at = datetime.utcnow()
-            await calendar_integration.save(db)
-
-            logger.info(
-                f"Synced {synced_count} events for calendar integration {calendar_integration_id}"
-            )
-            return {"status": "success", "synced_events": synced_count}
-
-        except Exception as e:
-            logger.error(f"Error syncing calendar events: {str(e)}")
-            raise
+    except Exception as e:
+        logger.error(f"Error syncing calendar events: {str(e)}")
+        raise
 
 
 async def _sync_all_calendar_integrations():
     """Internal async function to sync all active calendar integrations."""
-    async with AsyncSessionLocal() as db:
-        try:
-            # TODO: Fix ExternalCalendarAccount model methods
-            # integrations = await ExternalCalendarAccount.get_active_integrations(db)
-            logger.warning("Calendar integration methods not implemented")
-            return
+    try:
+        # ExternalCalendarAccount model methods not implemented
+        logger.warning("Calendar integration methods not implemented")
+        return {"status": "skipped", "reason": "not implemented"}
 
-            total_synced = 0
-            failed_syncs = 0
-
-            for integration in integrations:
-                try:
-                    result = await _sync_calendar_events(
-                        integration.id, force_full_sync=False
-                    )
-                    total_synced += result.get("synced_events", 0)
-                except Exception as e:
-                    logger.error(
-                        f"Failed to sync integration {integration.id}: {str(e)}"
-                    )
-                    failed_syncs += 1
-
-            logger.info(
-                f"Bulk sync completed: {total_synced} events, {failed_syncs} failures"
-            )
-            return {
-                "status": "completed",
-                "total_synced": total_synced,
-                "failed_syncs": failed_syncs,
-                "total_integrations": len(integrations),
-            }
-
-        except Exception as e:
-            logger.error(f"Error in bulk calendar sync: {str(e)}")
-            raise
+    except Exception as e:
+        logger.error(f"Error in bulk calendar sync: {str(e)}")
+        raise
 
 
 async def _check_interview_conflicts(interview_id: int):
@@ -238,69 +146,14 @@ async def _check_interview_conflicts(interview_id: int):
 
 async def _cleanup_expired_calendar_tokens():
     """Internal async function to clean up expired calendar tokens."""
-    async with AsyncSessionLocal() as db:
-        try:
-            # TODO: Fix ExternalCalendarAccount model methods
-            # expired_integrations = await ExternalCalendarAccount.get_expired_tokens(db)
-            logger.warning("Calendar integration methods not implemented")
-            return
+    try:
+        # ExternalCalendarAccount model methods not implemented
+        logger.warning("Calendar integration methods not implemented")
+        return {"status": "skipped", "reason": "not implemented"}
 
-            refreshed_count = 0
-            disabled_count = 0
-
-            for integration in expired_integrations:
-                try:
-                    if integration.provider == "google":
-                        service = GoogleCalendarService()
-                        new_tokens = await service.refresh_access_token(
-                            integration.refresh_token
-                        )
-
-                        integration.access_token = new_tokens["access_token"]
-                        if "refresh_token" in new_tokens:
-                            integration.refresh_token = new_tokens["refresh_token"]
-                        integration.token_expires_at = datetime.utcnow() + timedelta(
-                            seconds=new_tokens.get("expires_in", 3600)
-                        )
-                        await integration.save(db)
-                        refreshed_count += 1
-
-                    elif integration.provider == "microsoft":
-                        service = MicrosoftCalendarService()
-                        new_tokens = await service.refresh_access_token(
-                            integration.refresh_token
-                        )
-
-                        integration.access_token = new_tokens["access_token"]
-                        if "refresh_token" in new_tokens:
-                            integration.refresh_token = new_tokens["refresh_token"]
-                        integration.token_expires_at = datetime.utcnow() + timedelta(
-                            seconds=new_tokens.get("expires_in", 3600)
-                        )
-                        await integration.save(db)
-                        refreshed_count += 1
-
-                except Exception as e:
-                    logger.error(
-                        f"Failed to refresh token for integration {integration.id}: {str(e)}"
-                    )
-                    # Disable the integration
-                    integration.is_active = False
-                    await integration.save(db)
-                    disabled_count += 1
-
-            logger.info(
-                f"Token cleanup: {refreshed_count} refreshed, {disabled_count} disabled"
-            )
-            return {
-                "status": "completed",
-                "refreshed": refreshed_count,
-                "disabled": disabled_count,
-            }
-
-        except Exception as e:
-            logger.error(f"Error cleaning up expired tokens: {str(e)}")
-            raise
+    except Exception as e:
+        logger.error(f"Error cleaning up expired tokens: {str(e)}")
+        raise
 
 
 async def _sync_interview_to_calendar(interview_id: int, operation: str = "create"):
@@ -314,53 +167,9 @@ async def _sync_interview_to_calendar(interview_id: int, operation: str = "creat
                 logger.warning(f"Interview {interview_id} not found")
                 return {"status": "skipped", "reason": "interview not found"}
 
-            # Get calendar integrations for interview participants
-            participant_ids = [interview.candidate_id, interview.recruiter_id]
-            if interview.employer_company_id:
-                # Get employer users from the company
-                pass  # Would need to implement this
-
-            synced_count = 0
-            errors = []
-
-            for user_id in participant_ids:
-                try:
-                    # TODO: Fix ExternalCalendarAccount model methods
-                    # integrations = await ExternalCalendarAccount.get_by_user_id(db, user_id)
-                    logger.warning("Calendar integration methods not implemented")
-                    return
-
-                    for integration in integrations:
-                        if not integration.sync_enabled:
-                            continue
-
-                        if operation == "create":
-                            await _create_calendar_event_for_interview(
-                                db, integration, interview
-                            )
-                        elif operation == "update":
-                            await _update_calendar_event_for_interview(
-                                db, integration, interview
-                            )
-                        elif operation == "delete":
-                            await _delete_calendar_event_for_interview(
-                                db, integration, interview
-                            )
-
-                        synced_count += 1
-
-                except Exception as e:
-                    error_msg = (
-                        f"Failed to sync to calendar for user {user_id}: {str(e)}"
-                    )
-                    logger.error(error_msg)
-                    errors.append(error_msg)
-
-            return {
-                "status": "completed",
-                "synced_calendars": synced_count,
-                "errors": errors,
-            }
+            # ExternalCalendarAccount model methods not implemented
+            logger.warning("Calendar integration methods not implemented")
+            return {"status": "skipped", "reason": "not implemented"}
 
         except Exception as e:
             logger.error(f"Error syncing interview to calendar: {str(e)}")
@@ -374,94 +183,32 @@ async def _process_calendar_event(
     provider: str,
 ):
     """Process a calendar event from webhook or sync."""
-    # This is similar to the webhook processing logic
-    # Implementation would be similar to process_calendar_event_update in webhooks.py
+    # TODO: Implement when ExternalCalendarAccount model is fixed
+    logger.warning("Calendar event processing not implemented")
 
 
 async def _create_calendar_event_for_interview(
     db: AsyncSession, integration, interview: Interview  # TODO: Fix ExternalCalendarAccount type
 ):
     """Create a calendar event for an interview."""
-    if not interview.scheduled_start or not interview.scheduled_end:
-        return
-
-    if integration.provider == "google":
-        service = GoogleCalendarService()
-        event_data = {
-            "summary": interview.title,
-            "description": interview.description,
-            "location": interview.location,
-            "start": {
-                "dateTime": interview.scheduled_start.isoformat(),
-                "timeZone": interview.timezone or "UTC",
-            },
-            "end": {
-                "dateTime": interview.scheduled_end.isoformat(),
-                "timeZone": interview.timezone or "UTC",
-            },
-        }
-
-        created_event = await service.create_event(
-            integration.access_token, integration.calendar_id, event_data
-        )
-
-        # Store the external event ID with the interview
-        interview.external_calendar_event_id = created_event.get("id")
-        await interview.save(db)
-
-    elif integration.provider == "microsoft":
-        service = MicrosoftCalendarService()
-        event_data = {
-            "subject": interview.title,
-            "body": {"content": interview.description or ""},
-            "location": {"displayName": interview.location or ""},
-            "start": {
-                "dateTime": interview.scheduled_start.isoformat(),
-                "timeZone": interview.timezone or "UTC",
-            },
-            "end": {
-                "dateTime": interview.scheduled_end.isoformat(),
-                "timeZone": interview.timezone or "UTC",
-            },
-        }
-
-        created_event = await service.create_event(integration.access_token, event_data)
-
-        interview.external_calendar_event_id = created_event.get("id")
-        await interview.save(db)
+    # TODO: Implement when ExternalCalendarAccount model is fixed
+    logger.warning("Calendar event creation not implemented")
 
 
 async def _update_calendar_event_for_interview(
     db: AsyncSession, integration, interview: Interview  # TODO: Fix ExternalCalendarAccount type
 ):
     """Update a calendar event for an interview."""
-    if not interview.external_calendar_event_id:
-        # Create if doesn't exist
-        await _create_calendar_event_for_interview(db, integration, interview)
-        return
-
-    # Implementation would update the existing event
+    # TODO: Implement when ExternalCalendarAccount model is fixed
+    logger.warning("Calendar event update not implemented")
 
 
 async def _delete_calendar_event_for_interview(
     db: AsyncSession, integration, interview: Interview  # TODO: Fix ExternalCalendarAccount type
 ):
     """Delete a calendar event for an interview."""
-    if not interview.external_calendar_event_id:
-        return
-
-    if integration.provider == "google":
-        service = GoogleCalendarService()
-        await service.delete_event(
-            integration.access_token,
-            integration.calendar_id,
-            interview.external_calendar_event_id,
-        )
-    elif integration.provider == "microsoft":
-        service = MicrosoftCalendarService()
-        await service.delete_event(
-            integration.access_token, interview.external_calendar_event_id
-        )
+    # TODO: Implement when ExternalCalendarAccount model is fixed
+    logger.warning("Calendar event deletion not implemented")
 
 
 # Periodic task scheduling

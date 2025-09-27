@@ -1,6 +1,5 @@
 """Focused integration tests for message endpoints."""
 
-from typing import Optional
 
 import pytest
 from httpx import AsyncClient
@@ -22,7 +21,7 @@ async def create_user_with_role(
     roles: dict[str, Role],
     email: str,
     role: UserRoleEnum,
-    company_id: Optional[int],
+    company_id: int | None,
     password: str = "password123",
     first_name: str = "Test",
     last_name: str = "User",

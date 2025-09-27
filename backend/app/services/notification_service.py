@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime, timedelta
-from typing import Optional
 
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -29,7 +28,7 @@ class NotificationService:
         notification_type: str,
         title: str,
         message: str,
-        payload: Optional[dict] = None,
+        payload: dict | None = None,
     ) -> Notification:
         """Create a new in-app notification."""
         notification = Notification(
@@ -143,7 +142,7 @@ class NotificationService:
         )
 
         if unread_only:
-            query = query.where(Notification.is_read == False)
+            query = query.where(Notification.is_read is False)
 
         result = await db.execute(query)
         return result.scalars().all()
@@ -175,7 +174,7 @@ class NotificationService:
 
         result = await db.execute(
             select(func.count(Notification.id)).where(
-                and_(Notification.user_id == user_id, Notification.is_read == False)
+                and_(Notification.user_id == user_id, Notification.is_read is False)
             )
         )
         return result.scalar() or 0

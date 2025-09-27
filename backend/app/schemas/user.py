@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
@@ -13,22 +13,22 @@ class UserCreate(BaseModel):
     email: str
     first_name: str
     last_name: str
-    phone: Optional[str] = None
-    company_id: Optional[int] = None
-    roles: List[UserRole] = []
-    is_admin: Optional[bool] = False
-    require_2fa: Optional[bool] = False
+    phone: str | None = None
+    company_id: int | None = None
+    roles: list[UserRole] = []
+    is_admin: bool | None = False
+    require_2fa: bool | None = False
 
 
 class UserUpdate(BaseModel):
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    phone: Optional[str] = None
-    is_active: Optional[bool] = None
-    is_admin: Optional[bool] = None
-    require_2fa: Optional[bool] = None
-    company_id: Optional[int] = None
-    roles: Optional[List[UserRole]] = None
+    first_name: str | None = None
+    last_name: str | None = None
+    phone: str | None = None
+    is_active: bool | None = None
+    is_admin: bool | None = None
+    require_2fa: bool | None = None
+    company_id: int | None = None
+    roles: list[UserRole] | None = None
 
 
 class UserResponse(BaseModel):
@@ -39,20 +39,20 @@ class UserResponse(BaseModel):
     first_name: str
     last_name: str
     full_name: str
-    phone: Optional[str]
-    company_id: Optional[int]
-    company_name: Optional[str]
+    phone: str | None
+    company_id: int | None
+    company_name: str | None
     roles: list[str]
     is_active: bool
     is_admin: bool
     require_2fa: bool
-    last_login: Optional[datetime]
+    last_login: datetime | None
     created_at: datetime
     updated_at: datetime
 
 
 class UserListResponse(BaseModel):
-    users: List["UserInfo"]
+    users: list["UserInfo"]
     total: int
     page: int
     per_page: int
@@ -61,7 +61,7 @@ class UserListResponse(BaseModel):
 
 class BulkUserImportRequest(BaseModel):
     csv_data: str  # Base64 encoded CSV data
-    company_id: Optional[int] = None  # Required for non-super-admin users
+    company_id: int | None = None  # Required for non-super-admin users
 
 
 class BulkUserImportResponse(BaseModel):
@@ -75,13 +75,13 @@ class BulkUserImportResponse(BaseModel):
 class UserFilters(BaseModel):
     page: int = 1
     size: int = 20
-    search: Optional[str] = None
-    company_id: Optional[int] = None
-    is_active: Optional[bool] = None
-    is_admin: Optional[bool] = None
-    is_suspended: Optional[bool] = None
-    require_2fa: Optional[bool] = None
-    role: Optional[UserRole] = None
+    search: str | None = None
+    company_id: int | None = None
+    is_active: bool | None = None
+    is_admin: bool | None = None
+    is_suspended: bool | None = None
+    require_2fa: bool | None = None
+    role: UserRole | None = None
 
 
 class UserInfo(BaseModel):
@@ -92,21 +92,21 @@ class UserInfo(BaseModel):
     first_name: str
     last_name: str
     full_name: str
-    phone: Optional[str] = None
+    phone: str | None = None
     is_active: bool
     is_admin: bool
     require_2fa: bool
-    last_login: Optional[datetime] = None
+    last_login: datetime | None = None
     created_at: datetime
     updated_at: datetime
-    company_id: Optional[int] = None
-    company_name: Optional[str] = None
-    roles: List[str] = []
+    company_id: int | None = None
+    company_name: str | None = None
+    roles: list[str] = []
     is_deleted: bool = False
-    deleted_at: Optional[datetime] = None
+    deleted_at: datetime | None = None
     is_suspended: bool = False
-    suspended_at: Optional[datetime] = None
-    suspended_by: Optional[int] = None
+    suspended_at: datetime | None = None
+    suspended_by: int | None = None
 
 
 class PasswordResetRequest(BaseModel):
@@ -119,21 +119,21 @@ class ResendActivationRequest(BaseModel):
 
 
 class BulkUserOperation(BaseModel):
-    user_ids: List[int]
+    user_ids: list[int]
     send_email: bool = True
 
 
 class UserHoldRequest(BaseModel):
     reason: str
-    duration_hours: Optional[int] = 24  # Default 24 hours
+    duration_hours: int | None = 24  # Default 24 hours
 
 
 class UserSearchRequest(BaseModel):
-    email: Optional[str] = None
-    name: Optional[str] = None
-    company_id: Optional[int] = None
-    role: Optional[UserRole] = None
-    is_active: Optional[bool] = None
+    email: str | None = None
+    name: str | None = None
+    company_id: int | None = None
+    role: UserRole | None = None
+    is_active: bool | None = None
     page: int = 1
     per_page: int = 20
 

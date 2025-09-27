@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from typing import Optional
 
 from sqlalchemy import (
     Boolean,
@@ -59,25 +58,25 @@ class Meeting(Base):
     __tablename__ = "meetings"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    interview_id: Mapped[Optional[int]] = mapped_column(
+    interview_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("interviews.id", ondelete="SET NULL"), nullable=True
     )
 
     # Meeting metadata
     title: Mapped[str] = mapped_column(String(255), nullable=False)
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
     meeting_type: Mapped[str] = mapped_column(String(20), nullable=False)  # MeetingType
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="scheduled")
 
     # Scheduling
     scheduled_start: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     scheduled_end: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    actual_start: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-    actual_end: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    actual_start: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    actual_end: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # WebRTC and access
     room_id: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
-    access_code: Mapped[Optional[str]] = mapped_column(
+    access_code: Mapped[str | None] = mapped_column(
         String(50), nullable=True
     )  # Optional PIN
 
@@ -141,7 +140,7 @@ class Meeting(Base):
     )
 
     @property
-    def duration_minutes(self) -> Optional[int]:
+    def duration_minutes(self) -> int | None:
         """Calculate actual meeting duration in minutes"""
         if self.actual_start and self.actual_end:
             return int((self.actual_end - self.actual_start).total_seconds() / 60)
@@ -178,7 +177,7 @@ class MeetingRecording(Base):
     filename: Mapped[str] = mapped_column(String(255), nullable=False)
     original_filename: Mapped[str] = mapped_column(String(255), nullable=False)
     file_size: Mapped[int] = mapped_column(Integer, nullable=False)  # bytes
-    duration_seconds: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    duration_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     # Storage details
     storage_path: Mapped[str] = mapped_column(String(500), nullable=False)
@@ -188,17 +187,17 @@ class MeetingRecording(Base):
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default="processing"
     )
-    processing_started_at: Mapped[Optional[datetime]] = mapped_column(
+    processing_started_at: Mapped[datetime | None] = mapped_column(
         DateTime, nullable=True
     )
-    processing_completed_at: Mapped[Optional[datetime]] = mapped_column(
+    processing_completed_at: Mapped[datetime | None] = mapped_column(
         DateTime, nullable=True
     )
-    processing_error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    processing_error: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Access control
     is_public: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    access_expires_at: Mapped[Optional[datetime]] = mapped_column(
+    access_expires_at: Mapped[datetime | None] = mapped_column(
         DateTime, nullable=True
     )
 
@@ -232,29 +231,29 @@ class MeetingTranscript(Base):
     meeting_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("meetings.id", ondelete="CASCADE"), nullable=False
     )
-    recording_id: Mapped[Optional[int]] = mapped_column(
+    recording_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("meeting_recordings.id", ondelete="SET NULL"), nullable=True
     )
 
     # Transcript content
     transcript_text: Mapped[str] = mapped_column(LONGTEXT, nullable=False)
-    transcript_json: Mapped[Optional[str]] = mapped_column(
+    transcript_json: Mapped[str | None] = mapped_column(
         LONGTEXT, nullable=True
     )  # Structured data with timestamps, speakers
     language: Mapped[str] = mapped_column(String(10), nullable=False, default="ja")
-    confidence_score: Mapped[Optional[float]] = mapped_column(nullable=True)
+    confidence_score: Mapped[float | None] = mapped_column(nullable=True)
 
     # Processing details
     stt_service: Mapped[str] = mapped_column(
         String(50), nullable=False
     )  # Which STT service used
-    processing_duration_seconds: Mapped[Optional[int]] = mapped_column(
+    processing_duration_seconds: Mapped[int | None] = mapped_column(
         Integer, nullable=True
     )
-    word_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    word_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     # Speaker identification
-    speaker_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    speaker_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     speakers_identified: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False
     )
@@ -263,7 +262,7 @@ class MeetingTranscript(Base):
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default="processing"
     )
-    processing_error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    processing_error: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Metadata
     created_at: Mapped[datetime] = mapped_column(
@@ -292,7 +291,7 @@ class MeetingSummary(Base):
     meeting_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("meetings.id", ondelete="CASCADE"), nullable=False
     )
-    transcript_id: Mapped[Optional[int]] = mapped_column(
+    transcript_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey("meeting_transcripts.id", ondelete="SET NULL"),
         nullable=True,
@@ -300,13 +299,13 @@ class MeetingSummary(Base):
 
     # Summary content
     summary_text: Mapped[str] = mapped_column(Text, nullable=False)
-    key_points: Mapped[Optional[str]] = mapped_column(
+    key_points: Mapped[str | None] = mapped_column(
         Text, nullable=True
     )  # JSON array of key points
-    action_items: Mapped[Optional[str]] = mapped_column(
+    action_items: Mapped[str | None] = mapped_column(
         Text, nullable=True
     )  # JSON array of action items
-    sentiment_analysis: Mapped[Optional[str]] = mapped_column(
+    sentiment_analysis: Mapped[str | None] = mapped_column(
         Text, nullable=True
     )  # JSON sentiment data
 
@@ -317,14 +316,14 @@ class MeetingSummary(Base):
     prompt_version: Mapped[str] = mapped_column(
         String(20), nullable=False
     )  # For tracking prompt changes
-    generation_duration_seconds: Mapped[Optional[int]] = mapped_column(
+    generation_duration_seconds: Mapped[int | None] = mapped_column(
         Integer, nullable=True
     )
 
     # Quality metrics
-    confidence_score: Mapped[Optional[float]] = mapped_column(nullable=True)
-    summary_length_words: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    compression_ratio: Mapped[Optional[float]] = mapped_column(
+    confidence_score: Mapped[float | None] = mapped_column(nullable=True)
+    summary_length_words: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    compression_ratio: Mapped[float | None] = mapped_column(
         nullable=True
     )  # summary_length / transcript_length
 
@@ -332,16 +331,16 @@ class MeetingSummary(Base):
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default="processing"
     )
-    processing_error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    processing_error: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Access control
     is_final: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=True
     )  # vs draft
-    reviewed_by: Mapped[Optional[int]] = mapped_column(
+    reviewed_by: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id"), nullable=True
     )
-    reviewed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # Metadata
     created_at: Mapped[datetime] = mapped_column(

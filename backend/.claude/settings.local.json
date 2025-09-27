@@ -10,7 +10,11 @@
       "Bash(PYTHONPATH=. python -m pytest app/tests/test_todo_attachment_endpoints.py::TestTodoAttachmentEndpoints::test_upload_file_size_limit -v --tb=short)",
       "Bash(PYTHONPATH=. python -m pytest app/tests/test_todo_attachment_endpoints.py::TestTodoAttachmentEndpoints::test_get_todo_attachments -v --tb=short)",
       "Bash(PYTHONPATH=. python -m pytest app/tests/test_todo_attachment_endpoints.py -v --tb=short)",
-      "Bash(ruff check:*)"
+      "Bash(ruff check:*)",
+      "Bash(npm run build:ci:*)",
+      "Bash(PYTHONPATH=. python -m pytest app/tests/ -v --tb=short -x)",
+      "Bash(PYTHONPATH=. python:*)",
+      "Bash(npm run lint)"
     ],
     "deny": [],
     "ask": []

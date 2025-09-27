@@ -37,7 +37,7 @@ class PublicService:
         featured_companies = (
             self.db.query(Company)
             .join(CompanyProfile)
-            .filter(Company.is_active == "1", CompanyProfile.is_public == True)
+            .filter(Company.is_active == "1", CompanyProfile.is_public is True)
             .limit(6)
             .all()
         )
@@ -146,7 +146,7 @@ class PublicService:
 
         # Featured only
         if params.featured_only:
-            query = query.filter(Position.is_featured == True)
+            query = query.filter(Position.is_featured is True)
 
         # Sorting
         if params.sort_by == "published_date":
@@ -208,7 +208,7 @@ class PublicService:
         query = (
             self.db.query(Company)
             .join(CompanyProfile)
-            .filter(Company.is_active == "1", CompanyProfile.is_public == True)
+            .filter(Company.is_active == "1", CompanyProfile.is_public is True)
         )
 
         # Text search
@@ -272,7 +272,7 @@ class PublicService:
                     Company.domain.like(f"{slug}.%"),  # Match domain prefix
                 ),
                 Company.is_active == "1",
-                CompanyProfile.is_public == True,
+                CompanyProfile.is_public is True,
             )
             .first()
         )

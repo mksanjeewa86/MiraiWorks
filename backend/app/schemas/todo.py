@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -29,8 +29,8 @@ class TodoBase(BaseModel):
             except ValueError as exc:
                 raise ValueError("Invalid datetime format for due_date") from exc
         if value.tzinfo is None:
-            return value.replace(tzinfo=timezone.utc)
-        return value.astimezone(timezone.utc)
+            return value.replace(tzinfo=UTC)
+        return value.astimezone(UTC)
 
     @field_validator("status")
     @classmethod
@@ -86,8 +86,8 @@ class TodoUpdate(BaseModel):
             except ValueError as exc:
                 raise ValueError("Invalid datetime format for due_date") from exc
         if value.tzinfo is None:
-            return value.replace(tzinfo=timezone.utc)
-        return value.astimezone(timezone.utc)
+            return value.replace(tzinfo=UTC)
+        return value.astimezone(UTC)
 
     @field_validator("title")
     @classmethod
@@ -174,7 +174,7 @@ class TodoAssignmentUpdate(BaseModel):
 class AssignableUser(BaseModel):
     """User that can be assigned to todos."""
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: int
     email: str
     first_name: str
@@ -189,7 +189,7 @@ class AssignableUser(BaseModel):
 class TodoViewer(BaseModel):
     """Todo viewer information."""
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: int
     user_id: int
     todo_id: int
@@ -211,7 +211,7 @@ class TodoWithAssignedUser(TodoRead):
 class TodoExtensionValidation(BaseModel):
     """Validation response for todo extension requests."""
     model_config = ConfigDict(from_attributes=True)
-    
+
     can_request_extension: bool
     max_allowed_due_date: datetime | None = None
     days_extension_allowed: int = 3

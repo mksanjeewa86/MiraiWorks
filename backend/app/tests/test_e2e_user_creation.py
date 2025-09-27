@@ -106,10 +106,7 @@ async def test_company_admin_user_creation_e2e_flow(
     }
 
     # Simulate auto-setting company and role (from useEffect)
-    if test_company.type == "employer":
-        auto_role = "employer"
-    else:
-        auto_role = "recruiter"
+    auto_role = "employer" if test_company.type == "employer" else "recruiter"
 
     frontend_form_data["company_id"] = str(test_company.id)
     frontend_form_data["role"] = auto_role
@@ -158,7 +155,7 @@ async def test_company_admin_user_creation_e2e_flow(
     )
 
     assert create_response.status_code == 201
-    created_user = create_response.json()
+    create_response.json()
 
     # Step 7: Verify in database
 

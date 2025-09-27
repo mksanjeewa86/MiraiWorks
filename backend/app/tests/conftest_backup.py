@@ -29,11 +29,13 @@ os.environ["ENVIRONMENT"] = "test"
 
 # Test database URL for Docker MySQL (port 3307 to avoid conflicts)
 # Support both local Docker and GitHub Actions
+import contextlib
 import os
 import subprocess
 
 # Test database configuration - MySQL only with Docker
 import time
+from datetime import UTC
 
 from app.database import Base, get_db
 from app.main import app
@@ -104,14 +106,12 @@ def start_test_database():
         pass
 
     # Clean up any existing container
-    try:
+    with contextlib.suppress(subprocess.CalledProcessError):
         subprocess.run(
             ["docker-compose", "-f", "docker-compose.test.yml", "down", "-v"],
             cwd=str(BACKEND_DIR.parent),
             capture_output=True
         )
-    except subprocess.CalledProcessError:
-        pass
 
     # Start the test database
     try:
@@ -611,7 +611,7 @@ async def super_admin_auth_headers(client, test_super_admin):
 
         return {"Authorization": f"Bearer {token_data['access_token']}"}
 
-    except Exception as e:
+    except Exception:
         # Return a dummy header to prevent further crashes
         return {"Authorization": "Bearer dummy_token_for_testing"}
 
@@ -793,7 +793,7 @@ async def get_auth_headers_for_user(client, user):
 @pytest_asyncio.fixture
 async def test_video_call(db_session, test_users):
     """Create a test video call."""
-    from datetime import datetime, timedelta, timezone
+    from datetime import datetime, timedelta
 
     from sqlalchemy import select
     from sqlalchemy.orm import selectinload
@@ -807,7 +807,7 @@ async def test_video_call(db_session, test_users):
 
     call_data = VideoCallCreate(
         candidate_id=candidate.id,
-        scheduled_at=datetime.now(timezone.utc) + timedelta(hours=1),
+        scheduled_at=datetime.now(UTC) + timedelta(hours=1),
         enable_transcription=True,
         transcription_language="ja"
     )

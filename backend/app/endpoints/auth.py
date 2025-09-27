@@ -317,7 +317,7 @@ async def verify_2fa(
             selectinload(User.company),
             selectinload(User.user_roles).selectinload(UserRoleModel.role),
         )
-        .where(User.id == verify_data.user_id, User.is_active == True)
+        .where(User.id == verify_data.user_id, User.is_active is True)
     )
 
     user = result.scalar_one_or_none()
@@ -413,7 +413,7 @@ async def request_password_reset(
     result = await db.execute(
         select(User)
         .options(selectinload(User.company))
-        .where(User.email == reset_data.email, User.is_active == True)
+        .where(User.email == reset_data.email, User.is_active is True)
     )
 
     user = result.scalar_one_or_none()
@@ -445,8 +445,8 @@ async def request_password_reset(
             .join(UserRoleModel.role)
             .where(
                 User.company_id == user.company_id,
-                User.is_active == True,
-                User.is_admin == True,
+                User.is_active is True,
+                User.is_admin is True,
             )
         )
         company_admins = admin_result.scalars().all()
@@ -456,7 +456,7 @@ async def request_password_reset(
             select(User)
             .join(User.user_roles)
             .join(UserRoleModel.role)
-            .where(User.is_active == True, User.is_admin == True)
+            .where(User.is_active is True, User.is_admin is True)
         )
         company_admins = admin_result.scalars().all()
 
@@ -501,7 +501,7 @@ async def approve_password_reset(
         .options(selectinload(PasswordResetRequest.user))
         .where(
             PasswordResetRequest.id == approve_data.request_id,
-            PasswordResetRequest.is_used == False,
+            PasswordResetRequest.is_used is False,
             PasswordResetRequest.expires_at > datetime.utcnow(),
         )
     )
@@ -618,7 +618,7 @@ async def get_password_reset_requests(
         select(PasswordResetRequest)
         .options(selectinload(PasswordResetRequest.user))
         .where(
-            PasswordResetRequest.is_used == False,
+            PasswordResetRequest.is_used is False,
             PasswordResetRequest.expires_at > datetime.utcnow(),
         )
     )

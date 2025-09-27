@@ -1,7 +1,6 @@
 """Schemas for MBTI personality test."""
 
 from datetime import datetime
-from typing import Dict, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -10,7 +9,7 @@ from app.utils.constants import MBTITestStatus, MBTIType
 
 class MBTIQuestionRead(BaseModel):
     """Schema for reading MBTI test questions."""
-    
+
     id: int
     question_number: int
     dimension: str
@@ -26,22 +25,22 @@ class MBTIQuestionRead(BaseModel):
 
 class MBTIAnswerSubmit(BaseModel):
     """Schema for submitting a single MBTI answer."""
-    
+
     question_id: int
     answer: str = Field(..., pattern="^[AB]$")  # Must be "A" or "B"
 
 
 class MBTITestStart(BaseModel):
     """Schema for starting an MBTI test."""
-    
+
     language: str = Field(default="ja", pattern="^(en|ja)$")
 
 
 class MBTITestSubmit(BaseModel):
     """Schema for submitting MBTI test answers."""
-    
-    answers: Dict[int, str] = Field(..., description="Question ID to answer (A/B) mapping")
-    
+
+    answers: dict[int, str] = Field(..., description="Question ID to answer (A/B) mapping")
+
     @field_validator('answers')
     @classmethod
     def validate_answers(cls, v):
@@ -54,43 +53,43 @@ class MBTITestSubmit(BaseModel):
 
 class MBTITestResult(BaseModel):
     """Schema for MBTI test results."""
-    
+
     id: int
     user_id: int
     status: MBTITestStatus
-    mbti_type: Optional[str] = None
-    
+    mbti_type: str | None = None
+
     # Dimension scores (0-100)
-    extraversion_introversion_score: Optional[int] = None
-    sensing_intuition_score: Optional[int] = None
-    thinking_feeling_score: Optional[int] = None
-    judging_perceiving_score: Optional[int] = None
-    
+    extraversion_introversion_score: int | None = None
+    sensing_intuition_score: int | None = None
+    thinking_feeling_score: int | None = None
+    judging_perceiving_score: int | None = None
+
     # Timing
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+
     # Audit
     created_at: datetime
     updated_at: datetime
-    
+
     # Computed properties
     is_completed: bool
     completion_percentage: int
-    dimension_preferences: Dict[str, str] = Field(default_factory=dict)
-    strength_scores: Dict[str, int] = Field(default_factory=dict)
+    dimension_preferences: dict[str, str] = Field(default_factory=dict)
+    strength_scores: dict[str, int] = Field(default_factory=dict)
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class MBTITestSummary(BaseModel):
     """Schema for MBTI test summary (for candidate profile)."""
-    
+
     mbti_type: str
     completed_at: datetime
-    dimension_preferences: Dict[str, str]
-    strength_scores: Dict[str, int]
-    
+    dimension_preferences: dict[str, str]
+    strength_scores: dict[str, int]
+
     # MBTI type information
     type_name_en: str
     type_name_ja: str
@@ -103,19 +102,19 @@ class MBTITestSummary(BaseModel):
 
 class MBTITestProgress(BaseModel):
     """Schema for MBTI test progress."""
-    
+
     status: MBTITestStatus
     completion_percentage: int
-    current_question: Optional[int] = None
+    current_question: int | None = None
     total_questions: int = 60
-    started_at: Optional[datetime] = None
+    started_at: datetime | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class MBTITypeInfo(BaseModel):
     """Schema for MBTI type information."""
-    
+
     type_code: MBTIType
     name_en: str
     name_ja: str
@@ -162,7 +161,7 @@ MBTI_TYPE_INFO = {
     ),
     MBTIType.ENTJ: MBTITypeInfo(
         type_code=MBTIType.ENTJ,
-        name_en="The Commander", 
+        name_en="The Commander",
         name_ja="指揮官",
         description_en="Bold, imaginative and strong-willed leaders, always finding a way – or making one.",
         description_ja="大胆で想像力豊かで意志の強いリーダーで、常に道を見つけるか、作り出します。",
@@ -177,7 +176,7 @@ MBTI_TYPE_INFO = {
     MBTIType.ENTP: MBTITypeInfo(
         type_code=MBTIType.ENTP,
         name_en="The Debater",
-        name_ja="討論者", 
+        name_ja="討論者",
         description_en="Smart and curious thinkers who cannot resist an intellectual challenge.",
         description_ja="知的な挑戦に抗うことができない、スマートで好奇心旺盛な思考者です。",
         temperament="NT",

@@ -1,15 +1,15 @@
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
 
 class DashboardStats(BaseModel):
-    total_users: Optional[int] = 0
-    total_companies: Optional[int] = 0
-    total_interviews: Optional[int] = 0
-    total_resumes: Optional[int] = 0
-    active_conversations: Optional[int] = 0
+    total_users: int | None = 0
+    total_companies: int | None = 0
+    total_interviews: int | None = 0
+    total_resumes: int | None = 0
+    active_conversations: int | None = 0
 
 
 class ActivityItem(BaseModel):
@@ -18,7 +18,7 @@ class ActivityItem(BaseModel):
     title: str
     description: str
     timestamp: datetime
-    user_id: Optional[int] = None
-    metadata: Optional[dict[str, Any]] = None
+    user_id: int | None = None
+    metadata: dict[str, Any] | None = None
 
     model_config = ConfigDict(from_attributes=True)

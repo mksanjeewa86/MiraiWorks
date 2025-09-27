@@ -13,7 +13,7 @@ async def email_preview_dashboard():
     """Email preview dashboard with links to all templates."""
     templates = email_preview_service.get_available_templates()
 
-    html = f"""
+    html = """
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -21,61 +21,61 @@ async def email_preview_dashboard():
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>MiraiWorks Email Preview</title>
         <style>
-            body {{
+            body {
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                 margin: 0;
                 padding: 20px;
                 background: #f5f5f5;
-            }}
-            .container {{
+            }
+            .container {
                 max-width: 1200px;
                 margin: 0 auto;
                 background: white;
                 border-radius: 8px;
                 box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
                 overflow: hidden;
-            }}
-            .header {{
+            }
+            .header {
                 background: #007bff;
                 color: white;
                 padding: 20px;
                 text-align: center;
-            }}
-            .content {{
+            }
+            .content {
                 padding: 20px;
-            }}
-            .template-grid {{
+            }
+            .template-grid {
                 display: grid;
                 grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
                 gap: 20px;
                 margin-top: 20px;
-            }}
-            .template-card {{
+            }
+            .template-card {
                 border: 1px solid #e0e0e0;
                 border-radius: 8px;
                 padding: 20px;
                 background: #fafafa;
                 transition: transform 0.2s ease;
-            }}
-            .template-card:hover {{
+            }
+            .template-card:hover {
                 transform: translateY(-2px);
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            }}
-            .template-card h3 {{
+            }
+            .template-card h3 {
                 margin: 0 0 10px 0;
                 color: #333;
-            }}
-            .template-card p {{
+            }
+            .template-card p {
                 color: #666;
                 margin: 0 0 15px 0;
                 font-size: 14px;
-            }}
-            .btn-group {{
+            }
+            .btn-group {
                 display: flex;
                 gap: 10px;
                 flex-wrap: wrap;
-            }}
-            .btn {{
+            }
+            .btn {
                 padding: 8px 16px;
                 border: none;
                 border-radius: 4px;
@@ -83,29 +83,29 @@ async def email_preview_dashboard():
                 font-size: 14px;
                 cursor: pointer;
                 transition: all 0.2s ease;
-            }}
-            .btn-primary {{
+            }
+            .btn-primary {
                 background: #007bff;
                 color: white;
-            }}
-            .btn-primary:hover {{
+            }
+            .btn-primary:hover {
                 background: #0056b3;
-            }}
-            .btn-secondary {{
+            }
+            .btn-secondary {
                 background: #6c757d;
                 color: white;
-            }}
-            .btn-secondary:hover {{
+            }
+            .btn-secondary:hover {
                 background: #545b62;
-            }}
-            .btn-success {{
+            }
+            .btn-success {
                 background: #28a745;
                 color: white;
-            }}
-            .btn-success:hover {{
+            }
+            .btn-success:hover {
                 background: #1e7e34;
-            }}
-            .category {{
+            }
+            .category {
                 font-size: 12px;
                 background: #e9ecef;
                 color: #495057;
@@ -113,7 +113,7 @@ async def email_preview_dashboard():
                 border-radius: 12px;
                 margin-bottom: 10px;
                 display: inline-block;
-            }}
+            }
         </style>
     </head>
     <body>
@@ -258,7 +258,7 @@ async def preview_all_templates():
     try:
         previews = email_preview_service.preview_all_emails()
 
-        html = f"""
+        html = """
         <!DOCTYPE html>
         <html lang="en">
         <head>
@@ -266,39 +266,39 @@ async def preview_all_templates():
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>All Email Previews - MiraiWorks</title>
             <style>
-                body {{
+                body {
                     margin: 0;
                     padding: 20px;
                     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
                     background: #f5f5f5;
-                }}
-                .header {{
+                }
+                .header {
                     text-align: center;
                     margin-bottom: 30px;
-                }}
-                .template-section {{
+                }
+                .template-section {
                     margin-bottom: 40px;
-                }}
-                .template-header {{
+                }
+                .template-header {
                     background: #007bff;
                     color: white;
                     padding: 15px 20px;
                     border-radius: 8px 8px 0 0;
                     margin: 0;
-                }}
-                .template-preview {{
+                }
+                .template-preview {
                     background: white;
                     border: 1px solid #dee2e6;
                     border-top: none;
                     border-radius: 0 0 8px 8px;
                     overflow: hidden;
-                }}
-                .error {{
+                }
+                .error {
                     background: #f8d7da;
                     color: #721c24;
                     padding: 20px;
                     text-align: center;
-                }}
+                }
             </style>
         </head>
         <body>

@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Dict, List, Optional
 
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,7 +16,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
 
     async def get_with_relationships(
         self, db: AsyncSession, interview_id: int
-    ) -> Optional[Interview]:
+    ) -> Interview | None:
         """Get interview with all relationships loaded."""
         # First get the interview
         result = await db.execute(
@@ -72,12 +71,12 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
         self,
         db: AsyncSession,
         user_id: int,
-        status_filter: Optional[InterviewStatus] = None,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
+        status_filter: InterviewStatus | None = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
         limit: int = 50,
         offset: int = 0,
-    ) -> List[Interview]:
+    ) -> list[Interview]:
         """Get interviews for a specific user."""
         query = (
             select(Interview)
@@ -113,9 +112,9 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
         self,
         db: AsyncSession,
         user_id: int,
-        status_filter: Optional[InterviewStatus] = None,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
+        status_filter: InterviewStatus | None = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
     ) -> int:
         """Get count of interviews for a specific user."""
         query = select(func.count(Interview.id)).where(
@@ -138,7 +137,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
 
     async def get_upcoming_interviews(
         self, db: AsyncSession, user_id: int, limit: int = 10
-    ) -> List[Interview]:
+    ) -> list[Interview]:
         """Get upcoming interviews for a user."""
         now = datetime.utcnow()
         result = await db.execute(
@@ -223,7 +222,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
 
     async def get_detailed_interview_stats(
         self, db: AsyncSession, user_id: int
-    ) -> Dict:
+    ) -> dict:
         """Get detailed interview statistics for a user."""
         # Base condition for user's interviews
         base_condition = or_(
@@ -246,7 +245,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
             .where(base_condition)
             .group_by(Interview.status)
         )
-        by_status = {status: count for status, count in status_result.all()}
+        by_status = dict(status_result.all())
 
         # By type
         type_result = await db.execute(
@@ -254,7 +253,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
             .where(base_condition)
             .group_by(Interview.interview_type)
         )
-        by_type = {itype: count for itype, count in type_result.all()}
+        by_type = dict(type_result.all())
 
         # Upcoming interviews
         upcoming_result = await db.execute(
@@ -292,9 +291,9 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
         self,
         db: AsyncSession,
         user_id: int,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
-    ) -> List[Interview]:
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+    ) -> list[Interview]:
         """Get interview events in calendar format."""
         query = (
             select(Interview)
@@ -345,7 +344,7 @@ class CRUDInterviewProposal(CRUDBase[InterviewProposal, dict, dict]):
 
     async def get_by_interview(
         self, db: AsyncSession, interview_id: int
-    ) -> List[InterviewProposal]:
+    ) -> list[InterviewProposal]:
         """Get proposals for a specific interview."""
         result = await db.execute(
             select(InterviewProposal)
@@ -357,7 +356,7 @@ class CRUDInterviewProposal(CRUDBase[InterviewProposal, dict, dict]):
 
     async def get_pending_proposals(
         self, db: AsyncSession, user_id: int
-    ) -> List[InterviewProposal]:
+    ) -> list[InterviewProposal]:
         """Get pending proposals for a user."""
         result = await db.execute(
             select(InterviewProposal)
@@ -384,14 +383,14 @@ class CRUDInterviewProposal(CRUDBase[InterviewProposal, dict, dict]):
 
     async def get_calendar_accounts_by_user(
         self, db: AsyncSession, user_id: int
-    ) -> List:
+    ) -> list:
         """Get active calendar accounts for a user."""
         from app.models.calendar_integration import ExternalCalendarAccount
 
         result = await db.execute(
             select(ExternalCalendarAccount).where(
                 ExternalCalendarAccount.user_id == user_id,
-                ExternalCalendarAccount.is_active == True,
+                ExternalCalendarAccount.is_active is True,
             )
         )
         return result.scalars().all()

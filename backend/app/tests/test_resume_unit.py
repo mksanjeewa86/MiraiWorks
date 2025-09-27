@@ -73,7 +73,7 @@ class TestResumeServiceUnit:
             mock_resume_instance.title = sample_resume_create_data.title
             MockResume.return_value = mock_resume_instance
 
-            result = await resume_service.create_resume(mock_db, sample_resume_create_data, 1)
+            await resume_service.create_resume(mock_db, sample_resume_create_data, 1)
 
             # Verify database operations
             mock_db.add.assert_called_once()
@@ -112,7 +112,7 @@ class TestResumeServiceUnit:
                     professional_summary="Updated summary"
                 )
 
-                result = await resume_service.update_resume(mock_db, 1, 1, update_data)
+                await resume_service.update_resume(mock_db, 1, 1, update_data)
 
                 mock_db.commit.assert_called_once()
                 mock_db.refresh.assert_called_once_with(sample_resume)
@@ -235,7 +235,7 @@ class TestResumeServiceUnit:
                     description="Development work"
                 )
 
-                result = await resume_service.add_work_experience(mock_db, 1, 1, exp_data)
+                await resume_service.add_work_experience(mock_db, 1, 1, exp_data)
 
                 mock_db.add.assert_called_once()
                 mock_db.commit.assert_called_once()
@@ -398,7 +398,7 @@ class TestResumeServiceUnit:
                 mock_duplicate.id = 2
                 MockResume.return_value = mock_duplicate
 
-                result = await resume_service.duplicate_resume(mock_db, 1, 1)
+                await resume_service.duplicate_resume(mock_db, 1, 1)
 
                 mock_db.add.assert_called()
                 mock_db.flush.assert_called_once()
