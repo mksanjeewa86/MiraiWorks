@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mv:*)",
+      "Bash(find:*)",
+      "Bash(rm:*)",
+      "Read(//c/Users/mksan/OneDrive/ドキュメント/projects/MiraiWorks/**)",
+      "Bash(python:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

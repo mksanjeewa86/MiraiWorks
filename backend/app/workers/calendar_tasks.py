@@ -7,9 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.config import settings
-from app.models.calendar_integration import CalendarIntegration
+from app.models.calendar_integration import ExternalCalendarAccount
 from app.models.interview import Interview
-from app.services.calendar_service import GoogleCalendarService
+from app.services.google_calendar_service import GoogleCalendarService
 from app.services.interview_service import InterviewService
 from app.services.microsoft_calendar_service import MicrosoftCalendarService
 
