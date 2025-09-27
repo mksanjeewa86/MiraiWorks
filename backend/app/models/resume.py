@@ -40,13 +40,13 @@ class Resume(BaseModel):
     objective = Column(Text)
 
     # Status and visibility
-    status = Column(SQLEnum(ResumeStatus), default=ResumeStatus.DRAFT)
-    visibility = Column(SQLEnum(ResumeVisibility), default=ResumeVisibility.PRIVATE)
+    status = Column(SQLEnum(ResumeStatus, values_callable=lambda x: [e.value for e in x]), default=ResumeStatus.DRAFT.value)
+    visibility = Column(SQLEnum(ResumeVisibility, values_callable=lambda x: [e.value for e in x]), default=ResumeVisibility.PRIVATE.value)
 
     # Template and styling
     template_id = Column(String(50), default="modern")
-    resume_format = Column(SQLEnum(ResumeFormat), default=ResumeFormat.INTERNATIONAL)
-    resume_language = Column(SQLEnum(ResumeLanguage), default=ResumeLanguage.ENGLISH)
+    resume_format = Column(SQLEnum(ResumeFormat, values_callable=lambda x: [e.value for e in x]), default=ResumeFormat.INTERNATIONAL.value)
+    resume_language = Column(SQLEnum(ResumeLanguage, values_callable=lambda x: [e.value for e in x]), default=ResumeLanguage.ENGLISH.value)
     theme_color = Column(String(7), default="#2563eb")  # Hex color
     font_family = Column(String(50), default="Inter")
     custom_css = Column(Text)

@@ -37,9 +37,9 @@ class ProposalStatus(str, Enum):
 
 
 class ResumeStatus(str, Enum):
-    DRAFT = "DRAFT"
-    PUBLISHED = "PUBLISHED"
-    ARCHIVED = "ARCHIVED"
+    DRAFT = "draft"
+    PUBLISHED = "published"
+    ARCHIVED = "archived"
 
 
 class ResumeVisibility(str, Enum):

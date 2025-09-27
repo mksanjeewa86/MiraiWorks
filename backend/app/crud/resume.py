@@ -69,22 +69,35 @@ class CRUDResume(CRUDBase[Resume, ResumeCreate, ResumeUpdate]):
         return db_obj
 
     async def get_by_user(
-        self, 
-        db: AsyncSession, 
-        *, 
-        user_id: int, 
-        skip: int = 0, 
+        self,
+        db: AsyncSession,
+        *,
+        user_id: int,
+        skip: int = 0,
         limit: int = 10,
         status: Optional[ResumeStatus] = None
     ) -> list[Resume]:
         """Get resumes by user ID with optional status filter"""
-        query = select(Resume).where(Resume.user_id == user_id)
-        
+        query = (
+            select(Resume)
+            .options(
+                selectinload(Resume.sections),
+                selectinload(Resume.experiences),
+                selectinload(Resume.educations),
+                selectinload(Resume.skills),
+                selectinload(Resume.projects),
+                selectinload(Resume.certifications),
+                selectinload(Resume.languages),
+                selectinload(Resume.references),
+            )
+            .where(Resume.user_id == user_id)
+        )
+
         if status:
             query = query.where(Resume.status == status)
-            
+
         query = query.order_by(desc(Resume.updated_at)).offset(skip).limit(limit)
-        
+
         result = await db.execute(query)
         return result.scalars().all()
 
