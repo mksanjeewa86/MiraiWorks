@@ -544,3 +544,69 @@ async def get_auth_headers_for_user(client, user):
     assert response.status_code == 200, f"Login failed for user {user.email}: {response.text}"
     token_data = response.json()
     return {"Authorization": f"Bearer {token_data['access_token']}"}
+
+
+@pytest.fixture
+def test_users(test_user, test_admin_user, test_employer_user, test_candidate_only_user):
+    """Fixture providing dictionary of various test users for attachment tests."""
+    return {
+        'user': test_user,
+        'admin': test_admin_user,
+        'recruiter': test_employer_user,  # Using employer as recruiter for consistency
+        'candidate': test_candidate_only_user,
+        'employer': test_employer_user,
+    }
+
+
+@pytest_asyncio.fixture
+async def test_todo_with_attachments(db_session, test_user):
+    """Fixture providing a todo with test attachments."""
+    from app.crud.todo import todo as todo_crud
+    from app.crud.todo_attachment import todo_attachment as attachment_crud
+    from app.schemas.todo import TodoCreate
+    from app.schemas.todo_attachment import TodoAttachmentCreate
+    import tempfile
+    import os
+
+    # Create a test todo
+    todo_data = TodoCreate(
+        title="Test Todo with Attachments",
+        description="Todo for attachment testing"
+    )
+    todo = await todo_crud.create_with_owner(db_session, obj_in=todo_data, owner_id=test_user.id)
+
+    # Create test attachments
+    attachments = []
+
+    # Create a temporary file for testing
+    with tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.txt') as temp_file:
+        test_content = b"This is test attachment content for testing purposes."
+        temp_file.write(test_content)
+        temp_file_path = temp_file.name
+
+    try:
+        # Create attachment record in database
+        attachment_data = TodoAttachmentCreate(
+            todo_id=todo.id,
+            original_filename="test_attachment.txt",
+            stored_filename="test_attachment_stored.txt",
+            file_path=temp_file_path,
+            file_size=len(test_content),
+            mime_type="text/plain",
+            file_extension=".txt",
+            uploaded_by=test_user.id
+        )
+        attachment = await attachment_crud.create(db_session, obj_in=attachment_data)
+        attachments.append(attachment)
+
+        return {
+            'todo': todo,
+            'user': test_user,
+            'attachments': attachments,
+            'temp_files': [temp_file_path]  # For cleanup
+        }
+    except Exception:
+        # Clean up temp file if fixture creation fails
+        if os.path.exists(temp_file_path):
+            os.unlink(temp_file_path)
+        raise

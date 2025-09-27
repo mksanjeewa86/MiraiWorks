@@ -5,7 +5,11 @@
       "Bash(find:*)",
       "Bash(rm:*)",
       "Read(//c/Users/mksan/OneDrive/ドキュメント/projects/MiraiWorks/**)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(PYTHONPATH=. python -m pytest app/tests/test_todo_attachment_endpoints.py::TestTodoAttachmentEndpoints::test_upload_file_success -v)",
+      "Bash(PYTHONPATH=. python -m pytest app/tests/test_todo_attachment_endpoints.py::TestTodoAttachmentEndpoints::test_upload_file_size_limit -v --tb=short)",
+      "Bash(PYTHONPATH=. python -m pytest app/tests/test_todo_attachment_endpoints.py::TestTodoAttachmentEndpoints::test_get_todo_attachments -v --tb=short)",
+      "Bash(PYTHONPATH=. python -m pytest app/tests/test_todo_attachment_endpoints.py -v --tb=short)"
     ],
     "deny": [],
     "ask": []
