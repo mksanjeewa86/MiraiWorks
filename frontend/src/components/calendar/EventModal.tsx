@@ -1,16 +1,39 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, MapPin, Users, Video, Phone, Trash2, Save, AlertCircle } from 'lucide-react';
-import DateTimePicker from '@/components/ui/date-time-picker';
+import {
+  CalendarClock,
+  CalendarRange,
+  MapPin,
+  Users,
+  Video,
+  Phone,
+  Trash2,
+  Save,
+  X,
+} from 'lucide-react';
 import type { CalendarEvent } from '@/types/interview';
 import type { EventModalProps, EventFormData } from '@/types/components';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import Button from '@/components/ui/button';
+import Input from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import Checkbox from '@/components/ui/checkbox';
 
 export default function EventModal({
   isOpen,
   onClose,
   event,
   selectedDate,
+  selectedRange,
   isCreateMode,
   onSave,
   onDelete,
@@ -43,14 +66,18 @@ export default function EventModal({
         : 'This event cannot be deleted from this view.'
       : null;
 
-  // Safe date parsing helper
+  const handleClose = () => {
+    if (!loading) {
+      onClose();
+    }
+  };
+
   const safeParseDate = (dateString: string | null | undefined): Date | null => {
     if (!dateString) return null;
     const date = new Date(dateString);
-    return isNaN(date.getTime()) ? null : date;
+    return Number.isNaN(date.getTime()) ? null : date;
   };
 
-  // Safe date to datetime-local format
   const safeDateToLocalString = useCallback(
     (dateString: string | null | undefined, fallback: Date = new Date()): string => {
       const date = safeParseDate(dateString);
@@ -59,47 +86,71 @@ export default function EventModal({
     []
   );
 
-  // Initialize form data
   useEffect(() => {
-    if (isOpen) {
-      if (isCreateMode && selectedDate) {
-        const start = new Date(selectedDate);
-        const end = new Date(selectedDate);
-        end.setHours(start.getHours() + 1);
-
-        setFormData({
-          title: '',
-          description: '',
-          location: '',
-          startDatetime: start.toISOString().slice(0, 16),
-          endDatetime: end.toISOString().slice(0, 16),
-          isAllDay: false,
-          attendees: [],
-          status: 'tentative',
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
-        });
-      } else if (event) {
-        const currentTime = new Date();
-        const oneHourLater = new Date(currentTime.getTime() + 60 * 60 * 1000);
-
-        setFormData({
-          title: event.title,
-          description: event.description || '',
-          location: event.location || '',
-          startDatetime: safeDateToLocalString(event.startDatetime, currentTime),
-          endDatetime: safeDateToLocalString(event.endDatetime, oneHourLater),
-          isAllDay: event.isAllDay,
-          attendees: event.attendees,
-          status: event.status || 'tentative',
-          timezone: event.timezone || 'UTC',
-        });
-      }
-      setErrors({});
-      setAttendeeInput('');
+    if (!isOpen) {
+      return;
     }
-  }, [isOpen, isCreateMode, event, selectedDate, safeDateToLocalString]);
 
-  // Form validation
+    if (isCreateMode) {
+      const now = new Date();
+      const baseStart = selectedRange
+        ? new Date(selectedRange.start)
+        : selectedDate
+        ? new Date(selectedDate)
+        : now;
+      const safeStart = Number.isNaN(baseStart.getTime()) ? now : baseStart;
+
+      const computedEnd = (() => {
+        if (selectedRange) {
+          const maybeEnd = new Date(selectedRange.end);
+          if (!Number.isNaN(maybeEnd.getTime())) {
+            return maybeEnd;
+          }
+        }
+        const fallback = new Date(safeStart);
+        fallback.setHours(fallback.getHours() + 1);
+        return fallback;
+      })();
+
+      setFormData({
+        title: '',
+        description: '',
+        location: '',
+        startDatetime: safeStart.toISOString().slice(0, 16),
+        endDatetime: computedEnd.toISOString().slice(0, 16),
+        isAllDay: Boolean(selectedRange?.allDay),
+        attendees: [],
+        status: 'tentative',
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+      });
+    } else if (event) {
+      const currentTime = new Date();
+      const oneHourLater = new Date(currentTime.getTime() + 60 * 60 * 1000);
+
+      setFormData({
+        title: event.title,
+        description: event.description || '',
+        location: event.location || '',
+        startDatetime: safeDateToLocalString(event.startDatetime, currentTime),
+        endDatetime: safeDateToLocalString(event.endDatetime, oneHourLater),
+        isAllDay: event.isAllDay,
+        attendees: event.attendees,
+        status: event.status || 'tentative',
+        timezone: event.timezone || 'UTC',
+      });
+    }
+
+    setErrors({});
+    setAttendeeInput('');
+  }, [
+    isOpen,
+    isCreateMode,
+    event,
+    selectedDate,
+    selectedRange,
+    safeDateToLocalString,
+  ]);
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -127,9 +178,8 @@ export default function EventModal({
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle form submission
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
 
     if (!validateForm()) {
       return;
@@ -147,7 +197,7 @@ export default function EventModal({
         attendees: formData.attendees,
         status: formData.status,
         timezone: formData.timezone,
-        organizerEmail: undefined, // Will be set by backend
+        organizerEmail: undefined,
         isRecurring: false,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -161,7 +211,6 @@ export default function EventModal({
     }
   };
 
-  // Handle delete
   const handleDelete = async () => {
     if (event && window.confirm('Are you sure you want to delete this event?')) {
       setLoading(true);
@@ -175,7 +224,6 @@ export default function EventModal({
     }
   };
 
-  // Add attendee
   const addAttendee = () => {
     const email = attendeeInput.trim();
     if (email && !formData.attendees.includes(email)) {
@@ -187,24 +235,21 @@ export default function EventModal({
     }
   };
 
-  // Remove attendee
   const removeAttendee = (email: string) => {
     setFormData((prev) => ({
       ...prev,
-      attendees: prev.attendees.filter((a) => a !== email),
+      attendees: prev.attendees.filter((attendee) => attendee !== email),
     }));
   };
 
-  // Quick event templates
   const eventTemplates = [
     { name: 'Interview', icon: Video, duration: 60, location: 'Video Call' },
     { name: 'Phone Screening', icon: Phone, duration: 30, location: 'Phone' },
     { name: 'Team Meeting', icon: Users, duration: 60, location: 'Conference Room' },
     { name: 'One-on-One', icon: Users, duration: 30, location: 'Office' },
-  ];
+  ] as const;
 
-  // Apply template
-  const applyTemplate = (template: (typeof eventTemplates)[0]) => {
+  const applyTemplate = (template: (typeof eventTemplates)[number]) => {
     const startSource =
       formData.startDatetime || (selectedDate ? selectedDate.toISOString() : null);
     const start = safeParseDate(startSource) || new Date();
@@ -219,248 +264,269 @@ export default function EventModal({
     }));
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex items-center justify-center min-h-screen p-4">
-        <div className="fixed inset-0 bg-black bg-opacity-50" onClick={onClose} />
-
-        <div className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">
-              {isCreateMode ? 'Create Event' : 'Edit Event'}
-            </h2>
-            <button onClick={onClose} className="p-2 rounded-lg text-gray-400 hover:text-gray-600">
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit}>
-            <div className="p-6 space-y-6">
-              {/* Quick Templates (Create mode only) */}
-              {isCreateMode && (
+    <Dialog open={isOpen} onOpenChange={(open) => (!open ? handleClose() : undefined)}>
+      <DialogContent
+        closeButton={false}
+        className="flex flex-col h-[90vh] max-h-[90vh] w-full max-w-4xl md:max-w-3xl overflow-hidden rounded-3xl border border-slate-200 bg-white text-slate-900 shadow-[0_30px_80px_-20px_rgba(15,23,42,0.2)]"
+      >
+        <DialogHeader className="flex-shrink-0 px-6 pt-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                  <CalendarClock className="h-5 w-5" />
+                </span>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Quick Templates
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {eventTemplates.map((template, index) => (
+                  <DialogTitle className="text-xl font-semibold text-slate-900">
+                    {isCreateMode ? 'Create calendar event' : 'Edit calendar event'}
+                  </DialogTitle>
+                  <DialogDescription className="text-sm text-slate-500">
+                    {isCreateMode
+                      ? 'Schedule time on your calendar and tailor the invite before sending.'
+                      : 'Update the timing, details, or attendees for this event.'}
+                  </DialogDescription>
+                </div>
+              </div>
+            </div>
+            <DialogClose className="rounded-full border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
+              <X className="h-4 w-4" />
+            </DialogClose>
+          </div>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="flex flex-1 flex-col min-h-0">
+          <div className="flex-1 overflow-y-auto px-6 py-6 min-h-0">
+            <div className="space-y-8">
+              {isCreateMode && (
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_20px_40px_-28px_rgba(37,99,235,0.45)]">
+                  <div className="mb-4 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-800">Quick templates</p>
+                      <p className="text-xs text-slate-500">
+                        Prefill common event details in one click.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {eventTemplates.map((template) => (
                       <button
-                        key={index}
+                        key={template.name}
                         type="button"
                         onClick={() => applyTemplate(template)}
-                        className="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                        className="flex items-center gap-3 rounded-xl border border-slate-200 bg-gradient-to-r from-white to-blue-50/60 px-4 py-3 text-left transition-all hover:border-blue-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400"
                       >
-                        <template.icon className="h-4 w-4 text-gray-600" />
-                        <span className="text-sm font-medium text-gray-700">{template.name}</span>
+                        <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                          <template.icon className="h-4 w-4" />
+                        </span>
+                        <span className="text-sm font-medium text-slate-700">{template.name}</span>
                       </button>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Title */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Event Title *
-                </label>
-                <input
-                  type="text"
+              <div className="grid gap-6 rounded-2xl border border-slate-200 bg-slate-50 p-6">
+                <Input
+                  label="Event title"
+                  placeholder="Give this event a clear name"
                   value={formData.title}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.title ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder="Enter event title"
-                />
-                {errors.title && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center">
-                    <AlertCircle className="h-4 w-4 mr-1" />
-                    {errors.title}
-                  </p>
-                )}
-              </div>
-
-              {/* Date and Time */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <DateTimePicker
-                  label="Start Time *"
-                  value={formData.startDatetime || null}
-                  onChange={(nextValue) =>
-                    setFormData((prev) => ({ ...prev, startDatetime: nextValue ?? '' }))
+                  onChange={(event) =>
+                    setFormData((prev) => ({ ...prev, title: event.target.value }))
                   }
-                  error={errors.startDatetime}
-                  placeholder="Pick start time"
                   required
-                  allowClear={false}
+                  error={errors.title}
                 />
-                <DateTimePicker
-                  label="End Time *"
-                  value={formData.endDatetime || null}
-                  onChange={(nextValue) =>
-                    setFormData((prev) => ({ ...prev, endDatetime: nextValue ?? '' }))
-                  }
-                  error={errors.endDatetime}
-                  placeholder="Pick end time"
-                  required
-                  allowClear={false}
-                />
-              </div>
 
-              {/* All Day Toggle */}
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="allDay"
-                  checked={formData.isAllDay}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, isAllDay: e.target.checked }))}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label htmlFor="allDay" className="ml-2 text-sm text-gray-700">
-                  All day event
-                </label>
-              </div>
-
-              {/* Location */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <input
-                    type="text"
-                    value={formData.location}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, location: e.target.value }))}
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter location or video link"
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Input
+                    type="datetime-local"
+                    label="Starts"
+                    value={formData.startDatetime}
+                    onChange={(event) =>
+                      setFormData((prev) => ({ ...prev, startDatetime: event.target.value }))
+                    }
+                    leftIcon={<CalendarClock className="h-4 w-4" />}
+                    error={errors.startDatetime}
+                    required
+                  />
+                  <Input
+                    type="datetime-local"
+                    label="Ends"
+                    value={formData.endDatetime}
+                    onChange={(event) =>
+                      setFormData((prev) => ({ ...prev, endDatetime: event.target.value }))
+                    }
+                    leftIcon={<CalendarRange className="h-4 w-4" />}
+                    error={errors.endDatetime}
+                    required
                   />
                 </div>
-              </div>
 
-              {/* Description */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, description: e.target.value }))
-                  }
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter event description"
-                />
-              </div>
-
-              {/* Status */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, status: e.target.value }))}
-                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                    backgroundPosition: 'right 12px center',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundSize: '16px',
-                  }}
-                >
-                  <option value="tentative">Tentative</option>
-                  <option value="confirmed">Confirmed</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
-              </div>
-
-              {/* Attendees */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Attendees</label>
-                <div className="space-y-2">
-                  <div className="flex space-x-2">
-                    <input
-                      type="email"
-                      value={attendeeInput}
-                      onChange={(e) => setAttendeeInput(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addAttendee())}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Enter email address"
+                <div className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-3">
+                    <Checkbox
+                      id="all-day-event"
+                      checked={formData.isAllDay}
+                      onCheckedChange={(checked) =>
+                        setFormData((prev) => ({ ...prev, isAllDay: checked }))
+                      }
+                      disabled={loading}
                     />
-                    <button
-                      type="button"
-                      onClick={addAttendee}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                    >
-                      Add
-                    </button>
+                    <label htmlFor="all-day-event" className="text-sm font-medium text-slate-700">
+                      All-day event
+                    </label>
                   </div>
-                  {formData.attendees.length > 0 && (
-                    <div className="space-y-1">
-                      {formData.attendees.map((email, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-lg"
-                        >
-                          <span className="text-sm text-gray-700">{email}</span>
-                          <button
-                            type="button"
-                            onClick={() => removeAttendee(email)}
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  <p className="text-xs text-slate-500">
+                    {formData.isAllDay
+                      ? 'Blocks the entire day on your calendar.'
+                      : 'Uses start and end times in your local timezone.'}
+                  </p>
+                </div>
+
+                <Input
+                  label="Location"
+                  placeholder="Add a meeting room, video link, or phone number"
+                  value={formData.location}
+                  onChange={(event) =>
+                    setFormData((prev) => ({ ...prev, location: event.target.value }))
+                  }
+                  leftIcon={<MapPin className="h-4 w-4" />}
+                />
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-700">Description</label>
+                  <Textarea
+                    rows={4}
+                    placeholder="Share an agenda, preparation notes, or relevant links."
+                    value={formData.description}
+                    onChange={(event) =>
+                      setFormData((prev) => ({ ...prev, description: event.target.value }))
+                    }
+                    className="border border-slate-300 bg-white text-slate-900 focus-visible:ring-blue-500"
+                  />
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700">Status</label>
+                    <select
+                      value={formData.status}
+                      onChange={(event) =>
+                        setFormData((prev) => ({ ...prev, status: event.target.value }))
+                      }
+                      className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    >
+                      <option value="tentative">Tentative</option>
+                      <option value="confirmed">Confirmed</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </div>
+                  <div className="rounded-lg border border-dashed border-blue-200 bg-blue-50 px-4 py-3 text-xs font-medium text-blue-700">
+                    Invites default to <span className="font-semibold">{formData.timezone}</span> timezone.
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Footer */}
-            <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
-              <div className="flex flex-col">
-                {!isCreateMode && event && canDeleteEvent && (
-                  <button
+              <div className="rounded-2xl border border-slate-200 bg-white p-6">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+                      <Users className="h-4 w-4 text-blue-600" />
+                      Attendees
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      Invite teammates or clients to sync this event to their calendar.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <Input
+                    type="email"
+                    label="Email"
+                    placeholder="name@example.com"
+                    value={attendeeInput}
+                    onChange={(event) => setAttendeeInput(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') {
+                        event.preventDefault();
+                        addAttendee();
+                      }
+                    }}
+                  />
+                  <Button
                     type="button"
+                    onClick={addAttendee}
+                    disabled={loading || !attendeeInput.trim()}
+                    className="sm:self-end sm:px-5"
+                  >
+                    Add attendee
+                  </Button>
+                </div>
+                {formData.attendees.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    {formData.attendees.map((email) => (
+                      <div
+                        key={email}
+                        className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-2"
+                      >
+                        <span className="text-sm text-slate-700">{email}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeAttendee(email)}
+                          className="text-slate-400 transition hover:text-red-500"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex-shrink-0 border-t border-slate-200 bg-white px-6 py-4">
+            <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                {!isCreateMode && event && canDeleteEvent && (
+                  <Button
+                    type="button"
+                    variant="danger"
                     onClick={handleDelete}
                     disabled={loading}
-                    className="inline-flex items-center px-4 py-2 text-red-700 bg-red-100 border border-red-300 rounded-lg hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50"
+                    leftIcon={<Trash2 className="h-4 w-4" />}
                   >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete Event
-                  </button>
+                    Delete event
+                  </Button>
                 )}
                 {!isCreateMode && event && deleteHelperMessage && (
-                  <p className="mt-2 text-sm text-gray-500">{deleteHelperMessage}</p>
+                  <p className="text-xs text-slate-500">{deleteHelperMessage}</p>
                 )}
               </div>
-
-              <div className="flex space-x-3">
-                <button
+              <div className="flex items-center gap-3">
+                <Button
                   type="button"
-                  onClick={onClose}
-                  className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  variant="ghost"
+                  onClick={handleClose}
+                  disabled={loading}
+                  className="border border-slate-300 bg-white text-slate-600 hover:bg-slate-100"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
-                  disabled={loading}
-                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+                  loading={loading}
+                  leftIcon={<Save className="h-4 w-4" />}
+                  className="min-w-[150px] bg-blue-600 text-white shadow-lg shadow-blue-500/30 hover:bg-blue-600/90"
                 >
-                  {loading ? (
-                    <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                  ) : (
-                    <Save className="h-4 w-4 mr-2" />
-                  )}
-                  {isCreateMode ? 'Create Event' : 'Save Changes'}
-                </button>
+                  {isCreateMode ? 'Create event' : 'Save changes'}
+                </Button>
               </div>
             </div>
-          </form>
-        </div>
-      </div>
-    </div>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
-

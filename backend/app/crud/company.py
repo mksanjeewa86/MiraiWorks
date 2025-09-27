@@ -38,7 +38,7 @@ class CRUDCompany(CRUDBase[Company, CompanyCreate, CompanyUpdate]):
             and_(
                 User.company_id == company_id,
                 User.is_admin is True,
-                User.is_deleted is False,
+                User.is_deleted == False,
             )
         )
         result = await db.execute(admin_query)
@@ -63,7 +63,7 @@ async def get_companies(
 
     # Handle logical deletion
     if not include_deleted:
-        conditions.append(Company.is_deleted is False)
+        conditions.append(Company.is_deleted == False)
 
     if search:
         search_term = f"%{search}%"

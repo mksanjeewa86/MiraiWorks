@@ -1,41 +1,57 @@
-﻿'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { X, Plus, Save, ClipboardList } from 'lucide-react';
-import Button from '@/components/ui/button';
-import Input from '@/components/ui/input';
-import Badge from '@/components/ui/badge';
-import DateTimePicker from '@/components/ui/date-time-picker';
-import { useToast } from '@/contexts/ToastContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { todosApi } from '@/api/todos';
-import UserAssignment from './UserAssignment';
-import { getTodoPermissions } from '@/utils/todoPermissions';
+import { useState, useEffect } from "react";
+import { CalendarClock, ClipboardList, MinusCircle, PlusCircle, Save, X, Paperclip } from "lucide-react";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import Button from "@/components/ui/button";
+import Input from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import Badge from "@/components/ui/badge";
+import { useToast } from "@/contexts/ToastContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { todosApi } from "@/api/todos";
+import { todoAttachmentAPI } from "@/api/todo-attachments";
+import UserAssignment from "./UserAssignment";
+import { FileUpload } from "./FileUpload";
+import { AttachmentList } from "./AttachmentList";
+import { getTodoPermissions } from "@/utils/todoPermissions";
 import type {
-  Todo,
-  TodoPayload,
+  AssignableUser,
   TaskFormState,
   TaskModalProps,
-  AssignableUser,
+  Todo,
   TodoAssignmentUpdate,
-} from '@/types/todo';
+  TodoPayload,
+} from "@/types/todo";
+import type { TodoAttachment } from "@/types/todo-attachment";
 
 const initialFormState: TaskFormState = {
-  title: '',
-  description: '',
-  notes: '',
-  dueDate: '',
-  priority: '',
+  title: "",
+  description: "",
+  notes: "",
+  dueDate: "",
+  priority: "",
 };
 
-function formatDateForInput(input?: string | null): string {
-  if (!input) return '';
-  const date = new Date(input);
-  if (Number.isNaN(date.getTime())) return '';
-  const off = date.getTimezoneOffset();
-  const local = new Date(date.getTime() - off * 60_000);
+const formatDateForInput = (value?: string | null) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const offset = date.getTimezoneOffset();
+  const local = new Date(date.getTime() - offset * 60_000);
   return local.toISOString().slice(0, 16);
-}
+};
+
+const toISOStringIfPresent = (value?: string) =>
+  value && value.trim() ? new Date(value).toISOString() : undefined;
 
 export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: TaskModalProps) {
   const { showToast } = useToast();
@@ -45,52 +61,66 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: T
   const [assignableUsers, setAssignableUsers] = useState<AssignableUser[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [assignment, setAssignment] = useState<TodoAssignmentUpdate>({});
+  const [attachments, setAttachments] = useState<TodoAttachment[]>([]);
+  const [loadingAttachments, setLoadingAttachments] = useState(false);
+  const [showFileUpload, setShowFileUpload] = useState(false);
 
-  const isEditing = !!editingTodo;
-  const permissions = editingTodo ? getTodoPermissions(editingTodo, user) : null;
-  const canAssign = permissions?.canAssign || !isEditing; // Any user can assign when creating
+  const isEditing = Boolean(editingTodo);
+  const permissions = editingTodo ? getTodoPermissions(editingTodo as Todo, user) : null;
+  const canAssign = permissions?.canAssign || !isEditing;
 
-  // Load assignable users when modal opens
   useEffect(() => {
+    console.log("TaskModal useEffect - loading users", { isOpen, canAssign, user: user?.email || 'no user' });
     if (isOpen && canAssign) {
       const loadUsers = async () => {
+        console.log("Starting to load assignable users...");
         setLoadingUsers(true);
         try {
           const users = await todosApi.getAssignableUsers();
+          console.log("Successfully loaded assignable users", users);
           setAssignableUsers(users);
-        } catch (error) {
-          console.error('Failed to load assignable users:', error);
-          showToast({
-            type: 'error',
-            title: 'Failed to load users for assignment',
+        } catch (error: any) {
+          console.error("Failed to load assignable users", {
+            error,
+            status: error?.response?.status,
+            data: error?.response?.data,
+            message: error?.message
           });
+          const errorMessage = error?.response?.status === 401
+            ? "Authentication required to load teammates"
+            : "Unable to load teammates for assignment";
+          showToast({ type: "error", title: errorMessage });
         } finally {
           setLoadingUsers(false);
         }
       };
+
       loadUsers();
     }
   }, [isOpen, canAssign, showToast]);
 
-  // Reset form when modal opens/closes or when editing todo changes
   useEffect(() => {
-    if (isOpen) {
-      if (editingTodo) {
-        setFormState({
-          title: editingTodo.title,
-          description: editingTodo.description ?? '',
-          notes: editingTodo.notes ?? '',
-          dueDate: formatDateForInput(editingTodo.due_date),
-          priority: editingTodo.priority ?? '',
-        });
-        setAssignment({
-          assigned_user_id: editingTodo.assigned_user_id,
-          visibility: editingTodo.visibility,
-        });
-      } else {
-        setFormState(initialFormState);
-        setAssignment({});
-      }
+    if (!isOpen) return;
+
+    if (editingTodo) {
+      setFormState({
+        title: editingTodo.title,
+        description: editingTodo.description ?? "",
+        notes: editingTodo.notes ?? "",
+        dueDate: formatDateForInput(editingTodo.due_date),
+        priority: editingTodo.priority ?? "",
+      });
+      setAssignment({
+        assigned_user_id: editingTodo.assigned_user_id,
+        visibility: editingTodo.visibility,
+      });
+      // Load attachments for existing todo
+      loadAttachments(editingTodo.id);
+    } else {
+      setFormState(initialFormState);
+      setAssignment({});
+      setAttachments([]);
+      setShowFileUpload(false);
     }
   }, [isOpen, editingTodo]);
 
@@ -100,62 +130,54 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: T
       setFormState((prev) => ({ ...prev, [field]: event.target.value }));
     };
 
+  const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setFormState((prev) => ({ ...prev, dueDate: event.target.value }));
+  };
+
   const handleAssignmentChange = (assignmentData: TodoAssignmentUpdate) => {
     setAssignment(assignmentData);
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const trimmedTitle = formState.title.trim();
-    if (!trimmedTitle) {
-      showToast({ type: 'error', title: 'Title is required' });
-      return;
-    }
-
-    const payload: TodoPayload = {
-      title: trimmedTitle,
-      description: formState.description.trim() || undefined,
-      notes: formState.notes.trim() || undefined,
-      priority: formState.priority.trim() || undefined,
-      due_date: formState.dueDate ? new Date(formState.dueDate).toISOString() : undefined,
-      ...(canAssign && {
-        assigned_user_id: assignment.assigned_user_id,
-        visibility: assignment.visibility,
-      }),
-    };
-
-    setSubmitting(true);
+  // Load attachments for existing todo
+  const loadAttachments = async (todoId: number) => {
+    if (!todoId) return;
+    setLoadingAttachments(true);
     try {
-      if (isEditing && editingTodo) {
-        await todosApi.update(editingTodo.id, payload);
-
-        // Handle assignment separately if it changed and user can assign
-        if (
-          canAssign &&
-          permissions?.canAssign &&
-          (assignment.assigned_user_id !== editingTodo.assigned_user_id ||
-            assignment.visibility !== editingTodo.visibility)
-        ) {
-          await todosApi.assignTodo(editingTodo.id, assignment);
-        }
-
-        showToast({ type: 'success', title: 'Task updated successfully' });
-      } else {
-        await todosApi.create(payload);
-        showToast({ type: 'success', title: 'Task created successfully' });
-      }
-      onSuccess();
-      onClose();
-    } catch (err) {
-      console.error(err);
-      showToast({
-        type: 'error',
-        title:
-          err instanceof Error ? err.message : `Failed to ${isEditing ? 'update' : 'create'} task`,
-      });
+      const result = await todoAttachmentAPI.getAttachments(todoId);
+      setAttachments(result.attachments);
+    } catch (error) {
+      console.error('Failed to load attachments:', error);
     } finally {
-      setSubmitting(false);
+      setLoadingAttachments(false);
     }
+  };
+
+  // Handle file upload success
+  const handleUploadSuccess = (attachment: TodoAttachment) => {
+    setAttachments((prev) => [attachment, ...prev]);
+    showToast({
+      type: 'success',
+      title: `File "${attachment.original_filename}" uploaded successfully`,
+    });
+  };
+
+  // Handle file upload error
+  const handleUploadError = (error: string) => {
+    showToast({ type: 'error', title: error });
+  };
+
+  // Handle attachment deletion
+  const handleAttachmentDeleted = (attachmentId: number) => {
+    setAttachments((prev) => prev.filter((att) => att.id !== attachmentId));
+    showToast({ type: 'success', title: 'File deleted successfully' });
+  };
+
+  // Handle attachment update
+  const handleAttachmentUpdated = (updatedAttachment: TodoAttachment) => {
+    setAttachments((prev) =>
+      prev.map((att) => (att.id === updatedAttachment.id ? updatedAttachment : att))
+    );
+    showToast({ type: 'success', title: 'File updated successfully' });
   };
 
   const handleClose = () => {
@@ -164,142 +186,262 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: T
     }
   };
 
-  if (!isOpen) return null;
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const trimmedTitle = formState.title.trim();
+    if (!trimmedTitle) {
+      showToast({ type: "error", title: "Title is required" });
+      return;
+    }
+
+    const payload: TodoPayload = {
+      title: trimmedTitle,
+      description: formState.description.trim() || undefined,
+      notes: formState.notes.trim() || undefined,
+      priority: formState.priority.trim() || undefined,
+      due_date: toISOStringIfPresent(formState.dueDate),
+      ...(canAssign && {
+        assigned_user_id: assignment.assigned_user_id,
+        visibility: assignment.visibility,
+      }),
+    };
+
+    setSubmitting(true);
+
+    try {
+      if (isEditing && editingTodo) {
+        await todosApi.update(editingTodo.id, payload);
+        if (canAssign && editingTodo.id && (assignment.assigned_user_id || assignment.visibility)) {
+          await todosApi.assignTodo(editingTodo.id, {
+            assigned_user_id: assignment.assigned_user_id,
+            visibility: assignment.visibility,
+          });
+        }
+        onSuccess();
+        showToast({ type: "success", title: "Task updated" });
+      } else {
+        const created = await todosApi.create(payload);
+        if (canAssign && assignment.assigned_user_id) {
+          await todosApi.assignTodo(created.id, {
+            assigned_user_id: assignment.assigned_user_id,
+            visibility: assignment.visibility ?? "private",
+          });
+        }
+        onSuccess();
+        showToast({ type: "success", title: "Task created" });
+      }
+
+      onClose();
+    } catch (error: any) {
+      console.error("Failed to save task", error);
+      const message = error?.response?.data?.detail || "We couldn't save the task.";
+      showToast({ type: "error", title: message });
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex items-center justify-center min-h-screen p-4">
-        {/* Backdrop */}
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
-          onClick={handleClose}
-        />
-
-        {/* Modal */}
-        <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700">
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/20 text-blue-600 dark:bg-blue-500/25 dark:text-blue-200">
-                <ClipboardList className="h-5 w-5" />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  {isEditing ? 'Update Task' : 'Create New Task'}
-                </h2>
-                {isEditing && (
-                  <Badge variant="secondary" size="sm" className="mt-1">
-                    Editing
-                  </Badge>
-                )}
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent
+        closeButton={false}
+        className="flex flex-col h-[90vh] max-h-[90vh] w-full max-w-4xl md:max-w-3xl overflow-hidden rounded-3xl border border-slate-200 bg-white text-slate-900 shadow-[0_30px_80px_-20px_rgba(15,23,42,0.2)]"
+      >
+        <DialogHeader className="flex-shrink-0 px-6 pt-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                  <ClipboardList className="h-5 w-5" />
+                </span>
+                <div>
+                  <DialogTitle className="text-xl font-semibold text-slate-900">
+                    {isEditing ? "Edit task" : "Create a new task"}
+                  </DialogTitle>
+                  <DialogDescription className="text-sm text-slate-500">
+                    {isEditing
+                      ? "Update the details, assignees, or due date for this work item."
+                      : "Capture what needs to happen next and who should own it."}
+                  </DialogDescription>
+                </div>
               </div>
             </div>
-            <button
-              onClick={handleClose}
-              disabled={submitting}
-              className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
-            >
-              <X className="h-5 w-5" />
-            </button>
+            <DialogClose className="rounded-full border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
+              <X className="h-4 w-4" />
+            </DialogClose>
           </div>
+        </DialogHeader>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            <div>
-              <Input
-                label="Title"
-                placeholder="What needs to get done?"
-                value={formState.title}
-                onChange={handleInputChange('title')}
-                required
-                autoFocus
-              />
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <DateTimePicker
-                className="w-full"
-                label="Due Date"
-                value={formState.dueDate || null}
-                onChange={(nextValue) =>
-                  setFormState((prev) => ({ ...prev, dueDate: nextValue ?? '' }))
-                }
-                placeholder="Select due date"
-              />
-              <div>
+        <form onSubmit={handleSubmit} className="flex flex-1 flex-col min-h-0">
+          <div className="flex-1 overflow-y-auto px-6 py-6 min-h-0">
+            <div className="space-y-8">
+              <div className="grid gap-6 rounded-2xl border border-slate-200 bg-slate-50 p-6">
                 <Input
-                  label="Priority"
-                  placeholder="e.g., High, Medium, Low"
-                  value={formState.priority}
-                  onChange={handleInputChange('priority')}
+                  label="Title"
+                  placeholder="Give the task a clear, action-oriented name"
+                  value={formState.title}
+                  onChange={handleInputChange("title")}
+                  required
                 />
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Input
+                    type="datetime-local"
+                    label="Due date"
+                    value={formState.dueDate}
+                    onChange={handleDateChange}
+                    leftIcon={<CalendarClock className="h-4 w-4" />}
+                    helperText="Use your local time zone"
+                  />
+                  <Input
+                    label="Priority"
+                    placeholder="High, Medium, Low, or custom"
+                    value={formState.priority}
+                    onChange={handleInputChange("priority")}
+                    leftIcon={<MinusCircle className="h-4 w-4" />}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-700">Description</label>
+                  <Textarea
+                    placeholder="Outline context, expectations, or acceptance criteria."
+                    rows={4}
+                    value={formState.description}
+                    onChange={handleInputChange("description")}
+                    className="border border-slate-300 bg-white text-slate-900 focus-visible:ring-blue-500"
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-slate-700">Notes</label>
+                    <button
+                      type="button"
+                      onClick={() => setShowFileUpload(!showFileUpload)}
+                      className="flex items-center gap-1 text-xs text-slate-500 hover:text-blue-600 transition-colors"
+                    >
+                      <Paperclip className="h-3 w-3" />
+                      {attachments.length > 0 ? `${attachments.length} files` : 'Attach files'}
+                    </button>
+                  </div>
+                  <Textarea
+                    placeholder="Add quick reminders, meeting notes, or links."
+                    rows={3}
+                    value={formState.notes}
+                    onChange={handleInputChange("notes")}
+                    className="border border-slate-300 bg-white text-slate-900 focus-visible:ring-blue-500"
+                  />
+
+                  {/* File Upload Section */}
+                  {showFileUpload && (
+                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm font-medium text-slate-700">File Attachments</h4>
+                          <button
+                            type="button"
+                            onClick={() => setShowFileUpload(false)}
+                            className="text-slate-400 hover:text-slate-600"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+
+                        {/* File Upload (only for existing todos) */}
+                        {isEditing && editingTodo?.id ? (
+                          <FileUpload
+                            todoId={editingTodo.id}
+                            onUploadSuccess={handleUploadSuccess}
+                            onUploadError={handleUploadError}
+                            disabled={submitting}
+                          />
+                        ) : (
+                          <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                            <p className="text-sm text-blue-700">
+                              📎 Files can be attached after creating the task
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Attachment List */}
+                        {attachments.length > 0 && (
+                          <div className="space-y-2">
+                            <h5 className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                              Attached Files ({attachments.length})
+                            </h5>
+                            <AttachmentList
+                              todoId={editingTodo?.id || 0}
+                              attachments={attachments}
+                              onAttachmentDeleted={handleAttachmentDeleted}
+                              onAttachmentUpdated={handleAttachmentUpdated}
+                              showActions={isEditing}
+                              className="max-h-48 overflow-y-auto"
+                            />
+                          </div>
+                        )}
+
+                        {loadingAttachments && (
+                          <div className="text-center py-4">
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mx-auto"></div>
+                            <p className="text-xs text-slate-500 mt-2">Loading attachments...</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Description
-              </label>
-              <textarea
-                value={formState.description}
-                onChange={handleInputChange('description')}
-                placeholder="Add more context and details..."
-                rows={4}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Notes
-              </label>
-              <textarea
-                value={formState.notes}
-                onChange={handleInputChange('notes')}
-                placeholder="Quick reminders or additional notes..."
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none"
-              />
-            </div>
-
-            {/* Assignment Section */}
-            {canAssign && (
-              <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                <UserAssignment
-                  todo={
-                    {
+              {canAssign && (
+                <div className="rounded-2xl border border-blue-200 bg-blue-50 p-6">
+                  <div className="mb-4 flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-semibold text-blue-800">Assignment</h3>
+                      <p className="text-xs text-blue-600">
+                        Choose who should own this task and its visibility.
+                      </p>
+                    </div>
+                    <Badge className="bg-blue-100 text-blue-700 ring-1 ring-inset ring-blue-200">
+                      Teammate access
+                    </Badge>
+                  </div>
+                  <UserAssignment
+                    todo={{
                       ...formState,
                       assigned_user_id: assignment.assigned_user_id,
-                      visibility: assignment.visibility || 'private',
-                    } as any
-                  }
-                  assignableUsers={assignableUsers}
-                  onAssign={handleAssignmentChange}
-                  isLoading={loadingUsers || submitting}
-                />
-              </div>
-            )}
-
-            {/* Footer */}
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <Button type="button" variant="ghost" onClick={handleClose} disabled={submitting}>
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                loading={submitting}
-                leftIcon={isEditing ? <Save className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-              >
-                {isEditing ? 'Save Changes' : 'Create Task'}
-              </Button>
+                      visibility: assignment.visibility || "private",
+                    } as any}
+                    assignableUsers={assignableUsers}
+                    onAssign={handleAssignmentChange}
+                    isLoading={loadingUsers || submitting}
+                  />
+                </div>
+              )}
             </div>
-          </form>
-        </div>
-      </div>
-    </div>
+          </div>
+          <DialogFooter className="flex-shrink-0 gap-3 border-t border-slate-200 bg-white px-6 py-4">
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={submitting}
+              onClick={handleClose}
+              className="min-w-[120px] border border-slate-300 bg-white text-slate-600 hover:bg-slate-100"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              loading={submitting}
+              leftIcon={isEditing ? <Save className="h-4 w-4" /> : <PlusCircle className="h-4 w-4" />}
+              className="min-w-[160px] bg-blue-600 text-white shadow-lg shadow-blue-500/30 hover:bg-blue-600/90"
+            >
+              {isEditing ? "Save changes" : "Create task"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
-
-
-
-

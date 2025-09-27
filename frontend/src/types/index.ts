@@ -48,3 +48,6 @@ export * from './location';
 
 // Exam types
 export * from './exam';
+
+// Context types
+export * from './contexts';

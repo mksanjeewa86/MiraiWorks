@@ -1,416 +1,628 @@
-﻿'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import AppLayout from '@/components/layout/AppLayout';
-import ProtectedRoute from '@/components/auth/ProtectedRoute';
-import CalendarView from '@/components/calendar/CalendarView';
-import CalendarSidebar from '@/components/calendar/CalendarSidebar';
-import EventModal from '@/components/calendar/EventModal';
-import { Grid, List, Clock, Menu, Plus } from 'lucide-react';
-import { calendarApi } from '@/api/calendar';
-import { interviewsApi } from '@/api/interviews';
-import { useAuth } from '@/contexts/AuthContext';
-import type { CalendarEvent, Interview } from '@/types/interview';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import clsx from "clsx";
+import { addDays, endOfWeek, format, startOfWeek } from "date-fns";
+import {
+  Calendar as CalendarIcon,
+  Clock,
+  Grid,
+  List,
+  Menu,
+  Plus,
+  RotateCw,
+} from "lucide-react";
+import AppLayout from "@/components/layout/AppLayout";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import CalendarView from "@/components/calendar/CalendarView";
+import CalendarSidebar from "@/components/calendar/CalendarSidebar";
+import EventModal from "@/components/calendar/EventModal";
+import { calendarApi } from "@/api/calendar";
+import { interviewsApi } from "@/api/interviews";
+import { useAuth } from "@/contexts/AuthContext";
+import type { CalendarEvent, Interview } from "@/types/interview";
+import type { CalendarConnection, CalendarProvider } from "@/types/calendar";
+import type { CalendarFilters, CalendarViewMode } from "@/types/components";
+import { toast } from "sonner";
+
+interface SelectionRange {
+  start: Date;
+  end: Date;
+  allDay: boolean;
+}
+
+const defaultFilters: CalendarFilters = {
+  eventType: "all",
+  status: "all",
+  search: "",
+};
+
+const interviewStatusMap: Record<Interview["status"], CalendarEvent["status"]> = {
+  pending_schedule: "tentative",
+  scheduled: "confirmed",
+  confirmed: "confirmed",
+  in_progress: "confirmed",
+  completed: "confirmed",
+  cancelled: "cancelled",
+};
+
+const toDateOrNull = (value: unknown): Date | null => {
+  if (!value) return null;
+  const parsed = new Date(value as string);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const toStringArray = (value: unknown): string[] => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((item) => {
+      if (typeof item === "string") {
+        return item;
+      }
+      if (item && typeof item === "object") {
+        const record = item as Record<string, unknown>;
+        const candidate =
+          record.email ?? record.address ?? record.value ?? record.name ?? null;
+        return typeof candidate === "string" ? candidate : null;
+      }
+      return null;
+    })
+    .filter((entry): entry is string => Boolean(entry));
+};
+
+const normalizeCalendarEvent = (raw: Record<string, unknown>): CalendarEvent | null => {
+  const start =
+    raw?.startDatetime ??
+    raw?.start_datetime ??
+    raw?.start ??
+    raw?.start_at ??
+    raw?.startTime ??
+    raw?.start_time;
+  const end =
+    raw?.endDatetime ??
+    raw?.end_datetime ??
+    raw?.end ??
+    raw?.end_at ??
+    raw?.endTime ??
+    raw?.end_time;
+
+  const startDate = toDateOrNull(start);
+  if (!startDate) {
+    return null;
+  }
+
+  const endDate = toDateOrNull(end) ?? new Date(startDate.getTime() + 60 * 60 * 1000);
+  const attendeesRaw = raw?.attendees ?? raw?.guest_list ?? [];
+  const idSource = raw?.id ?? raw?.event_id ?? raw?.uid ?? raw?.external_id;
+  const id = idSource ? String(idSource) : `event-${startDate.getTime()}`;
+
+  return {
+    id,
+    title: String(raw?.title ?? raw?.summary ?? raw?.name ?? "Untitled event"),
+    description: typeof raw?.description === "string" ? (raw.description as string) : "",
+    location: typeof raw?.location === "string" ? (raw.location as string) : "",
+    startDatetime: startDate.toISOString(),
+    endDatetime: endDate.toISOString(),
+    timezone:
+      typeof raw?.timezone === "string"
+        ? (raw.timezone as string)
+        : typeof raw?.time_zone === "string"
+        ? (raw.time_zone as string)
+        : undefined,
+    isAllDay: Boolean(raw?.isAllDay ?? raw?.all_day ?? raw?.is_all_day ?? false),
+    isRecurring: Boolean(raw?.isRecurring ?? raw?.recurring ?? raw?.is_recurring ?? false),
+    organizerEmail:
+      typeof raw?.organizerEmail === "string"
+        ? (raw.organizerEmail as string)
+        : typeof raw?.organizer_email === "string"
+        ? (raw.organizer_email as string)
+        : (raw?.organizer as { email?: string } | undefined)?.email ?? "",
+    organizerName:
+      typeof raw?.organizerName === "string"
+        ? (raw.organizerName as string)
+        : typeof raw?.organizer_name === "string"
+        ? (raw.organizer_name as string)
+        : (raw?.organizer as { name?: string } | undefined)?.name ?? "",
+    meetingUrl:
+      typeof raw?.meetingUrl === "string"
+        ? (raw.meetingUrl as string)
+        : typeof raw?.meeting_url === "string"
+        ? (raw.meeting_url as string)
+        : "",
+    attendees: toStringArray(attendeesRaw),
+    status: typeof raw?.status === "string" ? (raw.status as string) : "tentative",
+    type: "calendar",
+    createdAt:
+      typeof raw?.createdAt === "string"
+        ? (raw.createdAt as string)
+        : typeof raw?.created_at === "string"
+        ? (raw.created_at as string)
+        : new Date().toISOString(),
+    updatedAt:
+      typeof raw?.updatedAt === "string"
+        ? (raw.updatedAt as string)
+        : typeof raw?.updated_at === "string"
+        ? (raw.updated_at as string)
+        : new Date().toISOString(),
+  };
+};
+
+const mapInterviewToEvent = (interview: Interview): CalendarEvent | null => {
+  const start = toDateOrNull(interview.scheduled_start);
+  if (!start) {
+    return null;
+  }
+
+  const end =
+    toDateOrNull(interview.scheduled_end) ??
+    new Date(start.getTime() + (interview.duration_minutes ?? 60) * 60 * 1000);
+
+  return {
+    id: `interview-${interview.id}`,
+    title: `Interview: ${interview.position_title || interview.title || "Untitled interview"}`,
+    description: interview.description ?? "",
+    location: interview.location ?? interview.meeting_url ?? "",
+    startDatetime: start.toISOString(),
+    endDatetime: end.toISOString(),
+    timezone: interview.timezone ?? "UTC",
+    isAllDay: false,
+    isRecurring: false,
+    organizerEmail: interview.recruiter?.email ?? "",
+    organizerName: interview.recruiter?.full_name ?? "",
+    meetingUrl: interview.meeting_url ?? "",
+    attendees: [interview.candidate?.email, interview.recruiter?.email].filter(Boolean) as string[],
+    status: interviewStatusMap[interview.status] ?? "tentative",
+    type: "interview",
+    createdAt: interview.created_at ?? new Date().toISOString(),
+    updatedAt: interview.updated_at ?? new Date().toISOString(),
+  };
+};
+
+const deriveEventType = (event: CalendarEvent): "calendar" | "interview" => {
+  if (event.type === "interview" || event.id.startsWith("interview-")) {
+    return "interview";
+  }
+  return "calendar";
+};
+
+const computeRangeForView = (reference: Date, view: CalendarViewMode): { start: Date; end: Date } => {
+  const start = new Date(reference);
+  const end = new Date(reference);
+
+  if (view === "month") {
+    start.setDate(1);
+    start.setHours(0, 0, 0, 0);
+    end.setMonth(end.getMonth() + 1, 0);
+    end.setHours(23, 59, 59, 999);
+  } else if (view === "week") {
+    const weekStart = startOfWeek(reference, { weekStartsOn: 0 });
+    const weekEnd = endOfWeek(reference, { weekStartsOn: 0 });
+    start.setTime(weekStart.getTime());
+    start.setHours(0, 0, 0, 0);
+    end.setTime(weekEnd.getTime());
+    end.setHours(23, 59, 59, 999);
+  } else if (view === "list") {
+    start.setHours(0, 0, 0, 0);
+    const listEnd = addDays(start, 14);
+    end.setTime(listEnd.getTime());
+    end.setHours(23, 59, 59, 999);
+  } else {
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
+  }
+
+  return { start, end };
+};
 
 function CalendarPageContent() {
+
   const { user } = useAuth();
+  const userId = user?.id ?? null;
+  const userCompanyId = user?.company_id ?? null;
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [viewType, setViewType] = useState<'month' | 'week' | 'day'>('month');
+  const [viewType, setViewType] = useState<CalendarViewMode>("month");
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [filters, setFilters] = useState<CalendarFilters>(defaultFilters);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedRange, setSelectedRange] = useState<SelectionRange | undefined>();
   const [modalOpen, setModalOpen] = useState(false);
   const [isCreateMode, setIsCreateMode] = useState(false);
-  const [filters, setFilters] = useState({
-    eventType: 'all',
-    status: 'all',
-    search: '',
-  });
+  const [connections, setConnections] = useState<CalendarConnection[]>([]);
+  const [connectionsLoading, setConnectionsLoading] = useState(false);
+  const [syncingConnectionId, setSyncingConnectionId] = useState<number | null>(null);
 
-  // Load events
+  const goToToday = useCallback(() => {
+    setCurrentDate(new Date());
+  }, []);
+
+  const loadConnections = useCallback(async () => {
+    try {
+      setConnectionsLoading(true);
+      const response = await calendarApi.getConnections();
+      setConnections(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      console.error("Failed to load calendar connections", error);
+      toast.error("Unable to load calendar connections.");
+    } finally {
+      setConnectionsLoading(false);
+    }
+  }, []);
+
   const loadEvents = useCallback(async () => {
     try {
       setLoading(true);
+      const { start, end } = computeRangeForView(currentDate, viewType);
 
-      // Get date range based on current view
-      const startDate = new Date(currentDate);
-      const endDate = new Date(currentDate);
-
-      if (viewType === 'month') {
-        startDate.setDate(1);
-        endDate.setMonth(endDate.getMonth() + 1, 0);
-      } else if (viewType === 'week') {
-        const startOfWeek = currentDate.getDate() - currentDate.getDay();
-        startDate.setDate(startOfWeek);
-        endDate.setDate(startOfWeek + 6);
-      } else {
-        endDate.setDate(endDate.getDate());
-      }
-
-      let allEvents: CalendarEvent[] = [];
+      const combined: CalendarEvent[] = [];
 
       try {
-        // Load calendar events
         const calendarResponse = await calendarApi.getEvents({
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString(),
+          startDate: start.toISOString(),
+          endDate: end.toISOString(),
         });
+        const payload = calendarResponse?.data;
 
-        // Robust response format handling
-        if (calendarResponse?.data) {
-          if (Array.isArray(calendarResponse.data)) {
-            allEvents = [...calendarResponse.data];
-          } else if (calendarResponse.data && typeof calendarResponse.data === 'object') {
-            // Handle object response with nested data
-            const dataObj = calendarResponse.data as unknown as Record<string, unknown>;
-            if (Array.isArray(dataObj.items)) {
-              allEvents = [...dataObj.items];
-            } else if (Array.isArray(dataObj.events)) {
-              allEvents = [...dataObj.events];
-            } else if (Array.isArray(dataObj.data)) {
-              allEvents = [...dataObj.data];
-            } else {
-              console.warn('Calendar API returned unexpected format:', calendarResponse);
-              allEvents = [];
+        const extractCalendarItems = (value: unknown): unknown[] => {
+          if (Array.isArray(value)) return value;
+          if (value && typeof value === "object") {
+            for (const key of ["items", "events", "data"]) {
+              const candidate = (value as Record<string, unknown>)[key];
+              if (Array.isArray(candidate)) {
+                return candidate;
+              }
             }
-          } else {
-            console.warn('Calendar API data is not in expected format:', calendarResponse);
-            allEvents = [];
           }
-        } else {
-          console.warn('Calendar API returned no data:', calendarResponse);
-          allEvents = [];
-        }
+          return [];
+        };
+
+        combined.push(
+          ...extractCalendarItems(payload)
+            .map((entry) =>
+              entry && typeof entry === "object"
+                ? normalizeCalendarEvent(entry as Record<string, unknown>)
+                : null
+            )
+            .filter((entry): entry is CalendarEvent => Boolean(entry))
+        );
       } catch (error) {
-        console.warn('Failed to load calendar events:', error);
-        allEvents = [];
+        console.warn("Failed to load calendar events", error);
       }
 
       try {
-        // Load interview events as well (only if user is available and has company_id)
-        if (!user || !user.company_id) {
-          // Skip interviews if user data is not available
-          console.warn('User data not available for loading interviews');
-        } else {
+        if (userId && userCompanyId) {
           const interviewResponse = await interviewsApi.getAll({
-            recruiter_id: user.id,
-            employer_company_id: user.company_id,
+            recruiter_id: userId,
+            employer_company_id: userCompanyId,
           });
-          let interviews: Interview[] = [];
+          const payload = interviewResponse?.data;
 
-          // Robust response format handling for interviews
-          if (interviewResponse?.data) {
-            if (Array.isArray(interviewResponse.data)) {
-              interviews = interviewResponse.data;
-            } else if (interviewResponse.data && typeof interviewResponse.data === 'object') {
-              // Handle object response with nested data
-              const dataObj = interviewResponse.data as unknown as Record<string, unknown>;
-              if (Array.isArray(dataObj.items)) {
-                interviews = dataObj.items;
-              } else if (Array.isArray(dataObj.interviews)) {
-                interviews = dataObj.interviews;
-              } else if (Array.isArray(dataObj.data)) {
-                interviews = dataObj.data;
-              } else {
-                console.warn('Interviews API returned unexpected format:', interviewResponse);
-                interviews = [];
+          const extractInterviews = (value: unknown): Interview[] => {
+            if (Array.isArray(value)) return value as Interview[];
+            if (value && typeof value === "object") {
+              for (const key of ["items", "interviews", "data"]) {
+                const candidate = (value as Record<string, unknown>)[key];
+                if (Array.isArray(candidate)) {
+                  return candidate as Interview[];
+                }
               }
-            } else {
-              console.warn('Interviews API data is not in expected format:', interviewResponse);
-              interviews = [];
             }
-          } else {
-            console.warn('Interviews API returned no data:', interviewResponse);
-            interviews = [];
-          }
+            return [];
+          };
 
-          // Safely process interviews array
-          if (Array.isArray(interviews) && interviews.length > 0) {
-            const interviewEvents: CalendarEvent[] = interviews
-              .filter((interview) => interview && interview.scheduled_start)
-              .map((interview) => ({
-                id: `interview-${interview.id}`,
-                title: `Interview: ${interview.position_title || interview.title || 'Untitled Interview'}`,
-                description: interview.description || '',
-                location: interview.location || interview.meeting_url || '',
-                startDatetime: interview.scheduled_start!,
-                endDatetime:
-                  interview.scheduled_end ||
-                  new Date(
-                    new Date(interview.scheduled_start!).getTime() +
-                      (interview.duration_minutes || 60) * 60000
-                  ).toISOString(),
-                timezone: interview.timezone || 'UTC',
-                isAllDay: false,
-                isRecurring: false,
-                organizerEmail: interview.recruiter?.email || '',
-                attendees: [interview.candidate?.email, interview.recruiter?.email].filter(
-                  Boolean
-                ) as string[],
-                status: interview.status || 'tentative',
-                createdAt: interview.created_at || new Date().toISOString(),
-                updatedAt: interview.updated_at || new Date().toISOString(),
-              }));
-            allEvents = [...allEvents, ...interviewEvents];
-          }
+          combined.push(
+            ...extractInterviews(payload)
+              .map((interview) => mapInterviewToEvent(interview))
+              .filter((entry): entry is CalendarEvent => Boolean(entry))
+          );
         }
       } catch (error) {
-        console.warn('Failed to load interview events:', error);
+        console.warn("Failed to load interview events", error);
       }
 
-      // Ensure allEvents is always an array
-      if (!Array.isArray(allEvents)) {
-        console.warn('allEvents is not an array, resetting to empty array');
-        allEvents = [];
-      }
-
-      setEvents(allEvents);
+      combined.sort(
+        (a, b) => new Date(a.startDatetime).getTime() - new Date(b.startDatetime).getTime()
+      );
+      setEvents(combined);
     } catch (error) {
-      console.error('Failed to load calendar events:', error);
-      setEvents([]);
+      console.error("Unexpected error while loading events", error);
+      toast.error("Unable to load calendar events.");
     } finally {
       setLoading(false);
     }
-  }, [currentDate, viewType, user]);
+  }, [currentDate, viewType, userCompanyId, userId]);
 
   useEffect(() => {
-    loadEvents();
-  }, [currentDate, viewType, loadEvents]);
+    void loadEvents();
+  }, [loadEvents]);
 
-  // Filter events based on current filters
-  const filteredEvents = Array.isArray(events)
-    ? events.filter((event) => {
-        // Ensure event has required properties
-        if (!event || !event.title || !event.id) {
+  useEffect(() => {
+    void loadConnections();
+  }, [loadConnections]);
+
+  const filteredEvents = useMemo(() => {
+    const searchTerm = filters.search.trim().toLowerCase();
+
+    return events.filter((event) => {
+      const eventType = deriveEventType(event);
+      if (filters.eventType !== "all" && eventType !== filters.eventType) {
+        return false;
+      }
+      if (
+        filters.status !== "all" &&
+        (event.status?.toLowerCase() ?? "tentative") !== filters.status
+      ) {
+        return false;
+      }
+      if (searchTerm) {
+        const haystack = [event.title, event.description, event.location]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        if (!haystack.includes(searchTerm)) {
           return false;
         }
+      }
+      return true;
+    });
+  }, [events, filters]);
 
-        // Search filter
-        if (filters.search) {
-          const searchLower = filters.search.toLowerCase();
-          const titleMatch = event.title.toLowerCase().includes(searchLower);
-          const descriptionMatch = event.description?.toLowerCase().includes(searchLower) || false;
-          if (!titleMatch && !descriptionMatch) {
-            return false;
-          }
-        }
-
-        // Event type filter
-        if (filters.eventType !== 'all') {
-          const eventId = event.id ? event.id.toString() : '';
-          const eventTitle = event.title ? event.title.toLowerCase() : '';
-
-          const eventType = eventId.startsWith('interview-')
-            ? 'interview'
-            : eventTitle.includes('meeting')
-              ? 'meeting'
-              : eventTitle.includes('call')
-                ? 'call'
-                : 'other';
-
-          if (eventType !== filters.eventType && filters.eventType !== 'other') {
-            return false;
-          }
-        }
-
-        // Status filter
-        if (filters.status !== 'all' && event.status !== filters.status) {
-          return false;
-        }
-
-        return true;
-      })
-    : [];
-
-  const handleEventClick = (event: CalendarEvent) => {
-    setSelectedEvent(event);
-    setSelectedDate(null);
-    setIsCreateMode(false);
-    setModalOpen(true);
-  };
-
-  const handleDateSelect = (date: Date) => {
-    setSelectedDate(date);
+  const closeModal = () => {
+    setModalOpen(false);
     setSelectedEvent(null);
-    setIsCreateMode(true);
-    setModalOpen(true);
+    setSelectedRange(undefined);
   };
+
+  const openCreateModal = useCallback((range?: SelectionRange) => {
+    const start = range?.start ?? new Date();
+    const end = range?.end ?? new Date(start.getTime() + 60 * 60 * 1000);
+    setIsCreateMode(true);
+    setSelectedEvent(null);
+    setSelectedDate(start);
+    setSelectedRange(range ?? { start, end, allDay: false });
+    setModalOpen(true);
+    setSidebarOpen(false);
+  }, []);
+
+  const handleRangeSelect = useCallback((range: SelectionRange) => {
+    openCreateModal(range);
+  }, [openCreateModal]);
+
+  const handleEventClick = useCallback((event: CalendarEvent) => {
+    setIsCreateMode(false);
+    setSelectedEvent(event);
+    setSelectedDate(toDateOrNull(event.startDatetime));
+    setSelectedRange(undefined);
+    setModalOpen(true);
+    setSidebarOpen(false);
+  }, []);
 
   const handleSaveEvent = async (eventData: Partial<CalendarEvent>) => {
     try {
       if (isCreateMode) {
-        // Create new event
         await calendarApi.createEvent(eventData);
-      } else if (selectedEvent && selectedEvent.id && /^\d+$/.test(selectedEvent.id.toString())) {
-        // Update existing calendar event (only for numeric IDs - real calendar events)
+        toast.success("Event created.");
+      } else if (selectedEvent && /^\d+$/.test(selectedEvent.id)) {
         await calendarApi.updateEvent(Number(selectedEvent.id), eventData);
+        toast.success("Event updated.");
+      } else {
+        toast.error("This event can only be edited from its source.");
+        return;
       }
 
-      // Reload events to show the changes
       await loadEvents();
-      setModalOpen(false);
+      closeModal();
     } catch (error) {
-      console.error('Error saving event:', error);
-      throw error; // Let the modal handle the error display
+      console.error("Failed to save event", error);
+      toast.error("Unable to save event. Please try again.");
+      throw error;
     }
   };
 
   const handleDeleteEvent = async (event: CalendarEvent) => {
     try {
-      if (event.id && /^\d+$/.test(event.id.toString())) {
-        // Delete calendar event (only for numeric IDs - real calendar events)
+      if (event.id && /^\d+$/.test(event.id)) {
         await calendarApi.deleteEvent(Number(event.id));
-
-        // Reload events to show the changes
+        toast.success("Event deleted.");
         await loadEvents();
-        setModalOpen(false);
+        closeModal();
       } else {
-        throw new Error('This event cannot be deleted from the calendar view');
+        toast.error("This event must be managed from the interview workflow.");
       }
     } catch (error) {
-      console.error('Error deleting event:', error);
-      throw error; // Let the modal handle the error display
+      console.error("Failed to delete event", error);
+      toast.error("Unable to delete event.");
+      throw error;
     }
   };
 
-  const getUserRole = () => {
-    const userRole = localStorage.getItem('userRole');
-    return userRole || 'candidate';
+  const handleConnectProvider = async (provider: CalendarProvider) => {
+    try {
+      const response =
+        provider === "google"
+          ? await calendarApi.getGoogleAuthUrl()
+          : await calendarApi.getOutlookAuthUrl();
+      const authUrl = response?.data?.auth_url;
+      if (authUrl) {
+        window.open(authUrl, "_blank", "noopener,noreferrer");
+        toast.info("Complete the connection in the new tab, then return to sync.");
+      } else {
+        throw new Error("Missing auth URL");
+      }
+    } catch (error) {
+      console.error("Failed to start calendar connection", error);
+      toast.error("Unable to start the calendar connection flow.");
+    }
   };
 
+  const handleDisconnect = async (connectionId: number) => {
+    try {
+      await calendarApi.deleteConnection(connectionId);
+      toast.success("Calendar disconnected.");
+      await loadConnections();
+    } catch (error) {
+      console.error("Failed to disconnect calendar", error);
+      toast.error("Unable to disconnect calendar.");
+    }
+  };
+
+  const handleSync = async (connectionId: number) => {
+    try {
+      setSyncingConnectionId(connectionId);
+      await calendarApi.syncCalendar(connectionId);
+      toast.success("Sync started. It may take a moment to finish.");
+      await Promise.all([loadConnections(), loadEvents()]);
+    } catch (error) {
+      console.error("Failed to sync calendar", error);
+      toast.error("Unable to trigger sync.");
+    } finally {
+      setSyncingConnectionId(null);
+    }
+  };
+
+  const headerLabel = useMemo(() => {
+    if (viewType === "week") {
+      const start = startOfWeek(currentDate, { weekStartsOn: 0 });
+      const end = endOfWeek(currentDate, { weekStartsOn: 0 });
+      return `${format(start, "MMM d")} - ${format(end, "MMM d, yyyy")}`;
+    }
+    if (viewType === "day") {
+      return format(currentDate, "EEEE, MMM d, yyyy");
+    }
+    if (viewType === "list") {
+      return `${format(currentDate, "MMM d")} - ${format(addDays(currentDate, 14), "MMM d, yyyy")}`;
+    }
+    return format(currentDate, "MMMM yyyy");
+  }, [currentDate, viewType]);
+
   return (
-    <AppLayout>
-      <div className="flex flex-col h-full bg-white">
-        {/* Header */}
-        <div className="bg-white border-b border-gray-100">
-          <div className="px-6 py-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-6">
-                <div className="flex items-center space-x-3">
-                  <h1 className="text-3xl font-semibold text-gray-900">Calendar</h1>
-                  <button
-                    onClick={() => setSidebarOpen(true)}
-                    className="lg:hidden p-2 rounded-xl text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
-                  >
-                    <Menu className="h-5 w-5" />
-                  </button>
-                </div>
-
-                {/* Current Date Display */}
-                <div className="text-sm text-gray-500 bg-gray-50 px-3 py-1 rounded-full">
-                  {new Date().toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    month: 'long',
-                    day: 'numeric',
-                    year: 'numeric',
-                  })}
-                </div>
+    <AppLayout pageTitle="Calendar" pageDescription="Manage interviews, internal events, and synced calendars.">
+      <div className="flex h-full flex-col bg-slate-100/80">
+        <div className="border-b border-slate-200 bg-white/90 backdrop-blur">
+          <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between gap-4 px-4 py-4 lg:px-6">
+            <div className="flex flex-1 items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setSidebarOpen(true)}
+                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white p-2 text-slate-500 transition hover:border-blue-300 hover:text-blue-600 lg:hidden"
+                aria-label="Open calendar sidebar"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+              <div>
+                <h1 className="text-xl font-semibold text-slate-900">Calendar</h1>
+                <p className="text-xs text-slate-500">{headerLabel}</p>
               </div>
-
-              <div className="flex items-center space-x-3">
-                {/* View Type Selector */}
-                <div className="flex bg-gray-50 rounded-xl p-1 border border-gray-200">
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={goToToday}
+                className="hidden items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-blue-300 hover:text-blue-600 lg:inline-flex"
+              >
+                <RotateCw className="h-4 w-4" />
+                Today
+              </button>
+              <div className="hidden rounded-full border border-slate-200 bg-slate-50 p-1 text-xs font-semibold text-slate-500 lg:flex">
+                {(
+                  [
+                    { key: "month", label: "Month", icon: Grid },
+                    { key: "week", label: "Week", icon: List },
+                    { key: "day", label: "Day", icon: Clock },
+                    { key: "list", label: "Agenda", icon: CalendarIcon },
+                  ] as { key: CalendarViewMode; label: string; icon: typeof Grid }[]
+                ).map(({ key, label, icon: Icon }) => (
                   <button
-                    onClick={() => setViewType('month')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                      viewType === 'month'
-                        ? 'bg-white text-gray-900 shadow-sm border border-gray-200'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                    }`}
+                    key={key}
+                    type="button"
+                    onClick={() => setViewType(key)}
+                    className={clsx(
+                      "inline-flex items-center gap-1 rounded-full px-3 py-1.5 transition",
+                      viewType === key ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-blue-600"
+                    )}
                   >
-                    <Grid className="h-4 w-4 mr-2 inline" />
-                    Month
+                    <Icon className="h-3.5 w-3.5" />
+                    {label}
                   </button>
-                  <button
-                    onClick={() => setViewType('week')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                      viewType === 'week'
-                        ? 'bg-white text-gray-900 shadow-sm border border-gray-200'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                    }`}
-                  >
-                    <List className="h-4 w-4 mr-2 inline" />
-                    Week
-                  </button>
-                  <button
-                    onClick={() => setViewType('day')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                      viewType === 'day'
-                        ? 'bg-white text-gray-900 shadow-sm border border-gray-200'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                    }`}
-                  >
-                    <Clock className="h-4 w-4 mr-2 inline" />
-                    Day
-                  </button>
-                </div>
-
-                {/* Create Event Button */}
-                <button
-                  onClick={() => handleDateSelect(new Date())}
-                  className="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-medium rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-sm hover:shadow-md"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Event
-                </button>
+                ))}
               </div>
+              <button
+                type="button"
+                onClick={() => openCreateModal()}
+                className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+              >
+                <Plus className="h-4 w-4" />
+                New event
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="flex flex-1 overflow-hidden bg-white relative">
-          {/* Left Sidebar - Hidden on mobile */}
-          <div className="hidden lg:flex lg:w-80 lg:flex-shrink-0 bg-gray-50 border-r border-gray-200">
-            <CalendarSidebar
-              isOpen={true}
-              onClose={() => {}}
-              events={filteredEvents}
-              onEventClick={handleEventClick}
-              filters={filters}
-              onFiltersChange={setFilters}
-              userRole={getUserRole()}
-            />
-          </div>
-
-          {/* Calendar View */}
-          <div className="flex-1 flex flex-col bg-white min-w-0">
-            <CalendarView
-              currentDate={currentDate}
-              onDateChange={setCurrentDate}
-              viewType={viewType}
-              events={filteredEvents}
-              onDateSelect={handleDateSelect}
-              onEventClick={handleEventClick}
-              loading={loading}
-              canCreateEvents={true}
-            />
-          </div>
-
-          {/* Mobile Sidebar Overlay - Only show on mobile when open */}
-          {sidebarOpen && (
-            <div className="lg:hidden">
+        <div className="mx-auto flex w-full max-w-[1400px] flex-1 overflow-hidden px-4 pb-6 pt-4 lg:px-6">
+          <div className="hidden w-80 flex-shrink-0 lg:block">
+            <div className="h-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
               <CalendarSidebar
-                isOpen={sidebarOpen}
+                isOpen
                 onClose={() => setSidebarOpen(false)}
                 events={filteredEvents}
                 onEventClick={handleEventClick}
                 filters={filters}
                 onFiltersChange={setFilters}
-                userRole={getUserRole()}
+                onCreateEvent={() => openCreateModal()}
+                connections={connections}
+                onConnectProvider={handleConnectProvider}
+                onDisconnect={handleDisconnect}
+                onSync={handleSync}
+                loadingConnections={connectionsLoading}
+                syncingConnectionId={syncingConnectionId}
               />
             </div>
-          )}
+          </div>
+
+          <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <CalendarView
+              currentDate={currentDate}
+              onDateChange={setCurrentDate}
+              viewType={viewType}
+              onViewChange={setViewType}
+              events={filteredEvents}
+              onRangeSelect={handleRangeSelect}
+              onEventClick={handleEventClick}
+              loading={loading}
+              canCreateEvents
+            />
+          </div>
         </div>
 
-        {/* Event Modal */}
+        {sidebarOpen && (
+          <CalendarSidebar
+            isOpen={sidebarOpen}
+            onClose={() => setSidebarOpen(false)}
+            events={filteredEvents}
+            onEventClick={handleEventClick}
+            filters={filters}
+            onFiltersChange={setFilters}
+            onCreateEvent={() => openCreateModal()}
+            connections={connections}
+            onConnectProvider={handleConnectProvider}
+            onDisconnect={handleDisconnect}
+            onSync={handleSync}
+            loadingConnections={connectionsLoading}
+            syncingConnectionId={syncingConnectionId}
+          />
+        )}
+
         <EventModal
           isOpen={modalOpen}
-          onClose={() => setModalOpen(false)}
+          onClose={closeModal}
           event={selectedEvent}
           selectedDate={selectedDate}
+          selectedRange={selectedRange}
           isCreateMode={isCreateMode}
           onSave={handleSaveEvent}
           onDelete={handleDeleteEvent}
@@ -427,3 +639,6 @@ export default function CalendarPage() {
     </ProtectedRoute>
   );
 }
+
+
+

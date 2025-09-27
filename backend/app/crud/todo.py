@@ -67,7 +67,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         if include_deleted:
             query = query.where(Todo.is_deleted is True)
         else:
-            query = query.where(Todo.is_deleted is False)
+            query = query.where(Todo.is_deleted == False)
 
         if status:
             query = query.where(Todo.status == status)
@@ -99,7 +99,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         await self.auto_mark_expired(db, owner_id)
         result = await db.execute(
             select(Todo)
-            .where(Todo.owner_id == owner_id, Todo.is_deleted is False)
+            .where(Todo.owner_id == owner_id, Todo.is_deleted == False)
             .order_by(Todo.updated_at.desc())
             .limit(limit)
         )
@@ -233,7 +233,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
             .options(selectinload(Todo.owner), selectinload(Todo.assigned_user))
             .where(
                 Todo.assigned_user_id == assigned_user_id,
-                Todo.is_deleted is False,
+                Todo.is_deleted == False,
                 Todo.visibility.in_([TodoVisibility.PUBLIC.value, TodoVisibility.VIEWER.value])
             )
         )

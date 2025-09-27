@@ -180,9 +180,9 @@ export const validateFile = (file: File, config: UploadConfig): FileValidationRe
 
 // Default upload configuration
 export const DEFAULT_UPLOAD_CONFIG: UploadConfig = {
-  maxFileSize: 25 * 1024 * 1024, // 25MB
+  maxFileSize: Number.MAX_SAFE_INTEGER, // No file size limit
   allowedTypes: [], // All types allowed
-  maxFiles: undefined, // No limit
+  maxFiles: undefined, // No file limit
 };
 
 // Component Props Interfaces

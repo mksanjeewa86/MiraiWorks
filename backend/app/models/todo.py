@@ -6,14 +6,13 @@ from typing import TYPE_CHECKING
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.models.base import Base
 from app.utils.constants import TodoStatus, TodoVisibility
 
-from .base import Base
-
 if TYPE_CHECKING:
-    from .todo_extension_request import TodoExtensionRequest
-    from .todo_viewer import TodoViewer
-    from .user import User
+    from app.models.todo_extension_request import TodoExtensionRequest
+    from app.models.todo_viewer import TodoViewer
+    from app.models.user import User
 
 
 class Todo(Base):

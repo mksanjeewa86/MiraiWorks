@@ -153,7 +153,7 @@ async def create_user(
                 and_(
                     User.company_id == current_user.company_id,
                     User.is_admin is True,
-                    User.is_deleted is False,
+                    User.is_deleted == False,
                     User.id != current_user.id,  # Exclude current user
                 )
             )
@@ -202,7 +202,7 @@ async def create_user(
             and_(
                 User.company_id == user_data.company_id,
                 User.is_admin is True,
-                User.is_deleted is False,
+                User.is_deleted == False,
             )
         )
         existing_admin_result = await db.execute(existing_admin_query)

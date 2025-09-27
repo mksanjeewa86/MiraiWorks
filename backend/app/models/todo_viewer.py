@@ -8,11 +8,11 @@ from typing import TYPE_CHECKING
 from sqlalchemy import DateTime, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .base import Base
+from app.models.base import Base
 
 if TYPE_CHECKING:
-    from .todo import Todo
-    from .user import User
+    from app.models.todo import Todo
+    from app.models.user import User
 
 
 class TodoViewer(Base):

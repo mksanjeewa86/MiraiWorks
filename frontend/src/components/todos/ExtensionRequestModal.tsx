@@ -1,70 +1,91 @@
-﻿import React, { useState, useEffect } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
-import { Fragment } from 'react';
-import { XMarkIcon, ClockIcon, CalendarIcon } from '@heroicons/react/24/outline';
-import { format, addDays, parseISO } from 'date-fns';
-import DateTimePicker from '@/components/ui/date-time-picker';
-import { todoExtensionsApi } from '@/api/todo-extensions';
-import type { ExtensionRequestModalProps, TodoExtensionValidation } from '@/types/todo';
+"use client";
 
-const ExtensionRequestModal: React.FC<ExtensionRequestModalProps> = ({
-  isOpen,
-  onClose,
-  todo,
-  onSuccess,
-}) => {
-  const [requestedDate, setRequestedDate] = useState('');
-  const [reason, setReason] = useState('');
+import { useEffect, useMemo, useState } from "react";
+import { AlertCircle, CalendarClock, CalendarRange, CheckCircle2, Hourglass, X } from "lucide-react";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import Button from "@/components/ui/button";
+import Input from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import Badge from "@/components/ui/badge";
+import { addDays, format, parseISO } from "date-fns";
+import { todoExtensionsApi } from "@/api/todo-extensions";
+import type { ExtensionRequestModalProps, TodoExtensionValidation } from "@/types/todo";
+
+const formatDateForInput = (value: Date | string) => {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const offset = date.getTimezoneOffset();
+  const local = new Date(date.getTime() - offset * 60_000);
+  return local.toISOString().slice(0, 16);
+};
+
+const toISO = (value: string) => (value ? new Date(value).toISOString() : "");
+
+const ExtensionRequestModal = ({ isOpen, onClose, todo, onSuccess }: ExtensionRequestModalProps) => {
+  const [requestedDate, setRequestedDate] = useState("");
+  const [reason, setReason] = useState("");
   const [validation, setValidation] = useState<TodoExtensionValidation | null>(null);
   const [isValidating, setIsValidating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Initialize with tomorrow's date
+  const currentDueDate = todo.due_date ? parseISO(todo.due_date) : null;
+
   useEffect(() => {
-    if (isOpen && todo.due_date) {
-      const tomorrow = addDays(parseISO(todo.due_date), 1);
-      setRequestedDate(format(tomorrow, "yyyy-MM-dd'T'HH:mm"));
-    }
-  }, [isOpen, todo.due_date]);
-
-  // Validate when requested date changes
-  useEffect(() => {
-    if (requestedDate && todo.due_date) {
-      validateExtension();
-    }
-  }, [requestedDate, todo.due_date]);
-
-  const validateExtension = async () => {
-    if (!requestedDate) return;
-
-    setIsValidating(true);
+    if (!isOpen || !currentDueDate) return;
+    const tomorrow = addDays(currentDueDate, 1);
+    setRequestedDate(formatDateForInput(tomorrow));
+    setReason("");
+    setValidation(null);
     setError(null);
+  }, [isOpen, currentDueDate]);
 
-    try {
-      const result = await todoExtensionsApi.validateExtensionRequest(
-        todo.id,
-        new Date(requestedDate).toISOString()
-      );
-      setValidation(result);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to validate extension request');
-      setValidation(null);
-    } finally {
-      setIsValidating(false);
-    }
+  useEffect(() => {
+    if (!isOpen || !requestedDate || !currentDueDate) return;
+
+    const runValidation = async () => {
+      setIsValidating(true);
+      setError(null);
+      try {
+        const payload = await todoExtensionsApi.validateExtensionRequest(todo.id, toISO(requestedDate));
+        setValidation(payload);
+      } catch (err: any) {
+        const message = err?.response?.data?.detail || "Unable to validate this extension";
+        setError(message);
+        setValidation(null);
+      } finally {
+        setIsValidating(false);
+      }
+    };
+
+    runValidation();
+  }, [isOpen, requestedDate, currentDueDate, todo.id]);
+
+  const handleClose = () => {
+    if (isSubmitting) return;
+    setError(null);
+    setValidation(null);
+    setReason("");
+    setRequestedDate("");
+    onClose();
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     if (!validation?.can_request_extension) {
-      setError('Extension request is not valid');
+      setError(validation?.reason || "Extension request is not valid");
       return;
     }
-
-    if (!reason.trim()) {
-      setError('Please provide a reason for the extension');
+    if (reason.trim().length < 10) {
+      setError("Please share a short explanation (at least 10 characters).");
       return;
     }
 
@@ -73,182 +94,165 @@ const ExtensionRequestModal: React.FC<ExtensionRequestModalProps> = ({
 
     try {
       await todoExtensionsApi.createExtensionRequest(todo.id, {
-        requested_due_date: new Date(requestedDate).toISOString(),
+        requested_due_date: toISO(requestedDate),
         reason: reason.trim(),
       });
-
       onSuccess();
-      onClose();
-
-      // Reset form
-      setRequestedDate('');
-      setReason('');
-      setValidation(null);
+      handleClose();
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to create extension request');
+      const message = err?.response?.data?.detail || "We couldn't submit your request.";
+      setError(message);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleClose = () => {
-    setRequestedDate('');
-    setReason('');
-    setValidation(null);
-    setError(null);
-    onClose();
-  };
+  const maxAllowedDate = useMemo(() => {
+    if (!currentDueDate) return null;
+    if (validation?.max_allowed_due_date) {
+      return parseISO(validation.max_allowed_due_date);
+    }
+    return addDays(currentDueDate, 3);
+  }, [currentDueDate, validation?.max_allowed_due_date]);
 
-  if (!todo.due_date) {
+  if (!currentDueDate) {
     return null;
   }
 
-  const currentDueDate = parseISO(todo.due_date);
-  const maxAllowedDate = validation?.max_allowed_due_date
-    ? parseISO(validation.max_allowed_due_date)
-    : addDays(currentDueDate, 3);
-
   return (
-    <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={handleClose}>
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-200"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 bg-black bg-opacity-25" />
-        </Transition.Child>
-
-        <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
-            >
-              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-                <div className="flex items-center justify-between mb-4">
-                  <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
-                    Request Extension
-                  </Dialog.Title>
-                  <button onClick={handleClose} className="text-gray-400 hover:text-gray-600">
-                    <XMarkIcon className="h-5 w-5" />
-                  </button>
-                </div>
-
-                <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                  <h4 className="font-medium text-gray-900 mb-1">{todo.title}</h4>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <CalendarIcon className="h-4 w-4 mr-1" />
-                    Current due: {format(currentDueDate, "MMM dd, yyyy 'at' h:mm a")}
-                  </div>
-                </div>
-
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  {/* Requested Date */}
-                  <DateTimePicker
-                    label="New Due Date"
-                    value={requestedDate || null}
-                    onChange={(nextValue) => setRequestedDate(nextValue ?? '')}
-                    min={format(addDays(currentDueDate, 1), "yyyy-MM-dd'T'HH:mm")}
-                    max={format(maxAllowedDate, "yyyy-MM-dd'T'HH:mm")}
-                    placeholder="Select new due date"
-                    helperText={`Maximum extension: ${format(maxAllowedDate, 'MMM dd, yyyy')} (3 days)`}
-                    required
-                  />
-
-                  {/* Validation Feedback */}
-                  {isValidating && (
-                    <div className="flex items-center text-sm text-blue-600">
-                      <ClockIcon className="h-4 w-4 mr-1 animate-spin" />
-                      Validating...
-                    </div>
-                  )}
-
-                  {validation && !validation.can_request_extension && (
-                    <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-                      <p className="text-sm text-red-600">{validation.reason}</p>
-                    </div>
-                  )}
-
-                  {validation && validation.can_request_extension && (
-                    <div className="p-3 bg-green-50 border border-green-200 rounded-md">
-                      <p className="text-sm text-green-600">笨・Extension request is valid</p>
-                    </div>
-                  )}
-
-                  {/* Reason */}
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent
+        closeButton={false}
+        className="flex flex-col max-h-[90vh] w-full max-w-3xl md:max-w-2xl overflow-hidden rounded-3xl border border-slate-200 bg-white text-slate-900 shadow-[0_30px_70px_-20px_rgba(15,23,42,0.2)]"
+      >
+          <DialogHeader className="flex-shrink-0 px-6 pt-6">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-cyan-100 text-cyan-600">
+                    <CalendarRange className="h-5 w-5" />
+                  </span>
                   <div>
-                    <label
-                      htmlFor="reason"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Reason for Extension <span className="text-red-500">*</span>
-                    </label>
-                    <textarea
-                      id="reason"
-                      value={reason}
-                      onChange={(e) => setReason(e.target.value)}
-                      rows={4}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Please explain why you need this extension..."
-                      required
-                      minLength={10}
-                      maxLength={1000}
-                    />
-                    <p className="mt-1 text-xs text-gray-500">
-                      {reason.length}/1000 characters (minimum 10)
-                    </p>
+                    <DialogTitle className="text-lg font-semibold text-slate-900">
+                      Request an extension
+                    </DialogTitle>
+                    <DialogDescription className="text-sm text-slate-500">
+                      Propose a new due date and let the task owner know why you need more time.
+                    </DialogDescription>
                   </div>
+                </div>
+                <Badge className="w-fit bg-cyan-100 text-cyan-700 ring-1 ring-inset ring-cyan-200">
+                  Current due {format(currentDueDate, "MMM dd, yyyy 'at' h:mm a")}
+                </Badge>
+              </div>
+              <DialogClose className="rounded-full border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
+                <X className="h-4 w-4" />
+              </DialogClose>
+            </div>
+          </DialogHeader>
 
-                  {/* Error Message */}
-                  {error && (
-                    <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-                      <p className="text-sm text-red-600">{error}</p>
+          <form onSubmit={handleSubmit} className="flex flex-1 flex-col overflow-hidden">
+            <div className="flex-1 overflow-y-auto space-y-6 px-6 pb-6">
+              <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-6">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Input
+                    type="datetime-local"
+                    label="New due date"
+                    value={requestedDate}
+                    onChange={(event) => setRequestedDate(event.target.value)}
+                    min={formatDateForInput(addDays(currentDueDate, 1))}
+                    max={maxAllowedDate ? formatDateForInput(maxAllowedDate) : undefined}
+                    required
+                    leftIcon={<CalendarClock className="h-4 w-4" />}
+                    helperText={
+                      maxAllowedDate
+                        ? `Maximum extension: ${format(maxAllowedDate, "MMM dd, yyyy")}`
+                        : undefined
+                    }
+                  />
+                  <div className="space-y-2">
+                    <span className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                      <Hourglass className="h-4 w-4 text-slate-400" />
+                      Validation status
+                    </span>
+                    <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm">
+                      {isValidating && (
+                        <div className="flex items-center gap-2 text-cyan-700">
+                          <Hourglass className="h-4 w-4 animate-spin" />
+                          Checking allowed extension window...
+                        </div>
+                      )}
+                      {!isValidating && validation?.can_request_extension && (
+                        <div className="flex items-center gap-2 text-emerald-600">
+                          <CheckCircle2 className="h-4 w-4" />
+                          Extension request looks good.
+                        </div>
+                      )}
+                      {!isValidating && validation && !validation.can_request_extension && (
+                        <div className="flex items-center gap-2 text-amber-600">
+                          <AlertCircle className="h-4 w-4" />
+                          {validation.reason}
+                        </div>
+                      )}
+                      {!isValidating && !validation && (
+                        <span className="text-slate-500">Select a new date to validate.</span>
+                      )}
                     </div>
-                  )}
-
-                  {/* Actions */}
-                  <div className="flex justify-end space-x-3 pt-4">
-                    <button
-                      type="button"
-                      onClick={handleClose}
-                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={
-                        isSubmitting ||
-                        isValidating ||
-                        !validation?.can_request_extension ||
-                        reason.trim().length < 10
-                      }
-                      className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isSubmitting ? 'Submitting...' : 'Request Extension'}
-                    </button>
                   </div>
-                </form>
-              </Dialog.Panel>
-            </Transition.Child>
-          </div>
-        </div>
-      </Dialog>
-    </Transition>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-700">Why do you need more time?</label>
+                  <Textarea
+                    value={reason}
+                    onChange={(event) => setReason(event.target.value)}
+                    rows={4}
+                    minLength={10}
+                    maxLength={1000}
+                    required
+                    placeholder="Share context so reviewers understand the request..."
+                    className="border border-slate-300 bg-white text-slate-900 focus-visible:ring-cyan-500"
+                  />
+                  <p className="text-xs text-slate-500">{reason.length}/1000 characters (minimum 10)</p>
+                </div>
+
+                {error && (
+                  <div className="flex items-start gap-2 rounded-xl border border-red-500/20 bg-red-50 p-4 text-sm text-red-600">
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                    <span>{error}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+            <DialogFooter className="flex-shrink-0 gap-3 border-t border-slate-200 bg-white px-6 py-4">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={handleClose}
+                disabled={isSubmitting}
+                className="border border-slate-300 bg-white text-slate-600 hover:bg-slate-100"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                loading={isSubmitting}
+                disabled={
+                  isSubmitting ||
+                  isValidating ||
+                  !validation?.can_request_extension ||
+                  reason.trim().length < 10
+                }
+                leftIcon={<CalendarRange className="h-4 w-4" />}
+                className="min-w-[170px] bg-cyan-600 text-white shadow-lg shadow-cyan-500/30 hover:bg-cyan-600/90 disabled:opacity-60"
+              >
+                Submit request
+              </Button>
+            </DialogFooter>
+          </form>
+      </DialogContent>
+    </Dialog>
   );
 };
 
 export default ExtensionRequestModal;
-
-
-

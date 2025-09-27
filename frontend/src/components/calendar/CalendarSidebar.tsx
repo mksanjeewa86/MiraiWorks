@@ -1,22 +1,275 @@
 'use client';
 
-import React from 'react';
+import { useMemo } from 'react';
+import clsx from 'clsx';
 import {
-  X,
-  Calendar,
-  Clock,
-  MapPin,
-  Users,
+  CalendarDays,
+  CircleCheck,
+  CloudOff,
+  Link2,
+  Loader2,
+  PlugZap,
+  RefreshCcw,
   Search,
-  CalendarCheck,
-  CalendarClock,
-  CalendarX,
-  Video,
-  Phone,
-  MessageSquare,
+  X,
 } from 'lucide-react';
+import { format } from 'date-fns';
 import type { CalendarEvent } from '@/types/interview';
-import type { CalendarSidebarProps } from '@/types/components';
+import type { CalendarConnection } from '@/types/calendar';
+import type { CalendarSidebarProps, CalendarFilters } from '@/types/components';
+
+const providerMeta = {
+  google: {
+    label: 'Google Calendar',
+    accentClass: 'bg-emerald-100 text-emerald-700',
+  },
+  outlook: {
+    label: 'Microsoft Outlook',
+    accentClass: 'bg-blue-100 text-blue-700',
+  },
+};
+
+type ProviderKey = keyof typeof providerMeta;
+
+const STATUS_BADGES: Record<CalendarConnection['status'], string> = {
+  connected: 'bg-emerald-100 text-emerald-700',
+  error: 'bg-red-100 text-red-700',
+  expired: 'bg-amber-100 text-amber-700',
+  disabled: 'bg-slate-100 text-slate-600',
+};
+
+const getEventPalette = (event: CalendarEvent) => {
+  if (event.id.startsWith('interview-') || event.type === 'interview') {
+    return {
+      backgroundColor: '#7c3aed',
+      textColor: '#ffffff',
+      badgeLabel: 'Interview',
+    };
+  }
+
+  if (event.id.startsWith('todo-')) {
+    return {
+      backgroundColor: '#0ea5e9',
+      textColor: '#ffffff',
+      badgeLabel: 'Task',
+    };
+  }
+
+  return {
+    backgroundColor: '#2563eb',
+    textColor: '#ffffff',
+    badgeLabel: 'Event',
+  };
+};
+
+const formatTimeRange = (startIso: string, endIso: string) => {
+  const start = new Date(startIso);
+  const end = new Date(endIso || startIso);
+
+  if (Number.isNaN(start.valueOf()) || Number.isNaN(end.valueOf())) {
+    return '';
+  }
+
+  const sameDay = start.toDateString() === end.toDateString();
+  if (sameDay) {
+    return `${format(start, 'MMM d, h:mm a')} - ${format(end, 'h:mm a')}`;
+  }
+
+  return `${format(start, 'MMM d, h:mm a')} - ${format(end, 'MMM d, h:mm a')}`;
+};
+
+const EmptyUpcomingState = () => (
+  <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/60 p-6 text-center">
+    <CalendarDays className="mb-3 h-8 w-8 text-slate-400" />
+    <p className="text-sm font-semibold text-slate-600">No upcoming events</p>
+    <p className="mt-1 text-xs text-slate-500">Create an event or connect a calendar to get started.</p>
+  </div>
+);
+
+const FiltersSection = ({
+  filters,
+  onFiltersChange,
+}: {
+  filters: CalendarFilters;
+  onFiltersChange: (filters: CalendarFilters) => void;
+}) => (
+  <div className="space-y-4">
+    <div className="relative">
+      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+      <input
+        type="search"
+        placeholder="Search events"
+        value={filters.search}
+        onChange={(event) => onFiltersChange({ ...filters, search: event.target.value })}
+        className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+      />
+    </div>
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Event type</p>
+      <div className="mt-2 flex flex-wrap gap-2">
+        {[
+          { key: 'all', label: 'All' },
+          { key: 'calendar', label: 'Internal' },
+          { key: 'interview', label: 'Interviews' },
+        ].map(({ key, label }) => {
+          const active = filters.eventType === key;
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => onFiltersChange({ ...filters, eventType: key as CalendarFilters['eventType'] })}
+              className={clsx(
+                'rounded-full border px-3 py-1 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-200',
+                active
+                  ? 'border-transparent bg-blue-600 text-white shadow-sm'
+                  : 'border-slate-200 bg-white text-slate-600 hover:border-blue-300 hover:text-blue-600'
+              )}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Status</p>
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        {[
+          { key: 'all', label: 'All' },
+          { key: 'tentative', label: 'Tentative' },
+          { key: 'confirmed', label: 'Confirmed' },
+          { key: 'cancelled', label: 'Cancelled' },
+        ].map(({ key, label }) => {
+          const active = filters.status === key;
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => onFiltersChange({ ...filters, status: key as CalendarFilters['status'] })}
+              className={clsx(
+                'rounded-lg border px-3 py-1.5 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-200',
+                active
+                  ? 'border-transparent bg-blue-100 text-blue-700'
+                  : 'border-slate-200 bg-white text-slate-600 hover:border-blue-300 hover:text-blue-600'
+              )}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  </div>
+);
+
+interface ConnectionListProps {
+  connections: CalendarConnection[];
+  onConnectProvider: CalendarSidebarProps['onConnectProvider'];
+  onDisconnect: CalendarSidebarProps['onDisconnect'];
+  onSync: CalendarSidebarProps['onSync'];
+  loadingConnections: boolean;
+  syncingConnectionId?: number | null;
+}
+
+const ConnectionsSection = ({
+  connections,
+  onConnectProvider,
+  onDisconnect,
+  onSync,
+  loadingConnections,
+  syncingConnectionId,
+}: ConnectionListProps) => (
+  <div className="space-y-4">
+    <div className="flex items-center justify-between">
+      <h3 className="text-sm font-semibold text-slate-700">Connected calendars</h3>
+      {loadingConnections && <Loader2 className="h-4 w-4 animate-spin text-blue-500" />}
+    </div>
+    <div className="grid grid-cols-1 gap-2">
+      {(Object.keys(providerMeta) as ProviderKey[]).map((provider) => (
+        <button
+          key={provider}
+          type="button"
+          onClick={() => onConnectProvider(provider)}
+          className="flex items-center justify-between rounded-lg border border-dashed border-slate-300 bg-white px-3 py-2 text-left text-sm font-medium text-slate-600 shadow-sm transition hover:border-blue-400 hover:bg-blue-50/50"
+        >
+          <span>{providerMeta[provider].label}</span>
+          <span className={clsx('rounded-full px-2 py-0.5 text-xs font-semibold', providerMeta[provider].accentClass)}>
+            Connect
+          </span>
+        </button>
+      ))}
+    </div>
+
+    {connections.length > 0 && (
+      <div className="space-y-3">
+        {connections.map((connection) => {
+          const provider = providerMeta[connection.provider as ProviderKey];
+          return (
+            <div
+              key={connection.id}
+              className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className={clsx('rounded-full px-2 py-0.5 text-[11px] font-semibold', provider.accentClass)}>
+                      {provider.label}
+                    </span>
+                    <span
+                      className={clsx(
+                        'rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase',
+                        STATUS_BADGES[connection.status]
+                      )}
+                    >
+                      {connection.status}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm font-semibold text-slate-700">
+                    {connection.display_name ?? connection.provider_email}
+                  </p>
+                  <p className="text-xs text-slate-500">{connection.provider_email}</p>
+                  {connection.last_sync_at && (
+                    <p className="mt-1 text-xs text-slate-400">
+                      Last sync: {format(new Date(connection.last_sync_at), 'MMM d, h:mm a')}
+                    </p>
+                  )}
+                  {connection.sync_error && (
+                    <p className="mt-1 flex items-center gap-1 text-xs text-red-600">
+                      <CloudOff className="h-3.5 w-3.5" />
+                      {connection.sync_error}
+                    </p>
+                  )}
+                </div>
+                <div className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onSync(connection.id)}
+                    className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 shadow-sm transition hover:border-blue-300 hover:text-blue-600"
+                  >
+                    {syncingConnectionId === connection.id ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <RefreshCcw className="h-3.5 w-3.5" />
+                    )}
+                    Sync
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onDisconnect(connection.id)}
+                    className="inline-flex items-center gap-1 rounded-lg border border-transparent bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500 transition hover:bg-red-100 hover:text-red-600"
+                  >
+                    <Link2 className="h-3.5 w-3.5 rotate-45" />
+                    Disconnect
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    )}
+  </div>
+);
 
 export default function CalendarSidebar({
   isOpen,
@@ -25,307 +278,138 @@ export default function CalendarSidebar({
   onEventClick,
   filters,
   onFiltersChange,
-  userRole,
+  onCreateEvent,
+  connections,
+  onConnectProvider,
+  onDisconnect,
+  onSync,
+  loadingConnections,
+  syncingConnectionId,
 }: CalendarSidebarProps) {
-  // Group events by date
-  const groupedEvents = events.reduce(
-    (groups, event) => {
-      const date = new Date(event.startDatetime).toDateString();
-      if (!groups[date]) {
-        groups[date] = [];
-      }
-      groups[date].push(event);
-      return groups;
-    },
-    {} as Record<string, CalendarEvent[]>
-  );
-
-  // Sort dates
-  const sortedDates = Object.keys(groupedEvents).sort(
-    (a, b) => new Date(a).getTime() - new Date(b).getTime()
-  );
-
-  // Get event icon based on type
-  const getEventIcon = (event: CalendarEvent) => {
-    if (
-      event.id.toString().startsWith('interview-') ||
-      event.title.toLowerCase().includes('interview')
-    ) {
-      return <Video className="h-4 w-4 text-purple-600" />;
-    }
-    if (event.title.toLowerCase().includes('meeting')) {
-      return <Users className="h-4 w-4 text-blue-600" />;
-    }
-    if (event.title.toLowerCase().includes('call') || event.title.toLowerCase().includes('phone')) {
-      return <Phone className="h-4 w-4 text-green-600" />;
-    }
-    if (event.title.toLowerCase().includes('screening')) {
-      return <MessageSquare className="h-4 w-4 text-orange-600" />;
-    }
-    return <Calendar className="h-4 w-4 text-gray-600" />;
-  };
-
-  // Get status icon
-  const getStatusIcon = (status?: string) => {
-    switch (status) {
-      case 'confirmed':
-        return <CalendarCheck className="h-4 w-4 text-green-600" />;
-      case 'tentative':
-        return <CalendarClock className="h-4 w-4 text-yellow-600" />;
-      case 'cancelled':
-        return <CalendarX className="h-4 w-4 text-red-600" />;
-      default:
-        return <Calendar className="h-4 w-4 text-gray-400" />;
-    }
-  };
-
-  // Filter options based on user role
-  const eventTypeOptions = [
-    { value: 'all', label: 'All Events' },
-    { value: 'interview', label: 'Interviews' },
-    { value: 'meeting', label: 'Meetings' },
-    { value: 'call', label: 'Calls' },
-  ];
-
-  if (userRole === 'candidate') {
-    eventTypeOptions.push({ value: 'personal', label: 'Personal' });
-  }
-
-  if (['super_admin', 'company_admin', 'recruiter'].includes(userRole)) {
-    eventTypeOptions.push(
-      { value: 'screening', label: 'Screenings' },
-      { value: 'onboarding', label: 'Onboarding' }
-    );
-  }
+  const upcomingEvents = useMemo(() => {
+    const now = new Date();
+    return [...events]
+      .filter((event) => {
+        const end = new Date(event.endDatetime || event.startDatetime);
+        return !Number.isNaN(end.valueOf()) && end >= now;
+      })
+      .sort((a, b) => new Date(a.startDatetime).getTime() - new Date(b.startDatetime).getTime())
+      .slice(0, 8);
+  }, [events]);
 
   return (
-    <>
-      {/* Mobile Overlay */}
-      {isOpen && (
-        <div className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden" onClick={onClose} />
+    <div
+      className={clsx(
+        'fixed inset-0 z-40 flex bg-slate-900/40 transition-opacity duration-200 lg:relative lg:inset-auto lg:z-auto lg:bg-transparent',
+        isOpen ? 'opacity-100' : 'pointer-events-none opacity-0 lg:pointer-events-auto lg:opacity-100'
       )}
-
-      {/* Sidebar */}
-      <div
-        className={`
-        fixed left-0 top-0 z-50 h-full w-80 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
-        lg:static lg:transform-none lg:shadow-none lg:z-auto lg:h-full lg:w-full
-        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-      `}
+    >
+      <div className="flex-1 lg:hidden" onClick={onClose} role="presentation" />
+      <aside
+        className={clsx(
+          'relative ml-auto flex h-full w-full max-w-sm transform flex-col overflow-hidden bg-gradient-to-b from-white to-slate-50 shadow-xl transition-transform duration-200 lg:ml-0 lg:w-80 lg:transform-none lg:shadow-none',
+          isOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'
+        )}
       >
-        <div className="flex flex-col h-full">
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-100">
-            <h2 className="text-xl font-semibold text-gray-900">Upcoming Events</h2>
-            <button
-              onClick={onClose}
-              className="lg:hidden p-2 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-            >
-              <X className="h-5 w-5" />
-            </button>
+        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 lg:py-5">
+          <div>
+            <h2 className="text-base font-semibold text-slate-800">Planner</h2>
+            <p className="text-xs text-slate-500">Keep track of interviews, tasks, and synced events.</p>
           </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full border border-slate-200 p-1 text-slate-500 transition hover:border-slate-300 hover:text-slate-700 lg:hidden"
+            aria-label="Close sidebar"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
 
-          {/* Filters */}
-          <div className="p-6 border-b border-gray-100 space-y-5">
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <input
-                type="text"
-                placeholder="Search events..."
-                value={filters.search}
-                onChange={(e) => onFiltersChange({ ...filters, search: e.target.value })}
-                className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-300 text-sm bg-gray-50 focus:bg-white transition-colors"
-              />
-            </div>
-
-            {/* Event Type Filter */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">Event Type</label>
-              <select
-                value={filters.eventType}
-                onChange={(e) => onFiltersChange({ ...filters, eventType: e.target.value })}
-                className="w-full px-4 py-3 pr-10 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-300 text-sm bg-gray-50 focus:bg-white transition-colors appearance-none"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                  backgroundPosition: 'right 12px center',
-                  backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px',
-                }}
-              >
-                {eventTypeOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Status Filter */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">Status</label>
-              <select
-                value={filters.status}
-                onChange={(e) => onFiltersChange({ ...filters, status: e.target.value })}
-                className="w-full px-4 py-3 pr-10 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-300 text-sm bg-gray-50 focus:bg-white transition-colors appearance-none"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                  backgroundPosition: 'right 12px center',
-                  backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px',
-                }}
-              >
-                <option value="all">All Status</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="tentative">Tentative</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Events List */}
-          <div className="flex-1 overflow-auto">
-            {sortedDates.length === 0 ? (
-              <div className="p-8 text-center">
-                <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-6" />
-                <p className="text-gray-600 font-semibold text-lg">No events found</p>
-                <p className="text-gray-400 text-sm mt-2">
-                  Try adjusting your filters or create a new event
-                </p>
+        <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-5 py-6">
+          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-slate-700">Quick actions</p>
+                <p className="text-xs text-slate-500">Create events or sync external calendars.</p>
               </div>
+              <button
+                type="button"
+                onClick={onCreateEvent}
+                className="inline-flex items-center gap-1 rounded-full bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700"
+              >
+                <PlugZap className="h-4 w-4" />
+                New event
+              </button>
+            </div>
+          </div>
+
+          <FiltersSection filters={filters} onFiltersChange={onFiltersChange} />
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-slate-700">Upcoming</h3>
+              <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+                {upcomingEvents.length}
+              </span>
+            </div>
+            {upcomingEvents.length === 0 ? (
+              <EmptyUpcomingState />
             ) : (
-              <div className="p-6 space-y-8">
-                {sortedDates.map((date) => {
-                  const dateEvents = groupedEvents[date];
-                  const dateObj = new Date(date);
-                  const isToday = dateObj.toDateString() === new Date().toDateString();
-                  const isTomorrow =
-                    dateObj.toDateString() === new Date(Date.now() + 86400000).toDateString();
-
+              <div className="space-y-3">
+                {upcomingEvents.map((event) => {
+                  const palette = getEventPalette(event);
                   return (
-                    <div key={date}>
-                      {/* Date Header */}
-                      <div className="flex items-center space-x-3 mb-4">
-                        <h3
-                          className={`text-sm font-bold ${
-                            isToday ? 'text-blue-600' : 'text-gray-900'
-                          }`}
-                        >
-                          {isToday
-                            ? 'Today'
-                            : isTomorrow
-                              ? 'Tomorrow'
-                              : dateObj.toLocaleDateString('en-US', {
-                                  weekday: 'short',
-                                  month: 'short',
-                                  day: 'numeric',
-                                })}
-                        </h3>
-                        <div className="flex-1 h-px bg-gray-200"></div>
-                        <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full font-medium">
-                          {dateEvents.length}
-                        </span>
-                      </div>
-
-                      {/* Events */}
-                      <div className="space-y-3">
-                        {dateEvents.map((event: CalendarEvent) => (
-                          <div
-                            key={event.id}
-                            className="p-4 rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all cursor-pointer bg-white hover:bg-gray-50/80"
-                            onClick={() => onEventClick(event)}
+                    <button
+                      key={event.id}
+                      type="button"
+                      onClick={() => onEventClick(event)}
+                      className="w-full rounded-xl border border-slate-200 bg-white p-3 text-left shadow-sm transition hover:border-blue-300 hover:shadow-md"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-semibold text-slate-800">{event.title}</p>
+                          <p className="mt-1 text-xs text-slate-500">{formatTimeRange(event.startDatetime, event.endDatetime)}</p>
+                          {event.location && (
+                            <p className="mt-1 text-xs text-slate-400">{event.location}</p>
+                          )}
+                        </div>
+                        {palette.badgeLabel && (
+                          <span
+                            className="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase"
+                            style={{
+                              backgroundColor: palette.backgroundColor,
+                              color: palette.textColor,
+                            }}
                           >
-                            <div className="flex items-start space-x-3">
-                              <div className="flex-shrink-0 mt-0.5">{getEventIcon(event)}</div>
-
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between">
-                                  <h4 className="text-sm font-medium text-gray-900 truncate">
-                                    {event.title}
-                                  </h4>
-                                  <div className="flex-shrink-0 ml-2">
-                                    {getStatusIcon(event.status)}
-                                  </div>
-                                </div>
-
-                                <div className="mt-1 flex items-center text-xs text-gray-500">
-                                  <Clock className="h-3 w-3 mr-1" />
-                                  {new Date(event.startDatetime).toLocaleTimeString('en-US', {
-                                    hour: 'numeric',
-                                    minute: '2-digit',
-                                  })}
-                                  {!event.isAllDay && (
-                                    <>
-                                      {' - '}
-                                      {new Date(event.endDatetime).toLocaleTimeString('en-US', {
-                                        hour: 'numeric',
-                                        minute: '2-digit',
-                                      })}
-                                    </>
-                                  )}
-                                </div>
-
-                                {event.location && (
-                                  <div className="mt-1 flex items-center text-xs text-gray-500">
-                                    <MapPin className="h-3 w-3 mr-1" />
-                                    <span className="truncate">{event.location}</span>
-                                  </div>
-                                )}
-
-                                {event.attendees.length > 0 && (
-                                  <div className="mt-1 flex items-center text-xs text-gray-500">
-                                    <Users className="h-3 w-3 mr-1" />
-                                    {event.attendees.length} attendee
-                                    {event.attendees.length !== 1 ? 's' : ''}
-                                  </div>
-                                )}
-
-                                {event.description && (
-                                  <p className="mt-2 text-xs text-gray-600 line-clamp-2">
-                                    {event.description}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
+                            {palette.badgeLabel}
+                          </span>
+                        )}
                       </div>
-                    </div>
+                    </button>
                   );
                 })}
               </div>
             )}
           </div>
 
-          {/* Quick Stats */}
-          <div className="p-6 border-t border-gray-100 bg-gradient-to-br from-gray-50 to-gray-100/50">
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div className="bg-white rounded-xl p-4 shadow-sm">
-                <div className="text-2xl font-bold text-gray-900">{events.length}</div>
-                <div className="text-xs text-gray-500 font-medium uppercase tracking-wide">
-                  Total
-                </div>
-              </div>
-              <div className="bg-white rounded-xl p-4 shadow-sm">
-                <div className="text-2xl font-bold text-green-600">
-                  {events.filter((e) => e.status === 'confirmed').length}
-                </div>
-                <div className="text-xs text-gray-500 font-medium uppercase tracking-wide">
-                  Confirmed
-                </div>
-              </div>
-              <div className="bg-white rounded-xl p-4 shadow-sm">
-                <div className="text-2xl font-bold text-yellow-600">
-                  {events.filter((e) => e.status === 'tentative').length}
-                </div>
-                <div className="text-xs text-gray-500 font-medium uppercase tracking-wide">
-                  Pending
-                </div>
-              </div>
-            </div>
+          <ConnectionsSection
+            connections={connections}
+            onConnectProvider={onConnectProvider}
+            onDisconnect={onDisconnect}
+            onSync={onSync}
+            loadingConnections={loadingConnections}
+            syncingConnectionId={syncingConnectionId}
+          />
+        </div>
+
+        <div className="border-t border-slate-200 bg-white px-5 py-4 text-xs text-slate-400">
+          <div className="flex items-center gap-2">
+            <CircleCheck className="h-4 w-4" />
+            Calendar sync keeps interviews, tasks, and external events aligned.
           </div>
         </div>
-      </div>
-    </>
+      </aside>
+    </div>
   );
 }

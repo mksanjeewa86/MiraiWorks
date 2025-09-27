@@ -14,9 +14,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.models.base import Base
 from app.models.db_types import CompatLONGTEXT as LONGTEXT
-
-from .base import Base
 
 # Association table for meeting participants
 meeting_participants = Table(

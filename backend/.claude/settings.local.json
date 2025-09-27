@@ -14,7 +14,12 @@
       "Bash(npm run build:ci:*)",
       "Bash(PYTHONPATH=. python -m pytest app/tests/ -v --tb=short -x)",
       "Bash(PYTHONPATH=. python:*)",
-      "Bash(npm run lint)"
+      "Bash(npm run lint)",
+      "Bash(npm run build:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run dev:*)",
+      "Bash(pkill:*)",
+      "Bash(npx kill-port:*)"
     ],
     "deny": [],
     "ask": []

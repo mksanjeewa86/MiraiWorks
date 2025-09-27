@@ -1,8 +1,7 @@
 'use client';
 
 import { createContext, useContext, useReducer, useEffect, type ReactNode } from 'react';
-import type { User, LoginCredentials, RegisterData } from '@/types';
-import type { AuthState, AuthAction, AuthContextType } from '@/types/contexts';
+import type { User, LoginCredentials, RegisterData, AuthState, AuthAction, AuthContextType } from '@/types';
 import { authApi } from '@/api/auth';
 import { setAuthHandler } from '@/api/apiClient';
 

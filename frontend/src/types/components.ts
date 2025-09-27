@@ -1,6 +1,7 @@
 import { type ReactNode, type ButtonHTMLAttributes, type InputHTMLAttributes } from 'react';
 import { LucideIcon } from 'lucide-react';
 import type { CalendarEvent } from './interview';
+import type { CalendarConnection, CalendarProvider } from './calendar';
 
 // ====================
 // UI COMPONENT INTERFACES
@@ -203,13 +204,23 @@ export interface NotificationDropdownProps {
 // ====================
 
 // Calendar Component Props
+export type CalendarViewMode = 'month' | 'week' | 'day' | 'list';
+
+export interface CalendarFilters {
+  eventType: 'all' | 'calendar' | 'interview';
+  status: 'all' | 'tentative' | 'confirmed' | 'cancelled';
+  search: string;
+}
+
 export interface CalendarViewProps {
   currentDate: Date;
   onDateChange: (date: Date) => void;
-  viewType: 'month' | 'week' | 'day';
+  viewType: CalendarViewMode;
+  onViewChange: (view: CalendarViewMode) => void;
   events: CalendarEvent[];
-  onDateSelect: (date: Date) => void;
+  onRangeSelect: (range: { start: Date; end: Date; allDay: boolean }) => void;
   onEventClick: (event: CalendarEvent) => void;
+  onEventTimeChange?: (event: CalendarEvent, updates: { start: Date; end: Date; allDay: boolean }) => void;
   loading: boolean;
   canCreateEvents: boolean;
 }
@@ -219,13 +230,15 @@ export interface CalendarSidebarProps {
   onClose: () => void;
   events: CalendarEvent[];
   onEventClick: (event: CalendarEvent) => void;
-  filters: {
-    eventType: string;
-    status: string;
-    search: string;
-  };
-  onFiltersChange: (filters: { eventType: string; status: string; search: string }) => void;
-  userRole: string;
+  filters: CalendarFilters;
+  onFiltersChange: (filters: CalendarFilters) => void;
+  onCreateEvent: () => void;
+  connections: CalendarConnection[];
+  onConnectProvider: (provider: CalendarProvider) => void;
+  onDisconnect: (connectionId: number) => void;
+  onSync: (connectionId: number) => void;
+  loadingConnections: boolean;
+  syncingConnectionId?: number | null;
 }
 
 export interface EventModalProps {
@@ -233,6 +246,7 @@ export interface EventModalProps {
   onClose: () => void;
   event: CalendarEvent | null;
   selectedDate: Date | null;
+  selectedRange?: { start: Date; end: Date; allDay: boolean };
   isCreateMode: boolean;
   onSave: (eventData: Partial<CalendarEvent>) => void;
   onDelete: (event: CalendarEvent) => Promise<void> | void;

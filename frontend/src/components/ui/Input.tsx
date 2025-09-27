@@ -39,12 +39,13 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             className={clsx(
               'input',
               {
-                'pl-10': leftIcon,
+                'pl-14': leftIcon,
                 'pr-10': rightIcon,
                 'border-red-300 focus-visible:ring-red-500 dark:border-red-700': hasError,
               },
               className
             )}
+            style={leftIcon ? { paddingLeft: '3.5rem' } : undefined}
             {...props}
           />
 

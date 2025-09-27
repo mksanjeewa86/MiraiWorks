@@ -1,11 +1,11 @@
 # Import all models to ensure they are registered with SQLAlchemy
-from .attachment import Attachment
-from .audit import AuditLog
-from .auth import OauthAccount, PasswordResetRequest, RefreshToken
-from .calendar_connection import CalendarConnection
-from .calendar_integration import ExternalCalendarAccount, SyncedEvent
-from .company import Company
-from .exam import (
+from app.models.attachment import Attachment
+from app.models.audit import AuditLog
+from app.models.auth import OauthAccount, PasswordResetRequest, RefreshToken
+from app.models.calendar_connection import CalendarConnection
+from app.models.calendar_integration import ExternalCalendarAccount, SyncedEvent
+from app.models.company import Company
+from app.models.exam import (
     Exam,
     ExamAnswer,
     ExamAssignment,
@@ -17,20 +17,20 @@ from .exam import (
     QuestionType,
     SessionStatus,
 )
-from .interview import Interview, InterviewProposal
-from .interview_note import InterviewNote
-from .mbti_model import MBTIQuestion, MBTITest
-from .meeting import (
+from app.models.interview import Interview, InterviewProposal
+from app.models.interview_note import InterviewNote
+from app.models.mbti_model import MBTIQuestion, MBTITest
+from app.models.meeting import (
     Meeting,
     MeetingRecording,
     MeetingSummary,
     MeetingTranscript,
     meeting_participants,
 )
-from .message import Message
-from .notification import Notification
-from .position import CompanyProfile, Position, PositionApplication
-from .resume import (
+from app.models.message import Message
+from app.models.notification import Notification
+from app.models.position import CompanyProfile, Position, PositionApplication
+from app.models.resume import (
     Certification,
     Education,
     Language,
@@ -40,14 +40,14 @@ from .resume import (
     Skill,
     WorkExperience,
 )
-from .role import Role, UserRole
-from .todo import Todo
-from .todo_attachment import TodoAttachment
-from .todo_extension_request import TodoExtensionRequest
-from .todo_viewer import TodoViewer
-from .user import User
-from .user_settings import UserSettings
-from .video_call import (
+from app.models.role import Role, UserRole
+from app.models.todo import Todo
+from app.models.todo_attachment import TodoAttachment
+from app.models.todo_extension_request import TodoExtensionRequest
+from app.models.todo_viewer import TodoViewer
+from app.models.user import User
+from app.models.user_settings import UserSettings
+from app.models.video_call import (
     CallParticipant,
     CallTranscription,
     RecordingConsent,

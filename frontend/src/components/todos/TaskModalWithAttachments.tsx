@@ -5,7 +5,9 @@ import { X, Plus, Save, ClipboardList, Paperclip } from 'lucide-react';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
 import Badge from '@/components/ui/badge';
-import DateTimePicker from '@/components/ui/date-time-picker';
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
+import '@/styles/datepicker.css';
 import { useToast } from '@/contexts/ToastContext';
 import { todosApi } from '@/api/todos';
 import { todoAttachmentAPI } from '@/api/todo-attachments';
@@ -235,15 +237,29 @@ export default function TaskModalWithAttachments({
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <DateTimePicker
-                    className="w-full"
-                    label="Due Date"
-                    value={formState.dueDate || null}
-                    onChange={(nextValue) =>
-                      setFormState((prev) => ({ ...prev, dueDate: nextValue ?? '' }))
-                    }
-                    placeholder="Select due date"
-                  />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Due Date
+                    </label>
+                    <DatePicker
+                      selected={formState.dueDate ? new Date(formState.dueDate) : null}
+                      onChange={(date) => {
+                        if (date) {
+                          const formatted = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}T${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+                          setFormState((prev) => ({ ...prev, dueDate: formatted }));
+                        } else {
+                          setFormState((prev) => ({ ...prev, dueDate: '' }));
+                        }
+                      }}
+                      showTimeSelect
+                      timeFormat="HH:mm"
+                      timeIntervals={15}
+                      dateFormat="yyyy-MM-dd HH:mm"
+                      placeholderText="Select due date"
+                      isClearable
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    />
+                  </div>
                   <div>
                     <Input
                       label="Priority"
