@@ -1,11 +1,12 @@
 import os
 import secrets
 from datetime import datetime, timedelta
-from typing import Dict, Any
+from typing import Any, Dict
+from urllib.parse import urlencode
+
 import aiohttp
 import structlog
 from sqlalchemy.orm import Session
-from urllib.parse import urlencode
 
 from app.models.calendar_connection import CalendarConnection
 

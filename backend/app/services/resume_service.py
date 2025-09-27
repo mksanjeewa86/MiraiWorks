@@ -8,14 +8,15 @@ from typing import Optional
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.crud.resume import resume as resume_crud
 from app.models.resume import (
     Education,
     Project,
     Resume,
+    ResumeMessageAttachment,
     ResumeSection,
     ResumeShare,
     ResumeTemplate,
-    ResumeMessageAttachment,
     Skill,
     WorkExperience,
 )
@@ -27,7 +28,6 @@ from app.schemas.resume import (
     WorkExperienceCreate,
 )
 from app.utils.constants import ResumeStatus, ResumeVisibility
-from app.crud.resume import resume as resume_crud
 
 logger = logging.getLogger(__name__)
 

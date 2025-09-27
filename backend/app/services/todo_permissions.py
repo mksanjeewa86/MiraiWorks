@@ -1,15 +1,17 @@
 """Todo permission service for role-based access control."""
 
 from typing import List
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
-from app.models.todo import Todo
-from app.models.user import User
-from app.models.role import UserRole, Role
-from app.models.todo_extension_request import TodoExtensionRequest
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.crud.todo_viewer import todo_viewer
-from app.utils.constants import UserRole as UserRoleEnum, TodoVisibility, TodoStatus
+from app.models.role import Role, UserRole
+from app.models.todo import Todo
+from app.models.todo_extension_request import TodoExtensionRequest
+from app.models.user import User
+from app.utils.constants import TodoStatus, TodoVisibility
+from app.utils.constants import UserRole as UserRoleEnum
 
 
 class TodoPermissionService:

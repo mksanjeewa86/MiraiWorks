@@ -12,7 +12,6 @@ from app.database import get_db
 from app.dependencies import get_current_active_user
 from app.models.interview import Interview, InterviewProposal
 from app.models.user import User
-from app.utils.constants import InterviewStatus
 from app.schemas.interview import (
     CalendarIntegrationStatus,
     InterviewCalendarEvent,
@@ -29,9 +28,10 @@ from app.schemas.interview import (
     ProposalInfo,
     ProposalResponse,
 )
-from app.schemas.video_call import VideoCallCreate, VideoCallInfo
 from app.schemas.interview_note import InterviewNoteInfo, InterviewNoteUpdate
+from app.schemas.video_call import VideoCallCreate, VideoCallInfo
 from app.services.interview_service import interview_service
+from app.utils.constants import InterviewStatus
 from app.utils.permissions import is_company_admin, is_super_admin, requires_permission
 
 router = APIRouter()

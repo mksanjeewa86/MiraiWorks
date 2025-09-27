@@ -3,9 +3,9 @@
 from datetime import datetime
 from typing import Dict, Optional
 
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.utils.constants import MBTIType, MBTITestStatus
+from app.utils.constants import MBTITestStatus, MBTIType
 
 
 class MBTIQuestionRead(BaseModel):

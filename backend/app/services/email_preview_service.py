@@ -1,4 +1,5 @@
-from typing import Dict, Any, List
+from typing import Any, Dict, List
+
 from app.services.email_template_service import email_template_service
 
 # Force reload after email_template_service fixes

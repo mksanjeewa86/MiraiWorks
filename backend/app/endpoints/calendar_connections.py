@@ -1,16 +1,16 @@
+import structlog
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-import structlog
 
 from app.crud import calendar_connection as calendar_connection_crud
-from app.dependencies import get_current_user
 from app.database import get_db
+from app.dependencies import get_current_user
 from app.models.user import User
 from app.schemas.calendar_connection import (
-    CalendarConnectionUpdate,
     CalendarConnectionPublic,
-    CalendarListResponse,
     CalendarConnectionResponse,
+    CalendarConnectionUpdate,
+    CalendarListResponse,
     GoogleCalendarAuth,
     OutlookCalendarAuth,
 )

@@ -7,13 +7,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.crud.base import CRUDBase
+from app.crud.todo_viewer import todo_viewer
 from app.models.todo import Todo
 from app.models.todo_viewer import TodoViewer
 from app.models.user import User
-from app.schemas.todo import TodoCreate, TodoUpdate, TodoAssignmentUpdate, TodoViewersUpdate
-from app.utils.constants import TodoStatus, TodoVisibility
+from app.schemas.todo import (
+    TodoAssignmentUpdate,
+    TodoCreate,
+    TodoUpdate,
+    TodoViewersUpdate,
+)
 from app.services.todo_permissions import TodoPermissionService
-from app.crud.todo_viewer import todo_viewer
+from app.utils.constants import TodoStatus, TodoVisibility
 
 
 class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):

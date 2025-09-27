@@ -14,7 +14,13 @@ from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.orm import relationship
 
 from app.models.base import BaseModel
-from app.utils.constants import ResumeStatus, ResumeVisibility, SectionType, ResumeFormat, ResumeLanguage
+from app.utils.constants import (
+    ResumeFormat,
+    ResumeLanguage,
+    ResumeStatus,
+    ResumeVisibility,
+    SectionType,
+)
 
 
 class Resume(BaseModel):

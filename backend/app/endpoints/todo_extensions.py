@@ -8,15 +8,17 @@ from app.crud.todo_extension_request import todo_extension_request
 from app.database import get_db
 from app.dependencies import get_current_active_user
 from app.models.user import User
+from app.schemas.todo import TodoExtensionValidation
 from app.schemas.todo_extension import (
     TodoExtensionRequestCreate,
-    TodoExtensionRequestResponse,
-    TodoExtensionRequestRead,
     TodoExtensionRequestList,
+    TodoExtensionRequestRead,
+    TodoExtensionRequestResponse,
 )
-from app.schemas.todo import TodoExtensionValidation
+from app.services.todo_extension_notification_service import (
+    todo_extension_notification_service,
+)
 from app.services.todo_permissions import TodoPermissionService
-from app.services.todo_extension_notification_service import todo_extension_notification_service
 from app.utils.constants import ExtensionRequestStatus
 
 router = APIRouter()

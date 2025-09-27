@@ -1,20 +1,20 @@
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.crud.position import position as position_crud
 from app.database import get_db
 from app.dependencies import get_current_active_user, get_optional_current_user
-from app.crud.position import position as position_crud
 from app.models.user import User
 from app.schemas.position import (
     PositionBulkStatusUpdateRequest,
     PositionCreate,
     PositionInfo,
     PositionListResponse,
-    PositionStatusUpdateRequest,
     PositionStatsResponse,
+    PositionStatusUpdateRequest,
     PositionUpdate,
 )
 

@@ -1,19 +1,20 @@
 """Targeted integration tests covering advanced interview endpoints."""
 
-import pytest
 from datetime import datetime, timedelta
+from uuid import uuid4
 
+import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from uuid import uuid4
 
 from app.crud.interview import interview as interview_crud
 from app.models.interview import Interview
 from app.models.role import Role, UserRole
 from app.models.user import User
-from app.services.interview_service import interview_service
-from app.utils.constants import InterviewStatus, UserRole as UserRoleEnum
 from app.services.auth_service import auth_service
+from app.services.interview_service import interview_service
+from app.utils.constants import InterviewStatus
+from app.utils.constants import UserRole as UserRoleEnum
 
 
 async def create_user_with_role(

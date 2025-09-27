@@ -11,9 +11,14 @@ This file was refactored from backend/scripts/seed_exam_data.py
 """
 
 from datetime import datetime, timedelta
+
 from app.models.exam import (
-    Exam, ExamQuestion, ExamAssignment,
-    ExamType, ExamStatus, QuestionType
+    Exam,
+    ExamAssignment,
+    ExamQuestion,
+    ExamStatus,
+    ExamType,
+    QuestionType,
 )
 
 

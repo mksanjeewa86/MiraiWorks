@@ -1,29 +1,29 @@
-from datetime import datetime
-from typing import Optional
 import secrets
 import string
+from datetime import datetime
+from typing import Optional
 
-from sqlalchemy import select, update, func, desc, and_
-from sqlalchemy.orm import selectinload
+from sqlalchemy import and_, desc, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.crud.base import CRUDBase
 from app.models.resume import (
-    Resume, 
-    WorkExperience, 
-    Education, 
-    Skill, 
-    ResumeMessageAttachment
+    Education,
+    Resume,
+    ResumeMessageAttachment,
+    Skill,
+    WorkExperience,
 )
 from app.schemas.resume import (
-    ResumeCreate, 
-    ResumeUpdate, 
-    WorkExperienceCreate, 
-    WorkExperienceUpdate,
     EducationCreate,
     EducationUpdate,
+    ResumeCreate,
+    ResumeUpdate,
     SkillCreate,
-    SkillUpdate
+    SkillUpdate,
+    WorkExperienceCreate,
+    WorkExperienceUpdate,
 )
 from app.utils.constants import ResumeStatus, ResumeVisibility
 

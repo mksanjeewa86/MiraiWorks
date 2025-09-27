@@ -1,16 +1,17 @@
-from typing import List, Optional
 from datetime import datetime
-from sqlalchemy import select, and_
+from typing import List, Optional
+
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.crud.base import CRUDBase
 from app.models.video_call import (
-    VideoCall,
     CallParticipant,
-    RecordingConsent,
     CallTranscription,
-    TranscriptionSegment
+    RecordingConsent,
+    TranscriptionSegment,
+    VideoCall,
 )
 from app.schemas.video_call import VideoCallCreate, VideoCallUpdate
 

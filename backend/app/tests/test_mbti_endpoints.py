@@ -4,10 +4,7 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.mbti_model import MBTITest, MBTIQuestion
-from app.models.user import User
-from app.schemas.mbti import MBTITestStart, MBTIAnswerSubmit, MBTITestSubmit
-from app.utils.constants import MBTITestStatus, UserRole as UserRoleEnum
+from app.utils.constants import MBTITestStatus
 
 
 class TestMBTIEndpoints:
@@ -285,8 +282,6 @@ class TestMBTIEndpoints:
 
         # Simulate completing test by directly updating database
         # (In real scenario, this would be done through the API)
-        from app.crud.mbti import mbti_test
-
         # Get the candidate user ID from the fixture
         # We'll need to simulate a completed test state
         # For now, we'll skip this complex scenario in the basic test

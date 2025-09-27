@@ -1,13 +1,13 @@
 """CRUD operations for MBTI personality test."""
 
 from datetime import datetime
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
 
-from sqlalchemy import select, and_
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.base import CRUDBase
-from app.models.mbti_model import MBTITest, MBTIQuestion
+from app.models.mbti_model import MBTIQuestion, MBTITest
 from app.schemas.mbti import MBTITestStart
 from app.utils.constants import MBTITestStatus
 

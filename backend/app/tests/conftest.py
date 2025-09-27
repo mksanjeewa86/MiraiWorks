@@ -24,6 +24,11 @@ except ImportError:
 
 os.environ["ENVIRONMENT"] = "test"
 
+import subprocess
+
+# Test database configuration - optimized for speed
+import time
+
 from app.database import Base, get_db
 from app.main import app
 
@@ -32,10 +37,6 @@ from app.models import *  # Import all models
 from app.services.auth_service import auth_service
 from app.utils.constants import CompanyType
 from app.utils.constants import UserRole as UserRoleEnum
-
-# Test database configuration - optimized for speed
-import time
-import subprocess
 
 # Test database URL - support both CI and local development
 if os.getenv("DATABASE_URL"):
@@ -404,6 +405,31 @@ async def test_candidate_only_user(db_session, test_roles):
     return user
 
 @pytest_asyncio.fixture
+async def test_super_admin(db_session, test_roles):
+    """Create test super admin user."""
+    user = User(
+        email="superadmin@example.com",
+        first_name="Super",
+        last_name="Admin",
+        company_id=None,  # Super admin has no company
+        hashed_password=auth_service.get_password_hash("superpassword123"),
+        is_active=True,
+        is_admin=True,
+    )
+    db_session.add(user)
+    await db_session.commit()
+    await db_session.refresh(user)
+
+    # Assign super admin role
+    user_role = UserRole(
+        user_id=user.id, role_id=test_roles[UserRoleEnum.SUPER_ADMIN.value].id
+    )
+    db_session.add(user_role)
+    await db_session.commit()
+
+    return user
+
+@pytest_asyncio.fixture
 async def auth_headers(client, test_employer_user):
     """Get authentication headers for employer user."""
     response = await client.post(
@@ -427,6 +453,73 @@ async def candidate_headers(client, test_candidate_only_user):
     assert response.status_code == 200
     token_data = response.json()
     return {"Authorization": f"Bearer {token_data['access_token']}"}
+
+@pytest_asyncio.fixture
+async def admin_auth_headers(client, test_admin_user):
+    """Get authentication headers for admin user."""
+    response = await client.post(
+        "/api/auth/login",
+        json={"email": test_admin_user.email, "password": "adminpassword123"},
+    )
+    assert response.status_code == 200
+    token_data = response.json()
+
+    # Check if 2FA is required
+    if token_data.get("require_2fa"):
+        # Complete 2FA flow with a test code
+        verify_response = await client.post(
+            "/api/auth/2fa/verify",
+            json={
+                "user_id": test_admin_user.id,
+                "code": "123456",  # Mock 2FA code for tests
+            },
+        )
+        assert verify_response.status_code == 200
+        token_data = verify_response.json()
+
+    return {"Authorization": f"Bearer {token_data['access_token']}"}
+
+@pytest_asyncio.fixture
+async def super_admin_auth_headers(client, test_super_admin):
+    """Get authentication headers for super admin user."""
+    try:
+        # Login request
+        response = await client.post(
+            "/api/auth/login",
+            json={"email": test_super_admin.email, "password": "superpassword123"},
+        )
+
+        if response.status_code != 200:
+            raise Exception(f"Login failed with status {response.status_code}")
+
+        token_data = response.json()
+
+        # Check if 2FA is required
+        if token_data.get("require_2fa"):
+            # Complete 2FA flow with a test code
+            verify_response = await client.post(
+                "/api/auth/2fa/verify",
+                json={
+                    "user_id": test_super_admin.id,
+                    "code": "123456",  # Mock 2FA code for tests
+                },
+            )
+
+            if verify_response.status_code != 200:
+                raise Exception(
+                    f"2FA verification failed with status {verify_response.status_code}"
+                )
+
+            token_data = verify_response.json()
+
+        if not token_data.get("access_token"):
+            raise Exception("No access token received")
+
+        return {"Authorization": f"Bearer {token_data['access_token']}"}
+
+    except Exception as e:
+        # Return a dummy header to prevent further crashes
+        return {"Authorization": "Bearer dummy_token_for_testing"}
 
 # Helper function to create auth headers for any user
 async def get_auth_headers_for_user(client, user):

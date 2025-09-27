@@ -1,4 +1,5 @@
 from sqlalchemy import (
+    JSON,
     Boolean,
     Column,
     DateTime,
@@ -6,7 +7,6 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
-    JSON,
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func

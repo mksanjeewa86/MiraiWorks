@@ -1,7 +1,8 @@
+from io import BytesIO
+
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from io import BytesIO
 
 from app.crud.todo import todo as todo_crud
 from app.schemas.todo import TodoCreate

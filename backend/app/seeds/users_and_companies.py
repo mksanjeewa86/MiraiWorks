@@ -5,10 +5,9 @@ Contains roles, companies, users, and user_roles seed data.
 This file creates the essential authentication system data.
 """
 
-from app.models import User, Company, Role, UserRole, UserSettings, CompanyProfile
+from app.models import Company, CompanyProfile, Role, User, UserRole, UserSettings
 from app.services.auth_service import auth_service
 from app.utils.constants import CompanyType
-
 
 # Roles data
 ROLES_DATA = [

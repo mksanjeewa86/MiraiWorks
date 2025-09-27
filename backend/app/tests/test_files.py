@@ -1,6 +1,7 @@
 import io
-import pytest
 from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -552,9 +553,10 @@ class TestFiles:
         test_admin_user: User,
     ):
         """Test that message sender can download their uploaded file."""
+        from pathlib import Path
+
         from app.schemas.message import MessageCreate
         from app.services.message_service import message_service
-        from pathlib import Path
 
         sender = test_user
         recipient = test_admin_user
@@ -616,9 +618,10 @@ class TestFiles:
         test_admin_user: User,
     ):
         """Test file download permission system works correctly."""
+        from pathlib import Path
+
         from app.schemas.message import MessageCreate
         from app.services.message_service import message_service
-        from pathlib import Path
 
         sender = test_user
         recipient = test_admin_user
@@ -686,9 +689,10 @@ class TestFiles:
         test_admin_user: User,
     ):
         """Test file download permissions work correctly between different users."""
+        from pathlib import Path
+
         from app.schemas.message import MessageCreate
         from app.services.message_service import message_service
-        from pathlib import Path
 
         # Use token-based auth instead of login to avoid 2FA issues
         sender_token = self._create_test_token(test_user.id)

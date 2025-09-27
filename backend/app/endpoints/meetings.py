@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.dependencies import get_current_user
 from app.models.user import User
 from app.schemas.meeting import (
     MeetingCreate,
@@ -12,7 +13,6 @@ from app.schemas.meeting import (
     MeetingResponse,
     MeetingUpdate,
 )
-from app.dependencies import get_current_user
 from app.services.meeting_service import MeetingService
 from app.utils.permissions import requires_permission
 

@@ -4,9 +4,11 @@ No paid APIs required - runs completely locally.
 """
 
 import asyncio
-import logging
+import importlib.util
 import io
-from typing import Optional, List
+import logging
+import shutil
+from typing import List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -23,27 +25,31 @@ class FreeTranscriptionService:
     def _initialize_engines(self):
         """Initialize available free transcription engines."""
         
-        # Try to import Vosk (free offline speech recognition)
+        # Try to detect Vosk (free offline speech recognition)
         try:
-            import vosk
-            self.vosk_available = True
-            logger.info("Vosk speech recognition available")
-        except ImportError:
+            if importlib.util.find_spec("vosk") is not None:
+                self.vosk_available = True
+                logger.info("Vosk speech recognition available")
+            else:
+                logger.info("Vosk not available (pip install vosk)")
+        except Exception:
             logger.info("Vosk not available (pip install vosk)")
-        
+
         # Try to import speech_recognition with pocketsphinx
         try:
-            import speech_recognition as sr
-            self.speech_recognition_available = True
-            logger.info("SpeechRecognition library available")
-        except ImportError:
+            if importlib.util.find_spec("speech_recognition") is not None:
+                self.speech_recognition_available = True
+                logger.info("SpeechRecognition library available")
+            else:
+                logger.info(
+                    "SpeechRecognition not available (pip install SpeechRecognition)"
+                )
+        except Exception:
             logger.info("SpeechRecognition not available (pip install SpeechRecognition)")
-        
+
         # Check for whisper.cpp availability
         try:
-            import subprocess
-            result = subprocess.run(['which', 'whisper'], capture_output=True, text=True)
-            if result.returncode == 0:
+            if shutil.which("whisper"):
                 self.whisper_cpp_available = True
                 logger.info("Whisper.cpp available")
         except Exception:
@@ -78,8 +84,9 @@ class FreeTranscriptionService:
     ) -> Optional[str]:
         """Transcribe using Vosk (completely free)."""
         try:
-            import vosk
             import json
+
+            import vosk
             
             # Vosk model selection based on language
             model_paths = {
@@ -157,9 +164,9 @@ class FreeTranscriptionService:
     ) -> Optional[str]:
         """Transcribe using whisper.cpp (free local inference)."""
         try:
+            import os
             import subprocess
             import tempfile
-            import os
             
             # Save audio to temporary file
             with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:

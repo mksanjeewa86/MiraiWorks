@@ -7,7 +7,6 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 
 from app.database import init_db
-from app.dependencies import get_redis
 from app.middleware import RequestContextMiddleware, StructuredLoggingMiddleware
 from app.routers import include_routers
 from app.utils.logging import configure_structlog, get_logger

@@ -3,11 +3,13 @@
 Test script to verify video call functionality
 """
 import asyncio
-import sys
 import os
+import sys
+
 sys.path.append(os.path.join(os.path.dirname(__file__), "."))
 
 from sqlalchemy import text
+
 from app.database import AsyncSessionLocal
 
 

@@ -609,8 +609,9 @@ class PDFService:
         </html>
         """
         
-        from jinja2 import Template
         from datetime import datetime
+
+        from jinja2 import Template
         
         template = Template(html_template)
         
@@ -907,8 +908,9 @@ class PDFService:
         </html>
         """
         
-        from jinja2 import Template
         from datetime import datetime
+
+        from jinja2 import Template
         
         template = Template(html_template)
         

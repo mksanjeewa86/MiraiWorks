@@ -1,19 +1,19 @@
 """Focused integration tests for message endpoints."""
 
-import pytest
 from typing import Optional
 
+import pytest
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.message import Message
 from app.models.role import Role, UserRole
 from app.models.user import User
 from app.schemas.message import MessageCreate
+from app.services.auth_service import auth_service
 from app.services.message_service import message_service
 from app.utils.constants import UserRole as UserRoleEnum
-from app.services.auth_service import auth_service
 
 
 async def create_user_with_role(

@@ -6,17 +6,21 @@ including CRUD operations, sharing, templates, and integration scenarios.
 Tests use real database data and API endpoints.
 """
 
+from datetime import datetime
+
 import pytest
-from datetime import datetime, timedelta
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.main import app
-from app.models.resume import Resume, WorkExperience, Education, Skill, ResumeShare
 from app.models.user import User
 from app.services.resume_service import ResumeService
-from app.crud.resume import resume as resume_crud
-from app.utils.constants import ResumeStatus, ResumeVisibility, ResumeFormat, ResumeLanguage
+from app.utils.constants import (
+    ResumeFormat,
+    ResumeLanguage,
+    ResumeStatus,
+    ResumeVisibility,
+)
 
 
 class TestResumeComprehensive:
@@ -445,8 +449,10 @@ class TestResumeComprehensive:
     async def test_resume_with_all_sections(self, db: AsyncSession, test_user: User, sample_resume_data: dict, resume_service: ResumeService):
         """Test resume with work experience, education, and skills."""
         from app.schemas.resume import (
-            ResumeCreate, WorkExperienceCreate,
-            EducationCreate, SkillCreate
+            EducationCreate,
+            ResumeCreate,
+            SkillCreate,
+            WorkExperienceCreate,
         )
 
         # Create resume
@@ -660,8 +666,11 @@ class TestResumeIntegrationScenarios:
     async def test_complete_resume_lifecycle(self, db: AsyncSession, test_user: User, resume_service: ResumeService):
         """Test complete resume lifecycle from creation to deletion."""
         from app.schemas.resume import (
-            ResumeCreate, ResumeUpdate, WorkExperienceCreate,
-            EducationCreate, SkillCreate
+            EducationCreate,
+            ResumeCreate,
+            ResumeUpdate,
+            SkillCreate,
+            WorkExperienceCreate,
         )
 
         # 1. Create resume

@@ -1,7 +1,17 @@
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, Boolean, Float, Index
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+)
+from sqlalchemy.dialects.mysql import JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from sqlalchemy.dialects.mysql import JSON
 
 from app.database import Base
 

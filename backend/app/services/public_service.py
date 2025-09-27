@@ -6,8 +6,8 @@ from sqlalchemy.orm import Session
 
 from app.models.company import Company
 from app.models.position import CompanyProfile, Position, PositionApplication
-from app.schemas.position import PositionStatus
 from app.models.user import User
+from app.schemas.position import PositionStatus
 from app.schemas.public import (
     CompanyProfileUpdate,
     CompanySearchParams,

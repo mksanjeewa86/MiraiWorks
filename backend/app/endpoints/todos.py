@@ -9,17 +9,17 @@ from app.dependencies import get_current_active_user
 from app.models.todo import Todo
 from app.models.user import User
 from app.schemas.todo import (
+    AssignableUser,
+    TodoAssignmentUpdate,
     TodoCreate,
     TodoListResponse,
     TodoRead,
     TodoUpdate,
-    TodoAssignmentUpdate,
-    TodoWithAssignedUser,
     TodoViewersUpdate,
-    AssignableUser,
+    TodoWithAssignedUser,
 )
-from app.utils.constants import TodoStatus
 from app.services.todo_permissions import TodoPermissionService
+from app.utils.constants import TodoStatus
 
 router = APIRouter()
 

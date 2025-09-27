@@ -6,26 +6,24 @@ This module creates comprehensive resume examples including 履歴書 (rirekisho
 職務経歴書 (shokumu keirekisho), international, and modern creative formats.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
+
+from app.crud.resume import generate_share_token, generate_slug
 from app.models.resume import (
-    Resume,
-    WorkExperience,
-    Education,
-    Skill,
-    Project,
     Certification,
+    Education,
     Language,
-    Reference,
-    ResumeSection
+    Project,
+    Resume,
+    Skill,
+    WorkExperience,
 )
 from app.utils.constants import (
-    ResumeStatus,
-    ResumeVisibility,
     ResumeFormat,
     ResumeLanguage,
-    SectionType
+    ResumeStatus,
+    ResumeVisibility,
 )
-from app.crud.resume import generate_slug, generate_share_token
 
 
 async def seed_resume_data(db, auth_result):

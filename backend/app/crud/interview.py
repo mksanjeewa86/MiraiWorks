@@ -3,7 +3,7 @@ from typing import Dict, List, Optional
 
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload, joinedload
+from sqlalchemy.orm import joinedload, selectinload
 
 from app.crud.base import CRUDBase
 from app.models.interview import Interview, InterviewProposal

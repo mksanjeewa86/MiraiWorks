@@ -1,11 +1,13 @@
 from datetime import datetime
 from typing import Optional
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.video_call import VideoCall
-from app.models.user import User
-from app.services.email_service import email_service
 from app.config import settings
+from app.models.user import User
+from app.models.video_call import VideoCall
+from app.services.email_service import email_service
+
 
 class VideoNotificationService:
     """Service for handling video call email notifications."""

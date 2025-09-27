@@ -11,8 +11,8 @@ This test validates the complete user creation workflow:
 
 import pytest
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import *  # Import all models to ensure table creation
 from app.services.auth_service import auth_service

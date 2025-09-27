@@ -5,14 +5,15 @@ These tests focus on testing the business logic and service methods
 using mocks and fixtures, ensuring the resume functionality works correctly.
 """
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from app.services.resume_service import ResumeService
-from app.models.resume import Resume, WorkExperience, Education, Skill
+import pytest
+
+from app.models.resume import Resume
 from app.schemas.resume import ResumeCreate, ResumeUpdate, WorkExperienceCreate
-from app.utils.constants import ResumeStatus, ResumeVisibility, ResumeFormat
+from app.services.resume_service import ResumeService
+from app.utils.constants import ResumeStatus, ResumeVisibility
 
 
 class TestResumeServiceUnit:

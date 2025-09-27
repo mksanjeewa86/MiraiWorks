@@ -16,9 +16,9 @@ from app.schemas.calendar import (
     CalendarSyncResponse,
     CalendarWebhookData,
     EventCreate,
-    EventUpdate,
     EventInfo,
     EventsListResponse,
+    EventUpdate,
 )
 from app.services.google_calendar_service import google_calendar_service
 from app.services.microsoft_calendar_service import microsoft_calendar_service

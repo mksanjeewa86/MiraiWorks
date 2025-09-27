@@ -6,25 +6,25 @@ and edge cases to ensure 100% functionality.
 """
 
 import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy.ext.asyncio import AsyncSession
 from httpx import AsyncClient
-import json
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.main import app
-from app.database import get_db
-from app.models.user import User
 from app.models.resume import Resume
-from app.utils.constants import ResumeStatus, ResumeVisibility, ResumeFormat, ResumeLanguage
+from app.models.user import User
 from app.services.auth_service import auth_service
+from app.utils.constants import (
+    ResumeFormat,
+    ResumeLanguage,
+    ResumeStatus,
+    ResumeVisibility,
+)
 
 
 @pytest.fixture
 async def test_user(db: AsyncSession):
     """Create a test user for authentication."""
-    from app.crud.user import user as user_crud
-    from app.schemas.user import UserCreate
     from app.models.role import Role, UserRole
+    from app.schemas.user import UserCreate
 
     # Create test user
     user_data = UserCreate(

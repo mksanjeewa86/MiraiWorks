@@ -17,7 +17,8 @@ from app.dependencies import (
 from app.models.auth import PasswordResetRequest
 from app.models.company import Company
 from app.models.notification import Notification
-from app.models.role import Role, UserRole as UserRoleModel
+from app.models.role import Role
+from app.models.role import UserRole as UserRoleModel
 from app.models.user import User
 from app.models.user_settings import UserSettings
 from app.schemas.auth import (

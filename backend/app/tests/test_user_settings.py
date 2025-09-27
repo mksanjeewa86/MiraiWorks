@@ -1,10 +1,9 @@
 """Integration tests for user settings and profile endpoints."""
 
 import pytest
-
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.user import User
 from app.models.user_settings import UserSettings

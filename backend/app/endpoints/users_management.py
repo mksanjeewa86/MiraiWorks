@@ -1,6 +1,6 @@
+import logging
 import secrets
 import string
-import logging
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status

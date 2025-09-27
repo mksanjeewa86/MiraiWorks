@@ -1,11 +1,11 @@
 """Targeted recruitment workflow integration tests."""
 
-import pytest
 from uuid import uuid4
 
+import pytest
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.position import Position
 from app.models.user import User

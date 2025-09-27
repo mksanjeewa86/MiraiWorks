@@ -1,7 +1,10 @@
 import asyncio
 from unittest.mock import AsyncMock, patch
 
-from app.services.transcription_service import transcription_service, TranscriptionService
+from app.services.transcription_service import (
+    TranscriptionService,
+    transcription_service,
+)
 
 
 class TestTranscriptionService:

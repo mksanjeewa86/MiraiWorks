@@ -7,13 +7,14 @@ from sqlalchemy import and_, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.config import settings
 from app.models.calendar_integration import ExternalCalendarAccount, SyncedEvent
 from app.models.company import Company
 from app.models.interview import Interview, InterviewProposal
-from app.models.role import Role, UserRole as UserRoleModel
+from app.models.role import Role
+from app.models.role import UserRole as UserRoleModel
 from app.models.user import User
 from app.services.calendar_service import google_calendar_service
-from app.config import settings
 from app.services.microsoft_calendar_service import microsoft_calendar_service
 from app.utils.constants import InterviewStatus, UserRole
 from app.utils.permissions import is_company_admin, is_super_admin

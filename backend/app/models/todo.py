@@ -11,9 +11,9 @@ from app.utils.constants import TodoStatus, TodoVisibility
 from .base import Base
 
 if TYPE_CHECKING:
-    from .user import User
-    from .todo_viewer import TodoViewer
     from .todo_extension_request import TodoExtensionRequest
+    from .todo_viewer import TodoViewer
+    from .user import User
 
 
 class Todo(Base):

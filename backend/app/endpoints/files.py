@@ -3,7 +3,7 @@ from pathlib import Path, PurePosixPath
 from typing import Optional
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
-from sqlalchemy import select, or_
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -123,6 +123,7 @@ async def check_file_access_permission(
         # Normalize the file path to match against the stored file_url
         # The s3_key from URL might be URL encoded, so we need to handle this
         import urllib.parse
+
         from sqlalchemy import or_
 
         # Create search patterns to handle different scenarios
@@ -316,6 +317,7 @@ async def download_file(
     # Fall back to local storage
     try:
         from fastapi.responses import FileResponse
+
         from app.services.local_storage_service import get_local_storage_service
 
         storage_service = get_local_storage_service()
@@ -450,8 +452,9 @@ async def serve_message_file(
     db: AsyncSession = Depends(get_db),
 ):
     """Serve message attachment files with proper security checks."""
-    from fastapi.responses import FileResponse
     from pathlib import Path
+
+    from fastapi.responses import FileResponse
 
     # Security check - user can only access their own files or files in messages they're part of
     file_path = f"message_files/{user_id}/{filename}"

@@ -19,7 +19,6 @@ from app.models.db_types import CompatLONGTEXT as LONGTEXT
 
 from .base import Base
 
-
 # Association table for meeting participants
 meeting_participants = Table(
     "meeting_participants",

@@ -1,8 +1,8 @@
 import logging
-from typing import Optional, Dict, Any
 from datetime import datetime, timezone
+from typing import Any, Dict, Optional
 
-from app.models.video_call import VideoCall, RecordingConsent
+from app.models.video_call import RecordingConsent, VideoCall
 from app.services.video_service import video_service
 
 logger = logging.getLogger(__name__)

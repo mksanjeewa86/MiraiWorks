@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, Any, Tuple
+from typing import Any, Dict, Tuple
 
 try:
     from jinja2 import Environment, FileSystemLoader

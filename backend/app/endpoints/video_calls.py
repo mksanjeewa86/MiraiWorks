@@ -1,27 +1,28 @@
-from typing import List
 from datetime import datetime, timezone
+from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud
 from app.crud.user import user as user_crud
-from app.schemas.video_call import (
-    VideoCallCreate,
-    VideoCallInfo,
-    VideoCallToken,
-    RecordingConsentRequest,
-    RecordingConsentInfo,
-    TranscriptionSegmentCreate,
-    TranscriptionSegmentInfo,
-    CallTranscriptionInfo,
-    TranscriptionStatus,
-)
 from app.database import get_db
 from app.dependencies import get_current_active_user
 from app.models.user import User
-from app.services.video_service import video_service
+from app.schemas.video_call import (
+    CallTranscriptionInfo,
+    RecordingConsentInfo,
+    RecordingConsentRequest,
+    TranscriptionSegmentCreate,
+    TranscriptionSegmentInfo,
+    TranscriptionStatus,
+    VideoCallCreate,
+    VideoCallInfo,
+    VideoCallToken,
+)
 from app.services.permission_service import permission_service
 from app.services.video_notification_service import video_notification_service
+from app.services.video_service import video_service
 
 router = APIRouter(prefix="/video-calls", tags=["video-calls"])
 

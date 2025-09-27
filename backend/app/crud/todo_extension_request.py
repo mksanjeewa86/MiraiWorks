@@ -3,17 +3,17 @@
 from datetime import datetime, timedelta
 from typing import List, Optional
 
-from sqlalchemy import and_, select, func
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.crud.base import CRUDBase
-from app.models.todo_extension_request import TodoExtensionRequest
 from app.models.todo import Todo
+from app.models.todo_extension_request import TodoExtensionRequest
 from app.schemas.todo_extension import (
     TodoExtensionRequestCreate,
     TodoExtensionRequestResponse,
-    TodoExtensionValidation
+    TodoExtensionValidation,
 )
 from app.utils.constants import ExtensionRequestStatus, TodoStatus
 

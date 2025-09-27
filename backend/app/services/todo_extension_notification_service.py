@@ -4,11 +4,11 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.todo_extension_request import TodoExtensionRequest
 from app.crud.todo_viewer import todo_viewer
-from app.services.notification_service import NotificationService
+from app.models.todo_extension_request import TodoExtensionRequest
 from app.services.email_service import email_service
-from app.utils.constants import NotificationType, ExtensionRequestStatus
+from app.services.notification_service import NotificationService
+from app.utils.constants import ExtensionRequestStatus, NotificationType
 
 logger = logging.getLogger(__name__)
 

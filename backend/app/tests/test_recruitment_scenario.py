@@ -1,12 +1,12 @@
 """Integration tests covering recruitment scenarios around jobs and interviews."""
 
-import pytest
 from datetime import datetime, timedelta
 from uuid import uuid4
 
+import pytest
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.role import Role, UserRole
 from app.models.user import User

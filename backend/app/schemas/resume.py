@@ -3,7 +3,13 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
-from app.utils.constants import ResumeStatus, ResumeVisibility, SectionType, ResumeFormat, ResumeLanguage
+from app.utils.constants import (
+    ResumeFormat,
+    ResumeLanguage,
+    ResumeStatus,
+    ResumeVisibility,
+    SectionType,
+)
 
 
 def _normalize_enum(enum_cls, value, field_name: str):

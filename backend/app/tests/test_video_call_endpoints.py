@@ -1,11 +1,11 @@
+from datetime import datetime, timedelta, timezone
+
 import pytest
-from datetime import datetime, timezone, timedelta
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.video_call import VideoCall
 from app.crud.video_call import video_call as video_call_crud
-
+from app.models.video_call import VideoCall
 
 # Removed duplicate fixture - using the one from conftest.py instead
 

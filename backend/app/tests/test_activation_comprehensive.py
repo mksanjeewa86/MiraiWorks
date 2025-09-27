@@ -5,12 +5,12 @@ Tests all scenarios, edge cases, and error conditions for user activation.
 
 import pytest
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.user import User
 from app.models.company import Company
 from app.models.role import Role, UserRole
+from app.models.user import User
 from app.models.user_settings import UserSettings
 from app.services.auth_service import auth_service
 from app.utils.constants import UserRole as UserRoleEnum
@@ -78,28 +78,33 @@ class TestAccountActivation:
         assert user_data["email"] == "activate@test.com"
         assert user_data["is_active"] is True
 
-        # Verify database changes
-        await db_session.refresh(user)
-        assert user.is_active is True
-        assert user.last_login is not None
+        # Verify database changes - use fresh query to bypass session isolation
+        from app.tests.conftest import test_engine
+        async with test_engine.begin() as conn:
+            result = await conn.execute(select(User).where(User.id == user.id))
+            updated_user = result.fetchone()
+            assert updated_user.is_active is True
+            assert updated_user.last_login is not None
 
-        # Verify new password works
-        new_password_valid = auth_service.verify_password(
-            "NewSecure@123", user.hashed_password
-        )
-        assert new_password_valid is True
+            # Verify new password works (using updated hash)
+            new_password_valid = auth_service.verify_password(
+                "NewSecure@123", updated_user.hashed_password
+            )
+            assert new_password_valid is True
 
-        # Verify old password no longer works
-        old_password_valid = auth_service.verify_password(
-            temp_password, user.hashed_password
-        )
-        assert old_password_valid is False
+            # Verify old password no longer works
+            old_password_valid = auth_service.verify_password(
+                temp_password, updated_user.hashed_password
+            )
+            assert old_password_valid is False
 
-        # Verify user settings were created
-        settings_result = await db_session.execute(
-            select(UserSettings).where(UserSettings.user_id == user.id)
-        )
-        settings = settings_result.scalar_one_or_none()
+        # Verify user settings were created (using direct DB query to bypass session isolation)
+        from app.tests.conftest import test_engine
+        async with test_engine.begin() as conn:
+            settings_result = await conn.execute(
+                select(UserSettings).where(UserSettings.user_id == user.id)
+            )
+            settings = settings_result.fetchone()
         assert settings is not None
         assert settings.email_notifications is True
 
@@ -417,9 +422,12 @@ class TestAccountActivation:
 
         assert response.status_code == 200
 
-        # Verify default phone was added
-        await db_session.refresh(user)
-        assert user.phone == "+1-555-0100"
+        # Verify default phone was added - use fresh query to bypass session isolation
+        from app.tests.conftest import test_engine
+        async with test_engine.begin() as conn:
+            result = await conn.execute(select(User).where(User.id == user.id))
+            updated_user = result.fetchone()
+            assert updated_user.phone == "+1-555-0100"
 
     async def test_activation_preserves_existing_phone(
         self, client: AsyncClient, db_session: AsyncSession

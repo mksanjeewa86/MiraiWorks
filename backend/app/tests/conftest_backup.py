@@ -27,6 +27,14 @@ except ImportError:
 
 os.environ["ENVIRONMENT"] = "test"
 
+# Test database URL for Docker MySQL (port 3307 to avoid conflicts)
+# Support both local Docker and GitHub Actions
+import os
+import subprocess
+
+# Test database configuration - MySQL only with Docker
+import time
+
 from app.database import Base, get_db
 from app.main import app
 
@@ -36,15 +44,6 @@ from app.services.auth_service import auth_service
 from app.utils.constants import CompanyType
 from app.utils.constants import UserRole as UserRoleEnum
 
-# Test database configuration - MySQL only with Docker
-import time
-import uuid
-import subprocess
-import asyncio as async_lib
-
-# Test database URL for Docker MySQL (port 3307 to avoid conflicts)
-# Support both local Docker and GitHub Actions
-import os
 if os.getenv("GITHUB_ACTIONS"):
     # GitHub Actions uses service containers
     TEST_DATABASE_URL = "mysql+asyncmy://changeme:changeme@127.0.0.1:3307/miraiworks_test"
@@ -709,11 +708,12 @@ async def test_users(db_session, test_company, test_roles):
 @pytest_asyncio.fixture
 async def test_todo_with_attachments(db_session, test_users):
     """Create a test todo with file attachments."""
+    import tempfile
+
     from app.crud.todo import todo as todo_crud
     from app.crud.todo_attachment import todo_attachment
     from app.schemas.todo import TodoCreate
     from app.schemas.todo_attachment import TodoAttachmentCreate
-    import tempfile
 
     user = test_users['recruiter']
 
@@ -793,12 +793,14 @@ async def get_auth_headers_for_user(client, user):
 @pytest_asyncio.fixture
 async def test_video_call(db_session, test_users):
     """Create a test video call."""
-    from app.crud.video_call import video_call as video_call_crud
-    from app.schemas.video_call import VideoCallCreate
-    from app.models.video_call import VideoCall
-    from datetime import datetime, timezone, timedelta
+    from datetime import datetime, timedelta, timezone
+
     from sqlalchemy import select
     from sqlalchemy.orm import selectinload
+
+    from app.crud.video_call import video_call as video_call_crud
+    from app.models.video_call import VideoCall
+    from app.schemas.video_call import VideoCallCreate
 
     recruiter = test_users['recruiter']
     candidate = test_users['candidate']

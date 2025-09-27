@@ -12,6 +12,7 @@ from app.models.meeting import (
     meeting_participants,
 )
 from app.models.user import User
+from app.rbac import has_permission
 from app.schemas.meeting import (
     MeetingCreate,
     MeetingListParams,
@@ -23,7 +24,6 @@ from app.schemas.meeting import (
     ParticipantStatus,
 )
 from app.services.audit_service import log_action
-from app.rbac import has_permission
 from app.utils.permissions import check_company_access
 
 
