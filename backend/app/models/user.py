@@ -82,6 +82,9 @@ class User(Base):
     calendar_connections = relationship(
         "CalendarConnection", back_populates="user", cascade="all, delete-orphan"
     )
+    calendar_events = relationship(
+        "CalendarEvent", back_populates="creator", cascade="all, delete-orphan"
+    )
     # Todo extension request relationships
     requested_extensions = relationship(
         "TodoExtensionRequest",

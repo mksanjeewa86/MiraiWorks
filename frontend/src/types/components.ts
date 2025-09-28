@@ -207,8 +207,6 @@ export interface NotificationDropdownProps {
 export type CalendarViewMode = 'month' | 'week' | 'day' | 'list';
 
 export interface CalendarFilters {
-  eventType: 'all' | 'calendar' | 'interview';
-  status: 'all' | 'tentative' | 'confirmed' | 'cancelled';
   search: string;
 }
 

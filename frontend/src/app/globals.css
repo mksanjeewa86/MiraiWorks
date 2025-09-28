@@ -608,6 +608,145 @@ body {
   background-color: #ef4444;
 }
 
+/* FullCalendar Full Height Container */
+.fc {
+  height: 100% !important;
+  min-height: 500px !important;
+}
+
+.fc-view-harness {
+  height: 100% !important;
+  min-height: 500px !important;
+}
+
+.fc-daygrid,
+.fc-timegrid,
+.fc-list {
+  height: 100% !important;
+}
+
+/* Force consistent row heights for month view using flexbox */
+.fc-daygrid-body {
+  height: calc(100% - 40px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.fc-daygrid-body table {
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.fc-daygrid-body tbody {
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.fc-daygrid-body tr {
+  flex: 1 !important;
+  display: flex !important;
+  min-height: 0 !important;
+}
+
+.fc-daygrid-day {
+  flex: 1 !important;
+  height: 100% !important;
+  min-height: 0 !important;
+}
+
+/* FullCalendar Responsive Height Cells */
+.fc-daygrid-day-frame {
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.fc-daygrid-day-events {
+  overflow: hidden !important;
+  flex-grow: 1 !important;
+  max-height: calc(100% - 25px) !important;
+}
+
+.fc-daygrid-more-link {
+  position: absolute !important;
+  bottom: 2px !important;
+  left: 2px !important;
+  right: 2px !important;
+  text-align: center !important;
+  background: #3b82f6 !important;
+  color: white !important;
+  border-radius: 4px !important;
+  padding: 2px 4px !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  z-index: 10 !important;
+}
+
+.fc-daygrid-more-link:hover {
+  background: #2563eb !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3) !important;
+}
+
+[data-theme='dark'] .fc-daygrid-more-link {
+  background: #60a5fa !important;
+  color: #1f2937 !important;
+}
+
+[data-theme='dark'] .fc-daygrid-more-link:hover {
+  background: #3b82f6 !important;
+  color: white !important;
+}
+
+/* Popover styling for more events */
+.fc-popover {
+  background: white !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 8px !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  z-index: 1000 !important;
+}
+
+[data-theme='dark'] .fc-popover {
+  background: #1f2937 !important;
+  border-color: #374151 !important;
+}
+
+.fc-popover-header {
+  background: #f9fafb !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  padding: 8px 12px !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  color: #374151 !important;
+}
+
+[data-theme='dark'] .fc-popover-header {
+  background: #374151 !important;
+  border-bottom-color: #4b5563 !important;
+  color: #f3f4f6 !important;
+}
+
+.fc-popover-body {
+  padding: 4px !important;
+  max-height: 300px !important;
+  overflow-y: auto !important;
+}
+
+/* Ensure events in popover have proper spacing */
+.fc-popover .fc-event {
+  margin: 2px 4px !important;
+  border-radius: 4px !important;
+}
+
 /* Responsive Animation Controls */
 @media (prefers-reduced-motion: reduce) {
   .animate-blob,

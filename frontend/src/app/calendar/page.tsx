@@ -2,9 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import clsx from "clsx";
-import { addDays, endOfWeek, format, startOfWeek } from "date-fns";
+import { addDays, addMonths, addWeeks, endOfWeek, format, startOfWeek } from "date-fns";
 import {
   Calendar as CalendarIcon,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   Grid,
   List,
@@ -32,8 +34,6 @@ interface SelectionRange {
 }
 
 const defaultFilters: CalendarFilters = {
-  eventType: "all",
-  status: "all",
   search: "",
 };
 
@@ -181,12 +181,6 @@ const mapInterviewToEvent = (interview: Interview): CalendarEvent | null => {
   };
 };
 
-const deriveEventType = (event: CalendarEvent): "calendar" | "interview" => {
-  if (event.type === "interview" || event.id.startsWith("interview-")) {
-    return "interview";
-  }
-  return "calendar";
-};
 
 const computeRangeForView = (reference: Date, view: CalendarViewMode): { start: Date; end: Date } => {
   const start = new Date(reference);
@@ -240,6 +234,36 @@ function CalendarPageContent() {
   const goToToday = useCallback(() => {
     setCurrentDate(new Date());
   }, []);
+
+  const navigateNext = useCallback(() => {
+    setCurrentDate(prevDate => {
+      if (viewType === "month") {
+        return addMonths(prevDate, 1); // Move to next month
+      } else if (viewType === "week") {
+        return addWeeks(prevDate, 1); // Move to next week
+      } else if (viewType === "day") {
+        return addDays(prevDate, 1); // Move to next day
+      } else if (viewType === "list") {
+        return addWeeks(prevDate, 2); // Move 2 weeks forward for list view
+      }
+      return prevDate;
+    });
+  }, [viewType]);
+
+  const navigatePrev = useCallback(() => {
+    setCurrentDate(prevDate => {
+      if (viewType === "month") {
+        return addMonths(prevDate, -1); // Move to previous month
+      } else if (viewType === "week") {
+        return addWeeks(prevDate, -1); // Move to previous week
+      } else if (viewType === "day") {
+        return addDays(prevDate, -1); // Move to previous day
+      } else if (viewType === "list") {
+        return addWeeks(prevDate, -2); // Move 2 weeks back for list view
+      }
+      return prevDate;
+    });
+  }, [viewType]);
 
   const loadConnections = useCallback(async () => {
     try {
@@ -349,16 +373,6 @@ function CalendarPageContent() {
     const searchTerm = filters.search.trim().toLowerCase();
 
     return events.filter((event) => {
-      const eventType = deriveEventType(event);
-      if (filters.eventType !== "all" && eventType !== filters.eventType) {
-        return false;
-      }
-      if (
-        filters.status !== "all" &&
-        (event.status?.toLowerCase() ?? "tentative") !== filters.status
-      ) {
-        return false;
-      }
       if (searchTerm) {
         const haystack = [event.title, event.description, event.location]
           .filter(Boolean)
@@ -502,7 +516,7 @@ function CalendarPageContent() {
 
   return (
     <AppLayout pageTitle="Calendar" pageDescription="Manage interviews, internal events, and synced calendars.">
-      <div className="flex h-full flex-col bg-slate-100/80">
+      <div className="flex h-screen flex-col bg-slate-100/80">
         <div className="border-b border-slate-200 bg-white/90 backdrop-blur">
           <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between gap-4 px-4 py-4 lg:px-6">
             <div className="flex flex-1 items-center gap-3">
@@ -516,7 +530,25 @@ function CalendarPageContent() {
               </button>
               <div>
                 <h1 className="text-xl font-semibold text-slate-900">Calendar</h1>
-                <p className="text-xs text-slate-500">{headerLabel}</p>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={navigatePrev}
+                    className="inline-flex items-center justify-center rounded-full p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                    aria-label="Previous"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <p className="text-xs text-slate-500 min-w-0 flex-1 text-center">{headerLabel}</p>
+                  <button
+                    type="button"
+                    onClick={navigateNext}
+                    className="inline-flex items-center justify-center rounded-full p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                    aria-label="Next"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -563,7 +595,7 @@ function CalendarPageContent() {
           </div>
         </div>
 
-        <div className="mx-auto flex w-full max-w-[1400px] flex-1 overflow-hidden px-4 pb-6 pt-4 lg:px-6">
+        <div className="mx-auto flex w-full max-w-[1400px] flex-1 gap-6 overflow-hidden px-4 pb-6 pt-4 lg:px-6">
           <div className="hidden w-80 flex-shrink-0 lg:block">
             <div className="h-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
               <CalendarSidebar

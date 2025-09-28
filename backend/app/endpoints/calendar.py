@@ -19,9 +19,19 @@ from app.schemas.calendar import (
     EventsListResponse,
     EventUpdate,
 )
+from app.schemas.calendar_event import (
+    CalendarEventCreate,
+    CalendarEventUpdate,
+    CalendarEventInfo,
+    CalendarEventQueryParams,
+    CalendarEventListResponse,
+    CalendarEventBulkCreate,
+    CalendarEventBulkResponse,
+)
 from app.services.google_calendar_service import google_calendar_service
 from app.services.microsoft_calendar_service import microsoft_calendar_service
 from app.services.holiday_service import holiday_service
+from app.services.calendar_service import calendar_service
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -374,54 +384,89 @@ async def get_events(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get calendar events including holidays."""
+    """Get consolidated calendar events including internal events, external events, and holidays."""
     logger.info(
         f"GET /api/calendar/events - startDate: {startDate}, endDate: {endDate}"
     )
 
-    all_events = []
+    # Set default date range if not provided
+    if not startDate:
+        start_date = datetime.utcnow()
+    else:
+        start_date = datetime.fromisoformat(startDate.replace('Z', '+00:00'))
 
-    # Add calendar events from storage (existing events)
-    all_events.extend(events_storage)
+    if not endDate:
+        end_date = start_date + timedelta(days=30)
+    else:
+        end_date = datetime.fromisoformat(endDate.replace('Z', '+00:00'))
 
-    # Add holidays if date range is provided
-    if startDate and endDate:
-        try:
-            start_date = datetime.fromisoformat(startDate.replace('Z', '+00:00')).date()
-            end_date = datetime.fromisoformat(endDate.replace('Z', '+00:00')).date()
+    try:
+        # Get consolidated calendar data from service
+        calendar_data = await calendar_service.get_consolidated_calendar(
+            db,
+            user_id=current_user.id,
+            start_date=start_date,
+            end_date=end_date
+        )
 
-            # Get holidays for the date range
-            holidays = await holiday_service.get_holidays_for_calendar(
-                db, start_date, end_date, country="JP"
+        all_events = []
+
+        # Convert internal events to EventInfo format
+        for event in calendar_data["internal_events"]:
+            event_info = EventInfo(
+                id=event["id"],
+                title=event["title"],
+                description=event.get("description"),
+                location=event.get("location"),
+                start_datetime=datetime.fromisoformat(event["start"]),
+                end_datetime=datetime.fromisoformat(event["end"]) if event["end"] else None,
+                timezone="UTC",
+                is_all_day=event["allDay"],
+                is_recurring=False,  # Will be enhanced later for recurring events
+                organizer_email=current_user.email,
+                attendees=[],
+                status=event["status"],
+                created_at=datetime.utcnow(),  # This should come from the event data
+                updated_at=datetime.utcnow()   # This should come from the event data
             )
+            all_events.append(event_info)
 
-            # Convert holidays to EventInfo format
-            for holiday in holidays:
-                holiday_event = EventInfo(
-                    id=f"holiday-{holiday.id}",
-                    title=holiday.name_en or holiday.name,
-                    description=holiday.description_en or holiday.description,
-                    location=None,
-                    startDatetime=datetime.combine(holiday.date, datetime.min.time()),
-                    endDatetime=datetime.combine(holiday.date, datetime.max.time()),
-                    timezone="Asia/Tokyo",
-                    isAllDay=True,
-                    isRecurring=holiday.is_recurring,
-                    organizerEmail=None,
-                    attendees=[],
-                    status="confirmed",
-                    createdAt=holiday.created_at,
-                    updatedAt=holiday.updated_at
-                )
-                all_events.append(holiday_event)
+        # Convert holidays to EventInfo format
+        for holiday in calendar_data["holidays"]:
+            holiday_event = EventInfo(
+                id=holiday["id"],
+                title=holiday["title"],
+                description=holiday.get("description"),
+                location=None,
+                start_datetime=datetime.fromisoformat(holiday["start"]),
+                end_datetime=datetime.fromisoformat(holiday["end"]),
+                timezone="Asia/Tokyo",
+                is_all_day=holiday["allDay"],
+                is_recurring=False,
+                organizer_email=None,
+                attendees=[],
+                status="confirmed",
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow()
+            )
+            all_events.append(holiday_event)
 
-        except Exception as e:
-            logger.warning(f"Failed to fetch holidays: {e}")
+        # Sort by start time
+        all_events.sort(key=lambda x: x.start_datetime)
 
-    return EventsListResponse(
-        events=all_events,
-        has_more=False,
-    )
+        logger.info(f"Retrieved {len(all_events)} events for user {current_user.id}")
+
+        return EventsListResponse(
+            events=all_events,
+            has_more=False,
+        )
+
+    except Exception as e:
+        logger.error(f"Failed to get calendar events: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve calendar events"
+        )
 
     # Original implementation (commented out for testing):
     """
@@ -593,129 +638,261 @@ async def microsoft_calendar_webhook(
     return {"status": "received"}
 
 
-# In-memory storage for testing
-events_storage = []
+# ==================== INTERNAL CALENDAR EVENT ENDPOINTS ====================
 
-
-# Basic Calendar Event CRUD Endpoints
-@router.post("/events", response_model=EventInfo, status_code=201)
-async def create_event(
-    event_data: EventCreate,
-    # Temporarily remove auth dependency for testing
-    # current_user: User = Depends(get_current_active_user),
-    # db: AsyncSession = Depends(get_db),
-):
-    """Create a new calendar event."""
-    # For now, we'll create a simple in-memory event
-    # In a real implementation, this would store to a database
-    import uuid
-    from datetime import datetime as dt
-
-    event_id = str(uuid.uuid4())
-    now = dt.utcnow()
-
-    # Convert to EventInfo format
-    event_info = EventInfo(
-        id=event_id,
-        title=event_data.title,
-        description=event_data.description,
-        location=event_data.location,
-        start_datetime=event_data.start_datetime,
-        end_datetime=event_data.end_datetime,
-        timezone=event_data.timezone,
-        is_all_day=event_data.is_all_day,
-        is_recurring=False,
-        organizer_email="test@example.com",  # Temporary placeholder
-        attendees=event_data.attendees,
-        status="tentative",
-        created_at=now,
-        updated_at=now,
-    )
-
-    # Store in memory
-    events_storage.append(event_info)
-
-    logger.info(f"Created event: {event_info.title} with ID: {event_id}")
-    return event_info
-
-
-@router.get("/events/{event_id}", response_model=EventInfo)
-async def get_event(
-    event_id: str,
+@router.post("/events", response_model=CalendarEventInfo, status_code=201)
+async def create_calendar_event(
+    event_data: CalendarEventCreate,
     current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Create a new internal calendar event."""
+    try:
+        event = await calendar_service.create_event(
+            db,
+            event_in=event_data,
+            creator_id=current_user.id
+        )
+        logger.info(f"Created calendar event: {event.title} for user {current_user.id}")
+        return event
+    except Exception as e:
+        logger.error(f"Failed to create calendar event: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+
+@router.get("/events/{event_id}", response_model=CalendarEventInfo)
+async def get_calendar_event(
+    event_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Get a specific calendar event."""
-    # For now, return a mock event
-    # In a real implementation, this would fetch from database
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
+    try:
+        # Get event from database
+        from app.crud.calendar_event import calendar_event
+        event = await calendar_event.get(db, id=event_id)
+
+        if not event:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Event not found"
+            )
+
+        # Check if user has permission to view this event
+        if event.creator_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to view this event"
+            )
+
+        return CalendarEventInfo.model_validate(event)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get calendar event {event_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve event"
+        )
 
 
-@router.put("/events/{event_id}", response_model=EventInfo)
-async def update_event(
-    event_id: str,
-    event_data: EventUpdate,
-    # Temporarily remove auth dependency for testing
-    # current_user: User = Depends(get_current_active_user),
+@router.put("/events/{event_id}", response_model=CalendarEventInfo)
+async def update_calendar_event(
+    event_id: int,
+    event_data: CalendarEventUpdate,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Update a calendar event."""
-    # Find and update event in memory storage
-    for i, event in enumerate(events_storage):
-        if event.id == event_id:
-            from datetime import datetime as dt
+    try:
+        updated_event = await calendar_service.update_event(
+            db,
+            event_id=event_id,
+            event_in=event_data,
+            user_id=current_user.id
+        )
 
-            # Update the event with new data
-            updated_event = EventInfo(
-                id=event_id,
-                title=event_data.title if event_data.title is not None else event.title,
-                description=event_data.description
-                if event_data.description is not None
-                else event.description,
-                location=event_data.location
-                if event_data.location is not None
-                else event.location,
-                start_datetime=event_data.start_datetime
-                if event_data.start_datetime is not None
-                else event.start_datetime,
-                end_datetime=event_data.end_datetime
-                if event_data.end_datetime is not None
-                else event.end_datetime,
-                timezone=event_data.timezone
-                if event_data.timezone is not None
-                else event.timezone,
-                is_all_day=event.is_all_day,
-                is_recurring=event.is_recurring,
-                organizer_email=event.organizer_email,
-                attendees=event_data.attendees
-                if event_data.attendees is not None
-                else event.attendees,
-                status=event.status,
-                created_at=event.created_at,
-                updated_at=dt.utcnow(),
+        if not updated_event:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Event not found"
             )
-            events_storage[i] = updated_event
-            logger.info(f"Updated event: {updated_event.title} with ID: {event_id}")
-            return updated_event
 
-    # If not found, raise 404
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
+        logger.info(f"Updated calendar event {event_id} for user {current_user.id}")
+        return updated_event
+
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Failed to update calendar event {event_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update event"
+        )
 
 
 @router.delete("/events/{event_id}")
-async def delete_event(
-    event_id: str,
-    # Temporarily remove auth dependency for testing
-    # current_user: User = Depends(get_current_active_user),
+async def delete_calendar_event(
+    event_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Delete a calendar event."""
-    # Find and delete event from memory storage
-    global events_storage
-    initial_count = len(events_storage)
-    events_storage = [event for event in events_storage if event.id != event_id]
-    deleted_count = initial_count - len(events_storage)
+    try:
+        deleted = await calendar_service.delete_event(
+            db,
+            event_id=event_id,
+            user_id=current_user.id
+        )
 
-    if deleted_count > 0:
-        logger.info(f"Deleted event with ID: {event_id}")
+        if not deleted:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Event not found"
+            )
+
+        logger.info(f"Deleted calendar event {event_id} for user {current_user.id}")
         return {"message": "Event deleted successfully"}
-    else:
-        logger.warning(f"Event not found for deletion: {event_id}")
-        return {"message": "Event not found"}
+
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Failed to delete calendar event {event_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete event"
+        )
+
+
+# ==================== ADDITIONAL CALENDAR ENDPOINTS ====================
+
+@router.get("/events/range", response_model=CalendarEventListResponse)
+async def get_events_in_range(
+    start_date: datetime = Query(...),
+    end_date: datetime = Query(...),
+    event_type: str = Query(None),
+    status: str = Query(None),
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get calendar events within a specific date range."""
+    try:
+        query_params = CalendarEventQueryParams(
+            start_date=start_date,
+            end_date=end_date,
+            event_type=event_type,
+            status=status
+        )
+
+        events = await calendar_service.get_user_events(
+            db,
+            user_id=current_user.id,
+            query_params=query_params
+        )
+
+        return CalendarEventListResponse(
+            events=events,
+            total=len(events),
+            start_date=start_date,
+            end_date=end_date
+        )
+
+    except Exception as e:
+        logger.error(f"Failed to get events in range: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve events"
+        )
+
+
+@router.get("/events/upcoming", response_model=list[CalendarEventInfo])
+async def get_upcoming_events(
+    limit: int = Query(10, ge=1, le=50),
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get upcoming calendar events for the user."""
+    try:
+        events = await calendar_service.get_upcoming_events(
+            db,
+            user_id=current_user.id,
+            limit=limit
+        )
+        return events
+
+    except Exception as e:
+        logger.error(f"Failed to get upcoming events: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve upcoming events"
+        )
+
+
+@router.post("/events/bulk", response_model=CalendarEventBulkResponse)
+async def bulk_create_events(
+    bulk_data: CalendarEventBulkCreate,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Create multiple calendar events at once."""
+    try:
+        created_events = await calendar_service.bulk_create_events(
+            db,
+            events_data=bulk_data.events,
+            creator_id=current_user.id
+        )
+
+        return CalendarEventBulkResponse(
+            created_events=created_events,
+            failed_events=[],
+            total_created=len(created_events),
+            total_failed=0
+        )
+
+    except Exception as e:
+        logger.error(f"Failed to bulk create events: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+
+@router.get("/events/search")
+async def search_events(
+    q: str = Query(..., min_length=1),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=100),
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Search calendar events by title, description, or location."""
+    try:
+        events = await calendar_service.search_events(
+            db,
+            user_id=current_user.id,
+            search_term=q,
+            skip=skip,
+            limit=limit
+        )
+        return {"events": events, "total": len(events)}
+
+    except Exception as e:
+        logger.error(f"Failed to search events: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to search events"
+        )

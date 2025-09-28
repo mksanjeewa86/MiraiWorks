@@ -1,6 +1,19 @@
 import { API_ENDPOINTS } from './config';
 import { apiClient, publicApiClient } from './apiClient';
-import type { ApiResponse, CalendarEvent, CalendarEventInput, CalendarConnection } from '@/types';
+import type {
+  ApiResponse,
+  CalendarEventInput,
+  CalendarConnection,
+  CalendarEventCreate,
+  CalendarEventUpdate,
+  CalendarEventInfo,
+  CalendarEventListResponse,
+  CalendarEventQueryParams,
+  CalendarEventBulkCreate,
+  CalendarEventBulkResponse,
+  ConsolidatedCalendarData
+} from '@/types';
+import type { CalendarEvent } from '@/types/interview';
 
 // Helper to build query strings
 const buildQueryString = (filters?: Record<string, string | undefined>): string => {
@@ -35,19 +48,79 @@ export const calendarApi = {
   },
 
   async createEvent(eventData: Partial<CalendarEvent>): Promise<ApiResponse<CalendarEvent>> {
-    const response = await apiClient.post<CalendarEvent>(API_ENDPOINTS.CALENDAR.EVENTS, eventData);
-    return { data: response.data, success: true };
+    // Transform the data from old format to new format
+    const transformedData: CalendarEventCreate = {
+      title: eventData.title || '',
+      description: eventData.description || undefined,
+      start_datetime: eventData.startDatetime || '',
+      end_datetime: eventData.endDatetime || undefined,
+      is_all_day: eventData.isAllDay || false,
+      location: eventData.location || undefined,
+      timezone: eventData.timezone || 'UTC'
+    };
+
+    const response = await apiClient.post<CalendarEventInfo>(API_ENDPOINTS.CALENDAR.EVENTS, transformedData);
+
+    // Transform the response back to the old format for compatibility
+    const transformedResponse: CalendarEvent = {
+      id: response.data.id.toString(),
+      title: response.data.title,
+      description: response.data.description || '',
+      location: response.data.location || '',
+      startDatetime: response.data.start_datetime,
+      endDatetime: response.data.end_datetime || '',
+      timezone: response.data.timezone || 'UTC',
+      isAllDay: response.data.is_all_day || false,
+      isRecurring: response.data.is_recurring || false,
+      organizerEmail: response.data.creator_id?.toString(),
+      attendees: [],
+      status: response.data.status || 'confirmed',
+      createdAt: response.data.created_at,
+      updatedAt: response.data.updated_at
+    };
+
+    return { data: transformedResponse, success: true };
   },
 
   async updateEvent(
     id: number,
     eventData: Partial<CalendarEvent>
   ): Promise<ApiResponse<CalendarEvent>> {
-    const response = await apiClient.put<CalendarEvent>(
+    // Transform the data from old format to new format
+    const transformedData: CalendarEventUpdate = {
+      title: eventData.title,
+      description: eventData.description,
+      start_datetime: eventData.startDatetime,
+      end_datetime: eventData.endDatetime,
+      is_all_day: eventData.isAllDay,
+      location: eventData.location,
+      timezone: eventData.timezone
+    };
+
+    const response = await apiClient.put<CalendarEventInfo>(
       API_ENDPOINTS.CALENDAR.EVENT_BY_ID(id),
-      eventData
+      transformedData
     );
-    return { data: response.data, success: true };
+
+    // Transform the response back to the old format for compatibility
+    const transformedResponse: CalendarEvent = {
+      id: response.data.id.toString(),
+      title: response.data.title,
+      description: response.data.description || '',
+      location: response.data.location || '',
+      startDatetime: response.data.start_datetime,
+      endDatetime: response.data.end_datetime || '',
+      timezone: response.data.timezone || 'UTC',
+      isAllDay: response.data.is_all_day || false,
+      isRecurring: response.data.is_recurring || false,
+      organizerEmail: response.data.creator_id?.toString(),
+      attendees: [],
+      status: response.data.status || 'confirmed',
+      createdAt: response.data.created_at,
+      updatedAt: response.data.updated_at
+    };
+
+    return { data: transformedResponse, success: true };
   },
 
   async deleteEvent(id: number): Promise<ApiResponse<void>> {
@@ -123,6 +196,95 @@ export const calendarApi = {
     const response = await apiClient.put<CalendarConnection>(
       `/api/calendar/accounts/${connectionId}`,
       updates
+    );
+    return { data: response.data, success: true };
+  },
+
+  // ==================== INTERNAL CALENDAR EVENTS ====================
+
+  async createInternalEvent(eventData: CalendarEventCreate): Promise<ApiResponse<CalendarEventInfo>> {
+    const response = await apiClient.post<CalendarEventInfo>('/api/calendar/events', eventData);
+    return { data: response.data, success: true };
+  },
+
+  async getInternalEvent(eventId: number): Promise<ApiResponse<CalendarEventInfo>> {
+    const response = await apiClient.get<CalendarEventInfo>(`/api/calendar/events/${eventId}`);
+    return { data: response.data, success: true };
+  },
+
+  async updateInternalEvent(
+    eventId: number,
+    eventData: CalendarEventUpdate
+  ): Promise<ApiResponse<CalendarEventInfo>> {
+    const response = await apiClient.put<CalendarEventInfo>(
+      `/api/calendar/events/${eventId}`,
+      eventData
+    );
+    return { data: response.data, success: true };
+  },
+
+  async deleteInternalEvent(eventId: number): Promise<ApiResponse<{ message: string }>> {
+    const response = await apiClient.delete<{ message: string }>(`/api/calendar/events/${eventId}`);
+    return { data: response.data, success: true };
+  },
+
+  async getEventsInRange(params: CalendarEventQueryParams): Promise<ApiResponse<CalendarEventListResponse>> {
+    const queryParams = new URLSearchParams();
+
+    if (params.start_date) queryParams.set('start_date', params.start_date);
+    if (params.end_date) queryParams.set('end_date', params.end_date);
+    if (params.event_type) queryParams.set('event_type', params.event_type);
+    if (params.status) queryParams.set('status', params.status);
+
+    const response = await apiClient.get<CalendarEventListResponse>(
+      `/api/calendar/events/range?${queryParams.toString()}`
+    );
+    return { data: response.data, success: true };
+  },
+
+  async getUpcomingEvents(limit: number = 10): Promise<ApiResponse<CalendarEventInfo[]>> {
+    const response = await apiClient.get<CalendarEventInfo[]>(
+      `/api/calendar/events/upcoming?limit=${limit}`
+    );
+    return { data: response.data, success: true };
+  },
+
+  async bulkCreateEvents(bulkData: CalendarEventBulkCreate): Promise<ApiResponse<CalendarEventBulkResponse>> {
+    const response = await apiClient.post<CalendarEventBulkResponse>(
+      '/api/calendar/events/bulk',
+      bulkData
+    );
+    return { data: response.data, success: true };
+  },
+
+  async searchEvents(
+    query: string,
+    skip: number = 0,
+    limit: number = 50
+  ): Promise<ApiResponse<{ events: CalendarEventInfo[]; total: number }>> {
+    const params = new URLSearchParams({
+      q: query,
+      skip: skip.toString(),
+      limit: limit.toString()
+    });
+
+    const response = await apiClient.get<{ events: CalendarEventInfo[]; total: number }>(
+      `/api/calendar/events/search?${params.toString()}`
+    );
+    return { data: response.data, success: true };
+  },
+
+  async getConsolidatedCalendar(
+    startDate: string,
+    endDate: string
+  ): Promise<ApiResponse<ConsolidatedCalendarData>> {
+    const params = new URLSearchParams({
+      startDate,
+      endDate
+    });
+
+    const response = await apiClient.get<ConsolidatedCalendarData>(
+      `/api/calendar/consolidated?${params.toString()}`
     );
     return { data: response.data, success: true };
   },

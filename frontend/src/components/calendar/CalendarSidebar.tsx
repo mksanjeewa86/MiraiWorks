@@ -87,7 +87,7 @@ const formatTimeRange = (startIso: string, endIso: string) => {
 };
 
 const EmptyUpcomingState = () => (
-  <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/60 p-6 text-center">
+  <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/60 p-6 text-center min-h-0">
     <CalendarDays className="mb-3 h-8 w-8 text-slate-400" />
     <p className="text-sm font-semibold text-slate-600">No upcoming events</p>
     <p className="mt-1 text-xs text-slate-500">Create an event or connect a calendar to get started.</p>
@@ -108,64 +108,9 @@ const FiltersSection = ({
         type="search"
         placeholder="Search events"
         value={filters.search}
-        onChange={(event) => onFiltersChange({ ...filters, search: event.target.value })}
+        onChange={(event) => onFiltersChange({ search: event.target.value })}
         className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
       />
-    </div>
-    <div>
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Event type</p>
-      <div className="mt-2 flex flex-wrap gap-2">
-        {[
-          { key: 'all', label: 'All' },
-          { key: 'calendar', label: 'Internal' },
-          { key: 'interview', label: 'Interviews' },
-        ].map(({ key, label }) => {
-          const active = filters.eventType === key;
-          return (
-            <button
-              key={key}
-              type="button"
-              onClick={() => onFiltersChange({ ...filters, eventType: key as CalendarFilters['eventType'] })}
-              className={clsx(
-                'rounded-full border px-3 py-1 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-200',
-                active
-                  ? 'border-transparent bg-blue-600 text-white shadow-sm'
-                  : 'border-slate-200 bg-white text-slate-600 hover:border-blue-300 hover:text-blue-600'
-              )}
-            >
-              {label}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-    <div>
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Status</p>
-      <div className="mt-2 grid grid-cols-2 gap-2">
-        {[
-          { key: 'all', label: 'All' },
-          { key: 'tentative', label: 'Tentative' },
-          { key: 'confirmed', label: 'Confirmed' },
-          { key: 'cancelled', label: 'Cancelled' },
-        ].map(({ key, label }) => {
-          const active = filters.status === key;
-          return (
-            <button
-              key={key}
-              type="button"
-              onClick={() => onFiltersChange({ ...filters, status: key as CalendarFilters['status'] })}
-              className={clsx(
-                'rounded-lg border px-3 py-1.5 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-200',
-                active
-                  ? 'border-transparent bg-blue-100 text-blue-700'
-                  : 'border-slate-200 bg-white text-slate-600 hover:border-blue-300 hover:text-blue-600'
-              )}
-            >
-              {label}
-            </button>
-          );
-        })}
-      </div>
     </div>
   </div>
 );
@@ -334,70 +279,78 @@ export default function CalendarSidebar({
           </button>
         </div>
 
-        <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-5 py-6">
-          <FiltersSection filters={filters} onFiltersChange={onFiltersChange} />
+        <div className="flex flex-1 flex-col overflow-hidden px-5 py-6">
+          <div className="space-y-6">
+            <FiltersSection filters={filters} onFiltersChange={onFiltersChange} />
 
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-slate-700">Upcoming</h3>
-              <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
-                {upcomingEvents.length}
-              </span>
-            </div>
-            {upcomingEvents.length === 0 ? (
-              <EmptyUpcomingState />
-            ) : (
-              <div className="space-y-3">
-                {upcomingEvents.map((event) => {
-                  const palette = getEventPalette(event);
-                  return (
-                    <button
-                      key={event.id}
-                      type="button"
-                      onClick={() => onEventClick(event)}
-                      className="w-full rounded-xl border border-slate-200 bg-white p-3 text-left shadow-sm transition hover:border-blue-300 hover:shadow-md"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <p className="text-sm font-semibold text-slate-800">{event.title}</p>
-                          <p className="mt-1 text-xs text-slate-500">{formatTimeRange(event.startDatetime, event.endDatetime)}</p>
-                          {event.location && (
-                            <p className="mt-1 text-xs text-slate-400">{event.location}</p>
+            <div className="flex flex-col space-y-3 h-96">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-slate-700">Upcoming</h3>
+                <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+                  {upcomingEvents.length}
+                </span>
+              </div>
+              {upcomingEvents.length === 0 ? (
+                <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/60 p-6 text-center">
+                  <CalendarDays className="mb-3 h-8 w-8 text-slate-400" />
+                  <p className="text-sm font-semibold text-slate-600">No upcoming events</p>
+                  <p className="mt-1 text-xs text-slate-500">Create an event or connect a calendar to get started.</p>
+                </div>
+              ) : (
+                <div className="flex-1 space-y-3 overflow-y-auto">
+                  {upcomingEvents.map((event) => {
+                    const palette = getEventPalette(event);
+                    return (
+                      <button
+                        key={event.id}
+                        type="button"
+                        onClick={() => onEventClick(event)}
+                        className="w-full rounded-xl border border-slate-200 bg-white p-3 text-left shadow-sm transition hover:border-blue-300 hover:shadow-md"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="text-sm font-semibold text-slate-800">{event.title}</p>
+                            <p className="mt-1 text-xs text-slate-500">{formatTimeRange(event.startDatetime, event.endDatetime)}</p>
+                            {event.location && (
+                              <p className="mt-1 text-xs text-slate-400">{event.location}</p>
+                            )}
+                          </div>
+                          {palette.badgeLabel && (
+                            <span
+                              className="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase"
+                              style={{
+                                backgroundColor: palette.backgroundColor,
+                                color: palette.textColor,
+                              }}
+                            >
+                              {palette.badgeLabel}
+                            </span>
                           )}
                         </div>
-                        {palette.badgeLabel && (
-                          <span
-                            className="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase"
-                            style={{
-                              backgroundColor: palette.backgroundColor,
-                              color: palette.textColor,
-                            }}
-                          >
-                            {palette.badgeLabel}
-                          </span>
-                        )}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
 
-          <ConnectionsSection
-            connections={connections}
-            onConnectProvider={onConnectProvider}
-            onDisconnect={onDisconnect}
-            onSync={onSync}
-            loadingConnections={loadingConnections}
-            syncingConnectionId={syncingConnectionId}
-          />
-        </div>
+          <div className="mt-auto space-y-4">
+            <ConnectionsSection
+              connections={connections}
+              onConnectProvider={onConnectProvider}
+              onDisconnect={onDisconnect}
+              onSync={onSync}
+              loadingConnections={loadingConnections}
+              syncingConnectionId={syncingConnectionId}
+            />
 
-        <div className="border-t border-slate-200 bg-white px-5 py-4 text-xs text-slate-400">
-          <div className="flex items-center gap-2">
-            <CircleCheck className="h-4 w-4" />
-            Calendar sync keeps interviews, tasks, and external events aligned.
+            <div className="border-t border-slate-200 bg-slate-50/50 rounded-lg px-4 py-3 text-xs text-slate-400">
+              <div className="flex items-center gap-2">
+                <CircleCheck className="h-4 w-4" />
+                Calendar sync keeps interviews, tasks, and external events aligned.
+              </div>
+            </div>
           </div>
         </div>
       </aside>

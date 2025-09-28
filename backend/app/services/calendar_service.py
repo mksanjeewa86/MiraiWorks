@@ -1,14 +1,26 @@
 import os
 import secrets
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, Dict, List, Optional
 from urllib.parse import urlencode
 
 import aiohttp
 import structlog
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
+from app.crud.calendar_event import calendar_event
+from app.crud.holiday import holiday
 from app.models.calendar_connection import CalendarConnection
+from app.models.calendar_integration import SyncedEvent
+from app.schemas.calendar_event import (
+    CalendarEventCreate,
+    CalendarEventUpdate,
+    CalendarEventInfo,
+    CalendarEventQueryParams,
+    EventType,
+    EventStatus
+)
 
 logger = structlog.get_logger()
 
@@ -54,6 +66,289 @@ class CalendarService:
             "https://graph.microsoft.com/calendars.readwrite",
             "https://graph.microsoft.com/user.read",
         ]
+
+    # ==================== INTERNAL CALENDAR EVENTS ====================
+
+    async def create_event(
+        self,
+        db: AsyncSession,
+        *,
+        event_in: CalendarEventCreate,
+        creator_id: int
+    ) -> CalendarEventInfo:
+        """Create a new internal calendar event"""
+        try:
+            # Check for conflicting events if needed
+            if event_in.end_datetime:
+                conflicts = await calendar_event.get_conflicting_events(
+                    db,
+                    start_datetime=event_in.start_datetime,
+                    end_datetime=event_in.end_datetime,
+                    creator_id=creator_id
+                )
+                if conflicts:
+                    logger.warning(
+                        "Creating event with potential conflicts",
+                        creator_id=creator_id,
+                        conflicts_count=len(conflicts)
+                    )
+
+            event = await calendar_event.create_with_creator(
+                db, obj_in=event_in, creator_id=creator_id
+            )
+
+            logger.info("Calendar event created", event_id=event.id, creator_id=creator_id)
+            return CalendarEventInfo.model_validate(event)
+
+        except Exception as e:
+            logger.error("Failed to create calendar event", error=str(e), creator_id=creator_id)
+            raise
+
+    async def update_event(
+        self,
+        db: AsyncSession,
+        *,
+        event_id: int,
+        event_in: CalendarEventUpdate,
+        user_id: int
+    ) -> Optional[CalendarEventInfo]:
+        """Update an existing calendar event"""
+        try:
+            # Get existing event
+            existing_event = await calendar_event.get(db, id=event_id)
+            if not existing_event:
+                return None
+
+            # Check permissions (only creator can update)
+            if existing_event.creator_id != user_id:
+                raise ValueError("Only the event creator can update this event")
+
+            # Check for conflicts if datetime is being updated
+            if event_in.start_datetime or event_in.end_datetime:
+                start_dt = event_in.start_datetime or existing_event.start_datetime
+                end_dt = event_in.end_datetime or existing_event.end_datetime
+
+                if end_dt:
+                    conflicts = await calendar_event.get_conflicting_events(
+                        db,
+                        start_datetime=start_dt,
+                        end_datetime=end_dt,
+                        creator_id=user_id,
+                        exclude_event_id=event_id
+                    )
+                    if conflicts:
+                        logger.warning(
+                            "Updating event with potential conflicts",
+                            event_id=event_id,
+                            conflicts_count=len(conflicts)
+                        )
+
+            updated_event = await calendar_event.update(db, db_obj=existing_event, obj_in=event_in)
+            logger.info("Calendar event updated", event_id=event_id, user_id=user_id)
+            return CalendarEventInfo.model_validate(updated_event)
+
+        except Exception as e:
+            logger.error("Failed to update calendar event", error=str(e), event_id=event_id)
+            raise
+
+    async def delete_event(
+        self,
+        db: AsyncSession,
+        *,
+        event_id: int,
+        user_id: int
+    ) -> bool:
+        """Delete a calendar event"""
+        try:
+            existing_event = await calendar_event.get(db, id=event_id)
+            if not existing_event:
+                return False
+
+            # Check permissions (only creator can delete)
+            if existing_event.creator_id != user_id:
+                raise ValueError("Only the event creator can delete this event")
+
+            await calendar_event.remove(db, id=event_id)
+            logger.info("Calendar event deleted", event_id=event_id, user_id=user_id)
+            return True
+
+        except Exception as e:
+            logger.error("Failed to delete calendar event", error=str(e), event_id=event_id)
+            raise
+
+    async def get_user_events(
+        self,
+        db: AsyncSession,
+        *,
+        user_id: int,
+        query_params: CalendarEventQueryParams
+    ) -> List[CalendarEventInfo]:
+        """Get calendar events for a user with filters"""
+        try:
+            events = await calendar_event.get_by_date_range(
+                db,
+                start_date=query_params.start_date or datetime.utcnow(),
+                end_date=query_params.end_date or (datetime.utcnow() + timedelta(days=30)),
+                creator_id=user_id,
+                event_type=query_params.event_type,
+                status=query_params.status,
+                include_all_day=query_params.include_all_day
+            )
+
+            return [CalendarEventInfo.model_validate(event) for event in events]
+
+        except Exception as e:
+            logger.error("Failed to get user events", error=str(e), user_id=user_id)
+            raise
+
+    async def get_consolidated_calendar(
+        self,
+        db: AsyncSession,
+        *,
+        user_id: int,
+        start_date: datetime,
+        end_date: datetime
+    ) -> Dict[str, List[Dict[str, Any]]]:
+        """Get consolidated calendar view with all event types"""
+        try:
+            result = {
+                "internal_events": [],
+                "external_events": [],
+                "holidays": []
+            }
+
+            # Get internal calendar events
+            internal_events = await calendar_event.get_by_date_range(
+                db,
+                start_date=start_date,
+                end_date=end_date,
+                creator_id=user_id
+            )
+
+            for event in internal_events:
+                result["internal_events"].append({
+                    "id": f"event-{event.id}",
+                    "title": event.title,
+                    "description": event.description,
+                    "start": event.start_datetime.isoformat(),
+                    "end": event.end_datetime.isoformat() if event.end_datetime else None,
+                    "allDay": event.is_all_day,
+                    "location": event.location,
+                    "type": event.event_type,
+                    "status": event.status,
+                    "source": "internal"
+                })
+
+            # Get external synced events (if we have the logic for this)
+            # This would need to be implemented based on your sync logic
+
+            # Get holidays
+            holidays = await holiday.get_by_date_range(
+                db,
+                date_from=start_date.date(),
+                date_to=end_date.date()
+            )
+
+            for hol in holidays:
+                result["holidays"].append({
+                    "id": f"holiday-{hol.id}",
+                    "title": hol.name,
+                    "description": hol.description,
+                    "start": hol.date.isoformat(),
+                    "end": hol.date.isoformat(),
+                    "allDay": True,
+                    "source": "holiday",
+                    "country": hol.country
+                })
+
+            logger.info(
+                "Consolidated calendar retrieved",
+                user_id=user_id,
+                internal_count=len(result["internal_events"]),
+                external_count=len(result["external_events"]),
+                holidays_count=len(result["holidays"])
+            )
+
+            return result
+
+        except Exception as e:
+            logger.error("Failed to get consolidated calendar", error=str(e), user_id=user_id)
+            raise
+
+    async def search_events(
+        self,
+        db: AsyncSession,
+        *,
+        user_id: int,
+        search_term: str,
+        skip: int = 0,
+        limit: int = 50
+    ) -> List[CalendarEventInfo]:
+        """Search calendar events by title, description, or location"""
+        try:
+            events = await calendar_event.search_events(
+                db,
+                search_term=search_term,
+                creator_id=user_id,
+                skip=skip,
+                limit=limit
+            )
+
+            return [CalendarEventInfo.model_validate(event) for event in events]
+
+        except Exception as e:
+            logger.error("Failed to search events", error=str(e), user_id=user_id)
+            raise
+
+    async def get_upcoming_events(
+        self,
+        db: AsyncSession,
+        *,
+        user_id: int,
+        limit: int = 10
+    ) -> List[CalendarEventInfo]:
+        """Get upcoming events for a user"""
+        try:
+            events = await calendar_event.get_upcoming_events(
+                db,
+                creator_id=user_id,
+                limit=limit
+            )
+
+            return [CalendarEventInfo.model_validate(event) for event in events]
+
+        except Exception as e:
+            logger.error("Failed to get upcoming events", error=str(e), user_id=user_id)
+            raise
+
+    async def bulk_create_events(
+        self,
+        db: AsyncSession,
+        *,
+        events_data: List[CalendarEventCreate],
+        creator_id: int
+    ) -> List[CalendarEventInfo]:
+        """Create multiple calendar events at once"""
+        try:
+            created_events = await calendar_event.create_multiple(
+                db,
+                events_data=events_data,
+                creator_id=creator_id
+            )
+
+            logger.info(
+                "Bulk calendar events created",
+                count=len(created_events),
+                creator_id=creator_id
+            )
+
+            return [CalendarEventInfo.model_validate(event) for event in created_events]
+
+        except Exception as e:
+            logger.error("Failed to bulk create events", error=str(e), creator_id=creator_id)
+            raise
+
+    # ==================== EXTERNAL CALENDAR INTEGRATION ====================
 
     async def get_google_auth_url(self, user_id: int) -> str:
         """Generate Google Calendar OAuth authorization URL"""
@@ -344,5 +639,6 @@ class CalendarService:
             raise
 
 
-# Create singleton instance
-google_calendar_service = CalendarService()
+# Create singleton instances
+calendar_service = CalendarService()
+google_calendar_service = CalendarService()  # Backward compatibility

@@ -10,8 +10,9 @@ import type { CalendarApi, DateSelectArg, EventClickArg, DatesSetArg } from '@fu
 import type { CalendarEvent } from '@/types/interview';
 import type { CalendarViewProps, CalendarViewMode } from '@/types/components';
 
-const FullCalendar = dynamic(() => import('@fullcalendar/react'), {
+const FullCalendar = dynamic(() => import('@fullcalendar/react').then(mod => ({ default: mod.default })), {
   ssr: false,
+  loading: () => <div className="flex items-center justify-center h-96"><div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" /></div>
 });
 
 const viewToFullCalendar: Record<CalendarViewMode, string> = {
@@ -244,7 +245,10 @@ export default function CalendarView({
           eventClick={handleEventClick}
           datesSet={handleDatesSet}
           eventOverlap
-          dayMaxEventRows={4}
+          dayMaxEventRows={3}
+          moreLinkClick="popover"
+          moreLinkClassNames="text-xs text-blue-600 hover:text-blue-700 font-medium cursor-pointer bg-blue-50 hover:bg-blue-100 rounded px-1 py-0.5 transition-colors"
+          moreLinkContent={(args) => `+${args.num} more`}
           weekends
           nowIndicator
           slotLabelFormat={{
@@ -257,7 +261,6 @@ export default function CalendarView({
             minute: '2-digit',
             hour12: false,
           }}
-          expandRows
           stickyHeaderDates
           displayEventEnd
           eventDisplay="block"

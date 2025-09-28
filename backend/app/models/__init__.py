@@ -3,6 +3,7 @@ from app.models.attachment import Attachment
 from app.models.audit import AuditLog
 from app.models.auth import OauthAccount, PasswordResetRequest, RefreshToken
 from app.models.calendar_connection import CalendarConnection
+from app.models.calendar_event import CalendarEvent
 from app.models.calendar_integration import ExternalCalendarAccount, SyncedEvent
 from app.models.company import Company
 from app.models.exam import (
@@ -106,6 +107,7 @@ __all__ = [
     "ExternalCalendarAccount",
     "SyncedEvent",
     "CalendarConnection",
+    "CalendarEvent",
     "Exam",
     "ExamQuestion",
     "ExamSession",

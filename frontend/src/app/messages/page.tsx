@@ -26,7 +26,7 @@ import dynamic from 'next/dynamic';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import clsx from 'clsx';
 
-const EmojiPicker = dynamic(() => import('emoji-picker-react'), {
+const EmojiPicker = dynamic(() => import('emoji-picker-react').then(mod => ({ default: mod.default })), {
   ssr: false,
   loading: () => <div>Loading...</div>,
 });
