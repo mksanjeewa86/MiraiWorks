@@ -99,6 +99,25 @@ class TodoVisibility(str, Enum):
     VIEWER = "viewer"    # Assigned user can see but not interact
 
 
+class TodoType(str, Enum):
+    REGULAR = "regular"
+    ASSIGNMENT = "assignment"  # For any kind of task assignment (coding test, document review, etc.)
+
+
+class TodoPublishStatus(str, Enum):
+    DRAFT = "draft"      # Not visible to assignee/viewers
+    PUBLISHED = "published"  # Visible to assignee/viewers
+
+
+class AssignmentStatus(str, Enum):
+    NOT_STARTED = "not_started"
+    IN_PROGRESS = "in_progress"
+    SUBMITTED = "submitted"
+    UNDER_REVIEW = "under_review"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+
+
 class ExtensionRequestStatus(str, Enum):
     PENDING = "pending"
     APPROVED = "approved"

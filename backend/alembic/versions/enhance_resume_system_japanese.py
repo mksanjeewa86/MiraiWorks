@@ -1,7 +1,7 @@
 """Enhance resume system with Japanese formats and sharing features
 
 Revision ID: enhance_resume_system_japanese
-Revises: add_exam_system_tables
+Revises: f1413e5cffd1
 Create Date: 2024-12-19 12:00:00.000000
 
 """
@@ -11,7 +11,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = 'enhance_resume_system_japanese'
-down_revision = 'add_exam_system_tables'
+down_revision = 'f1413e5cffd1'
 branch_labels = None
 depends_on = None
 

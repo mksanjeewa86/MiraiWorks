@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.utils.constants import TodoStatus, TodoVisibility
+from app.utils.constants import TodoStatus, TodoVisibility, TodoType, TodoPublishStatus, AssignmentStatus
 
 
 class TodoBase(BaseModel):
@@ -17,6 +17,13 @@ class TodoBase(BaseModel):
     assigned_user_id: int | None = None
     visibility: str | None = Field(default=TodoVisibility.PRIVATE.value)
     viewer_ids: list[int] | None = None
+
+    # Assignment workflow fields
+    todo_type: str | None = Field(default=TodoType.REGULAR.value)
+    publish_status: str | None = Field(default=TodoPublishStatus.PUBLISHED.value)
+    assignment_status: str | None = None
+    assignment_assessment: str | None = None
+    assignment_score: int | None = None
 
     @field_validator("due_date", mode="before")
     @classmethod
@@ -59,6 +66,36 @@ class TodoBase(BaseModel):
             raise ValueError("Title is required")
         return value.strip()
 
+    @field_validator("todo_type")
+    @classmethod
+    def validate_todo_type(cls, value: str | None) -> str:
+        if value is None:
+            return TodoType.REGULAR.value
+        allowed = {todo_type.value for todo_type in TodoType}
+        if value not in allowed:
+            raise ValueError(f"Todo type must be one of: {', '.join(sorted(allowed))}")
+        return value
+
+    @field_validator("publish_status")
+    @classmethod
+    def validate_publish_status(cls, value: str | None) -> str:
+        if value is None:
+            return TodoPublishStatus.PUBLISHED.value
+        allowed = {status.value for status in TodoPublishStatus}
+        if value not in allowed:
+            raise ValueError(f"Publish status must be one of: {', '.join(sorted(allowed))}")
+        return value
+
+    @field_validator("assignment_status")
+    @classmethod
+    def validate_assignment_status(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        allowed = {status.value for status in AssignmentStatus}
+        if value not in allowed:
+            raise ValueError(f"Assignment status must be one of: {', '.join(sorted(allowed))}")
+        return value
+
 
 class TodoCreate(TodoBase):
     pass
@@ -74,6 +111,13 @@ class TodoUpdate(BaseModel):
     assigned_user_id: int | None = None
     visibility: str | None = None
     viewer_ids: list[int] | None = None
+
+    # Assignment workflow fields
+    todo_type: str | None = None
+    publish_status: str | None = None
+    assignment_status: str | None = None
+    assignment_assessment: str | None = None
+    assignment_score: int | None = None
 
     @field_validator("due_date", mode="before")
     @classmethod
@@ -137,6 +181,16 @@ class TodoRead(BaseModel):
     created_at: datetime
     updated_at: datetime
     is_expired: bool
+
+    # Assignment workflow fields
+    todo_type: str
+    publish_status: str
+    assignment_status: str | None = None
+    assignment_assessment: str | None = None
+    assignment_score: int | None = None
+    submitted_at: datetime | None = None
+    reviewed_at: datetime | None = None
+    reviewed_by: int | None = None
 
 
 class TodoListResponse(BaseModel):
@@ -216,3 +270,44 @@ class TodoExtensionValidation(BaseModel):
     max_allowed_due_date: datetime | None = None
     days_extension_allowed: int = 3
     reason: str | None = None  # Reason why extension cannot be requested
+
+
+# Assignment workflow schemas
+class TodoPublishUpdate(BaseModel):
+    """Update publish status of a todo."""
+    publish_status: str
+
+    @field_validator("publish_status")
+    @classmethod
+    def validate_publish_status(cls, value: str) -> str:
+        allowed = {status.value for status in TodoPublishStatus}
+        if value not in allowed:
+            raise ValueError(f"Publish status must be one of: {', '.join(sorted(allowed))}")
+        return value
+
+
+class AssignmentSubmission(BaseModel):
+    """Submit an assignment for review."""
+    notes: str | None = None  # Optional submission notes
+
+
+class AssignmentReview(BaseModel):
+    """Review an assignment and provide assessment."""
+    assignment_status: str
+    assessment: str | None = None
+    score: int | None = Field(default=None, ge=0, le=100)
+
+    @field_validator("assignment_status")
+    @classmethod
+    def validate_assignment_status(cls, value: str) -> str:
+        allowed = {AssignmentStatus.APPROVED.value, AssignmentStatus.REJECTED.value}
+        if value not in allowed:
+            raise ValueError(f"Assignment status for review must be either 'approved' or 'rejected'")
+        return value
+
+
+class AssignmentWorkflowResponse(BaseModel):
+    """Response for assignment workflow actions."""
+    success: bool
+    message: str
+    todo: TodoRead | None = None

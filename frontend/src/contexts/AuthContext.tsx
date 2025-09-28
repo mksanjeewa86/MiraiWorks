@@ -171,18 +171,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const refreshToken = localStorage.getItem('refreshToken');
 
         if (token && refreshToken) {
-          // First try to refresh the token to get a fresh one
-          // This prevents the 401 error on initial load
+          // Try to verify current token first by calling /me endpoint
           try {
-            console.log('Refreshing token on initialization to ensure validity');
-            await refreshAuth();
-            // refreshAuth already dispatches AUTH_SUCCESS which sets isLoading to false
-          } catch (refreshError) {
-            console.log('Token refresh failed during initialization, clearing auth:', refreshError);
-            // Both tokens invalid, clear auth completely
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('refreshToken');
-            dispatch({ type: 'LOGOUT' });
+            console.log('Verifying current token validity');
+            const userResponse = await authApi.me(token);
+
+            // Token is valid, set auth state without refreshing
+            console.log('Token is valid, setting authenticated state');
+            dispatch({
+              type: 'AUTH_SUCCESS',
+              payload: {
+                user: userResponse.data!,
+                access_token: token,
+                refresh_token: refreshToken,
+                expires_in: 3600, // Default 1 hour for existing tokens
+              },
+            });
+          } catch (verifyError) {
+            console.log('Current token invalid, attempting refresh:', verifyError);
+
+            // Current token invalid, try refresh
+            try {
+              await refreshAuth();
+              console.log('Token refresh successful');
+              // refreshAuth already dispatches AUTH_SUCCESS which sets isLoading to false
+            } catch (refreshError) {
+              console.log('Token refresh also failed, clearing auth:', refreshError);
+              // Both tokens invalid, clear auth completely
+              localStorage.removeItem('accessToken');
+              localStorage.removeItem('refreshToken');
+              dispatch({ type: 'LOGOUT' });
+            }
           }
         } else {
           // No tokens found, ensure clean state

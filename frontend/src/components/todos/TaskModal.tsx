@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { CalendarClock, ClipboardList, MinusCircle, PlusCircle, Save, X, Paperclip } from "lucide-react";
+import { CalendarClock, ClipboardList, MinusCircle, PlusCircle, Save, X, Paperclip, Eye, Download, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogClose,
@@ -20,8 +20,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { todosApi } from "@/api/todos";
 import { todoAttachmentAPI } from "@/api/todo-attachments";
 import UserAssignment from "./UserAssignment";
-import { FileUpload } from "./FileUpload";
-import { AttachmentList } from "./AttachmentList";
+import AssignmentWorkflow from "./AssignmentWorkflow";
 import { getTodoPermissions } from "@/utils/todoPermissions";
 import type {
   AssignableUser,
@@ -30,6 +29,10 @@ import type {
   Todo,
   TodoAssignmentUpdate,
   TodoPayload,
+  TodoWithAssignedUser,
+  TodoViewersUpdate,
+  TodoType,
+  TodoPublishStatus,
 } from "@/types/todo";
 import type { TodoAttachment } from "@/types/todo-attachment";
 
@@ -61,17 +64,30 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: T
   const [assignableUsers, setAssignableUsers] = useState<AssignableUser[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [assignment, setAssignment] = useState<TodoAssignmentUpdate>({});
+  const [viewers, setViewers] = useState<number[]>([]);
   const [attachments, setAttachments] = useState<TodoAttachment[]>([]);
   const [loadingAttachments, setLoadingAttachments] = useState(false);
-  const [showFileUpload, setShowFileUpload] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [todoType, setTodoType] = useState<TodoType>('regular');
+  const [publishStatus, setPublishStatus] = useState<TodoPublishStatus>('published');
 
   const isEditing = Boolean(editingTodo);
   const permissions = editingTodo ? getTodoPermissions(editingTodo as Todo, user) : null;
-  const canAssign = permissions?.canAssign || !isEditing;
+  // Always allow assignment during creation, check permissions only when editing
+  const canAssign = !isEditing || (permissions?.canAssign ?? false);
 
   useEffect(() => {
-    console.log("TaskModal useEffect - loading users", { isOpen, canAssign, user: user?.email || 'no user' });
-    if (isOpen && canAssign) {
+    console.log("TaskModal useEffect - loading users", {
+      isOpen,
+      canAssign,
+      user: user?.email || 'no user',
+      isEditing,
+      hasUser: !!user,
+      isAuthenticated: user !== null
+    });
+
+    // Only load users if modal is open, assignment is allowed, and user is authenticated
+    if (isOpen && canAssign && user) {
       const loadUsers = async () => {
         console.log("Starting to load assignable users...");
         setLoadingUsers(true);
@@ -96,8 +112,15 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: T
       };
 
       loadUsers();
+    } else {
+      // Clear users if conditions not met
+      if (!user) {
+        console.log("No user authenticated, clearing assignable users");
+        setAssignableUsers([]);
+        setLoadingUsers(false);
+      }
     }
-  }, [isOpen, canAssign, showToast]);
+  }, [isOpen, canAssign, user, showToast]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -114,13 +137,22 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: T
         assigned_user_id: editingTodo.assigned_user_id,
         visibility: editingTodo.visibility,
       });
+      // Load viewers from existing todo
+      const todoWithViewers = editingTodo as TodoWithAssignedUser;
+      setViewers(todoWithViewers.viewers?.map(v => v.user_id) || []);
+      // Set assignment workflow fields
+      setTodoType(editingTodo.todo_type || 'regular');
+      setPublishStatus(editingTodo.publish_status || 'published');
       // Load attachments for existing todo
       loadAttachments(editingTodo.id);
     } else {
       setFormState(initialFormState);
       setAssignment({});
+      setViewers([]);
       setAttachments([]);
-      setShowFileUpload(false);
+      setPendingFiles([]);
+      setTodoType('regular');
+      setPublishStatus('published');
     }
   }, [isOpen, editingTodo]);
 
@@ -136,6 +168,10 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: T
 
   const handleAssignmentChange = (assignmentData: TodoAssignmentUpdate) => {
     setAssignment(assignmentData);
+  };
+
+  const handleViewersChange = (viewersData: TodoViewersUpdate) => {
+    setViewers(viewersData.viewer_ids || []);
   };
 
   // Load attachments for existing todo
@@ -180,6 +216,93 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: T
     showToast({ type: 'success', title: 'File updated successfully' });
   };
 
+  // Handle pending file selection (for new todos)
+  const handlePendingFileSelect = (files: File[]) => {
+    setPendingFiles((prev) => [...prev, ...files]);
+    showToast({
+      type: 'success',
+      title: `${files.length} file(s) selected for upload after creation`,
+    });
+  };
+
+  // Remove pending file
+  const handleRemovePendingFile = (fileToRemove: File) => {
+    setPendingFiles((prev) => prev.filter((file) => file !== fileToRemove));
+  };
+
+  // Upload pending files after todo creation
+  const uploadPendingFiles = async (todoId: number) => {
+    if (pendingFiles.length === 0) return;
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const file of pendingFiles) {
+      try {
+        const response = await todoAttachmentAPI.uploadFile(todoId, file);
+        setAttachments((prev) => [response.attachment, ...prev]);
+        successCount++;
+      } catch (error) {
+        console.error('Failed to upload pending file:', error);
+        errorCount++;
+      }
+    }
+
+    if (successCount > 0) {
+      showToast({
+        type: 'success',
+        title: `${successCount} file(s) uploaded successfully`,
+      });
+    }
+
+    if (errorCount > 0) {
+      showToast({
+        type: 'error',
+        title: `Failed to upload ${errorCount} file(s)`,
+      });
+    }
+
+    setPendingFiles([]);
+  };
+
+  // Handle file actions
+  const handleViewFile = async (attachment: TodoAttachment) => {
+    if (!editingTodo?.id) return;
+
+    try {
+      const previewUrl = await todoAttachmentAPI.getPreviewUrl(editingTodo.id, attachment.id);
+      window.open(previewUrl, '_blank');
+    } catch (error) {
+      console.error('Failed to get preview URL:', error);
+      showToast({ type: 'error', title: 'Failed to preview file' });
+    }
+  };
+
+  const handleDownloadFile = async (attachment: TodoAttachment) => {
+    if (!editingTodo?.id) return;
+
+    try {
+      await todoAttachmentAPI.downloadFile(editingTodo.id, attachment.id);
+      showToast({ type: 'success', title: 'File downloaded successfully' });
+    } catch (error) {
+      console.error('Failed to download file:', error);
+      showToast({ type: 'error', title: 'Failed to download file' });
+    }
+  };
+
+  const handleDeleteFile = async (attachment: TodoAttachment) => {
+    if (!editingTodo?.id) return;
+
+    try {
+      await todoAttachmentAPI.deleteAttachment(editingTodo.id, attachment.id);
+      handleAttachmentDeleted(attachment.id);
+      showToast({ type: 'success', title: 'File deleted successfully' });
+    } catch (error) {
+      console.error('Failed to delete attachment:', error);
+      showToast({ type: 'error', title: 'Failed to delete file' });
+    }
+  };
+
   const handleClose = () => {
     if (!submitting) {
       onClose();
@@ -201,6 +324,8 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: T
       notes: formState.notes.trim() || undefined,
       priority: formState.priority.trim() || undefined,
       due_date: toISOStringIfPresent(formState.dueDate),
+      todo_type: todoType,
+      publish_status: publishStatus,
       ...(canAssign && {
         assigned_user_id: assignment.assigned_user_id,
         visibility: assignment.visibility,
@@ -218,6 +343,11 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: T
             visibility: assignment.visibility,
           });
         }
+        if (canAssign && editingTodo.id && viewers.length >= 0) {
+          await todosApi.updateViewers(editingTodo.id, {
+            viewer_ids: viewers,
+          });
+        }
         onSuccess();
         showToast({ type: "success", title: "Task updated" });
       } else {
@@ -228,6 +358,15 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: T
             visibility: assignment.visibility ?? "private",
           });
         }
+        if (canAssign && viewers.length > 0) {
+          await todosApi.updateViewers(created.id, {
+            viewer_ids: viewers,
+          });
+        }
+
+        // Upload pending files after todo creation
+        await uploadPendingFiles(created.id);
+
         onSuccess();
         showToast({ type: "success", title: "Task created" });
       }
@@ -285,6 +424,35 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: T
                   required
                 />
 
+                {/* Assignment Workflow Controls */}
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700">Task Type</label>
+                    <select
+                      value={todoType}
+                      onChange={(e) => setTodoType(e.target.value as TodoType)}
+                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      <option value="regular">Regular Task</option>
+                      <option value="assignment">Assignment</option>
+                    </select>
+                  </div>
+
+                  {todoType === 'assignment' && (
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-slate-700">Assignment Status</label>
+                      <select
+                        value={publishStatus}
+                        onChange={(e) => setPublishStatus(e.target.value as TodoPublishStatus)}
+                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value="draft">Draft (Not visible to assignee)</option>
+                        <option value="published">Published (Visible to assignee)</option>
+                      </select>
+                    </div>
+                  )}
+                </div>
+
                 <div className="grid gap-4 md:grid-cols-2">
                   <Input
                     type="datetime-local"
@@ -317,14 +485,44 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: T
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <label className="text-sm font-medium text-slate-700">Notes</label>
-                    <button
-                      type="button"
-                      onClick={() => setShowFileUpload(!showFileUpload)}
-                      className="flex items-center gap-1 text-xs text-slate-500 hover:text-blue-600 transition-colors"
-                    >
-                      <Paperclip className="h-3 w-3" />
-                      {attachments.length > 0 ? `${attachments.length} files` : 'Attach files'}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="file"
+                        multiple
+                        onChange={(e) => {
+                          const files = Array.from(e.target.files || []);
+                          if (files.length > 0) {
+                            if (isEditing && editingTodo?.id) {
+                              // For editing todos, upload files immediately
+                              files.forEach(async (file) => {
+                                try {
+                                  const response = await todoAttachmentAPI.uploadFile(editingTodo.id, file);
+                                  handleUploadSuccess(response.attachment);
+                                } catch (error) {
+                                  console.error('Failed to upload file:', error);
+                                  handleUploadError('Failed to upload file');
+                                }
+                              });
+                            } else {
+                              // For new todos, add to pending files
+                              handlePendingFileSelect(files);
+                            }
+                          }
+                          // Reset input
+                          e.target.value = '';
+                        }}
+                        className="hidden"
+                        id="file-input"
+                      />
+                      <label
+                        htmlFor="file-input"
+                        className="flex items-center gap-1 text-xs text-slate-500 hover:text-blue-600 transition-colors cursor-pointer"
+                        title="Attach files"
+                      >
+                        <Paperclip className="h-4 w-4" />
+                        <span>Attach files</span>
+                      </label>
+                    </div>
                   </div>
                   <Textarea
                     placeholder="Add quick reminders, meeting notes, or links."
@@ -334,63 +532,107 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: T
                     className="border border-slate-300 bg-white text-slate-900 focus-visible:ring-blue-500"
                   />
 
-                  {/* File Upload Section */}
-                  {showFileUpload && (
-                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <h4 className="text-sm font-medium text-slate-700">File Attachments</h4>
-                          <button
-                            type="button"
-                            onClick={() => setShowFileUpload(false)}
-                            className="text-slate-400 hover:text-slate-600"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
+                  {/* Display attached files directly below Notes */}
+                  {(attachments.length > 0 || pendingFiles.length > 0) && (
+                    <div className="space-y-2 pt-2 border-t border-slate-200">
+                      {/* Existing Attachments */}
+                      {attachments.length > 0 && (
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-xs font-medium text-slate-600">
+                            <Paperclip className="h-3 w-3" />
+                            <span>Attached files ({attachments.length})</span>
+                          </div>
+                          <div className="space-y-1 ml-5">
+                            {attachments.map((attachment) => (
+                              <div
+                                key={attachment.id}
+                                className="flex items-center justify-between text-sm text-slate-700 bg-slate-50 px-3 py-2 rounded"
+                              >
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <Paperclip className="h-3 w-3 text-slate-400 flex-shrink-0" />
+                                    <span className="truncate font-medium">{attachment.original_filename}</span>
+                                  </div>
+                                  <div className="text-xs text-slate-500 ml-5">
+                                    {(attachment.file_size / 1024 / 1024).toFixed(1)} MB
+                                  </div>
+                                </div>
+
+                                {/* Action buttons */}
+                                <div className="flex items-center gap-1 ml-3 flex-shrink-0">
+                                  {/* View button */}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleViewFile(attachment)}
+                                    className="p-1 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded"
+                                    title="View file"
+                                  >
+                                    <Eye className="h-3 w-3" />
+                                  </button>
+
+                                  {/* Download button */}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDownloadFile(attachment)}
+                                    className="p-1 text-green-500 hover:text-green-700 hover:bg-green-50 rounded"
+                                    title="Download file"
+                                  >
+                                    <Download className="h-3 w-3" />
+                                  </button>
+
+                                  {/* Delete button - only when editing */}
+                                  {isEditing && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteFile(attachment)}
+                                      className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
+                                      title="Delete file"
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         </div>
+                      )}
 
-                        {/* File Upload (only for existing todos) */}
-                        {isEditing && editingTodo?.id ? (
-                          <FileUpload
-                            todoId={editingTodo.id}
-                            onUploadSuccess={handleUploadSuccess}
-                            onUploadError={handleUploadError}
-                            disabled={submitting}
-                          />
-                        ) : (
-                          <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                            <p className="text-sm text-blue-700">
-                              📎 Files can be attached after creating the task
-                            </p>
+                      {/* Pending Files (for new todos) */}
+                      {pendingFiles.length > 0 && (
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-xs font-medium text-green-600">
+                            <Paperclip className="h-3 w-3" />
+                            <span>Selected for upload ({pendingFiles.length})</span>
                           </div>
-                        )}
-
-                        {/* Attachment List */}
-                        {attachments.length > 0 && (
-                          <div className="space-y-2">
-                            <h5 className="text-xs font-medium text-slate-600 uppercase tracking-wide">
-                              Attached Files ({attachments.length})
-                            </h5>
-                            <AttachmentList
-                              todoId={editingTodo?.id || 0}
-                              attachments={attachments}
-                              onAttachmentDeleted={handleAttachmentDeleted}
-                              onAttachmentUpdated={handleAttachmentUpdated}
-                              showActions={isEditing}
-                              className="max-h-48 overflow-y-auto"
-                            />
+                          <div className="space-y-1 ml-5">
+                            {pendingFiles.map((file, index) => (
+                              <div
+                                key={`${file.name}-${index}`}
+                                className="flex items-center justify-between text-sm text-green-700 bg-green-50 px-2 py-1 rounded"
+                              >
+                                <span className="truncate flex-1">{file.name}</span>
+                                <div className="flex items-center gap-1 ml-2">
+                                  <span className="text-xs text-green-600">
+                                    {(file.size / 1024 / 1024).toFixed(1)} MB
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemovePendingFile(file)}
+                                    className="text-red-500 hover:text-red-700 p-1"
+                                    title="Remove file"
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                        )}
-
-                        {loadingAttachments && (
-                          <div className="text-center py-4">
-                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mx-auto"></div>
-                            <p className="text-xs text-slate-500 mt-2">Loading attachments...</p>
-                          </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
                   )}
+
                 </div>
               </div>
 
@@ -412,12 +654,31 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: T
                       ...formState,
                       assigned_user_id: assignment.assigned_user_id,
                       visibility: assignment.visibility || "private",
+                      viewers: viewers.map(viewerId => ({
+                        id: viewerId,
+                        user_id: viewerId,
+                        user: assignableUsers.find(u => u.id === viewerId) || {
+                          id: viewerId,
+                          first_name: "Loading...",
+                          last_name: "",
+                          email: "",
+                        },
+                      })),
                     } as any}
                     assignableUsers={assignableUsers}
                     onAssign={handleAssignmentChange}
+                    onUpdateViewers={handleViewersChange}
                     isLoading={loadingUsers || submitting}
                   />
                 </div>
+              )}
+
+              {/* Assignment Workflow - Only show for existing assignments */}
+              {isEditing && editingTodo && editingTodo.is_assignment && (
+                <AssignmentWorkflow
+                  todo={editingTodo as TodoWithAssignedUser}
+                  onUpdate={onSuccess}
+                />
               )}
             </div>
           </div>

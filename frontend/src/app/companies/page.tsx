@@ -641,7 +641,7 @@ function CompaniesPageContent() {
 
 export default function CompaniesPage() {
   return (
-    <ProtectedRoute>
+    <ProtectedRoute allowedRoles={['super_admin']}>
       <CompaniesPageContent />
     </ProtectedRoute>
   );

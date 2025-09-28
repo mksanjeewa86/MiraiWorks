@@ -419,6 +419,195 @@ body {
     0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
+/* FullCalendar Weekend Styling */
+.fc .fc-day-sat,
+.fc .fc-day-sun {
+  background-color: #fef2f2 !important;
+}
+
+[data-theme='dark'] .fc .fc-day-sat,
+[data-theme='dark'] .fc .fc-day-sun {
+  background-color: #451a1a !important;
+}
+
+/* Today cell styling - use weekend colors when today is weekend */
+.fc .fc-day-today.fc-day-sat,
+.fc .fc-day-today.fc-day-sun {
+  background-color: #fee2e2 !important;
+  border: 1px solid rgba(248, 113, 113, 0.5) !important;
+}
+
+[data-theme='dark'] .fc .fc-day-today.fc-day-sat,
+[data-theme='dark'] .fc .fc-day-today.fc-day-sun {
+  background-color: #7f1d1d !important;
+  border: 1px solid rgba(220, 38, 38, 0.6) !important;
+}
+
+/* Today cell styling for weekdays */
+.fc .fc-day-today:not(.fc-day-sat):not(.fc-day-sun) {
+  background-color: #eff6ff !important;
+  border: 1px solid rgba(59, 130, 246, 0.5) !important;
+}
+
+[data-theme='dark'] .fc .fc-day-today:not(.fc-day-sat):not(.fc-day-sun) {
+  background-color: #1e3a8a !important;
+  border: 1px solid rgba(96, 165, 250, 0.6) !important;
+}
+
+/* Today's date number chip styling */
+.fc .fc-day-today .fc-daygrid-day-number,
+.fc .fc-day-today .fc-col-header-cell-cushion {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 28px !important;
+  height: 28px !important;
+  border-radius: 50% !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  line-height: 1 !important;
+}
+
+/* Weekend today chip styling */
+.fc .fc-day-today.fc-day-sat .fc-daygrid-day-number,
+.fc .fc-day-today.fc-day-sun .fc-daygrid-day-number,
+.fc .fc-day-today.fc-day-sat .fc-col-header-cell-cushion,
+.fc .fc-day-today.fc-day-sun .fc-col-header-cell-cushion {
+  background-color: #dc2626 !important;
+  color: white !important;
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3) !important;
+}
+
+[data-theme='dark'] .fc .fc-day-today.fc-day-sat .fc-daygrid-day-number,
+[data-theme='dark'] .fc .fc-day-today.fc-day-sun .fc-daygrid-day-number,
+[data-theme='dark'] .fc .fc-day-today.fc-day-sat .fc-col-header-cell-cushion,
+[data-theme='dark'] .fc .fc-day-today.fc-day-sun .fc-col-header-cell-cushion {
+  background-color: #f87171 !important;
+  color: #1f2937 !important;
+  box-shadow: 0 2px 4px rgba(248, 113, 113, 0.4) !important;
+}
+
+/* Weekday today chip styling */
+.fc .fc-day-today:not(.fc-day-sat):not(.fc-day-sun) .fc-daygrid-day-number,
+.fc .fc-day-today:not(.fc-day-sat):not(.fc-day-sun) .fc-col-header-cell-cushion {
+  background-color: #2563eb !important;
+  color: white !important;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3) !important;
+}
+
+[data-theme='dark'] .fc .fc-day-today:not(.fc-day-sat):not(.fc-day-sun) .fc-daygrid-day-number,
+[data-theme='dark'] .fc .fc-day-today:not(.fc-day-sat):not(.fc-day-sun) .fc-col-header-cell-cushion {
+  background-color: #60a5fa !important;
+  color: #1f2937 !important;
+  box-shadow: 0 2px 4px rgba(96, 165, 250, 0.4) !important;
+}
+
+/* Weekend styling for different view types */
+.fc-timegrid .fc-day-sat .fc-timegrid-col-frame,
+.fc-timegrid .fc-day-sun .fc-timegrid-col-frame {
+  background-color: #fef2f2 !important;
+}
+
+[data-theme='dark'] .fc-timegrid .fc-day-sat .fc-timegrid-col-frame,
+[data-theme='dark'] .fc-timegrid .fc-day-sun .fc-timegrid-col-frame {
+  background-color: #451a1a !important;
+}
+
+/* Today styling for timegrid weekend */
+.fc-timegrid .fc-day-today.fc-day-sat .fc-timegrid-col-frame,
+.fc-timegrid .fc-day-today.fc-day-sun .fc-timegrid-col-frame {
+  background-color: #fee2e2 !important;
+}
+
+[data-theme='dark'] .fc-timegrid .fc-day-today.fc-day-sat .fc-timegrid-col-frame,
+[data-theme='dark'] .fc-timegrid .fc-day-today.fc-day-sun .fc-timegrid-col-frame {
+  background-color: #7f1d1d !important;
+}
+
+/* Today styling for timegrid weekdays */
+.fc-timegrid .fc-day-today:not(.fc-day-sat):not(.fc-day-sun) .fc-timegrid-col-frame {
+  background-color: #eff6ff !important;
+}
+
+[data-theme='dark'] .fc-timegrid .fc-day-today:not(.fc-day-sat):not(.fc-day-sun) .fc-timegrid-col-frame {
+  background-color: #1e3a8a !important;
+}
+
+/* Weekend styling for daygrid (month view) */
+.fc-daygrid .fc-day-sat,
+.fc-daygrid .fc-day-sun {
+  background-color: #fef2f2 !important;
+}
+
+[data-theme='dark'] .fc-daygrid .fc-day-sat,
+[data-theme='dark'] .fc-daygrid .fc-day-sun {
+  background-color: #451a1a !important;
+}
+
+/* Holiday styling for FullCalendar */
+.fc-event.holiday-event {
+  background-color: #dc2626 !important;
+  border-color: #b91c1c !important;
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+.fc-event.holiday-event .fc-event-title {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+
+[data-theme='dark'] .fc-event.holiday-event {
+  background-color: #ef4444 !important;
+  border-color: #dc2626 !important;
+  color: white !important;
+}
+
+/* Holiday date cells - make holidays stand out more */
+.fc .fc-day.holiday-day {
+  background-color: #fef2f2 !important;
+  position: relative;
+}
+
+[data-theme='dark'] .fc .fc-day.holiday-day {
+  background-color: #451a1a !important;
+}
+
+/* Holiday styling for different view types */
+.fc-timegrid .fc-day.holiday-day .fc-timegrid-col-frame {
+  background-color: #fef2f2 !important;
+}
+
+[data-theme='dark'] .fc-timegrid .fc-day.holiday-day .fc-timegrid-col-frame {
+  background-color: #451a1a !important;
+}
+
+/* Holiday styling for daygrid (month view) */
+.fc-daygrid .fc-day.holiday-day {
+  background-color: #fef2f2 !important;
+}
+
+[data-theme='dark'] .fc-daygrid .fc-day.holiday-day {
+  background-color: #451a1a !important;
+}
+
+/* Holiday indicator for day cells */
+.fc .fc-day.holiday-day::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 8px;
+  height: 8px;
+  background-color: #dc2626;
+  border-radius: 50%;
+  z-index: 10;
+}
+
+[data-theme='dark'] .fc .fc-day.holiday-day::after {
+  background-color: #ef4444;
+}
+
 /* Responsive Animation Controls */
 @media (prefers-reduced-motion: reduce) {
   .animate-blob,

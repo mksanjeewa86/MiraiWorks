@@ -135,18 +135,41 @@ class TodoPermissionService:
     @staticmethod
     async def get_assignable_users(db: AsyncSession, assigner_id: int) -> list[User]:
         """Get list of users that can be assigned todos by the assigner."""
-        # Get all active users (any creator can assign to anyone)
-        query = (
-            select(User)
-            .where(
-                User.is_active is True,
-                User.is_deleted == False,
-                User.id != assigner_id  # Don't include the assigner themselves
-            )
-        )
+        # Import here to avoid circular import
+        from app.services.user_connection_service import user_connection_service
 
-        result = await db.execute(query)
-        return list(result.scalars().all())
+        # Use simple connection service to get connected users
+        try:
+            connected_users = await user_connection_service.get_connected_users(db, assigner_id)
+
+            # If no connections exist, fall back to including the user themselves
+            # This provides a smooth transition and allows self-assignment for testing
+            if not connected_users:
+                query = select(User).where(
+                    User.id == assigner_id,
+                    User.is_active is True,
+                    User.is_deleted == False
+                )
+                result = await db.execute(query)
+                self_user = result.scalars().first()
+                return [self_user] if self_user else []
+
+            return connected_users
+
+        except Exception as e:
+            # Fallback to original behavior if connection service fails
+            print(f"Connection service error, falling back: {e}")
+            query = (
+                select(User)
+                .where(
+                    User.is_active is True,
+                    User.is_deleted == False,
+                    User.id != assigner_id  # Don't include the assigner themselves
+                )
+            )
+
+            result = await db.execute(query)
+            return list(result.scalars().all())
 
     @staticmethod
     async def filter_todos_by_permission(

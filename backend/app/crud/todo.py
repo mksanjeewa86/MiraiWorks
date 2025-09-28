@@ -18,7 +18,7 @@ from app.schemas.todo import (
     TodoViewersUpdate,
 )
 from app.services.todo_permissions import TodoPermissionService
-from app.utils.constants import TodoStatus, TodoVisibility
+from app.utils.constants import TodoStatus, TodoVisibility, TodoPublishStatus, AssignmentStatus
 
 
 class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
@@ -55,11 +55,16 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         await self.auto_mark_expired(db, user_id)
 
         # Build query to include todos where user is owner OR assigned
+        # BUT exclude draft assignments if user is not the owner
         query: Select = (
             select(Todo)
             .options(selectinload(Todo.assigned_user))
             .where(
-                (Todo.owner_id == user_id) | (Todo.assigned_user_id == user_id)
+                (Todo.owner_id == user_id) |
+                (
+                    (Todo.assigned_user_id == user_id) &
+                    (Todo.publish_status == TodoPublishStatus.PUBLISHED.value)
+                )
             )
         )
 
@@ -325,6 +330,149 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
     ) -> Todo:
         """Create a todo with owner - alias for create_for_user."""
         return await self.create_for_user(db, owner_id=owner_id, created_by=owner_id, obj_in=obj_in)
+
+    # Assignment workflow methods
+    async def publish_assignment(
+        self, db: AsyncSession, *, todo: Todo, published_by: int
+    ) -> Todo:
+        """Publish an assignment (make it visible to assignee and viewers)."""
+        if todo.is_assignment:
+            todo.publish()
+            todo.last_updated_by = published_by
+            db.add(todo)
+            await db.commit()
+            await db.refresh(todo)
+        return todo
+
+    async def make_draft(
+        self, db: AsyncSession, *, todo: Todo, updated_by: int
+    ) -> Todo:
+        """Make assignment a draft (hide from assignee and viewers)."""
+        if todo.is_assignment:
+            todo.make_draft()
+            todo.last_updated_by = updated_by
+            db.add(todo)
+            await db.commit()
+            await db.refresh(todo)
+        return todo
+
+    async def submit_assignment(
+        self, db: AsyncSession, *, todo: Todo, submitted_by: int, notes: str = None
+    ) -> Todo:
+        """Submit assignment for review."""
+        if todo.is_assignment and todo.assigned_user_id == submitted_by:
+            todo.submit_assignment()
+            todo.last_updated_by = submitted_by
+            if notes:
+                # Add notes to existing notes if any
+                if todo.notes:
+                    todo.notes = f"{todo.notes}\n\n**Submission Notes:**\n{notes}"
+                else:
+                    todo.notes = f"**Submission Notes:**\n{notes}"
+            db.add(todo)
+            await db.commit()
+            await db.refresh(todo)
+        return todo
+
+    async def start_assignment_review(
+        self, db: AsyncSession, *, todo: Todo, reviewer_id: int
+    ) -> Todo:
+        """Start review process for assignment."""
+        if todo.is_assignment and todo.owner_id == reviewer_id:
+            todo.start_review()
+            todo.last_updated_by = reviewer_id
+            db.add(todo)
+            await db.commit()
+            await db.refresh(todo)
+        return todo
+
+    async def review_assignment(
+        self,
+        db: AsyncSession,
+        *,
+        todo: Todo,
+        reviewer_id: int,
+        assignment_status: str,
+        assessment: str = None,
+        score: int = None
+    ) -> Todo:
+        """Review and assess an assignment."""
+        if todo.is_assignment and todo.owner_id == reviewer_id:
+            if assignment_status == AssignmentStatus.APPROVED.value:
+                todo.approve_assignment(reviewer_id, assessment, score)
+            elif assignment_status == AssignmentStatus.REJECTED.value:
+                todo.reject_assignment(reviewer_id, assessment, score)
+
+            todo.last_updated_by = reviewer_id
+            db.add(todo)
+            await db.commit()
+            await db.refresh(todo)
+        return todo
+
+    async def get_assignments_for_review(
+        self, db: AsyncSession, *, reviewer_id: int
+    ) -> list[Todo]:
+        """Get assignments that need review by the reviewer."""
+        result = await db.execute(
+            select(Todo)
+            .options(selectinload(Todo.assigned_user))
+            .where(
+                Todo.owner_id == reviewer_id,
+                Todo.todo_type == "assignment",
+                Todo.assignment_status.in_([
+                    AssignmentStatus.SUBMITTED.value,
+                    AssignmentStatus.UNDER_REVIEW.value
+                ]),
+                Todo.is_deleted == False
+            )
+            .order_by(Todo.submitted_at.asc())
+        )
+        return result.scalars().all()
+
+    async def get_user_assignments(
+        self,
+        db: AsyncSession,
+        *,
+        user_id: int,
+        assignment_status: str = None,
+        limit: int = 100,
+        offset: int = 0
+    ) -> tuple[list[Todo], int]:
+        """Get assignments for a user (either as assignee or viewer)."""
+        # Get assignments where user is assigned or is a viewer
+        query: Select = (
+            select(Todo)
+            .options(
+                selectinload(Todo.owner),
+                selectinload(Todo.assigned_user),
+                selectinload(Todo.viewers).selectinload(TodoViewer.user)
+            )
+            .where(
+                Todo.todo_type == "assignment",
+                Todo.publish_status == TodoPublishStatus.PUBLISHED.value,
+                Todo.is_deleted == False,
+                (
+                    (Todo.assigned_user_id == user_id) |
+                    (Todo.viewers.any(TodoViewer.user_id == user_id))
+                )
+            )
+        )
+
+        if assignment_status:
+            query = query.where(Todo.assignment_status == assignment_status)
+
+        total_query = select(func.count()).select_from(query.subquery())
+        total_result = await db.execute(total_query)
+        total = total_result.scalar() or 0
+
+        query = query.order_by(
+            Todo.due_date.is_(None), Todo.due_date.asc(), Todo.created_at.desc()
+        )
+        query = query.offset(offset).limit(limit)
+
+        result = await db.execute(query)
+        assignments = result.scalars().all()
+        return assignments, total
 
 
 todo = CRUDTodo(Todo)

@@ -46,6 +46,8 @@ from app.models.todo_attachment import TodoAttachment
 from app.models.todo_extension_request import TodoExtensionRequest
 from app.models.todo_viewer import TodoViewer
 from app.models.user import User
+from app.models.user_connection import UserConnection
+from app.models.connection_invitation import ConnectionInvitation
 from app.models.user_settings import UserSettings
 from app.models.video_call import (
     CallParticipant,
@@ -54,10 +56,13 @@ from app.models.video_call import (
     TranscriptionSegment,
     VideoCall,
 )
+from app.models.holiday import Holiday
 
 __all__ = [
     "Company",
     "User",
+    "UserConnection",
+    "ConnectionInvitation",
     "Role",
     "UserRole",
     "RefreshToken",
@@ -111,4 +116,5 @@ __all__ = [
     "ExamStatus",
     "QuestionType",
     "SessionStatus",
+    "Holiday",
 ]

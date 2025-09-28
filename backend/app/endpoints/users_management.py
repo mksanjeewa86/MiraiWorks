@@ -22,11 +22,31 @@ from app.schemas.user import (
 )
 from app.services.auth_service import auth_service
 from app.services.email_service import email_service
+from app.services.user_connection_service import user_connection_service
 from app.utils.constants import UserRole as UserRoleEnum
 from app.utils.permissions import is_company_admin, is_super_admin
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+
+async def get_super_admin_user(db: AsyncSession) -> User | None:
+    """Get the first available super admin user."""
+    super_admin_query = (
+        select(User)
+        .join(UserRole)
+        .join(Role)
+        .where(
+            and_(
+                Role.name == UserRoleEnum.SUPER_ADMIN.value,
+                User.is_active == True,
+                User.is_deleted == False,
+            )
+        )
+        .limit(1)
+    )
+    result = await db.execute(super_admin_query)
+    return result.scalar_one_or_none()
 
 
 @router.get("/users", response_model=UserListResponse)
@@ -227,6 +247,7 @@ async def create_user(
         company_id=user_data.company_id,
         is_admin=is_admin_user,
         require_2fa=require_2fa,
+        created_by=current_user.id,  # Track who created this user
         is_active=False,  # User needs to activate account
     )
 
@@ -248,6 +269,23 @@ async def create_user(
     db.add(user_settings)
 
     await db.commit()
+
+    # Auto-connect admin users to super admin
+    if is_admin_user:
+        try:
+            super_admin = await get_super_admin_user(db)
+            if super_admin and super_admin.id != new_user.id:
+                await user_connection_service.connect_users(
+                    db=db,
+                    user_id=new_user.id,
+                    connected_user_id=super_admin.id,
+                    creation_type="automatic",
+                    created_by=None
+                )
+                logger.info(f"Automatically connected admin user {new_user.email} to super admin {super_admin.email}")
+        except Exception as e:
+            # Log error but don't fail the user creation
+            logger.error(f"Error creating automatic connection to super admin for {new_user.email}: {e}")
 
     # Send activation email
     try:

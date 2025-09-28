@@ -2,14 +2,17 @@
 from fastapi import FastAPI
 
 from app.endpoints import (
+    assignment_workflow,
     auth,
     calendar,
     calendar_connections,
     companies,
+    connection_invitations,
     dashboard,
     email_preview,
     exam,
     files,
+    holidays,
     infrastructure,
     interviews,
     mbti,
@@ -21,6 +24,7 @@ from app.endpoints import (
     todo_attachments,
     todo_extensions,
     todos,
+    user_connections,
     user_settings,
     users_management,
     video_calls,
@@ -44,12 +48,14 @@ def include_routers(app: FastAPI) -> None:
     )
     app.include_router(files.router, prefix="/api/files", tags=["files"])
     app.include_router(todos.router, prefix="/api/todos", tags=["todos"])
+    app.include_router(assignment_workflow.router, prefix="/api/assignments", tags=["assignments"])
     app.include_router(todo_attachments.router, prefix="/api", tags=["todo-attachments"])
     app.include_router(todo_extensions.router, prefix="/api/todos", tags=["todo-extensions"])
     app.include_router(calendar.router, prefix="/api/calendar", tags=["calendar"])
     app.include_router(
         calendar_connections.router, prefix="/api/user", tags=["calendar-connections"]
     )
+    app.include_router(holidays.router, prefix="/api/holidays", tags=["holidays"])
     app.include_router(interviews.router, prefix="/api/interviews", tags=["interviews"])
     app.include_router(video_calls.router, prefix="/api", tags=["video-calls"])
     app.include_router(websocket_video.router, tags=["websocket-video"])
@@ -59,6 +65,8 @@ def include_routers(app: FastAPI) -> None:
     app.include_router(webhooks.router, prefix="/api/webhooks", tags=["webhooks"])
     app.include_router(resumes.router, prefix="/api/resumes", tags=["resumes"])
     app.include_router(user_settings.router, prefix="/api/user", tags=["user-settings"])
+    app.include_router(user_connections.router, prefix="/api/user/connections", tags=["user-connections"])
+    app.include_router(connection_invitations.router, prefix="/api/user/invitations", tags=["connection-invitations"])
     app.include_router(companies.router, prefix="/api/admin", tags=["companies"])
     app.include_router(
         users_management.router, prefix="/api/admin", tags=["users-management"]

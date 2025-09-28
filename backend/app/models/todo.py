@@ -7,7 +7,7 @@ from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
-from app.utils.constants import TodoStatus, TodoVisibility
+from app.utils.constants import TodoStatus, TodoVisibility, TodoType, TodoPublishStatus, AssignmentStatus
 
 if TYPE_CHECKING:
     from app.models.todo_extension_request import TodoExtensionRequest
@@ -42,6 +42,35 @@ class Todo(Base):
     visibility: Mapped[str] = mapped_column(
         String(20), nullable=False, default=TodoVisibility.PRIVATE.value, index=True
     )
+
+    # Todo type and publishing
+    todo_type: Mapped[str] = mapped_column(
+        String(20), nullable=False, default=TodoType.REGULAR.value, index=True
+    )
+    publish_status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default=TodoPublishStatus.PUBLISHED.value, index=True
+    )
+
+    # Assignment specific fields
+    assignment_status: Mapped[str | None] = mapped_column(
+        String(20), nullable=True, index=True
+    )
+    assignment_assessment: Mapped[str | None] = mapped_column(
+        Text, nullable=True
+    )
+    assignment_score: Mapped[int | None] = mapped_column(
+        Integer, nullable=True
+    )
+    submitted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    reviewed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    reviewed_by: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+
     is_deleted: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, index=True
     )
@@ -76,6 +105,9 @@ class Todo(Base):
     )
     assigned_user: Mapped[User | None] = relationship(
         "User", foreign_keys=[assigned_user_id], backref="assigned_todos"
+    )
+    reviewer: Mapped[User | None] = relationship(
+        "User", foreign_keys=[reviewed_by], backref="reviewed_todos"
     )
     viewers: Mapped[list[TodoViewer]] = relationship(
         "TodoViewer", back_populates="todo", cascade="all, delete-orphan"
@@ -115,3 +147,70 @@ class Todo(Base):
     def restore(self) -> None:
         self.is_deleted = False
         self.deleted_at = None
+
+    @property
+    def is_assignment(self) -> bool:
+        return self.todo_type == TodoType.ASSIGNMENT.value
+
+    @property
+    def is_published(self) -> bool:
+        return self.publish_status == TodoPublishStatus.PUBLISHED.value
+
+    @property
+    def is_draft(self) -> bool:
+        return self.publish_status == TodoPublishStatus.DRAFT.value
+
+    def publish(self) -> None:
+        """Publish the todo (make it visible to assignee and viewers)"""
+        self.publish_status = TodoPublishStatus.PUBLISHED.value
+
+    def make_draft(self) -> None:
+        """Make the todo a draft (hide from assignee and viewers)"""
+        self.publish_status = TodoPublishStatus.DRAFT.value
+
+    def submit_assignment(self) -> None:
+        """Mark assignment as submitted"""
+        if self.is_assignment:
+            self.assignment_status = AssignmentStatus.SUBMITTED.value
+            self.submitted_at = datetime.utcnow()
+            self.status = TodoStatus.COMPLETED.value
+            self.completed_at = datetime.utcnow()
+
+    def start_review(self) -> None:
+        """Start review process for assignment"""
+        if self.is_assignment and self.assignment_status == AssignmentStatus.SUBMITTED.value:
+            self.assignment_status = AssignmentStatus.UNDER_REVIEW.value
+
+    def approve_assignment(self, reviewer_id: int, assessment: str = None, score: int = None) -> None:
+        """Mark assignment as approved"""
+        if self.is_assignment:
+            self.assignment_status = AssignmentStatus.APPROVED.value
+            self.reviewed_at = datetime.utcnow()
+            self.reviewed_by = reviewer_id
+            if assessment:
+                self.assignment_assessment = assessment
+            if score is not None:
+                self.assignment_score = score
+
+    def reject_assignment(self, reviewer_id: int, assessment: str = None, score: int = None) -> None:
+        """Mark assignment as rejected"""
+        if self.is_assignment:
+            self.assignment_status = AssignmentStatus.REJECTED.value
+            self.reviewed_at = datetime.utcnow()
+            self.reviewed_by = reviewer_id
+            if assessment:
+                self.assignment_assessment = assessment
+            if score is not None:
+                self.assignment_score = score
+
+    @property
+    def can_be_edited_by_assignee(self) -> bool:
+        """Check if assignee can edit the todo"""
+        if not self.is_assignment:
+            return True
+        return self.assignment_status not in [
+            AssignmentStatus.SUBMITTED.value,
+            AssignmentStatus.UNDER_REVIEW.value,
+            AssignmentStatus.APPROVED.value,
+            AssignmentStatus.REJECTED.value
+        ]

@@ -583,7 +583,7 @@ function EditCompanyContent() {
 
 export default function EditCompanyPage() {
   return (
-    <ProtectedRoute>
+    <ProtectedRoute allowedRoles={['super_admin']}>
       <EditCompanyContent />
     </ProtectedRoute>
   );

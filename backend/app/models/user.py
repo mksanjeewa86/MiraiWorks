@@ -24,6 +24,8 @@ class User(Base):
     is_admin = Column(Boolean, nullable=False, default=False, index=True)
     require_2fa = Column(Boolean, nullable=False, default=False, index=True)
     last_login = Column(DateTime(timezone=True), nullable=True)
+    # Creation tracking
+    created_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)  # ID of user who created this user (NULL for self-registration)
     # Logical deletion fields
     is_deleted = Column(Boolean, nullable=False, default=False, index=True)
     deleted_at = Column(DateTime(timezone=True), nullable=True)
@@ -102,6 +104,37 @@ class User(Base):
     mbti_test = relationship(
         "MBTITest", back_populates="user", cascade="all, delete-orphan", uselist=False
     )
+
+    # User connections
+    sent_connections = relationship(
+        "UserConnection",
+        foreign_keys="UserConnection.user_id",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    received_connections = relationship(
+        "UserConnection",
+        foreign_keys="UserConnection.connected_user_id",
+        back_populates="connected_user",
+        cascade="all, delete-orphan"
+    )
+
+    # Connection invitations
+    sent_invitations = relationship(
+        "ConnectionInvitation",
+        foreign_keys="ConnectionInvitation.sender_id",
+        back_populates="sender",
+        cascade="all, delete-orphan"
+    )
+    received_invitations = relationship(
+        "ConnectionInvitation",
+        foreign_keys="ConnectionInvitation.receiver_id",
+        back_populates="receiver",
+        cascade="all, delete-orphan"
+    )
+
+    # Creator relationship (who created this user)
+    creator = relationship("User", remote_side="User.id", post_update=True)
 
     @property
     def full_name(self):

@@ -204,6 +204,7 @@ async def register(
         is_active=True,  # Candidates are immediately active
         is_admin=False,  # Candidates are not admins
         company_id=None,  # Candidates don't belong to companies
+        created_by=None,  # Self-registered user
         last_login=datetime.utcnow(),
     )
 

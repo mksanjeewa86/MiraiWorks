@@ -1,5 +1,8 @@
 ﻿export type TodoStatus = 'pending' | 'in_progress' | 'completed' | 'expired';
 export type TodoVisibility = 'private' | 'public' | 'viewer';
+export type TodoType = 'regular' | 'assignment';
+export type TodoPublishStatus = 'draft' | 'published';
+export type AssignmentStatus = 'not_started' | 'in_progress' | 'submitted' | 'under_review' | 'approved' | 'rejected';
 
 export interface Todo {
   id: number;
@@ -19,6 +22,19 @@ export interface Todo {
   created_at: string;
   updated_at: string;
   is_expired: boolean;
+  // Assignment workflow fields
+  todo_type?: TodoType;
+  publish_status?: TodoPublishStatus;
+  assignment_status?: AssignmentStatus | null;
+  assignment_assessment?: string | null;
+  assignment_score?: number | null;
+  submitted_at?: string | null;
+  reviewed_at?: string | null;
+  reviewed_by?: number | null;
+  is_assignment?: boolean;
+  is_published?: boolean;
+  is_draft?: boolean;
+  can_be_edited_by_assignee?: boolean;
 }
 
 export interface TodoListResponse {
@@ -36,6 +52,8 @@ export interface TodoPayload {
   assigned_user_id?: number | null;
   visibility?: TodoVisibility;
   viewer_ids?: number[];
+  todo_type?: TodoType;
+  publish_status?: TodoPublishStatus;
 }
 
 export interface TodoListParams {
@@ -128,6 +146,23 @@ export interface UserAssignmentProps {
   onAssign: (assignment: TodoAssignmentUpdate) => void;
   onUpdateViewers?: (viewers: TodoViewersUpdate) => void;
   isLoading?: boolean;
+}
+
+// Assignment workflow types
+export interface AssignmentSubmission {
+  notes?: string;
+}
+
+export interface AssignmentReview {
+  assignment_status: 'approved' | 'rejected';
+  assessment?: string;
+  score?: number;
+}
+
+export interface AssignmentWorkflowResponse {
+  success: boolean;
+  message: string;
+  todo: Todo;
 }
 
 export interface AssignmentStatusProps {

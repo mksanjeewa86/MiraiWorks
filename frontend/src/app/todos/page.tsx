@@ -15,6 +15,7 @@ import {
   CalendarCheck,
   Sun,
   Search,
+  CalendarRange,
 } from 'lucide-react';
 
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
@@ -26,7 +27,9 @@ import Input from '@/components/ui/input';
 import LoadingSpinner from '@/components/ui/loading-spinner';
 import ConfirmationModal from '@/components/ui/confirmation-modal';
 import TaskModal from '@/components/todos/TaskModal';
+import ExtensionRequestModal from '@/components/todos/ExtensionRequestModal';
 import { useToast } from '@/contexts/ToastContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { todosApi } from '@/api/todos';
 import type { Todo, ViewFilter, TodoItemProps } from '@/types/todo';
 
@@ -57,13 +60,17 @@ function TodoItem({
   onDelete,
   onRestore,
   loadingId,
-}: TodoItemProps) {
+  onRequestExtension,
+}: TodoItemProps & { onRequestExtension?: (todo: Todo) => void }) {
   const isProcessing = loadingId === todo.id;
   const showExpired = todo.status === 'expired' || todo.is_expired;
   const showCompleteAction = !todo.is_deleted && todo.status !== 'completed';
   const showReopenAction = !todo.is_deleted && (todo.status === 'completed' || showExpired);
   const isCompleted = todo.status === 'completed';
   const isDeleted = todo.is_deleted;
+
+  // Check if user can request extension (assignee with due date, not completed/deleted)
+  const canRequestExtension = !isDeleted && !isCompleted && todo.due_date && todo.assigned_user_id && onRequestExtension;
 
   const statusAccentClass = isDeleted
     ? 'bg-red-500/20 text-red-700 dark:bg-red-500/25 dark:text-red-300'
@@ -235,7 +242,7 @@ function TodoItem({
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-2">
+            <div className={`grid gap-2 ${canRequestExtension ? 'grid-cols-4' : 'grid-cols-3'}`}>
               {/* Primary Action (Complete/Reopen) */}
               {showCompleteAction && (
                 <Button
@@ -259,6 +266,19 @@ function TodoItem({
                   leftIcon={<RotateCcw className="h-4 w-4" />}
                 >
                   Reopen
+                </Button>
+              )}
+
+              {/* Extension Request Action */}
+              {canRequestExtension && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="w-full text-orange-600 hover:bg-orange-100 hover:text-orange-700 dark:text-orange-400 dark:hover:bg-orange-900/30 dark:hover:text-orange-300"
+                  onClick={() => onRequestExtension(todo)}
+                  leftIcon={<CalendarRange className="h-4 w-4" />}
+                >
+                  Extend
                 </Button>
               )}
 
@@ -294,6 +314,7 @@ function TodoItem({
 
 function TodosPageContent() {
   const { showToast } = useToast();
+  const { user } = useAuth();
   const [todos, setTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
@@ -302,6 +323,10 @@ function TodosPageContent() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
+  const [extensionRequestModal, setExtensionRequestModal] = useState<{
+    isOpen: boolean;
+    todo: Todo | null;
+  }>({ isOpen: false, todo: null });
 
   // Confirmation modal state
   const [confirmationModal, setConfirmationModal] = useState<{
@@ -591,6 +616,18 @@ function TodosPageContent() {
     openConfirmationModal(todo, 'delete');
   };
 
+  const handleRequestExtension = (todo: Todo) => {
+    // Check if current user is the assignee
+    if (user && todo.assigned_user_id === user.id) {
+      setExtensionRequestModal({ isOpen: true, todo });
+    } else {
+      showToast({
+        type: 'error',
+        title: 'Only the assigned user can request an extension'
+      });
+    }
+  };
+
   const executeDelete = async (todo: Todo) => {
     setActionLoadingId(todo.id);
     try {
@@ -762,6 +799,18 @@ function TodosPageContent() {
         icon={getConfirmationIcon()}
       />
 
+      {extensionRequestModal.todo && (
+        <ExtensionRequestModal
+          isOpen={extensionRequestModal.isOpen}
+          onClose={() => setExtensionRequestModal({ isOpen: false, todo: null })}
+          todo={extensionRequestModal.todo}
+          onSuccess={() => {
+            setExtensionRequestModal({ isOpen: false, todo: null });
+            showToast({ type: 'success', title: 'Extension request submitted' });
+          }}
+        />
+      )}
+
       <div className="space-y-6 px-4 py-4 md:px-8 lg:px-12">
         <div className="relative overflow-hidden rounded-2xl border border-gray-200/80 bg-white/80 shadow-md dark:border-gray-800/70 dark:bg-gray-900/70">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-transparent dark:from-blue-500/15 dark:via-purple-500/20" />
@@ -901,6 +950,7 @@ function TodosPageContent() {
                       onReopen={handleReopen}
                       onDelete={handleDelete}
                       onRestore={handleRestore}
+                      onRequestExtension={handleRequestExtension}
                       loadingId={actionLoadingId}
                     />
                   ))}

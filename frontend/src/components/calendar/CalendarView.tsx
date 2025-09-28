@@ -37,6 +37,14 @@ const getEventPalette = (event: CalendarEvent | undefined) => {
     };
   }
 
+  if (event.id?.startsWith('holiday-')) {
+    return {
+      backgroundColor: '#dc2626',
+      borderColor: '#b91c1c',
+      textColor: '#ffffff',
+    };
+  }
+
   if (event.id?.startsWith('interview-')) {
     return {
       backgroundColor: '#7c3aed',
@@ -77,6 +85,7 @@ export default function CalendarView({
     () =>
       events.map((event) => {
         const palette = getEventPalette(event);
+        const isHoliday = event.id?.startsWith('holiday-');
         return {
           id: event.id,
           title: event.title,
@@ -87,6 +96,7 @@ export default function CalendarView({
           backgroundColor: palette.backgroundColor,
           borderColor: palette.borderColor,
           textColor: palette.textColor,
+          classNames: isHoliday ? ['holiday-event'] : [],
         };
       }),
     [events]
@@ -108,6 +118,38 @@ export default function CalendarView({
       api.gotoDate(currentDate);
     }
   }, [currentDate]);
+
+  // Apply holiday styling when events change
+  useEffect(() => {
+    const applyHolidayStyling = () => {
+      // Clear previous holiday classes
+      document.querySelectorAll('.holiday-day').forEach(cell => {
+        cell.classList.remove('holiday-day');
+      });
+
+      // Apply holiday styling
+      const holidayEvents = events.filter(event => event.id?.startsWith('holiday-'));
+      holidayEvents.forEach(holiday => {
+        const holidayDate = new Date(holiday.startDatetime);
+
+        // Format date correctly to avoid timezone issues
+        const year = holidayDate.getFullYear();
+        const month = String(holidayDate.getMonth() + 1).padStart(2, '0');
+        const day = String(holidayDate.getDate()).padStart(2, '0');
+        const dateStr = `${year}-${month}-${day}`;
+
+        // Find all date cells for this holiday
+        const dateCells = document.querySelectorAll(`[data-date="${dateStr}"]`);
+        dateCells.forEach(cell => {
+          cell.classList.add('holiday-day');
+        });
+      });
+    };
+
+    // Apply with a small delay to ensure DOM is ready
+    const timeoutId = setTimeout(applyHolidayStyling, 100);
+    return () => clearTimeout(timeoutId);
+  }, [events]);
 
   const handleSelect = useCallback((selection: DateSelectArg) => {
     onRangeSelect({
@@ -151,7 +193,27 @@ export default function CalendarView({
     if (newDate.getTime() !== currentDate.getTime()) {
       onDateChange(newDate);
     }
-  }, [viewType, currentDate, onViewChange, onDateChange]);
+
+    // Add holiday styling to date cells
+    setTimeout(() => {
+      const holidayEvents = events.filter(event => event.id?.startsWith('holiday-'));
+      holidayEvents.forEach(holiday => {
+        const holidayDate = new Date(holiday.startDatetime);
+
+        // Format date correctly to avoid timezone issues
+        const year = holidayDate.getFullYear();
+        const month = String(holidayDate.getMonth() + 1).padStart(2, '0');
+        const day = String(holidayDate.getDate()).padStart(2, '0');
+        const dateStr = `${year}-${month}-${day}`;
+
+        // Find all date cells for this holiday
+        const dateCells = document.querySelectorAll(`[data-date="${dateStr}"]`);
+        dateCells.forEach(cell => {
+          cell.classList.add('holiday-day');
+        });
+      });
+    }, 100);
+  }, [viewType, currentDate, onViewChange, onDateChange, events]);
 
   return (
     <div className="relative flex-1 overflow-hidden">

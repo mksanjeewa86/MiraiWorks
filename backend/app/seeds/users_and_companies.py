@@ -6,6 +6,7 @@ This file creates the essential authentication system data.
 """
 
 from app.models import Company, CompanyProfile, Role, User, UserRole, UserSettings
+from app.models.user_connection import UserConnection
 from app.services.auth_service import auth_service
 from app.utils.constants import CompanyType
 
@@ -336,6 +337,76 @@ def get_company_profiles_data():
     ]
 
 
+async def create_user_connections(db, users, roles):
+    """Create user connections between admin users and super admin."""
+    connections_created = 0
+
+    # Find super admin user
+    super_admin_user = None
+    for user, role_name in users:
+        if role_name == "super_admin":
+            super_admin_user = user
+            break
+
+    if not super_admin_user:
+        print("   - No super admin found, skipping user connections")
+        return 0
+
+    # Connect all admin users (company_admin) to super admin
+    for user, role_name in users:
+        if role_name == "company_admin" and user.id != super_admin_user.id:
+            connection = UserConnection(
+                user_id=user.id,
+                connected_user_id=super_admin_user.id,
+                is_active=True,
+                creation_type="automatic",
+                created_by=None
+            )
+            db.add(connection)
+            connections_created += 1
+            print(f"   - Connected {user.email} (company_admin) to {super_admin_user.email} (super_admin) [AUTOMATIC]")
+
+    # Connect recruiters to super admin as well for coordination
+    for user, role_name in users:
+        if role_name == "recruiter" and user.id != super_admin_user.id:
+            connection = UserConnection(
+                user_id=user.id,
+                connected_user_id=super_admin_user.id,
+                is_active=True,
+                creation_type="automatic",
+                created_by=None
+            )
+            db.add(connection)
+            connections_created += 1
+            print(f"   - Connected {user.email} (recruiter) to {super_admin_user.email} (super_admin) [AUTOMATIC]")
+
+    # Connect candidate to recruiters for demonstration
+    candidate_user = None
+    recruiter_users = []
+    for user, role_name in users:
+        if role_name == "candidate":
+            candidate_user = user
+        elif role_name == "recruiter":
+            recruiter_users.append(user)
+
+    if candidate_user and recruiter_users:
+        for recruiter_user in recruiter_users:
+            connection = UserConnection(
+                user_id=candidate_user.id,
+                connected_user_id=recruiter_user.id,
+                is_active=True,
+                creation_type="automatic",
+                created_by=None
+            )
+            db.add(connection)
+            connections_created += 1
+            print(f"   - Connected {candidate_user.email} (candidate) to {recruiter_user.email} (recruiter) [AUTOMATIC]")
+
+    await db.commit()
+    print(f"   - Created {connections_created} user connections")
+    return connections_created
+
+
 async def seed_auth_data(db):
     """Create authentication and user data."""
     print("Creating authentication data...")
@@ -368,13 +439,33 @@ async def seed_auth_data(db):
     print("Creating users...")
     users_data = get_users_data(companies)
     users = []
-    for user_data in users_data:
+    super_admin_user = None
+
+    for i, user_data in enumerate(users_data):
         user_role = user_data.pop("role")
+
+        # Set created_by based on user type
+        if user_role == "super_admin":
+            user_data["created_by"] = None  # Super admin is self-created (system user)
+        elif user_role == "candidate":
+            user_data["created_by"] = None  # Candidates self-register
+        else:
+            # Other users (company_admin, recruiter, employer) are created by super admin
+            if super_admin_user:
+                user_data["created_by"] = super_admin_user.id
+            else:
+                user_data["created_by"] = None  # Fallback if super admin not created yet
+
         user = User(**user_data)
         db.add(user)
         await db.flush()
         users.append((user, user_role))
-        print(f"   - Created user '{user_data['email']}'")
+
+        # Store reference to super admin for other users
+        if user_role == "super_admin":
+            super_admin_user = user
+
+        print(f"   - Created user '{user.email}' (created_by: {user_data.get('created_by', 'None')})")
 
     await db.commit()
 
@@ -414,6 +505,10 @@ async def seed_auth_data(db):
 
     await db.commit()
 
+    # Create user connections (admin users connected to super admin)
+    print("Creating user connections...")
+    user_connections_count = await create_user_connections(db, users, roles)
+
     return {
         "roles": len(roles),
         "companies": len(companies),
@@ -421,6 +516,7 @@ async def seed_auth_data(db):
         "user_roles": len(users),
         "user_settings": len(users),
         "company_profiles": len(companies),
+        "user_connections": user_connections_count,
         "users_list": users,
         "companies_list": companies
     }

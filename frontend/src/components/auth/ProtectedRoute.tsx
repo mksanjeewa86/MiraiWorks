@@ -16,14 +16,19 @@ export default function ProtectedRoute({
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated && typeof window !== 'undefined') {
-      const currentPath = window.location.pathname;
-      // Only redirect if not already on the redirect page and not authenticated
-      if (currentPath !== redirectTo) {
-        console.log(`ProtectedRoute: Redirecting from ${currentPath} to ${redirectTo}`);
-        router.push(redirectTo);
+    // Add a small delay to ensure auth state is fully determined
+    const timeoutId = setTimeout(() => {
+      if (!isLoading && !isAuthenticated && typeof window !== 'undefined') {
+        const currentPath = window.location.pathname;
+        // Only redirect if not already on the redirect page and not authenticated
+        if (currentPath !== redirectTo) {
+          console.log(`ProtectedRoute: Redirecting from ${currentPath} to ${redirectTo} (auth loading: ${isLoading}, authenticated: ${isAuthenticated})`);
+          router.push(redirectTo);
+        }
       }
-    }
+    }, 100); // Small delay to let auth state settle
+
+    return () => clearTimeout(timeoutId);
   }, [isAuthenticated, isLoading, router, redirectTo]);
 
   // Check role-based access if allowedRoles is specified

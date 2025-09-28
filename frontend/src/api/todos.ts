@@ -9,6 +9,9 @@ import type {
   TodoWithAssignedUser,
   TodoAssignmentUpdate,
   TodoViewersUpdate,
+  AssignmentSubmission,
+  AssignmentReview,
+  AssignmentWorkflowResponse,
 } from '@/types/todo';
 
 export const todosApi = {
@@ -116,5 +119,31 @@ export const todosApi = {
   async updateViewers(id: number, viewers: TodoViewersUpdate): Promise<Todo> {
     const response = await apiClient.put<Todo>(API_ENDPOINTS.TODOS.VIEWERS(id), viewers);
     return response.data as Todo;
+  },
+
+  // Assignment workflow methods
+  async publishAssignment(id: number): Promise<AssignmentWorkflowResponse> {
+    const response = await apiClient.post<AssignmentWorkflowResponse>(`/api/assignments/${id}/publish`);
+    return response.data as AssignmentWorkflowResponse;
+  },
+
+  async makeDraftAssignment(id: number): Promise<AssignmentWorkflowResponse> {
+    const response = await apiClient.post<AssignmentWorkflowResponse>(`/api/assignments/${id}/make-draft`);
+    return response.data as AssignmentWorkflowResponse;
+  },
+
+  async submitAssignment(id: number, submission: AssignmentSubmission): Promise<AssignmentWorkflowResponse> {
+    const response = await apiClient.post<AssignmentWorkflowResponse>(`/api/assignments/${id}/submit`, submission);
+    return response.data as AssignmentWorkflowResponse;
+  },
+
+  async reviewAssignment(id: number, review: AssignmentReview): Promise<AssignmentWorkflowResponse> {
+    const response = await apiClient.post<AssignmentWorkflowResponse>(`/api/assignments/${id}/review`, review);
+    return response.data as AssignmentWorkflowResponse;
+  },
+
+  async getAssignmentsForReview(): Promise<Todo[]> {
+    const response = await apiClient.get<Todo[]>('/api/assignments/pending-review');
+    return response.data as Todo[];
   },
 };

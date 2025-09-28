@@ -17,8 +17,8 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
+import type { PieLabelRenderProps } from 'recharts';
 import type {
-  PieChartLabelProps,
   LineChartProps,
   AreaChartProps,
   BarChartProps,
@@ -191,17 +191,13 @@ export function SimplePieChart({
   showLabels = false,
   showLegend = true,
 }: PieChartProps) {
-  const renderLabel = ({
-    cx,
-    cy,
-    midAngle,
-    innerRadius,
-    outerRadius,
-    percent,
-  }: PieChartLabelProps) => {
-    if (midAngle === undefined || percent === undefined) return null;
+  const renderLabel = (props: PieLabelRenderProps) => {
+    const { cx, cy, midAngle, innerRadius, outerRadius, percent } = props;
+    if (midAngle === undefined || midAngle === null || percent === undefined || percent === null ||
+        innerRadius === undefined || outerRadius === undefined) return null;
+    if (typeof cx !== 'number' || typeof cy !== 'number') return null;
     const RADIAN = Math.PI / 180;
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const radius = Number(innerRadius) + (Number(outerRadius) - Number(innerRadius)) * 0.5;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
@@ -214,7 +210,7 @@ export function SimplePieChart({
         dominantBaseline="central"
         className="text-xs font-medium"
       >
-        {`${(percent * 100).toFixed(0)}%`}
+        {`${(Number(percent) * 100).toFixed(0)}%`}
       </text>
     );
   };

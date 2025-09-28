@@ -106,7 +106,7 @@ const navigationItems: NavItem[] = [
     name: 'Companies',
     href: '/companies',
     icon: Building2,
-    roles: ['recruiter', 'super_admin'],
+    roles: ['super_admin'],
     color: 'bg-amber-600',
     lightColor: 'bg-amber-500',
   },

@@ -39,6 +39,14 @@ const STATUS_BADGES: Record<CalendarConnection['status'], string> = {
 };
 
 const getEventPalette = (event: CalendarEvent) => {
+  if (event.id.startsWith('holiday-')) {
+    return {
+      backgroundColor: '#dc2626',
+      textColor: '#ffffff',
+      badgeLabel: 'Holiday',
+    };
+  }
+
   if (event.id.startsWith('interview-') || event.type === 'interview') {
     return {
       backgroundColor: '#7c3aed',
@@ -327,23 +335,6 @@ export default function CalendarSidebar({
         </div>
 
         <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-5 py-6">
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-slate-700">Quick actions</p>
-                <p className="text-xs text-slate-500">Create events or sync external calendars.</p>
-              </div>
-              <button
-                type="button"
-                onClick={onCreateEvent}
-                className="inline-flex items-center gap-1 rounded-full bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700"
-              >
-                <PlugZap className="h-4 w-4" />
-                New event
-              </button>
-            </div>
-          </div>
-
           <FiltersSection filters={filters} onFiltersChange={onFiltersChange} />
 
           <div className="space-y-3">

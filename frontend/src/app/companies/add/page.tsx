@@ -8,6 +8,7 @@ import { CompanyCreate, CompanyType } from '@/types/company';
 import { CompanyFormData } from '@/types/forms';
 import { useToast } from '@/contexts/ToastContext';
 import AppLayout from '@/components/layout/AppLayout';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { PREFECTURES } from '@/utils/prefectures';
 
 const emptyFormData: CompanyFormData = {
@@ -26,7 +27,7 @@ const emptyFormData: CompanyFormData = {
   demo_notes: '',
 };
 
-export default function AddCompanyPage() {
+function AddCompanyContent() {
   const router = useRouter();
   const { showToast } = useToast();
   const [formData, setFormData] = useState<CompanyFormData>(emptyFormData);
@@ -366,5 +367,13 @@ export default function AddCompanyPage() {
         </div>
       </div>
     </AppLayout>
+  );
+}
+
+export default function AddCompanyPage() {
+  return (
+    <ProtectedRoute allowedRoles={['super_admin']}>
+      <AddCompanyContent />
+    </ProtectedRoute>
   );
 }

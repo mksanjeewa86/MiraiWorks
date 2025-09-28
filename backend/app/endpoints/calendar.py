@@ -21,6 +21,7 @@ from app.schemas.calendar import (
 )
 from app.services.google_calendar_service import google_calendar_service
 from app.services.microsoft_calendar_service import microsoft_calendar_service
+from app.services.holiday_service import holiday_service
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -370,20 +371,55 @@ async def get_calendars(
 async def get_events(
     startDate: str | None = Query(None),
     endDate: str | None = Query(None),
-    # Temporarily remove auth dependency for testing
-    # request: EventsListRequest = Depends(),
-    # current_user: User = Depends(get_current_active_user),
-    # db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
 ):
-    """Get calendar events."""
+    """Get calendar events including holidays."""
     logger.info(
         f"GET /api/calendar/events - startDate: {startDate}, endDate: {endDate}"
     )
 
-    # Return stored events from memory
-    # In a real implementation, this would fetch from database with date filtering
+    all_events = []
+
+    # Add calendar events from storage (existing events)
+    all_events.extend(events_storage)
+
+    # Add holidays if date range is provided
+    if startDate and endDate:
+        try:
+            start_date = datetime.fromisoformat(startDate.replace('Z', '+00:00')).date()
+            end_date = datetime.fromisoformat(endDate.replace('Z', '+00:00')).date()
+
+            # Get holidays for the date range
+            holidays = await holiday_service.get_holidays_for_calendar(
+                db, start_date, end_date, country="JP"
+            )
+
+            # Convert holidays to EventInfo format
+            for holiday in holidays:
+                holiday_event = EventInfo(
+                    id=f"holiday-{holiday.id}",
+                    title=holiday.name_en or holiday.name,
+                    description=holiday.description_en or holiday.description,
+                    location=None,
+                    startDatetime=datetime.combine(holiday.date, datetime.min.time()),
+                    endDatetime=datetime.combine(holiday.date, datetime.max.time()),
+                    timezone="Asia/Tokyo",
+                    isAllDay=True,
+                    isRecurring=holiday.is_recurring,
+                    organizerEmail=None,
+                    attendees=[],
+                    status="confirmed",
+                    createdAt=holiday.created_at,
+                    updatedAt=holiday.updated_at
+                )
+                all_events.append(holiday_event)
+
+        except Exception as e:
+            logger.warning(f"Failed to fetch holidays: {e}")
+
     return EventsListResponse(
-        events=events_storage,
+        events=all_events,
         has_more=False,
     )
 
