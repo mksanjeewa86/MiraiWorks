@@ -150,21 +150,18 @@ function MessagesPageContent() {
       return;
     }
 
-    const loadSuperAdmins = async () => {
+    const loadRestrictedUsers = async () => {
       try {
-        const response = await usersApi.getUsers({ size: 200 });
-        if (response.success && response.data?.users) {
-          const adminIds = response.data.users
-            .filter((admin) => Array.isArray(admin.roles) && admin.roles.includes('super_admin'))
-            .map((admin) => admin.id);
-          setSuperAdminIds(adminIds);
+        const response = await messagesApi.getRestrictedUserIds();
+        if (response.success && response.data?.restricted_user_ids) {
+          setSuperAdminIds(response.data.restricted_user_ids);
         }
       } catch (error) {
-        console.error('Failed to load super administrator list', error);
+        console.error('Failed to load restricted user list', error);
       }
     };
 
-    loadSuperAdmins();
+    loadRestrictedUsers();
   }, [user]);
 
   useEffect(() => {

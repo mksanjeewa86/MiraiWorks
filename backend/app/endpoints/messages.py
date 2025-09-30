@@ -268,3 +268,62 @@ async def get_message_participants(
         )
 
     return {"participants": participants}
+
+
+@router.get("/restricted-users")
+async def get_restricted_user_ids(
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get list of user IDs that current user cannot message."""
+    from sqlalchemy import select
+    from sqlalchemy.orm import selectinload
+    from app.models.user import UserRole
+    from app.models.role import Role
+
+    # Get current user's roles
+    current_user_roles = [user_role.role.name for user_role in current_user.user_roles]
+
+    # Determine which users are restricted based on messaging rules
+    restricted_user_ids = []
+
+    if "super_admin" in current_user_roles:
+        # Super admin can only message company admins, so restrict non-company-admin users
+        query = (
+            select(User.id)
+            .join(UserRole, User.id == UserRole.user_id)
+            .join(Role, UserRole.role_id == Role.id)
+            .where(Role.name != "company_admin")
+            .where(User.is_active == True)
+            .where(User.is_deleted == False)
+        )
+        result = await db.execute(query)
+        restricted_user_ids = [user_id for user_id, in result.fetchall()]
+
+    elif "company_admin" in current_user_roles:
+        # Company admin can only message super admins, so restrict non-super-admin users
+        query = (
+            select(User.id)
+            .join(UserRole, User.id == UserRole.user_id)
+            .join(Role, UserRole.role_id == Role.id)
+            .where(Role.name != "super_admin")
+            .where(User.is_active == True)
+            .where(User.is_deleted == False)
+        )
+        result = await db.execute(query)
+        restricted_user_ids = [user_id for user_id, in result.fetchall()]
+
+    else:
+        # Other users can message anyone except company admins
+        query = (
+            select(User.id)
+            .join(UserRole, User.id == UserRole.user_id)
+            .join(Role, UserRole.role_id == Role.id)
+            .where(Role.name == "company_admin")
+            .where(User.is_active == True)
+            .where(User.is_deleted == False)
+        )
+        result = await db.execute(query)
+        restricted_user_ids = [user_id for user_id, in result.fetchall()]
+
+    return {"restricted_user_ids": restricted_user_ids}

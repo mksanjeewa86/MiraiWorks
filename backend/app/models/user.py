@@ -139,6 +139,74 @@ class User(Base):
     # Creator relationship (who created this user)
     creator = relationship("User", remote_side="User.id", post_update=True)
 
+    # Recruitment process relationships
+    created_recruitment_processes = relationship(
+        "RecruitmentProcess",
+        foreign_keys="RecruitmentProcess.created_by",
+        back_populates="creator",
+        cascade="all, delete-orphan"
+    )
+    updated_recruitment_processes = relationship(
+        "RecruitmentProcess",
+        foreign_keys="RecruitmentProcess.updated_by",
+        back_populates="updater",
+        cascade="all, delete-orphan"
+    )
+    candidate_processes = relationship(
+        "CandidateProcess",
+        foreign_keys="CandidateProcess.candidate_id",
+        back_populates="candidate",
+        cascade="all, delete-orphan"
+    )
+    assigned_candidate_processes = relationship(
+        "CandidateProcess",
+        foreign_keys="CandidateProcess.assigned_recruiter_id",
+        back_populates="assigned_recruiter",
+        cascade="all, delete-orphan"
+    )
+    assigned_node_executions = relationship(
+        "NodeExecution",
+        foreign_keys="NodeExecution.assigned_to",
+        back_populates="assignee",
+        cascade="all, delete-orphan"
+    )
+    completed_node_executions = relationship(
+        "NodeExecution",
+        foreign_keys="NodeExecution.completed_by",
+        back_populates="completer",
+        cascade="all, delete-orphan"
+    )
+    reviewed_node_executions = relationship(
+        "NodeExecution",
+        foreign_keys="NodeExecution.reviewed_by",
+        back_populates="reviewer",
+        cascade="all, delete-orphan"
+    )
+    process_viewers = relationship(
+        "ProcessViewer",
+        foreign_keys="ProcessViewer.user_id",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    added_process_viewers = relationship(
+        "ProcessViewer",
+        foreign_keys="ProcessViewer.added_by",
+        back_populates="added_by_user",
+        cascade="all, delete-orphan"
+    )
+    created_process_nodes = relationship(
+        "ProcessNode",
+        foreign_keys="ProcessNode.created_by",
+        back_populates="creator",
+        cascade="all, delete-orphan"
+    )
+    updated_process_nodes = relationship(
+        "ProcessNode",
+        foreign_keys="ProcessNode.updated_by",
+        back_populates="updater",
+        cascade="all, delete-orphan"
+    )
+
     @property
     def full_name(self):
         return f"{self.first_name} {self.last_name}"

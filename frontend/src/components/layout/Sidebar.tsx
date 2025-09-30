@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   User,
   Menu,
+  GitBranch,
 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -45,6 +46,14 @@ const navigationItems: NavItem[] = [
     roles: ['employer', 'company_admin'],
     color: 'bg-emerald-600',
     lightColor: 'bg-emerald-500',
+  },
+  {
+    name: 'Workflows',
+    href: '/recruitment-workflows',
+    icon: GitBranch,
+    roles: ['employer', 'company_admin'],
+    color: 'bg-violet-600',
+    lightColor: 'bg-violet-500',
   },
   {
     name: 'Candidates',

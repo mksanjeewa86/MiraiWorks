@@ -52,7 +52,7 @@ async def get_super_admin_user(db: AsyncSession) -> User | None:
 @router.get("/users", response_model=UserListResponse)
 async def get_users(
     page: int = Query(1, ge=1),
-    size: int = Query(20, ge=1, le=100),
+    size: int = Query(20, ge=1, le=500),
     search: str | None = Query(None),
     company_id: int | None = Query(None),
     is_active: bool | None = Query(None),

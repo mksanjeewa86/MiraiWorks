@@ -76,6 +76,8 @@ temp/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+.venv/
+venv/
 
 # Docker
 Dockerfile

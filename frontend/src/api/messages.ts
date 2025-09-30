@@ -220,4 +220,11 @@ export const messagesApi = {
     const data = await response.json();
     return { data, success: true };
   },
+
+  async getRestrictedUserIds(): Promise<ApiResponse<{ restricted_user_ids: number[] }>> {
+    const response = await apiClient.get<{ restricted_user_ids: number[] }>(
+      '/api/messages/restricted-users'
+    );
+    return { data: response.data, success: true };
+  },
 };
