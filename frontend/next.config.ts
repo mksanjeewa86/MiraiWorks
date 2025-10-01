@@ -14,6 +14,9 @@ const nextConfig: NextConfig = {
       '@': path.resolve(__dirname, 'src'),
     };
 
+    // Explicitly configure module resolution extensions for CI compatibility
+    config.resolve.extensions = ['.tsx', '.ts', '.jsx', '.js', '.json'];
+
     if (dev) {
       // Improve chunk splitting for development
       config.optimization = {
