@@ -249,6 +249,7 @@ async def upload_file(
 
         response_data = {
             "file_url": download_url,
+            "file_path": file_path,  # Add file_path for tests
             "file_name": file.filename,
             "file_size": file_size,
             "file_type": file.content_type,
