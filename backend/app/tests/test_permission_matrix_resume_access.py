@@ -58,7 +58,7 @@ class TestResumeAccessControl:
         }
 
         response = await client.post(
-            "/api/resumes", json=resume_data, headers=headers
+            "/api/resumes/", json=resume_data, headers=headers
         )
 
         assert response.status_code == 201
@@ -134,7 +134,7 @@ class TestResumeAccessControl:
         headers = await self._get_auth_headers(client, candidate)
 
         # View resume list
-        response = await client.get("/api/resumes", headers=headers)
+        response = await client.get("/api/resumes/", headers=headers)
         assert response.status_code == 200
         data = response.json()
         assert len(data["resumes"]) >= 1
@@ -230,7 +230,7 @@ class TestResumeAccessControl:
         }
 
         response = await client.post(
-            "/api/resumes", json=resume_data, headers=super_admin_auth_headers
+            "/api/resumes/", json=resume_data, headers=super_admin_auth_headers
         )
         assert response.status_code == 403
         assert "candidates only" in response.json()["detail"].lower()
@@ -255,7 +255,7 @@ class TestResumeAccessControl:
         }
 
         response = await client.post(
-            "/api/resumes", json=resume_data, headers=headers
+            "/api/resumes/", json=resume_data, headers=headers
         )
         assert response.status_code == 403
         assert "candidates only" in response.json()["detail"].lower()
@@ -280,7 +280,7 @@ class TestResumeAccessControl:
         }
 
         response = await client.post(
-            "/api/resumes", json=resume_data, headers=headers
+            "/api/resumes/", json=resume_data, headers=headers
         )
         assert response.status_code == 403
         assert "candidates only" in response.json()["detail"].lower()
@@ -305,7 +305,7 @@ class TestResumeAccessControl:
         }
 
         response = await client.post(
-            "/api/resumes", json=resume_data, headers=headers
+            "/api/resumes/", json=resume_data, headers=headers
         )
         assert response.status_code == 403
         assert "candidates only" in response.json()["detail"].lower()
@@ -652,8 +652,8 @@ class TestResumeAccessControl:
         resume = await self._create_resume_for_candidate(db_session, candidate)
 
         endpoints = [
-            ("GET", "/api/resumes"),
-            ("POST", "/api/resumes"),
+            ("GET", "/api/resumes/"),
+            ("POST", "/api/resumes/"),
             ("GET", f"/api/resumes/{resume.id}"),
             ("PUT", f"/api/resumes/{resume.id}"),
             ("DELETE", f"/api/resumes/{resume.id}"),
