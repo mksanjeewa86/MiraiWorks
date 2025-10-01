@@ -1,5 +1,8 @@
 # Video Call Feature - Implementation Complete
 
+**Last Updated**: October 2025
+
+
 ## 🎯 Overview
 
 The MiraiWorks video call feature has been fully implemented with comprehensive real-time transcription capabilities. This feature enables seamless video interviews between recruiters and candidates with automatic transcription in both Japanese and English.

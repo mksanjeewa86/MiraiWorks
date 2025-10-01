@@ -347,7 +347,7 @@ async def delete_recruitment_process(
     current_user: User = Depends(get_current_active_user)
 ):
     """
-    Delete a recruitment process.
+    Soft delete a recruitment process (論理削除).
 
     Requires: process owner or admin
     Only draft processes can be deleted.
@@ -380,7 +380,8 @@ async def delete_recruitment_process(
             detail="Only draft processes can be deleted"
         )
 
-    await recruitment_process.remove(db, id=process_id)
+    # Use soft delete instead of hard delete
+    await recruitment_process.soft_delete(db, id=process_id)
 
 
 @router.get("/{process_id}/validate")

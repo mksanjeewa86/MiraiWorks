@@ -1,5 +1,8 @@
 # Recruitment Workflow System - Detailed Implementation Plan
 
+**Last Updated**: October 2025
+
+
 ## 🎯 Overview
 
 The **Recruitment Workflow System** (RWS) is a comprehensive solution that enables employers to create, manage, and execute structured recruitment processes. The system provides visual workflow management with drag-and-drop node creation, supports multiple phases including interviews and tasks, and offers role-based access for employers, recruitment agents, and candidates.

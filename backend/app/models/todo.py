@@ -38,6 +38,11 @@ class Todo(Base):
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
     )
 
+    # Workflow relationship
+    workflow_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("recruitment_processes.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -114,6 +119,9 @@ class Todo(Base):
     )
     reviewer: Mapped[User | None] = relationship(
         "User", foreign_keys=[reviewed_by], backref="reviewed_todos"
+    )
+    workflow: Mapped["RecruitmentProcess"] | None = relationship(
+        "RecruitmentProcess", foreign_keys=[workflow_id]
     )
     viewers: Mapped[list[TodoViewer]] = relationship(
         "TodoViewer", back_populates="todo", cascade="all, delete-orphan"

@@ -1,5 +1,8 @@
 # API Connection Test
 
+**Last Updated**: October 2025
+
+
 Open the browser console (F12 → Console) and run these commands one by one:
 
 ## 1. Test basic backend connectivity:

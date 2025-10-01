@@ -1,5 +1,8 @@
 # MBTI Personality Test Feature
 
+**Last Updated**: October 2025
+
+
 ## Overview
 The MBTI (Myers-Briggs Type Indicator) personality test feature allows candidates to take a comprehensive 60-question assessment to determine their personality type. Results are displayed in their profile with custom artwork for each type.
 

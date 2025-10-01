@@ -1,5 +1,8 @@
 # MiraiWorks Database Seeds
 
+**Last Updated**: October 2025
+
+
 This directory contains comprehensive seed data for the MiraiWorks application, providing sample data for development and testing purposes.
 
 ## Overview

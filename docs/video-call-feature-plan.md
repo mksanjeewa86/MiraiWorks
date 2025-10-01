@@ -1,5 +1,8 @@
 # Video Call Feature Plan for Interviews
 
+**Last Updated**: October 2025
+
+
 ## Overview
 This document outlines the implementation plan for adding video call functionality to MiraiWorks, specifically designed for conducting remote interviews between recruiters/employers and candidates.
 

@@ -1,5 +1,8 @@
 # Recruitment Process Feature Plan
 
+**Last Updated**: October 2025
+
+
 ## Overview
 - Empower employers to model vacancy-specific recruitment workflows using configurable interview and todo nodes displayed in an interactive block diagram.
 - Recruiters execute the workflow on behalf of employers once connected to the vacancy; candidates participate only when prompted and can track personal progress.

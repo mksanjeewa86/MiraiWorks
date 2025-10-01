@@ -56,7 +56,7 @@ const formatDateForInput = (value?: string | null) => {
 const toISOStringIfPresent = (value?: string) =>
   value && value.trim() ? new Date(value).toISOString() : undefined;
 
-export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: TaskModalProps) {
+export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo, workflowContext = false }: TaskModalProps) {
   const { showToast } = useToast();
   const { user } = useAuth();
   const [formState, setFormState] = useState<TaskFormState>(initialFormState);
@@ -332,6 +332,13 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: T
       }),
     };
 
+    // If in workflow context, just return the payload without saving to DB
+    if (workflowContext) {
+      onSuccess(payload);
+      onClose();
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -406,7 +413,7 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: T
                 </div>
               </div>
             </div>
-            <DialogClose className="rounded-full border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
+            <DialogClose className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
               <X className="h-4 w-4" />
             </DialogClose>
           </div>
@@ -698,7 +705,10 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo }: T
               leftIcon={isEditing ? <Save className="h-4 w-4" /> : <PlusCircle className="h-4 w-4" />}
               className="min-w-[160px] bg-blue-600 text-white shadow-lg shadow-blue-500/30 hover:bg-blue-600/90"
             >
-              {isEditing ? "Save changes" : "Create task"}
+              {workflowContext
+                ? "Save & Return to Workflow"
+                : (isEditing ? "Save changes" : "Create task")
+              }
             </Button>
           </DialogFooter>
         </form>

@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any, Generic, TypeVar
 
 from fastapi.encoders import jsonable_encoder
@@ -79,8 +80,19 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return db_obj
 
     async def remove(self, db: AsyncSession, *, id: int) -> ModelType:
-        """Delete object by id."""
+        """Delete object by id (hard delete)."""
         obj = await self.get(db, id)
         await db.delete(obj)
         await db.commit()
+        return obj
+
+    async def soft_delete(self, db: AsyncSession, *, id: int) -> ModelType:
+        """Soft delete object by id (set is_deleted=True, deleted_at=now)."""
+        obj = await self.get(db, id)
+        if obj and hasattr(obj, 'is_deleted') and hasattr(obj, 'deleted_at'):
+            obj.is_deleted = True
+            obj.deleted_at = datetime.utcnow()
+            db.add(obj)
+            await db.commit()
+            await db.refresh(obj)
         return obj

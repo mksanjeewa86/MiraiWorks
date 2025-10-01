@@ -93,8 +93,9 @@ export interface TaskFormState {
 export interface TaskModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (todo?: any) => void;
   editingTodo?: Todo | null;
+  workflowContext?: boolean;
 }
 
 // Assignment-related types

@@ -1,5 +1,8 @@
 # 📝 MiraiWorks Exam System (適性検査システム)
 
+**Last Updated**: October 2025
+
+
 A comprehensive recruitment exam system with advanced security features, real-time monitoring, and flexible question types.
 
 ## 🎯 Features

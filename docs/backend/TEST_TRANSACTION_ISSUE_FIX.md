@@ -1,5 +1,8 @@
 # Test Transaction Isolation Issue - CRITICAL BUG
 
+**Last Updated**: October 2025
+
+
 ## 🚨 **Root Cause:**
 The account activation tests are failing because of **database session isolation**:
 

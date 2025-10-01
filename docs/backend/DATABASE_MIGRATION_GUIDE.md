@@ -1,5 +1,8 @@
 # Database Migration: Jobs to Positions
 
+**Last Updated**: October 2025
+
+
 ## Overview
 This migration renames the `jobs` and `job_applications` tables to `positions` and `position_applications` respectively, along with updating all related indexes and foreign keys.
 

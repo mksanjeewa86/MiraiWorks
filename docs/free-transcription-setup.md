@@ -1,5 +1,8 @@
 # Free Transcription Setup - No Paid APIs Required
 
+**Last Updated**: October 2025
+
+
 ## 🆓 **Complete Free Transcription Options**
 
 Your MiraiWorks video call system now supports **completely free transcription** without requiring any paid API services. Here are your options:

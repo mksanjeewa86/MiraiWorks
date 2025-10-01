@@ -1,5 +1,8 @@
 # User Permissions and Capabilities
 
+**Last Updated**: October 2025
+
+
 This document outlines what different user roles can view, create, edit, and manage in the MiraiWorks system.
 
 ## User Roles Overview

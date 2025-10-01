@@ -19,9 +19,11 @@ from app.models.base import Base
 if TYPE_CHECKING:
     from app.models.candidate_process import CandidateProcess
     from app.models.company import Company
+    from app.models.interview import Interview
     from app.models.position import Position
     from app.models.process_node import ProcessNode
     from app.models.process_viewer import ProcessViewer
+    from app.models.todo import Todo
     from app.models.user import User
 
 
@@ -76,6 +78,10 @@ class RecruitmentProcess(Base):
         DateTime(timezone=True), nullable=True
     )
 
+    # Soft delete
+    is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
     # Relationships
     employer_company: Mapped[Company] = relationship(
         "Company", foreign_keys=[employer_company_id], back_populates="recruitment_processes"
@@ -98,6 +104,12 @@ class RecruitmentProcess(Base):
     )
     viewers: Mapped[list[ProcessViewer]] = relationship(
         "ProcessViewer", back_populates="process", cascade="all, delete-orphan"
+    )
+    interviews: Mapped[list[Interview]] = relationship(
+        "Interview", foreign_keys="Interview.workflow_id", back_populates="workflow"
+    )
+    todos: Mapped[list[Todo]] = relationship(
+        "Todo", foreign_keys="Todo.workflow_id", back_populates="workflow"
     )
 
     @property

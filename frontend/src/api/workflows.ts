@@ -144,10 +144,10 @@ export const recruitmentWorkflowsApi = {
     return { data: response.data, success: true };
   },
 
-  // Delete/Archive process
-  async archiveProcess(id: number): Promise<ApiResponse<void>> {
-    await apiClient.delete(`/api/recruitment-processes/${id}`);
-    return { data: undefined, success: true };
+  // Archive process
+  async archiveProcess(id: number): Promise<ApiResponse<RecruitmentProcess>> {
+    const response = await apiClient.post(`/api/recruitment-processes/${id}/archive`, {});
+    return { data: response.data, success: true };
   },
 
   // Node management

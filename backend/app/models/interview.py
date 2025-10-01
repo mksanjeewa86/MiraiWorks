@@ -1,6 +1,7 @@
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+from datetime import datetime
 
 from app.database import Base
 from app.utils.constants import InterviewStatus
@@ -28,6 +29,14 @@ class Interview(Base):
         Integer,
         ForeignKey("companies.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
+    )
+
+    # Workflow relationship
+    workflow_id = Column(
+        Integer,
+        ForeignKey("recruitment_processes.id", ondelete="SET NULL"),
+        nullable=True,
         index=True,
     )
 
@@ -88,6 +97,10 @@ class Interview(Base):
         nullable=False,
     )
 
+    # Soft delete
+    is_deleted = Column(Boolean, nullable=False, default=False, index=True)
+    deleted_at = Column(DateTime(timezone=True), nullable=True)
+
     # Relationships (using noload to prevent lazy loading in async context)
     candidate = relationship("User", foreign_keys=[candidate_id], lazy="noload")
     recruiter = relationship("User", foreign_keys=[recruiter_id], lazy="noload")
@@ -96,6 +109,9 @@ class Interview(Base):
     creator = relationship("User", foreign_keys=[created_by], lazy="noload")
     confirmer = relationship("User", foreign_keys=[confirmed_by], lazy="noload")
     canceller = relationship("User", foreign_keys=[cancelled_by], lazy="noload")
+
+    # Workflow relationship
+    workflow = relationship("RecruitmentProcess", foreign_keys=[workflow_id], lazy="noload")
 
     proposals = relationship(
         "InterviewProposal", back_populates="interview", cascade="all, delete-orphan", lazy="noload"

@@ -1,5 +1,7 @@
 # MiraiWorks System Documentation
 
+**Last Updated**: October 2025
+
 ## Table of Contents
 1. [System Overview](#system-overview)
 2. [User Roles and Permissions](#user-roles-and-permissions)

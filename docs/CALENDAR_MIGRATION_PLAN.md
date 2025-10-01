@@ -1,5 +1,8 @@
 # Calendar System Migration Plan
 
+**Last Updated**: October 2025
+
+
 ## Current State Analysis
 
 ### Existing Tables

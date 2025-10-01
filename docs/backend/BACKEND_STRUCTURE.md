@@ -1,5 +1,8 @@
 # Backend Directory Structure - Cleaned & Organized
 
+**Last Updated**: October 2025
+
+
 ## Overview
 This document describes the cleaned and organized backend directory structure after removing unused files and organizing utility scripts.
 

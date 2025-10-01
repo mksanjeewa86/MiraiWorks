@@ -14,13 +14,38 @@ from app.utils.constants import InterviewStatus
 class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
     """Interview CRUD operations."""
 
+    async def get(self, db: AsyncSession, id: int) -> Interview | None:
+        """Get interview by id, excluding soft-deleted records."""
+        result = await db.execute(
+            select(Interview).where(
+                Interview.id == id,
+                Interview.is_deleted == False
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def get_multi(
+        self, db: AsyncSession, *, skip: int = 0, limit: int = 100
+    ) -> list[Interview]:
+        """Get multiple interviews, excluding soft-deleted records."""
+        result = await db.execute(
+            select(Interview)
+            .where(Interview.is_deleted == False)
+            .offset(skip)
+            .limit(limit)
+        )
+        return result.scalars().all()
+
     async def get_with_relationships(
         self, db: AsyncSession, interview_id: int
     ) -> Interview | None:
-        """Get interview with all relationships loaded."""
+        """Get interview with all relationships loaded, excluding soft-deleted."""
         # First get the interview
         result = await db.execute(
-            select(Interview).where(Interview.id == interview_id)
+            select(Interview).where(
+                Interview.id == interview_id,
+                Interview.is_deleted == False
+            )
         )
         interview = result.scalar_one_or_none()
 
@@ -77,7 +102,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
         limit: int = 50,
         offset: int = 0,
     ) -> list[Interview]:
-        """Get interviews for a specific user."""
+        """Get interviews for a specific user, excluding soft-deleted."""
         query = (
             select(Interview)
             .options(
@@ -92,7 +117,8 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
                     Interview.candidate_id == user_id,
                     Interview.recruiter_id == user_id,
                     Interview.created_by == user_id,
-                )
+                ),
+                Interview.is_deleted == False
             )
             .order_by(Interview.scheduled_start.desc())
         )
@@ -116,13 +142,14 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
         start_date: datetime | None = None,
         end_date: datetime | None = None,
     ) -> int:
-        """Get count of interviews for a specific user."""
+        """Get count of interviews for a specific user, excluding soft-deleted."""
         query = select(func.count(Interview.id)).where(
             or_(
                 Interview.candidate_id == user_id,
                 Interview.recruiter_id == user_id,
                 Interview.created_by == user_id,
-            )
+            ),
+            Interview.is_deleted == False
         )
 
         if status_filter:
@@ -138,7 +165,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
     async def get_upcoming_interviews(
         self, db: AsyncSession, user_id: int, limit: int = 10
     ) -> list[Interview]:
-        """Get upcoming interviews for a user."""
+        """Get upcoming interviews for a user, excluding soft-deleted."""
         now = datetime.utcnow()
         result = await db.execute(
             select(Interview)
@@ -157,6 +184,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
                 Interview.status.in_(
                     [InterviewStatus.SCHEDULED, InterviewStatus.CONFIRMED]
                 ),
+                Interview.is_deleted == False
             )
             .order_by(Interview.scheduled_start.asc())
             .limit(limit)
@@ -164,7 +192,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
         return result.scalars().all()
 
     async def get_interview_stats(self, db: AsyncSession, user_id: int) -> dict:
-        """Get interview statistics for a user."""
+        """Get interview statistics for a user, excluding soft-deleted."""
         # Get counts by status
         total_result = await db.execute(
             select(func.count(Interview.id)).where(
@@ -172,7 +200,8 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
                     Interview.candidate_id == user_id,
                     Interview.recruiter_id == user_id,
                     Interview.created_by == user_id,
-                )
+                ),
+                Interview.is_deleted == False
             )
         )
         total = total_result.scalar() or 0
@@ -185,6 +214,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
                     Interview.created_by == user_id,
                 ),
                 Interview.status == InterviewStatus.SCHEDULED,
+                Interview.is_deleted == False
             )
         )
         scheduled = scheduled_result.scalar() or 0
@@ -197,6 +227,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
                     Interview.created_by == user_id,
                 ),
                 Interview.status == InterviewStatus.COMPLETED,
+                Interview.is_deleted == False
             )
         )
         completed = completed_result.scalar() or 0
@@ -209,6 +240,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
                     Interview.created_by == user_id,
                 ),
                 Interview.status == InterviewStatus.CANCELLED,
+                Interview.is_deleted == False
             )
         )
         cancelled = cancelled_result.scalar() or 0
@@ -223,7 +255,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
     async def get_detailed_interview_stats(
         self, db: AsyncSession, user_id: int
     ) -> dict:
-        """Get detailed interview statistics for a user."""
+        """Get detailed interview statistics for a user, excluding soft-deleted."""
         # Base condition for user's interviews
         base_condition = or_(
             Interview.candidate_id == user_id,
@@ -231,10 +263,13 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
             Interview.created_by == user_id,
         )
 
+        # Add soft delete filter
+        not_deleted_condition = Interview.is_deleted == False
+
         # Total interviews
         total_result = await db.execute(
             select(func.count()).select_from(
-                select(Interview).where(base_condition).subquery()
+                select(Interview).where(base_condition, not_deleted_condition).subquery()
             )
         )
         total_interviews = total_result.scalar()
@@ -242,7 +277,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
         # By status
         status_result = await db.execute(
             select(Interview.status, func.count(Interview.id))
-            .where(base_condition)
+            .where(base_condition, not_deleted_condition)
             .group_by(Interview.status)
         )
         by_status = dict(status_result.all())
@@ -250,7 +285,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
         # By type
         type_result = await db.execute(
             select(Interview.interview_type, func.count(Interview.id))
-            .where(base_condition)
+            .where(base_condition, not_deleted_condition)
             .group_by(Interview.interview_type)
         )
         by_type = dict(type_result.all())
@@ -259,6 +294,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
         upcoming_result = await db.execute(
             select(func.count(Interview.id)).where(
                 base_condition,
+                not_deleted_condition,
                 Interview.scheduled_start > datetime.utcnow(),
                 Interview.status.in_(
                     [InterviewStatus.CONFIRMED.value, InterviewStatus.IN_PROGRESS.value]
@@ -271,6 +307,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
         duration_result = await db.execute(
             select(func.avg(Interview.duration_minutes)).where(
                 base_condition,
+                not_deleted_condition,
                 Interview.duration_minutes.is_not(None),
             )
         )
@@ -294,7 +331,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
         start_date: datetime | None = None,
         end_date: datetime | None = None,
     ) -> list[Interview]:
-        """Get interview events in calendar format."""
+        """Get interview events in calendar format, excluding soft-deleted."""
         query = (
             select(Interview)
             .options(
@@ -314,6 +351,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
                         InterviewStatus.COMPLETED.value,
                     ]
                 ),
+                Interview.is_deleted == False
             )
         )
 

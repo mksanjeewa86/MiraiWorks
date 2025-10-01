@@ -29,6 +29,28 @@ from app.utils.constants import (
 class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
     """CRUD operations for Todo items."""
 
+    async def get(self, db: AsyncSession, id: int) -> Todo | None:
+        """Get todo by id, excluding soft-deleted records."""
+        result = await db.execute(
+            select(Todo).where(
+                Todo.id == id,
+                Todo.is_deleted == False
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def get_multi(
+        self, db: AsyncSession, *, skip: int = 0, limit: int = 100
+    ) -> list[Todo]:
+        """Get multiple todos, excluding soft-deleted records."""
+        result = await db.execute(
+            select(Todo)
+            .where(Todo.is_deleted == False)
+            .offset(skip)
+            .limit(limit)
+        )
+        return result.scalars().all()
+
     async def auto_mark_expired(self, db: AsyncSession, owner_id: int) -> None:
         """Automatically mark overdue todos as expired."""
         now = datetime.now(UTC)
@@ -191,14 +213,17 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
     async def get_with_assigned_user(
         self, db: AsyncSession, *, todo_id: int
     ) -> Todo | None:
-        """Get todo with assigned user and viewers information."""
+        """Get todo with assigned user and viewers information, excluding soft-deleted."""
         result = await db.execute(
             select(Todo)
             .options(
                 selectinload(Todo.assigned_user),
                 selectinload(Todo.viewers).selectinload(TodoViewer.user)
             )
-            .where(Todo.id == todo_id)
+            .where(
+                Todo.id == todo_id,
+                Todo.is_deleted == False
+            )
         )
         return result.scalars().first()
 

@@ -8,11 +8,13 @@ import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { interviewsApi } from '@/api/interviews';
+import InterviewModal from '@/components/interviews/InterviewModal';
 import type {
   InterviewListItem,
   InterviewStatusFilter,
   InterviewTypeFilter,
   InterviewSortField,
+  Interview,
 } from '@/types/interview';
 
 function InterviewsPageContent() {
@@ -65,6 +67,11 @@ function InterviewsPageContent() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
+  const [editingInterviewId, setEditingInterviewId] = useState<number | undefined>();
 
   // Fetch interviews from API
   useEffect(() => {
@@ -252,6 +259,76 @@ function InterviewsPageContent() {
     }
   };
 
+  // Modal handlers
+  const handleOpenCreateModal = () => {
+    setModalMode('create');
+    setEditingInterviewId(undefined);
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditModal = (interviewId: number) => {
+    setModalMode('edit');
+    setEditingInterviewId(interviewId);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingInterviewId(undefined);
+  };
+
+  const handleModalSuccess = async (interview: Interview) => {
+    // Refresh the interviews list
+    try {
+      const response = await interviewsApi.getMyInterviews({
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        limit: 100,
+      });
+
+      const interviewsData =
+        response.data?.interviews?.map((interview) => ({
+          id: interview.id,
+          title: interview.title,
+          candidate_name: interview.candidate?.full_name || 'Unknown Candidate',
+          recruiter_name: interview.recruiter?.full_name || 'Unknown Recruiter',
+          company_name: interview.employer_company_name || 'Unknown Company',
+          scheduled_date: interview.scheduled_start
+            ? new Date(interview.scheduled_start).toISOString().split('T')[0]
+            : '',
+          start_time: interview.scheduled_start
+            ? new Date(interview.scheduled_start).toTimeString().split(' ')[0].slice(0, 5)
+            : '',
+          end_time: interview.scheduled_end
+            ? new Date(interview.scheduled_end).toTimeString().split(' ')[0].slice(0, 5)
+            : '',
+          location: interview.location || 'TBD',
+          type: (interview.interview_type as 'phone' | 'video' | 'in_person') || 'video',
+          status: (() => {
+            switch (interview.status) {
+              case 'pending_schedule':
+              case 'scheduled':
+              case 'confirmed':
+                return 'scheduled' as const;
+              case 'completed':
+                return 'completed' as const;
+              case 'cancelled':
+                return 'cancelled' as const;
+              case 'in_progress':
+                return 'scheduled' as const;
+              default:
+                return 'scheduled' as const;
+            }
+          })() as InterviewListItem['status'],
+          notes: interview.notes || '',
+          created_at: interview.created_at,
+        })) || [];
+
+      setInterviews(interviewsData);
+    } catch (err) {
+      console.error('Error refreshing interviews:', err);
+    }
+  };
+
   if (loading) {
     return (
       <AppLayout>
@@ -279,13 +356,13 @@ function InterviewsPageContent() {
               )}
             </div>
             {canCreateInterviews() && (
-              <Link
-                href="/interviews/new"
+              <button
+                onClick={handleOpenCreateModal}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
               >
                 <Plus size={20} />
                 Schedule Interview
-              </Link>
+              </button>
             )}
           </div>
 
@@ -392,13 +469,13 @@ function InterviewsPageContent() {
                   statusFilter === 'all' &&
                   typeFilter === 'all' &&
                   canCreateInterviews() && (
-                    <Link
-                      href="/interviews/new"
+                    <button
+                      onClick={handleOpenCreateModal}
                       className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg inline-flex items-center gap-2 transition-colors"
                     >
                       <Plus size={20} />
                       Schedule Interview
-                    </Link>
+                    </button>
                   )}
               </div>
             ) : (
@@ -474,13 +551,13 @@ function InterviewsPageContent() {
                             </Link>
                             {canModifyInterviews() && (
                               <>
-                                <Link
-                                  href={`/interviews/${interview.id}/edit`}
+                                <button
+                                  onClick={() => handleOpenEditModal(interview.id)}
                                   className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 hover:text-gray-700 rounded-lg transition-colors duration-200"
                                 >
                                   <Edit size={14} />
                                   Edit
-                                </Link>
+                                </button>
                                 {canDeleteInterview(interview) ? (
                                   <button
                                     onClick={() => handleDelete(interview.id, interview.title)}
@@ -555,6 +632,15 @@ function InterviewsPageContent() {
           )}
         </div>
       </div>
+
+      {/* Interview Modal */}
+      <InterviewModal
+        isOpen={isModalOpen}
+        mode={modalMode}
+        interviewId={editingInterviewId}
+        onClose={handleCloseModal}
+        onSuccess={handleModalSuccess}
+      />
     </AppLayout>
   );
 }

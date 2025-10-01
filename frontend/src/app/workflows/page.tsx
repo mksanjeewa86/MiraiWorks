@@ -9,6 +9,7 @@ import { recruitmentWorkflowsApi, workflowIntegrationService, type RecruitmentPr
 import { interviewsApi } from '@/api/interviews';
 import { todosApi } from '@/api/todos';
 import TaskModal from '@/components/todos/TaskModal';
+import InterviewModal from '@/components/interviews/InterviewModal';
 import type { Todo } from '@/types/todo';
 import type { Interview } from '@/types/interview';
 import {
@@ -33,6 +34,7 @@ import {
   Play,
   Square,
   Circle,
+  Save,
 } from 'lucide-react';
 
 // No more mock data - using real API integration
@@ -49,7 +51,6 @@ function RecruitmentWorkflowsPageContent() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  const [isNewProcessOpen, setIsNewProcessOpen] = useState(false);
   const [selectedProcess, setSelectedProcess] = useState<RecruitmentProcess | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isWorkflowEditorOpen, setIsWorkflowEditorOpen] = useState(false);
@@ -259,84 +260,35 @@ function RecruitmentWorkflowsPageContent() {
     }
   };
 
-  const handleCreateWorkflow = async (formData: any) => {
+  const handleNewWorkflow = async () => {
     try {
-      let response;
-      let newProcess: RecruitmentProcess;
+      // Create an empty workflow process
+      const response = await recruitmentWorkflowsApi.createProcess({
+        name: 'New Workflow',
+        description: 'Click steps below to build your workflow',
+        is_template: false
+      });
 
-      // If template is selected, use integrated workflow creation
-      if (formData.useTemplate && formData.templateSteps) {
-        const workflowData = {
-          name: formData.name,
-          description: formData.description,
-          position_id: formData.position_id,
-          workflow_steps: formData.templateSteps
+      if (response.success && response.data) {
+        const newProcess: RecruitmentProcess = {
+          id: response.data.id,
+          name: response.data.name,
+          description: response.data.description || '',
+          status: response.data.status,
+          employer_company_id: response.data.employer_company_id,
+          position_id: response.data.position_id,
+          created_by: response.data.created_by,
+          nodes: [],
+          candidate_processes: [],
+          created_at: response.data.created_at,
+          updated_at: response.data.updated_at,
+          is_template: false
         };
 
-        const integratedResponse = await workflowIntegrationService.createCompleteWorkflow(workflowData);
-        if (integratedResponse.success && integratedResponse.data) {
-          const processData = integratedResponse.data.process;
-          newProcess = {
-            id: processData.id,
-            name: processData.name,
-            description: processData.description || '',
-            status: processData.status,
-            employer_company_id: processData.employer_company_id,
-            position_id: processData.position_id,
-            created_by: processData.created_by,
-            nodes: processData.nodes || [],
-            candidate_processes: processData.candidate_processes || [],
-            created_at: processData.created_at,
-            updated_at: processData.updated_at,
-            is_template: processData.is_template || false
-          };
-
-          // Show success message with integration details
-          const interviewCount = integratedResponse.data.created_interviews.length;
-          const todoCount = integratedResponse.data.created_todos.length;
-          alert(
-            `✅ Created workflow: ${formData.name}\n` +
-            `📝 Created ${processData.nodes?.length || 0} workflow steps\n` +
-            `🎙️ Created ${interviewCount} interview templates\n` +
-            `📋 Created ${todoCount} todo assignments\n\n` +
-            `The workflow is now linked to real interviews and todos!`
-          );
-        } else {
-          throw new Error('Failed to create integrated workflow');
-        }
-      } else {
-        // Regular workflow creation
-        const createData = {
-          name: formData.name,
-          description: formData.description,
-          is_template: formData.isTemplate || false
-        };
-
-        response = await recruitmentWorkflowsApi.createProcess(createData);
-        if (response.success && response.data) {
-          newProcess = {
-            id: response.data.id,
-            name: response.data.name,
-            description: response.data.description || '',
-            status: response.data.status,
-            employer_company_id: response.data.employer_company_id,
-            position_id: response.data.position_id,
-            created_by: response.data.created_by,
-            nodes: response.data.nodes || [],
-            candidate_processes: response.data.candidate_processes || [],
-            created_at: response.data.created_at,
-            updated_at: response.data.updated_at,
-            is_template: response.data.is_template || false
-          };
-
-          alert(`Created new workflow: ${formData.name}`);
-        } else {
-          throw new Error('Failed to create workflow');
-        }
+        setProcesses(prev => [newProcess, ...prev]);
+        setEditingProcess(newProcess);
+        setIsWorkflowEditorOpen(true);
       }
-
-      setProcesses(prev => [newProcess, ...prev]);
-      setIsNewProcessOpen(false);
     } catch (err) {
       console.error('Failed to create workflow:', err);
       alert('Failed to create workflow: ' + (err instanceof Error ? err.message : 'Unknown error'));
@@ -360,11 +312,6 @@ function RecruitmentWorkflowsPageContent() {
   return (
     <AppLayout>
       {/* Modals */}
-      <NewWorkflowModal
-        isOpen={isNewProcessOpen}
-        onClose={() => setIsNewProcessOpen(false)}
-        onSubmit={handleCreateWorkflow}
-      />
       <ViewWorkflowModal
         isOpen={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}
@@ -406,7 +353,7 @@ function RecruitmentWorkflowsPageContent() {
             </button>
             <button
               type="button"
-              onClick={() => setIsNewProcessOpen(true)}
+              onClick={handleNewWorkflow}
               className="flex items-center gap-2 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors"
             >
               <Plus className="h-4 w-4" />
@@ -776,308 +723,6 @@ function RecruitmentWorkflowsPageContent() {
 }
 
 // New Workflow Modal
-interface NewWorkflowModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (data: any) => void;
-}
-
-function NewWorkflowModal({ isOpen, onClose, onSubmit }: NewWorkflowModalProps) {
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    isTemplate: false,
-    useTemplate: false,
-    selectedTemplate: '',
-    position_id: undefined as number | undefined
-  });
-
-  useEffect(() => {
-    if (isOpen) {
-      setFormData({
-        name: '',
-        description: '',
-        isTemplate: false,
-        useTemplate: false,
-        selectedTemplate: '',
-        position_id: undefined
-      });
-    }
-  }, [isOpen]);
-
-  // Pre-configured workflow templates with real integration
-  const workflowTemplates = {
-    software_engineer: {
-      name: 'Software Engineer Hiring',
-      description: 'Complete technical hiring with coding tests and multiple interview stages',
-      steps: [
-        {
-          type: 'interview' as const,
-          title: 'Initial HR Screening',
-          description: 'Initial screening interview with HR team',
-          interview_config: {
-            duration: 30,
-            interview_type: 'video',
-            location: 'Video Call'
-          }
-        },
-        {
-          type: 'todo' as const,
-          title: 'Coding Test',
-          description: 'Technical coding assessment',
-          todo_config: {
-            category: 'coding_test',
-            priority: 'high' as const,
-            is_assignment: true,
-            assignment_type: 'coding'
-          }
-        },
-        {
-          type: 'interview' as const,
-          title: 'Technical Interview',
-          description: 'Deep technical skills interview',
-          interview_config: {
-            duration: 60,
-            interview_type: 'video',
-            location: 'Conference Room A'
-          }
-        },
-        {
-          type: 'interview' as const,
-          title: 'Team Culture Interview',
-          description: 'Cultural fit and team dynamics interview',
-          interview_config: {
-            duration: 45,
-            interview_type: 'in_person',
-            location: 'Team Room'
-          }
-        },
-        {
-          type: 'assessment' as const,
-          title: '適性検査 (Aptitude Test)',
-          description: 'Personality and aptitude assessment'
-        }
-      ]
-    },
-    marketing_specialist: {
-      name: 'Marketing Specialist Process',
-      description: 'Marketing role recruitment with portfolio review and case studies',
-      steps: [
-        {
-          type: 'interview' as const,
-          title: 'Initial Interview',
-          description: 'General background and motivation interview',
-          interview_config: {
-            duration: 45,
-            interview_type: 'video',
-            location: 'Video Call'
-          }
-        },
-        {
-          type: 'todo' as const,
-          title: 'Portfolio Review',
-          description: 'Marketing portfolio and case study assignment',
-          todo_config: {
-            category: 'portfolio',
-            priority: 'medium' as const,
-            is_assignment: true,
-            assignment_type: 'portfolio'
-          }
-        },
-        {
-          type: 'interview' as const,
-          title: 'Final Decision Interview',
-          description: 'Final interview with marketing director',
-          interview_config: {
-            duration: 30,
-            interview_type: 'in_person',
-            location: 'Director Office'
-          }
-        }
-      ]
-    }
-  };
-
-  if (!isOpen) return null;
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.name.trim()) {
-      alert('Please enter a workflow name');
-      return;
-    }
-
-    const submitData: any = { ...formData };
-
-    if (formData.useTemplate && formData.selectedTemplate) {
-      const template = workflowTemplates[formData.selectedTemplate as keyof typeof workflowTemplates];
-      submitData.templateSteps = template.steps;
-      if (!formData.name.trim() || formData.name === template.name) {
-        submitData.name = template.name;
-        submitData.description = template.description;
-      }
-    }
-
-    onSubmit(submitData);
-  };
-
-  const handleTemplateSelect = (templateKey: string) => {
-    const template = workflowTemplates[templateKey as keyof typeof workflowTemplates];
-    if (template) {
-      setFormData(prev => ({
-        ...prev,
-        selectedTemplate: templateKey,
-        name: template.name,
-        description: template.description
-      }));
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-8" onClick={onClose}>
-      <div
-        className="w-full max-w-lg rounded-xl bg-white shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-          <h2 className="text-lg font-semibold text-gray-900">Create New Workflow</h2>
-          <button onClick={onClose} className="rounded-full p-1 text-gray-400 hover:text-gray-600">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4 px-6 py-5">
-          {/* Template Selection */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <input
-                type="checkbox"
-                id="useTemplate"
-                checked={formData.useTemplate}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  useTemplate: e.target.checked,
-                  selectedTemplate: e.target.checked ? prev.selectedTemplate : ''
-                }))}
-                className="h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
-              />
-              <label htmlFor="useTemplate" className="text-sm font-medium text-gray-700">
-                ✨ Use pre-configured template (with real interviews & todos)
-              </label>
-            </div>
-
-            {formData.useTemplate && (
-              <div className="space-y-3 p-3 bg-violet-50 rounded-lg border">
-                <p className="text-sm text-violet-700 font-medium">
-                  🚀 Choose a template that creates real interviews and todo assignments:
-                </p>
-                <div className="space-y-2">
-                  <label className="flex items-center gap-3 p-3 border border-violet-200 rounded-lg hover:bg-violet-100 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="template"
-                      value="software_engineer"
-                      checked={formData.selectedTemplate === 'software_engineer'}
-                      onChange={(e) => handleTemplateSelect(e.target.value)}
-                      className="h-4 w-4 text-violet-600 focus:ring-violet-500"
-                    />
-                    <div className="flex-1">
-                      <div className="font-medium text-gray-900">Software Engineer</div>
-                      <div className="text-sm text-gray-600">
-                        HR Screening → Coding Test → Technical Interview → Culture Interview → 適性検査
-                      </div>
-                      <div className="text-xs text-green-600 font-medium">
-                        ✅ Creates 3 real interviews + 1 coding assignment
-                      </div>
-                    </div>
-                  </label>
-                  <label className="flex items-center gap-3 p-3 border border-violet-200 rounded-lg hover:bg-violet-100 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="template"
-                      value="marketing_specialist"
-                      checked={formData.selectedTemplate === 'marketing_specialist'}
-                      onChange={(e) => handleTemplateSelect(e.target.value)}
-                      className="h-4 w-4 text-violet-600 focus:ring-violet-500"
-                    />
-                    <div className="flex-1">
-                      <div className="font-medium text-gray-900">Marketing Specialist</div>
-                      <div className="text-sm text-gray-600">
-                        Initial Interview → Portfolio Review → Final Interview
-                      </div>
-                      <div className="text-xs text-green-600 font-medium">
-                        ✅ Creates 2 real interviews + 1 portfolio assignment
-                      </div>
-                    </div>
-                  </label>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
-              Workflow Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="e.g. Software Engineer Hiring"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-violet-500 focus:ring-2 focus:ring-violet-500"
-            />
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
-              Description
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Describe the purpose of this recruitment workflow"
-              rows={3}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-violet-500 focus:ring-2 focus:ring-violet-500"
-            />
-          </div>
-
-          {!formData.useTemplate && (
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="isTemplate"
-                checked={formData.isTemplate}
-                onChange={(e) => setFormData(prev => ({ ...prev, isTemplate: e.target.checked }))}
-                className="h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
-              />
-              <label htmlFor="isTemplate" className="text-sm text-gray-700">
-                Save as template for reuse
-              </label>
-            </div>
-          )}
-
-          <div className="flex justify-end gap-3 border-t border-gray-200 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-700"
-            >
-              Create Workflow
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-// View Workflow Modal
 interface ViewWorkflowModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -1266,6 +911,7 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
   const [isTodoModalOpen, setIsTodoModalOpen] = useState(false);
   const [editingInterview, setEditingInterview] = useState<Interview | null>(null);
   const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
+  const [editingStepId, setEditingStepId] = useState<string | null>(null); // Track which step is being edited
 
   // Drag and drop state
   const [draggedStep, setDraggedStep] = useState<LinearWorkflowStep | null>(null);
@@ -1368,28 +1014,52 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
 
   // Handle editing the actual interview/todo record
   const handleEditStepRecord = async (step: LinearWorkflowStep) => {
-    if (step.type === 'interview' && step.interview_id) {
-      try {
-        const response = await interviewsApi.getById(step.interview_id);
-        if (response.success && response.data) {
-          setEditingInterview(response.data);
-          setIsInterviewModalOpen(true);
+    setEditingStepId(step.id); // Store which step is being edited
+
+    if (step.type === 'interview') {
+      if (step.interview_id) {
+        // Edit existing interview
+        try {
+          const response = await interviewsApi.getById(step.interview_id);
+          if (response.success && response.data) {
+            setEditingInterview(response.data);
+            setIsInterviewModalOpen(true);
+          }
+        } catch (error) {
+          console.error('Failed to load interview:', error);
+          alert('Failed to load interview for editing');
         }
-      } catch (error) {
-        console.error('Failed to load interview:', error);
-        alert('Failed to load interview for editing');
+      } else {
+        // Create new interview from step - use formData if exists
+        if (step.formData) {
+          // If formData exists, pass it to populate the modal
+          setEditingInterview(step.formData as any);
+        } else {
+          setEditingInterview(null);
+        }
+        setIsInterviewModalOpen(true);
       }
-    } else if (step.type === 'todo' && step.todo_id) {
-      try {
-        const todo = await todosApi.getTodoWithAssignedUser(step.todo_id);
-        setEditingTodo(todo);
+    } else if (step.type === 'todo') {
+      if (step.todo_id) {
+        // Edit existing todo
+        try {
+          const todo = await todosApi.getTodoWithAssignedUser(step.todo_id);
+          setEditingTodo(todo);
+          setIsTodoModalOpen(true);
+        } catch (error) {
+          console.error('Failed to load todo:', error);
+          alert('Failed to load todo for editing');
+        }
+      } else {
+        // Create new todo from step - use formData if exists
+        if (step.formData) {
+          // If formData exists, pass it to populate the modal
+          setEditingTodo(step.formData as any);
+        } else {
+          setEditingTodo(null);
+        }
         setIsTodoModalOpen(true);
-      } catch (error) {
-        console.error('Failed to load todo:', error);
-        alert('Failed to load todo for editing');
       }
-    } else {
-      alert(`No linked ${step.type} found for this step. The integration may not have been completed.`);
     }
   };
 
@@ -1673,251 +1343,95 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-6xl h-[90vh] flex flex-col">
-        {/* Header */}
-        <div className="border-b border-gray-200 p-6 flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <GitBranch className="h-5 w-5 text-violet-600" />
-              Linear Workflow Editor
-            </h2>
-            <p className="text-sm text-gray-500 mt-1">Create a step-by-step recruitment process with interviews and coding tests</p>
-          </div>
-          <div className="flex items-center gap-3">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl md:max-w-3xl h-[90vh] max-h-[90vh] flex flex-col overflow-hidden">
+        {/* Header - Fixed */}
+        <div className="flex-shrink-0 px-6 pt-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                <GitBranch className="h-5 w-5 text-violet-600" />
+                {process.id ? 'Edit Workflow' : 'Create Workflow'}
+              </h2>
+              <p className="text-sm text-gray-500">Create a step-by-step recruitment process</p>
+            </div>
             <button
               onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600"
+              className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
             >
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4" />
             </button>
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* Left Sidebar - Step Controls */}
-          <div className="w-80 border-r border-gray-200 p-6 bg-gray-50 overflow-y-auto">
-            <h3 className="font-semibold text-gray-900 mb-4">Workflow Configuration</h3>
-
-            {/* Process Info */}
-            <div className="mb-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Process Name</label>
-                <input
-                  type="text"
-                  value={processTitle}
-                  onChange={(e) => setProcessTitle(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                <textarea
-                  value={processDescription}
-                  onChange={(e) => setProcessDescription(e.target.value)}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
-                />
+        {/* Main Content - Scrollable Single Column */}
+        <div className="flex-1 overflow-y-auto px-6 py-6 min-h-0">
+          <div className="max-w-4xl mx-auto space-y-8">
+            {/* Process Info Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900">Basic Information</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Process Name *</label>
+                  <input
+                    type="text"
+                    value={processTitle}
+                    onChange={(e) => setProcessTitle(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                    placeholder="e.g., Software Engineer Hiring Process"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                  <textarea
+                    value={processDescription}
+                    onChange={(e) => setProcessDescription(e.target.value)}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                    placeholder="Describe the purpose of this workflow..."
+                  />
+                </div>
               </div>
             </div>
 
-            {/* Add Step Buttons */}
-            <div className="mb-6">
-              <h4 className="font-medium text-gray-900 mb-3">Add Workflow Steps</h4>
-              <div className="space-y-3">
+            {/* Add Step Buttons Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900">Add Workflow Steps</h3>
+              <div className="flex gap-3">
                 <button
                   onClick={() => addStep('interview')}
-                  className="w-full flex items-center gap-3 p-4 text-left text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                  className="flex-1 flex items-center justify-center gap-3 p-4 text-sm font-medium text-gray-700 bg-white border-2 border-gray-300 rounded-lg hover:bg-blue-50 hover:border-blue-400 transition-colors"
                 >
                   <Video className="h-5 w-5 text-blue-500" />
-                  <div>
-                    <div className="font-medium text-gray-900">Interview</div>
+                  <div className="text-left">
+                    <div className="font-semibold text-gray-900">Add Interview</div>
                     <div className="text-xs text-gray-500">Technical, HR, or cultural interview</div>
                   </div>
                 </button>
                 <button
                   onClick={() => addStep('todo')}
-                  className="w-full flex items-center gap-3 p-4 text-left text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-green-50 hover:border-green-300 transition-colors"
+                  className="flex-1 flex items-center justify-center gap-3 p-4 text-sm font-medium text-gray-700 bg-white border-2 border-gray-300 rounded-lg hover:bg-green-50 hover:border-green-400 transition-colors"
                 >
                   <CheckSquare className="h-5 w-5 text-green-500" />
-                  <div>
-                    <div className="font-medium text-gray-900">Todo</div>
+                  <div className="text-left">
+                    <div className="font-semibold text-gray-900">Add Todo</div>
                     <div className="text-xs text-gray-500">Assignment or task</div>
                   </div>
                 </button>
               </div>
             </div>
 
-            {/* Candidate Assignment */}
-            <div className="mb-6">
-              <h4 className="font-medium text-gray-900 mb-3">Candidate & Viewer Assignment</h4>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Assign Candidates</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={candidateInput}
-                      onChange={(e) => setCandidateInput(e.target.value)}
-                      placeholder="Enter candidate ID or email"
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          handleAddCandidate();
-                        }
-                      }}
-                    />
-                    <button
-                      type="button"
-                      onClick={handleAddCandidate}
-                      className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
-                    >
-                      Add
-                    </button>
-                  </div>
-
-                  {/* Assigned Candidates List */}
-                  {assignedCandidates.length > 0 && (
-                    <div className="mt-2 space-y-1">
-                      {assignedCandidates.map(candidate => (
-                        <div key={candidate.id} className="flex items-center justify-between p-2 bg-blue-50 border border-blue-200 rounded text-sm">
-                          <div>
-                            <span className="font-medium text-blue-900">{candidate.name}</span>
-                            <span className="text-blue-600 ml-2">({candidate.email})</span>
-                          </div>
-                          <button
-                            onClick={() => handleRemoveCandidate(candidate.id)}
-                            className="text-red-500 hover:text-red-700"
-                            title="Remove candidate"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <p className="text-xs text-gray-500 mt-1">
-                    Candidates will be automatically assigned to all interviews and todos in this workflow
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Add Viewers</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={viewerInput}
-                      onChange={(e) => setViewerInput(e.target.value)}
-                      placeholder="Enter user ID or email"
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          handleAddViewer();
-                        }
-                      }}
-                    />
-                    <select
-                      value={viewerRole}
-                      onChange={(e) => setViewerRole(e.target.value as 'viewer' | 'reviewer' | 'manager')}
-                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
-                    >
-                      <option value="viewer">Viewer</option>
-                      <option value="reviewer">Reviewer</option>
-                      <option value="manager">Manager</option>
-                    </select>
-                    <button
-                      type="button"
-                      onClick={handleAddViewer}
-                      className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
-                    >
-                      Add
-                    </button>
-                  </div>
-
-                  {/* Workflow Viewers List */}
-                  {workflowViewers.length > 0 && (
-                    <div className="mt-2 space-y-1">
-                      {workflowViewers.map(viewer => (
-                        <div key={viewer.id} className="flex items-center justify-between p-2 bg-green-50 border border-green-200 rounded text-sm">
-                          <div>
-                            <span className="font-medium text-green-900">{viewer.name}</span>
-                            <span className="text-green-600 ml-2">({viewer.email})</span>
-                            <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
-                              viewer.role === 'manager' ? 'bg-purple-100 text-purple-800' :
-                              viewer.role === 'reviewer' ? 'bg-orange-100 text-orange-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
-                              {viewer.role}
-                            </span>
-                          </div>
-                          <button
-                            onClick={() => handleRemoveViewer(viewer.id)}
-                            className="text-red-500 hover:text-red-700"
-                            title="Remove viewer"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <p className="text-xs text-gray-500 mt-1">
-                    Viewers will have access to all interviews and todos created by this workflow
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Integration Info */}
-            <div className="p-4 bg-violet-50 border border-violet-200 rounded-lg">
-              <div className="flex items-start gap-2">
-                <GitBranch className="h-4 w-4 text-violet-600 mt-0.5" />
-                <div className="text-xs text-violet-800">
-                  <div className="font-medium mb-1">Smart Integration</div>
-                  <p>
-                    When enabled, interview steps create actual interview records and todo steps create real todo assignments.
-                    Assigned candidates and viewers are automatically propagated to all created records.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Center - Linear Workflow View */}
-          <div className="flex-1 p-6 bg-white overflow-y-auto">
-            <div className="max-w-4xl mx-auto">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">Workflow Steps</h3>
-              </div>
+            {/* Workflow Steps Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900">Workflow Steps</h3>
 
               {steps.length === 0 ? (
                 /* Empty State */
-                <div className="text-center py-12">
+                <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
                   <GitBranch className="h-16 w-16 mx-auto text-gray-400 mb-4" />
                   <h4 className="text-xl font-semibold text-gray-900 mb-2">No Steps Yet</h4>
                   <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                    Start building your recruitment workflow by adding interview and todo steps.
-                    Use the buttons on the left to get started.
+                    Start building your recruitment workflow by adding interview and todo steps using the buttons above.
                   </p>
-                  <div className="flex justify-center gap-3">
-                    <button
-                      onClick={() => addStep('interview')}
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                      <Video className="h-4 w-4" />
-                      Interview
-                    </button>
-                    <button
-                      onClick={() => addStep('todo')}
-                      className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                    >
-                      <CheckSquare className="h-4 w-4" />
-                      Todo
-                    </button>
-                  </div>
                 </div>
               ) : (
                 /* Linear Workflow Steps */
@@ -1935,16 +1449,10 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
                         className={`relative border-2 rounded-xl p-5 cursor-move transition-all shadow-sm hover:shadow-md ${
                           draggedStep?.id === step.id
                             ? 'opacity-50 border-violet-500 bg-violet-100'
-                            : selectedStep?.id === step.id
-                            ? 'border-violet-500 bg-gradient-to-br from-violet-50 to-purple-50 shadow-lg ring-2 ring-violet-200'
                             : dragOverIndex === index && draggedStep?.id !== step.id
                             ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-300'
                             : 'border-gray-200 bg-white hover:border-gray-300'
                         }`}
-                        onClick={() => {
-                          setSelectedStep(step);
-                          setShowStepPanel(true);
-                        }}
                       >
                         {/* Drop indicator line at top */}
                         {dragOverIndex === index && draggedStep?.id !== step.id && (
@@ -1998,52 +1506,29 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
                           </div>
 
                           {/* Step Controls */}
-                          <div className="flex-shrink-0 flex items-center gap-2">
+                          <div className="flex-shrink-0 flex flex-col gap-2">
                             {/* Edit button - opens actual interview/todo for editing */}
-                            {(step.interview_id || step.todo_id) && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEditStepRecord(step);
-                                }}
-                                className="px-3 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors flex items-center gap-1"
-                                title={`Edit ${step.type === 'interview' ? 'interview' : 'todo'} record`}
-                              >
-                                <Edit className="h-4 w-4" />
-                                Edit
-                              </button>
-                            )}
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                moveStep(step.id, 'up');
+                                handleEditStepRecord(step);
                               }}
-                              disabled={index === 0}
-                              className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
-                              title="Move up"
+                              className="w-24 px-3 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors flex items-center justify-center gap-1"
+                              title={`Edit ${step.type === 'interview' ? 'interview' : 'todo'} record`}
                             >
-                              ↑
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                moveStep(step.id, 'down');
-                              }}
-                              disabled={index === steps.length - 1}
-                              className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
-                              title="Move down"
-                            >
-                              ↓
+                              <Edit className="h-4 w-4" />
+                              Edit
                             </button>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 deleteStep(step.id);
                               }}
-                              className="p-1 text-red-400 hover:text-red-600"
+                              className="w-24 px-3 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-sm transition-colors flex items-center justify-center gap-1"
                               title="Delete step"
                             >
                               <Trash2 className="h-4 w-4" />
+                              Delete
                             </button>
                           </div>
                         </div>
@@ -2067,209 +1552,175 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
                 </div>
               )}
             </div>
-          </div>
 
-          {/* Right Sidebar - Step Properties */}
-          {showStepPanel && selectedStep && (
-            <div className="w-80 border-l border-gray-200 p-6 bg-gray-50">
-              <h3 className="font-semibold text-gray-900 mb-4">Step Properties</h3>
-
+            {/* Candidate Assignment Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900">Candidate Assignment</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
-                  <input
-                    type="text"
-                    value={selectedStep.title}
-                    onChange={(e) => updateStep(selectedStep.id, { title: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                  <textarea
-                    value={selectedStep.description || ''}
-                    onChange={(e) => updateStep(selectedStep.id, { description: e.target.value })}
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="flex items-center gap-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Assign Candidates</label>
+                  <div className="flex gap-2">
                     <input
-                      type="checkbox"
-                      checked={selectedStep.isIntegrated}
-                      onChange={(e) => updateStep(selectedStep.id, { isIntegrated: e.target.checked })}
-                      className="h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
+                      type="text"
+                      value={candidateInput}
+                      onChange={(e) => setCandidateInput(e.target.value)}
+                      placeholder="Enter candidate ID or email"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleAddCandidate();
+                        }
+                      }}
                     />
-                    <span className="text-sm font-medium text-gray-700">
-                      Create real {selectedStep.type === 'interview' ? 'interview' : 'todo'} record
-                    </span>
-                  </label>
-                  <p className="text-xs text-gray-500 mt-1">
-                    When enabled, this step will create an actual {selectedStep.type === 'interview' ? 'interview' : 'todo assignment'} that you can view in the {selectedStep.type === 'interview' ? 'Interviews' : 'Todos'} section.
+                    <button
+                      type="button"
+                      onClick={handleAddCandidate}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
+                    >
+                      Add
+                    </button>
+                  </div>
+
+                  {/* Assigned Candidates List */}
+                  {assignedCandidates.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      {assignedCandidates.map(candidate => (
+                        <div key={candidate.id} className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+                          <div>
+                            <span className="font-medium text-blue-900">{candidate.name}</span>
+                            <span className="text-blue-600 ml-2">({candidate.email})</span>
+                          </div>
+                          <button
+                            onClick={() => handleRemoveCandidate(candidate.id)}
+                            className="text-red-500 hover:text-red-700 p-1"
+                            title="Remove candidate"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <p className="text-xs text-gray-500 mt-2">
+                    Candidates will be automatically assigned to all interviews and todos in this workflow
                   </p>
-                </div>
-
-                {/* Interview-specific settings */}
-                {selectedStep.type === 'interview' && (
-                  <div className="space-y-4 pt-4 border-t border-gray-200">
-                    <h4 className="font-medium text-gray-900">Interview Settings</h4>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Duration (minutes)</label>
-                      <input
-                        type="number"
-                        min="15"
-                        max="480"
-                        value={selectedStep.config?.duration || 60}
-                        onChange={(e) => updateStep(selectedStep.id, {
-                          config: { ...selectedStep.config, duration: parseInt(e.target.value) }
-                        })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Interview Type</label>
-                      <select
-                        value={selectedStep.config?.interview_type || 'video'}
-                        onChange={(e) => updateStep(selectedStep.id, {
-                          config: { ...selectedStep.config, interview_type: e.target.value }
-                        })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
-                      >
-                        <option value="video">Video Interview</option>
-                        <option value="phone">Phone Interview</option>
-                        <option value="in_person">In-Person Interview</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
-                      <input
-                        type="text"
-                        value={selectedStep.config?.location || 'Video Call'}
-                        onChange={(e) => updateStep(selectedStep.id, {
-                          config: { ...selectedStep.config, location: e.target.value }
-                        })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
-                        placeholder="e.g., Video Call, Conference Room A"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Todo-specific settings */}
-                {selectedStep.type === 'todo' && (
-                  <div className="space-y-4 pt-4 border-t border-gray-200">
-                    <h4 className="font-medium text-gray-900">Assignment Settings</h4>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
-                      <select
-                        value={selectedStep.config?.priority || 'medium'}
-                        onChange={(e) => updateStep(selectedStep.id, {
-                          config: { ...selectedStep.config, priority: e.target.value }
-                        })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
-                      >
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                        <option value="urgent">Urgent</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Assignment Type</label>
-                      <select
-                        value={selectedStep.config?.assignment_type || 'general'}
-                        onChange={(e) => updateStep(selectedStep.id, {
-                          config: { ...selectedStep.config, assignment_type: e.target.value }
-                        })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
-                      >
-                        <option value="general">General Assignment</option>
-                        <option value="coding">Coding Challenge</option>
-                        <option value="research">Research Task</option>
-                        <option value="presentation">Presentation</option>
-                        <option value="analysis">Analysis Task</option>
-                        <option value="design">Design Task</option>
-                        <option value="writing">Writing Assignment</option>
-                        <option value="review">Review Task</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={selectedStep.config?.is_assignment !== false}
-                          onChange={(e) => updateStep(selectedStep.id, {
-                            config: { ...selectedStep.config, is_assignment: e.target.checked }
-                          })}
-                          className="h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
-                        />
-                        <span className="text-sm font-medium text-gray-700">Is Assignment</span>
-                      </label>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Assignments are special todos that require completion and scoring.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                <div className="pt-4 border-t border-gray-200">
-                  <div className="text-xs text-gray-500">
-                    <div>Step #{selectedStep.order}</div>
-                    <div>Type: {selectedStep.type}</div>
-                    {selectedStep.realId && <div>Node ID: {selectedStep.realId}</div>}
-                  </div>
                 </div>
               </div>
             </div>
-          )}
+
+            {/* Viewer Assignment Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900">Workflow Viewers</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Add Viewers</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={viewerInput}
+                      onChange={(e) => setViewerInput(e.target.value)}
+                      placeholder="Enter user ID or email"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleAddViewer();
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddViewer}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium"
+                    >
+                      Add
+                    </button>
+                  </div>
+
+                  {/* Workflow Viewers List */}
+                  {workflowViewers.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      {workflowViewers.map(viewer => (
+                        <div key={viewer.id} className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg text-sm">
+                          <div>
+                            <span className="font-medium text-green-900">{viewer.name}</span>
+                            <span className="text-green-600 ml-2">({viewer.email})</span>
+                          </div>
+                          <button
+                            onClick={() => handleRemoveViewer(viewer.id)}
+                            className="text-red-500 hover:text-red-700 p-1"
+                            title="Remove viewer"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <p className="text-xs text-gray-500 mt-2">
+                    Viewers will have access to all interviews and todos created by this workflow
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Integration Info */}
+            <div className="p-4 bg-violet-50 border border-violet-200 rounded-lg">
+              <div className="flex items-start gap-2">
+                <GitBranch className="h-5 w-5 text-violet-600 mt-0.5" />
+                <div className="text-sm text-violet-800">
+                  <div className="font-semibold mb-1">Smart Integration</div>
+                  <p>
+                    When enabled, interview steps create actual interview records and todo steps create real todo assignments.
+                    Assigned candidates and viewers are automatically propagated to all created records.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Footer */}
-        <div className="border-t border-gray-200 p-6 flex justify-between items-center">
-          <div className="text-sm text-gray-600">
-            {(steps.length > 0 || assignedCandidates.length > 0 || workflowViewers.length > 0) && (
-              <div className="mt-1 text-xs text-gray-500 space-y-1">
-                {steps.length > 0 && (
-                  <div>{steps.filter(s => s.type === 'interview').length} interviews • {steps.filter(s => s.type === 'todo').length} todos</div>
-                )}
-                {assignedCandidates.length > 0 && (
-                  <div className="flex items-center gap-1">
-                    <Users className="h-3 w-3" />
-                    {assignedCandidates.length} candidate{assignedCandidates.length !== 1 ? 's' : ''} assigned
-                  </div>
-                )}
-                {workflowViewers.length > 0 && (
-                  <div className="flex items-center gap-1">
-                    <Eye className="h-3 w-3" />
-                    {workflowViewers.length} viewer{workflowViewers.length !== 1 ? 's' : ''} added
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={steps.length === 0}
-              className="px-4 py-2 text-sm font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Save Linear Workflow
-            </button>
+        {/* Footer - Fixed */}
+        <div className="flex-shrink-0 border-t border-slate-200 bg-white px-6 py-4">
+          <div className="flex justify-between items-center">
+            <div className="text-sm text-gray-600">
+              {(steps.length > 0 || assignedCandidates.length > 0 || workflowViewers.length > 0) && (
+                <div className="flex items-center gap-4 text-xs text-gray-500">
+                  {steps.length > 0 && (
+                    <div>{steps.filter(s => s.type === 'interview').length} interviews • {steps.filter(s => s.type === 'todo').length} todos</div>
+                  )}
+                  {assignedCandidates.length > 0 && (
+                    <div className="flex items-center gap-1">
+                      <Users className="h-3 w-3" />
+                      {assignedCandidates.length} candidate{assignedCandidates.length !== 1 ? 's' : ''}
+                    </div>
+                  )}
+                  {workflowViewers.length > 0 && (
+                    <div className="flex items-center gap-1">
+                      <Eye className="h-3 w-3" />
+                      {workflowViewers.length} viewer{workflowViewers.length !== 1 ? 's' : ''}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={onClose}
+                className="min-w-[120px] px-4 py-2 text-sm font-medium text-gray-700 bg-transparent hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={steps.length === 0}
+                className="inline-flex items-center justify-center gap-2 min-w-[160px] px-4 py-2 text-sm font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <Save className="h-4 w-4" />
+                <span>Save Workflow</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -2281,112 +1732,76 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
           onClose={() => {
             setIsTodoModalOpen(false);
             setEditingTodo(null);
+            setEditingStepId(null);
           }}
-          onSuccess={() => {
+          onSuccess={(todoData) => {
+            // Store todo data in the workflow step
+            if (editingStepId && todoData) {
+              setSteps(prev => prev.map(step => {
+                if (step.id === editingStepId) {
+                  return {
+                    ...step,
+                    title: todoData.title || step.title,
+                    description: todoData.description || step.description,
+                    config: {
+                      ...step.config,
+                      priority: todoData.priority,
+                      assignment_type: todoData.todo_type,
+                      is_assignment: todoData.todo_type === 'assignment',
+                    },
+                    formData: todoData, // Store the full form data
+                  };
+                }
+                return step;
+              }));
+            }
             setIsTodoModalOpen(false);
             setEditingTodo(null);
-            alert('Todo updated successfully!');
+            setEditingStepId(null);
           }}
           editingTodo={editingTodo}
+          workflowContext={true}
         />
       )}
 
-      {isInterviewModalOpen && editingInterview && (
-        <div className="fixed inset-0 z-[60] overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4"
-             onClick={() => {
-               setIsInterviewModalOpen(false);
-               setEditingInterview(null);
-             }}>
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
-               onClick={(e) => e.stopPropagation()}>
-            <div className="border-b border-gray-200 p-6 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-900">Edit Interview</h2>
-              <button
-                onClick={() => {
-                  setIsInterviewModalOpen(false);
-                  setEditingInterview(null);
-                }}
-                className="p-2 text-gray-400 hover:text-gray-600"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <div className="p-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
-                  <input
-                    type="text"
-                    value={editingInterview.title || ''}
-                    onChange={(e) => setEditingInterview({ ...editingInterview, title: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
-                  <textarea
-                    value={editingInterview.notes || ''}
-                    onChange={(e) => setEditingInterview({ ...editingInterview, notes: e.target.value })}
-                    rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Duration (minutes)</label>
-                    <input
-                      type="number"
-                      value={editingInterview.duration_minutes || 60}
-                      onChange={(e) => setEditingInterview({ ...editingInterview, duration_minutes: parseInt(e.target.value) })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
-                    <input
-                      type="text"
-                      value={editingInterview.location || ''}
-                      onChange={(e) => setEditingInterview({ ...editingInterview, location: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="border-t border-gray-200 p-6 flex justify-end gap-3">
-              <button
-                onClick={() => {
-                  setIsInterviewModalOpen(false);
-                  setEditingInterview(null);
-                }}
-                className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={async () => {
-                  try {
-                    await interviewsApi.update(editingInterview.id, {
-                      title: editingInterview.title,
-                      notes: editingInterview.notes,
-                      duration_minutes: editingInterview.duration_minutes,
-                      location: editingInterview.location
-                    });
-                    alert('Interview updated successfully!');
-                    setIsInterviewModalOpen(false);
-                    setEditingInterview(null);
-                  } catch (error) {
-                    console.error('Failed to update interview:', error);
-                    alert('Failed to update interview');
-                  }
-                }}
-                className="px-4 py-2 text-sm font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-700"
-              >
-                Save Changes
-              </button>
-            </div>
-          </div>
-        </div>
+      {isInterviewModalOpen && (
+        <InterviewModal
+          isOpen={isInterviewModalOpen}
+          mode={editingInterview?.id ? "edit" : "create"}
+          interviewId={editingInterview?.id}
+          defaultData={!editingInterview?.id && editingInterview ? editingInterview as any : undefined}
+          onClose={() => {
+            setIsInterviewModalOpen(false);
+            setEditingInterview(null);
+            setEditingStepId(null);
+          }}
+          onSuccess={(interviewData) => {
+            // Store interview data in the workflow step
+            if (editingStepId && interviewData) {
+              setSteps(prev => prev.map(step => {
+                if (step.id === editingStepId) {
+                  return {
+                    ...step,
+                    title: interviewData.title || step.title,
+                    description: interviewData.description || step.description,
+                    config: {
+                      ...step.config,
+                      duration: 60, // Can calculate from scheduled_start and scheduled_end
+                      interview_type: interviewData.interview_type,
+                      location: interviewData.location || interviewData.meeting_url,
+                    },
+                    formData: interviewData, // Store the full form data
+                  };
+                }
+                return step;
+              }));
+            }
+            setIsInterviewModalOpen(false);
+            setEditingInterview(null);
+            setEditingStepId(null);
+          }}
+          workflowContext={true}
+        />
       )}
     </div>
   );
