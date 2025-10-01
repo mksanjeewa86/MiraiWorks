@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { CSSProperties } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
@@ -8,6 +8,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { recruitmentWorkflowsApi, workflowIntegrationService, type RecruitmentProcess, type ProcessNode, type CreateNodeData } from '@/api/recruitment-workflows';
 import { interviewsApi } from '@/api/interviews';
 import { todosApi } from '@/api/todos';
+import TaskModal from '@/components/todos/TaskModal';
+import type { Todo } from '@/types/todo';
+import type { Interview } from '@/types/interview';
 import {
   GitBranch,
   Search,
@@ -31,10 +34,6 @@ import {
   Square,
   Circle,
 } from 'lucide-react';
-
-// Use types from API
-import type { Interview } from '@/types/interview';
-import type { Todo } from '@/types/todo';
 
 // No more mock data - using real API integration
 
@@ -1294,6 +1293,16 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
   const [viewerInput, setViewerInput] = useState('');
   const [viewerRole, setViewerRole] = useState<'viewer' | 'reviewer' | 'manager'>('viewer');
 
+  // Modal states for interview and todo editing
+  const [isInterviewModalOpen, setIsInterviewModalOpen] = useState(false);
+  const [isTodoModalOpen, setIsTodoModalOpen] = useState(false);
+  const [editingInterview, setEditingInterview] = useState<Interview | null>(null);
+  const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
+
+  // Drag and drop state
+  const [draggedStep, setDraggedStep] = useState<LinearWorkflowStep | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
   // Initialize steps when process changes
   useEffect(() => {
     if (process && isOpen) {
@@ -1390,13 +1399,27 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
   };
 
   // Handle editing the actual interview/todo record
-  const handleEditStepRecord = (step: LinearWorkflowStep) => {
+  const handleEditStepRecord = async (step: LinearWorkflowStep) => {
     if (step.type === 'interview' && step.interview_id) {
-      // Open interview for editing in new tab
-      window.open(`/interviews?edit=${step.interview_id}`, '_blank');
+      try {
+        const response = await interviewsApi.getById(step.interview_id);
+        if (response.success && response.data) {
+          setEditingInterview(response.data);
+          setIsInterviewModalOpen(true);
+        }
+      } catch (error) {
+        console.error('Failed to load interview:', error);
+        alert('Failed to load interview for editing');
+      }
     } else if (step.type === 'todo' && step.todo_id) {
-      // Open todo for editing in new tab
-      window.open(`/todos?edit=${step.todo_id}`, '_blank');
+      try {
+        const todo = await todosApi.getTodoWithAssignedUser(step.todo_id);
+        setEditingTodo(todo);
+        setIsTodoModalOpen(true);
+      } catch (error) {
+        console.error('Failed to load todo:', error);
+        alert('Failed to load todo for editing');
+      }
     } else {
       alert(`No linked ${step.type} found for this step. The integration may not have been completed.`);
     }
@@ -1463,6 +1486,44 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
   // Remove viewer from workflow
   const handleRemoveViewer = (viewerId: number) => {
     setWorkflowViewers(prev => prev.filter(v => v.id !== viewerId));
+  };
+
+  // Drag and drop handlers
+  const handleDragStart = (step: LinearWorkflowStep) => {
+    setDraggedStep(step);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    setDragOverIndex(index);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedStep(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+
+    if (!draggedStep) return;
+
+    const currentIndex = steps.findIndex(s => s.id === draggedStep.id);
+    if (currentIndex === -1 || currentIndex === targetIndex) {
+      handleDragEnd();
+      return;
+    }
+
+    // Reorder steps
+    setSteps(prev => {
+      const newSteps = [...prev];
+      const [removed] = newSteps.splice(currentIndex, 1);
+      newSteps.splice(targetIndex, 0, removed);
+      // Update order numbers
+      return newSteps.map((step, index) => ({ ...step, order: index + 1 }));
+    });
+
+    handleDragEnd();
   };
 
   const getStepIcon = (type: 'interview' | 'todo') => {
@@ -1913,9 +1974,16 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
                   {steps.map((step, index) => (
                     <div key={step.id} className="relative">
                       <div
-                        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                        draggable
+                        onDragStart={() => handleDragStart(step)}
+                        onDragOver={(e) => handleDragOver(e, index)}
+                        onDragEnd={handleDragEnd}
+                        onDrop={(e) => handleDrop(e, index)}
+                        className={`border-2 rounded-xl p-5 cursor-move transition-all shadow-sm hover:shadow-md ${
                           selectedStep?.id === step.id
-                            ? 'border-violet-500 bg-violet-50'
+                            ? 'border-violet-500 bg-gradient-to-br from-violet-50 to-purple-50 shadow-lg ring-2 ring-violet-200'
+                            : dragOverIndex === index && draggedStep?.id !== step.id
+                            ? 'border-blue-400 bg-blue-50'
                             : 'border-gray-200 bg-white hover:border-gray-300'
                         }`}
                         onClick={() => {
@@ -1924,13 +1992,20 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
                         }}
                       >
                         <div className="flex items-center gap-4">
+                          {/* Drag Handle */}
+                          <div className="flex-shrink-0 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing">
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M7 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 2zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 14zm6-8a2 2 0 1 0-.001-4.001A2 2 0 0 0 13 6zm0 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 14z"></path>
+                            </svg>
+                          </div>
+
                           {/* Step Number */}
-                          <div className="flex-shrink-0 w-10 h-10 bg-violet-100 text-violet-600 rounded-full flex items-center justify-center font-semibold">
+                          <div className="flex-shrink-0 w-11 h-11 bg-gradient-to-br from-violet-500 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-md">
                             {step.order}
                           </div>
 
                           {/* Step Icon and Type */}
-                          <div className={`flex-shrink-0 w-12 h-12 rounded-lg border-2 ${getStepColor(step.type)} flex items-center justify-center`}>
+                          <div className={`flex-shrink-0 w-14 h-14 rounded-xl border-2 ${getStepColor(step.type)} flex items-center justify-center shadow-sm`}>
                             {getStepIcon(step.type)}
                           </div>
 
@@ -2248,6 +2323,115 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
           </div>
         </div>
       </div>
+
+      {/* Interview Edit Modal */}
+      {isInterviewModalOpen && editingInterview && (
+        <div className="fixed inset-0 z-[60] overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="border-b border-gray-200 p-6 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-gray-900">Edit Interview</h2>
+              <button
+                onClick={() => {
+                  setIsInterviewModalOpen(false);
+                  setEditingInterview(null);
+                }}
+                className="p-2 text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                  <input
+                    type="text"
+                    value={editingInterview.title || ''}
+                    onChange={(e) => setEditingInterview({ ...editingInterview, title: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+                  <textarea
+                    value={editingInterview.notes || ''}
+                    onChange={(e) => setEditingInterview({ ...editingInterview, notes: e.target.value })}
+                    rows={4}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Duration (minutes)</label>
+                    <input
+                      type="number"
+                      value={editingInterview.duration_minutes || 60}
+                      onChange={(e) => setEditingInterview({ ...editingInterview, duration_minutes: parseInt(e.target.value) })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                    <input
+                      type="text"
+                      value={editingInterview.location || ''}
+                      onChange={(e) => setEditingInterview({ ...editingInterview, location: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="border-t border-gray-200 p-6 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setIsInterviewModalOpen(false);
+                  setEditingInterview(null);
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    await interviewsApi.update(editingInterview.id, {
+                      title: editingInterview.title,
+                      notes: editingInterview.notes,
+                      duration_minutes: editingInterview.duration_minutes,
+                      location: editingInterview.location
+                    });
+                    alert('Interview updated successfully!');
+                    setIsInterviewModalOpen(false);
+                    setEditingInterview(null);
+                  } catch (error) {
+                    console.error('Failed to update interview:', error);
+                    alert('Failed to update interview');
+                  }
+                }}
+                className="px-4 py-2 text-sm font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-700"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Todo Edit Modal */}
+      <TaskModal
+        isOpen={isTodoModalOpen}
+        onClose={() => {
+          setIsTodoModalOpen(false);
+          setEditingTodo(null);
+        }}
+        onSuccess={() => {
+          setIsTodoModalOpen(false);
+          setEditingTodo(null);
+          alert('Todo updated successfully!');
+        }}
+        editingTodo={editingTodo}
+      />
     </div>
   );
 }
