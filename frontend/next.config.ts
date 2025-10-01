@@ -15,7 +15,14 @@ const nextConfig: NextConfig = {
     };
 
     // Explicitly configure module resolution extensions for CI compatibility
-    config.resolve.extensions = ['.tsx', '.ts', '.jsx', '.js', '.json'];
+    config.resolve.extensions = [
+      ...(config.resolve.extensions || []),
+      '.tsx',
+      '.ts',
+      '.jsx',
+      '.js',
+      '.json',
+    ];
 
     if (dev) {
       // Improve chunk splitting for development
