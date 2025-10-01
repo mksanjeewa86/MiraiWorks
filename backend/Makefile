@@ -8,11 +8,15 @@ help:
 	@echo ""
 	@echo "Testing:"
 	@echo "  test           - Run all tests"
+	@echo "  test-fast      - ⚡ Run tests in parallel (FASTEST)"
+	@echo "  test-parallel  - Run tests with N workers (WORKERS=8)"
+	@echo "  test-failed    - Re-run only failed tests"
 	@echo "  test-verbose   - Run tests with verbose output"
 	@echo "  test-coverage  - Run tests with coverage report"
 	@echo "  test-single    - Run single test for quick validation"
 	@echo "  test-fix       - Attempt to fix fixture issues and run tests"
 	@echo "  test-collect   - Test collection without running tests"
+	@echo "  test-quick     - Quick test (stops on first failure)"
 	@echo ""
 	@echo "Development:"
 	@echo "  install-deps   - Install all dependencies"
@@ -38,6 +42,47 @@ test:
 	python -m pytest app/tests/ \
 		--tb=short \
 		--maxfail=3 \
+		-q
+
+# Fastest: Parallel execution with all CPU cores
+test-fast:
+	@echo "⚡ Running tests in parallel (auto-detect CPU cores)..."
+	@export PYTHONPATH=$$(pwd) && \
+	python -m pytest app/tests/ \
+		-n auto \
+		--dist loadfile \
+		--tb=short \
+		--maxfail=1 \
+		-q
+
+# Parallel with specific number of workers
+WORKERS ?= 4
+test-parallel:
+	@echo "⚡ Running tests with $(WORKERS) workers..."
+	@export PYTHONPATH=$$(pwd) && \
+	python -m pytest app/tests/ \
+		-n $(WORKERS) \
+		--dist loadfile \
+		--tb=short \
+		-v
+
+# Re-run only failed tests
+test-failed:
+	@echo "🔄 Re-running failed tests..."
+	@export PYTHONPATH=$$(pwd) && \
+	python -m pytest app/tests/ \
+		--lf \
+		-x \
+		-v
+
+# Quick test (stops on first failure)
+test-quick:
+	@echo "⚡ Running quick test (stops on first failure)..."
+	@export PYTHONPATH=$$(pwd) && \
+	python -m pytest app/tests/ \
+		-x \
+		-n auto \
+		--dist loadfile \
 		-q
 
 # Verbose test run
