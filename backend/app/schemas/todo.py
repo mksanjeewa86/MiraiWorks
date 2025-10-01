@@ -173,6 +173,8 @@ class TodoRead(BaseModel):
 
     id: int
     owner_id: int
+    created_by: Optional[int] = None  # Add created_by field
+    last_updated_by: Optional[int] = None  # Add last_updated_by field
     assigned_user_id: Optional[int] = None
     title: str
     description: Optional[str] = None

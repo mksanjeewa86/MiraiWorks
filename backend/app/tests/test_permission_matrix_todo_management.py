@@ -65,7 +65,7 @@ class TestTodoManagementPermissionMatrix:
             assert response.status_code == 201, f"Failed for role {role.value}"
             data = response.json()
             assert data["title"] == todo_data["title"]
-            assert data["creator_id"] == user.id
+            assert data["created_by"] == user.id  # Use created_by instead of creator_id
 
     @pytest.mark.asyncio
     async def test_super_admin_can_create_todos(
@@ -733,8 +733,9 @@ class TestTodoManagementPermissionMatrix:
         todo = Todo(
             title=title,
             description=f"Description for {title}",
-            creator_id=creator_id,
-            assignee_id=assignee_id,
+            owner_id=creator_id,  # Use owner_id instead of creator_id
+            created_by=creator_id,  # Set created_by
+            assigned_user_id=assignee_id,  # Use assigned_user_id instead of assignee_id
             due_date=datetime.utcnow() + timedelta(days=7),
             priority="medium",
             status="pending",
