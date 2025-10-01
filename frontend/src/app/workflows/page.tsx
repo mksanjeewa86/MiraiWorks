@@ -1891,7 +1891,6 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
             <div className="max-w-4xl mx-auto">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-semibold text-gray-900">Workflow Steps</h3>
-                <span className="text-sm text-gray-500">{steps.length} steps configured</span>
               </div>
 
               {steps.length === 0 ? (
@@ -2237,15 +2236,6 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
         {/* Footer */}
         <div className="border-t border-gray-200 p-6 flex justify-between items-center">
           <div className="text-sm text-gray-600">
-            <div className="flex items-center gap-4">
-              <span>{steps.length} workflow steps configured</span>
-              {isCreatingIntegratedRecords && (
-                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-violet-100 text-violet-800">
-                  <GitBranch className="h-3 w-3" />
-                  Integration enabled
-                </span>
-              )}
-            </div>
             {(steps.length > 0 || assignedCandidates.length > 0 || workflowViewers.length > 0) && (
               <div className="mt-1 text-xs text-gray-500 space-y-1">
                 {steps.length > 0 && (
