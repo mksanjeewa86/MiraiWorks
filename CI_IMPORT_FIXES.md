@@ -235,6 +235,7 @@ try:
 
 ## Files Modified
 
+### Backend:
 1. `backend/app/endpoints/__init__.py` - Added missing endpoint exports
 2. `backend/app/endpoints/recruitment_workflow/__init__.py` - Created module exports
 3. `backend/app/endpoints/recruitment_workflow/nodes.py` - Removed BOM character
@@ -242,25 +243,45 @@ try:
 5. `backend/app/endpoints/messages.py` - Fixed UserRole import path
 6. `backend/app/services/pdf_service.py` - Changed to dynamic import for pdf2image
 
+### Frontend:
+7. `frontend/.next/` - Cleared stale build cache (causes module resolution issues)
+8. `.github/workflows/ci.yml` - Added cache cleanup step before frontend build
+
 ---
 
 ## CI/CD Impact
 
-### Before:
+### Backend - Before:
 ```
 ❌ Found 11 import errors
 Error: Process completed with exit code 1
 ```
 
-### After:
+### Backend - After:
 ```
 ✅ All imports are valid! Checked 245 Python files.
 ```
 
+### Frontend - Before:
+```
+Failed to compile.
+Module not found: Can't resolve '@/components/ui/card'
+Error: Process completed with exit code 1
+```
+
+### Frontend - After:
+```
+✓ Compiled successfully
+✓ Linting and checking validity of types
+✓ Generating static pages (39/39)
+```
+
 ### Pipeline Status:
-- ✅ Import validation - PASSING
-- ✅ Module structure - PASSING
-- ✅ Static analysis - PASSING
+- ✅ Backend import validation - PASSING
+- ✅ Backend module structure - PASSING
+- ✅ Backend static analysis - PASSING
+- ✅ Frontend build - PASSING
+- ✅ Frontend type checking - PASSING
 
 ---
 
@@ -278,14 +299,21 @@ Error: Process completed with exit code 1
 
 ### Pre-commit Checks:
 ```bash
-# Check for BOM in Python files
+# Backend - Check for BOM in Python files
 find . -name "*.py" -exec file {} \; | grep "BOM"
 
-# Validate all imports
+# Backend - Validate all imports
+cd backend
 python scripts/validate_imports.py
 
-# Run CI simulation locally
+# Backend - Run CI simulation locally
+cd backend
 make test-ci
+
+# Frontend - Clear cache and rebuild
+cd frontend
+rm -rf .next
+npm run build
 ```
 
 ### Editor Settings:
@@ -295,6 +323,36 @@ make test-ci
   "files.autoGuessEncoding": false
 }
 ```
+
+### Common Issues:
+
+#### Frontend Build Failures:
+**Symptom**: `Module not found: Can't resolve '@/components/ui/...'`
+**Cause**: Stale `.next` build cache (especially in CI/CD environments)
+**Solution**:
+
+Local development:
+```bash
+cd frontend
+rm -rf .next
+npm run build
+```
+
+CI/CD (GitHub Actions):
+```yaml
+- name: Clean build cache
+  working-directory: ./frontend
+  run: rm -rf .next || true
+
+- name: Build application
+  working-directory: ./frontend
+  run: npm run build:ci
+```
+
+#### Backend Import Errors:
+**Symptom**: `ERROR: ... not found in app.endpoints`
+**Cause**: Missing exports in `__init__.py` files
+**Solution**: Add module to both import statement and `__all__` list
 
 ---
 

@@ -87,6 +87,10 @@ jobs:
       working-directory: ./frontend
       run: npm run lint . || echo "ESLint failed, but continuing..."
 
+    - name: Clean build cache
+      working-directory: ./frontend
+      run: rm -rf .next || true
+
     - name: Build application
       working-directory: ./frontend
       run: npm run build:ci
