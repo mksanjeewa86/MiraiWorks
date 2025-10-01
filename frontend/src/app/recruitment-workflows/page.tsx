@@ -1609,14 +1609,19 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
           // Create new node with integration
           try {
             if (step.isIntegrated && (nodeData.create_interview || nodeData.create_todo)) {
+              console.log('Creating node with integration:', { step: step.title, nodeData });
               const nodeResponse = await recruitmentWorkflowsApi.createNodeWithIntegration(process.id, nodeData);
+              console.log('Node integration response:', nodeResponse);
+
               if (nodeResponse.success && nodeResponse.data) {
                 // Update step with the actual linked IDs
                 if (nodeResponse.data.interview) {
+                  console.log('Interview created:', nodeResponse.data.interview);
                   createdInterviews.push(nodeResponse.data.interview);
                   step.interview_id = nodeResponse.data.interview.id;
                 }
                 if (nodeResponse.data.todo) {
+                  console.log('Todo created:', nodeResponse.data.todo);
                   createdTodos.push(nodeResponse.data.todo);
                   step.todo_id = nodeResponse.data.todo.id;
                 }
@@ -1668,28 +1673,36 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
 
       onSave(updatedProcess);
 
+      console.log('Workflow saved!', { createdInterviews, createdTodos });
+
       let successMessage = '✅ Workflow saved successfully!';
 
       // Show integration results
       if (createdInterviews.length > 0 || createdTodos.length > 0) {
         successMessage += `\n\n📊 Integration Results:`;
         if (createdInterviews.length > 0) {
-          successMessage += `\n🎙️ Created ${createdInterviews.length} interview templates`;
+          successMessage += `\n🎙️ Created ${createdInterviews.length} interview(s)`;
+          createdInterviews.forEach((interview, i) => {
+            successMessage += `\n   Interview ${i + 1}: ID ${interview.id}`;
+          });
         }
         if (createdTodos.length > 0) {
-          successMessage += `\n📋 Created ${createdTodos.length} todo assignments`;
+          successMessage += `\n📋 Created ${createdTodos.length} todo(s)`;
+          createdTodos.forEach((todo, i) => {
+            successMessage += `\n   Todo ${i + 1}: ID ${todo.id}`;
+          });
         }
 
         // Show assignment information
         if (assignedCandidates.length > 0) {
           successMessage += `\n\n👥 Assignments:`;
-          successMessage += `\n• ${assignedCandidates.length} candidate${assignedCandidates.length !== 1 ? 's' : ''} assigned to all records`;
+          successMessage += `\n• ${assignedCandidates.length} candidate${assignedCandidates.length !== 1 ? 's' : ''} assigned`;
         }
         if (workflowViewers.length > 0) {
-          successMessage += `\n• ${workflowViewers.length} viewer${workflowViewers.length !== 1 ? 's' : ''} added to all records`;
+          successMessage += `\n• ${workflowViewers.length} viewer${workflowViewers.length !== 1 ? 's' : ''} added`;
         }
 
-        successMessage += `\n\n💡 You can now view these in the Interviews and Todos sections!`;
+        successMessage += `\n\n💡 Check /interviews and /todos pages to see them!`;
       }
 
       alert(successMessage);
@@ -1971,7 +1984,9 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
               ) : (
                 /* Linear Workflow Steps */
                 <div className="space-y-4">
-                  {steps.map((step, index) => (
+                  {steps.map((step, index) => {
+                    console.log(`Step ${index}:`, { id: step.id, interview_id: step.interview_id, todo_id: step.todo_id, isIntegrated: step.isIntegrated, realId: step.realId });
+                    return (
                     <div key={step.id} className="relative">
                       <div
                         draggable
@@ -2109,7 +2124,8 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
                         </div>
                       )}
                     </div>
-                  ))}
+                  );
+                  })}
                 </div>
               )}
             </div>
@@ -2329,10 +2345,31 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
         </div>
       </div>
 
-      {/* Interview Edit Modal */}
+      {/* Modals for editing */}
+      {isTodoModalOpen && (
+        <TaskModal
+          isOpen={isTodoModalOpen}
+          onClose={() => {
+            setIsTodoModalOpen(false);
+            setEditingTodo(null);
+          }}
+          onSuccess={() => {
+            setIsTodoModalOpen(false);
+            setEditingTodo(null);
+            alert('Todo updated successfully!');
+          }}
+          editingTodo={editingTodo}
+        />
+      )}
+
       {isInterviewModalOpen && editingInterview && (
-        <div className="fixed inset-0 z-[60] overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-[60] overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4"
+             onClick={() => {
+               setIsInterviewModalOpen(false);
+               setEditingInterview(null);
+             }}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+               onClick={(e) => e.stopPropagation()}>
             <div className="border-b border-gray-200 p-6 flex items-center justify-between">
               <h2 className="text-xl font-bold text-gray-900">Edit Interview</h2>
               <button
@@ -2422,21 +2459,6 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
           </div>
         </div>
       )}
-
-      {/* Todo Edit Modal */}
-      <TaskModal
-        isOpen={isTodoModalOpen}
-        onClose={() => {
-          setIsTodoModalOpen(false);
-          setEditingTodo(null);
-        }}
-        onSuccess={() => {
-          setIsTodoModalOpen(false);
-          setEditingTodo(null);
-          alert('Todo updated successfully!');
-        }}
-        editingTodo={editingTodo}
-      />
     </div>
   );
 }
