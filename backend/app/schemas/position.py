@@ -2,6 +2,7 @@ from datetime import datetime
 from enum import Enum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+from typing import Optional
 
 
 # Enums
@@ -63,27 +64,27 @@ class PositionBase(BaseModel):
 
     title: str = Field(..., max_length=255, min_length=1)
     description: str = Field(..., min_length=10)
-    summary: str | None = Field(None, max_length=1000)
-    department: str | None = Field(None, max_length=100)
-    location: str | None = Field(None, max_length=255)
-    country: str | None = Field(None, max_length=100)
-    city: str | None = Field(None, max_length=100)
+    summary: Optional[str] = Field(None, max_length=1000)
+    department: Optional[str] = Field(None, max_length=100)
+    location: Optional[str] = Field(None, max_length=255)
+    country: Optional[str] = Field(None, max_length=100)
+    city: Optional[str] = Field(None, max_length=100)
     job_type: PositionType = PositionType.FULL_TIME
     experience_level: ExperienceLevel = ExperienceLevel.MID_LEVEL
     remote_type: RemoteType = RemoteType.ON_SITE
-    requirements: str | None = None
+    requirements: Optional[str] = None
     preferred_skills: list[str] | None = None  # Will be JSON serialized
     required_skills: list[str] | None = None  # Will be JSON serialized
     benefits: list[str] | None = None  # Will be JSON serialized
     perks: list[str] | None = None  # Will be JSON serialized
-    application_deadline: datetime | None = Field(None, alias="deadline")
-    external_apply_url: str | None = Field(None, max_length=1000)
+    application_deadline: Optional[datetime] = Field(None, alias="deadline")
+    external_apply_url: Optional[str] = Field(None, max_length=1000)
     application_questions: list[dict] | None = None  # Will be JSON serialized
     is_featured: bool = False
     is_urgent: bool = False
-    seo_title: str | None = Field(None, max_length=255)
-    seo_description: str | None = Field(None, max_length=500)
-    social_image_url: str | None = Field(None, max_length=1000)
+    seo_title: Optional[str] = Field(None, max_length=255)
+    seo_description: Optional[str] = Field(None, max_length=500)
+    social_image_url: Optional[str] = Field(None, max_length=1000)
 
     @field_validator("job_type", mode="before")
     @classmethod
@@ -120,8 +121,8 @@ class PositionBase(BaseModel):
 
 
 class PositionSalaryInfo(BaseModel):
-    salary_min: int | None = Field(None, gt=0)  # In cents
-    salary_max: int | None = Field(None, gt=0)  # In cents
+    salary_min: Optional[int] = Field(None, gt=0)  # In cents
+    salary_max: Optional[int] = Field(None, gt=0)  # In cents
     salary_type: SalaryType = SalaryType.ANNUAL
     salary_currency: str = Field("USD", max_length=3)
     show_salary: bool = False
@@ -136,41 +137,41 @@ class PositionSalaryInfo(BaseModel):
 
 class PositionCreate(PositionBase, PositionSalaryInfo):
     company_id: int
-    posted_by: int | None = None
+    posted_by: Optional[int] = None
 
 
 class PositionUpdate(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
-    title: str | None = Field(None, max_length=255, min_length=1)
-    description: str | None = Field(None, min_length=10)
-    summary: str | None = Field(None, max_length=1000)
-    department: str | None = Field(None, max_length=100)
-    location: str | None = Field(None, max_length=255)
-    country: str | None = Field(None, max_length=100)
-    city: str | None = Field(None, max_length=100)
-    job_type: PositionType | None = None
-    experience_level: ExperienceLevel | None = None
-    remote_type: RemoteType | None = None
-    requirements: str | None = None
+    title: Optional[str] = Field(None, max_length=255, min_length=1)
+    description: Optional[str] = Field(None, min_length=10)
+    summary: Optional[str] = Field(None, max_length=1000)
+    department: Optional[str] = Field(None, max_length=100)
+    location: Optional[str] = Field(None, max_length=255)
+    country: Optional[str] = Field(None, max_length=100)
+    city: Optional[str] = Field(None, max_length=100)
+    job_type: Optional[PositionType] = None
+    experience_level: Optional[ExperienceLevel] = None
+    remote_type: Optional[RemoteType] = None
+    requirements: Optional[str] = None
     preferred_skills: list[str] | None = None
     required_skills: list[str] | None = None
     benefits: list[str] | None = None
     perks: list[str] | None = None
-    salary_min: int | None = Field(None, gt=0)
-    salary_max: int | None = Field(None, gt=0)
-    salary_type: SalaryType | None = None
-    salary_currency: str | None = Field(None, max_length=3)
-    show_salary: bool | None = None
-    application_deadline: datetime | None = Field(None, alias="deadline")
-    external_apply_url: str | None = Field(None, max_length=1000)
+    salary_min: Optional[int] = Field(None, gt=0)
+    salary_max: Optional[int] = Field(None, gt=0)
+    salary_type: Optional[SalaryType] = None
+    salary_currency: Optional[str] = Field(None, max_length=3)
+    show_salary: Optional[bool] = None
+    application_deadline: Optional[datetime] = Field(None, alias="deadline")
+    external_apply_url: Optional[str] = Field(None, max_length=1000)
     application_questions: list[dict] | None = None
-    status: PositionStatus | None = None
-    is_featured: bool | None = None
-    is_urgent: bool | None = None
-    seo_title: str | None = Field(None, max_length=255)
-    seo_description: str | None = Field(None, max_length=500)
-    social_image_url: str | None = Field(None, max_length=1000)
+    status: Optional[PositionStatus] = None
+    is_featured: Optional[bool] = None
+    is_urgent: Optional[bool] = None
+    seo_title: Optional[str] = Field(None, max_length=255)
+    seo_description: Optional[str] = Field(None, max_length=500)
+    social_image_url: Optional[str] = Field(None, max_length=1000)
 
     @field_validator("job_type", mode="before")
     @classmethod
@@ -208,18 +209,18 @@ class PositionUpdate(BaseModel):
 
 class PositionInfo(PositionBase, PositionSalaryInfo):
     title: str = Field(default="", max_length=255)
-    description: str | None = None
+    description: Optional[str] = None
     id: int
-    slug: str | None = None
+    slug: Optional[str] = None
     company_id: int
     status: PositionStatus = PositionStatus.DRAFT
     view_count: int = 0
     application_count: int = 0
-    published_at: datetime | None = None
-    expires_at: datetime | None = None
-    posted_by: int | None = None
-    created_at: datetime | None = None
-    updated_at: datetime | None = None
+    published_at: Optional[datetime] = None
+    expires_at: Optional[datetime] = None
+    posted_by: Optional[int] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     @field_validator("title", mode="before")
     @classmethod
@@ -308,46 +309,46 @@ class PositionInfo(PositionBase, PositionSalaryInfo):
 
     # Computed properties
     is_active: bool = False
-    days_since_published: int | None = None
-    salary_range_display: str | None = None
+    days_since_published: Optional[int] = None
+    salary_range_display: Optional[str] = None
 
     # Company info (from relationship)
-    company_name: str | None = None
-    company_logo_url: str | None = None
+    company_name: Optional[str] = None
+    company_logo_url: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
 
 # Job Application Schemas
 class PositionApplicationBase(BaseModel):
-    cover_letter: str | None = None
+    cover_letter: Optional[str] = None
     application_answers: list[dict] | None = None  # Will be JSON serialized
-    source: str | None = Field(None, max_length=100)
+    source: Optional[str] = Field(None, max_length=100)
 
 
 class PositionApplicationCreate(PositionApplicationBase):
     position_id: int
-    resume_id: int | None = None
+    resume_id: Optional[int] = None
 
 
 class PositionApplicationUpdate(BaseModel):
-    status: ApplicationStatus | None = None
-    cover_letter: str | None = None
-    notes: str | None = None
-    last_contacted_at: datetime | None = None
+    status: Optional[ApplicationStatus] = None
+    cover_letter: Optional[str] = None
+    notes: Optional[str] = None
+    last_contacted_at: Optional[datetime] = None
 
 
 class PositionApplicationInfo(PositionApplicationBase):
     id: int
     position_id: int
     candidate_id: int
-    resume_id: int | None = None
+    resume_id: Optional[int] = None
     status: ApplicationStatus = ApplicationStatus.APPLIED
     status_updated_at: datetime
-    status_updated_by: int | None = None
-    last_contacted_at: datetime | None = None
-    notes: str | None = None
-    referrer_id: int | None = None
+    status_updated_by: Optional[int] = None
+    last_contacted_at: Optional[datetime] = None
+    notes: Optional[str] = None
+    referrer_id: Optional[int] = None
     applied_at: datetime
     updated_at: datetime
 
@@ -356,41 +357,41 @@ class PositionApplicationInfo(PositionApplicationBase):
     days_since_applied: int = 0
 
     # Related info
-    job_title: str | None = None
-    candidate_name: str | None = None
-    candidate_email: str | None = None
+    job_title: Optional[str] = None
+    candidate_name: Optional[str] = None
+    candidate_email: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
 
 # Company Profile Schemas
 class CompanyProfileBase(BaseModel):
-    tagline: str | None = Field(None, max_length=255)
-    mission: str | None = None
+    tagline: Optional[str] = Field(None, max_length=255)
+    mission: Optional[str] = None
     values: list[str] | None = None  # Will be JSON serialized
-    culture: str | None = None
-    logo_url: str | None = Field(None, max_length=1000)
-    banner_url: str | None = Field(None, max_length=1000)
+    culture: Optional[str] = None
+    logo_url: Optional[str] = Field(None, max_length=1000)
+    banner_url: Optional[str] = Field(None, max_length=1000)
     gallery_images: list[str] | None = None  # Will be JSON serialized
-    company_video_url: str | None = Field(None, max_length=1000)
-    contact_email: str | None = Field(None, max_length=255)
-    phone: str | None = Field(None, max_length=50)
-    address: str | None = None
-    linkedin_url: str | None = Field(None, max_length=500)
-    twitter_url: str | None = Field(None, max_length=500)
-    facebook_url: str | None = Field(None, max_length=500)
-    instagram_url: str | None = Field(None, max_length=500)
-    youtube_url: str | None = Field(None, max_length=500)
-    founded_year: int | None = Field(None, ge=1800, le=2030)
-    employee_count: str | None = Field(None, max_length=50)
-    headquarters: str | None = Field(None, max_length=255)
-    funding_stage: str | None = Field(None, max_length=100)
-    benefits_summary: str | None = None
+    company_video_url: Optional[str] = Field(None, max_length=1000)
+    contact_email: Optional[str] = Field(None, max_length=255)
+    phone: Optional[str] = Field(None, max_length=50)
+    address: Optional[str] = None
+    linkedin_url: Optional[str] = Field(None, max_length=500)
+    twitter_url: Optional[str] = Field(None, max_length=500)
+    facebook_url: Optional[str] = Field(None, max_length=500)
+    instagram_url: Optional[str] = Field(None, max_length=500)
+    youtube_url: Optional[str] = Field(None, max_length=500)
+    founded_year: Optional[int] = Field(None, ge=1800, le=2030)
+    employee_count: Optional[str] = Field(None, max_length=50)
+    headquarters: Optional[str] = Field(None, max_length=255)
+    funding_stage: Optional[str] = Field(None, max_length=100)
+    benefits_summary: Optional[str] = None
     perks_highlights: list[str] | None = None  # Will be JSON serialized
     is_public: bool = True
-    seo_title: str | None = Field(None, max_length=255)
-    seo_description: str | None = Field(None, max_length=500)
-    custom_slug: str | None = Field(
+    seo_title: Optional[str] = Field(None, max_length=255)
+    seo_description: Optional[str] = Field(None, max_length=500)
+    custom_slug: Optional[str] = Field(
         None, max_length=100, pattern=r"^[a-zA-Z0-9-_]+$"
     )
 
@@ -407,36 +408,36 @@ class CompanyProfileInfo(CompanyProfileBase):
     id: int
     company_id: int
     profile_views: int = 0
-    last_updated_by: int | None = None
+    last_updated_by: Optional[int] = None
     created_at: datetime
     updated_at: datetime
     public_slug: str
 
     # Company info
-    company_name: str | None = None
+    company_name: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
 
 # List and Filter Schemas
 class PositionListParams(BaseModel):
-    search: str | None = None
-    company_id: int | None = None
-    job_type: PositionType | None = None
-    experience_level: ExperienceLevel | None = None
-    remote_type: RemoteType | None = None
-    location: str | None = None
-    country: str | None = None
-    city: str | None = None
-    status: PositionStatus | None = None
-    is_featured: bool | None = None
-    salary_min: int | None = None
-    salary_max: int | None = None
-    sort_by: str | None = Field(
+    search: Optional[str] = None
+    company_id: Optional[int] = None
+    job_type: Optional[PositionType] = None
+    experience_level: Optional[ExperienceLevel] = None
+    remote_type: Optional[RemoteType] = None
+    location: Optional[str] = None
+    country: Optional[str] = None
+    city: Optional[str] = None
+    status: Optional[PositionStatus] = None
+    is_featured: Optional[bool] = None
+    salary_min: Optional[int] = None
+    salary_max: Optional[int] = None
+    sort_by: Optional[str] = Field(
         "published_at",
         pattern=r"^(published_at|created_at|title|salary_min|view_count)$",
     )
-    sort_order: str | None = Field("desc", pattern=r"^(asc|desc)$")
+    sort_order: Optional[str] = Field("desc", pattern=r"^(asc|desc)$")
     limit: int = Field(50, ge=1, le=100)
     offset: int = Field(0, ge=0)
 
@@ -465,15 +466,15 @@ class PositionBulkStatusUpdateRequest(BaseModel):
 
 
 class PositionApplicationListParams(BaseModel):
-    position_id: int | None = None
-    candidate_id: int | None = None
-    status: ApplicationStatus | None = None
-    applied_after: datetime | None = None
-    applied_before: datetime | None = None
-    sort_by: str | None = Field(
+    position_id: Optional[int] = None
+    candidate_id: Optional[int] = None
+    status: Optional[ApplicationStatus] = None
+    applied_after: Optional[datetime] = None
+    applied_before: Optional[datetime] = None
+    sort_by: Optional[str] = Field(
         "applied_at", pattern=r"^(applied_at|status_updated_at)$"
     )
-    sort_order: str | None = Field("desc", pattern=r"^(asc|desc)$")
+    sort_order: Optional[str] = Field("desc", pattern=r"^(asc|desc)$")
     limit: int = Field(50, ge=1, le=100)
     offset: int = Field(0, ge=0)
 
@@ -500,7 +501,7 @@ class PositionSearchResponse(BaseModel):
     total: int
     facets: dict = Field(default_factory=dict)  # For search faceting
     has_more: bool = False
-    search_query: str | None = None
+    search_query: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 

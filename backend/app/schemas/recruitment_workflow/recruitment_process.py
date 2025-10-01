@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -12,9 +12,9 @@ from app.schemas.recruitment_workflow.process_viewer import ProcessViewerInfo
 class RecruitmentProcessBase(BaseModel):
     """Base schema for recruitment process"""
     name: str = Field(..., min_length=1, max_length=255, description="Process name")
-    description: str | None = Field(None, description="Process description")
-    position_id: int | None = Field(None, description="Associated position ID")
-    settings: dict[str, Any] | None = Field(default_factory=dict, description="Process settings")
+    description: Optional[str] = Field(None, description="Process description")
+    position_id: Optional[int] = Field(None, description="Associated position ID")
+    settings: Optional[dict[str, Any]] = Field(default_factory=dict, description="Process settings")
 
     @field_validator('name')
     @classmethod
@@ -25,7 +25,7 @@ class RecruitmentProcessBase(BaseModel):
 class RecruitmentProcessCreate(RecruitmentProcessBase):
     """Schema for creating a recruitment process"""
     is_template: bool = Field(False, description="Whether this is a template")
-    template_name: str | None = Field(None, max_length=255, description="Template name if is_template=True")
+    template_name: Optional[str] = Field(None, max_length=255, description="Template name if is_template=True")
 
     @field_validator('template_name')
     @classmethod
@@ -39,8 +39,8 @@ class RecruitmentProcessCreate(RecruitmentProcessBase):
 
 class RecruitmentProcessUpdate(BaseModel):
     """Schema for updating a recruitment process"""
-    name: str | None = Field(None, min_length=1, max_length=255)
-    description: str | None = None
+    name: Optional[str] = Field(None, min_length=1, max_length=255)
+    description: Optional[str] = None
     settings: dict[str, Any] | None = None
 
     @field_validator('name')
@@ -56,19 +56,19 @@ class RecruitmentProcessInfo(RecruitmentProcessBase):
     id: int
     employer_company_id: int
     created_by: int
-    updated_by: int | None
+    updated_by: Optional[int]
     status: ProcessStatus
     version: int
     is_template: bool
-    template_name: str | None
+    template_name: Optional[str]
     created_at: datetime
     updated_at: datetime
-    activated_at: datetime | None
-    archived_at: datetime | None
+    activated_at: Optional[datetime]
+    archived_at: Optional[datetime]
 
     # Computed fields
-    node_count: int | None = Field(None, description="Number of nodes in the process")
-    active_candidate_count: int | None = Field(None, description="Number of active candidates")
+    node_count: Optional[int] = Field(None, description="Number of nodes in the process")
+    active_candidate_count: Optional[int] = Field(None, description="Number of active candidates")
 
     class Config:
         from_attributes = True
@@ -81,8 +81,8 @@ class RecruitmentProcessDetails(RecruitmentProcessInfo):
     viewers: list[ProcessViewerInfo] = Field(default_factory=list)
 
     # Statistics
-    completion_rate: float | None = Field(None, description="Process completion rate")
-    average_duration_days: float | None = Field(None, description="Average completion time in days")
+    completion_rate: Optional[float] = Field(None, description="Process completion rate")
+    average_duration_days: Optional[float] = Field(None, description="Average completion time in days")
 
 
 class ProcessActivation(BaseModel):
@@ -92,7 +92,7 @@ class ProcessActivation(BaseModel):
 
 class ProcessArchive(BaseModel):
     """Schema for archiving a process"""
-    reason: str | None = Field(None, max_length=500, description="Reason for archiving")
+    reason: Optional[str] = Field(None, max_length=500, description="Reason for archiving")
 
 
 class ProcessClone(BaseModel):
@@ -110,9 +110,9 @@ class ProcessClone(BaseModel):
 class ProcessTemplate(BaseModel):
     """Schema for creating a process template"""
     name: str = Field(..., min_length=1, max_length=255)
-    description: str | None = None
-    category: str | None = Field(None, max_length=100, description="Template category (e.g., engineering, sales)")
-    industry: str | None = Field(None, max_length=100, description="Industry this template is for")
+    description: Optional[str] = None
+    category: Optional[str] = Field(None, max_length=100, description="Template category (e.g., engineering, sales)")
+    industry: Optional[str] = Field(None, max_length=100, description="Industry this template is for")
     is_public: bool = Field(False, description="Whether this template is publicly available")
 
     @field_validator('name')
@@ -125,7 +125,7 @@ class ProcessTemplateInfo(ProcessTemplate):
     """Schema for process template information"""
     id: int
     created_by: int
-    company_id: int | None
+    company_id: Optional[int]
     usage_count: int
     created_at: datetime
 

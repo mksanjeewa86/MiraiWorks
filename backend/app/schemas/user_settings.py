@@ -1,12 +1,13 @@
 
 from pydantic import BaseModel, ConfigDict
+from typing import Optional
 
 
 class UserSettingsResponse(BaseModel):
     # Profile settings
-    job_title: str | None = None
-    bio: str | None = None
-    avatar_url: str | None = None
+    job_title: Optional[str] = None
+    bio: Optional[str] = None
+    avatar_url: Optional[str] = None
 
     # Notification preferences
     email_notifications: bool = True
@@ -29,34 +30,34 @@ class UserSettingsResponse(BaseModel):
 
 class UserSettingsUpdate(BaseModel):
     # Profile settings
-    job_title: str | None = None
-    bio: str | None = None
-    avatar_url: str | None = None
+    job_title: Optional[str] = None
+    bio: Optional[str] = None
+    avatar_url: Optional[str] = None
 
     # Notification preferences
-    email_notifications: bool | None = None
-    push_notifications: bool | None = None
-    sms_notifications: bool | None = None
-    interview_reminders: bool | None = None
-    application_updates: bool | None = None
-    message_notifications: bool | None = None
+    email_notifications: Optional[bool] = None
+    push_notifications: Optional[bool] = None
+    sms_notifications: Optional[bool] = None
+    interview_reminders: Optional[bool] = None
+    application_updates: Optional[bool] = None
+    message_notifications: Optional[bool] = None
 
     # UI preferences
-    language: str | None = None
-    timezone: str | None = None
-    date_format: str | None = None
+    language: Optional[str] = None
+    timezone: Optional[str] = None
+    date_format: Optional[str] = None
 
     # Security settings (from User model)
-    require_2fa: bool | None = None
+    require_2fa: Optional[bool] = None
 
 
 class UserProfileUpdate(BaseModel):
-    first_name: str | None = None
-    last_name: str | None = None
-    phone: str | None = None
-    job_title: str | None = None
-    bio: str | None = None
-    avatar_url: str | None = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    phone: Optional[str] = None
+    job_title: Optional[str] = None
+    bio: Optional[str] = None
+    avatar_url: Optional[str] = None
 
 
 class UserProfileResponse(BaseModel):
@@ -64,10 +65,10 @@ class UserProfileResponse(BaseModel):
     email: str
     first_name: str
     last_name: str
-    phone: str | None = None
+    phone: Optional[str] = None
     full_name: str
-    job_title: str | None = None
-    bio: str | None = None
-    avatar_url: str | None = None
+    job_title: Optional[str] = None
+    bio: Optional[str] = None
+    avatar_url: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -15,25 +16,25 @@ from app.utils.constants import (
 
 class TodoBase(BaseModel):
     title: str = Field(..., max_length=255)
-    description: str | None = None
-    notes: str | None = None
-    priority: str | None = Field(default=None, max_length=20)
-    due_date: datetime | None = None
-    status: str | None = Field(default=TodoStatus.PENDING.value)
-    assigned_user_id: int | None = None
-    visibility: str | None = Field(default=TodoVisibility.PRIVATE.value)
+    description: Optional[str] = None
+    notes: Optional[str] = None
+    priority: Optional[str] = Field(default=None, max_length=20)
+    due_date: Optional[datetime] = None
+    status: Optional[str] = Field(default=TodoStatus.PENDING.value)
+    assigned_user_id: Optional[int] = None
+    visibility: Optional[str] = Field(default=TodoVisibility.PRIVATE.value)
     viewer_ids: list[int] | None = None
 
     # Assignment workflow fields
-    todo_type: str | None = Field(default=TodoType.REGULAR.value)
-    publish_status: str | None = Field(default=TodoPublishStatus.PUBLISHED.value)
-    assignment_status: str | None = None
-    assignment_assessment: str | None = None
-    assignment_score: int | None = None
+    todo_type: Optional[str] = Field(default=TodoType.REGULAR.value)
+    publish_status: Optional[str] = Field(default=TodoPublishStatus.PUBLISHED.value)
+    assignment_status: Optional[str] = None
+    assignment_assessment: Optional[str] = None
+    assignment_score: Optional[int] = None
 
     @field_validator("due_date", mode="before")
     @classmethod
-    def ensure_timezone(cls, value: datetime | None) -> datetime | None:
+    def ensure_timezone(cls, value: Optional[datetime]) -> Optional[datetime]:
         if value is None:
             return value
         if isinstance(value, str):
@@ -47,7 +48,7 @@ class TodoBase(BaseModel):
 
     @field_validator("status")
     @classmethod
-    def validate_status(cls, value: str | None) -> str:
+    def validate_status(cls, value: Optional[str]) -> str:
         if value is None:
             return TodoStatus.PENDING.value
         allowed = {status.value for status in TodoStatus}
@@ -57,7 +58,7 @@ class TodoBase(BaseModel):
 
     @field_validator("visibility")
     @classmethod
-    def validate_visibility(cls, value: str | None) -> str:
+    def validate_visibility(cls, value: Optional[str]) -> str:
         if value is None:
             return TodoVisibility.PRIVATE.value
         allowed = {visibility.value for visibility in TodoVisibility}
@@ -74,7 +75,7 @@ class TodoBase(BaseModel):
 
     @field_validator("todo_type")
     @classmethod
-    def validate_todo_type(cls, value: str | None) -> str:
+    def validate_todo_type(cls, value: Optional[str]) -> str:
         if value is None:
             return TodoType.REGULAR.value
         allowed = {todo_type.value for todo_type in TodoType}
@@ -84,7 +85,7 @@ class TodoBase(BaseModel):
 
     @field_validator("publish_status")
     @classmethod
-    def validate_publish_status(cls, value: str | None) -> str:
+    def validate_publish_status(cls, value: Optional[str]) -> str:
         if value is None:
             return TodoPublishStatus.PUBLISHED.value
         allowed = {status.value for status in TodoPublishStatus}
@@ -94,7 +95,7 @@ class TodoBase(BaseModel):
 
     @field_validator("assignment_status")
     @classmethod
-    def validate_assignment_status(cls, value: str | None) -> str | None:
+    def validate_assignment_status(cls, value: Optional[str]) -> Optional[str]:
         if value is None:
             return value
         allowed = {status.value for status in AssignmentStatus}
@@ -108,26 +109,26 @@ class TodoCreate(TodoBase):
 
 
 class TodoUpdate(BaseModel):
-    title: str | None = Field(default=None, max_length=255)
-    description: str | None = None
-    notes: str | None = None
-    priority: str | None = Field(default=None, max_length=20)
-    due_date: datetime | None = None
-    status: str | None = None
-    assigned_user_id: int | None = None
-    visibility: str | None = None
+    title: Optional[str] = Field(default=None, max_length=255)
+    description: Optional[str] = None
+    notes: Optional[str] = None
+    priority: Optional[str] = Field(default=None, max_length=20)
+    due_date: Optional[datetime] = None
+    status: Optional[str] = None
+    assigned_user_id: Optional[int] = None
+    visibility: Optional[str] = None
     viewer_ids: list[int] | None = None
 
     # Assignment workflow fields
-    todo_type: str | None = None
-    publish_status: str | None = None
-    assignment_status: str | None = None
-    assignment_assessment: str | None = None
-    assignment_score: int | None = None
+    todo_type: Optional[str] = None
+    publish_status: Optional[str] = None
+    assignment_status: Optional[str] = None
+    assignment_assessment: Optional[str] = None
+    assignment_score: Optional[int] = None
 
     @field_validator("due_date", mode="before")
     @classmethod
-    def ensure_timezone(cls, value: datetime | None) -> datetime | None:
+    def ensure_timezone(cls, value: Optional[datetime]) -> Optional[datetime]:
         if value is None:
             return value
         if isinstance(value, str):
@@ -141,14 +142,14 @@ class TodoUpdate(BaseModel):
 
     @field_validator("title")
     @classmethod
-    def validate_title(cls, value: str | None) -> str | None:
+    def validate_title(cls, value: Optional[str]) -> Optional[str]:
         if value is not None and not value.strip():
             raise ValueError("Title cannot be empty")
         return value.strip() if value else value
 
     @field_validator("status")
     @classmethod
-    def validate_status(cls, value: str | None) -> str | None:
+    def validate_status(cls, value: Optional[str]) -> Optional[str]:
         if value is None:
             return value
         allowed = {status.value for status in TodoStatus}
@@ -158,7 +159,7 @@ class TodoUpdate(BaseModel):
 
     @field_validator("visibility")
     @classmethod
-    def validate_visibility(cls, value: str | None) -> str | None:
+    def validate_visibility(cls, value: Optional[str]) -> Optional[str]:
         if value is None:
             return value
         allowed = {visibility.value for visibility in TodoVisibility}
@@ -172,18 +173,18 @@ class TodoRead(BaseModel):
 
     id: int
     owner_id: int
-    assigned_user_id: int | None = None
+    assigned_user_id: Optional[int] = None
     title: str
-    description: str | None = None
-    notes: str | None = None
+    description: Optional[str] = None
+    notes: Optional[str] = None
     status: str
-    priority: str | None = None
+    priority: Optional[str] = None
     visibility: str
-    due_date: datetime | None = None
-    completed_at: datetime | None = None
-    expired_at: datetime | None = None
+    due_date: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+    expired_at: Optional[datetime] = None
     is_deleted: bool
-    deleted_at: datetime | None = None
+    deleted_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
     is_expired: bool
@@ -191,12 +192,12 @@ class TodoRead(BaseModel):
     # Assignment workflow fields
     todo_type: str
     publish_status: str
-    assignment_status: str | None = None
-    assignment_assessment: str | None = None
-    assignment_score: int | None = None
-    submitted_at: datetime | None = None
-    reviewed_at: datetime | None = None
-    reviewed_by: int | None = None
+    assignment_status: Optional[str] = None
+    assignment_assessment: Optional[str] = None
+    assignment_score: Optional[int] = None
+    submitted_at: Optional[datetime] = None
+    reviewed_at: Optional[datetime] = None
+    reviewed_by: Optional[int] = None
 
 
 class TodoListResponse(BaseModel):
@@ -217,12 +218,12 @@ class TodoStatusUpdate(BaseModel):
 
 
 class TodoAssignmentUpdate(BaseModel):
-    assigned_user_id: int | None = None
-    visibility: str | None = None
+    assigned_user_id: Optional[int] = None
+    visibility: Optional[str] = None
 
     @field_validator("visibility")
     @classmethod
-    def validate_visibility(cls, value: str | None) -> str | None:
+    def validate_visibility(cls, value: Optional[str]) -> Optional[str]:
         if value is None:
             return value
         allowed = {visibility.value for visibility in TodoVisibility}
@@ -264,7 +265,7 @@ class TodoViewersUpdate(BaseModel):
 
 class TodoWithAssignedUser(TodoRead):
     """Todo with assigned user information."""
-    assigned_user: AssignableUser | None = None
+    assigned_user: Optional[AssignableUser] = None
     viewers: list[TodoViewer] | None = None
 
 
@@ -273,9 +274,9 @@ class TodoExtensionValidation(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     can_request_extension: bool
-    max_allowed_due_date: datetime | None = None
+    max_allowed_due_date: Optional[datetime] = None
     days_extension_allowed: int = 3
-    reason: str | None = None  # Reason why extension cannot be requested
+    reason: Optional[str] = None  # Reason why extension cannot be requested
 
 
 # Assignment workflow schemas
@@ -294,14 +295,14 @@ class TodoPublishUpdate(BaseModel):
 
 class AssignmentSubmission(BaseModel):
     """Submit an assignment for review."""
-    notes: str | None = None  # Optional submission notes
+    notes: Optional[str] = None  # Optional submission notes
 
 
 class AssignmentReview(BaseModel):
     """Review an assignment and provide assessment."""
     assignment_status: str
-    assessment: str | None = None
-    score: int | None = Field(default=None, ge=0, le=100)
+    assessment: Optional[str] = None
+    score: Optional[int] = Field(default=None, ge=0, le=100)
 
     @field_validator("assignment_status")
     @classmethod
@@ -316,4 +317,4 @@ class AssignmentWorkflowResponse(BaseModel):
     """Response for assignment workflow actions."""
     success: bool
     message: str
-    todo: TodoRead | None = None
+    todo: Optional[TodoRead] = None

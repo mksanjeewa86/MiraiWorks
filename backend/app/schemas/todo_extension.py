@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.schemas.todo import AssignableUser
 from app.utils.constants import ExtensionRequestStatus
+from typing import Optional
 
 
 class TodoExtensionRequestCreate(BaseModel):
@@ -33,7 +34,7 @@ class TodoExtensionRequestResponse(BaseModel):
     status: ExtensionRequestStatus = Field(
         ..., description="Response status (approved or rejected)"
     )
-    response_reason: str | None = Field(
+    response_reason: Optional[str] = Field(
         None, max_length=1000,
         description="Optional reason for the response"
     )
@@ -64,16 +65,16 @@ class TodoExtensionRequestRead(BaseModel):
     requested_due_date: datetime
     reason: str
     status: ExtensionRequestStatus
-    response_reason: str | None = None
-    responded_at: datetime | None = None
-    responded_by_id: int | None = None
+    response_reason: Optional[str] = None
+    responded_at: Optional[datetime] = None
+    responded_by_id: Optional[int] = None
     created_at: datetime
     updated_at: datetime
 
     # Related objects
     requested_by: AssignableUser
     creator: AssignableUser
-    responded_by: AssignableUser | None = None
+    responded_by: Optional[AssignableUser] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -92,9 +93,9 @@ class TodoExtensionValidation(BaseModel):
     """Schema for validating extension request constraints."""
 
     can_request_extension: bool
-    max_allowed_due_date: datetime | None = None
+    max_allowed_due_date: Optional[datetime] = None
     days_extension_allowed: int = 3
-    reason: str | None = None  # Reason why extension cannot be requested
+    reason: Optional[str] = None  # Reason why extension cannot be requested
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -111,6 +112,6 @@ class TodoExtensionNotification(BaseModel):
     requested_due_date: datetime
     reason: str
     status: ExtensionRequestStatus
-    response_reason: str | None = None
+    response_reason: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)

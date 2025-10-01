@@ -2,6 +2,7 @@ from datetime import datetime
 from enum import Enum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+from typing import Optional
 
 
 class VideoCallStatus(str, Enum):
@@ -26,8 +27,8 @@ class TranscriptionStatus(str, Enum):
 
 
 class VideoCallCreate(BaseModel):
-    job_id: int | None = None
-    interview_id: int | None = None
+    job_id: Optional[int] = None
+    interview_id: Optional[int] = None
     candidate_id: int
     scheduled_at: datetime
     transcription_enabled: bool = True
@@ -35,25 +36,25 @@ class VideoCallCreate(BaseModel):
 
 
 class VideoCallUpdate(BaseModel):
-    scheduled_at: datetime | None = None
-    status: VideoCallStatus | None = None
-    recording_url: str | None = None
-    transcription_enabled: bool | None = None
-    transcription_language: str | None = None
+    scheduled_at: Optional[datetime] = None
+    status: Optional[VideoCallStatus] = None
+    recording_url: Optional[str] = None
+    transcription_enabled: Optional[bool] = None
+    transcription_language: Optional[str] = None
 
 
 class VideoCallInfo(BaseModel):
     id: int
-    job_id: int | None = None
-    interview_id: int | None = None
+    job_id: Optional[int] = None
+    interview_id: Optional[int] = None
     interviewer_id: int
     candidate_id: int
     scheduled_at: datetime
-    started_at: datetime | None = None
-    ended_at: datetime | None = None
+    started_at: Optional[datetime] = None
+    ended_at: Optional[datetime] = None
     status: VideoCallStatus
     room_id: str
-    recording_url: str | None = None
+    recording_url: Optional[str] = None
     transcription_enabled: bool
     transcription_language: str
     created_at: datetime
@@ -77,7 +78,7 @@ class RecordingConsentInfo(BaseModel):
     video_call_id: int
     user_id: int
     consented: bool
-    consented_at: datetime | None = None
+    consented_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -87,7 +88,7 @@ class TranscriptionSegmentCreate(BaseModel):
     segment_text: str
     start_time: float = Field(..., ge=0)
     end_time: float = Field(..., ge=0)
-    confidence: float | None = Field(None, ge=0, le=1)
+    confidence: Optional[float] = Field(None, ge=0, le=1)
 
     @field_validator('end_time')
     @classmethod
@@ -104,7 +105,7 @@ class TranscriptionSegmentInfo(BaseModel):
     segment_text: str
     start_time: float
     end_time: float
-    confidence: float | None = None
+    confidence: Optional[float] = None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
@@ -113,13 +114,13 @@ class TranscriptionSegmentInfo(BaseModel):
 class CallTranscriptionInfo(BaseModel):
     id: int
     video_call_id: int
-    transcript_url: str | None = None
-    transcript_text: str | None = None
+    transcript_url: Optional[str] = None
+    transcript_text: Optional[str] = None
     language: str
     processing_status: TranscriptionStatus
-    word_count: int | None = None
+    word_count: Optional[int] = None
     created_at: datetime
-    processed_at: datetime | None = None
+    processed_at: Optional[datetime] = None
     segments: list[TranscriptionSegmentInfo] | None = []
 
     model_config = ConfigDict(from_attributes=True)
@@ -129,9 +130,9 @@ class CallParticipantInfo(BaseModel):
     id: int
     video_call_id: int
     user_id: int
-    joined_at: datetime | None = None
-    left_at: datetime | None = None
-    connection_quality: ConnectionQuality | None = None
-    device_info: dict | None = None
+    joined_at: Optional[datetime] = None
+    left_at: Optional[datetime] = None
+    connection_quality: Optional[ConnectionQuality] = None
+    device_info: Optional[dict] = None
 
     model_config = ConfigDict(from_attributes=True)

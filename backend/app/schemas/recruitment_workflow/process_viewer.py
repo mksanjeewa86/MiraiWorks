@@ -1,3 +1,5 @@
+from typing import Optional
+
 from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
@@ -46,7 +48,7 @@ class ProcessViewerCreate(ProcessViewerBase):
 
 class ProcessViewerUpdate(BaseModel):
     """Schema for updating a process viewer"""
-    role: ViewerRole | None = None
+    role: Optional[ViewerRole] = None
     permissions: dict[str, bool] | None = None
 
 
@@ -59,14 +61,14 @@ class ProcessViewerInfo(ProcessViewerBase):
     added_at: datetime
 
     # User information (from relationship)
-    user_name: str | None = Field(None, description="Name of the viewer")
-    user_email: str | None = Field(None, description="Email of the viewer")
-    added_by_name: str | None = Field(None, description="Name of user who added this viewer")
+    user_name: Optional[str] = Field(None, description="Name of the viewer")
+    user_email: Optional[str] = Field(None, description="Email of the viewer")
+    added_by_name: Optional[str] = Field(None, description="Name of user who added this viewer")
 
     # Computed permissions
     effective_permissions: list[str] | None = Field(None, description="All effective permissions")
-    can_execute: bool | None = Field(None, description="Whether can execute nodes")
-    can_view_all_candidates: bool | None = Field(None, description="Whether can view all candidates")
+    can_execute: Optional[bool] = Field(None, description="Whether can execute nodes")
+    can_view_all_candidates: Optional[bool] = Field(None, description="Whether can view all candidates")
 
     class Config:
         from_attributes = True
@@ -88,7 +90,7 @@ class BulkViewerAdd(BaseModel):
 class ViewerRoleChange(BaseModel):
     """Schema for changing a viewer's role"""
     new_role: ViewerRole = Field(..., description="New role for the viewer")
-    reason: str | None = Field(None, max_length=500, description="Reason for role change")
+    reason: Optional[str] = Field(None, max_length=500, description="Reason for role change")
 
 
 class ViewerPermissionChange(BaseModel):
@@ -127,7 +129,7 @@ class ViewerActivity(BaseModel):
     user_id: int
     user_name: str
     role: ViewerRole
-    last_activity: datetime | None
+    last_activity: Optional[datetime]
     actions_count: int = Field(0, description="Number of actions performed")
     executions_completed: int = Field(0, description="Number of executions completed")
     interviews_scheduled: int = Field(0, description="Number of interviews scheduled")
@@ -161,7 +163,7 @@ class ViewerInvitation(BaseModel):
     """Schema for inviting a viewer to a process"""
     email: str = Field(..., description="Email of the user to invite")
     role: ViewerRole = Field(..., description="Role to assign")
-    message: str | None = Field(None, max_length=1000, description="Custom invitation message")
+    message: Optional[str] = Field(None, max_length=1000, description="Custom invitation message")
     permissions: dict[str, bool] | None = Field(default_factory=dict, description="Custom permissions")
 
     @field_validator('email')
@@ -176,7 +178,7 @@ class ViewerInvitation(BaseModel):
 class ViewerInvitationResponse(BaseModel):
     """Schema for responding to a viewer invitation"""
     accept: bool = Field(..., description="Whether to accept the invitation")
-    message: str | None = Field(None, max_length=500, description="Response message")
+    message: Optional[str] = Field(None, max_length=500, description="Response message")
 
 
 class ViewerNotificationSettings(BaseModel):

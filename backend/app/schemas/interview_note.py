@@ -1,11 +1,12 @@
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
+from typing import Optional
 
 
 class InterviewNoteBase(BaseModel):
     """Base schema for interview notes."""
-    content: str | None = Field(None, description="Private note content")
+    content: Optional[str] = Field(None, description="Private note content")
 
 
 class InterviewNoteCreate(InterviewNoteBase):

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -9,11 +9,11 @@ from app.models.exam import ExamStatus, ExamType, QuestionType, SessionStatus
 
 class ExamBase(BaseModel):
     title: str = Field(..., min_length=1, max_length=255)
-    description: str | None = None
+    description: Optional[str] = None
     exam_type: ExamType = ExamType.CUSTOM
-    time_limit_minutes: int | None = Field(None, ge=1, le=480)  # Max 8 hours
+    time_limit_minutes: Optional[int] = Field(None, ge=1, le=480)  # Max 8 hours
     max_attempts: int = Field(1, ge=1, le=10)
-    passing_score: float | None = Field(None, ge=0, le=100)
+    passing_score: Optional[float] = Field(None, ge=0, le=100)
     is_randomized: bool = False
     allow_web_usage: bool = True
     monitor_web_usage: bool = False
@@ -22,7 +22,7 @@ class ExamBase(BaseModel):
     show_results_immediately: bool = True
     show_correct_answers: bool = False
     show_score: bool = True
-    instructions: str | None = None
+    instructions: Optional[str] = None
 
 
 class ExamCreate(ExamBase):
@@ -30,36 +30,36 @@ class ExamCreate(ExamBase):
 
 
 class ExamUpdate(BaseModel):
-    title: str | None = Field(None, min_length=1, max_length=255)
-    description: str | None = None
-    status: ExamStatus | None = None
-    time_limit_minutes: int | None = Field(None, ge=1, le=480)
-    max_attempts: int | None = Field(None, ge=1, le=10)
-    passing_score: float | None = Field(None, ge=0, le=100)
-    is_randomized: bool | None = None
-    allow_web_usage: bool | None = None
-    monitor_web_usage: bool | None = None
-    require_face_verification: bool | None = None
-    face_check_interval_minutes: int | None = Field(None, ge=1, le=60)
-    show_results_immediately: bool | None = None
-    show_correct_answers: bool | None = None
-    show_score: bool | None = None
-    instructions: str | None = None
+    title: Optional[str] = Field(None, min_length=1, max_length=255)
+    description: Optional[str] = None
+    status: Optional[ExamStatus] = None
+    time_limit_minutes: Optional[int] = Field(None, ge=1, le=480)
+    max_attempts: Optional[int] = Field(None, ge=1, le=10)
+    passing_score: Optional[float] = Field(None, ge=0, le=100)
+    is_randomized: Optional[bool] = None
+    allow_web_usage: Optional[bool] = None
+    monitor_web_usage: Optional[bool] = None
+    require_face_verification: Optional[bool] = None
+    face_check_interval_minutes: Optional[int] = Field(None, ge=1, le=60)
+    show_results_immediately: Optional[bool] = None
+    show_correct_answers: Optional[bool] = None
+    show_score: Optional[bool] = None
+    instructions: Optional[str] = None
 
 
 class ExamInfo(ExamBase):
     id: int
     company_id: int
-    created_by: int | None
+    created_by: Optional[int]
     status: ExamStatus
     created_at: datetime
     updated_at: datetime
 
     # Additional computed fields
-    total_questions: int | None = None
-    total_sessions: int | None = None
-    completed_sessions: int | None = None
-    average_score: float | None = None
+    total_questions: Optional[int] = None
+    total_sessions: Optional[int] = None
+    completed_sessions: Optional[int] = None
+    average_score: Optional[float] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -69,14 +69,14 @@ class ExamQuestionBase(BaseModel):
     question_type: QuestionType
     order_index: int = Field(0, ge=0)
     points: float = Field(1.0, ge=0)
-    time_limit_seconds: int | None = Field(None, ge=1)
+    time_limit_seconds: Optional[int] = Field(None, ge=1)
     is_required: bool = True
     options: dict[str, str] | None = None  # {"A": "Option 1", "B": "Option 2"}
     correct_answers: list[str] | None = None  # ["A"] or ["A", "B"]
-    max_length: int | None = Field(None, ge=1, le=10000)
-    min_length: int | None = Field(None, ge=0)
-    rating_scale: int | None = Field(None, ge=2, le=10)
-    explanation: str | None = None
+    max_length: Optional[int] = Field(None, ge=1, le=10000)
+    min_length: Optional[int] = Field(None, ge=0)
+    rating_scale: Optional[int] = Field(None, ge=2, le=10)
+    explanation: Optional[str] = None
     tags: list[str] | None = None
 
 
@@ -85,18 +85,18 @@ class ExamQuestionCreate(ExamQuestionBase):
 
 
 class ExamQuestionUpdate(BaseModel):
-    question_text: str | None = Field(None, min_length=1)
-    question_type: QuestionType | None = None
-    order_index: int | None = Field(None, ge=0)
-    points: float | None = Field(None, ge=0)
-    time_limit_seconds: int | None = Field(None, ge=1)
-    is_required: bool | None = None
+    question_text: Optional[str] = Field(None, min_length=1)
+    question_type: Optional[QuestionType] = None
+    order_index: Optional[int] = Field(None, ge=0)
+    points: Optional[float] = Field(None, ge=0)
+    time_limit_seconds: Optional[int] = Field(None, ge=1)
+    is_required: Optional[bool] = None
     options: dict[str, str] | None = None
     correct_answers: list[str] | None = None
-    max_length: int | None = Field(None, ge=1, le=10000)
-    min_length: int | None = Field(None, ge=0)
-    rating_scale: int | None = Field(None, ge=2, le=10)
-    explanation: str | None = None
+    max_length: Optional[int] = Field(None, ge=1, le=10000)
+    min_length: Optional[int] = Field(None, ge=0)
+    rating_scale: Optional[int] = Field(None, ge=2, le=10)
+    explanation: Optional[str] = None
     tags: list[str] | None = None
 
 
@@ -116,48 +116,48 @@ class ExamQuestionPublic(BaseModel):
     question_type: QuestionType
     order_index: int
     points: float
-    time_limit_seconds: int | None
+    time_limit_seconds: Optional[int]
     is_required: bool
     options: dict[str, str] | None  # No correct answers exposed
-    max_length: int | None
-    min_length: int | None
-    rating_scale: int | None
+    max_length: Optional[int]
+    min_length: Optional[int]
+    rating_scale: Optional[int]
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class ExamSessionCreate(BaseModel):
     exam_id: int
-    assignment_id: int | None = None
+    assignment_id: Optional[int] = None
 
 
 class ExamSessionUpdate(BaseModel):
-    status: SessionStatus | None = None
-    current_question_index: int | None = Field(None, ge=0)
-    time_remaining_seconds: int | None = Field(None, ge=0)
-    user_agent: str | None = None
-    ip_address: str | None = None
-    screen_resolution: str | None = None
+    status: Optional[SessionStatus] = None
+    current_question_index: Optional[int] = Field(None, ge=0)
+    time_remaining_seconds: Optional[int] = Field(None, ge=0)
+    user_agent: Optional[str] = None
+    ip_address: Optional[str] = None
+    screen_resolution: Optional[str] = None
 
 
 class ExamSessionInfo(BaseModel):
     id: int
     exam_id: int
     candidate_id: int
-    assignment_id: int | None
+    assignment_id: Optional[int]
     status: SessionStatus
     attempt_number: int
-    started_at: datetime | None
-    completed_at: datetime | None
-    expires_at: datetime | None
-    time_remaining_seconds: int | None
+    started_at: Optional[datetime]
+    completed_at: Optional[datetime]
+    expires_at: Optional[datetime]
+    time_remaining_seconds: Optional[int]
     current_question_index: int
     total_questions: int
     questions_answered: int
-    score: float | None
-    max_score: float | None
-    percentage: float | None
-    passed: bool | None
+    score: Optional[float]
+    max_score: Optional[float]
+    percentage: Optional[float]
+    passed: Optional[bool]
     web_usage_detected: bool
     web_usage_count: int
     face_verification_failed: bool
@@ -166,10 +166,10 @@ class ExamSessionInfo(BaseModel):
     updated_at: datetime
 
     # Exam info for convenience
-    exam_title: str | None = None
-    exam_type: ExamType | None = None
-    candidate_name: str | None = None
-    candidate_email: str | None = None
+    exam_title: Optional[str] = None
+    exam_type: Optional[ExamType] = None
+    candidate_name: Optional[str] = None
+    candidate_email: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -177,9 +177,9 @@ class ExamSessionInfo(BaseModel):
 class ExamAnswerSubmit(BaseModel):
     question_id: int
     answer_data: dict[str, Any] | None = None
-    answer_text: str | None = None
+    answer_text: Optional[str] = None
     selected_options: list[str] | None = None
-    time_spent_seconds: int | None = Field(None, ge=0)
+    time_spent_seconds: Optional[int] = Field(None, ge=0)
 
 
 class ExamAnswerInfo(BaseModel):
@@ -187,12 +187,12 @@ class ExamAnswerInfo(BaseModel):
     session_id: int
     question_id: int
     answer_data: dict[str, Any] | None
-    answer_text: str | None
+    answer_text: Optional[str]
     selected_options: list[str] | None
-    is_correct: bool | None
+    is_correct: Optional[bool]
     points_earned: float
     points_possible: float
-    time_spent_seconds: int | None
+    time_spent_seconds: Optional[int]
     answered_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
@@ -201,26 +201,26 @@ class ExamAnswerInfo(BaseModel):
 class ExamAssignmentCreate(BaseModel):
     exam_id: int
     candidate_ids: list[int]  # Can assign to multiple candidates
-    due_date: datetime | None = None
-    custom_time_limit_minutes: int | None = Field(None, ge=1)
-    custom_max_attempts: int | None = Field(None, ge=1, le=10)
+    due_date: Optional[datetime] = None
+    custom_time_limit_minutes: Optional[int] = Field(None, ge=1)
+    custom_max_attempts: Optional[int] = Field(None, ge=1, le=10)
 
 
 class ExamAssignmentUpdate(BaseModel):
-    due_date: datetime | None = None
-    custom_time_limit_minutes: int | None = Field(None, ge=1)
-    custom_max_attempts: int | None = Field(None, ge=1, le=10)
-    is_active: bool | None = None
+    due_date: Optional[datetime] = None
+    custom_time_limit_minutes: Optional[int] = Field(None, ge=1)
+    custom_max_attempts: Optional[int] = Field(None, ge=1, le=10)
+    is_active: Optional[bool] = None
 
 
 class ExamAssignmentInfo(BaseModel):
     id: int
     exam_id: int
     candidate_id: int
-    assigned_by: int | None
-    due_date: datetime | None
-    custom_time_limit_minutes: int | None
-    custom_max_attempts: int | None
+    assigned_by: Optional[int]
+    due_date: Optional[datetime]
+    custom_time_limit_minutes: Optional[int]
+    custom_max_attempts: Optional[int]
     is_active: bool
     completed: bool
     notification_sent: bool
@@ -229,13 +229,13 @@ class ExamAssignmentInfo(BaseModel):
     updated_at: datetime
 
     # Related info for convenience
-    exam_title: str | None = None
-    exam_type: ExamType | None = None
-    candidate_name: str | None = None
-    candidate_email: str | None = None
-    assigner_name: str | None = None
-    sessions_count: int | None = None
-    latest_session: ExamSessionInfo | None = None
+    exam_title: Optional[str] = None
+    exam_type: Optional[ExamType] = None
+    candidate_name: Optional[str] = None
+    candidate_email: Optional[str] = None
+    assigner_name: Optional[str] = None
+    sessions_count: Optional[int] = None
+    latest_session: Optional[ExamSessionInfo] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -273,9 +273,9 @@ class ExamStatistics(BaseModel):
     total_started: int
     total_completed: int
     completion_rate: float
-    average_score: float | None
-    average_time_minutes: float | None
-    pass_rate: float | None
+    average_score: Optional[float]
+    average_time_minutes: Optional[float]
+    pass_rate: Optional[float]
     question_statistics: list[dict[str, Any]]  # Per-question stats
 
 
@@ -298,18 +298,18 @@ class ExamSessionListResponse(BaseModel):
 class ExamTakeRequest(BaseModel):
     """Request to start taking an exam"""
     exam_id: int
-    assignment_id: int | None = None
+    assignment_id: Optional[int] = None
     test_mode: bool = False
-    user_agent: str | None = None
-    screen_resolution: str | None = None
+    user_agent: Optional[str] = None
+    screen_resolution: Optional[str] = None
 
 
 class ExamTakeResponse(BaseModel):
     """Response when starting exam"""
     session: ExamSessionInfo
     questions: list[ExamQuestionPublic]
-    current_question: ExamQuestionPublic | None = None
-    time_remaining_seconds: int | None
+    current_question: Optional[ExamQuestionPublic] = None
+    time_remaining_seconds: Optional[int]
     can_navigate: bool = True
 
 

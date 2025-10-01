@@ -4,6 +4,7 @@ from datetime import datetime
 from enum import Enum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+from typing import Optional
 
 
 class EventType(str, Enum):
@@ -27,14 +28,14 @@ class CalendarEventBase(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     title: str = Field(..., min_length=1, max_length=255)
-    description: str | None = Field(None)
+    description: Optional[str] = Field(None)
     start_datetime: datetime
-    end_datetime: datetime | None = None
+    end_datetime: Optional[datetime] = None
     is_all_day: bool = Field(default=False)
-    location: str | None = Field(None, max_length=255)
+    location: Optional[str] = Field(None, max_length=255)
     event_type: EventType = Field(default=EventType.EVENT)
     status: EventStatus = Field(default=EventStatus.CONFIRMED)
-    recurrence_rule: str | None = Field(None, max_length=255)
+    recurrence_rule: Optional[str] = Field(None, max_length=255)
     timezone: str = Field(default="UTC", max_length=50)
 
     @field_validator('end_datetime')
@@ -59,16 +60,16 @@ class CalendarEventCreate(CalendarEventBase):
 
 class CalendarEventUpdate(BaseModel):
     """Schema for updating an existing calendar event."""
-    title: str | None = Field(None, min_length=1, max_length=255)
-    description: str | None = None
-    start_datetime: datetime | None = None
-    end_datetime: datetime | None = None
-    is_all_day: bool | None = None
-    location: str | None = Field(None, max_length=255)
-    event_type: EventType | None = None
-    status: EventStatus | None = None
-    recurrence_rule: str | None = Field(None, max_length=255)
-    timezone: str | None = Field(None, max_length=50)
+    title: Optional[str] = Field(None, min_length=1, max_length=255)
+    description: Optional[str] = None
+    start_datetime: Optional[datetime] = None
+    end_datetime: Optional[datetime] = None
+    is_all_day: Optional[bool] = None
+    location: Optional[str] = Field(None, max_length=255)
+    event_type: Optional[EventType] = None
+    status: Optional[EventStatus] = None
+    recurrence_rule: Optional[str] = Field(None, max_length=255)
+    timezone: Optional[str] = Field(None, max_length=50)
 
     @field_validator('end_datetime')
     @classmethod
@@ -88,10 +89,10 @@ class CalendarEventUpdate(BaseModel):
 class CalendarEventInfo(CalendarEventBase):
     """Schema for calendar event responses."""
     id: int
-    creator_id: int | None = None
+    creator_id: Optional[int] = None
     created_at: datetime
     updated_at: datetime
-    parent_event_id: int | None = None
+    parent_event_id: Optional[int] = None
     is_recurring: bool = False
     is_instance: bool = False
 
@@ -100,20 +101,20 @@ class CalendarEventListResponse(BaseModel):
     """Schema for calendar event list responses."""
     events: list[CalendarEventInfo]
     total: int
-    start_date: datetime | None = None
-    end_date: datetime | None = None
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
 
 
 class CalendarEventQueryParams(BaseModel):
     """Schema for calendar event query parameters."""
-    start_date: datetime | None = Field(None)
-    end_date: datetime | None = Field(None)
-    event_type: EventType | None = Field(None)
-    status: EventStatus | None = Field(None)
-    creator_id: int | None = Field(None)
+    start_date: Optional[datetime] = Field(None)
+    end_date: Optional[datetime] = Field(None)
+    event_type: Optional[EventType] = Field(None)
+    status: Optional[EventStatus] = Field(None)
+    creator_id: Optional[int] = Field(None)
     include_all_day: bool = Field(default=True)
     include_recurring: bool = Field(default=True)
-    timezone: str | None = Field(None, max_length=50)
+    timezone: Optional[str] = Field(None, max_length=50)
 
     @field_validator('end_date')
     @classmethod
@@ -140,8 +141,8 @@ class RecurrencePattern(BaseModel):
     """Schema for recurring event patterns."""
     frequency: str = Field(..., description="DAILY, WEEKLY, MONTHLY, YEARLY")
     interval: int = Field(default=1, ge=1, le=999)
-    count: int | None = Field(None, ge=1, le=999)
-    until: datetime | None = None
+    count: Optional[int] = Field(None, ge=1, le=999)
+    until: Optional[datetime] = None
     by_weekday: list[int] | None = Field(None, description="0=Monday, 6=Sunday")
     by_monthday: list[int] | None = Field(None, description="1-31")
     by_month: list[int] | None = Field(None, description="1-12")

@@ -2,6 +2,7 @@
 from pydantic import BaseModel, ConfigDict, EmailStr
 
 from app.utils.constants import CompanyType
+from typing import Optional
 
 
 class CompanyBase(BaseModel):
@@ -11,37 +12,37 @@ class CompanyBase(BaseModel):
     type: CompanyType
     email: EmailStr
     phone: str
-    website: str | None = None
-    postal_code: str | None = None
-    prefecture: str | None = None
-    city: str | None = None
-    description: str | None = None
+    website: Optional[str] = None
+    postal_code: Optional[str] = None
+    prefecture: Optional[str] = None
+    city: Optional[str] = None
+    description: Optional[str] = None
 
 
 class CompanyCreate(CompanyBase):
     """Schema for creating a new company."""
 
-    is_demo: bool | None = False
-    demo_days: int | None = 30  # Default 30 days demo period
+    is_demo: Optional[bool] = False
+    demo_days: Optional[int] = 30  # Default 30 days demo period
 
 
 class CompanyUpdate(BaseModel):
     """Schema for updating a company."""
 
-    name: str | None = None
-    type: CompanyType | None = None
-    email: EmailStr | None = None
-    phone: str | None = None
-    website: str | None = None
-    postal_code: str | None = None
-    prefecture: str | None = None
-    city: str | None = None
-    description: str | None = None
-    is_active: bool | None = None
-    is_demo: bool | None = None
-    demo_end_date: str | None = None
-    demo_features: str | None = None
-    demo_notes: str | None = None
+    name: Optional[str] = None
+    type: Optional[CompanyType] = None
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    website: Optional[str] = None
+    postal_code: Optional[str] = None
+    prefecture: Optional[str] = None
+    city: Optional[str] = None
+    description: Optional[str] = None
+    is_active: Optional[bool] = None
+    is_demo: Optional[bool] = None
+    demo_end_date: Optional[str] = None
+    demo_features: Optional[str] = None
+    demo_notes: Optional[str] = None
 
 
 class CompanyResponse(CompanyBase):
@@ -50,14 +51,14 @@ class CompanyResponse(CompanyBase):
     id: int
     is_active: bool
     is_demo: bool
-    demo_end_date: str | None
-    demo_features: str | None = None
-    demo_notes: str | None = None
+    demo_end_date: Optional[str]
+    demo_features: Optional[str] = None
+    demo_notes: Optional[str] = None
     user_count: int
     job_count: int
     is_deleted: bool
-    deleted_at: str | None = None
-    deleted_by: int | None = None
+    deleted_at: Optional[str] = None
+    deleted_by: Optional[int] = None
     created_at: str
     updated_at: str
 
