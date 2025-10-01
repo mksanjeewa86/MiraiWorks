@@ -176,7 +176,54 @@ ERROR: Cannot import pdf2image: No module named 'pdf2image'
 
 **Solution**: Changed to dynamic import using `importlib.import_module()`
 
-**Changed**:
+---
+
+### 6. Frontend Module Resolution in CI ✅
+
+**Problem**: Next.js build failing in CI with module resolution errors
+
+**Error**:
+```
+Module not found: Can't resolve '@/components/ui/card'
+Module not found: Can't resolve '@/components/ui/button'
+Module not found: Can't resolve '@/components/ui/badge'
+```
+
+**Root Cause**: CI environment (clean builds without cache) had issues resolving direct file imports
+
+**Solution**: Created barrel export file (`src/components/ui/index.ts`) to centralize all UI component exports
+
+**Created**:
+```typescript
+// frontend/src/components/ui/index.ts
+export { Alert, AlertDescription } from './alert';
+export { Badge } from './badge';
+export { Button } from './button';
+export { Card, CardContent, CardDescription, CardHeader, CardTitle } from './card';
+export { Checkbox } from './checkbox';
+export { default as ConfirmationModal } from './confirmation-modal';
+export { Input } from './input';
+export { Label } from './label';
+export { LoadingSpinner } from './loading-spinner';
+export { Progress } from './progress';
+export { RadioGroup, RadioGroupItem } from './radio-group';
+export { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './select';
+export { Separator } from './separator';
+export { Slider } from './slider';
+export { Switch } from './switch';
+export { Textarea } from './textarea';
+export { default as Toggle } from './toggle';
+```
+
+**Why This Works**:
+- Barrel exports provide a single entry point for module resolution
+- Webpack/Next.js can resolve the index file more reliably in CI
+- Reduces module resolution complexity in clean build environments
+- Standard pattern for component libraries
+
+---
+
+**Changed** (pdf2image fix):
 ```python
 # app/services/pdf_service.py:291-297
 
@@ -244,8 +291,9 @@ try:
 6. `backend/app/services/pdf_service.py` - Changed to dynamic import for pdf2image
 
 ### Frontend:
-7. `frontend/.next/` - Cleared stale build cache (causes module resolution issues)
-8. `.github/workflows/ci.yml` - Added cache cleanup step before frontend build
+7. `frontend/src/components/ui/index.ts` - Created barrel export file for UI components
+8. `frontend/.next/` - Cleared stale build cache (causes module resolution issues)
+9. `.github/workflows/ci.yml` - Added cache cleanup step before frontend build
 
 ---
 
