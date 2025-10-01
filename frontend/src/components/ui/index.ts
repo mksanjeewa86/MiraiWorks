@@ -5,6 +5,26 @@ export { Button } from './button';
 export { Card, CardContent, CardDescription, CardHeader, CardTitle } from './card';
 export { Checkbox } from './checkbox';
 export { default as ConfirmationModal } from './confirmation-modal';
+export {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitle,
+  DialogTrigger,
+} from './dialog';
+export {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from './dropdown-menu';
 export { Input } from './input';
 export { Label } from './label';
 export { LoadingSpinner } from './loading-spinner';
