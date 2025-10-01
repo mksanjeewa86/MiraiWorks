@@ -770,38 +770,6 @@ function RecruitmentWorkflowsPageContent() {
           )}
         </div>
 
-        {/* Linear Workflow Feature Banner */}
-        <div className="bg-gradient-to-r from-violet-50 to-purple-50 border border-violet-200 rounded-lg p-6">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-violet-100 rounded-full">
-              <GitBranch className="h-6 w-6 text-violet-600" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-900">✨ Linear Workflow Editor Now Available!</h3>
-              <p className="text-gray-600 mt-1">
-                Create step-by-step recruitment processes with interviews and todos.
-                Each step can automatically create real interview and todo records that integrate with your existing workflow.
-              </p>
-              <div className="mt-3 flex items-center gap-4 text-sm text-gray-600">
-                <span className="flex items-center gap-1">
-                  <Video className="h-4 w-4" /> Interview Steps
-                </span>
-                <span className="flex items-center gap-1">
-                  <CheckSquare className="h-4 w-4" /> Todo Steps
-                </span>
-                <span className="flex items-center gap-1">
-                  <GitBranch className="h-4 w-4" /> Real Integration
-                </span>
-                <span className="flex items-center gap-1">
-                  <Clock className="h-4 w-4" /> Linear Process Flow
-                </span>
-              </div>
-              <div className="mt-2 text-sm text-green-700 font-medium">
-                💡 Try it now: Click "Edit Workflow" on any process above!
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </AppLayout>
   );
