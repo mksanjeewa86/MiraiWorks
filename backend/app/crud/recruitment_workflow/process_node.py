@@ -174,26 +174,40 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
         node_sequence_updates: list[dict[str, int]],
         updated_by: int
     ) -> list[ProcessNode]:
-        """Reorder nodes in a process"""
+        """Reorder nodes in a process
+
+        Uses a two-step update to avoid unique constraint violations:
+        1. Set temporary negative values to avoid conflicts
+        2. Update to final positive sequence_order values
+        """
         updated_nodes = []
+        timestamp = datetime.utcnow()
 
-        for update in node_sequence_updates:
+        # Step 1: Set all nodes to negative temporary values to avoid constraint conflicts
+        for i, update in enumerate(node_sequence_updates):
             node_id = update["node_id"]
-            new_sequence = update["sequence_order"]
-
             node = await self.get(db, id=node_id)
             if node and node.process_id == process_id:
-                node.sequence_order = new_sequence
+                node.sequence_order = -(i + 1000)  # Use negative values as temporary
                 node.updated_by = updated_by
-                node.updated_at = datetime.utcnow()
-                updated_nodes.append(node)
+                node.updated_at = timestamp
+                updated_nodes.append((node, update["sequence_order"]))
+
+        await db.flush()  # Flush temporary values
+
+        # Step 2: Update to final sequence_order values
+        for node, final_sequence in updated_nodes:
+            node.sequence_order = final_sequence
 
         await db.commit()
 
-        for node in updated_nodes:
+        # Refresh all nodes
+        result_nodes = []
+        for node, _ in updated_nodes:
             await db.refresh(node)
+            result_nodes.append(node)
 
-        return updated_nodes
+        return result_nodes
 
     async def activate_node(
         self,
