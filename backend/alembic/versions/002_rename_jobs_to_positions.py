@@ -5,17 +5,15 @@ Revises: c5a8b9e7f3d1, add_file_attachments, create_todos_table
 Create Date: 2024-09-20 20:30:00.000000
 
 """
-from typing import Sequence, Union
+from collections.abc import Sequence
 
 from alembic import op
-import sqlalchemy as sa
-
 
 # revision identifiers, used by Alembic.
 revision: str = '002_rename_jobs_to_positions'
-down_revision: Union[str, None] = 'c5a8b9e7f3d1'  # Use the latest stable revision
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = 'c5a8b9e7f3d1'  # Use the latest stable revision
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:

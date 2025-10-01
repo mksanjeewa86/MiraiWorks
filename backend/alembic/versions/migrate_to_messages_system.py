@@ -8,17 +8,18 @@ Revises: add_file_attachments
 Create Date: 2025-09-21 02:50:00.000000
 
 """
+import contextlib
 from collections.abc import Sequence
-from typing import Union
 
 import sqlalchemy as sa
+
 from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "migrate_to_messages"
-down_revision: Union[str, None] = "a84ff39f6879"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = "a84ff39f6879"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -58,16 +59,12 @@ def upgrade() -> None:
         """)
     except:
         # Try alternative approach for MySQL
-        try:
+        with contextlib.suppress(Exception):
             op.execute("ALTER TABLE attachments DROP FOREIGN KEY attachments_ibfk_1")
-        except:
-            pass
 
     # Drop other foreign key constraints
-    try:
+    with contextlib.suppress(Exception):
         op.drop_constraint("attachments_direct_message_fk", "attachments", type_="foreignkey")
-    except:
-        pass
 
     # Drop tables in correct order (child tables first)
     op.execute("DROP TABLE IF EXISTS message_reads CASCADE")

@@ -31,7 +31,7 @@ from app.endpoints import (
     webhooks,
     websocket_video,
 )
-from app.endpoints.recruitment_workflow import processes, candidates
+from app.endpoints.recruitment_workflow import candidates, nodes, processes
 
 
 def include_routers(app: FastAPI) -> None:
@@ -62,6 +62,7 @@ def include_routers(app: FastAPI) -> None:
     # Recruitment workflow endpoints
     app.include_router(processes.router, prefix="/api/recruitment-processes", tags=["recruitment-processes"])
     app.include_router(candidates.router, prefix="/api/recruitment-processes", tags=["recruitment-candidates"])
+    app.include_router(nodes.router, prefix="/api/recruitment-processes", tags=["recruitment-process-nodes"])
     app.include_router(video_calls.router, prefix="/api", tags=["video-calls"])
     app.include_router(websocket_video.router, tags=["websocket-video"])
     app.include_router(mbti.router, prefix="/api/mbti", tags=["mbti"])

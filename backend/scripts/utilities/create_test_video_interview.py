@@ -2,8 +2,8 @@
 """
 Script to create test data for video call testing
 """
+
 import requests
-import json
 
 BASE_URL = "http://localhost:8000"
 
@@ -62,14 +62,14 @@ def create_test_interview():
 
         if response.status_code in [200, 201]:
             interview = response.json()
-            print(f"Interview created successfully!")
+            print("Interview created successfully!")
             print(f"Interview ID: {interview.get('id')}")
             print(f"Title: {interview.get('title')}")
             print(f"Type: {interview.get('interview_type')}")
             print(f"Status: {interview.get('status')}")
             print()
             print(f"Access the interview at: http://localhost:3000/interviews/{interview.get('id')}")
-            print(f"Click 'Start Video Call' button to test video functionality")
+            print("Click 'Start Video Call' button to test video functionality")
             return interview.get('id')
         else:
             print(f"Failed to create interview: {response.status_code}")

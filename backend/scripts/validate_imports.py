@@ -3,13 +3,12 @@
 Comprehensive import validation script for MiraiWorks backend.
 Detects unused imports, missing imports, and wrong imports.
 """
+import argparse
 import ast
 import importlib
 import sys
-import os
-import argparse
 from pathlib import Path
-from typing import List, Dict, Tuple
+
 
 class ImportValidator:
     def __init__(self, project_root: str):
@@ -26,7 +25,7 @@ class ImportValidator:
             'docx', 'pdfplumber', 'weasyprint', 'pdf2image'
         }
 
-    def check_unused_imports(self, file_path: Path) -> List[str]:
+    def check_unused_imports(self, file_path: Path) -> list[str]:
         """Check for unused imports using ruff."""
         import subprocess
         try:
@@ -46,12 +45,12 @@ class ImportValidator:
         except Exception as e:
             return [f"Error checking unused imports: {e}"]
 
-    def check_import_errors(self, file_path: Path) -> List[str]:
+    def check_import_errors(self, file_path: Path) -> list[str]:
         """Check for import errors (missing/wrong imports)."""
         errors = []
 
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, encoding='utf-8') as f:
                 content = f.read()
 
             tree = ast.parse(content)
@@ -106,7 +105,7 @@ class ImportValidator:
 
         return errors
 
-    def check_import_sorting(self, file_path: Path) -> List[str]:
+    def check_import_sorting(self, file_path: Path) -> list[str]:
         """Check if imports are properly sorted."""
         import subprocess
         try:
@@ -126,7 +125,7 @@ class ImportValidator:
         except Exception as e:
             return [f"Error checking import sorting: {e}"]
 
-    def validate_file(self, file_path: Path) -> Dict[str, List[str]]:
+    def validate_file(self, file_path: Path) -> dict[str, list[str]]:
         """Validate all import aspects of a single file."""
         relative_path = file_path.relative_to(self.project_root)
 
@@ -137,7 +136,7 @@ class ImportValidator:
             'sorting_issues': self.check_import_sorting(file_path)
         }
 
-    def validate_project(self, app_dir: str = "app") -> Dict[str, any]:
+    def validate_project(self, app_dir: str = "app") -> dict[str, any]:
         """Validate all Python files in the project."""
         app_path = self.project_root / app_dir
 
@@ -183,17 +182,17 @@ class ImportValidator:
 
         return results
 
-    def print_results(self, results: Dict[str, any], verbose: bool = False):
+    def print_results(self, results: dict[str, any], verbose: bool = False):
         """Print validation results in a formatted way."""
         if 'error' in results:
             print(f"❌ {results['error']}")
             return
 
-        print(f"\n🔍 Import Validation Results")
+        print("\n🔍 Import Validation Results")
         print(f"{'='*50}")
 
         # Summary
-        print(f"📊 Summary:")
+        print("📊 Summary:")
         print(f"  Files checked: {results['files_checked']}")
         print(f"  Files with issues: {results['files_with_issues']}")
         print(f"  Total issues: {results['total_issues']}")
@@ -203,7 +202,7 @@ class ImportValidator:
 
         # File details
         if results['file_results'] and verbose:
-            print(f"\n📋 Detailed Issues:")
+            print("\n📋 Detailed Issues:")
             for file_result in results['file_results']:
                 print(f"\n📁 {file_result['file']}:")
 
@@ -224,14 +223,14 @@ class ImportValidator:
 
         # Conclusion
         if results['total_issues'] == 0:
-            print(f"\n✅ All imports are clean and valid!")
+            print("\n✅ All imports are clean and valid!")
         else:
             print(f"\n⚠️ Found {results['total_issues']} import issues to fix.")
-            print(f"\n🔧 Fix commands:")
+            print("\n🔧 Fix commands:")
             if results['summary']['unused_imports'] > 0:
-                print(f"  Remove unused imports: python -m ruff check app/ --select F401 --fix")
+                print("  Remove unused imports: python -m ruff check app/ --select F401 --fix")
             if results['summary']['sorting_issues'] > 0:
-                print(f"  Sort imports: python -m ruff check app/ --select I001 --fix")
+                print("  Sort imports: python -m ruff check app/ --select I001 --fix")
 
 def main():
     parser = argparse.ArgumentParser(description='Validate Python imports in MiraiWorks backend')

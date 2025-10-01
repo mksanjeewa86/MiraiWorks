@@ -39,8 +39,8 @@ async def get_super_admin_user(db: AsyncSession) -> User | None:
         .where(
             and_(
                 Role.name == UserRoleEnum.SUPER_ADMIN.value,
-                User.is_active == True,
-                User.is_deleted == False,
+                User.is_active is True,
+                User.is_deleted is False,
             )
         )
         .limit(1)
@@ -173,7 +173,7 @@ async def create_user(
                 and_(
                     User.company_id == current_user.company_id,
                     User.is_admin is True,
-                    User.is_deleted == False,
+                    User.is_deleted is False,
                     User.id != current_user.id,  # Exclude current user
                 )
             )
@@ -222,7 +222,7 @@ async def create_user(
             and_(
                 User.company_id == user_data.company_id,
                 User.is_admin is True,
-                User.is_deleted == False,
+                User.is_deleted is False,
             )
         )
         existing_admin_result = await db.execute(existing_admin_query)

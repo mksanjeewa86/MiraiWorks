@@ -5,9 +5,9 @@ Revises: add_video_call_tables
 Create Date: 2024-01-15 10:00:00.000000
 
 """
-from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = 'add_todo_attachments'
@@ -37,7 +37,7 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('stored_filename')
     )
-    
+
     # Create indexes for better performance
     op.create_index(op.f('ix_todo_attachments_todo_id'), 'todo_attachments', ['todo_id'], unique=False)
     op.create_index(op.f('ix_todo_attachments_uploaded_at'), 'todo_attachments', ['uploaded_at'], unique=False)
@@ -53,6 +53,6 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_todo_attachments_uploaded_by'), table_name='todo_attachments')
     op.drop_index(op.f('ix_todo_attachments_uploaded_at'), table_name='todo_attachments')
     op.drop_index(op.f('ix_todo_attachments_todo_id'), table_name='todo_attachments')
-    
+
     # Drop table
     op.drop_table('todo_attachments')

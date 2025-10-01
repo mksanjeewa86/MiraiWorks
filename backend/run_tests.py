@@ -3,10 +3,11 @@
 Quick test runner script for MiraiWorks backend
 Optimized for fast database testing with persistent connection
 """
-import sys
-import subprocess
-import time
 import os
+import subprocess
+import sys
+import time
+
 
 def run_command(cmd, description=""):
     """Run a command and return success status."""
@@ -16,7 +17,7 @@ def run_command(cmd, description=""):
     start_time = time.time()
 
     try:
-        result = subprocess.run(
+        subprocess.run(
             cmd,
             shell=True,
             check=True,
@@ -25,7 +26,7 @@ def run_command(cmd, description=""):
         duration = time.time() - start_time
         print(f"[SUCCESS] Completed in {duration:.2f}s")
         return True
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError:
         duration = time.time() - start_time
         print(f"[FAILED] Failed in {duration:.2f}s")
         return False
@@ -80,10 +81,7 @@ def main():
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
     # Parse command line arguments
-    if len(sys.argv) > 1:
-        test_args = " ".join(sys.argv[1:])
-    else:
-        test_args = None
+    test_args = " ".join(sys.argv[1:]) if len(sys.argv) > 1 else None
 
     # Start database if needed
     if not start_database():

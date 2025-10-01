@@ -1,6 +1,9 @@
 import asyncio
-from app.database import get_db
+
 from sqlalchemy import text
+
+from app.database import get_db
+
 
 async def check_tables():
     async for db in get_db():

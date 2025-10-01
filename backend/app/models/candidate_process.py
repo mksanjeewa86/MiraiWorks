@@ -1,18 +1,26 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, DECIMAL, UniqueConstraint
+from sqlalchemy import (
+    DECIMAL,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
 
 if TYPE_CHECKING:
-    from app.models.user import User
-    from app.models.recruitment_process import RecruitmentProcess
-    from app.models.process_node import ProcessNode
     from app.models.node_execution import NodeExecution
+    from app.models.process_node import ProcessNode
+    from app.models.recruitment_process import RecruitmentProcess
+    from app.models.user import User
 
 
 class CandidateProcess(Base):
@@ -31,7 +39,7 @@ class CandidateProcess(Base):
         Integer, ForeignKey("recruitment_processes.id", ondelete="CASCADE"),
         nullable=False, index=True
     )
-    current_node_id: Mapped[Optional[int]] = mapped_column(
+    current_node_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("process_nodes.id", ondelete="SET NULL"), nullable=True, index=True
     )
 
@@ -41,21 +49,21 @@ class CandidateProcess(Base):
     )  # not_started, in_progress, completed, failed, withdrawn, on_hold
 
     # Assignment and ownership
-    assigned_recruiter_id: Mapped[Optional[int]] = mapped_column(
+    assigned_recruiter_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
     )
-    assigned_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    assigned_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Progress tracking
-    started_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    failed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    withdrawn_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    failed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    withdrawn_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Evaluation
-    overall_score: Mapped[Optional[float]] = mapped_column(DECIMAL(5, 2), nullable=True)
-    final_result: Mapped[Optional[str]] = mapped_column(String(50), nullable=True, index=True)
-    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    overall_score: Mapped[float | None] = mapped_column(DECIMAL(5, 2), nullable=True)
+    final_result: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
@@ -75,10 +83,10 @@ class CandidateProcess(Base):
     process: Mapped[RecruitmentProcess] = relationship(
         "RecruitmentProcess", back_populates="candidate_processes"
     )
-    current_node: Mapped[Optional[ProcessNode]] = relationship(
+    current_node: Mapped[ProcessNode | None] = relationship(
         "ProcessNode", foreign_keys=[current_node_id]
     )
-    assigned_recruiter: Mapped[Optional[User]] = relationship(
+    assigned_recruiter: Mapped[User | None] = relationship(
         "User", foreign_keys=[assigned_recruiter_id], back_populates="assigned_candidate_processes"
     )
 
@@ -120,7 +128,7 @@ class CandidateProcess(Base):
         return (len(completed_executions) / total_nodes) * 100.0
 
     @property
-    def current_step_title(self) -> Optional[str]:
+    def current_step_title(self) -> str | None:
         """Get the title of the current step"""
         if self.current_node:
             return self.current_node.title
@@ -135,7 +143,7 @@ class CandidateProcess(Base):
         self.current_node_id = first_node_id
         self.started_at = datetime.utcnow()
 
-    def complete(self, final_result: str, overall_score: Optional[float] = None, notes: Optional[str] = None) -> None:
+    def complete(self, final_result: str, overall_score: float | None = None, notes: str | None = None) -> None:
         """Mark the process as completed"""
         self.status = "completed"
         self.completed_at = datetime.utcnow()
@@ -147,7 +155,7 @@ class CandidateProcess(Base):
         if notes:
             self.notes = notes
 
-    def fail(self, reason: Optional[str] = None, failed_at_node_id: Optional[int] = None) -> None:
+    def fail(self, reason: str | None = None, failed_at_node_id: int | None = None) -> None:
         """Mark the process as failed"""
         self.status = "failed"
         self.failed_at = datetime.utcnow()
@@ -158,7 +166,7 @@ class CandidateProcess(Base):
         if failed_at_node_id:
             self.current_node_id = failed_at_node_id
 
-    def withdraw(self, reason: Optional[str] = None) -> None:
+    def withdraw(self, reason: str | None = None) -> None:
         """Mark the process as withdrawn"""
         self.status = "withdrawn"
         self.withdrawn_at = datetime.utcnow()
@@ -180,7 +188,7 @@ class CandidateProcess(Base):
             raise ValueError("Only processes on hold can be resumed")
         self.status = "in_progress"
 
-    def advance_to_node(self, next_node_id: Optional[int]) -> None:
+    def advance_to_node(self, next_node_id: int | None) -> None:
         """Advance to the next node"""
         self.current_node_id = next_node_id
 

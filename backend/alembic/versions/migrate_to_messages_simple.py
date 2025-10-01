@@ -8,17 +8,18 @@ Revises: a84ff39f6879
 Create Date: 2025-09-21 03:10:00.000000
 
 """
+import contextlib
 from collections.abc import Sequence
-from typing import Union
 
 import sqlalchemy as sa
+
 from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "migrate_simple"
-down_revision: Union[str, None] = "a84ff39f6879"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = "a84ff39f6879"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -185,13 +186,11 @@ def downgrade() -> None:
     print("Reverting to direct_messages system...")
 
     # Create backup of current messages data
-    try:
+    with contextlib.suppress(Exception):
         op.execute("""
             CREATE TABLE IF NOT EXISTS messages_backup AS
             SELECT * FROM messages
         """)
-    except:
-        pass
 
     # Drop messages table
     op.drop_table("messages")
@@ -221,7 +220,7 @@ def downgrade() -> None:
     )
 
     # Restore data from backup
-    try:
+    with contextlib.suppress(Exception):
         op.execute("""
             INSERT INTO direct_messages
             SELECT sender_id, recipient_id, content, type, is_read,
@@ -231,7 +230,5 @@ def downgrade() -> None:
             FROM direct_messages_backup
             WHERE EXISTS (SELECT 1 FROM direct_messages_backup)
         """)
-    except:
-        pass
 
     print("Downgrade completed!")

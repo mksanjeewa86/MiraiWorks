@@ -1,15 +1,15 @@
-from typing import Any, Dict, List, Optional
 from datetime import datetime
+from typing import Any
 
-from sqlalchemy import and_, or_, select, func, desc
+from sqlalchemy import and_, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.crud.base import CRUDBase
-from app.models.recruitment_process import RecruitmentProcess
 from app.models.candidate_process import CandidateProcess
 from app.models.process_node import ProcessNode
 from app.models.process_viewer import ProcessViewer
+from app.models.recruitment_process import RecruitmentProcess
 
 
 class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
@@ -18,7 +18,7 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
         self,
         db: AsyncSession,
         *,
-        obj_in: Dict[str, Any],
+        obj_in: dict[str, Any],
         created_by: int
     ) -> RecruitmentProcess:
         """Create a new recruitment process"""
@@ -38,7 +38,7 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
         company_id: int,
         skip: int = 0,
         limit: int = 100
-    ) -> List[RecruitmentProcess]:
+    ) -> list[RecruitmentProcess]:
         """Get all processes for a company"""
         result = await db.execute(
             select(RecruitmentProcess)
@@ -54,7 +54,7 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
         db: AsyncSession,
         *,
         company_id: int
-    ) -> List[RecruitmentProcess]:
+    ) -> list[RecruitmentProcess]:
         """Get active processes for a company"""
         result = await db.execute(
             select(RecruitmentProcess)
@@ -73,7 +73,7 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
         db: AsyncSession,
         *,
         id: int
-    ) -> Optional[RecruitmentProcess]:
+    ) -> RecruitmentProcess | None:
         """Get process with its nodes"""
         result = await db.execute(
             select(RecruitmentProcess)
@@ -91,7 +91,7 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
         db: AsyncSession,
         *,
         job_id: int
-    ) -> List[RecruitmentProcess]:
+    ) -> list[RecruitmentProcess]:
         """Get processes associated with a job"""
         result = await db.execute(
             select(RecruitmentProcess)
@@ -104,13 +104,13 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
         self,
         db: AsyncSession,
         *,
-        company_id: Optional[int] = None,
+        company_id: int | None = None,
         is_public: bool = False,
         skip: int = 0,
         limit: int = 100
-    ) -> List[RecruitmentProcess]:
+    ) -> list[RecruitmentProcess]:
         """Get process templates"""
-        conditions = [RecruitmentProcess.is_template == True]
+        conditions = [RecruitmentProcess.is_template is True]
 
         if company_id is not None:
             conditions.append(
@@ -134,7 +134,7 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
         db: AsyncSession,
         *,
         db_obj: RecruitmentProcess,
-        obj_in: Dict[str, Any],
+        obj_in: dict[str, Any],
         updated_by: int
     ) -> RecruitmentProcess:
         """Update a recruitment process"""
@@ -264,7 +264,7 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
         db: AsyncSession,
         *,
         company_id: int
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get process statistics for a company"""
         # Count processes by status
         status_counts = await db.execute(
@@ -334,10 +334,10 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
         *,
         company_id: int,
         query: str,
-        status: Optional[str] = None,
+        status: str | None = None,
         skip: int = 0,
         limit: int = 100
-    ) -> List[RecruitmentProcess]:
+    ) -> list[RecruitmentProcess]:
         """Search processes by name or description"""
         conditions = [RecruitmentProcess.employer_company_id == company_id]
 
@@ -369,7 +369,7 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
         role: str,
         skip: int = 0,
         limit: int = 100
-    ) -> List[RecruitmentProcess]:
+    ) -> list[RecruitmentProcess]:
         """Get processes accessible to a user based on their role"""
         if role == "employer":
             # Employer can see their company's processes

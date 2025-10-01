@@ -1,19 +1,18 @@
 from datetime import date, datetime
-from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.crud.holiday import holiday as holiday_crud
 from app.database import get_db
 from app.dependencies import get_current_active_user
-from app.crud.holiday import holiday as holiday_crud
 from app.models.user import User
 from app.schemas.holiday import (
+    CountryCode,
     HolidayCreate,
-    HolidayUpdate,
     HolidayInfo,
     HolidayListResponse,
-    CountryCode
+    HolidayUpdate,
 )
 
 router = APIRouter()
@@ -23,12 +22,12 @@ router = APIRouter()
 async def get_holidays(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
-    year: Optional[int] = Query(None, description="Filter by year"),
-    country: Optional[CountryCode] = Query(CountryCode.JAPAN, description="Filter by country"),
-    month: Optional[int] = Query(None, ge=1, le=12, description="Filter by month"),
-    is_national: Optional[bool] = Query(None, description="Filter by national holidays"),
-    date_from: Optional[date] = Query(None, description="Filter holidays from this date"),
-    date_to: Optional[date] = Query(None, description="Filter holidays to this date"),
+    year: int | None = Query(None, description="Filter by year"),
+    country: CountryCode | None = Query(CountryCode.JAPAN, description="Filter by country"),
+    month: int | None = Query(None, ge=1, le=12, description="Filter by month"),
+    is_national: bool | None = Query(None, description="Filter by national holidays"),
+    date_from: date | None = Query(None, description="Filter holidays from this date"),
+    date_to: date | None = Query(None, description="Filter holidays to this date"),
 ):
     """Get holidays with optional filters"""
     # Default to current year if no filters provided
@@ -70,13 +69,13 @@ async def get_holidays(
     )
 
 
-@router.get("/upcoming", response_model=List[HolidayInfo])
+@router.get("/upcoming", response_model=list[HolidayInfo])
 async def get_upcoming_holidays(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
     limit: int = Query(10, ge=1, le=50, description="Number of upcoming holidays to return"),
     country: CountryCode = Query(CountryCode.JAPAN, description="Country code"),
-    from_date: Optional[date] = Query(None, description="Start date (default: today)"),
+    from_date: date | None = Query(None, description="Start date (default: today)"),
 ):
     """Get upcoming holidays from today or specified date"""
     start_date = from_date or date.today()
@@ -147,9 +146,9 @@ async def create_holiday(
     return holiday
 
 
-@router.post("/bulk", response_model=List[HolidayInfo])
+@router.post("/bulk", response_model=list[HolidayInfo])
 async def create_holidays_bulk(
-    holidays_in: List[HolidayCreate],
+    holidays_in: list[HolidayCreate],
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):

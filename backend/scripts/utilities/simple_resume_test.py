@@ -5,8 +5,9 @@ Simple Resume Function Test
 Test resume functionality without database dependencies.
 """
 
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'app'))
 
 from services.resume_service import ResumeService
@@ -40,17 +41,17 @@ def test_resume_service_basics():
     # Test share token generation
     token = service._generate_share_token()
     if len(token) == 32:
-        print(f"PASS: Share token length is 32")
+        print("PASS: Share token length is 32")
         passed += 1
     else:
         print(f"FAIL: Share token length is {len(token)}, expected 32")
         failed += 1
 
     if token.isalnum():
-        print(f"PASS: Share token is alphanumeric")
+        print("PASS: Share token is alphanumeric")
         passed += 1
     else:
-        print(f"FAIL: Share token contains non-alphanumeric characters")
+        print("FAIL: Share token contains non-alphanumeric characters")
         failed += 1
 
     # Test data validation
@@ -141,8 +142,8 @@ def test_schema_imports():
     print("-" * 40)
 
     try:
+
         from schemas.resume import ResumeCreate, ResumeUpdate
-        from datetime import datetime
 
         # Test ResumeCreate
         resume_data = ResumeCreate(

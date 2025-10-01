@@ -1,6 +1,6 @@
 """Simple user connection service."""
 
-from typing import List
+
 from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -56,7 +56,7 @@ class UserConnectionService:
         self,
         db: AsyncSession,
         user_id: int
-    ) -> List[User]:
+    ) -> list[User]:
         """Get all users connected to this user."""
 
         # Get all active connections where user is involved
@@ -66,7 +66,7 @@ class UserConnectionService:
                     UserConnection.user_id == user_id,
                     UserConnection.connected_user_id == user_id
                 ),
-                UserConnection.is_active == True
+                UserConnection.is_active is True
             )
         )
 
@@ -88,8 +88,8 @@ class UserConnectionService:
         users_query = select(User).where(
             and_(
                 User.id.in_(connected_user_ids),
-                User.is_active == True,
-                User.is_deleted == False
+                User.is_active is True,
+                User.is_deleted is False
             )
         )
 

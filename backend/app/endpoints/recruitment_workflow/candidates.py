@@ -1,26 +1,24 @@
-from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database import get_db
-from app.models.user import User
 from app.crud.recruitment_workflow.candidate_process import candidate_process
-from app.crud.recruitment_workflow.recruitment_process import recruitment_process
 from app.crud.recruitment_workflow.process_viewer import process_viewer
-from app.services.recruitment_workflow.workflow_engine import workflow_engine
-from app.schemas.recruitment_workflow.candidate_process import (
-    CandidateProcessCreate,
-    CandidateProcessInfo,
-    CandidateProcessDetails,
-    CandidateTimeline,
-    BulkCandidateAssignment,
-    CandidateProcessStatusChange,
-    CandidateProcessStart,
-    CandidateProcessCompletion,
-    RecruiterWorkload
-)
+from app.crud.recruitment_workflow.recruitment_process import recruitment_process
+from app.database import get_db
 from app.dependencies import get_current_active_user
+from app.models.user import User
+from app.schemas.recruitment_workflow.candidate_process import (
+    BulkCandidateAssignment,
+    CandidateProcessCreate,
+    CandidateProcessDetails,
+    CandidateProcessInfo,
+    CandidateProcessStart,
+    CandidateProcessStatusChange,
+    CandidateTimeline,
+    RecruiterWorkload,
+)
+from app.services.recruitment_workflow.workflow_engine import workflow_engine
 
 router = APIRouter()
 
@@ -82,7 +80,7 @@ async def assign_candidate_to_process(
         )
 
 
-@router.post("/{process_id}/candidates/bulk", response_model=List[CandidateProcessInfo])
+@router.post("/{process_id}/candidates/bulk", response_model=list[CandidateProcessInfo])
 async def bulk_assign_candidates(
     process_id: int,
     bulk_assignment: BulkCandidateAssignment,
@@ -132,10 +130,10 @@ async def bulk_assign_candidates(
     return candidate_processes
 
 
-@router.get("/{process_id}/candidates", response_model=List[CandidateProcessInfo])
+@router.get("/{process_id}/candidates", response_model=list[CandidateProcessInfo])
 async def list_process_candidates(
     process_id: int,
-    status: Optional[str] = Query(None, description="Filter by status"),
+    status: str | None = Query(None, description="Filter by status"),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     db: AsyncSession = Depends(get_db),
@@ -422,9 +420,9 @@ async def get_candidate_timeline(
     )
 
 
-@router.get("/my-processes", response_model=List[CandidateProcessInfo])
+@router.get("/my-processes", response_model=list[CandidateProcessInfo])
 async def get_my_candidate_processes(
-    status: Optional[str] = Query(None, description="Filter by status"),
+    status: str | None = Query(None, description="Filter by status"),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     db: AsyncSession = Depends(get_db),

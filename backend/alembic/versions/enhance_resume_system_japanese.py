@@ -5,9 +5,9 @@ Revises: f1413e5cffd1
 Create Date: 2024-12-19 12:00:00.000000
 
 """
-from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = 'enhance_resume_system_japanese'
@@ -32,10 +32,10 @@ def upgrade() -> None:
     op.add_column('resumes', sa.Column('can_download_pdf', sa.Boolean(), nullable=True))
     op.add_column('resumes', sa.Column('can_edit', sa.Boolean(), nullable=True))
     op.add_column('resumes', sa.Column('can_delete', sa.Boolean(), nullable=True))
-    
+
     # Create indexes
     op.create_index(op.f('ix_resumes_public_url_slug'), 'resumes', ['public_url_slug'], unique=True)
-    
+
     # Create resume_message_attachments table
     op.create_table('resume_message_attachments',
         sa.Column('id', sa.Integer(), nullable=False),
@@ -49,7 +49,7 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_resume_message_attachments_id'), 'resume_message_attachments', ['id'], unique=False)
-    
+
     # Set default values for new columns
     op.execute("UPDATE resumes SET resume_format = 'INTERNATIONAL' WHERE resume_format IS NULL")
     op.execute("UPDATE resumes SET resume_language = 'ENGLISH' WHERE resume_language IS NULL")
@@ -57,7 +57,7 @@ def upgrade() -> None:
     op.execute("UPDATE resumes SET can_download_pdf = true WHERE can_download_pdf IS NULL")
     op.execute("UPDATE resumes SET can_edit = true WHERE can_edit IS NULL")
     op.execute("UPDATE resumes SET can_delete = true WHERE can_delete IS NULL")
-    
+
     # Make columns non-nullable after setting defaults
     op.alter_column('resumes', 'resume_format', nullable=False)
     op.alter_column('resumes', 'resume_language', nullable=False)
@@ -71,10 +71,10 @@ def downgrade() -> None:
     # Drop resume_message_attachments table
     op.drop_index(op.f('ix_resume_message_attachments_id'), table_name='resume_message_attachments')
     op.drop_table('resume_message_attachments')
-    
+
     # Drop indexes
     op.drop_index(op.f('ix_resumes_public_url_slug'), table_name='resumes')
-    
+
     # Drop columns from resumes table
     op.drop_column('resumes', 'can_delete')
     op.drop_column('resumes', 'can_edit')
@@ -90,7 +90,7 @@ def downgrade() -> None:
     op.drop_column('resumes', 'furigana_name')
     op.drop_column('resumes', 'resume_language')
     op.drop_column('resumes', 'resume_format')
-    
+
     # Drop enums
     op.execute('DROP TYPE IF EXISTS resumelanguage')
     op.execute('DROP TYPE IF EXISTS resumeformat')

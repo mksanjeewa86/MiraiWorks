@@ -1,9 +1,9 @@
+
 import pytest
 from httpx import AsyncClient
-from datetime import datetime
 
 from app.main import app
-from app.schemas.recruitment_workflow.enums import ProcessStatus, NodeType
+from app.schemas.recruitment_workflow.enums import ProcessStatus
 
 
 class TestRecruitmentProcessEndpoints:
@@ -435,6 +435,68 @@ class TestRecruitmentProcessEndpoints:
             assert response.status_code == 404
 
 
+    @pytest.mark.asyncio
+    async def test_create_process_node_interview(self):
+        """Ensure we can create an interview node via the new endpoint."""
+        async with AsyncClient(app=app, base_url="http://test") as client:
+            node_payload = {
+                "node_type": "interview",
+                "title": "Initial Interview",
+                "description": "Kick-off conversation",
+                "sequence_order": 0,
+                "position": {"x": 120, "y": 220},
+                "config": {
+                    "interview_type": "video",
+                    "duration_minutes": 45
+                }
+            }
+
+            response = await client.post(
+                "/api/recruitment-processes/1/nodes",
+                json=node_payload,
+                headers={"Authorization": "Bearer employer_token"}
+            )
+
+            assert response.status_code == 201
+            data = response.json()
+            assert data["node_type"] == "interview"
+            assert data["sequence_order"] >= 1
+            assert data["position_x"] == 120
+            assert data["position_y"] == 220
+
+    @pytest.mark.asyncio
+    async def test_create_process_node_with_todo_integration(self):
+        """Ensure todo integration endpoint returns node metadata."""
+        async with AsyncClient(app=app, base_url="http://test") as client:
+            node_payload = {
+                "node_type": "todo",
+                "title": "Coding Challenge",
+                "description": "Solve provided assignment",
+                "sequence_order": 0,
+                "position": {"x": 320, "y": 220},
+                "config": {
+                    "due_in_days": 5
+                },
+                "create_todo": {
+                    "due_in_days": 5,
+                    "priority": "high",
+                    "is_assignment": True
+                }
+            }
+
+            response = await client.post(
+                "/api/recruitment-processes/1/nodes/create-with-integration",
+                json=node_payload,
+                headers={"Authorization": "Bearer employer_token"}
+            )
+
+            assert response.status_code == 201
+            data = response.json()
+            assert "node" in data
+            assert data["node"]["node_type"] == "todo"
+            assert "todo" in data
+
+
 class TestCandidateProcessEndpoints:
     """Test candidate process API endpoints"""
 
@@ -831,6 +893,8 @@ class TestCandidateProcessEndpoints:
             )
 
             assert response.status_code == 403
+
+
 
 
 if __name__ == "__main__":

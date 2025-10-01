@@ -1,21 +1,24 @@
-from typing import Any, Dict, List, Optional
 from datetime import datetime, timedelta
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.crud.recruitment_workflow.recruitment_process import recruitment_process
-from app.crud.recruitment_workflow.process_node import process_node
-from app.crud.recruitment_workflow.candidate_process import candidate_process
-from app.crud.recruitment_workflow.node_execution import node_execution
-from app.crud.recruitment_workflow.node_connection import node_connection
-from app.crud.recruitment_workflow.process_viewer import process_viewer
 from app.crud.interview import interview as interview_crud
+from app.crud.recruitment_workflow.candidate_process import candidate_process
+from app.crud.recruitment_workflow.node_connection import node_connection
+from app.crud.recruitment_workflow.node_execution import node_execution
+from app.crud.recruitment_workflow.process_node import process_node
+from app.crud.recruitment_workflow.recruitment_process import recruitment_process
 from app.crud.todo import todo as todo_crud
-from app.models.recruitment_process import RecruitmentProcess
-from app.models.process_node import ProcessNode
 from app.models.candidate_process import CandidateProcess
 from app.models.node_execution import NodeExecution
-from app.schemas.recruitment_workflow.enums import NodeType, InterviewNodeType, TodoNodeType
+from app.models.process_node import ProcessNode
+from app.models.recruitment_process import RecruitmentProcess
+from app.schemas.recruitment_workflow.enums import (
+    InterviewNodeType,
+    NodeType,
+    TodoNodeType,
+)
 
 
 class WorkflowEngineService:
@@ -26,7 +29,7 @@ class WorkflowEngineService:
         db: AsyncSession,
         template_id: int,
         employer_id: int,
-        process_data: Dict[str, Any]
+        process_data: dict[str, Any]
     ) -> RecruitmentProcess:
         """Create a new process from a template"""
         template = await recruitment_process.get(db, id=template_id)
@@ -79,7 +82,7 @@ class WorkflowEngineService:
         db: AsyncSession,
         process_id: int,
         candidate_id: int,
-        recruiter_id: Optional[int] = None,
+        recruiter_id: int | None = None,
         start_immediately: bool = False
     ) -> CandidateProcess:
         """Assign a candidate to a process"""
@@ -150,7 +153,7 @@ class WorkflowEngineService:
         db: AsyncSession,
         candidate_process_id: int,
         node_id: int,
-        assigned_to: Optional[int] = None
+        assigned_to: int | None = None
     ) -> NodeExecution:
         """Create a new node execution"""
         # Get the node to determine configuration
@@ -186,10 +189,10 @@ class WorkflowEngineService:
         execution_id: int,
         result: str,
         completed_by: int,
-        score: Optional[float] = None,
-        feedback: Optional[str] = None,
-        execution_data: Optional[Dict[str, Any]] = None
-    ) -> Optional[NodeExecution]:
+        score: float | None = None,
+        feedback: str | None = None,
+        execution_data: dict[str, Any] | None = None
+    ) -> NodeExecution | None:
         """Complete a node and advance to next"""
         execution = await node_execution.get(db, id=execution_id)
         if not execution:
@@ -219,8 +222,8 @@ class WorkflowEngineService:
         candidate_process_id: int,
         current_node_id: int,
         execution_result: str,
-        execution_data: Optional[Dict[str, Any]] = None
-    ) -> List[NodeExecution]:
+        execution_data: dict[str, Any] | None = None
+    ) -> list[NodeExecution]:
         """Advance candidate to the next node(s)"""
         # Get next nodes based on execution result
         next_nodes = await process_node.get_next_nodes(
@@ -360,7 +363,7 @@ class WorkflowEngineService:
         self,
         db: AsyncSession,
         process_id: int
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Validate a process before activation"""
         # Get process nodes
         nodes = await process_node.get_by_process_id(db, process_id=process_id, include_inactive=False)
@@ -397,7 +400,7 @@ class WorkflowEngineService:
             "node_types": list(node_types)
         }
 
-    def _validate_node_config(self, node: ProcessNode) -> List[str]:
+    def _validate_node_config(self, node: ProcessNode) -> list[str]:
         """Validate individual node configuration"""
         issues = []
 
@@ -431,7 +434,7 @@ class WorkflowEngineService:
         self,
         db: AsyncSession,
         candidate_process_id: int
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get detailed timeline for a candidate process"""
         return await candidate_process.get_timeline(db, candidate_process_id=candidate_process_id)
 
@@ -439,7 +442,7 @@ class WorkflowEngineService:
         self,
         db: AsyncSession,
         process_id: int
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get comprehensive analytics for a process"""
         # Basic statistics
         stats = await candidate_process.get_statistics_by_process(db, process_id=process_id)
@@ -471,10 +474,10 @@ class WorkflowEngineService:
         self,
         db: AsyncSession,
         process_id: int,
-        candidate_ids: List[int],
-        assigned_recruiter_id: Optional[int] = None,
+        candidate_ids: list[int],
+        assigned_recruiter_id: int | None = None,
         start_immediately: bool = False
-    ) -> List[CandidateProcess]:
+    ) -> list[CandidateProcess]:
         """Bulk assign multiple candidates to a process"""
         assigned_processes = await candidate_process.bulk_assign_candidates(
             db,

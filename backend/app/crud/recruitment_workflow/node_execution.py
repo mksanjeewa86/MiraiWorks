@@ -1,11 +1,12 @@
-from typing import Any, Dict, List, Optional
 from datetime import datetime
+from typing import Any
 
-from sqlalchemy import and_, select, func, desc, asc
+from sqlalchemy import and_, asc, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.crud.base import CRUDBase
+from app.models.candidate_process import CandidateProcess
 from app.models.node_execution import NodeExecution
 
 
@@ -15,7 +16,7 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         self,
         db: AsyncSession,
         *,
-        obj_in: Dict[str, Any]
+        obj_in: dict[str, Any]
     ) -> NodeExecution:
         """Create a new node execution"""
         db_obj = NodeExecution(**obj_in)
@@ -30,7 +31,7 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         *,
         candidate_process_id: int,
         node_id: int
-    ) -> Optional[NodeExecution]:
+    ) -> NodeExecution | None:
         """Get execution by candidate process and node"""
         result = await db.execute(
             select(NodeExecution)
@@ -48,8 +49,8 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         db: AsyncSession,
         *,
         candidate_process_id: int,
-        status: Optional[str] = None
-    ) -> List[NodeExecution]:
+        status: str | None = None
+    ) -> list[NodeExecution]:
         """Get all executions for a candidate process"""
         conditions = [NodeExecution.candidate_process_id == candidate_process_id]
 
@@ -69,10 +70,10 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         db: AsyncSession,
         *,
         node_id: int,
-        status: Optional[str] = None,
+        status: str | None = None,
         skip: int = 0,
         limit: int = 100
-    ) -> List[NodeExecution]:
+    ) -> list[NodeExecution]:
         """Get all executions for a specific node"""
         conditions = [NodeExecution.node_id == node_id]
 
@@ -97,10 +98,10 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         db: AsyncSession,
         *,
         user_id: int,
-        status: Optional[str] = None,
+        status: str | None = None,
         skip: int = 0,
         limit: int = 100
-    ) -> List[NodeExecution]:
+    ) -> list[NodeExecution]:
         """Get executions assigned to a specific user"""
         conditions = [NodeExecution.assigned_to == user_id]
 
@@ -124,9 +125,9 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         self,
         db: AsyncSession,
         *,
-        assigned_to: Optional[int] = None,
+        assigned_to: int | None = None,
         limit: int = 100
-    ) -> List[NodeExecution]:
+    ) -> list[NodeExecution]:
         """Get overdue executions"""
         conditions = [
             NodeExecution.due_date < datetime.utcnow(),
@@ -154,7 +155,7 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         db: AsyncSession,
         *,
         id: int
-    ) -> Optional[NodeExecution]:
+    ) -> NodeExecution | None:
         """Get execution with full details"""
         result = await db.execute(
             select(NodeExecution)
@@ -177,7 +178,7 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         db: AsyncSession,
         *,
         execution: NodeExecution,
-        assigned_to: Optional[int] = None
+        assigned_to: int | None = None
     ) -> NodeExecution:
         """Start an execution"""
         execution.start(assigned_to)
@@ -192,9 +193,9 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         execution: NodeExecution,
         result: str,
         completed_by: int,
-        score: Optional[float] = None,
-        feedback: Optional[str] = None,
-        execution_data: Optional[Dict[str, Any]] = None
+        score: float | None = None,
+        feedback: str | None = None,
+        execution_data: dict[str, Any] | None = None
     ) -> NodeExecution:
         """Complete an execution"""
         execution.complete(result, completed_by, score, feedback, execution_data)
@@ -208,7 +209,7 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         *,
         execution: NodeExecution,
         completed_by: int,
-        reason: Optional[str] = None
+        reason: str | None = None
     ) -> NodeExecution:
         """Fail an execution"""
         execution.fail(completed_by, reason)
@@ -222,7 +223,7 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         *,
         execution: NodeExecution,
         completed_by: int,
-        reason: Optional[str] = None
+        reason: str | None = None
     ) -> NodeExecution:
         """Skip an execution"""
         execution.skip(completed_by, reason)
@@ -273,10 +274,10 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         self,
         db: AsyncSession,
         *,
-        execution_ids: List[int],
+        execution_ids: list[int],
         status: str,
-        assigned_to: Optional[int] = None
-    ) -> List[NodeExecution]:
+        assigned_to: int | None = None
+    ) -> list[NodeExecution]:
         """Bulk update execution status"""
         executions = await db.execute(
             select(NodeExecution)
@@ -301,9 +302,9 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         self,
         db: AsyncSession,
         *,
-        completions: List[Dict[str, Any]],
+        completions: list[dict[str, Any]],
         completed_by: int
-    ) -> List[NodeExecution]:
+    ) -> list[NodeExecution]:
         """Bulk complete executions"""
         execution_ids = [c["execution_id"] for c in completions]
         executions = await db.execute(
@@ -339,10 +340,10 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         self,
         db: AsyncSession,
         *,
-        node_id: Optional[int] = None,
-        process_id: Optional[int] = None,
-        candidate_process_id: Optional[int] = None
-    ) -> Dict[str, Any]:
+        node_id: int | None = None,
+        process_id: int | None = None,
+        candidate_process_id: int | None = None
+    ) -> dict[str, Any]:
         """Get execution statistics"""
         conditions = []
 
@@ -430,8 +431,8 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         self,
         db: AsyncSession,
         *,
-        process_id: Optional[int] = None
-    ) -> List[Dict[str, Any]]:
+        process_id: int | None = None
+    ) -> list[dict[str, Any]]:
         """Get workload distribution by assignee"""
         conditions = [NodeExecution.assigned_to.isnot(None)]
 

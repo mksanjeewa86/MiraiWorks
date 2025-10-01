@@ -126,7 +126,7 @@ class TodoPermissionService:
         query = select(User).where(
             User.id == assignee_id,
             User.is_active is True,
-            User.is_deleted == False
+            User.is_deleted is False
         )
         result = await db.execute(query)
         user = result.scalars().first()
@@ -148,7 +148,7 @@ class TodoPermissionService:
                 query = select(User).where(
                     User.id == assigner_id,
                     User.is_active is True,
-                    User.is_deleted == False
+                    User.is_deleted is False
                 )
                 result = await db.execute(query)
                 self_user = result.scalars().first()
@@ -163,7 +163,7 @@ class TodoPermissionService:
                 select(User)
                 .where(
                     User.is_active is True,
-                    User.is_deleted == False,
+                    User.is_deleted is False,
                     User.id != assigner_id  # Don't include the assigner themselves
                 )
             )

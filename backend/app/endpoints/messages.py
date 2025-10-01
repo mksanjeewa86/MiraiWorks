@@ -277,9 +277,9 @@ async def get_restricted_user_ids(
 ):
     """Get list of user IDs that current user cannot message."""
     from sqlalchemy import select
-    from sqlalchemy.orm import selectinload
-    from app.models.user import UserRole
+
     from app.models.role import Role
+    from app.models.user import UserRole
 
     # Get current user's roles
     current_user_roles = [user_role.role.name for user_role in current_user.user_roles]
@@ -294,8 +294,8 @@ async def get_restricted_user_ids(
             .join(UserRole, User.id == UserRole.user_id)
             .join(Role, UserRole.role_id == Role.id)
             .where(Role.name != "company_admin")
-            .where(User.is_active == True)
-            .where(User.is_deleted == False)
+            .where(User.is_active is True)
+            .where(User.is_deleted is False)
         )
         result = await db.execute(query)
         restricted_user_ids = [user_id for user_id, in result.fetchall()]
@@ -307,8 +307,8 @@ async def get_restricted_user_ids(
             .join(UserRole, User.id == UserRole.user_id)
             .join(Role, UserRole.role_id == Role.id)
             .where(Role.name != "super_admin")
-            .where(User.is_active == True)
-            .where(User.is_deleted == False)
+            .where(User.is_active is True)
+            .where(User.is_deleted is False)
         )
         result = await db.execute(query)
         restricted_user_ids = [user_id for user_id, in result.fetchall()]
@@ -320,8 +320,8 @@ async def get_restricted_user_ids(
             .join(UserRole, User.id == UserRole.user_id)
             .join(Role, UserRole.role_id == Role.id)
             .where(Role.name == "company_admin")
-            .where(User.is_active == True)
-            .where(User.is_deleted == False)
+            .where(User.is_active is True)
+            .where(User.is_deleted is False)
         )
         result = await db.execute(query)
         restricted_user_ids = [user_id for user_id, in result.fetchall()]

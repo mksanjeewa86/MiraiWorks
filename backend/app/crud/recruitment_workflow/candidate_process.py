@@ -1,14 +1,13 @@
-from typing import Any, Dict, List, Optional
 from datetime import datetime
+from typing import Any
 
-from sqlalchemy import and_, or_, select, func, desc, asc
+from sqlalchemy import and_, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.crud.base import CRUDBase
 from app.models.candidate_process import CandidateProcess
 from app.models.node_execution import NodeExecution
-from app.models.recruitment_process import RecruitmentProcess
 
 
 class CRUDCandidateProcess(CRUDBase[CandidateProcess, dict, dict]):
@@ -17,7 +16,7 @@ class CRUDCandidateProcess(CRUDBase[CandidateProcess, dict, dict]):
         self,
         db: AsyncSession,
         *,
-        obj_in: Dict[str, Any]
+        obj_in: dict[str, Any]
     ) -> CandidateProcess:
         """Create a new candidate process"""
         db_obj = CandidateProcess(**obj_in)
@@ -32,7 +31,7 @@ class CRUDCandidateProcess(CRUDBase[CandidateProcess, dict, dict]):
         *,
         candidate_id: int,
         process_id: int
-    ) -> Optional[CandidateProcess]:
+    ) -> CandidateProcess | None:
         """Get candidate process by candidate and process IDs"""
         result = await db.execute(
             select(CandidateProcess)
@@ -50,10 +49,10 @@ class CRUDCandidateProcess(CRUDBase[CandidateProcess, dict, dict]):
         db: AsyncSession,
         *,
         process_id: int,
-        status: Optional[str] = None,
+        status: str | None = None,
         skip: int = 0,
         limit: int = 100
-    ) -> List[CandidateProcess]:
+    ) -> list[CandidateProcess]:
         """Get all candidate processes for a recruitment process"""
         conditions = [CandidateProcess.process_id == process_id]
 
@@ -79,10 +78,10 @@ class CRUDCandidateProcess(CRUDBase[CandidateProcess, dict, dict]):
         db: AsyncSession,
         *,
         candidate_id: int,
-        status: Optional[str] = None,
+        status: str | None = None,
         skip: int = 0,
         limit: int = 100
-    ) -> List[CandidateProcess]:
+    ) -> list[CandidateProcess]:
         """Get all processes for a candidate"""
         conditions = [CandidateProcess.candidate_id == candidate_id]
 
@@ -108,10 +107,10 @@ class CRUDCandidateProcess(CRUDBase[CandidateProcess, dict, dict]):
         db: AsyncSession,
         *,
         recruiter_id: int,
-        status: Optional[str] = None,
+        status: str | None = None,
         skip: int = 0,
         limit: int = 100
-    ) -> List[CandidateProcess]:
+    ) -> list[CandidateProcess]:
         """Get all candidate processes assigned to a recruiter"""
         conditions = [CandidateProcess.assigned_recruiter_id == recruiter_id]
 
@@ -137,7 +136,7 @@ class CRUDCandidateProcess(CRUDBase[CandidateProcess, dict, dict]):
         db: AsyncSession,
         *,
         id: int
-    ) -> Optional[CandidateProcess]:
+    ) -> CandidateProcess | None:
         """Get candidate process with full details"""
         result = await db.execute(
             select(CandidateProcess)
@@ -183,7 +182,7 @@ class CRUDCandidateProcess(CRUDBase[CandidateProcess, dict, dict]):
         db: AsyncSession,
         *,
         candidate_process: CandidateProcess,
-        next_node_id: Optional[int]
+        next_node_id: int | None
     ) -> CandidateProcess:
         """Advance candidate to next node"""
         candidate_process.advance_to_node(next_node_id)
@@ -197,8 +196,8 @@ class CRUDCandidateProcess(CRUDBase[CandidateProcess, dict, dict]):
         *,
         candidate_process: CandidateProcess,
         final_result: str,
-        overall_score: Optional[float] = None,
-        notes: Optional[str] = None
+        overall_score: float | None = None,
+        notes: str | None = None
     ) -> CandidateProcess:
         """Complete a candidate process"""
         candidate_process.complete(final_result, overall_score, notes)
@@ -211,8 +210,8 @@ class CRUDCandidateProcess(CRUDBase[CandidateProcess, dict, dict]):
         db: AsyncSession,
         *,
         candidate_process: CandidateProcess,
-        reason: Optional[str] = None,
-        failed_at_node_id: Optional[int] = None
+        reason: str | None = None,
+        failed_at_node_id: int | None = None
     ) -> CandidateProcess:
         """Fail a candidate process"""
         candidate_process.fail(reason, failed_at_node_id)
@@ -225,7 +224,7 @@ class CRUDCandidateProcess(CRUDBase[CandidateProcess, dict, dict]):
         db: AsyncSession,
         *,
         candidate_process: CandidateProcess,
-        reason: Optional[str] = None
+        reason: str | None = None
     ) -> CandidateProcess:
         """Withdraw a candidate from the process"""
         candidate_process.withdraw(reason)
@@ -262,9 +261,9 @@ class CRUDCandidateProcess(CRUDBase[CandidateProcess, dict, dict]):
         db: AsyncSession,
         *,
         process_id: int,
-        candidate_ids: List[int],
-        assigned_recruiter_id: Optional[int] = None
-    ) -> List[CandidateProcess]:
+        candidate_ids: list[int],
+        assigned_recruiter_id: int | None = None
+    ) -> list[CandidateProcess]:
         """Bulk assign candidates to a process"""
         candidate_processes = []
 
@@ -298,7 +297,7 @@ class CRUDCandidateProcess(CRUDBase[CandidateProcess, dict, dict]):
         db: AsyncSession,
         *,
         candidate_process_id: int
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get timeline for a candidate process"""
         candidate_process = await self.get_with_details(db, id=candidate_process_id)
         if not candidate_process:
@@ -363,7 +362,7 @@ class CRUDCandidateProcess(CRUDBase[CandidateProcess, dict, dict]):
         db: AsyncSession,
         *,
         process_id: int
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get statistics for candidate processes in a specific recruitment process"""
         # Count candidates by status
         status_counts = await db.execute(
@@ -413,7 +412,7 @@ class CRUDCandidateProcess(CRUDBase[CandidateProcess, dict, dict]):
         db: AsyncSession,
         *,
         recruiter_id: int
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get workload statistics for a recruiter"""
         # Count active processes
         active_count = await db.execute(

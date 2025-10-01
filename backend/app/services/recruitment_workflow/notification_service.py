@@ -1,13 +1,11 @@
-from typing import Any, Dict, List, Optional
-from datetime import datetime
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.candidate_process import CandidateProcess
 from app.models.node_execution import NodeExecution
-from app.models.recruitment_process import RecruitmentProcess
 from app.models.process_node import ProcessNode
-from app.models.user import User
+from app.models.recruitment_process import RecruitmentProcess
 
 
 class RecruitmentWorkflowNotificationService:
@@ -363,7 +361,7 @@ class RecruitmentWorkflowNotificationService:
         self,
         db: AsyncSession,
         execution: NodeExecution,
-        interview_data: Dict[str, Any],
+        interview_data: dict[str, Any],
         candidate_process: CandidateProcess
     ) -> None:
         """Send notification when an interview is scheduled"""
@@ -411,10 +409,10 @@ class RecruitmentWorkflowNotificationService:
         self,
         db: AsyncSession,
         user_id: int,
-        notification_type: Optional[str] = None,
+        notification_type: str | None = None,
         unread_only: bool = False,
         limit: int = 50
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get notifications for a user (placeholder - would integrate with notification system)"""
         # This would typically query a notifications table
         # For now, return empty list as placeholder
@@ -433,7 +431,7 @@ class RecruitmentWorkflowNotificationService:
     async def _send_notifications(
         self,
         db: AsyncSession,
-        notifications: List[Dict[str, Any]]
+        notifications: list[dict[str, Any]]
     ) -> None:
         """Send notifications (placeholder - would integrate with notification system)"""
         # This would typically:
@@ -450,7 +448,7 @@ class RecruitmentWorkflowNotificationService:
         self,
         db: AsyncSession,
         user_id: int
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get user notification preferences"""
         # This would typically query user preferences
         # Return default preferences for now
@@ -473,8 +471,8 @@ class RecruitmentWorkflowNotificationService:
         self,
         db: AsyncSession,
         user_id: int,
-        preferences: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        preferences: dict[str, Any]
+    ) -> dict[str, Any]:
         """Update user notification preferences"""
         # This would typically update user preferences in database
         return preferences

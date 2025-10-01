@@ -1,7 +1,7 @@
 import re
 
 # Read the file
-with open('app/tests/test_recruitment_workflow_scenarios.py', 'r', encoding='utf-8') as file:
+with open('app/tests/test_recruitment_workflow_scenarios.py', encoding='utf-8') as file:
     content = file.read()
 
 # Fix method signatures to include client and auth_headers fixtures

@@ -12,13 +12,15 @@ if str(BACKEND_DIR) not in sys.path:
 os.environ["ENVIRONMENT"] = "test"
 
 async def debug_auth_flow():
-    from app.tests.conftest import TestingSessionLocal, fast_clear_data
-    from app.models.user import User
+    from sqlalchemy import select
+
     from app.models.company import Company
     from app.models.role import Role, UserRole
+    from app.models.user import User
     from app.services.auth_service import auth_service
-    from app.utils.constants import UserRole as UserRoleEnum, CompanyType
-    from sqlalchemy import select
+    from app.tests.conftest import TestingSessionLocal, fast_clear_data
+    from app.utils.constants import CompanyType
+    from app.utils.constants import UserRole as UserRoleEnum
 
     # Clear data first
     await fast_clear_data()

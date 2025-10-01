@@ -6,6 +6,7 @@ from app.models.calendar_connection import CalendarConnection
 from app.models.calendar_event import CalendarEvent
 from app.models.calendar_integration import ExternalCalendarAccount, SyncedEvent
 from app.models.company import Company
+from app.models.connection_invitation import ConnectionInvitation
 from app.models.exam import (
     Exam,
     ExamAnswer,
@@ -18,6 +19,7 @@ from app.models.exam import (
     QuestionType,
     SessionStatus,
 )
+from app.models.holiday import Holiday
 from app.models.interview import Interview, InterviewProposal
 from app.models.interview_note import InterviewNote
 from app.models.mbti_model import MBTIQuestion, MBTITest
@@ -48,7 +50,6 @@ from app.models.todo_extension_request import TodoExtensionRequest
 from app.models.todo_viewer import TodoViewer
 from app.models.user import User
 from app.models.user_connection import UserConnection
-from app.models.connection_invitation import ConnectionInvitation
 from app.models.user_settings import UserSettings
 from app.models.video_call import (
     CallParticipant,
@@ -57,7 +58,6 @@ from app.models.video_call import (
     TranscriptionSegment,
     VideoCall,
 )
-from app.models.holiday import Holiday
 
 __all__ = [
     "Company",

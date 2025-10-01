@@ -1,18 +1,28 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, JSON, Float, Boolean, UniqueConstraint
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
 
 if TYPE_CHECKING:
-    from app.models.user import User
-    from app.models.recruitment_process import RecruitmentProcess
     from app.models.node_connection import NodeConnection
     from app.models.node_execution import NodeExecution
+    from app.models.recruitment_process import RecruitmentProcess
+    from app.models.user import User
 
 
 class ProcessNode(Base):
@@ -34,7 +44,7 @@ class ProcessNode(Base):
         String(50), nullable=False, index=True
     )  # interview, todo, assessment, decision
     title: Mapped[str] = mapped_column(String(255), nullable=False)
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Ordering and positioning
     sequence_order: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
@@ -42,10 +52,10 @@ class ProcessNode(Base):
     position_y: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
 
     # Configuration and requirements
-    config: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
-    requirements: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
-    instructions: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    estimated_duration_minutes: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    config: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    requirements: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    instructions: Mapped[str | None] = mapped_column(Text, nullable=True)
+    estimated_duration_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     # Node behavior
     status: Mapped[str] = mapped_column(
@@ -59,7 +69,7 @@ class ProcessNode(Base):
     created_by: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    updated_by: Mapped[Optional[int]] = mapped_column(
+    updated_by: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
 
@@ -81,7 +91,7 @@ class ProcessNode(Base):
     creator: Mapped[User] = relationship(
         "User", foreign_keys=[created_by], back_populates="created_process_nodes"
     )
-    updater: Mapped[Optional[User]] = relationship(
+    updater: Mapped[User | None] = relationship(
         "User", foreign_keys=[updated_by], back_populates="updated_process_nodes"
     )
 

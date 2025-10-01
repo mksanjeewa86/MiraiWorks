@@ -5,13 +5,12 @@ Generate corrected email templates to confirm HTML rendering
 """
 
 import asyncio
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.abspath("."))
 
 from app.services.email_preview_service import email_preview_service
-from app.services.email_service import email_service
 
 
 async def main():

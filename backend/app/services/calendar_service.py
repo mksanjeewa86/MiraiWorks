@@ -1,7 +1,7 @@
 import os
 import secrets
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any
 from urllib.parse import urlencode
 
 import aiohttp
@@ -12,14 +12,11 @@ from sqlalchemy.orm import Session
 from app.crud.calendar_event import calendar_event
 from app.crud.holiday import holiday
 from app.models.calendar_connection import CalendarConnection
-from app.models.calendar_integration import SyncedEvent
 from app.schemas.calendar_event import (
     CalendarEventCreate,
-    CalendarEventUpdate,
     CalendarEventInfo,
     CalendarEventQueryParams,
-    EventType,
-    EventStatus
+    CalendarEventUpdate,
 )
 
 logger = structlog.get_logger()
@@ -111,7 +108,7 @@ class CalendarService:
         event_id: int,
         event_in: CalendarEventUpdate,
         user_id: int
-    ) -> Optional[CalendarEventInfo]:
+    ) -> CalendarEventInfo | None:
         """Update an existing calendar event"""
         try:
             # Get existing event
@@ -182,7 +179,7 @@ class CalendarService:
         *,
         user_id: int,
         query_params: CalendarEventQueryParams
-    ) -> List[CalendarEventInfo]:
+    ) -> list[CalendarEventInfo]:
         """Get calendar events for a user with filters"""
         try:
             events = await calendar_event.get_by_date_range(
@@ -208,7 +205,7 @@ class CalendarService:
         user_id: int,
         start_date: datetime,
         end_date: datetime
-    ) -> Dict[str, List[Dict[str, Any]]]:
+    ) -> dict[str, list[dict[str, Any]]]:
         """Get consolidated calendar view with all event types"""
         try:
             result = {
@@ -283,7 +280,7 @@ class CalendarService:
         search_term: str,
         skip: int = 0,
         limit: int = 50
-    ) -> List[CalendarEventInfo]:
+    ) -> list[CalendarEventInfo]:
         """Search calendar events by title, description, or location"""
         try:
             events = await calendar_event.search_events(
@@ -306,7 +303,7 @@ class CalendarService:
         *,
         user_id: int,
         limit: int = 10
-    ) -> List[CalendarEventInfo]:
+    ) -> list[CalendarEventInfo]:
         """Get upcoming events for a user"""
         try:
             events = await calendar_event.get_upcoming_events(
@@ -325,9 +322,9 @@ class CalendarService:
         self,
         db: AsyncSession,
         *,
-        events_data: List[CalendarEventCreate],
+        events_data: list[CalendarEventCreate],
         creator_id: int
-    ) -> List[CalendarEventInfo]:
+    ) -> list[CalendarEventInfo]:
         """Create multiple calendar events at once"""
         try:
             created_events = await calendar_event.create_multiple(

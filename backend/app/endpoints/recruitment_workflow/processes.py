@@ -1,30 +1,29 @@
-from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database import get_db
-from app.models.user import User
-from app.crud.recruitment_workflow.recruitment_process import recruitment_process
 from app.crud.recruitment_workflow.process_viewer import process_viewer
-from app.services.recruitment_workflow.workflow_engine import workflow_engine
+from app.crud.recruitment_workflow.recruitment_process import recruitment_process
+from app.database import get_db
+from app.dependencies import get_current_active_user
+from app.models.user import User
 from app.schemas.recruitment_workflow.recruitment_process import (
-    RecruitmentProcessCreate,
-    RecruitmentProcessUpdate,
-    RecruitmentProcessInfo,
-    RecruitmentProcessDetails,
     ProcessActivation,
+    ProcessAnalytics,
     ProcessArchive,
     ProcessClone,
     ProcessStatistics,
-    ProcessAnalytics
+    RecruitmentProcessCreate,
+    RecruitmentProcessDetails,
+    RecruitmentProcessInfo,
+    RecruitmentProcessUpdate,
 )
-from app.dependencies import get_current_active_user
+from app.services.recruitment_workflow.workflow_engine import workflow_engine
 
 router = APIRouter()
 
 
-def get_user_roles(user: User) -> List[str]:
+def get_user_roles(user: User) -> list[str]:
     """Helper function to get user roles."""
     return [user_role.role.name for user_role in user.user_roles]
 
@@ -59,13 +58,13 @@ async def create_recruitment_process(
     return process
 
 
-@router.get("/", response_model=List[RecruitmentProcessInfo])
+@router.get("/", response_model=list[RecruitmentProcessInfo])
 async def list_recruitment_processes(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
-    status: Optional[str] = Query(None, description="Filter by status"),
-    company_id: Optional[int] = Query(None, description="Filter by company (admin only)"),
-    search: Optional[str] = Query(None, description="Search by name or description"),
+    status: str | None = Query(None, description="Filter by status"),
+    company_id: int | None = Query(None, description="Filter by company (admin only)"),
+    search: str | None = Query(None, description="Search by name or description"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
@@ -503,12 +502,12 @@ async def get_company_process_statistics(
     return ProcessStatistics(**stats)
 
 
-@router.get("/templates/", response_model=List[RecruitmentProcessInfo])
+@router.get("/templates/", response_model=list[RecruitmentProcessInfo])
 async def list_process_templates(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
-    category: Optional[str] = Query(None, description="Filter by category"),
-    industry: Optional[str] = Query(None, description="Filter by industry"),
+    category: str | None = Query(None, description="Filter by category"),
+    industry: str | None = Query(None, description="Filter by industry"),
     public_only: bool = Query(False, description="Show only public templates"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user)

@@ -1,13 +1,14 @@
 """Add video call tables for interview feature
 
 Revision ID: add_video_call_tables
-Revises: 
+Revises:
 Create Date: 2025-09-22 12:00:00.000000
 
 """
-from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
+
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = 'add_video_call_tables'
@@ -48,7 +49,7 @@ def upgrade() -> None:
     op.create_index(op.f('ix_video_calls_job_id'), 'video_calls', ['job_id'], unique=False)
     op.create_index('idx_video_calls_scheduled_at', 'video_calls', ['scheduled_at'], unique=False)
     op.create_index('idx_video_calls_status', 'video_calls', ['status'], unique=False)
-    
+
     # Create call_participants table
     op.create_table('call_participants',
         sa.Column('id', sa.Integer(), nullable=False),
@@ -68,7 +69,7 @@ def upgrade() -> None:
     op.create_index(op.f('ix_call_participants_user_id'), 'call_participants', ['user_id'], unique=False)
     op.create_index(op.f('ix_call_participants_video_call_id'), 'call_participants', ['video_call_id'], unique=False)
     op.create_index('idx_call_participants_video_call_user', 'call_participants', ['video_call_id', 'user_id'], unique=True)
-    
+
     # Create recording_consents table
     op.create_table('recording_consents',
         sa.Column('id', sa.Integer(), nullable=False),
@@ -85,7 +86,7 @@ def upgrade() -> None:
     op.create_index(op.f('ix_recording_consents_user_id'), 'recording_consents', ['user_id'], unique=False)
     op.create_index(op.f('ix_recording_consents_video_call_id'), 'recording_consents', ['video_call_id'], unique=False)
     op.create_index('idx_recording_consents_video_call_user', 'recording_consents', ['video_call_id', 'user_id'], unique=True)
-    
+
     # Create call_transcriptions table
     op.create_table('call_transcriptions',
         sa.Column('id', sa.Integer(), nullable=False),
@@ -103,7 +104,7 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_call_transcriptions_id'), 'call_transcriptions', ['id'], unique=False)
     op.create_index(op.f('ix_call_transcriptions_video_call_id'), 'call_transcriptions', ['video_call_id'], unique=True)
-    
+
     # Create transcription_segments table
     op.create_table('transcription_segments',
         sa.Column('id', sa.Integer(), nullable=False),
@@ -131,23 +132,23 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_transcription_segments_speaker_id'), table_name='transcription_segments')
     op.drop_index(op.f('ix_transcription_segments_id'), table_name='transcription_segments')
     op.drop_table('transcription_segments')
-    
+
     op.drop_index(op.f('ix_call_transcriptions_video_call_id'), table_name='call_transcriptions')
     op.drop_index(op.f('ix_call_transcriptions_id'), table_name='call_transcriptions')
     op.drop_table('call_transcriptions')
-    
+
     op.drop_index('idx_recording_consents_video_call_user', table_name='recording_consents')
     op.drop_index(op.f('ix_recording_consents_video_call_id'), table_name='recording_consents')
     op.drop_index(op.f('ix_recording_consents_user_id'), table_name='recording_consents')
     op.drop_index(op.f('ix_recording_consents_id'), table_name='recording_consents')
     op.drop_table('recording_consents')
-    
+
     op.drop_index('idx_call_participants_video_call_user', table_name='call_participants')
     op.drop_index(op.f('ix_call_participants_video_call_id'), table_name='call_participants')
     op.drop_index(op.f('ix_call_participants_user_id'), table_name='call_participants')
     op.drop_index(op.f('ix_call_participants_id'), table_name='call_participants')
     op.drop_table('call_participants')
-    
+
     op.drop_index('idx_video_calls_status', table_name='video_calls')
     op.drop_index('idx_video_calls_scheduled_at', table_name='video_calls')
     op.drop_index(op.f('ix_video_calls_job_id'), table_name='video_calls')

@@ -5,14 +5,12 @@ Specifically for the raw HTML display issue
 """
 
 import asyncio
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.abspath("."))
 
-from app.services.email_service import email_service
 from app.services.email_preview_service import email_preview_service
-from app.config import settings
 
 
 async def main():

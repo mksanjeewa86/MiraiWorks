@@ -5,9 +5,10 @@ Revises: add_user_suspension
 Create Date: 2025-09-19 06:00:00.000000
 
 """
-from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.sql import func
+
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "create_todos_table"

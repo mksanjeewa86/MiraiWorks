@@ -1,14 +1,14 @@
 """User connections API endpoints."""
 
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List
 
 from app.database import get_db
 from app.dependencies import get_current_active_user
 from app.models.user import User
-from app.services.user_connection_service import user_connection_service
 from app.schemas.user import UserResponse
+from app.services.user_connection_service import user_connection_service
 
 router = APIRouter()
 
@@ -71,7 +71,7 @@ async def disconnect_from_user(
         )
 
 
-@router.get("/my-connections", response_model=List[UserResponse])
+@router.get("/my-connections", response_model=list[UserResponse])
 async def get_my_connections(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
@@ -86,7 +86,7 @@ async def get_my_connections(
     return connected_users
 
 
-@router.get("/assignable-users", response_model=List[UserResponse])
+@router.get("/assignable-users", response_model=list[UserResponse])
 async def get_assignable_users(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),

@@ -1,14 +1,14 @@
-from typing import Any, Dict, List, Optional
 from datetime import datetime
+from typing import Any
 
-from sqlalchemy import and_, select, func, desc, asc
+from sqlalchemy import and_, asc, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.crud.base import CRUDBase
-from app.models.process_node import ProcessNode
 from app.models.node_connection import NodeConnection
 from app.models.node_execution import NodeExecution
+from app.models.process_node import ProcessNode
 
 
 class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
@@ -17,7 +17,7 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
         self,
         db: AsyncSession,
         *,
-        obj_in: Dict[str, Any],
+        obj_in: dict[str, Any],
         created_by: int
     ) -> ProcessNode:
         """Create a new process node"""
@@ -42,7 +42,7 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
         *,
         process_id: int,
         include_inactive: bool = False
-    ) -> List[ProcessNode]:
+    ) -> list[ProcessNode]:
         """Get all nodes for a process"""
         conditions = [ProcessNode.process_id == process_id]
 
@@ -61,7 +61,7 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
         db: AsyncSession,
         *,
         id: int
-    ) -> Optional[ProcessNode]:
+    ) -> ProcessNode | None:
         """Get node with its connections"""
         result = await db.execute(
             select(ProcessNode)
@@ -79,7 +79,7 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
         db: AsyncSession,
         *,
         process_id: int
-    ) -> List[ProcessNode]:
+    ) -> list[ProcessNode]:
         """Get start nodes for a process (nodes with no incoming connections or sequence_order = 1)"""
         # First try to get node with sequence_order = 1
         result = await db.execute(
@@ -122,8 +122,8 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
         *,
         node_id: int,
         execution_result: str,
-        execution_data: Optional[Dict[str, Any]] = None
-    ) -> List[ProcessNode]:
+        execution_data: dict[str, Any] | None = None
+    ) -> list[ProcessNode]:
         """Get next nodes based on execution result"""
         # Get outgoing connections
         result = await db.execute(
@@ -146,7 +146,7 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
         db: AsyncSession,
         *,
         db_obj: ProcessNode,
-        obj_in: Dict[str, Any],
+        obj_in: dict[str, Any],
         updated_by: int
     ) -> ProcessNode:
         """Update a process node"""
@@ -171,9 +171,9 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
         db: AsyncSession,
         *,
         process_id: int,
-        node_sequence_updates: List[Dict[str, int]],
+        node_sequence_updates: list[dict[str, int]],
         updated_by: int
-    ) -> List[ProcessNode]:
+    ) -> list[ProcessNode]:
         """Reorder nodes in a process"""
         updated_nodes = []
 
@@ -226,7 +226,7 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
         db: AsyncSession,
         *,
         node_id: int
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get statistics for a specific node"""
         # Count executions by status
         status_counts = await db.execute(
@@ -307,7 +307,7 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
         *,
         process_id: int,
         limit: int = 5
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get nodes that are bottlenecks in the process"""
         # Nodes with longest average execution time or lowest completion rate
         result = await db.execute(

@@ -1,11 +1,10 @@
 """Connection invitation service for managing connection requests."""
 
 from datetime import datetime
-from typing import List, Optional
-from sqlalchemy import and_, or_, select
+
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.user import User
 from app.models.connection_invitation import ConnectionInvitation, InvitationStatus
 from app.services.user_connection_service import user_connection_service
 
@@ -18,7 +17,7 @@ class ConnectionInvitationService:
         db: AsyncSession,
         sender_id: int,
         receiver_id: int,
-        message: Optional[str] = None
+        message: str | None = None
     ) -> ConnectionInvitation:
         """Send a connection invitation to another user."""
 
@@ -123,8 +122,8 @@ class ConnectionInvitationService:
         self,
         db: AsyncSession,
         sender_id: int,
-        status: Optional[InvitationStatus] = None
-    ) -> List[ConnectionInvitation]:
+        status: InvitationStatus | None = None
+    ) -> list[ConnectionInvitation]:
         """Get invitations sent by user."""
 
         query = select(ConnectionInvitation).where(
@@ -143,8 +142,8 @@ class ConnectionInvitationService:
         self,
         db: AsyncSession,
         receiver_id: int,
-        status: Optional[InvitationStatus] = None
-    ) -> List[ConnectionInvitation]:
+        status: InvitationStatus | None = None
+    ) -> list[ConnectionInvitation]:
         """Get invitations received by user."""
 
         query = select(ConnectionInvitation).where(
@@ -183,7 +182,7 @@ class ConnectionInvitationService:
         db: AsyncSession,
         sender_id: int,
         receiver_id: int
-    ) -> Optional[ConnectionInvitation]:
+    ) -> ConnectionInvitation | None:
         """Check if pending invitation exists between users."""
 
         query = select(ConnectionInvitation).where(
@@ -201,7 +200,7 @@ class ConnectionInvitationService:
         self,
         db: AsyncSession,
         invitation_id: int
-    ) -> Optional[ConnectionInvitation]:
+    ) -> ConnectionInvitation | None:
         """Get invitation by ID."""
 
         query = select(ConnectionInvitation).where(

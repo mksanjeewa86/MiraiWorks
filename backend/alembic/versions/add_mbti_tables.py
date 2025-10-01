@@ -5,9 +5,10 @@ Revises: create_todos_table
 Create Date: 2025-09-22 00:00:00.000000
 
 """
-from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.sql import func
+
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "add_mbti_tables"
@@ -45,7 +46,7 @@ def upgrade():
             onupdate=func.now(),
         ),
     )
-    
+
     # Create indexes for mbti_questions
     op.create_index("ix_mbti_questions_dimension", "mbti_questions", ["dimension"])
     op.create_index("ix_mbti_questions_number", "mbti_questions", ["question_number"])
@@ -90,7 +91,7 @@ def upgrade():
             onupdate=func.now(),
         ),
     )
-    
+
     # Create indexes for mbti_tests
     op.create_index("ix_mbti_tests_user", "mbti_tests", ["user_id"])
     op.create_index("ix_mbti_tests_status", "mbti_tests", ["status"])
@@ -115,7 +116,7 @@ def downgrade():
     op.drop_index("ix_mbti_tests_status", table_name="mbti_tests")
     op.drop_index("ix_mbti_tests_user", table_name="mbti_tests")
     op.drop_table("mbti_tests")
-    
+
     # Drop mbti_questions table
     op.drop_index("ix_mbti_questions_active", table_name="mbti_questions")
     op.drop_index("ix_mbti_questions_number", table_name="mbti_questions")

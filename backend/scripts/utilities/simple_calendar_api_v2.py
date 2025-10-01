@@ -3,26 +3,26 @@
 Simple calendar API server that exactly matches frontend types.
 """
 
+import uuid
+from datetime import datetime
+
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, field_validator
-from datetime import datetime
-from typing import Optional, List
-import uuid
-import uvicorn
 
 
 # Schemas that exactly match frontend CalendarEvent interface
 class EventCreate(BaseModel):
     title: str
-    description: Optional[str] = None
-    location: Optional[str] = None
+    description: str | None = None
+    location: str | None = None
     startDatetime: str  # Frontend sends as ISO string
     endDatetime: str  # Frontend sends as ISO string
-    timezone: Optional[str] = "UTC"
-    isAllDay: Optional[bool] = False
-    attendees: Optional[List[str]] = []
-    status: Optional[str] = None
+    timezone: str | None = "UTC"
+    isAllDay: bool | None = False
+    attendees: list[str] | None = []
+    status: str | None = None
 
     @field_validator("title")
     def title_must_not_be_empty(cls, v):
@@ -42,22 +42,22 @@ class EventCreate(BaseModel):
 class EventInfo(BaseModel):
     id: str
     title: str
-    description: Optional[str]
-    location: Optional[str]
+    description: str | None
+    location: str | None
     startDatetime: str
     endDatetime: str
-    timezone: Optional[str]
+    timezone: str | None
     isAllDay: bool
     isRecurring: bool
-    organizerEmail: Optional[str]
-    attendees: List[str]
-    status: Optional[str]
+    organizerEmail: str | None
+    attendees: list[str]
+    status: str | None
     createdAt: str
     updatedAt: str
 
 
 class EventsListResponse(BaseModel):
-    events: List[EventInfo]
+    events: list[EventInfo]
     has_more: bool = False
 
 
@@ -88,7 +88,7 @@ async def root():
 
 
 @app.get("/api/calendar/events", response_model=EventsListResponse)
-async def get_events(startDate: Optional[str] = None, endDate: Optional[str] = None):
+async def get_events(startDate: str | None = None, endDate: str | None = None):
     """Get calendar events."""
     print(f"GET /api/calendar/events - startDate: {startDate}, endDate: {endDate}")
     return EventsListResponse(events=events_storage, has_more=False)

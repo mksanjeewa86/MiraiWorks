@@ -3,30 +3,30 @@
 Simple calendar API server for testing without dependencies.
 """
 
+import uuid
+from datetime import datetime
+
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from datetime import datetime
-from typing import Optional, List
-import uuid
-import uvicorn
 
 
 # Simple schemas
 class EventCreate(BaseModel):
     title: str
-    description: Optional[str] = None
-    location: Optional[str] = None
+    description: str | None = None
+    location: str | None = None
     startDatetime: datetime = Field(alias="startDatetime")
     endDatetime: datetime = Field(alias="endDatetime")
     timezone: str = Field(default="UTC")
     isAllDay: bool = Field(default=False, alias="isAllDay")
-    attendees: List[str] = Field(default_factory=list)
-    status: Optional[str] = None
-    organizerEmail: Optional[str] = Field(None, alias="organizerEmail")
-    isRecurring: Optional[bool] = Field(None, alias="isRecurring")
-    createdAt: Optional[str] = Field(None, alias="createdAt")
-    updatedAt: Optional[str] = Field(None, alias="updatedAt")
+    attendees: list[str] = Field(default_factory=list)
+    status: str | None = None
+    organizerEmail: str | None = Field(None, alias="organizerEmail")
+    isRecurring: bool | None = Field(None, alias="isRecurring")
+    createdAt: str | None = Field(None, alias="createdAt")
+    updatedAt: str | None = Field(None, alias="updatedAt")
 
     class Config:
         populate_by_name = True
@@ -35,16 +35,16 @@ class EventCreate(BaseModel):
 class EventInfo(BaseModel):
     id: str
     title: str
-    description: Optional[str]
-    location: Optional[str]
+    description: str | None
+    location: str | None
     startDatetime: datetime = Field(alias="startDatetime")
     endDatetime: datetime = Field(alias="endDatetime")
     timezone: str
     isAllDay: bool = Field(alias="isAllDay")
     isRecurring: bool = Field(alias="isRecurring")
-    organizerEmail: Optional[str] = Field(alias="organizerEmail")
-    attendees: List[str]
-    status: Optional[str]
+    organizerEmail: str | None = Field(alias="organizerEmail")
+    attendees: list[str]
+    status: str | None
     createdAt: datetime = Field(alias="createdAt")
     updatedAt: datetime = Field(alias="updatedAt")
 
@@ -53,7 +53,7 @@ class EventInfo(BaseModel):
 
 
 class EventsListResponse(BaseModel):
-    events: List[EventInfo]
+    events: list[EventInfo]
     has_more: bool = False
 
 
@@ -79,7 +79,7 @@ async def root():
 
 
 @app.get("/api/calendar/events", response_model=EventsListResponse)
-async def get_events(startDate: Optional[str] = None, endDate: Optional[str] = None):
+async def get_events(startDate: str | None = None, endDate: str | None = None):
     """Get calendar events."""
     return EventsListResponse(events=events_storage, has_more=False)
 

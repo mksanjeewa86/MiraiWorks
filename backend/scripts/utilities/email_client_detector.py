@@ -5,16 +5,17 @@ Sends test emails with client detection headers to identify rendering issues
 """
 
 import asyncio
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.abspath("."))
 
-from app.services.email_service import email_service
-from app.config import settings
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+
+from app.config import settings
+from app.services.email_service import email_service
 
 
 class EmailClientDetector:

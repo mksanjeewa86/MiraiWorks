@@ -1,6 +1,6 @@
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from sqlalchemy import and_, select, func, desc
+from sqlalchemy import and_, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -14,7 +14,7 @@ class CRUDProcessViewer(CRUDBase[ProcessViewer, dict, dict]):
         self,
         db: AsyncSession,
         *,
-        obj_in: Dict[str, Any],
+        obj_in: dict[str, Any],
         added_by: int
     ) -> ProcessViewer:
         """Add a viewer to a process"""
@@ -32,7 +32,7 @@ class CRUDProcessViewer(CRUDBase[ProcessViewer, dict, dict]):
         db: AsyncSession,
         *,
         process_id: int
-    ) -> List[ProcessViewer]:
+    ) -> list[ProcessViewer]:
         """Get all viewers for a process"""
         result = await db.execute(
             select(ProcessViewer)
@@ -50,7 +50,7 @@ class CRUDProcessViewer(CRUDBase[ProcessViewer, dict, dict]):
         db: AsyncSession,
         *,
         user_id: int
-    ) -> List[ProcessViewer]:
+    ) -> list[ProcessViewer]:
         """Get all processes a user has access to"""
         result = await db.execute(
             select(ProcessViewer)
@@ -69,7 +69,7 @@ class CRUDProcessViewer(CRUDBase[ProcessViewer, dict, dict]):
         *,
         process_id: int,
         user_id: int
-    ) -> Optional[ProcessViewer]:
+    ) -> ProcessViewer | None:
         """Get specific process viewer"""
         result = await db.execute(
             select(ProcessViewer)
@@ -88,7 +88,7 @@ class CRUDProcessViewer(CRUDBase[ProcessViewer, dict, dict]):
         *,
         process_id: int,
         role: str
-    ) -> List[ProcessViewer]:
+    ) -> list[ProcessViewer]:
         """Get viewers by role for a process"""
         result = await db.execute(
             select(ProcessViewer)
@@ -108,7 +108,7 @@ class CRUDProcessViewer(CRUDBase[ProcessViewer, dict, dict]):
         db: AsyncSession,
         *,
         process_id: int
-    ) -> List[ProcessViewer]:
+    ) -> list[ProcessViewer]:
         """Get all recruiters for a process"""
         return await self.get_by_role(db, process_id=process_id, role="recruiter")
 
@@ -117,9 +117,9 @@ class CRUDProcessViewer(CRUDBase[ProcessViewer, dict, dict]):
         db: AsyncSession,
         *,
         process_id: int,
-        viewers: List[Dict[str, Any]],
+        viewers: list[dict[str, Any]],
         added_by: int
-    ) -> List[ProcessViewer]:
+    ) -> list[ProcessViewer]:
         """Add multiple viewers to a process"""
         new_viewers = []
 
@@ -167,7 +167,7 @@ class CRUDProcessViewer(CRUDBase[ProcessViewer, dict, dict]):
         db: AsyncSession,
         *,
         viewer: ProcessViewer,
-        permission_updates: Dict[str, bool]
+        permission_updates: dict[str, bool]
     ) -> ProcessViewer:
         """Update specific permissions for a viewer"""
         if not viewer.permissions:
@@ -221,9 +221,9 @@ class CRUDProcessViewer(CRUDBase[ProcessViewer, dict, dict]):
         self,
         db: AsyncSession,
         *,
-        process_id: Optional[int] = None,
-        user_id: Optional[int] = None
-    ) -> List[Dict[str, Any]]:
+        process_id: int | None = None,
+        user_id: int | None = None
+    ) -> list[dict[str, Any]]:
         """Get viewer activity statistics"""
         # This would typically involve joining with activity logs
         # For now, we'll return basic viewer information
@@ -262,8 +262,8 @@ class CRUDProcessViewer(CRUDBase[ProcessViewer, dict, dict]):
         self,
         db: AsyncSession,
         *,
-        process_id: Optional[int] = None
-    ) -> List[Dict[str, Any]]:
+        process_id: int | None = None
+    ) -> list[dict[str, Any]]:
         """Get workload distribution among viewers"""
         # Import here to avoid circular imports
         from app.models.candidate_process import CandidateProcess
@@ -345,7 +345,7 @@ class CRUDProcessViewer(CRUDBase[ProcessViewer, dict, dict]):
         db: AsyncSession,
         *,
         process_id: int
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get overall viewer statistics for a process"""
         # Count viewers by role
         role_counts = await db.execute(
@@ -392,8 +392,8 @@ class CRUDProcessViewer(CRUDBase[ProcessViewer, dict, dict]):
         db: AsyncSession,
         *,
         user_id: int,
-        permission: Optional[str] = None
-    ) -> List[int]:
+        permission: str | None = None
+    ) -> list[int]:
         """Get list of process IDs accessible to a user"""
         conditions = [ProcessViewer.user_id == user_id]
 

@@ -1,14 +1,14 @@
 """Connection invitation API endpoints."""
 
+
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Optional
 from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.dependencies import get_current_active_user
-from app.models.user import User
 from app.models.connection_invitation import InvitationStatus
+from app.models.user import User
 from app.services.connection_invitation_service import connection_invitation_service
 
 router = APIRouter()
@@ -16,7 +16,7 @@ router = APIRouter()
 
 class InvitationCreate(BaseModel):
     """Schema for creating invitations."""
-    message: Optional[str] = None
+    message: str | None = None
 
 
 class InvitationResponse(BaseModel):
@@ -113,7 +113,7 @@ async def cancel_invitation(
 
 @router.get("/sent")
 async def get_sent_invitations(
-    status_filter: Optional[str] = None,
+    status_filter: str | None = None,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -143,7 +143,7 @@ async def get_sent_invitations(
 
 @router.get("/received")
 async def get_received_invitations(
-    status_filter: Optional[str] = None,
+    status_filter: str | None = None,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ):

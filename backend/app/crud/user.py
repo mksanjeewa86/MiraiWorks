@@ -53,7 +53,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
         # Handle logical deletion
         if not include_deleted:
-            query_conditions.append(User.is_deleted == False)
+            query_conditions.append(User.is_deleted is False)
 
         # Apply filters
         if company_id is not None:
@@ -127,7 +127,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             and_(
                 User.company_id == company_id,
                 User.is_admin is True,
-                User.is_deleted == False,
+                User.is_deleted is False,
             )
         )
         result = await db.execute(admin_query)

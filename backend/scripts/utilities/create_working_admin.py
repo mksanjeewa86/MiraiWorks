@@ -2,18 +2,16 @@
 """Create a working admin user for testing"""
 
 import asyncio
-import os
 import sys
 
 # Add the app directory to the Python path
 sys.path.insert(0, "/app")
 
+from sqlalchemy import select, update
+
 from app.database import get_db_session
 from app.models.user import User
-from app.models.role import Role, UserRole
-from app.models.user_settings import UserSettings
 from app.services.auth_service import AuthService
-from sqlalchemy import select, update
 
 
 async def create_working_admin():

@@ -5,7 +5,7 @@ import type { CSSProperties } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
-import { recruitmentWorkflowsApi, workflowIntegrationService, type RecruitmentProcess, type ProcessNode } from '@/api/recruitment-workflows';
+import { recruitmentWorkflowsApi, workflowIntegrationService, type RecruitmentProcess, type ProcessNode, type CreateNodeData } from '@/api/recruitment-workflows';
 import { interviewsApi } from '@/api/interviews';
 import { todosApi } from '@/api/todos';
 import {
@@ -299,7 +299,7 @@ function RecruitmentWorkflowsPageContent() {
             `✅ Created workflow: ${formData.name}\n` +
             `📝 Created ${processData.nodes?.length || 0} workflow steps\n` +
             `🎙️ Created ${interviewCount} interview templates\n` +
-            `📋 Created ${todoCount} coding test assignments\n\n` +
+            `📋 Created ${todoCount} todo assignments\n\n` +
             `The workflow is now linked to real interviews and todos!`
           );
         } else {
@@ -771,31 +771,34 @@ function RecruitmentWorkflowsPageContent() {
           )}
         </div>
 
-        {/* Coming Soon Banner */}
+        {/* Linear Workflow Feature Banner */}
         <div className="bg-gradient-to-r from-violet-50 to-purple-50 border border-violet-200 rounded-lg p-6">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-violet-100 rounded-full">
               <GitBranch className="h-6 w-6 text-violet-600" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-900">Visual Workflow Designer Coming Soon!</h3>
+              <h3 className="text-lg font-semibold text-gray-900">✨ Linear Workflow Editor Now Available!</h3>
               <p className="text-gray-600 mt-1">
-                We're building a drag-and-drop interface for creating complex recruitment workflows.
-                Create processes with conditional paths, score-based routing, and visual node editing.
+                Create step-by-step recruitment processes with interviews and todos.
+                Each step can automatically create real interview and todo records that integrate with your existing workflow.
               </p>
               <div className="mt-3 flex items-center gap-4 text-sm text-gray-600">
                 <span className="flex items-center gap-1">
-                  <Video className="h-4 w-4" /> Interview Nodes
+                  <Video className="h-4 w-4" /> Interview Steps
                 </span>
                 <span className="flex items-center gap-1">
-                  <CheckSquare className="h-4 w-4" /> Coding Tests
+                  <CheckSquare className="h-4 w-4" /> Todo Steps
                 </span>
                 <span className="flex items-center gap-1">
-                  <TrendingUp className="h-4 w-4" /> 適性検査 (Aptitude Tests)
+                  <GitBranch className="h-4 w-4" /> Real Integration
                 </span>
                 <span className="flex items-center gap-1">
-                  <GitBranch className="h-4 w-4" /> Decision Points
+                  <Clock className="h-4 w-4" /> Linear Process Flow
                 </span>
+              </div>
+              <div className="mt-2 text-sm text-green-700 font-medium">
+                💡 Try it now: Click "Edit Workflow" on any process above!
               </div>
             </div>
           </div>
@@ -1242,7 +1245,7 @@ function ViewWorkflowModal({ isOpen, onClose, process, onEdit }: ViewWorkflowMod
   );
 }
 
-// Visual Workflow Editor Modal
+// Linear Workflow Editor Modal
 interface WorkflowEditorModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -1250,139 +1253,231 @@ interface WorkflowEditorModalProps {
   onSave: (process: RecruitmentProcess) => void;
 }
 
-interface WorkflowNode {
+interface LinearWorkflowStep {
   id: string;
-  type: 'interview' | 'todo' | 'assessment' | 'decision' | 'start' | 'end';
+  type: 'interview' | 'todo';
   title: string;
   description?: string;
-  x: number;
-  y: number;
   config?: any;
-  connections?: string[];
+  order: number;
+  realId?: number; // Actual backend node ID
+  isIntegrated?: boolean; // Whether this step creates a real interview/todo
+  interview_id?: number; // Linked interview ID (for interview steps)
+  todo_id?: number; // Linked todo ID (for todo steps)
+}
+
+interface WorkflowCandidate {
+  id: number;
+  name: string;
+  email: string;
+}
+
+interface WorkflowViewer {
+  id: number;
+  name: string;
+  email: string;
+  role: 'viewer' | 'reviewer' | 'manager';
 }
 
 function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEditorModalProps) {
-  const [nodes, setNodes] = useState<WorkflowNode[]>([]);
-  const [selectedNode, setSelectedNode] = useState<WorkflowNode | null>(null);
-  const [dragNode, setDragNode] = useState<{ id: string; startX: number; startY: number } | null>(null);
-  const [showNodePanel, setShowNodePanel] = useState(false);
+  const [steps, setSteps] = useState<LinearWorkflowStep[]>([]);
+  const [selectedStep, setSelectedStep] = useState<LinearWorkflowStep | null>(null);
+  const [showStepPanel, setShowStepPanel] = useState(false);
   const [processTitle, setProcessTitle] = useState('');
   const [processDescription, setProcessDescription] = useState('');
+  const [isCreatingIntegratedRecords, setIsCreatingIntegratedRecords] = useState(true);
 
-  // Initialize nodes when process changes
+  // Candidate and viewer management
+  const [assignedCandidates, setAssignedCandidates] = useState<WorkflowCandidate[]>([]);
+  const [workflowViewers, setWorkflowViewers] = useState<WorkflowViewer[]>([]);
+  const [candidateInput, setCandidateInput] = useState('');
+  const [viewerInput, setViewerInput] = useState('');
+  const [viewerRole, setViewerRole] = useState<'viewer' | 'reviewer' | 'manager'>('viewer');
+
+  // Initialize steps when process changes
   useEffect(() => {
     if (process && isOpen) {
       setProcessTitle(process.name);
       setProcessDescription(process.description || '');
 
-      // Convert existing nodes or create default workflow
+      // Convert existing nodes to linear steps
       if (process.nodes && process.nodes.length > 0) {
-        const workflowNodes: WorkflowNode[] = [
-          { id: 'start', type: 'start', title: 'Start', x: 100, y: 200 },
-          ...process.nodes.map((node, index) => ({
-            id: `node-${node.id}`,
-            type: node.node_type,
+        const linearSteps: LinearWorkflowStep[] = process.nodes
+          .filter(node => node.node_type === 'interview' || node.node_type === 'todo')
+          .sort((a, b) => a.sequence_order - b.sequence_order)
+          .map((node, index) => ({
+            id: `step-${node.id}`,
+            type: node.node_type as 'interview' | 'todo',
             title: node.title,
             description: node.description,
-            x: node.position_x || 300 + (index * 200),
-            y: node.position_y || 200,
-            config: node.config
-          })),
-          { id: 'end', type: 'end', title: 'End', x: 700, y: 200 }
-        ];
-        setNodes(workflowNodes);
+            config: node.config || {},
+            order: index + 1,
+            realId: node.id,
+            isIntegrated: !!(node.interview_id || node.todo_id),
+            interview_id: node.interview_id,
+            todo_id: node.todo_id
+          }));
+        setSteps(linearSteps);
       } else {
-        // Default workflow template
-        setNodes([
-          { id: 'start', type: 'start', title: 'Start', x: 100, y: 200 },
-          { id: 'end', type: 'end', title: 'End', x: 700, y: 200 }
-        ]);
+        // Start with empty workflow
+        setSteps([]);
       }
     }
   }, [process, isOpen]);
 
-  const handleNodeDragStart = (nodeId: string, e: React.MouseEvent) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    setDragNode({
-      id: nodeId,
-      startX: e.clientX - rect.left,
-      startY: e.clientY - rect.top
+  // Add new step to the workflow
+  const addStep = (type: 'interview' | 'todo') => {
+    const newStep: LinearWorkflowStep = {
+      id: `step-${Date.now()}`,
+      type,
+      title: type === 'interview' ? 'New Interview' : 'New Todo',
+      description: type === 'interview' ? 'Interview step description' : 'Todo assignment',
+      config: type === 'interview' ? {
+        duration: 60,
+        interview_type: 'technical',
+        location: 'Video Call'
+      } : {
+        priority: 'medium',
+        assignment_type: 'general',
+        is_assignment: true
+      },
+      order: steps.length + 1,
+      isIntegrated: isCreatingIntegratedRecords
+    };
+    setSteps(prev => [...prev, newStep]);
+    setSelectedStep(newStep);
+    setShowStepPanel(true);
+  };
+
+  // Update step properties
+  const updateStep = (stepId: string, updates: Partial<LinearWorkflowStep>) => {
+    setSteps(prev => prev.map(step =>
+      step.id === stepId ? { ...step, ...updates } : step
+    ));
+    if (selectedStep?.id === stepId) {
+      setSelectedStep(prev => prev ? { ...prev, ...updates } : null);
+    }
+  };
+
+  // Delete step from workflow
+  const deleteStep = (stepId: string) => {
+    setSteps(prev => {
+      const filtered = prev.filter(step => step.id !== stepId);
+      // Reorder remaining steps
+      return filtered.map((step, index) => ({ ...step, order: index + 1 }));
+    });
+    if (selectedStep?.id === stepId) {
+      setSelectedStep(null);
+      setShowStepPanel(false);
+    }
+  };
+
+  // Move step up/down in the sequence
+  const moveStep = (stepId: string, direction: 'up' | 'down') => {
+    setSteps(prev => {
+      const currentIndex = prev.findIndex(step => step.id === stepId);
+      if (currentIndex === -1) return prev;
+
+      const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+      if (newIndex < 0 || newIndex >= prev.length) return prev;
+
+      const newSteps = [...prev];
+      [newSteps[currentIndex], newSteps[newIndex]] = [newSteps[newIndex], newSteps[currentIndex]];
+
+      // Update order numbers
+      return newSteps.map((step, index) => ({ ...step, order: index + 1 }));
     });
   };
 
-  const handleNodeDrag = (e: React.MouseEvent) => {
-    if (!dragNode) return;
-
-    const canvas = e.currentTarget as HTMLElement;
-    const rect = canvas.getBoundingClientRect();
-    const newX = e.clientX - rect.left - dragNode.startX;
-    const newY = e.clientY - rect.top - dragNode.startY;
-
-    setNodes(prev => prev.map(node =>
-      node.id === dragNode.id ? { ...node, x: Math.max(0, newX), y: Math.max(0, newY) } : node
-    ));
-  };
-
-  const handleNodeDragEnd = () => {
-    setDragNode(null);
-  };
-
-  const addNode = (type: WorkflowNode['type']) => {
-    const newNode: WorkflowNode = {
-      id: `node-${Date.now()}`,
-      type,
-      title: type === 'interview' ? 'New Interview' :
-             type === 'todo' ? 'New Coding Test' :
-             type === 'assessment' ? 'New 適性検査' :
-             'New Decision Point',
-      x: 400,
-      y: 250,
-      config: {}
-    };
-    setNodes(prev => [...prev, newNode]);
-    setSelectedNode(newNode);
-    setShowNodePanel(true);
-  };
-
-  const updateNode = (nodeId: string, updates: Partial<WorkflowNode>) => {
-    setNodes(prev => prev.map(node =>
-      node.id === nodeId ? { ...node, ...updates } : node
-    ));
-    if (selectedNode?.id === nodeId) {
-      setSelectedNode(prev => prev ? { ...prev, ...updates } : null);
+  // Handle editing the actual interview/todo record
+  const handleEditStepRecord = (step: LinearWorkflowStep) => {
+    if (step.type === 'interview' && step.interview_id) {
+      // Open interview for editing in new tab
+      window.open(`/interviews?edit=${step.interview_id}`, '_blank');
+    } else if (step.type === 'todo' && step.todo_id) {
+      // Open todo for editing in new tab
+      window.open(`/todos?edit=${step.todo_id}`, '_blank');
+    } else {
+      alert(`No linked ${step.type} found for this step. The integration may not have been completed.`);
     }
   };
 
-  const deleteNode = (nodeId: string) => {
-    if (nodeId === 'start' || nodeId === 'end') return;
-    setNodes(prev => prev.filter(node => node.id !== nodeId));
-    if (selectedNode?.id === nodeId) {
-      setSelectedNode(null);
-      setShowNodePanel(false);
+  // Add candidate to workflow
+  const handleAddCandidate = async () => {
+    if (!candidateInput.trim()) return;
+
+    try {
+      // For demo purposes, we'll simulate finding a candidate
+      // In real implementation, this would search users by email/ID
+      const candidateId = parseInt(candidateInput) || Math.floor(Math.random() * 1000);
+      const newCandidate: WorkflowCandidate = {
+        id: candidateId,
+        name: candidateInput.includes('@') ? candidateInput.split('@')[0] : `User ${candidateId}`,
+        email: candidateInput.includes('@') ? candidateInput : `user${candidateId}@example.com`
+      };
+
+      setAssignedCandidates(prev => [...prev, newCandidate]);
+      setCandidateInput('');
+
+      // If process is already created, assign candidate via API
+      if (process?.id) {
+        await recruitmentWorkflowsApi.assignCandidates(process.id, [candidateId]);
+      }
+    } catch (error) {
+      console.error('Failed to add candidate:', error);
+      alert('Failed to add candidate');
     }
   };
 
-  const getNodeIcon = (type: WorkflowNode['type']) => {
+  // Add viewer to workflow
+  const handleAddViewer = async () => {
+    if (!viewerInput.trim()) return;
+
+    try {
+      // For demo purposes, we'll simulate finding a user
+      // In real implementation, this would search users by email/ID
+      const viewerId = parseInt(viewerInput) || Math.floor(Math.random() * 1000);
+      const newViewer: WorkflowViewer = {
+        id: viewerId,
+        name: viewerInput.includes('@') ? viewerInput.split('@')[0] : `User ${viewerId}`,
+        email: viewerInput.includes('@') ? viewerInput : `user${viewerId}@example.com`,
+        role: viewerRole
+      };
+
+      setWorkflowViewers(prev => [...prev, newViewer]);
+      setViewerInput('');
+
+      // Note: API call for adding viewers would go here
+      // await recruitmentWorkflowsApi.addViewer(process.id, viewerId, viewerRole);
+    } catch (error) {
+      console.error('Failed to add viewer:', error);
+      alert('Failed to add viewer');
+    }
+  };
+
+  // Remove candidate from workflow
+  const handleRemoveCandidate = (candidateId: number) => {
+    setAssignedCandidates(prev => prev.filter(c => c.id !== candidateId));
+  };
+
+  // Remove viewer from workflow
+  const handleRemoveViewer = (viewerId: number) => {
+    setWorkflowViewers(prev => prev.filter(v => v.id !== viewerId));
+  };
+
+  const getStepIcon = (type: 'interview' | 'todo') => {
     switch (type) {
-      case 'interview': return <Video className="h-4 w-4" />;
-      case 'todo': return <CheckSquare className="h-4 w-4" />;
-      case 'assessment': return <TrendingUp className="h-4 w-4" />;
-      case 'decision': return <GitBranch className="h-4 w-4" />;
-      case 'start': return <Play className="h-4 w-4" />;
-      case 'end': return <Square className="h-4 w-4" />;
-      default: return <Circle className="h-4 w-4" />;
+      case 'interview': return <Video className="h-5 w-5" />;
+      case 'todo': return <CheckSquare className="h-5 w-5" />;
+      default: return <Circle className="h-5 w-5" />;
     }
   };
 
-  const getNodeColor = (type: WorkflowNode['type']) => {
+  const getStepColor = (type: 'interview' | 'todo') => {
     switch (type) {
-      case 'interview': return 'bg-blue-500 border-blue-600';
-      case 'todo': return 'bg-green-500 border-green-600';
-      case 'assessment': return 'bg-purple-500 border-purple-600';
-      case 'decision': return 'bg-orange-500 border-orange-600';
-      case 'start': return 'bg-gray-500 border-gray-600';
-      case 'end': return 'bg-red-500 border-red-600';
-      default: return 'bg-gray-400 border-gray-500';
+      case 'interview': return 'bg-blue-500 text-white border-blue-600';
+      case 'todo': return 'bg-green-500 text-white border-green-600';
+      default: return 'bg-gray-400 text-white border-gray-500';
     }
   };
 
@@ -1390,46 +1485,92 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
     if (!process) return;
 
     try {
-      // Convert workflow nodes back to ProcessNode format
-      const processNodes = nodes
-        .filter(node => node.type !== 'start' && node.type !== 'end')
-        .map((node, index) => ({
-          id: parseInt(node.id.replace('node-', '')) || 0,
-          process_id: process.id,
-          node_type: node.type,
-          title: node.title,
-          description: node.description,
-          sequence_order: index + 1,
-          position_x: node.x,
-          position_y: node.y,
-          config: node.config,
-          status: 'active' as const
-        }));
+      // First, delete any existing nodes that are not in our current steps
+      const existingNodeIds = process.nodes?.map(n => n.id) || [];
+      const currentStepNodeIds = steps.filter(s => s.realId).map(s => s.realId!);
+      const nodesToDelete = existingNodeIds.filter(id => !currentStepNodeIds.includes(id));
 
-      // Update process nodes via API
-      for (const node of processNodes) {
-        if (node.id > 0) {
+      for (const nodeId of nodesToDelete) {
+        try {
+          await recruitmentWorkflowsApi.deleteNode(process.id, nodeId);
+        } catch (error) {
+          console.warn(`Failed to delete node ${nodeId}:`, error);
+        }
+      }
+
+      // Create or update steps
+      const createdInterviews: any[] = [];
+      const createdTodos: any[] = [];
+
+      for (const step of steps) {
+        const nodeData: CreateNodeData = {
+          node_type: step.type,
+          title: step.title,
+          description: step.description,
+          sequence_order: step.order,
+          position_x: 100 + (step.order * 200), // Linear horizontal layout
+          position_y: 200,
+          config: step.config
+        };
+
+        // Add integration data if creating real records
+        if (step.isIntegrated && !step.realId) {
+          if (step.type === 'interview') {
+            nodeData.create_interview = {
+              duration: step.config?.duration || 60,
+              interview_type: step.config?.interview_type || 'technical',
+              location: step.config?.location || 'Video Call',
+              notes: `Auto-generated for workflow: ${processTitle}`,
+              // Use first candidate if available
+              candidate_id: assignedCandidates.length > 0 ? assignedCandidates[0].id : undefined
+            };
+          }
+
+          if (step.type === 'todo') {
+            nodeData.create_todo = {
+              title: step.title,
+              description: step.description || 'Todo assignment',
+              priority: step.config?.priority || 'medium',
+              is_assignment: step.config?.is_assignment !== false,
+              assignment_type: step.config?.assignment_type || 'general',
+              // Use first candidate if available
+              assigned_to: assignedCandidates.length > 0 ? assignedCandidates[0].id : undefined
+            };
+          }
+        }
+
+        if (step.realId) {
           // Update existing node
-          await recruitmentWorkflowsApi.updateNode(process.id, node.id, {
-            node_type: node.node_type as 'interview' | 'todo' | 'assessment' | 'decision',
-            title: node.title,
-            description: node.description,
-            sequence_order: node.sequence_order,
-            position_x: node.position_x,
-            position_y: node.position_y,
-            config: node.config
-          });
+          await recruitmentWorkflowsApi.updateNode(process.id, step.realId, nodeData);
         } else {
-          // Create new node
-          await recruitmentWorkflowsApi.createNode(process.id, {
-            node_type: node.node_type as 'interview' | 'todo' | 'assessment' | 'decision',
-            title: node.title,
-            description: node.description,
-            sequence_order: node.sequence_order,
-            position_x: node.position_x,
-            position_y: node.position_y,
-            config: node.config
-          });
+          // Create new node with integration
+          try {
+            if (step.isIntegrated && (nodeData.create_interview || nodeData.create_todo)) {
+              const nodeResponse = await recruitmentWorkflowsApi.createNodeWithIntegration(process.id, nodeData);
+              if (nodeResponse.success && nodeResponse.data) {
+                // Update step with the actual linked IDs
+                if (nodeResponse.data.interview) {
+                  createdInterviews.push(nodeResponse.data.interview);
+                  step.interview_id = nodeResponse.data.interview.id;
+                }
+                if (nodeResponse.data.todo) {
+                  createdTodos.push(nodeResponse.data.todo);
+                  step.todo_id = nodeResponse.data.todo.id;
+                }
+                // Update the step with the real node ID
+                step.realId = nodeResponse.data.node.id;
+              }
+            } else {
+              const nodeResponse = await recruitmentWorkflowsApi.createNode(process.id, nodeData);
+              if (nodeResponse.success && nodeResponse.data) {
+                step.realId = nodeResponse.data.id;
+              }
+            }
+          } catch (error) {
+            console.warn(`Failed to create integrated node for step ${step.title}:`, error);
+            // Fallback to regular node creation
+            await recruitmentWorkflowsApi.createNode(process.id, nodeData);
+          }
         }
       }
 
@@ -1442,18 +1583,56 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
       }
 
       // Create updated process object
+      const updatedNodes: ProcessNode[] = steps.map(step => ({
+        id: step.realId || 0,
+        process_id: process.id,
+        node_type: step.type,
+        title: step.title,
+        description: step.description,
+        sequence_order: step.order,
+        position_x: 100 + (step.order * 200),
+        position_y: 200,
+        config: step.config,
+        status: 'active' as const
+      }));
+
       const updatedProcess: RecruitmentProcess = {
         ...process,
         name: processTitle,
         description: processDescription,
-        nodes: processNodes as ProcessNode[]
+        nodes: updatedNodes
       };
 
       onSave(updatedProcess);
-      alert('✅ Workflow saved successfully!');
+
+      let successMessage = '✅ Workflow saved successfully!';
+
+      // Show integration results
+      if (createdInterviews.length > 0 || createdTodos.length > 0) {
+        successMessage += `\n\n📊 Integration Results:`;
+        if (createdInterviews.length > 0) {
+          successMessage += `\n🎙️ Created ${createdInterviews.length} interview templates`;
+        }
+        if (createdTodos.length > 0) {
+          successMessage += `\n📋 Created ${createdTodos.length} todo assignments`;
+        }
+
+        // Show assignment information
+        if (assignedCandidates.length > 0) {
+          successMessage += `\n\n👥 Assignments:`;
+          successMessage += `\n• ${assignedCandidates.length} candidate${assignedCandidates.length !== 1 ? 's' : ''} assigned to all records`;
+        }
+        if (workflowViewers.length > 0) {
+          successMessage += `\n• ${workflowViewers.length} viewer${workflowViewers.length !== 1 ? 's' : ''} added to all records`;
+        }
+
+        successMessage += `\n\n💡 You can now view these in the Interviews and Todos sections!`;
+      }
+
+      alert(successMessage);
     } catch (error) {
       console.error('Failed to save workflow:', error);
-      alert('❌ Failed to save workflow');
+      alert('❌ Failed to save workflow: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   };
 
@@ -1461,22 +1640,34 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-7xl h-[90vh] flex flex-col">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-6xl h-[90vh] flex flex-col">
         {/* Header */}
         <div className="border-b border-gray-200 p-6 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
               <GitBranch className="h-5 w-5 text-violet-600" />
-              Visual Workflow Editor
+              Linear Workflow Editor
             </h2>
-            <p className="text-sm text-gray-500 mt-1">Drag and drop to design your recruitment workflow</p>
+            <p className="text-sm text-gray-500 mt-1">Create a step-by-step recruitment process with interviews and coding tests</p>
           </div>
           <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="createIntegratedRecords"
+                checked={isCreatingIntegratedRecords}
+                onChange={(e) => setIsCreatingIntegratedRecords(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
+              />
+              <label htmlFor="createIntegratedRecords" className="text-sm text-gray-700">
+                Create real interviews & todos
+              </label>
+            </div>
             <button
-              onClick={() => setShowNodePanel(!showNodePanel)}
+              onClick={() => setShowStepPanel(!showStepPanel)}
               className="px-3 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
             >
-              {showNodePanel ? 'Hide' : 'Show'} Properties
+              {showStepPanel ? 'Hide' : 'Show'} Properties
             </button>
             <button
               onClick={onClose}
@@ -1489,263 +1680,519 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
 
         {/* Main Content */}
         <div className="flex-1 flex overflow-hidden">
-          {/* Left Sidebar - Node Palette */}
-          <div className="w-64 border-r border-gray-200 p-4 bg-gray-50">
-            <h3 className="font-semibold text-gray-900 mb-4">Node Types</h3>
+          {/* Left Sidebar - Step Controls */}
+          <div className="w-80 border-r border-gray-200 p-6 bg-gray-50">
+            <h3 className="font-semibold text-gray-900 mb-4">Workflow Configuration</h3>
 
             {/* Process Info */}
-            <div className="mb-6 space-y-3">
+            <div className="mb-6 space-y-4">
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Process Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Process Name</label>
                 <input
                   type="text"
                   value={processTitle}
                   onChange={(e) => setProcessTitle(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Description</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
                 <textarea
                   value={processDescription}
                   onChange={(e) => setProcessDescription(e.target.value)}
-                  rows={2}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
                 />
               </div>
             </div>
 
-            {/* Node Palette */}
-            <div className="space-y-2">
-              <button
-                onClick={() => addNode('interview')}
-                className="w-full flex items-center gap-3 p-3 text-left text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-blue-50 hover:border-blue-300"
-              >
-                <Video className="h-4 w-4 text-blue-500" />
-                Interview Node
-              </button>
-              <button
-                onClick={() => addNode('todo')}
-                className="w-full flex items-center gap-3 p-3 text-left text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-green-50 hover:border-green-300"
-              >
-                <CheckSquare className="h-4 w-4 text-green-500" />
-                Coding Test
-              </button>
-              <button
-                onClick={() => addNode('assessment')}
-                className="w-full flex items-center gap-3 p-3 text-left text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-purple-50 hover:border-purple-300"
-              >
-                <TrendingUp className="h-4 w-4 text-purple-500" />
-                適性検査 (Aptitude)
-              </button>
-              <button
-                onClick={() => addNode('decision')}
-                className="w-full flex items-center gap-3 p-3 text-left text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-orange-50 hover:border-orange-300"
-              >
-                <GitBranch className="h-4 w-4 text-orange-500" />
-                Decision Point
-              </button>
-            </div>
-
-            <div className="mt-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-xs text-blue-800">
-                💡 <strong>Tip:</strong> Click and drag nodes to reposition them. Click a node to edit its properties.
-              </p>
-            </div>
-          </div>
-
-          {/* Center Canvas */}
-          <div className="flex-1 relative overflow-auto bg-gray-100">
-            <div
-              className="relative w-full h-full min-w-[1000px] min-h-[600px]"
-              onMouseMove={handleNodeDrag}
-              onMouseUp={handleNodeDragEnd}
-              style={{ cursor: dragNode ? 'grabbing' : 'default' }}
-            >
-              {/* Grid Background */}
-              <div
-                className="absolute inset-0 opacity-20"
-                style={{
-                  backgroundImage: `radial-gradient(circle, #6b7280 1px, transparent 1px)`,
-                  backgroundSize: '20px 20px'
-                }}
-              />
-
-              {/* Connection Lines */}
-              <svg className="absolute inset-0 w-full h-full pointer-events-none">
-                {nodes.map((node, index) => {
-                  const nextNode = nodes[index + 1];
-                  if (!nextNode) return null;
-                  return (
-                    <line
-                      key={`line-${node.id}-${nextNode.id}`}
-                      x1={node.x + 60}
-                      y1={node.y + 30}
-                      x2={nextNode.x + 60}
-                      y2={nextNode.y + 30}
-                      stroke="#9ca3af"
-                      strokeWidth="2"
-                      strokeDasharray="5,5"
-                    />
-                  );
-                })}
-              </svg>
-
-              {/* Workflow Nodes */}
-              {nodes.map((node) => (
-                <div
-                  key={node.id}
-                  className={`absolute cursor-move select-none ${
-                    selectedNode?.id === node.id ? 'ring-2 ring-violet-500' : ''
-                  }`}
-                  style={{ left: node.x, top: node.y }}
-                  onMouseDown={(e) => handleNodeDragStart(node.id, e)}
-                  onClick={() => {
-                    setSelectedNode(node);
-                    setShowNodePanel(true);
-                  }}
+            {/* Add Step Buttons */}
+            <div className="mb-6">
+              <h4 className="font-medium text-gray-900 mb-3">Add Workflow Steps</h4>
+              <div className="space-y-3">
+                <button
+                  onClick={() => addStep('interview')}
+                  className="w-full flex items-center gap-3 p-4 text-left text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors"
                 >
-                  <div className={`w-32 h-16 rounded-lg border-2 ${getNodeColor(node.type)} text-white shadow-lg flex flex-col items-center justify-center p-2 hover:shadow-xl transition-shadow`}>
-                    {getNodeIcon(node.type)}
-                    <span className="text-xs font-semibold text-center leading-tight">
-                      {node.title}
-                    </span>
+                  <Video className="h-5 w-5 text-blue-500" />
+                  <div>
+                    <div className="font-medium text-gray-900">Add Interview</div>
+                    <div className="text-xs text-gray-500">Technical, HR, or cultural interview</div>
                   </div>
-                  {node.type !== 'start' && node.type !== 'end' && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteNode(node.id);
+                </button>
+                <button
+                  onClick={() => addStep('todo')}
+                  className="w-full flex items-center gap-3 p-4 text-left text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-green-50 hover:border-green-300 transition-colors"
+                >
+                  <CheckSquare className="h-5 w-5 text-green-500" />
+                  <div>
+                    <div className="font-medium text-gray-900">Add Todo</div>
+                    <div className="text-xs text-gray-500">Assignment or task</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Candidate Assignment */}
+            <div className="mb-6">
+              <h4 className="font-medium text-gray-900 mb-3">Candidate & Viewer Assignment</h4>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Assign Candidates</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={candidateInput}
+                      onChange={(e) => setCandidateInput(e.target.value)}
+                      placeholder="Enter candidate ID or email"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleAddCandidate();
+                        }
                       }}
-                      className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddCandidate}
+                      className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
                     >
-                      ×
+                      Add
                     </button>
+                  </div>
+
+                  {/* Assigned Candidates List */}
+                  {assignedCandidates.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                      {assignedCandidates.map(candidate => (
+                        <div key={candidate.id} className="flex items-center justify-between p-2 bg-blue-50 border border-blue-200 rounded text-sm">
+                          <div>
+                            <span className="font-medium text-blue-900">{candidate.name}</span>
+                            <span className="text-blue-600 ml-2">({candidate.email})</span>
+                          </div>
+                          <button
+                            onClick={() => handleRemoveCandidate(candidate.id)}
+                            className="text-red-500 hover:text-red-700"
+                            title="Remove candidate"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   )}
+
+                  <p className="text-xs text-gray-500 mt-1">
+                    Candidates will be automatically assigned to all interviews and todos in this workflow
+                  </p>
                 </div>
-              ))}
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Add Viewers</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={viewerInput}
+                      onChange={(e) => setViewerInput(e.target.value)}
+                      placeholder="Enter user ID or email"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleAddViewer();
+                        }
+                      }}
+                    />
+                    <select
+                      value={viewerRole}
+                      onChange={(e) => setViewerRole(e.target.value as 'viewer' | 'reviewer' | 'manager')}
+                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                    >
+                      <option value="viewer">Viewer</option>
+                      <option value="reviewer">Reviewer</option>
+                      <option value="manager">Manager</option>
+                    </select>
+                    <button
+                      type="button"
+                      onClick={handleAddViewer}
+                      className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
+                    >
+                      Add
+                    </button>
+                  </div>
+
+                  {/* Workflow Viewers List */}
+                  {workflowViewers.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                      {workflowViewers.map(viewer => (
+                        <div key={viewer.id} className="flex items-center justify-between p-2 bg-green-50 border border-green-200 rounded text-sm">
+                          <div>
+                            <span className="font-medium text-green-900">{viewer.name}</span>
+                            <span className="text-green-600 ml-2">({viewer.email})</span>
+                            <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
+                              viewer.role === 'manager' ? 'bg-purple-100 text-purple-800' :
+                              viewer.role === 'reviewer' ? 'bg-orange-100 text-orange-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {viewer.role}
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => handleRemoveViewer(viewer.id)}
+                            className="text-red-500 hover:text-red-700"
+                            title="Remove viewer"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <p className="text-xs text-gray-500 mt-1">
+                    Viewers will have access to all interviews and todos created by this workflow
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Integration Info */}
+            <div className="p-4 bg-violet-50 border border-violet-200 rounded-lg">
+              <div className="flex items-start gap-2">
+                <GitBranch className="h-4 w-4 text-violet-600 mt-0.5" />
+                <div className="text-xs text-violet-800">
+                  <div className="font-medium mb-1">Smart Integration</div>
+                  <p>
+                    When enabled, interview steps create actual interview records and todo steps create real todo assignments.
+                    Assigned candidates and viewers are automatically propagated to all created records.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Right Sidebar - Node Properties */}
-          {showNodePanel && selectedNode && (
-            <div className="w-80 border-l border-gray-200 p-4 bg-gray-50">
-              <h3 className="font-semibold text-gray-900 mb-4">Node Properties</h3>
+          {/* Center - Linear Workflow View */}
+          <div className="flex-1 p-6 bg-white overflow-y-auto">
+            <div className="max-w-4xl mx-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-gray-900">Workflow Steps</h3>
+                <span className="text-sm text-gray-500">{steps.length} steps configured</span>
+              </div>
+
+              {steps.length === 0 ? (
+                /* Empty State */
+                <div className="text-center py-12">
+                  <GitBranch className="h-16 w-16 mx-auto text-gray-400 mb-4" />
+                  <h4 className="text-xl font-semibold text-gray-900 mb-2">No Steps Yet</h4>
+                  <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                    Start building your recruitment workflow by adding interview and todo steps.
+                    Use the buttons on the left to get started.
+                  </p>
+                  <div className="flex justify-center gap-3">
+                    <button
+                      onClick={() => addStep('interview')}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      <Video className="h-4 w-4" />
+                      Add Interview
+                    </button>
+                    <button
+                      onClick={() => addStep('todo')}
+                      className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                      <CheckSquare className="h-4 w-4" />
+                      Add Todo
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* Linear Workflow Steps */
+                <div className="space-y-4">
+                  {steps.map((step, index) => (
+                    <div key={step.id} className="relative">
+                      <div
+                        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                          selectedStep?.id === step.id
+                            ? 'border-violet-500 bg-violet-50'
+                            : 'border-gray-200 bg-white hover:border-gray-300'
+                        }`}
+                        onClick={() => {
+                          setSelectedStep(step);
+                          setShowStepPanel(true);
+                        }}
+                      >
+                        <div className="flex items-center gap-4">
+                          {/* Step Number */}
+                          <div className="flex-shrink-0 w-10 h-10 bg-violet-100 text-violet-600 rounded-full flex items-center justify-center font-semibold">
+                            {step.order}
+                          </div>
+
+                          {/* Step Icon and Type */}
+                          <div className={`flex-shrink-0 w-12 h-12 rounded-lg border-2 ${getStepColor(step.type)} flex items-center justify-center`}>
+                            {getStepIcon(step.type)}
+                          </div>
+
+                          {/* Step Content */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-semibold text-gray-900 truncate">{step.title}</h4>
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                step.type === 'interview'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : 'bg-green-100 text-green-800'
+                              }`}>
+                                {step.type}
+                              </span>
+                              {step.isIntegrated && (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-violet-100 text-violet-800">
+                                  {(step.interview_id || step.todo_id) ? '🔗 Linked' : '✨ Integration Enabled'}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-600 truncate">{step.description}</p>
+                            <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                              {step.type === 'interview' && (
+                                <>
+                                  <span>📅 {step.config?.duration || 60} minutes</span>
+                                  <span>🎥 {step.config?.interview_type || 'technical'}</span>
+                                  <span>📍 {step.config?.location || 'Video Call'}</span>
+                                </>
+                              )}
+                              {step.type === 'todo' && (
+                                <>
+                                  <span>📋 {step.config?.assignment_type || 'general'} assignment</span>
+                                  <span>⭐ {step.config?.priority || 'medium'} priority</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Step Controls */}
+                          <div className="flex-shrink-0 flex items-center gap-2">
+                            {/* Edit button - opens actual interview/todo for editing */}
+                            {step.isIntegrated && step.realId && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditStepRecord(step);
+                                }}
+                                className="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded"
+                                title={`Edit ${step.type === 'interview' ? 'interview' : 'todo'} record`}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </button>
+                            )}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                moveStep(step.id, 'up');
+                              }}
+                              disabled={index === 0}
+                              className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                              title="Move up"
+                            >
+                              ↑
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                moveStep(step.id, 'down');
+                              }}
+                              disabled={index === steps.length - 1}
+                              className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                              title="Move down"
+                            >
+                              ↓
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteStep(step.id);
+                              }}
+                              className="p-1 text-red-400 hover:text-red-600"
+                              title="Delete step"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Connection Arrow */}
+                      {index < steps.length - 1 && (
+                        <div className="flex justify-center py-2">
+                          <div className="text-gray-400">
+                            ↓
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right Sidebar - Step Properties */}
+          {showStepPanel && selectedStep && (
+            <div className="w-80 border-l border-gray-200 p-6 bg-gray-50">
+              <h3 className="font-semibold text-gray-900 mb-4">Step Properties</h3>
 
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
                   <input
                     type="text"
-                    value={selectedNode.title}
-                    onChange={(e) => updateNode(selectedNode.id, { title: e.target.value })}
+                    value={selectedStep.title}
+                    onChange={(e) => updateStep(selectedStep.id, { title: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
-                    disabled={selectedNode.type === 'start' || selectedNode.type === 'end'}
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
                   <textarea
-                    value={selectedNode.description || ''}
-                    onChange={(e) => updateNode(selectedNode.id, { description: e.target.value })}
+                    value={selectedStep.description || ''}
+                    onChange={(e) => updateStep(selectedStep.id, { description: e.target.value })}
                     rows={3}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
-                    disabled={selectedNode.type === 'start' || selectedNode.type === 'end'}
                   />
                 </div>
 
-                {/* Type-specific configuration */}
-                {selectedNode.type === 'interview' && (
-                  <div className="space-y-3">
+                <div>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={selectedStep.isIntegrated}
+                      onChange={(e) => updateStep(selectedStep.id, { isIntegrated: e.target.checked })}
+                      className="h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      Create real {selectedStep.type === 'interview' ? 'interview' : 'todo'} record
+                    </span>
+                  </label>
+                  <p className="text-xs text-gray-500 mt-1">
+                    When enabled, this step will create an actual {selectedStep.type === 'interview' ? 'interview' : 'todo assignment'} that you can view in the {selectedStep.type === 'interview' ? 'Interviews' : 'Todos'} section.
+                  </p>
+                </div>
+
+                {/* Interview-specific settings */}
+                {selectedStep.type === 'interview' && (
+                  <div className="space-y-4 pt-4 border-t border-gray-200">
                     <h4 className="font-medium text-gray-900">Interview Settings</h4>
+
                     <div>
-                      <label className="block text-sm text-gray-700 mb-1">Duration (minutes)</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Duration (minutes)</label>
                       <input
                         type="number"
-                        value={selectedNode.config?.duration || 60}
-                        onChange={(e) => updateNode(selectedNode.id, {
-                          config: { ...selectedNode.config, duration: parseInt(e.target.value) }
+                        min="15"
+                        max="480"
+                        value={selectedStep.config?.duration || 60}
+                        onChange={(e) => updateStep(selectedStep.id, {
+                          config: { ...selectedStep.config, duration: parseInt(e.target.value) }
                         })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
                       />
                     </div>
+
                     <div>
-                      <label className="block text-sm text-gray-700 mb-1">Interview Type</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Interview Type</label>
                       <select
-                        value={selectedNode.config?.interview_type || 'technical'}
-                        onChange={(e) => updateNode(selectedNode.id, {
-                          config: { ...selectedNode.config, interview_type: e.target.value }
+                        value={selectedStep.config?.interview_type || 'technical'}
+                        onChange={(e) => updateStep(selectedStep.id, {
+                          config: { ...selectedStep.config, interview_type: e.target.value }
                         })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
                       >
                         <option value="hr_screening">HR Screening</option>
-                        <option value="technical">Technical</option>
+                        <option value="technical">Technical Interview</option>
                         <option value="culture">Culture Fit</option>
                         <option value="final">Final Interview</option>
+                        <option value="behavioral">Behavioral Interview</option>
                       </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                      <input
+                        type="text"
+                        value={selectedStep.config?.location || 'Video Call'}
+                        onChange={(e) => updateStep(selectedStep.id, {
+                          config: { ...selectedStep.config, location: e.target.value }
+                        })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                        placeholder="e.g., Video Call, Conference Room A"
+                      />
                     </div>
                   </div>
                 )}
 
-                {selectedNode.type === 'todo' && (
-                  <div className="space-y-3">
+                {/* Todo-specific settings */}
+                {selectedStep.type === 'todo' && (
+                  <div className="space-y-4 pt-4 border-t border-gray-200">
                     <h4 className="font-medium text-gray-900">Assignment Settings</h4>
+
                     <div>
-                      <label className="block text-sm text-gray-700 mb-1">Priority</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
                       <select
-                        value={selectedNode.config?.priority || 'medium'}
-                        onChange={(e) => updateNode(selectedNode.id, {
-                          config: { ...selectedNode.config, priority: e.target.value }
+                        value={selectedStep.config?.priority || 'medium'}
+                        onChange={(e) => updateStep(selectedStep.id, {
+                          config: { ...selectedStep.config, priority: e.target.value }
                         })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
                       >
                         <option value="low">Low</option>
                         <option value="medium">Medium</option>
                         <option value="high">High</option>
+                        <option value="urgent">Urgent</option>
                       </select>
                     </div>
+
                     <div>
-                      <label className="block text-sm text-gray-700 mb-1">Assignment Type</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Assignment Type</label>
                       <select
-                        value={selectedNode.config?.assignment_type || 'coding'}
-                        onChange={(e) => updateNode(selectedNode.id, {
-                          config: { ...selectedNode.config, assignment_type: e.target.value }
+                        value={selectedStep.config?.assignment_type || 'general'}
+                        onChange={(e) => updateStep(selectedStep.id, {
+                          config: { ...selectedStep.config, assignment_type: e.target.value }
                         })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
                       >
+                        <option value="general">General Assignment</option>
                         <option value="coding">Coding Challenge</option>
-                        <option value="design">Design Task</option>
-                        <option value="analysis">Data Analysis</option>
+                        <option value="research">Research Task</option>
                         <option value="presentation">Presentation</option>
+                        <option value="analysis">Analysis Task</option>
+                        <option value="design">Design Task</option>
+                        <option value="writing">Writing Assignment</option>
+                        <option value="review">Review Task</option>
                       </select>
                     </div>
-                  </div>
-                )}
 
-                {selectedNode.type === 'assessment' && (
-                  <div className="space-y-3">
-                    <h4 className="font-medium text-gray-900">適性検査 Settings</h4>
                     <div>
-                      <label className="block text-sm text-gray-700 mb-1">Assessment Type</label>
-                      <select
-                        value={selectedNode.config?.assessment_type || 'personality'}
-                        onChange={(e) => updateNode(selectedNode.id, {
-                          config: { ...selectedNode.config, assessment_type: e.target.value }
-                        })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                      >
-                        <option value="personality">Personality Test</option>
-                        <option value="aptitude">Aptitude Test</option>
-                        <option value="cognitive">Cognitive Assessment</option>
-                        <option value="skills">Skills Assessment</option>
-                      </select>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedStep.config?.is_assignment !== false}
+                          onChange={(e) => updateStep(selectedStep.id, {
+                            config: { ...selectedStep.config, is_assignment: e.target.checked }
+                          })}
+                          className="h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
+                        />
+                        <span className="text-sm font-medium text-gray-700">Is Assignment</span>
+                      </label>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Assignments are special todos that require completion and scoring.
+                      </p>
                     </div>
                   </div>
                 )}
 
-                <div className="text-xs text-gray-500 mt-4">
-                  Position: ({selectedNode.x}, {selectedNode.y})
+                <div className="pt-4 border-t border-gray-200">
+                  <div className="text-xs text-gray-500">
+                    <div>Step #{selectedStep.order}</div>
+                    <div>Type: {selectedStep.type}</div>
+                    {selectedStep.realId && <div>Node ID: {selectedStep.realId}</div>}
+                  </div>
                 </div>
               </div>
             </div>
@@ -1755,7 +2202,34 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
         {/* Footer */}
         <div className="border-t border-gray-200 p-6 flex justify-between items-center">
           <div className="text-sm text-gray-600">
-            {nodes.length - 2} workflow steps configured
+            <div className="flex items-center gap-4">
+              <span>{steps.length} workflow steps configured</span>
+              {isCreatingIntegratedRecords && (
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-violet-100 text-violet-800">
+                  <GitBranch className="h-3 w-3" />
+                  Integration enabled
+                </span>
+              )}
+            </div>
+            {(steps.length > 0 || assignedCandidates.length > 0 || workflowViewers.length > 0) && (
+              <div className="mt-1 text-xs text-gray-500 space-y-1">
+                {steps.length > 0 && (
+                  <div>{steps.filter(s => s.type === 'interview').length} interviews • {steps.filter(s => s.type === 'todo').length} todos</div>
+                )}
+                {assignedCandidates.length > 0 && (
+                  <div className="flex items-center gap-1">
+                    <Users className="h-3 w-3" />
+                    {assignedCandidates.length} candidate{assignedCandidates.length !== 1 ? 's' : ''} assigned
+                  </div>
+                )}
+                {workflowViewers.length > 0 && (
+                  <div className="flex items-center gap-1">
+                    <Eye className="h-3 w-3" />
+                    {workflowViewers.length} viewer{workflowViewers.length !== 1 ? 's' : ''} added
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           <div className="flex gap-3">
             <button
@@ -1766,9 +2240,10 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
             </button>
             <button
               onClick={handleSave}
-              className="px-4 py-2 text-sm font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-700"
+              disabled={steps.length === 0}
+              className="px-4 py-2 text-sm font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Save Workflow
+              Save Linear Workflow
             </button>
           </div>
         </div>

@@ -1,6 +1,6 @@
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from sqlalchemy import and_, select, desc
+from sqlalchemy import and_, desc, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -14,7 +14,7 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
         self,
         db: AsyncSession,
         *,
-        obj_in: Dict[str, Any]
+        obj_in: dict[str, Any]
     ) -> NodeConnection:
         """Create a new node connection"""
         db_obj = NodeConnection(**obj_in)
@@ -28,7 +28,7 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
         db: AsyncSession,
         *,
         process_id: int
-    ) -> List[NodeConnection]:
+    ) -> list[NodeConnection]:
         """Get all connections for a process"""
         result = await db.execute(
             select(NodeConnection)
@@ -46,7 +46,7 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
         db: AsyncSession,
         *,
         source_node_id: int
-    ) -> List[NodeConnection]:
+    ) -> list[NodeConnection]:
         """Get outgoing connections from a node"""
         result = await db.execute(
             select(NodeConnection)
@@ -61,7 +61,7 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
         db: AsyncSession,
         *,
         target_node_id: int
-    ) -> List[NodeConnection]:
+    ) -> list[NodeConnection]:
         """Get incoming connections to a node"""
         result = await db.execute(
             select(NodeConnection)
@@ -77,7 +77,7 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
         *,
         source_node_id: int,
         target_node_id: int
-    ) -> Optional[NodeConnection]:
+    ) -> NodeConnection | None:
         """Get specific connection between two nodes"""
         result = await db.execute(
             select(NodeConnection)
@@ -98,9 +98,9 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
         source_node_id: int,
         target_node_id: int,
         condition_type: str = "success",
-        condition_config: Optional[Dict[str, Any]] = None,
-        label: Optional[str] = None,
-        description: Optional[str] = None
+        condition_config: dict[str, Any] | None = None,
+        label: str | None = None,
+        description: str | None = None
     ) -> NodeConnection:
         """Create a connection between two nodes"""
         # Check if connection already exists
@@ -128,10 +128,10 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
         db: AsyncSession,
         *,
         connection: NodeConnection,
-        condition_type: Optional[str] = None,
-        condition_config: Optional[Dict[str, Any]] = None,
-        label: Optional[str] = None,
-        description: Optional[str] = None
+        condition_type: str | None = None,
+        condition_config: dict[str, Any] | None = None,
+        label: str | None = None,
+        description: str | None = None
     ) -> NodeConnection:
         """Update a node connection"""
         if condition_type is not None:
@@ -191,8 +191,8 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
         db: AsyncSession,
         *,
         process_id: int,
-        connections: List[Dict[str, Any]]
-    ) -> List[NodeConnection]:
+        connections: list[dict[str, Any]]
+    ) -> list[NodeConnection]:
         """Create multiple connections at once"""
         new_connections = []
 
@@ -229,7 +229,7 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
         db: AsyncSession,
         *,
         process_id: int
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Validate the flow of a process"""
         # Get all connections and nodes for the process
         connections = await self.get_by_process_id(db, process_id=process_id)
@@ -328,8 +328,8 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
         db: AsyncSession,
         *,
         process_id: int,
-        start_node_id: Optional[int] = None
-    ) -> List[List[int]]:
+        start_node_id: int | None = None
+    ) -> list[list[int]]:
         """Get all possible paths through the process"""
         connections = await self.get_by_process_id(db, process_id=process_id)
 
@@ -342,7 +342,7 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
 
         paths = []
 
-        def find_paths(current_node: int, path: List[int], visited: set):
+        def find_paths(current_node: int, path: list[int], visited: set):
             if current_node in visited:
                 return  # Cycle detected, stop this path
 

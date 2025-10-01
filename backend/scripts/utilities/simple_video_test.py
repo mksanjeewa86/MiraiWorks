@@ -2,8 +2,9 @@
 """
 Simple test script to verify video call functionality
 """
+
 import requests
-import json
+
 
 def check_api_health():
     """Check if the API is running"""
@@ -26,7 +27,7 @@ def check_openapi_docs():
             video_endpoints = []
             for path, methods in openapi_data.get("paths", {}).items():
                 if "video-call" in path:
-                    for method, details in methods.items():
+                    for method, _details in methods.items():
                         video_endpoints.append(f"{method.upper()} {path}")
 
             print("=== Video Call API Endpoints ===")

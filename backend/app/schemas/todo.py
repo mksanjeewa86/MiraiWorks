@@ -4,7 +4,13 @@ from datetime import UTC, datetime
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.utils.constants import TodoStatus, TodoVisibility, TodoType, TodoPublishStatus, AssignmentStatus
+from app.utils.constants import (
+    AssignmentStatus,
+    TodoPublishStatus,
+    TodoStatus,
+    TodoType,
+    TodoVisibility,
+)
 
 
 class TodoBase(BaseModel):
@@ -302,7 +308,7 @@ class AssignmentReview(BaseModel):
     def validate_assignment_status(cls, value: str) -> str:
         allowed = {AssignmentStatus.APPROVED.value, AssignmentStatus.REJECTED.value}
         if value not in allowed:
-            raise ValueError(f"Assignment status for review must be either 'approved' or 'rejected'")
+            raise ValueError("Assignment status for review must be either 'approved' or 'rejected'")
         return value
 
 

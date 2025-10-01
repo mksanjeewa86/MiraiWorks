@@ -7,7 +7,13 @@ from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
-from app.utils.constants import TodoStatus, TodoVisibility, TodoType, TodoPublishStatus, AssignmentStatus
+from app.utils.constants import (
+    AssignmentStatus,
+    TodoPublishStatus,
+    TodoStatus,
+    TodoType,
+    TodoVisibility,
+)
 
 if TYPE_CHECKING:
     from app.models.todo_extension_request import TodoExtensionRequest

@@ -1,5 +1,4 @@
-from datetime import date, datetime
-from typing import List, Optional
+from datetime import date
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,7 +16,7 @@ class HolidayService:
         start_date: date,
         end_date: date,
         country: str = "JP"
-    ) -> List[Holiday]:
+    ) -> list[Holiday]:
         """Get holidays for calendar view within date range"""
         return await holiday_crud.get_by_date_range(
             db, date_from=start_date, date_to=end_date, country=country
@@ -39,16 +38,16 @@ class HolidayService:
         db: AsyncSession,
         check_date: date,
         country: str = "JP"
-    ) -> Optional[Holiday]:
+    ) -> Holiday | None:
         """Get holiday information for a specific date"""
         return await holiday_crud.get_by_date(db, holiday_date=check_date)
 
     async def get_next_holiday(
         self,
         db: AsyncSession,
-        from_date: Optional[date] = None,
+        from_date: date | None = None,
         country: str = "JP"
-    ) -> Optional[Holiday]:
+    ) -> Holiday | None:
         """Get the next upcoming holiday"""
         start_date = from_date or date.today()
         holidays = await holiday_crud.get_upcoming_holidays(
@@ -56,7 +55,7 @@ class HolidayService:
         )
         return holidays[0] if holidays else None
 
-    async def setup_japan_holidays_2025(self, db: AsyncSession) -> List[Holiday]:
+    async def setup_japan_holidays_2025(self, db: AsyncSession) -> list[Holiday]:
         """Setup Japan national holidays for 2025"""
         japan_holidays_2025 = [
             {

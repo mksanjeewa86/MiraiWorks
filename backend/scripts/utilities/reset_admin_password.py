@@ -2,7 +2,7 @@
 """Reset admin user password for MiraiWorks"""
 
 import asyncio
-import sys
+
 from passlib.context import CryptContext
 
 

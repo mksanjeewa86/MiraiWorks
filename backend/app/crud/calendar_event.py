@@ -1,13 +1,17 @@
 from datetime import datetime
-from typing import List, Optional
 
-from sqlalchemy import select, and_, or_
+from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.crud.base import CRUDBase
 from app.models.calendar_event import CalendarEvent
-from app.schemas.calendar_event import CalendarEventCreate, CalendarEventUpdate, EventType, EventStatus
+from app.schemas.calendar_event import (
+    CalendarEventCreate,
+    CalendarEventUpdate,
+    EventStatus,
+    EventType,
+)
 
 
 class CRUDCalendarEvent(CRUDBase[CalendarEvent, CalendarEventCreate, CalendarEventUpdate]):
@@ -18,7 +22,7 @@ class CRUDCalendarEvent(CRUDBase[CalendarEvent, CalendarEventCreate, CalendarEve
         creator_id: int,
         skip: int = 0,
         limit: int = 100
-    ) -> List[CalendarEvent]:
+    ) -> list[CalendarEvent]:
         """Get calendar events by creator"""
         result = await db.execute(
             select(CalendarEvent)
@@ -35,11 +39,11 @@ class CRUDCalendarEvent(CRUDBase[CalendarEvent, CalendarEventCreate, CalendarEve
         *,
         start_date: datetime,
         end_date: datetime,
-        creator_id: Optional[int] = None,
-        event_type: Optional[EventType] = None,
-        status: Optional[EventStatus] = None,
+        creator_id: int | None = None,
+        event_type: EventType | None = None,
+        status: EventStatus | None = None,
         include_all_day: bool = True
-    ) -> List[CalendarEvent]:
+    ) -> list[CalendarEvent]:
         """Get calendar events within a date range"""
         conditions = [
             or_(
@@ -75,7 +79,7 @@ class CRUDCalendarEvent(CRUDBase[CalendarEvent, CalendarEventCreate, CalendarEve
             conditions.append(CalendarEvent.status == status.value)
 
         if not include_all_day:
-            conditions.append(CalendarEvent.is_all_day == False)
+            conditions.append(CalendarEvent.is_all_day is False)
 
         result = await db.execute(
             select(CalendarEvent)
@@ -89,8 +93,8 @@ class CRUDCalendarEvent(CRUDBase[CalendarEvent, CalendarEventCreate, CalendarEve
         db: AsyncSession,
         *,
         target_date: datetime,
-        creator_id: Optional[int] = None
-    ) -> List[CalendarEvent]:
+        creator_id: int | None = None
+    ) -> list[CalendarEvent]:
         """Get calendar events for a specific date"""
         start_of_day = target_date.replace(hour=0, minute=0, second=0, microsecond=0)
         end_of_day = target_date.replace(hour=23, minute=59, second=59, microsecond=999999)
@@ -106,10 +110,10 @@ class CRUDCalendarEvent(CRUDBase[CalendarEvent, CalendarEventCreate, CalendarEve
         self,
         db: AsyncSession,
         *,
-        creator_id: Optional[int] = None,
+        creator_id: int | None = None,
         limit: int = 10,
-        from_datetime: Optional[datetime] = None
-    ) -> List[CalendarEvent]:
+        from_datetime: datetime | None = None
+    ) -> list[CalendarEvent]:
         """Get upcoming calendar events"""
         if from_datetime is None:
             from_datetime = datetime.utcnow()
@@ -135,10 +139,10 @@ class CRUDCalendarEvent(CRUDBase[CalendarEvent, CalendarEventCreate, CalendarEve
         db: AsyncSession,
         *,
         event_type: EventType,
-        creator_id: Optional[int] = None,
+        creator_id: int | None = None,
         skip: int = 0,
         limit: int = 100
-    ) -> List[CalendarEvent]:
+    ) -> list[CalendarEvent]:
         """Get calendar events by type"""
         conditions = [CalendarEvent.event_type == event_type.value]
 
@@ -159,10 +163,10 @@ class CRUDCalendarEvent(CRUDBase[CalendarEvent, CalendarEventCreate, CalendarEve
         db: AsyncSession,
         *,
         status: EventStatus,
-        creator_id: Optional[int] = None,
+        creator_id: int | None = None,
         skip: int = 0,
         limit: int = 100
-    ) -> List[CalendarEvent]:
+    ) -> list[CalendarEvent]:
         """Get calendar events by status"""
         conditions = [CalendarEvent.status == status.value]
 
@@ -182,9 +186,9 @@ class CRUDCalendarEvent(CRUDBase[CalendarEvent, CalendarEventCreate, CalendarEve
         self,
         db: AsyncSession,
         *,
-        creator_id: Optional[int] = None,
+        creator_id: int | None = None,
         parent_only: bool = True
-    ) -> List[CalendarEvent]:
+    ) -> list[CalendarEvent]:
         """Get recurring calendar events"""
         if parent_only:
             conditions = [
@@ -209,7 +213,7 @@ class CRUDCalendarEvent(CRUDBase[CalendarEvent, CalendarEventCreate, CalendarEve
         db: AsyncSession,
         *,
         parent_event_id: int
-    ) -> List[CalendarEvent]:
+    ) -> list[CalendarEvent]:
         """Get all instances of a recurring event"""
         result = await db.execute(
             select(CalendarEvent)
@@ -239,9 +243,9 @@ class CRUDCalendarEvent(CRUDBase[CalendarEvent, CalendarEventCreate, CalendarEve
         self,
         db: AsyncSession,
         *,
-        events_data: List[CalendarEventCreate],
+        events_data: list[CalendarEventCreate],
         creator_id: int
-    ) -> List[CalendarEvent]:
+    ) -> list[CalendarEvent]:
         """Create multiple calendar events at once"""
         db_events = []
         for event_data in events_data:
@@ -263,10 +267,10 @@ class CRUDCalendarEvent(CRUDBase[CalendarEvent, CalendarEventCreate, CalendarEve
         db: AsyncSession,
         *,
         start_datetime: datetime,
-        end_datetime: Optional[datetime] = None,
+        end_datetime: datetime | None = None,
         creator_id: int,
-        exclude_event_id: Optional[int] = None
-    ) -> List[CalendarEvent]:
+        exclude_event_id: int | None = None
+    ) -> list[CalendarEvent]:
         """Get events that conflict with the given time period"""
         if end_datetime is None:
             end_datetime = start_datetime
@@ -317,10 +321,10 @@ class CRUDCalendarEvent(CRUDBase[CalendarEvent, CalendarEventCreate, CalendarEve
         db: AsyncSession,
         *,
         search_term: str,
-        creator_id: Optional[int] = None,
+        creator_id: int | None = None,
         skip: int = 0,
         limit: int = 100
-    ) -> List[CalendarEvent]:
+    ) -> list[CalendarEvent]:
         """Search calendar events by title or description"""
         search_pattern = f"%{search_term}%"
         conditions = [
@@ -348,7 +352,7 @@ class CRUDCalendarEvent(CRUDBase[CalendarEvent, CalendarEventCreate, CalendarEve
         db: AsyncSession,
         *,
         event_id: int
-    ) -> Optional[CalendarEvent]:
+    ) -> CalendarEvent | None:
         """Get calendar event with all relationships loaded"""
         result = await db.execute(
             select(CalendarEvent)

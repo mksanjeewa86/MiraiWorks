@@ -18,7 +18,12 @@ from app.schemas.todo import (
     TodoViewersUpdate,
 )
 from app.services.todo_permissions import TodoPermissionService
-from app.utils.constants import TodoStatus, TodoVisibility, TodoPublishStatus, AssignmentStatus
+from app.utils.constants import (
+    AssignmentStatus,
+    TodoPublishStatus,
+    TodoStatus,
+    TodoVisibility,
+)
 
 
 class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
@@ -72,7 +77,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         if include_deleted:
             query = query.where(Todo.is_deleted is True)
         else:
-            query = query.where(Todo.is_deleted == False)
+            query = query.where(Todo.is_deleted is False)
 
         if status:
             query = query.where(Todo.status == status)
@@ -104,7 +109,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         await self.auto_mark_expired(db, owner_id)
         result = await db.execute(
             select(Todo)
-            .where(Todo.owner_id == owner_id, Todo.is_deleted == False)
+            .where(Todo.owner_id == owner_id, Todo.is_deleted is False)
             .order_by(Todo.updated_at.desc())
             .limit(limit)
         )
@@ -238,7 +243,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
             .options(selectinload(Todo.owner), selectinload(Todo.assigned_user))
             .where(
                 Todo.assigned_user_id == assigned_user_id,
-                Todo.is_deleted == False,
+                Todo.is_deleted is False,
                 Todo.visibility.in_([TodoVisibility.PUBLIC.value, TodoVisibility.VIEWER.value])
             )
         )
@@ -423,7 +428,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
                     AssignmentStatus.SUBMITTED.value,
                     AssignmentStatus.UNDER_REVIEW.value
                 ]),
-                Todo.is_deleted == False
+                Todo.is_deleted is False
             )
             .order_by(Todo.submitted_at.asc())
         )
@@ -450,7 +455,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
             .where(
                 Todo.todo_type == "assignment",
                 Todo.publish_status == TodoPublishStatus.PUBLISHED.value,
-                Todo.is_deleted == False,
+                Todo.is_deleted is False,
                 (
                     (Todo.assigned_user_id == user_id) |
                     (Todo.viewers.any(TodoViewer.user_id == user_id))

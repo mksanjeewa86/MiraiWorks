@@ -1,19 +1,28 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, DECIMAL, JSON, UniqueConstraint
+from sqlalchemy import (
+    DECIMAL,
+    JSON,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
 
 if TYPE_CHECKING:
-    from app.models.user import User
     from app.models.candidate_process import CandidateProcess
-    from app.models.process_node import ProcessNode
     from app.models.interview import Interview
+    from app.models.process_node import ProcessNode
     from app.models.todo import Todo
+    from app.models.user import User
 
 
 class NodeExecution(Base):
@@ -40,35 +49,35 @@ class NodeExecution(Base):
     )  # pending, scheduled, in_progress, awaiting_input, completed, failed, skipped
 
     # Results and evaluation
-    result: Mapped[Optional[str]] = mapped_column(
+    result: Mapped[str | None] = mapped_column(
         String(50), nullable=True, index=True
     )  # pass, fail, pending_review, approved, rejected
-    score: Mapped[Optional[float]] = mapped_column(DECIMAL(5, 2), nullable=True)
-    feedback: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    assessor_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    execution_data: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    score: Mapped[float | None] = mapped_column(DECIMAL(5, 2), nullable=True)
+    feedback: Mapped[str | None] = mapped_column(Text, nullable=True)
+    assessor_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    execution_data: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
     # Linked resources (interviews/todos created for this execution)
-    interview_id: Mapped[Optional[int]] = mapped_column(
+    interview_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("interviews.id", ondelete="SET NULL"), nullable=True, index=True
     )
-    todo_id: Mapped[Optional[int]] = mapped_column(
+    todo_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("todos.id", ondelete="SET NULL"), nullable=True, index=True
     )
 
     # Timing
-    started_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    due_date: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    due_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Actors
-    assigned_to: Mapped[Optional[int]] = mapped_column(
+    assigned_to: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
     )
-    completed_by: Mapped[Optional[int]] = mapped_column(
+    completed_by: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
-    reviewed_by: Mapped[Optional[int]] = mapped_column(
+    reviewed_by: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
 
@@ -90,21 +99,21 @@ class NodeExecution(Base):
     node: Mapped[ProcessNode] = relationship(
         "ProcessNode", back_populates="executions"
     )
-    assignee: Mapped[Optional[User]] = relationship(
+    assignee: Mapped[User | None] = relationship(
         "User", foreign_keys=[assigned_to], back_populates="assigned_node_executions"
     )
-    completer: Mapped[Optional[User]] = relationship(
+    completer: Mapped[User | None] = relationship(
         "User", foreign_keys=[completed_by], back_populates="completed_node_executions"
     )
-    reviewer: Mapped[Optional[User]] = relationship(
+    reviewer: Mapped[User | None] = relationship(
         "User", foreign_keys=[reviewed_by], back_populates="reviewed_node_executions"
     )
 
     # Linked resources
-    interview: Mapped[Optional[Interview]] = relationship(
+    interview: Mapped[Interview | None] = relationship(
         "Interview", foreign_keys=[interview_id]
     )
-    todo: Mapped[Optional[Todo]] = relationship(
+    todo: Mapped[Todo | None] = relationship(
         "Todo", foreign_keys=[todo_id]
     )
 
@@ -131,7 +140,7 @@ class NodeExecution(Base):
         return datetime.utcnow() > self.due_date
 
     @property
-    def duration_minutes(self) -> Optional[int]:
+    def duration_minutes(self) -> int | None:
         """Calculate execution duration in minutes"""
         if not self.started_at or not self.completed_at:
             return None
@@ -139,7 +148,7 @@ class NodeExecution(Base):
         delta = self.completed_at - self.started_at
         return int(delta.total_seconds() / 60)
 
-    def start(self, assigned_to: Optional[int] = None) -> None:
+    def start(self, assigned_to: int | None = None) -> None:
         """Start the execution"""
         if self.status not in ["pending", "scheduled"]:
             raise ValueError(f"Cannot start execution with status '{self.status}'")
@@ -153,9 +162,9 @@ class NodeExecution(Base):
         self,
         result: str,
         completed_by: int,
-        score: Optional[float] = None,
-        feedback: Optional[str] = None,
-        execution_data: Optional[dict] = None
+        score: float | None = None,
+        feedback: str | None = None,
+        execution_data: dict | None = None
     ) -> None:
         """Complete the execution"""
         if self.status not in ["in_progress", "awaiting_input"]:
@@ -173,7 +182,7 @@ class NodeExecution(Base):
         if execution_data:
             self.execution_data = execution_data
 
-    def fail(self, completed_by: int, reason: Optional[str] = None) -> None:
+    def fail(self, completed_by: int, reason: str | None = None) -> None:
         """Mark execution as failed"""
         self.status = "failed"
         self.result = "fail"
@@ -182,7 +191,7 @@ class NodeExecution(Base):
         if reason:
             self.feedback = reason
 
-    def skip(self, completed_by: int, reason: Optional[str] = None) -> None:
+    def skip(self, completed_by: int, reason: str | None = None) -> None:
         """Skip this execution"""
         self.status = "skipped"
         self.result = "skipped"
@@ -191,7 +200,7 @@ class NodeExecution(Base):
         if reason:
             self.feedback = reason
 
-    def schedule(self, due_date: Optional[datetime] = None) -> None:
+    def schedule(self, due_date: datetime | None = None) -> None:
         """Schedule the execution"""
         if self.status != "pending":
             raise ValueError("Only pending executions can be scheduled")
@@ -215,7 +224,7 @@ class NodeExecution(Base):
         """Link a todo to this execution"""
         self.todo_id = todo_id
 
-    def add_review(self, reviewer_id: int, notes: Optional[str] = None) -> None:
+    def add_review(self, reviewer_id: int, notes: str | None = None) -> None:
         """Add reviewer notes"""
         self.reviewed_by = reviewer_id
         if notes:

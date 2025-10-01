@@ -8,17 +8,16 @@ Revises: a84ff39f6879
 Create Date: 2025-09-21 03:15:00.000000
 
 """
+import contextlib
 from collections.abc import Sequence
-from typing import Union
 
-import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "optimize_messages"
-down_revision: Union[str, None] = "a84ff39f6879"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = "a84ff39f6879"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -272,10 +271,8 @@ def downgrade() -> None:
         pass
 
     # Drop view
-    try:
+    with contextlib.suppress(Exception):
         op.execute("DROP VIEW IF EXISTS conversation_summaries")
-    except:
-        pass
 
     # Drop constraints
     try:

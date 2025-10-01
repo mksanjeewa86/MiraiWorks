@@ -1,16 +1,16 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, JSON, UniqueConstraint
+from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
 
 if TYPE_CHECKING:
-    from app.models.user import User
     from app.models.recruitment_process import RecruitmentProcess
+    from app.models.user import User
 
 
 class ProcessViewer(Base):
@@ -35,7 +35,7 @@ class ProcessViewer(Base):
     role: Mapped[str] = mapped_column(
         String(50), nullable=False, index=True
     )  # recruiter, observer, admin, assistant
-    permissions: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    permissions: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
     # Audit
     added_by: Mapped[int] = mapped_column(

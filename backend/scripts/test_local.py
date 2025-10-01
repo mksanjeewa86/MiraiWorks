@@ -236,7 +236,7 @@ def fix_fixtures():
         return False
 
     # Read current conftest
-    with open(conftest_file, "r") as f:
+    with open(conftest_file) as f:
         content = f.read()
 
     fixes_applied = []
@@ -272,9 +272,8 @@ def event_loop():
     if fixes_applied:
         # Backup original
         backup_file = conftest_file.with_suffix(".py.bak")
-        with open(backup_file, "w") as f:
-            with open(conftest_file, "r") as original:
-                f.write(original.read())
+        with open(backup_file, "w") as f, open(conftest_file) as original:
+            f.write(original.read())
 
         # Write fixed version
         with open(conftest_file, "w") as f:
@@ -318,10 +317,9 @@ def main():
         return 1
 
     # Step 2: Fix fixtures if requested
-    if args.fix_fixtures:
-        if not fix_fixtures():
-            print("❌ Failed to fix fixtures")
-            return 1
+    if args.fix_fixtures and not fix_fixtures():
+        print("❌ Failed to fix fixtures")
+        return 1
 
     # Step 3: Set up environment
     env, backend_dir = setup_test_environment()

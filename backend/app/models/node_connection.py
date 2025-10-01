@@ -1,16 +1,16 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, JSON
+from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
 
 if TYPE_CHECKING:
-    from app.models.recruitment_process import RecruitmentProcess
     from app.models.process_node import ProcessNode
+    from app.models.recruitment_process import RecruitmentProcess
 
 
 class NodeConnection(Base):
@@ -38,11 +38,11 @@ class NodeConnection(Base):
     condition_type: Mapped[str] = mapped_column(
         String(50), nullable=False, default="success", index=True
     )  # success, failure, conditional, always
-    condition_config: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    condition_config: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
     # Metadata
-    label: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    description: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    label: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    description: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
@@ -74,7 +74,7 @@ class NodeConnection(Base):
     def is_conditional(self) -> bool:
         return self.condition_type == "conditional"
 
-    def evaluate_condition(self, execution_result: str, execution_data: Optional[dict] = None) -> bool:
+    def evaluate_condition(self, execution_result: str, execution_data: dict | None = None) -> bool:
         """Evaluate whether this connection should be taken based on execution result"""
         if self.condition_type == "always":
             return True
@@ -91,7 +91,7 @@ class NodeConnection(Base):
 
         return False
 
-    def _evaluate_custom_condition(self, execution_result: str, execution_data: Optional[dict] = None) -> bool:
+    def _evaluate_custom_condition(self, execution_result: str, execution_data: dict | None = None) -> bool:
         """Evaluate custom conditions based on condition_config"""
         if not self.condition_config:
             return False

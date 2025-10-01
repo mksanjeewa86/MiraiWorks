@@ -164,7 +164,7 @@ class AuthService:
                 selectinload(User.company),
                 selectinload(User.user_roles).selectinload(UserRoleModel.role),
             )
-            .where(User.email == email, User.is_deleted == False)
+            .where(User.email == email, User.is_deleted is False)
         )
 
         user = result.scalar_one_or_none()

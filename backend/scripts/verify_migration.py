@@ -5,19 +5,19 @@ Run this after the database migration to verify data integrity.
 """
 
 import asyncio
-import sys
 import os
-from typing import Dict, Any
+import sys
+from typing import Any
 
 # Add the parent directory to the path so we can import from app
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from sqlalchemy import text, inspect
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
+
 from app.database import AsyncSessionLocal
 
 
-async def verify_tables_exist() -> Dict[str, Any]:
+async def verify_tables_exist() -> dict[str, Any]:
     """Verify that the new tables exist and old tables are gone."""
     results = {
         "tables_renamed": False,
@@ -66,7 +66,7 @@ async def verify_tables_exist() -> Dict[str, Any]:
     return results
 
 
-async def verify_data_integrity() -> Dict[str, Any]:
+async def verify_data_integrity() -> dict[str, Any]:
     """Verify that data was preserved during migration."""
     results = {
         "data_preserved": False,
@@ -104,7 +104,7 @@ async def verify_data_integrity() -> Dict[str, Any]:
     return results
 
 
-async def verify_indexes() -> Dict[str, Any]:
+async def verify_indexes() -> dict[str, Any]:
     """Verify that indexes were updated correctly."""
     results = {
         "indexes_updated": False,

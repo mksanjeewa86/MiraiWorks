@@ -7,10 +7,12 @@ to match the updated enum definitions in constants.py
 
 import asyncio
 import sys
+
 sys.path.append('.')
 
-from app.database import get_db
 from sqlalchemy import text
+
+from app.database import get_db
 
 
 async def fix_resume_enum_values():

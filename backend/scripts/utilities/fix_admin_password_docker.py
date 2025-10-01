@@ -4,16 +4,14 @@ Fix admin user password hashes in Docker MySQL database.
 This script generates proper bcrypt hashes and updates the database.
 """
 
-import asyncio
-import os
 import sys
 from pathlib import Path
 
 # Add the app directory to Python path
 sys.path.append(str(Path(__file__).parent))
 
-from passlib.context import CryptContext
 import pymysql
+from passlib.context import CryptContext
 
 # Initialize password context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

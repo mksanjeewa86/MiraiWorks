@@ -14,24 +14,21 @@ from app.schemas.calendar import (
     CalendarSyncRequest,
     CalendarSyncResponse,
     CalendarWebhookData,
-    EventCreate,
     EventInfo,
     EventsListResponse,
-    EventUpdate,
 )
 from app.schemas.calendar_event import (
-    CalendarEventCreate,
-    CalendarEventUpdate,
-    CalendarEventInfo,
-    CalendarEventQueryParams,
-    CalendarEventListResponse,
     CalendarEventBulkCreate,
     CalendarEventBulkResponse,
+    CalendarEventCreate,
+    CalendarEventInfo,
+    CalendarEventListResponse,
+    CalendarEventQueryParams,
+    CalendarEventUpdate,
 )
+from app.services.calendar_service import calendar_service
 from app.services.google_calendar_service import google_calendar_service
 from app.services.microsoft_calendar_service import microsoft_calendar_service
-from app.services.holiday_service import holiday_service
-from app.services.calendar_service import calendar_service
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
