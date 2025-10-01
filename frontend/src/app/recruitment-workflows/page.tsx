@@ -1979,11 +1979,13 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
                         onDragOver={(e) => handleDragOver(e, index)}
                         onDragEnd={handleDragEnd}
                         onDrop={(e) => handleDrop(e, index)}
-                        className={`border-2 rounded-xl p-5 cursor-move transition-all shadow-sm hover:shadow-md ${
-                          selectedStep?.id === step.id
+                        className={`relative border-2 rounded-xl p-5 cursor-move transition-all shadow-sm hover:shadow-md ${
+                          draggedStep?.id === step.id
+                            ? 'opacity-50 border-violet-500 bg-violet-100'
+                            : selectedStep?.id === step.id
                             ? 'border-violet-500 bg-gradient-to-br from-violet-50 to-purple-50 shadow-lg ring-2 ring-violet-200'
                             : dragOverIndex === index && draggedStep?.id !== step.id
-                            ? 'border-blue-400 bg-blue-50'
+                            ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-300'
                             : 'border-gray-200 bg-white hover:border-gray-300'
                         }`}
                         onClick={() => {
@@ -1991,14 +1993,12 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
                           setShowStepPanel(true);
                         }}
                       >
-                        <div className="flex items-center gap-4">
-                          {/* Drag Handle */}
-                          <div className="flex-shrink-0 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing">
-                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                              <path d="M7 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 2zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 14zm6-8a2 2 0 1 0-.001-4.001A2 2 0 0 0 13 6zm0 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 14z"></path>
-                            </svg>
-                          </div>
+                        {/* Drop indicator line at top */}
+                        {dragOverIndex === index && draggedStep?.id !== step.id && (
+                          <div className="absolute -top-1 left-0 right-0 h-1 bg-blue-500 rounded-full shadow-lg animate-pulse" />
+                        )}
 
+                        <div className="flex items-center gap-4">
                           {/* Step Number */}
                           <div className="flex-shrink-0 w-11 h-11 bg-gradient-to-br from-violet-500 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-md">
                             {step.order}
@@ -2047,16 +2047,17 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
                           {/* Step Controls */}
                           <div className="flex-shrink-0 flex items-center gap-2">
                             {/* Edit button - opens actual interview/todo for editing */}
-                            {step.isIntegrated && step.realId && (
+                            {(step.interview_id || step.todo_id) && (
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleEditStepRecord(step);
                                 }}
-                                className="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded"
+                                className="px-3 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors flex items-center gap-1"
                                 title={`Edit ${step.type === 'interview' ? 'interview' : 'todo'} record`}
                               >
                                 <Edit className="h-4 w-4" />
+                                Edit
                               </button>
                             )}
                             <button
@@ -2098,7 +2099,11 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
                       {/* Connection Arrow */}
                       {index < steps.length - 1 && (
                         <div className="flex justify-center py-2">
-                          <div className="text-gray-400">
+                          <div className={`text-2xl font-bold ${
+                            draggedStep && (dragOverIndex === index || dragOverIndex === index + 1)
+                              ? 'text-blue-500 animate-pulse'
+                              : 'text-gray-400'
+                          }`}>
                             ↓
                           </div>
                         </div>
