@@ -122,7 +122,8 @@ async def _create_node(
     node_data: ProcessNodeCreate,
     actor: User,
 ):
-    payload = node_data.model_dump()
+    # Exclude integration fields (create_interview, create_todo) from node creation
+    payload = node_data.model_dump(exclude={'create_interview', 'create_todo'})
     payload["process_id"] = process_id
     payload.setdefault("config", {})
 
