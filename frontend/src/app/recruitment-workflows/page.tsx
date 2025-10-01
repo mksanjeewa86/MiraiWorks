@@ -850,7 +850,7 @@ function NewWorkflowModal({ isOpen, onClose, onSubmit }: NewWorkflowModalProps) 
           description: 'Initial screening interview with HR team',
           interview_config: {
             duration: 30,
-            interview_type: 'hr_screening',
+            interview_type: 'video',
             location: 'Video Call'
           }
         },
@@ -871,7 +871,7 @@ function NewWorkflowModal({ isOpen, onClose, onSubmit }: NewWorkflowModalProps) 
           description: 'Deep technical skills interview',
           interview_config: {
             duration: 60,
-            interview_type: 'technical',
+            interview_type: 'video',
             location: 'Conference Room A'
           }
         },
@@ -881,7 +881,7 @@ function NewWorkflowModal({ isOpen, onClose, onSubmit }: NewWorkflowModalProps) 
           description: 'Cultural fit and team dynamics interview',
           interview_config: {
             duration: 45,
-            interview_type: 'culture',
+            interview_type: 'in_person',
             location: 'Team Room'
           }
         },
@@ -902,7 +902,7 @@ function NewWorkflowModal({ isOpen, onClose, onSubmit }: NewWorkflowModalProps) 
           description: 'General background and motivation interview',
           interview_config: {
             duration: 45,
-            interview_type: 'general',
+            interview_type: 'video',
             location: 'Video Call'
           }
         },
@@ -923,7 +923,7 @@ function NewWorkflowModal({ isOpen, onClose, onSubmit }: NewWorkflowModalProps) 
           description: 'Final interview with marketing director',
           interview_config: {
             duration: 30,
-            interview_type: 'final',
+            interview_type: 'in_person',
             location: 'Director Office'
           }
         }
@@ -1334,7 +1334,7 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
       description: type === 'interview' ? 'Interview step description' : 'Todo assignment',
       config: type === 'interview' ? {
         duration: 60,
-        interview_type: 'technical',
+        interview_type: 'video',
         location: 'Video Call'
       } : {
         priority: 'medium',
@@ -1508,8 +1508,10 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
           title: step.title,
           description: step.description,
           sequence_order: step.order,
-          position_x: 100 + (step.order * 200), // Linear horizontal layout
-          position_y: 200,
+          position: {
+            x: 100 + (step.order * 200), // Linear horizontal layout
+            y: 200
+          },
           config: step.config
         };
 
@@ -1518,7 +1520,7 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
           if (step.type === 'interview') {
             nodeData.create_interview = {
               duration: step.config?.duration || 60,
-              interview_type: step.config?.interview_type || 'technical',
+              interview_type: step.config?.interview_type || 'video',
               location: step.config?.location || 'Video Call',
               notes: `Auto-generated for workflow: ${processTitle}`,
               // Use first candidate if available
@@ -1954,7 +1956,7 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
                               {step.type === 'interview' && (
                                 <>
                                   <span>📅 {step.config?.duration || 60} minutes</span>
-                                  <span>🎥 {step.config?.interview_type || 'technical'}</span>
+                                  <span>🎥 {step.config?.interview_type || 'video'}</span>
                                   <span>📍 {step.config?.location || 'Video Call'}</span>
                                 </>
                               )}
@@ -2098,17 +2100,15 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Interview Type</label>
                       <select
-                        value={selectedStep.config?.interview_type || 'technical'}
+                        value={selectedStep.config?.interview_type || 'video'}
                         onChange={(e) => updateStep(selectedStep.id, {
                           config: { ...selectedStep.config, interview_type: e.target.value }
                         })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
                       >
-                        <option value="hr_screening">HR Screening</option>
-                        <option value="technical">Technical Interview</option>
-                        <option value="culture">Culture Fit</option>
-                        <option value="final">Final Interview</option>
-                        <option value="behavioral">Behavioral Interview</option>
+                        <option value="video">Video Interview</option>
+                        <option value="phone">Phone Interview</option>
+                        <option value="in_person">In-Person Interview</option>
                       </select>
                     </div>
 

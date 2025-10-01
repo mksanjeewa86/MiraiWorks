@@ -57,6 +57,11 @@ export interface CreateNodeData {
   title: string;
   description?: string;
   sequence_order: number;
+  position?: {
+    x: number;
+    y: number;
+  };
+  // Legacy fields (deprecated, use position instead)
   position_x?: number;
   position_y?: number;
   config?: any;
@@ -295,8 +300,10 @@ export const workflowIntegrationService = {
         title: step.title,
         description: step.description,
         sequence_order: i + 1,
-        position_x: 100 + (i * 200), // Simple horizontal layout
-        position_y: 100
+        position: {
+          x: 100 + (i * 200), // Simple horizontal layout
+          y: 100
+        }
       };
 
       // Add interview/todo creation data
@@ -304,7 +311,7 @@ export const workflowIntegrationService = {
         nodeData.create_interview = {
           position_id: data.position_id,
           duration: step.interview_config.duration || 60,
-          interview_type: step.interview_config.interview_type || 'technical',
+          interview_type: step.interview_config.interview_type || 'video',
           location: step.interview_config.location,
           notes: `Auto-generated for workflow: ${data.name}`
         };
