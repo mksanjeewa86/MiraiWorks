@@ -1650,30 +1650,19 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
         });
       }
 
-      // Create updated process object
-      const updatedNodes: ProcessNode[] = steps.map(step => ({
-        id: step.realId || 0,
-        process_id: process.id,
-        node_type: step.type,
-        title: step.title,
-        description: step.description,
-        sequence_order: step.order,
-        position_x: 100 + (step.order * 200),
-        position_y: 200,
-        config: step.config,
-        status: 'active' as const
-      }));
+      // Reload the process from the API to get the actual node IDs
+      const reloadedProcessResponse = await recruitmentWorkflowsApi.getProcess(process.id);
 
-      const updatedProcess: RecruitmentProcess = {
+      const updatedProcess: RecruitmentProcess = reloadedProcessResponse.data || {
         ...process,
         name: processTitle,
         description: processDescription,
-        nodes: updatedNodes
+        nodes: []
       };
 
       onSave(updatedProcess);
 
-      console.log('Workflow saved!', { createdInterviews, createdTodos });
+      console.log('Workflow saved!', { createdInterviews, createdTodos, reloadedNodes: updatedProcess.nodes.length });
 
       let successMessage = '✅ Workflow saved successfully!';
 
