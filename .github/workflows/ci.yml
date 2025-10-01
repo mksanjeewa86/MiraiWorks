@@ -79,6 +79,16 @@ jobs:
         HUSKY: 0
       run: npm ci
 
+    - name: Verify UI components exist
+      working-directory: ./frontend
+      run: |
+        echo "Checking UI components directory..."
+        ls -la src/components/ui/ || echo "UI directory not found!"
+        echo "Checking if card.tsx exists..."
+        test -f src/components/ui/card.tsx && echo "✓ card.tsx exists" || echo "✗ card.tsx missing!"
+        test -f src/components/ui/button.tsx && echo "✓ button.tsx exists" || echo "✗ button.tsx missing!"
+        test -f src/components/ui/badge.tsx && echo "✓ badge.tsx exists" || echo "✗ badge.tsx missing!"
+
     - name: Type checking
       working-directory: ./frontend
       run: npm run typecheck || echo "TypeScript checking failed, but continuing..."
@@ -91,8 +101,16 @@ jobs:
       working-directory: ./frontend
       run: rm -rf .next || true
 
+    - name: Verify tsconfig paths
+      working-directory: ./frontend
+      run: |
+        echo "Checking tsconfig.json paths configuration..."
+        cat tsconfig.json | grep -A 3 '"paths"'
+
     - name: Build application
       working-directory: ./frontend
+      env:
+        NODE_ENV: production
       run: npm run build:ci
 
 
