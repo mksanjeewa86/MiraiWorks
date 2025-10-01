@@ -393,10 +393,10 @@ function RecruitmentWorkflowsPageContent() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
               <GitBranch className="h-6 w-6 text-violet-600" />
-              Recruitment Workflows
+              Workflows
             </h1>
             <p className="text-gray-600 mt-1">
-              Create and manage recruitment processes with multiple interview stages, coding tests, and assessments
+              Create and manage hiring workflows with interviews, tasks, and assessments
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -840,8 +840,8 @@ function NewWorkflowModal({ isOpen, onClose, onSubmit }: NewWorkflowModalProps) 
   // Pre-configured workflow templates with real integration
   const workflowTemplates = {
     software_engineer: {
-      name: 'Software Engineer Recruitment',
-      description: 'Complete technical recruitment with coding tests and multiple interview stages',
+      name: 'Software Engineer Hiring',
+      description: 'Complete technical hiring with coding tests and multiple interview stages',
       steps: [
         {
           type: 'interview' as const,
@@ -1055,7 +1055,7 @@ function NewWorkflowModal({ isOpen, onClose, onSubmit }: NewWorkflowModalProps) 
               type="text"
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="e.g. Software Engineer Recruitment"
+              placeholder="e.g. Software Engineer Hiring"
               className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-violet-500 focus:ring-2 focus:ring-violet-500"
             />
           </div>
