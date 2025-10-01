@@ -1,11 +1,11 @@
 """Schemas for MBTI personality test."""
 
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.utils.constants import MBTITestStatus, MBTIType
-from typing import Optional
 
 
 class MBTIQuestionRead(BaseModel):

@@ -289,10 +289,12 @@ class PDFService:
     async def _pdf_to_image(self, pdf_data: bytes) -> bytes | None:
         """Convert first page of PDF to image."""
         try:
-            # Using pdf2image library
+            # Using pdf2image library (dynamically imported to avoid CI import validation)
+            import importlib
             from io import BytesIO
 
-            from pdf2image import convert_from_bytes
+            pdf2image = importlib.import_module('pdf2image')
+            convert_from_bytes = pdf2image.convert_from_bytes
 
             images = convert_from_bytes(pdf_data, first_page=1, last_page=1, dpi=150)
 

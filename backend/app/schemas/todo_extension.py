@@ -1,12 +1,12 @@
 """Schemas for todo extension requests."""
 
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.schemas.todo import AssignableUser
 from app.utils.constants import ExtensionRequestStatus
-from typing import Optional
 
 
 class TodoExtensionRequestCreate(BaseModel):

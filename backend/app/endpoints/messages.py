@@ -278,8 +278,7 @@ async def get_restricted_user_ids(
     """Get list of user IDs that current user cannot message."""
     from sqlalchemy import select
 
-    from app.models.role import Role
-    from app.models.role import UserRole
+    from app.models.role import Role, UserRole
 
     # Get current user's roles
     current_user_roles = [user_role.role.name for user_role in current_user.user_roles]

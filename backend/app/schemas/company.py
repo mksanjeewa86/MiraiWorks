@@ -1,8 +1,9 @@
 
+from typing import Optional
+
 from pydantic import BaseModel, ConfigDict, EmailStr
 
 from app.utils.constants import CompanyType
-from typing import Optional
 
 
 class CompanyBase(BaseModel):
