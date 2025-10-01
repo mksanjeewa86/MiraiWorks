@@ -779,9 +779,22 @@ class TestPositionManagementPermissionMatrix:
         return user
 
     async def _create_position_for_company(
-        self, db_session: AsyncSession, company: Company, status: str = "published"
+        self, db_session: AsyncSession, company: Company, status: str = "published", posted_by_user: User | None = None
     ) -> Position:
         """Create a position for a company."""
+        # Create a default user if none provided
+        if posted_by_user is None:
+            posted_by_user = User(
+                email=f"position_poster_{company.id}@test.com",
+                first_name="Poster",
+                last_name="User",
+                password_hash=auth_service.get_password_hash("testpass123"),
+                is_active=True,
+                company_id=company.id,
+            )
+            db_session.add(posted_by_user)
+            await db_session.flush()
+
         position = Position(
             title="Test Position",
             description="Test job description",
@@ -793,6 +806,7 @@ class TestPositionManagementPermissionMatrix:
             company_id=company.id,
             status=status,
             slug=f"test-position-{company.id}",
+            posted_by=posted_by_user.id,
         )
         db_session.add(position)
         await db_session.commit()

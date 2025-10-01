@@ -248,11 +248,12 @@ class TestCrossCompanyAccessPrevention:
             title="Software Engineer",
             description="Great opportunity",
             company_id=scenario["company_b"].id,
-            created_by=scenario["recruiter_b"].id,
+            posted_by=scenario["recruiter_b"].id,
             location="Osaka",
             job_type="full_time",
             experience_level="mid",
-            status="published"
+            status="published",
+            slug="software-engineer-b"
         )
         db.add(position_b)
         await db.commit()
@@ -286,11 +287,12 @@ class TestCrossCompanyAccessPrevention:
             title="Backend Developer",
             description="Backend role",
             company_id=scenario["company_b"].id,
-            created_by=scenario["employer_b"].id,
+            posted_by=scenario["employer_b"].id,
             location="Osaka",
             job_type="full_time",
             experience_level="senior",
-            status="published"
+            status="published",
+            slug="backend-developer-b"
         )
         db.add(position_b)
         await db.flush()
@@ -530,11 +532,12 @@ class TestCrossCompanyAccessPrevention:
             title="Data Scientist",
             description="Data science role",
             company_id=scenario["company_b"].id,
-            created_by=scenario["recruiter_b"].id,
+            posted_by=scenario["recruiter_b"].id,
             location="Osaka",
             job_type="full_time",
             experience_level="senior",
-            status="published"
+            status="published",
+            slug="data-scientist-b"
         )
         db.add(position_b)
         await db.flush()
