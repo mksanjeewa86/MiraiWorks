@@ -5,7 +5,7 @@ import type { CSSProperties } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
-import { recruitmentWorkflowsApi, workflowIntegrationService, type RecruitmentProcess, type ProcessNode, type CreateNodeData } from '@/api/recruitment-workflows';
+import { recruitmentWorkflowsApi, workflowIntegrationService, type RecruitmentProcess, type ProcessNode, type CreateNodeData } from '@/api/workflows';
 import { interviewsApi } from '@/api/interviews';
 import { todosApi } from '@/api/todos';
 import TaskModal from '@/components/todos/TaskModal';

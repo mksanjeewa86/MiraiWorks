@@ -49,7 +49,7 @@ const navigationItems: NavItem[] = [
   },
   {
     name: 'Workflows',
-    href: '/recruitment-workflows',
+    href: '/workflows',
     icon: GitBranch,
     roles: ['employer', 'company_admin'],
     color: 'bg-violet-600',
