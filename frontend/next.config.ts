@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import path from 'path';
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
@@ -7,6 +8,12 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ['lucide-react', '@headlessui/react'],
   },
   webpack: (config, { dev }) => {
+    // Ensure path aliases work in all environments (especially CI)
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(__dirname, 'src'),
+    };
+
     if (dev) {
       // Improve chunk splitting for development
       config.optimization = {

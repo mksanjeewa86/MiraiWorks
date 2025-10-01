@@ -223,6 +223,42 @@ export { default as Toggle } from './toggle';
 
 ---
 
+### 7. Explicit Webpack Path Alias Configuration ✅
+
+**Problem**: Path aliases (`@/`) not resolving correctly in CI environment
+
+**Root Cause**: While `tsconfig.json` configures TypeScript paths, webpack needs its own configuration for module resolution at build time. CI environments may not inherit these paths correctly.
+
+**Solution**: Added explicit webpack alias configuration in `next.config.ts`
+
+**Changed**:
+```typescript
+// frontend/next.config.ts
+import path from 'path';
+
+const nextConfig: NextConfig = {
+  // ... existing config
+  webpack: (config, { dev }) => {
+    // Ensure path aliases work in all environments (especially CI)
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(__dirname, 'src'),
+    };
+
+    // ... rest of config
+    return config;
+  },
+};
+```
+
+**Why This Works**:
+- Explicitly tells webpack where `@` points to
+- `path.resolve(__dirname, 'src')` creates absolute path
+- Works consistently across all environments (local, CI, Docker)
+- Ensures webpack module resolution matches TypeScript expectations
+
+---
+
 **Changed** (pdf2image fix):
 ```python
 # app/services/pdf_service.py:291-297
@@ -291,9 +327,10 @@ try:
 6. `backend/app/services/pdf_service.py` - Changed to dynamic import for pdf2image
 
 ### Frontend:
-7. `frontend/src/components/ui/index.ts` - Created barrel export file for UI components
-8. `frontend/.next/` - Cleared stale build cache (causes module resolution issues)
-9. `.github/workflows/ci.yml` - Added cache cleanup step before frontend build
+7. `frontend/next.config.ts` - Added explicit webpack path alias configuration for CI
+8. `frontend/src/components/ui/index.ts` - Created barrel export file for UI components
+9. `frontend/.next/` - Cleared stale build cache (causes module resolution issues)
+10. `.github/workflows/ci.yml` - Added cache cleanup and diagnostic steps before frontend build
 
 ---
 
