@@ -1684,24 +1684,6 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
             <p className="text-sm text-gray-500 mt-1">Create a step-by-step recruitment process with interviews and coding tests</p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="createIntegratedRecords"
-                checked={isCreatingIntegratedRecords}
-                onChange={(e) => setIsCreatingIntegratedRecords(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
-              />
-              <label htmlFor="createIntegratedRecords" className="text-sm text-gray-700">
-                Create real interviews & todos
-              </label>
-            </div>
-            <button
-              onClick={() => setShowStepPanel(!showStepPanel)}
-              className="px-3 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              {showStepPanel ? 'Hide' : 'Show'} Properties
-            </button>
             <button
               onClick={onClose}
               className="p-2 text-gray-400 hover:text-gray-600"
@@ -1714,7 +1696,7 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
         {/* Main Content */}
         <div className="flex-1 flex overflow-hidden">
           {/* Left Sidebar - Step Controls */}
-          <div className="w-80 border-r border-gray-200 p-6 bg-gray-50">
+          <div className="w-80 border-r border-gray-200 p-6 bg-gray-50 overflow-y-auto">
             <h3 className="font-semibold text-gray-900 mb-4">Workflow Configuration</h3>
 
             {/* Process Info */}
@@ -1749,7 +1731,7 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
                 >
                   <Video className="h-5 w-5 text-blue-500" />
                   <div>
-                    <div className="font-medium text-gray-900">Add Interview</div>
+                    <div className="font-medium text-gray-900">Interview</div>
                     <div className="text-xs text-gray-500">Technical, HR, or cultural interview</div>
                   </div>
                 </button>
@@ -1759,7 +1741,7 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
                 >
                   <CheckSquare className="h-5 w-5 text-green-500" />
                   <div>
-                    <div className="font-medium text-gray-900">Add Todo</div>
+                    <div className="font-medium text-gray-900">Todo</div>
                     <div className="text-xs text-gray-500">Assignment or task</div>
                   </div>
                 </button>
@@ -1927,14 +1909,14 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
                       className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                     >
                       <Video className="h-4 w-4" />
-                      Add Interview
+                      Interview
                     </button>
                     <button
                       onClick={() => addStep('todo')}
                       className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                     >
                       <CheckSquare className="h-4 w-4" />
-                      Add Todo
+                      Todo
                     </button>
                   </div>
                 </div>
