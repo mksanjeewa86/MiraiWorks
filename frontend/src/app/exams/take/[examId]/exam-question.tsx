@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
+import { Card, CardContent } from '@/components/ui';
+import { Button } from '@/components/ui';
+import { Textarea } from '@/components/ui';
+import { RadioGroup, RadioGroupItem } from '@/components/ui';
+import { Checkbox } from '@/components/ui';
+import { Label } from '@/components/ui';
+import { Slider } from '@/components/ui';
 
 interface Question {
   id: number;

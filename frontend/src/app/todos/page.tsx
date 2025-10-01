@@ -20,12 +20,12 @@ import {
 
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import AppLayout from '@/components/layout/AppLayout';
-import Card from '@/components/ui/card';
-import Badge from '@/components/ui/badge';
-import Button from '@/components/ui/button';
-import Input from '@/components/ui/input';
-import LoadingSpinner from '@/components/ui/loading-spinner';
-import ConfirmationModal from '@/components/ui/confirmation-modal';
+import { Card } from '@/components/ui';
+import { Badge } from '@/components/ui';
+import { Button } from '@/components/ui';
+import { Input } from '@/components/ui';
+import { LoadingSpinner } from '@/components/ui';
+import { ConfirmationModal } from '@/components/ui';
 import TaskModal from '@/components/todos/TaskModal';
 import ExtensionRequestModal from '@/components/todos/ExtensionRequestModal';
 import { useToast } from '@/contexts/ToastContext';

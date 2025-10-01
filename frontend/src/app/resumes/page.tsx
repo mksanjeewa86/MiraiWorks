@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AppLayout from '@/components/layout/AppLayout';
-import Card from '@/components/ui/card';
-import Badge from '@/components/ui/badge';
-import Button from '@/components/ui/button';
-import LoadingSpinner from '@/components/ui/loading-spinner';
+import { Card } from '@/components/ui';
+import { Badge } from '@/components/ui';
+import { Button } from '@/components/ui';
+import { LoadingSpinner } from '@/components/ui';
 import {
   Plus,
   FileText,

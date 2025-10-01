@@ -6,10 +6,10 @@ import {
   MapPinIcon,
   CalendarIcon,
 } from '@heroicons/react/24/outline';
-import Card from '@/components/ui/card';
-import Badge from '@/components/ui/badge';
-import Button from '@/components/ui/button';
-import LoadingSpinner from '@/components/ui/loading-spinner';
+import { Card } from '@/components/ui';
+import { Badge } from '@/components/ui';
+import { Button } from '@/components/ui';
+import { LoadingSpinner } from '@/components/ui';
 import MBTIResultCard from '@/components/mbti/MBTIResultCard';
 import { mbtiApi } from '@/api/mbti';
 import { useAuth } from '@/contexts/AuthContext';

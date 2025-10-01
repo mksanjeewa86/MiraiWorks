@@ -10,11 +10,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import Button from "@/components/ui/button";
-import Input from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import Badge from "@/components/ui/badge";
+} from '@/components/ui';
+import { Button } from '@/components/ui';
+import { Input } from '@/components/ui';
+import { Textarea } from '@/components/ui';
+import { Badge } from '@/components/ui';
 import { useToast } from "@/contexts/ToastContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { todosApi } from "@/api/todos";

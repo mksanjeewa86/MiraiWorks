@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { dashboardApi } from '@/api/dashboard';
-import Card from '@/components/ui/card';
-import Badge from '@/components/ui/badge';
-import LoadingSpinner from '@/components/ui/loading-spinner';
-import Button from '@/components/ui/button';
+import { Card } from '@/components/ui';
+import { Badge } from '@/components/ui';
+import { LoadingSpinner } from '@/components/ui';
+import { Button } from '@/components/ui';
 import {
   Users,
   Building2,

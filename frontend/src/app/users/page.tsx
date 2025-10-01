@@ -28,7 +28,7 @@ import { usersApi } from '@/api/users';
 import { UserManagement, UserFilters } from '@/types/user';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
-import ConfirmationModal from '@/components/ui/confirmation-modal';
+import { ConfirmationModal } from '@/components/ui';
 
 function UsersPageContent() {
   const [users, setUsers] = useState<UserManagement[]>([]);

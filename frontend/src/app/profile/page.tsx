@@ -5,10 +5,10 @@ import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
-import Card from '@/components/ui/card';
-import Button from '@/components/ui/button';
-import Badge from '@/components/ui/badge';
-import LoadingSpinner from '@/components/ui/loading-spinner';
+import { Card } from '@/components/ui';
+import { Button } from '@/components/ui';
+import { Badge } from '@/components/ui';
+import { LoadingSpinner } from '@/components/ui';
 import { userSettingsApi } from '@/api/userSettings';
 import { UserProfile, UserProfileUpdate } from '@/types';
 import {

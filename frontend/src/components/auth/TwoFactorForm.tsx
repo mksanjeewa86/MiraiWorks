@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Shield, RotateCcw } from 'lucide-react';
-import Button from '@/components/ui/button';
+import { Button } from '@/components/ui';
 import type { TwoFactorFormProps } from '@/types/components';
 import { twoFactorSchema, type TwoFactorFormData } from '@/types/forms';
 

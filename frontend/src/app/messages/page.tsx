@@ -4,9 +4,9 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useAuth } from '@/contexts/AuthContext';
 import { API_CONFIG } from '@/api/config';
 import AppLayout from '@/components/layout/AppLayout';
-import Button from '@/components/ui/button';
-import Input from '@/components/ui/input';
-import LoadingSpinner from '@/components/ui/loading-spinner';
+import { Button } from '@/components/ui';
+import { Input } from '@/components/ui';
+import { LoadingSpinner } from '@/components/ui';
 import {
   ChevronLeft,
   Menu,

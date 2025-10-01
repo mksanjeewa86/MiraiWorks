@@ -10,11 +10,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import Button from "@/components/ui/button";
-import Input from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import Badge from "@/components/ui/badge";
+} from '@/components/ui';
+import { Button } from '@/components/ui';
+import { Input } from '@/components/ui';
+import { Textarea } from '@/components/ui';
+import { Badge } from '@/components/ui';
 import { addDays, format, parseISO } from "date-fns";
 import { todoExtensionsApi } from "@/api/todo-extensions";
 import type { ExtensionRequestModalProps, TodoExtensionValidation } from "@/types/todo";

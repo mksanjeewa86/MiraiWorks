@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Clock, AlertTriangle } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/ui';
 
 interface ExamTimerProps {
   timeRemaining: number; // in seconds

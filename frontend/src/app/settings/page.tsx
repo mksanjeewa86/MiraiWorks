@@ -7,11 +7,11 @@ import { calendarApi } from '@/api/calendar';
 import { UserSettings, CalendarConnection } from '@/types';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
-import Card from '@/components/ui/card';
-import Button from '@/components/ui/button';
-import Input from '@/components/ui/input';
-import LoadingSpinner from '@/components/ui/loading-spinner';
-import Toggle from '@/components/ui/toggle';
+import { Card } from '@/components/ui';
+import { Button } from '@/components/ui';
+import { Input } from '@/components/ui';
+import { LoadingSpinner } from '@/components/ui';
+import { Toggle } from '@/components/ui';
 import {
   Save,
   Shield,

@@ -22,11 +22,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import Button from '@/components/ui/button';
-import Input from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import Checkbox from '@/components/ui/checkbox';
+} from '@/components/ui';
+import { Button } from '@/components/ui';
+import { Input } from '@/components/ui';
+import { Textarea } from '@/components/ui';
+import { Checkbox } from '@/components/ui';
 
 export default function EventModal({
   isOpen,

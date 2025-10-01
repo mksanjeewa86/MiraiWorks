@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { X, Plus, Save, ClipboardList, Paperclip } from 'lucide-react';
-import Button from '@/components/ui/button';
-import Input from '@/components/ui/input';
-import Badge from '@/components/ui/badge';
+import { Button } from '@/components/ui';
+import { Input } from '@/components/ui';
+import { Badge } from '@/components/ui';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import '@/styles/datepicker.css';

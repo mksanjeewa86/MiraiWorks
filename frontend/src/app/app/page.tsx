@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import LoadingSpinner from '@/components/ui/loading-spinner';
+import { LoadingSpinner } from '@/components/ui';
 
 export default function AppPage() {
   const { user, isLoading } = useAuth();

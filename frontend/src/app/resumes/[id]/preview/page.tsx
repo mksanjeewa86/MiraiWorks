@@ -3,9 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import AppLayout from '@/components/layout/AppLayout';
-import Card from '@/components/ui/card';
-import Button from '@/components/ui/button';
-import LoadingSpinner from '@/components/ui/loading-spinner';
+import { Card } from '@/components/ui';
+import { Button } from '@/components/ui';
+import { LoadingSpinner } from '@/components/ui';
 import { ArrowLeft, Download, Edit, Share2, Eye, Globe, FileText, ZoomIn, ZoomOut, Maximize2, Minimize2, RotateCcw, Printer } from 'lucide-react';
 import { Resume, ResumeFormat } from '@/types/resume';
 import { resumesApi } from '@/api/resumes';

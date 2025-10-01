@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { CheckCircle, XCircle, Send, Eye, EyeOff, Star, MessageSquare } from "lucide-react";
-import Button from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import Input from "@/components/ui/input";
-import Badge from "@/components/ui/badge";
+import { Button } from '@/components/ui';
+import { Textarea } from '@/components/ui';
+import { Input } from '@/components/ui';
+import { Badge } from '@/components/ui';
 import { useToast } from "@/contexts/ToastContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { todosApi } from "@/api/todos";

@@ -16,7 +16,7 @@ import {
   Download,
   Eye,
 } from 'lucide-react';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { LoadingSpinner } from '@/components/ui';
 import { toast } from 'sonner';
 
 interface ExamStatistics {

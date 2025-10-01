@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { ZoomIn, ZoomOut, Maximize2, Minimize2, RotateCcw, Printer, Eye } from 'lucide-react';
-import Button from '@/components/ui/button';
-import Card from '@/components/ui/card';
-import LoadingSpinner from '@/components/ui/loading-spinner';
+import { Button } from '@/components/ui';
+import { Card } from '@/components/ui';
+import { LoadingSpinner } from '@/components/ui';
 import { Resume } from '@/types/resume';
 
 interface ResumePreviewProps {

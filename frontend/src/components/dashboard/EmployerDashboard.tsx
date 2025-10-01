@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { dashboardApi } from '@/api/dashboard';
-import Card from '@/components/ui/card';
-import LoadingSpinner from '@/components/ui/loading-spinner';
-import Button from '@/components/ui/button';
+import { Card } from '@/components/ui';
+import { LoadingSpinner } from '@/components/ui';
+import { Button } from '@/components/ui';
 import type { EmployerStats } from '@/types/dashboard';
 
 export default function EmployerDashboard() {

@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui';
+import { Button } from '@/components/ui';
+import { Badge } from '@/components/ui';
 import { Calendar, Clock, Users, BookOpen, Play, Eye } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { LoadingSpinner } from '@/components/ui';
 import { toast } from 'sonner';
 
 interface ExamAssignment {

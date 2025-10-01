@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { UserIcon, InboxIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { useToast } from '@/contexts/ToastContext';
 import { todosApi } from '@/api/todos';
-import LoadingSpinner from '@/components/ui/loading-spinner';
+import { LoadingSpinner } from '@/components/ui';
 import { TodoItem } from './TodoItem';
 import { useAuth } from '@/contexts/AuthContext';
 import { getTodoPermissions } from '@/utils/todoPermissions';

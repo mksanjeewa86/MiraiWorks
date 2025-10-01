@@ -2,17 +2,17 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui';
+import { Button } from '@/components/ui';
+import { Progress } from '@/components/ui';
+import { Badge } from '@/components/ui';
 import {
   AlertTriangle,
   Clock,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { LoadingSpinner } from '@/components/ui';
 import { toast } from 'sonner';
 import { ExamQuestion } from './exam-question';
 import { ExamTimer } from './exam-timer';
