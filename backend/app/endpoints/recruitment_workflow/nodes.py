@@ -106,7 +106,12 @@ async def _shift_sequence_numbers(
             updates.append({"node_id": node.id, "sequence_order": node.sequence_order + 1})
 
     if updates:
-        await process_node.reorder_nodes(db, updates)
+        await process_node.reorder_nodes(
+            db,
+            process_id=process_id,
+            node_sequence_updates=updates,
+            updated_by=updated_by
+        )
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
