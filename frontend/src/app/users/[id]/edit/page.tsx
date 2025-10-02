@@ -13,28 +13,21 @@ import {
   Mail,
   AlertTriangle,
 } from 'lucide-react';
+import { UserEditFormData, ActionState } from '@/types/user';
 import { usersApi } from '@/api/users';
 import { UserManagement as UserType } from '@/types/user';
 import { useToast } from '@/contexts/ToastContext';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
-interface UserFormData {
-  first_name: string;
-  last_name: string;
-}
 
-interface ActionState {
-  loading: boolean;
-  type: string | null;
-}
 
 function EditUserContent() {
   const router = useRouter();
   const params = useParams();
   const { showToast } = useToast();
   const [user, setUser] = useState<UserType | null>(null);
-  const [formData, setFormData] = useState<UserFormData>({
+  const [formData, setFormData] = useState<UserEditFormData>({
     first_name: '',
     last_name: '',
   });

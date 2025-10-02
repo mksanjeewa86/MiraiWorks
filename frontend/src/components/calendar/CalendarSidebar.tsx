@@ -16,7 +16,7 @@ import {
 import { format } from 'date-fns';
 import type { CalendarEvent } from '@/types/interview';
 import type { CalendarConnection } from '@/types/calendar';
-import type { CalendarSidebarProps, CalendarFilters } from '@/types/components';
+import type { CalendarSidebarProps, CalendarFilters, ConnectionListProps } from '@/types/components';
 
 const providerMeta = {
   google: {
@@ -115,23 +115,14 @@ const FiltersSection = ({
   </div>
 );
 
-interface ConnectionListProps {
-  connections: CalendarConnection[];
-  onConnectProvider: CalendarSidebarProps['onConnectProvider'];
-  onDisconnect: CalendarSidebarProps['onDisconnect'];
-  onSync: CalendarSidebarProps['onSync'];
-  loadingConnections: boolean;
-  syncingConnectionId?: number | null;
-}
-
-const ConnectionsSection = ({
+const ConnectionsSection: React.FC<ConnectionListProps> = ({
   connections,
   onConnectProvider,
   onDisconnect,
   onSync,
   loadingConnections,
   syncingConnectionId,
-}: ConnectionListProps) => (
+}) => (
   <div className="space-y-4">
     <div className="flex items-center justify-between">
       <h3 className="text-sm font-semibold text-slate-700">Connected calendars</h3>

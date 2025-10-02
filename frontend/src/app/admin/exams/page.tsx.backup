@@ -38,11 +38,48 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui';
-import { Exam, ExamListResponse, ExamStatus, ExamType } from '@/types/exam';
 
+interface Exam {
+  id: number;
+  title: string;
+  description: string | null;
+  exam_type: string;
+  status: string;
+  time_limit_minutes: number | null;
+  max_attempts: number;
+  passing_score: number | null;
+  is_randomized: boolean;
+  require_face_verification: boolean;
+  monitor_web_usage: boolean;
+  created_at: string;
+  updated_at: string;
+  total_questions: number | null;
+  total_sessions: number | null;
+  completed_sessions: number | null;
+  average_score: number | null;
+}
 
+interface ExamListResponse {
+  exams: Exam[];
+  total: number;
+  page: number;
+  page_size: number;
+  has_more: boolean;
+}
 
+const ExamStatus = {
+  DRAFT: 'draft',
+  ACTIVE: 'active',
+  ARCHIVED: 'archived',
+} as const;
 
+const ExamType = {
+  APTITUDE: 'aptitude',
+  SKILL: 'skill',
+  KNOWLEDGE: 'knowledge',
+  PERSONALITY: 'personality',
+  CUSTOM: 'custom',
+} as const;
 
 export default function AdminExamsPage() {
   const [exams, setExams] = useState<Exam[]>([]);
@@ -351,7 +388,7 @@ export default function AdminExamsPage() {
                     {exam.average_score !== null && (
                       <div className="flex justify-between text-sm">
                         <span>Average Score</span>
-                        <span className="font-medium">{exam.average_score?.toFixed(1) ?? 'N/A'}%</span>
+                        <span className="font-medium">{exam.average_score.toFixed(1)}%</span>
                       </div>
                     )}
                   </div>

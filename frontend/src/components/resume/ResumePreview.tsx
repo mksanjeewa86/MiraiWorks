@@ -6,15 +6,7 @@ import { Button } from '@/components/ui';
 import { Card } from '@/components/ui';
 import { LoadingSpinner } from '@/components/ui';
 import { Resume } from '@/types/resume';
-
-interface ResumePreviewProps {
-  resume: Resume;
-  previewHtml: string;
-  loading?: boolean;
-  showControls?: boolean;
-  onPrint?: () => void;
-  className?: string;
-}
+import type { ResumePreviewProps } from '@/types/components';
 
 export default function ResumePreview({
   resume,

@@ -1,24 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { ChatMessage } from '@/types/video';
 import Button from '../ui/button';
 import Input from '../ui/input';
 import { PaperAirplaneIcon, LinkIcon, DocumentIcon } from '@heroicons/react/24/outline';
-
-interface ChatMessage {
-  id: string;
-  senderId: number;
-  senderName: string;
-  message: string;
-  timestamp: Date;
-  type: 'text' | 'link' | 'code' | 'file';
-}
-
-interface ChatPanelProps {
-  messages: ChatMessage[];
-  onSendMessage: (message: string, type?: string) => void;
-  currentUserId: number;
-  isVisible: boolean;
-  onToggleVisibility: () => void;
-}
+import type { ChatPanelProps } from '@/types/components';
 
 export const ChatPanel: React.FC<ChatPanelProps> = ({
   messages,

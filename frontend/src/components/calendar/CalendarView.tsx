@@ -153,11 +153,13 @@ export default function CalendarView({
   }, [events]);
 
   const handleSelect = useCallback((selection: DateSelectArg) => {
-    onRangeSelect({
-      start: selection.start,
-      end: selection.end,
-      allDay: selection.allDay,
-    });
+    if (onRangeSelect) {
+      onRangeSelect({
+        start: selection.start,
+        end: selection.end,
+        allDay: selection.allDay,
+      });
+    }
   }, [onRangeSelect]);
 
   const handleEventClick = useCallback((eventClickArg: EventClickArg) => {

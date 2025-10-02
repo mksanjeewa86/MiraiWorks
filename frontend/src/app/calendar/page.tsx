@@ -24,14 +24,10 @@ import { interviewsApi } from "@/api/interviews";
 import { useAuth } from "@/contexts/AuthContext";
 import type { CalendarEvent, Interview } from "@/types/interview";
 import type { CalendarConnection, CalendarProvider } from "@/types/calendar";
+import type { SelectionRange } from '@/types/calendar';
 import type { CalendarFilters, CalendarViewMode } from "@/types/components";
 import { toast } from "sonner";
 
-interface SelectionRange {
-  start: Date;
-  end: Date;
-  allDay: boolean;
-}
 
 const defaultFilters: CalendarFilters = {
   search: "",

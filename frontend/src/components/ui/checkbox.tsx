@@ -1,10 +1,6 @@
-import { forwardRef, InputHTMLAttributes } from 'react';
+import { forwardRef } from 'react';
 import { clsx } from 'clsx';
-
-interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
-  className?: string;
-  onCheckedChange?: (checked: boolean) => void;
-}
+import type { CheckboxProps } from '@/types/components';
 
 const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
   ({ className, onCheckedChange, onChange, ...props }, ref) => {

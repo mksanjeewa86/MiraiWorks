@@ -1,4 +1,6 @@
 'use client';
+import { QuestionFormData } from '@/types/exam';
+import type { ExamQuestionFormProps } from '@/types/components';
 
 import { useState, useEffect } from 'react';
 import {
@@ -24,27 +26,6 @@ import {
 } from '@/components/ui';
 import { Plus, Trash2, Save, X } from 'lucide-react';
 
-interface QuestionFormData {
-  question_text: string;
-  question_type: string;
-  points: number;
-  time_limit_seconds: number | null;
-  is_required: boolean;
-  options: Record<string, string>;
-  correct_answers: string[];
-  max_length: number | null;
-  min_length: number | null;
-  rating_scale: number | null;
-  explanation: string;
-  tags: string[];
-}
-
-interface ExamQuestionFormProps {
-  question: QuestionFormData;
-  onSave: (question: QuestionFormData) => void;
-  onCancel: () => void;
-}
-
 const QuestionType = {
   MULTIPLE_CHOICE: 'multiple_choice',
   SINGLE_CHOICE: 'single_choice',
@@ -54,7 +35,11 @@ const QuestionType = {
   RATING: 'rating',
 } as const;
 
-export function ExamQuestionForm({ question, onSave, onCancel }: ExamQuestionFormProps) {
+export function ExamQuestionForm({
+  question,
+  onSave,
+  onCancel,
+}: ExamQuestionFormProps) {
   const [formData, setFormData] = useState<QuestionFormData>(question);
   const [newOption, setNewOption] = useState('');
   const [newTag, setNewTag] = useState('');

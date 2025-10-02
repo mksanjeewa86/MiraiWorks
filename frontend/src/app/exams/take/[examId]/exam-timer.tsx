@@ -3,11 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Clock, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui';
-
-interface ExamTimerProps {
-  timeRemaining: number; // in seconds
-  onTimeUp: () => void;
-}
+import type { ExamTimerProps } from '@/types/components';
 
 export function ExamTimer({ timeRemaining, onTimeUp }: ExamTimerProps) {
   const [showWarning, setShowWarning] = useState(false);

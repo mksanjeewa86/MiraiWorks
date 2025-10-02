@@ -1,4 +1,6 @@
 'use client';
+import { Question, Answer } from '@/types/exam';
+import type { ExamQuestionProps } from '@/types/components';
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui';
@@ -8,34 +10,6 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui';
 import { Checkbox } from '@/components/ui';
 import { Label } from '@/components/ui';
 import { Slider } from '@/components/ui';
-
-interface Question {
-  id: number;
-  question_text: string;
-  question_type: string;
-  order_index: number;
-  points: number;
-  time_limit_seconds: number | null;
-  is_required: boolean;
-  options: Record<string, string> | null;
-  max_length: number | null;
-  min_length: number | null;
-  rating_scale: number | null;
-}
-
-interface Answer {
-  question_id: number;
-  answer_data?: Record<string, any>;
-  answer_text?: string;
-  selected_options?: string[];
-  time_spent_seconds?: number;
-}
-
-interface ExamQuestionProps {
-  question: Question;
-  answer?: Answer;
-  onAnswerChange: (answer: Partial<Answer>) => void;
-}
 
 const QuestionType = {
   MULTIPLE_CHOICE: 'multiple_choice',

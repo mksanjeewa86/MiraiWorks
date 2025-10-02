@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -16,6 +16,7 @@ from app.utils.constants import (
 )
 
 if TYPE_CHECKING:
+    from app.models.recruitment_process import RecruitmentProcess
     from app.models.todo_extension_request import TodoExtensionRequest
     from app.models.todo_viewer import TodoViewer
     from app.models.user import User
@@ -120,7 +121,7 @@ class Todo(Base):
     reviewer: Mapped[User | None] = relationship(
         "User", foreign_keys=[reviewed_by], backref="reviewed_todos"
     )
-    workflow: Mapped["RecruitmentProcess"] | None = relationship(
+    workflow: Mapped[Optional["RecruitmentProcess"]] = relationship(
         "RecruitmentProcess", foreign_keys=[workflow_id]
     )
     viewers: Mapped[list[TodoViewer]] = relationship(

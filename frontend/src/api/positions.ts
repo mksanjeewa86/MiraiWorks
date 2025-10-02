@@ -1,9 +1,12 @@
 import { API_ENDPOINTS } from './config';
 import { apiClient, publicApiClient } from './apiClient';
-import type { ApiResponse, Position, PositionCreate, PositionUpdate } from '@/types';
-
-type PositionFilterValue = string | number | boolean | undefined;
-type PositionFilters = Record<string, PositionFilterValue>;
+import type { ApiResponse } from '@/types';
+import type {
+  Position,
+  PositionCreate,
+  PositionUpdate,
+  PositionFilters,
+} from '@/types/position';
 
 // Helper to build query strings
 const buildQueryString = (filters?: PositionFilters): string => {

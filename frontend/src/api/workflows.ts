@@ -3,93 +3,13 @@ import { apiClient } from './apiClient';
 import type { ApiResponse } from '@/types';
 import { interviewsApi } from './interviews';
 import { todosApi } from './todos';
-
-export interface RecruitmentProcess {
-  id: number;
-  name: string;
-  description: string;
-  status: 'draft' | 'active' | 'inactive' | 'archived';
-  employer_company_id: number;
-  position_id?: number;
-  created_by: number;
-  nodes: ProcessNode[];
-  candidate_processes: CandidateProcess[];
-  created_at: string;
-  updated_at: string;
-  is_template: boolean;
-}
-
-export interface ProcessNode {
-  id: number;
-  process_id: number;
-  node_type: 'interview' | 'todo' | 'assessment' | 'decision';
-  title: string;
-  description?: string;
-  sequence_order: number;
-  position_x: number;
-  position_y: number;
-  config?: any;
-  status: 'draft' | 'active' | 'inactive';
-  interview_id?: number;
-  todo_id?: number;
-}
-
-export interface CandidateProcess {
-  id: number;
-  candidate_id: number;
-  process_id: number;
-  current_node_id?: number;
-  status: 'not_started' | 'in_progress' | 'completed' | 'failed' | 'withdrawn';
-  assigned_recruiter_id?: number;
-  overall_score?: number;
-  final_result?: string;
-}
-
-export interface CreateProcessData {
-  name: string;
-  description?: string;
-  position_id?: number;
-  is_template?: boolean;
-}
-
-export interface CreateNodeData {
-  node_type: 'interview' | 'todo' | 'assessment' | 'decision';
-  title: string;
-  description?: string;
-  sequence_order: number;
-  position?: {
-    x: number;
-    y: number;
-  };
-  // Legacy fields (deprecated, use position instead)
-  position_x?: number;
-  position_y?: number;
-  config?: any;
-  // For linking to existing interviews/todos
-  interview_id?: number;
-  todo_id?: number;
-  // For creating new interviews/todos with the node
-  create_interview?: {
-    candidate_id?: number;
-    position_id?: number;
-    scheduled_at?: string;
-    duration?: number;
-    location?: string;
-    meeting_link?: string;
-    interview_type?: string;
-    notes?: string;
-  };
-  create_todo?: {
-    title: string;
-    description?: string;
-    category?: string;
-    priority?: 'low' | 'medium' | 'high';
-    due_date?: string;
-    assigned_to?: number;
-    is_assignment?: boolean;
-    assignment_type?: string;
-  };
-}
+import type {
+  RecruitmentProcess,
+  ProcessNode,
+  CandidateProcess,
+  CreateProcessData,
+  CreateNodeData,
+} from '@/types/workflow';
 
 export const recruitmentWorkflowsApi = {
   // Get all recruitment processes for current user's company
@@ -97,7 +17,7 @@ export const recruitmentWorkflowsApi = {
     status?: string;
     is_template?: boolean;
   }): Promise<ApiResponse<{ processes: RecruitmentProcess[]; total: number }>> {
-    let url = '/api/recruitment-processes/';
+    let url = API_ENDPOINTS.WORKFLOWS.BASE;
 
     if (params) {
       const searchParams = new URLSearchParams();
@@ -122,37 +42,37 @@ export const recruitmentWorkflowsApi = {
 
   // Create new recruitment process
   async createProcess(data: CreateProcessData): Promise<ApiResponse<RecruitmentProcess>> {
-    const response = await apiClient.post<RecruitmentProcess>('/api/recruitment-processes/', data);
+    const response = await apiClient.post<RecruitmentProcess>(API_ENDPOINTS.WORKFLOWS.BASE, data);
     return { data: response.data, success: true };
   },
 
   // Get specific process with details
   async getProcess(id: number): Promise<ApiResponse<RecruitmentProcess>> {
-    const response = await apiClient.get<RecruitmentProcess>(`/api/recruitment-processes/${id}`);
+    const response = await apiClient.get<RecruitmentProcess>(`${API_ENDPOINTS.WORKFLOWS.BASE}${id}`);
     return { data: response.data, success: true };
   },
 
   // Update process
   async updateProcess(id: number, data: Partial<CreateProcessData>): Promise<ApiResponse<RecruitmentProcess>> {
-    const response = await apiClient.put<RecruitmentProcess>(`/api/recruitment-processes/${id}`, data);
+    const response = await apiClient.put<RecruitmentProcess>(`${API_ENDPOINTS.WORKFLOWS.BASE}${id}`, data);
     return { data: response.data, success: true };
   },
 
   // Change process status (draft -> active -> inactive -> archived)
   async updateProcessStatus(id: number, status: string): Promise<ApiResponse<RecruitmentProcess>> {
-    const response = await apiClient.put<RecruitmentProcess>(`/api/recruitment-processes/${id}/status`, { status });
+    const response = await apiClient.put<RecruitmentProcess>(`${API_ENDPOINTS.WORKFLOWS.BASE}${id}/status`, { status });
     return { data: response.data, success: true };
   },
 
   // Archive process
   async archiveProcess(id: number): Promise<ApiResponse<RecruitmentProcess>> {
-    const response = await apiClient.post(`/api/recruitment-processes/${id}/archive`, {});
+    const response = await apiClient.post<RecruitmentProcess>(`${API_ENDPOINTS.WORKFLOWS.BASE}${id}/archive`, {});
     return { data: response.data, success: true };
   },
 
   // Node management
   async createNode(processId: number, data: CreateNodeData): Promise<ApiResponse<ProcessNode>> {
-    const response = await apiClient.post<ProcessNode>(`/api/recruitment-processes/${processId}/nodes`, data);
+    const response = await apiClient.post<ProcessNode>(`${API_ENDPOINTS.WORKFLOWS.BASE}${processId}/nodes`, data);
     return { data: response.data, success: true };
   },
 
@@ -166,24 +86,24 @@ export const recruitmentWorkflowsApi = {
       node: ProcessNode;
       interview?: any;
       todo?: any;
-    }>(`/api/recruitment-processes/${processId}/nodes/create-with-integration`, data);
+    }>(`${API_ENDPOINTS.WORKFLOWS.BASE}${processId}/nodes/create-with-integration`, data);
     return { data: response.data, success: true };
   },
 
   async updateNode(processId: number, nodeId: number, data: Partial<CreateNodeData>): Promise<ApiResponse<ProcessNode>> {
-    const response = await apiClient.put<ProcessNode>(`/api/recruitment-processes/${processId}/nodes/${nodeId}`, data);
+    const response = await apiClient.put<ProcessNode>(`${API_ENDPOINTS.WORKFLOWS.BASE}${processId}/nodes/${nodeId}`, data);
     return { data: response.data, success: true };
   },
 
   async deleteNode(processId: number, nodeId: number): Promise<ApiResponse<void>> {
-    await apiClient.delete(`/api/recruitment-processes/${processId}/nodes/${nodeId}`);
+    await apiClient.delete(`${API_ENDPOINTS.WORKFLOWS.BASE}${processId}/nodes/${nodeId}`);
     return { data: undefined, success: true };
   },
 
   // Candidate management
   async assignCandidates(processId: number, candidateIds: number[]): Promise<ApiResponse<CandidateProcess[]>> {
     const response = await apiClient.post<CandidateProcess[]>(
-      `/api/recruitment-processes/${processId}/candidates/assign`,
+      `${API_ENDPOINTS.WORKFLOWS.BASE}${processId}/candidates/assign`,
       { candidate_ids: candidateIds }
     );
     return { data: response.data, success: true };
@@ -191,7 +111,7 @@ export const recruitmentWorkflowsApi = {
 
   async getCandidateProcess(processId: number, candidateId: number): Promise<ApiResponse<CandidateProcess>> {
     const response = await apiClient.get<CandidateProcess>(
-      `/api/recruitment-processes/${processId}/candidates/${candidateId}`
+      `${API_ENDPOINTS.WORKFLOWS.BASE}${processId}/candidates/${candidateId}`
     );
     return { data: response.data, success: true };
   },
@@ -207,7 +127,7 @@ export const recruitmentWorkflowsApi = {
       created_interview?: any;
       created_todo?: any;
     }>(
-      `/api/recruitment-processes/${processId}/candidates/${candidateId}/progress`,
+      `${API_ENDPOINTS.WORKFLOWS.BASE}${processId}/candidates/${candidateId}/progress`,
       { next_node_id: nodeId }
     );
     return { data: response.data, success: true };
@@ -229,7 +149,7 @@ export const recruitmentWorkflowsApi = {
       failed_candidates: number;
       average_completion_time: number;
       node_completion_rates: { node_id: number; completion_rate: number }[];
-    }>(`/api/recruitment-processes/${processId}/stats`);
+    }>(`${API_ENDPOINTS.WORKFLOWS.BASE}${processId}/stats`);
     return { data: response.data, success: true };
   },
 
@@ -243,7 +163,7 @@ export const recruitmentWorkflowsApi = {
       interviews: any[];
       todos: any[];
       nodes_with_links: { node_id: number; interview_id?: number; todo_id?: number; }[];
-    }>(`/api/recruitment-processes/${processId}/integrations`);
+    }>(`${API_ENDPOINTS.WORKFLOWS.BASE}${processId}/integrations`);
     return { data: response.data, success: true };
   }
 };

@@ -16,46 +16,10 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui';
+import { ExamInfo, Question } from '@/types/exam';
 import { toast } from 'sonner';
 
-interface ExamInfo {
-  id: number;
-  title: string;
-  description: string | null;
-  exam_type: string;
-  status: string;
-  time_limit_minutes: number | null;
-  max_attempts: number;
-  passing_score: number | null;
-  is_randomized: boolean;
-  allow_web_usage: boolean;
-  monitor_web_usage: boolean;
-  require_face_verification: boolean;
-  face_check_interval_minutes: number;
-  show_results_immediately: boolean;
-  show_correct_answers: boolean;
-  show_score: boolean;
-  instructions: string | null;
-  created_at: string;
-  total_questions: number;
-}
 
-interface Question {
-  id: number;
-  question_text: string;
-  question_type: string;
-  order_index: number;
-  points: number;
-  time_limit_seconds: number | null;
-  is_required: boolean;
-  options: Record<string, string> | null;
-  correct_answers: string[] | null;
-  max_length: number | null;
-  min_length: number | null;
-  rating_scale: number | null;
-  explanation: string | null;
-  tags: string[] | null;
-}
 
 const ExamType = {
   APTITUDE: 'aptitude',

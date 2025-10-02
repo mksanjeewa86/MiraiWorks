@@ -18,52 +18,11 @@ import { ExamQuestion } from './exam-question';
 import { ExamTimer } from './exam-timer';
 import { FaceVerification } from './face-verification';
 import { WebUsageMonitor } from './web-usage-monitor';
+import { Question, SessionInfo, ExamTakeResponse, Answer } from '@/types/exam';
 
-interface Question {
-  id: number;
-  question_text: string;
-  question_type: string;
-  order_index: number;
-  points: number;
-  time_limit_seconds: number | null;
-  is_required: boolean;
-  options: Record<string, string> | null;
-  max_length: number | null;
-  min_length: number | null;
-  rating_scale: number | null;
-}
 
-interface SessionInfo {
-  id: number;
-  exam_id: number;
-  status: string;
-  current_question_index: number;
-  total_questions: number;
-  questions_answered: number;
-  time_remaining_seconds: number | null;
-  expires_at: string | null;
-  exam_title: string;
-  require_face_verification: boolean;
-  face_check_interval_minutes: number;
-  monitor_web_usage: boolean;
-  allow_web_usage: boolean;
-}
 
-interface ExamTakeResponse {
-  session: SessionInfo;
-  questions: Question[];
-  current_question: Question | null;
-  time_remaining_seconds: number | null;
-  can_navigate: boolean;
-}
 
-interface Answer {
-  question_id: number;
-  answer_data?: Record<string, any>;
-  answer_text?: string;
-  selected_options?: string[];
-  time_spent_seconds?: number;
-}
 
 export default function TakeExamPage() {
   const params = useParams();

@@ -1,20 +1,7 @@
 import { useState, useEffect } from 'react';
 import { VideoCall } from '../types/video';
 import { apiClient } from '../api/apiClient';
-
-interface UseVideoCallResult {
-  videoCall: VideoCall | null;
-  loading: boolean;
-  error: string | null;
-  joinCall: () => Promise<void>;
-  endCall: () => Promise<{ message: string; call_ended: boolean } | undefined>;
-  recordConsent: (consented: boolean) => Promise<void>;
-  refreshCall: () => Promise<void>;
-}
-
-interface UseVideoCallOptions {
-  type?: 'id' | 'roomCode';
-}
+import type { UseVideoCallResult, UseVideoCallOptions } from '../types/hooks';
 
 export const useVideoCall = (
   identifier?: string,

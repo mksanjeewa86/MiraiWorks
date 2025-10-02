@@ -1,15 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
+import { UseInterviewNoteResult } from '@/types/hooks';
 import { interviewNotesApi } from '../api/interviewNotes';
 import type { InterviewNote, InterviewNoteUpdate } from '../types/interviewNote';
 
-interface UseInterviewNoteResult {
-  note: InterviewNote | null;
-  loading: boolean;
-  error: string | null;
-  updateNote: (content: string) => Promise<void>;
-  deleteNote: () => Promise<void>;
-  refreshNote: () => Promise<void>;
-}
 
 export const useInterviewNote = (interviewId: number): UseInterviewNoteResult => {
   const [note, setNote] = useState<InterviewNote | null>(null);

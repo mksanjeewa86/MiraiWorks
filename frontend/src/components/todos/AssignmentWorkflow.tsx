@@ -16,11 +16,7 @@ import type {
   AssignmentReview,
   AssignmentStatus,
 } from "@/types/todo";
-
-interface AssignmentWorkflowProps {
-  todo: TodoWithAssignedUser;
-  onUpdate: () => void;
-}
+import type { AssignmentWorkflowProps } from '@/types/components';
 
 export default function AssignmentWorkflow({ todo, onUpdate }: AssignmentWorkflowProps) {
   const { showToast } = useToast();

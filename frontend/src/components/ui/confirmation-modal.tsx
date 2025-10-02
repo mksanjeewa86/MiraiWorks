@@ -1,21 +1,9 @@
 import React from 'react';
 import { X } from 'lucide-react';
 import { clsx } from 'clsx';
+import type { ConfirmationModalPropsExtended } from '@/types/components';
 
-interface ConfirmationModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-  title: string;
-  message: string | React.ReactNode;
-  confirmText?: string;
-  cancelText?: string;
-  confirmButtonClass?: string;
-  icon?: React.ReactNode;
-  dangerous?: boolean;
-}
-
-const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
+const ConfirmationModal: React.FC<ConfirmationModalPropsExtended> = ({
   isOpen,
   onClose,
   onConfirm,

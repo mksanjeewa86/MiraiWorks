@@ -183,3 +183,31 @@ export interface CompanyFormData {
   address: string;
   description: string;
 }
+
+// ====================
+// WORKFLOWS PAGE
+// ====================
+
+export interface ViewWorkflowModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  process: import('@/types/workflow').RecruitmentProcess | null;
+  onEdit?: (process: import('@/types/workflow').RecruitmentProcess) => void;
+}
+
+export interface WorkflowEditorModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  process: import('@/types/workflow').RecruitmentProcess | null;
+  onSave: (process: import('@/types/workflow').RecruitmentProcess) => void;
+}
+
+// ====================
+// POSITIONS PAGE
+// ====================
+
+export interface NewPositionModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (data: import('@/types/position').NewPositionFormData) => void;
+}

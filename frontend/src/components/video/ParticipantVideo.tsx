@@ -1,13 +1,6 @@
 import React, { forwardRef } from 'react';
 import { MicrophoneIcon } from '@heroicons/react/24/solid';
-
-interface ParticipantVideoProps {
-  stream: MediaStream | null;
-  isLocal: boolean;
-  participantName: string;
-  isMuted: boolean;
-  className?: string;
-}
+import type { ParticipantVideoProps } from '@/types/components';
 
 const ParticipantVideo = forwardRef<HTMLVideoElement, ParticipantVideoProps>(
   ({ stream, isLocal, participantName, isMuted, className = '' }, ref) => {

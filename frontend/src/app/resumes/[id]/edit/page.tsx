@@ -7,6 +7,7 @@ import { Card } from '@/components/ui';
 import { Button } from '@/components/ui';
 import { LoadingSpinner } from '@/components/ui';
 import { ArrowLeft, FileText, Upload, X, Edit } from 'lucide-react';
+import { ExtendedResume } from '@/types/resume';
 import {
   Resume,
   ResumeFormat,
@@ -21,14 +22,6 @@ import {
 import { resumesApi } from '@/api/resumes';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
-interface ExtendedResume extends Resume {
-  experiences?: WorkExperience[];
-  educations?: Education[];
-  skills?: Skill[];
-  projects?: Project[];
-  certifications?: Certification[];
-  languages?: Language[];
-}
 
 function EditResumePageContent() {
   const router = useRouter();

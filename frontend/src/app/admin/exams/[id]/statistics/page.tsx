@@ -16,50 +16,12 @@ import {
   Download,
   Eye,
 } from 'lucide-react';
+import { ExamStatistics, SessionSummary, ExamInfo } from '@/types/exam';
 import { LoadingSpinner } from '@/components/ui';
 import { toast } from 'sonner';
 
-interface ExamStatistics {
-  exam_id: number;
-  total_assigned: number;
-  total_started: number;
-  total_completed: number;
-  completion_rate: number;
-  average_score: number | null;
-  min_score: number | null;
-  max_score: number | null;
-  average_time_minutes: number | null;
-}
 
-interface ExamInfo {
-  id: number;
-  title: string;
-  exam_type: string;
-  status: string;
-  created_at: string;
-  total_questions: number;
-  time_limit_minutes: number | null;
-  max_attempts: number;
-  passing_score: number | null;
-  require_face_verification: boolean;
-  monitor_web_usage: boolean;
-}
 
-interface SessionSummary {
-  id: number;
-  candidate_name: string;
-  candidate_email: string;
-  attempt_number: number;
-  status: string;
-  started_at: string | null;
-  completed_at: string | null;
-  score: number | null;
-  percentage: number | null;
-  passed: boolean | null;
-  web_usage_detected: boolean;
-  face_verification_failed: boolean;
-  time_spent_minutes: number | null;
-}
 
 export default function ExamStatisticsPage() {
   const params = useParams();

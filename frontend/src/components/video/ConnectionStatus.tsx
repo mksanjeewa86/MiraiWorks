@@ -5,12 +5,7 @@ import {
   ExclamationTriangleIcon,
   UserGroupIcon,
 } from '@heroicons/react/24/outline';
-
-interface ConnectionStatusProps {
-  isConnected: boolean;
-  quality: 'excellent' | 'good' | 'fair' | 'poor';
-  participantCount: number;
-}
+import type { ConnectionStatusProps } from '@/types/components';
 
 export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
   isConnected,

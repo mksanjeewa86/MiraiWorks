@@ -1,9 +1,5 @@
 import { clsx } from 'clsx';
-
-interface LoadingSpinnerProps {
-  size?: 'sm' | 'md' | 'lg' | 'xl';
-  className?: string;
-}
+import type { LoadingSpinnerProps } from '@/types/components';
 
 const sizeClasses = {
   sm: 'h-4 w-4',

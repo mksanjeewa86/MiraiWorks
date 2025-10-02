@@ -1,28 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { TranscriptionSegment } from '@/types/video';
 import Button from '../ui/button';
 import Input from '../ui/input';
 import { LanguageSelector } from './LanguageSelector';
 import { apiClient } from '../../api/apiClient';
 import { MagnifyingGlassIcon, ArrowDownTrayIcon, XMarkIcon } from '@heroicons/react/24/outline';
-
-interface TranscriptionSegment {
-  id: number;
-  speaker_id: number;
-  speaker_name?: string;
-  segment_text: string;
-  start_time: number;
-  end_time: number;
-  confidence?: number;
-  created_at: string;
-}
-
-interface TranscriptionPanelProps {
-  segments: TranscriptionSegment[];
-  isTranscribing: boolean;
-  language: string;
-  onLanguageChange: (language: string) => void;
-  callId?: string;
-}
+import type { TranscriptionPanelProps } from '@/types/components';
 
 export const TranscriptionPanel: React.FC<TranscriptionPanelProps> = ({
   segments,

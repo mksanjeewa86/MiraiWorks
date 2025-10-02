@@ -5,15 +5,7 @@ import {
   ArrowsPointingOutIcon,
   ArrowsPointingInIcon,
 } from '@heroicons/react/24/outline';
-
-interface ScreenShareViewProps {
-  stream: MediaStream | null;
-  isSharing: boolean;
-  onStopSharing: () => void;
-  onToggleFullScreen: () => void;
-  isFullScreen: boolean;
-  sharerName: string;
-}
+import type { ScreenShareViewProps } from '@/types/components';
 
 export const ScreenShareView: React.FC<ScreenShareViewProps> = ({
   stream,

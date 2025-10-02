@@ -1,98 +1,15 @@
 import { apiClient } from './apiClient';
+import { API_ENDPOINTS } from './config';
 import type { ApiResponse } from '@/types';
-
-// Bulk Operations Types
-export interface BulkOperation {
-  id: string;
-  type: 'import' | 'export' | 'delete' | 'update' | 'migrate';
-  entity_type: string;
-  status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled';
-  progress: number;
-  total_items: number;
-  processed_items: number;
-  success_count: number;
-  error_count: number;
-  created_by: {
-    id: number;
-    full_name: string;
-    email: string;
-  };
-  created_at: string;
-  started_at?: string;
-  completed_at?: string;
-  file_url?: string;
-  error_details?: string[];
-}
-
-export interface BulkImportRequest {
-  entity_type: 'users' | 'companies' | 'positions' | 'interviews' | 'candidates';
-  file: File;
-  options: {
-    skip_duplicates?: boolean;
-    update_existing?: boolean;
-    validate_only?: boolean;
-    batch_size?: number;
-  };
-}
-
-export interface BulkExportRequest {
-  entity_type: 'users' | 'companies' | 'positions' | 'interviews' | 'audit_logs' | 'messages';
-  filters?: Record<string, any>;
-  format: 'csv' | 'excel' | 'json';
-  include_deleted?: boolean;
-  date_range?: {
-    start_date: string;
-    end_date: string;
-  };
-}
-
-export interface BulkUpdateRequest {
-  entity_type: string;
-  entity_ids: number[];
-  updates: Record<string, any>;
-  options: {
-    validate_before_update?: boolean;
-    send_notifications?: boolean;
-  };
-}
-
-export interface BulkDeleteRequest {
-  entity_type: string;
-  entity_ids: number[];
-  options: {
-    hard_delete?: boolean;
-    cascade?: boolean;
-    backup_before_delete?: boolean;
-  };
-}
-
-export interface ImportValidationResult {
-  valid_rows: number;
-  invalid_rows: number;
-  warnings: Array<{
-    row: number;
-    field: string;
-    message: string;
-    severity: 'warning' | 'error';
-  }>;
-  preview: Array<Record<string, any>>;
-}
-
-export interface DataMigrationJob {
-  id: string;
-  name: string;
-  description: string;
-  status: 'pending' | 'running' | 'completed' | 'failed';
-  progress: number;
-  log_entries: Array<{
-    timestamp: string;
-    level: 'info' | 'warning' | 'error';
-    message: string;
-  }>;
-  created_at: string;
-  started_at?: string;
-  completed_at?: string;
-}
+import type {
+  BulkOperation,
+  BulkImportRequest,
+  BulkExportRequest,
+  BulkUpdateRequest,
+  BulkDeleteRequest,
+  ImportValidationResult,
+  DataMigrationJob,
+} from '@/types/admin';
 
 export const bulkOperationsApi = {
   // Bulk Import Operations
@@ -102,7 +19,7 @@ export const bulkOperationsApi = {
     formData.append('entity_type', request.entity_type);
     formData.append('options', JSON.stringify(request.options));
 
-    const response = await apiClient.post<BulkOperation>('/api/admin/bulk/import', formData, {
+    const response = await apiClient.post<BulkOperation>(API_ENDPOINTS.ADMIN_EXTENDED.BULK.IMPORT, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return { data: response.data, success: true };
@@ -114,7 +31,7 @@ export const bulkOperationsApi = {
     formData.append('entity_type', request.entity_type);
 
     const response = await apiClient.post<ImportValidationResult>(
-      '/api/admin/bulk/validate-import',
+      API_ENDPOINTS.ADMIN_EXTENDED.BULK.VALIDATE_IMPORT,
       formData,
       {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -130,13 +47,13 @@ export const bulkOperationsApi = {
     const response = await apiClient.get<{
       download_url: string;
       expires_at: string;
-    }>(`/api/admin/bulk/import-template/${entityType}`);
+    }>(`${API_ENDPOINTS.ADMIN_EXTENDED.BULK.IMPORT}/template/${entityType}`);
     return { data: response.data, success: true };
   },
 
   // Bulk Export Operations
   async exportData(request: BulkExportRequest): Promise<ApiResponse<BulkOperation>> {
-    const response = await apiClient.post<BulkOperation>('/api/admin/bulk/export', request);
+    const response = await apiClient.post<BulkOperation>(API_ENDPOINTS.ADMIN_EXTENDED.BULK.EXPORT, request);
     return { data: response.data, success: true };
   },
 
@@ -153,13 +70,13 @@ export const bulkOperationsApi = {
         description: string;
         supported_features: string[];
       }>;
-    }>(`/api/admin/bulk/export-formats/${entityType}`);
+    }>(`${API_ENDPOINTS.ADMIN_EXTENDED.BULK.EXPORT}/formats/${entityType}`);
     return { data: response.data, success: true };
   },
 
   // Bulk Update Operations
   async bulkUpdate(request: BulkUpdateRequest): Promise<ApiResponse<BulkOperation>> {
-    const response = await apiClient.post<BulkOperation>('/api/admin/bulk/update', request);
+    const response = await apiClient.post<BulkOperation>(API_ENDPOINTS.ADMIN_EXTENDED.BULK.UPDATE, request);
     return { data: response.data, success: true };
   },
 
@@ -180,13 +97,13 @@ export const bulkOperationsApi = {
         warnings?: string[];
       }>;
       total_affected: number;
-    }>('/api/admin/bulk/preview-update', request);
+    }>(API_ENDPOINTS.ADMIN_EXTENDED.BULK.PREVIEW_UPDATE, request);
     return { data: response.data, success: true };
   },
 
   // Bulk Delete Operations
   async bulkDelete(request: BulkDeleteRequest): Promise<ApiResponse<BulkOperation>> {
-    const response = await apiClient.post<BulkOperation>('/api/admin/bulk/delete', request);
+    const response = await apiClient.post<BulkOperation>(API_ENDPOINTS.ADMIN_EXTENDED.BULK.DELETE, request);
     return { data: response.data, success: true };
   },
 
@@ -215,7 +132,7 @@ export const bulkOperationsApi = {
       }>;
       total_to_delete: number;
       cascade_effects: Record<string, number>;
-    }>('/api/admin/bulk/preview-delete', request);
+    }>(API_ENDPOINTS.ADMIN_EXTENDED.BULK.PREVIEW_DELETE, request);
     return { data: response.data, success: true };
   },
 
@@ -242,25 +159,25 @@ export const bulkOperationsApi = {
       total: number;
       page: number;
       size: number;
-    }>(`/api/admin/bulk/operations?${params.toString()}`);
+    }>(`${API_ENDPOINTS.ADMIN_EXTENDED.BULK.IMPORT}/operations?${params.toString()}`);
     return { data: response.data, success: true };
   },
 
   async getBulkOperation(operationId: string): Promise<ApiResponse<BulkOperation>> {
-    const response = await apiClient.get<BulkOperation>(`/api/admin/bulk/operations/${operationId}`);
+    const response = await apiClient.get<BulkOperation>(`${API_ENDPOINTS.ADMIN_EXTENDED.BULK.IMPORT}/operations/${operationId}`);
     return { data: response.data, success: true };
   },
 
   async cancelBulkOperation(operationId: string): Promise<ApiResponse<BulkOperation>> {
     const response = await apiClient.post<BulkOperation>(
-      `/api/admin/bulk/operations/${operationId}/cancel`
+      `${API_ENDPOINTS.ADMIN_EXTENDED.BULK.IMPORT}/operations/${operationId}/cancel`
     );
     return { data: response.data, success: true };
   },
 
   async retryBulkOperation(operationId: string): Promise<ApiResponse<BulkOperation>> {
     const response = await apiClient.post<BulkOperation>(
-      `/api/admin/bulk/operations/${operationId}/retry`
+      `${API_ENDPOINTS.ADMIN_EXTENDED.BULK.IMPORT}/operations/${operationId}/retry`
     );
     return { data: response.data, success: true };
   },
@@ -268,7 +185,7 @@ export const bulkOperationsApi = {
   async downloadOperationResult(operationId: string): Promise<void> {
     const token = localStorage.getItem('accessToken');
     const response = await fetch(
-      `/api/admin/bulk/operations/${operationId}/download`,
+      `${API_ENDPOINTS.ADMIN_EXTENDED.BULK.IMPORT}/operations/${operationId}/download`,
       {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       }
@@ -289,12 +206,12 @@ export const bulkOperationsApi = {
 
   // Data Migration Jobs
   async getDataMigrationJobs(): Promise<ApiResponse<DataMigrationJob[]>> {
-    const response = await apiClient.get<DataMigrationJob[]>('/api/admin/data-migration/jobs');
+    const response = await apiClient.get<DataMigrationJob[]>(API_ENDPOINTS.ADMIN_EXTENDED.DATA_MIGRATION.JOBS);
     return { data: response.data, success: true };
   },
 
   async startDataMigration(jobName: string, parameters?: Record<string, any>): Promise<ApiResponse<DataMigrationJob>> {
-    const response = await apiClient.post<DataMigrationJob>('/api/admin/data-migration/start', {
+    const response = await apiClient.post<DataMigrationJob>(API_ENDPOINTS.ADMIN_EXTENDED.DATA_MIGRATION.START, {
       job_name: jobName,
       parameters: parameters || {},
     });
@@ -302,13 +219,13 @@ export const bulkOperationsApi = {
   },
 
   async getDataMigrationStatus(jobId: string): Promise<ApiResponse<DataMigrationJob>> {
-    const response = await apiClient.get<DataMigrationJob>(`/api/admin/data-migration/jobs/${jobId}`);
+    const response = await apiClient.get<DataMigrationJob>(`${API_ENDPOINTS.ADMIN_EXTENDED.DATA_MIGRATION.JOBS}/${jobId}`);
     return { data: response.data, success: true };
   },
 
   // Batch Processing Utilities
   async getEntityCounts(): Promise<ApiResponse<Record<string, number>>> {
-    const response = await apiClient.get<Record<string, number>>('/api/admin/bulk/entity-counts');
+    const response = await apiClient.get<Record<string, number>>(API_ENDPOINTS.ADMIN_EXTENDED.BULK.ENTITY_COUNTS);
     return { data: response.data, success: true };
   },
 
@@ -324,7 +241,7 @@ export const bulkOperationsApi = {
       valid_ids: number[];
       invalid_ids: number[];
       warnings: string[];
-    }>('/api/admin/bulk/validate-ids', {
+    }>(API_ENDPOINTS.ADMIN_EXTENDED.BULK.VALIDATE_IDS, {
       entity_type: entityType,
       entity_ids: entityIds,
     });
@@ -344,7 +261,7 @@ export const bulkOperationsApi = {
       concurrent_operations: number;
       concurrent_limit: number;
       next_reset: string;
-    }>('/api/admin/bulk/quota');
+    }>(API_ENDPOINTS.ADMIN_EXTENDED.BULK.QUOTA);
     return { data: response.data, success: true };
   },
 };

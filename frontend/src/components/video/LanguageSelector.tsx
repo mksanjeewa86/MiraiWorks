@@ -1,9 +1,5 @@
 import React from 'react';
-
-interface LanguageSelectorProps {
-  value: string;
-  onChange: (language: string) => void;
-}
+import type { LanguageSelectorProps } from '@/types/components';
 
 export const LanguageSelector: React.FC<LanguageSelectorProps> = ({ value, onChange }) => {
   const languages = [

@@ -2,11 +2,7 @@ import React, { useState } from 'react';
 import Button from '../ui/button';
 import Card from '../ui/card';
 import { VideoCameraIcon, MicrophoneIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
-
-interface RecordingConsentProps {
-  onSubmit: (consented: boolean) => void;
-  onClose: () => void;
-}
+import type { RecordingConsentProps } from '@/types/components';
 
 export const RecordingConsent: React.FC<RecordingConsentProps> = ({ onSubmit, onClose }) => {
   const [hasRead, setHasRead] = useState(false);

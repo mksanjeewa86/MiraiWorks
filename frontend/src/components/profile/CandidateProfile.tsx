@@ -14,11 +14,7 @@ import MBTIResultCard from '@/components/mbti/MBTIResultCard';
 import { mbtiApi } from '@/api/mbti';
 import { useAuth } from '@/contexts/AuthContext';
 import type { MBTITestSummary } from '@/types/mbti';
-
-interface CandidateProfileProps {
-  userId?: number;
-  isPublic?: boolean;
-}
+import type { CandidateProfileProps } from '@/types/components';
 
 const CandidateProfile: React.FC<CandidateProfileProps> = ({ userId, isPublic = false }) => {
   const { user } = useAuth();

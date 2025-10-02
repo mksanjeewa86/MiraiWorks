@@ -1,11 +1,6 @@
 import React from 'react';
 import { MBTI_TYPE_COLORS } from '@/types/mbti';
-
-interface MBTITypeAvatarProps {
-  type: string;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
-  showLabel?: boolean;
-}
+import type { MBTITypeAvatarProps } from '@/types/components';
 
 const MBTITypeAvatar: React.FC<MBTITypeAvatarProps> = ({
   type,

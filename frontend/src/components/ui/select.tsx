@@ -1,10 +1,6 @@
-import { forwardRef, SelectHTMLAttributes } from 'react';
+import { forwardRef } from 'react';
 import { clsx } from 'clsx';
-
-interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
-  className?: string;
-  onValueChange?: (value: string) => void;
-}
+import type { SelectProps, SelectContentProps, SelectItemProps, SelectTriggerProps, SelectValueProps } from '@/types/components';
 
 const Select = forwardRef<HTMLSelectElement, SelectProps>(
   ({ className, children, onValueChange, onChange, ...props }, ref) => {
@@ -35,20 +31,9 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
 
 Select.displayName = 'Select';
 
-interface SelectContentProps {
-  children: React.ReactNode;
-  className?: string;
-}
-
 const SelectContent = ({ children, className }: SelectContentProps) => {
   return <div className={clsx('select-content', className)}>{children}</div>;
 };
-
-interface SelectItemProps {
-  children: React.ReactNode;
-  value: string;
-  className?: string;
-}
 
 const SelectItem = ({ children, value, className }: SelectItemProps) => {
   return (
@@ -57,11 +42,6 @@ const SelectItem = ({ children, value, className }: SelectItemProps) => {
     </option>
   );
 };
-
-interface SelectTriggerProps {
-  children: React.ReactNode;
-  className?: string;
-}
 
 const SelectTrigger = forwardRef<HTMLSelectElement, SelectTriggerProps & SelectProps>(
   ({ children, className, ...props }, ref) => {
@@ -74,11 +54,6 @@ const SelectTrigger = forwardRef<HTMLSelectElement, SelectTriggerProps & SelectP
 );
 
 SelectTrigger.displayName = 'SelectTrigger';
-
-interface SelectValueProps {
-  placeholder?: string;
-  className?: string;
-}
 
 const SelectValue = ({ placeholder, className }: SelectValueProps) => {
   return <span className={clsx('select-value', className)}>{placeholder}</span>;

@@ -39,6 +39,15 @@ export const API_ENDPOINTS = {
     EVENTS: '/api/calendar/events',
     EVENT_BY_ID: (id: string | number) => `/api/calendar/events/${id}`,
     AVAILABILITY: (userId: string | number) => `/api/calendar/availability/${userId}`,
+    RANGE: '/api/calendar/events/range',
+    UPCOMING: '/api/calendar/events/upcoming',
+    SEARCH: '/api/calendar/events/search',
+    CONSOLIDATED: '/api/calendar/consolidated',
+    ACCOUNTS: {
+      BASE: '/api/calendar/accounts',
+      BY_ID: (connectionId: string | number) => `/api/calendar/accounts/${connectionId}`,
+      SYNC: (connectionId: string | number) => `/api/calendar/accounts/${connectionId}/sync`,
+    },
   },
 
   // Company endpoints
@@ -181,5 +190,121 @@ export const API_ENDPOINTS = {
     PROGRESS: '/api/mbti/progress',
     TYPES: '/api/mbti/types',
     TYPE_DETAILS: (type: string) => `/api/mbti/types/${type}`,
+  },
+
+  // Workflow/Recruitment Process endpoints
+  WORKFLOWS: {
+    BASE: '/api/recruitment-processes/',
+  },
+
+  // Exam endpoints
+  EXAMS: {
+    BASE: '/api/exam/exams',
+    TAKE: '/api/exam/exams/take',
+    MY_ASSIGNMENTS: '/api/exam/my-assignments',
+  },
+
+  // Assignment endpoints
+  ASSIGNMENTS: {
+    PENDING_REVIEW: '/api/assignments/pending-review',
+    BY_ID: (id: number | string) => `/api/assignments/${id}`,
+    PUBLISH: (id: number | string) => `/api/assignments/${id}/publish`,
+    MAKE_DRAFT: (id: number | string) => `/api/assignments/${id}/make-draft`,
+    SUBMIT: (id: number | string) => `/api/assignments/${id}/submit`,
+    REVIEW: (id: number | string) => `/api/assignments/${id}/review`,
+  },
+
+  // Admin endpoints
+  ADMIN_EXTENDED: {
+    // Audit logs
+    AUDIT_LOGS: {
+      BASE: '/api/admin/audit-logs',
+      STATS: '/api/admin/audit-logs/stats',
+      ACTIVITY: '/api/admin/audit-logs/activity',
+      EXPORT: '/api/admin/audit-logs/export',
+      FILTER_OPTIONS: '/api/admin/audit-logs/filter-options',
+    },
+    // Bulk operations
+    BULK: {
+      DELETE: '/api/admin/bulk/delete',
+      UPDATE: '/api/admin/bulk/update',
+      EXPORT: '/api/admin/bulk/export',
+      IMPORT: '/api/admin/bulk/import',
+      VALIDATE_IDS: '/api/admin/bulk/validate-ids',
+      VALIDATE_IMPORT: '/api/admin/bulk/validate-import',
+      PREVIEW_DELETE: '/api/admin/bulk/preview-delete',
+      PREVIEW_UPDATE: '/api/admin/bulk/preview-update',
+      ENTITY_COUNTS: '/api/admin/bulk/entity-counts',
+      QUOTA: '/api/admin/bulk/quota',
+    },
+    // Security
+    SECURITY: {
+      STATS: '/api/admin/security/stats',
+      FILES: '/api/admin/security/files',
+      FILE_BY_ID: (fileId: number | string) => `/api/admin/security/files/${fileId}`,
+      SCAN_FILE: (fileId: number | string) => `/api/admin/security/files/${fileId}/scan`,
+      QUARANTINE_FILE: (fileId: number | string) => `/api/admin/security/files/${fileId}/quarantine`,
+      RESTORE_FILE: (fileId: number | string) => `/api/admin/security/files/${fileId}/restore`,
+      LOGS: '/api/admin/security/logs',
+      BULK_ACTION: '/api/admin/security/bulk-action',
+      ANTIVIRUS: {
+        STATUS: '/api/admin/security/antivirus/status',
+        BULK_SCAN: '/api/admin/security/antivirus/bulk-scan',
+      },
+    },
+    // System monitoring
+    SYSTEM: {
+      HEALTH: '/api/admin/system/health',
+      HEALTH_CHECK: '/api/admin/system/health-check',
+      ALERTS: '/api/admin/system/alerts',
+      BACKUP: '/api/admin/system/backup',
+      CONFIGURATION: '/api/admin/system/configuration',
+      FEATURES: '/api/admin/system/features',
+      SERVICES: (serviceName: string) => `/api/admin/system/services/${serviceName}`,
+      PERFORMANCE: '/api/admin/system/performance',
+      RESOURCES: '/api/admin/system/resources',
+      DATABASE: {
+        STATS: '/api/admin/system/database/stats',
+      },
+      CACHE: {
+        STATS: '/api/admin/system/cache/stats',
+        CLEAR: '/api/admin/system/cache/clear',
+      },
+      MAINTENANCE: {
+        SCHEDULE: '/api/admin/system/maintenance/schedule',
+      },
+    },
+    // Data migration
+    DATA_MIGRATION: {
+      START: '/api/admin/data-migration/start',
+      JOBS: '/api/admin/data-migration/jobs',
+    },
+    // User bulk operations
+    USERS_BULK: {
+      DELETE: '/api/admin/users/bulk/delete',
+      SUSPEND: '/api/admin/users/bulk/suspend',
+      UNSUSPEND: '/api/admin/users/bulk/unsuspend',
+      RESET_PASSWORD: '/api/admin/users/bulk/reset-password',
+      RESEND_ACTIVATION: '/api/admin/users/bulk/resend-activation',
+    },
+  },
+
+  // Calendar OAuth endpoints
+  CALENDAR_OAUTH: {
+    GOOGLE_START: '/api/calendar/oauth/google/start',
+    MICROSOFT_START: '/api/calendar/oauth/microsoft/start',
+  },
+
+  // Calendar accounts
+  CALENDAR_ACCOUNTS: '/api/calendar/accounts',
+
+  // Calendar events bulk
+  CALENDAR_EVENTS_BULK: '/api/calendar/events/bulk',
+
+  // Messages extended
+  MESSAGES_EXTENDED: {
+    UPLOAD: '/api/messages/upload',
+    UPLOAD_CHUNK: '/api/messages/upload/chunk',
+    RESTRICTED_USERS: '/api/messages/restricted-users',
   },
 } as const;

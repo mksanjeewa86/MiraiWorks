@@ -14,11 +14,7 @@ import { useWebRTC } from '../../hooks/useWebRTC';
 import { useTranscription } from '../../hooks/useTranscription';
 import { ChatMessage } from '../../types/video';
 import { useAuth } from '../../contexts/AuthContext';
-
-interface VideoCallRoomProps {
-  callId?: string;
-  roomCode?: string;
-}
+import type { VideoCallRoomProps } from '@/types/components';
 
 export const VideoCallRoom: React.FC<VideoCallRoomProps> = ({ callId: propCallId, roomCode }) => {
   const { callId: paramCallId } = useParams<{ callId: string }>();

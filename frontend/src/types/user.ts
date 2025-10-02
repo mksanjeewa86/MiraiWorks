@@ -55,6 +55,8 @@ export interface UserListResponse {
 export interface UserFilters {
   page?: number;
   size?: number;
+  limit?: number;
+  offset?: number;
   search?: string;
   company_id?: number;
   is_active?: boolean;
@@ -74,4 +76,20 @@ export interface PasswordResetRequest {
 export interface BulkUserOperation {
   user_ids: number[];
   send_email?: boolean;
+}
+
+// ============================================================================
+// USER FORMS & STATE
+// ============================================================================
+
+// User Edit Form Data (from app/users/[id]/edit/page.tsx)
+export interface UserEditFormData {
+  first_name: string;
+  last_name: string;
+}
+
+// Action State (from app/users/[id]/edit/page.tsx)
+export interface ActionState {
+  loading: boolean;
+  type: string | null;
 }

@@ -15,6 +15,7 @@ import type {
   InterviewTypeFilter,
   InterviewSortField,
   Interview,
+  InterviewFormData,
 } from '@/types/interview';
 
 function InterviewsPageContent() {
@@ -277,7 +278,7 @@ function InterviewsPageContent() {
     setEditingInterviewId(undefined);
   };
 
-  const handleModalSuccess = async (interview: Interview) => {
+  const handleModalSuccess = async (interview: Interview | InterviewFormData) => {
     // Refresh the interviews list
     try {
       const response = await interviewsApi.getMyInterviews({

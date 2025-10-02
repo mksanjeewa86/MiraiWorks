@@ -6,65 +6,14 @@ import AppLayout from '@/components/layout/AppLayout';
 import { Card } from '@/components/ui';
 import { Button } from '@/components/ui';
 import { ArrowLeft, FileText, Upload, X, Plus, Trash2 } from 'lucide-react';
+import { WorkExperience, Education, ResumeFormData } from '@/types/resume';
 import { ResumeFormat, ResumeLanguage, ResumeStatus, ResumeVisibility } from '@/types/resume';
 import { resumesApi } from '@/api/resumes';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { PREFECTURES } from '@/utils/prefectures';
 
-interface WorkExperience {
-  id: string;
-  company_name: string;
-  position_title: string;
-  location: string;
-  start_date: string;
-  end_date: string;
-  is_current: boolean;
-  description: string;
-  achievements: string[];
-  technologies: string[];
-}
 
-interface Education {
-  id: string;
-  institution_name: string;
-  degree: string;
-  field_of_study: string;
-  location: string;
-  start_date: string;
-  end_date: string;
-  is_current: boolean;
-  gpa?: string;
-  description?: string;
-}
 
-interface ResumeFormData {
-  title: string;
-  description: string;
-  last_name: string;
-  first_name: string;
-  furigana_last_name?: string;
-  furigana_first_name?: string;
-  email: string;
-  phone: string;
-  postal_code: string;
-  prefecture: string;
-  city: string;
-  address_line: string;
-  website?: string;
-  linkedin_url?: string;
-  github_url?: string;
-  birth_date?: string;
-  gender?: string;
-  nationality?: string;
-  marital_status?: string;
-  professional_summary: string;
-  objective?: string;
-  resume_format: ResumeFormat;
-  resume_language: ResumeLanguage;
-  status: ResumeStatus;
-  work_experiences: WorkExperience[];
-  educations: Education[];
-}
 
 // Common nationalities
 const NATIONALITIES = [
@@ -105,9 +54,9 @@ function CreateResumePageContent() {
     professional_summary: '',
     resume_format: ResumeFormat.RIREKISHO,
     resume_language: ResumeLanguage.JAPANESE,
-    status: ResumeStatus.DRAFT,
     work_experiences: [],
     educations: [],
+    skills: [],
   });
 
   const handleInputChange = (
@@ -194,16 +143,21 @@ function CreateResumePageContent() {
   // Work experience functions
   const addWorkExperience = () => {
     const newExp: WorkExperience = {
-      id: Date.now().toString(),
-      company_name: '',
-      position_title: '',
+      id: Date.now(),
+      resumeId: 0,
+      companyName: '',
+      positionTitle: '',
       location: '',
-      start_date: '',
-      end_date: '',
-      is_current: false,
+      startDate: '',
+      endDate: '',
+      isCurrent: false,
       description: '',
       achievements: [''],
       technologies: [''],
+      isVisible: true,
+      displayOrder: formData.work_experiences.length,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
     setFormData((prev) => ({
       ...prev,
@@ -211,14 +165,14 @@ function CreateResumePageContent() {
     }));
   };
 
-  const removeWorkExperience = (id: string) => {
+  const removeWorkExperience = (id: number) => {
     setFormData((prev) => ({
       ...prev,
       work_experiences: prev.work_experiences.filter((exp) => exp.id !== id),
     }));
   };
 
-  const updateWorkExperience = (id: string, field: string, value: any) => {
+  const updateWorkExperience = (id: number, field: string, value: any) => {
     setFormData((prev) => ({
       ...prev,
       work_experiences: prev.work_experiences.map((exp) =>
@@ -230,16 +184,22 @@ function CreateResumePageContent() {
   // Education functions
   const addEducation = () => {
     const newEd: Education = {
-      id: Date.now().toString(),
-      institution_name: '',
+      id: Date.now(),
+      resumeId: 0,
+      institutionName: '',
       degree: '',
-      field_of_study: '',
+      fieldOfStudy: '',
       location: '',
-      start_date: '',
-      end_date: '',
-      is_current: false,
+      startDate: '',
+      endDate: '',
+      isCurrent: false,
       gpa: '',
       description: '',
+      courses: [],
+      isVisible: true,
+      displayOrder: formData.educations.length,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
     setFormData((prev) => ({
       ...prev,
@@ -247,14 +207,14 @@ function CreateResumePageContent() {
     }));
   };
 
-  const removeEducation = (id: string) => {
+  const removeEducation = (id: number) => {
     setFormData((prev) => ({
       ...prev,
       educations: prev.educations.filter((ed) => ed.id !== id),
     }));
   };
 
-  const updateEducation = (id: string, field: string, value: any) => {
+  const updateEducation = (id: number, field: string, value: any) => {
     setFormData((prev) => ({
       ...prev,
       educations: prev.educations.map((ed) => (ed.id === id ? { ...ed, [field]: value } : ed)),
@@ -278,19 +238,16 @@ function CreateResumePageContent() {
       setLoading(true);
 
       // Combine name fields for API compatibility and exclude arrays that should be added separately
-      const { work_experiences, educations, ...resumeDataOnly } = formData;
+      const { work_experiences, educations, skills, ...resumeDataOnly } = formData;
 
       const submitData = {
         ...resumeDataOnly,
         full_name: `${formData.last_name} ${formData.first_name}`,
         location: `${formData.postal_code} ${formData.prefecture}${formData.city}${formData.address_line}`,
-        // Auto-set visibility and download settings based on status
-        visibility:
-          formData.status === ResumeStatus.PUBLISHED
-            ? ResumeVisibility.PUBLIC
-            : ResumeVisibility.PRIVATE,
-        is_public: formData.status === ResumeStatus.PUBLISHED,
-        can_download_pdf: formData.status === ResumeStatus.PUBLISHED,
+        // Set default visibility and download settings
+        visibility: ResumeVisibility.PRIVATE,
+        is_public: false,
+        can_download_pdf: false,
       };
 
       // First create the resume
@@ -316,16 +273,16 @@ function CreateResumePageContent() {
       // Add work experiences if any
       if (formData.work_experiences.length > 0) {
         for (const exp of formData.work_experiences) {
-          if (exp.company_name && exp.position_title) {
+          if (exp.companyName && exp.positionTitle) {
             try {
               // Convert frontend format to API format
               const expData = {
-                company_name: exp.company_name,
-                position_title: exp.position_title,
+                company_name: exp.companyName,
+                position_title: exp.positionTitle,
                 location: exp.location,
-                start_date: exp.start_date,
-                end_date: exp.is_current ? null : exp.end_date,
-                is_current: exp.is_current,
+                start_date: exp.startDate,
+                end_date: exp.isCurrent ? null : exp.endDate,
+                is_current: exp.isCurrent,
                 description: exp.description,
                 achievements: exp.achievements.filter((a) => a.trim()),
                 technologies: exp.technologies.filter((t) => t.trim()),
@@ -341,17 +298,17 @@ function CreateResumePageContent() {
       // Add education if any
       if (formData.educations.length > 0) {
         for (const edu of formData.educations) {
-          if (edu.institution_name && edu.degree) {
+          if (edu.institutionName && edu.degree) {
             try {
               // Convert frontend format to API format
               const eduData = {
-                institution_name: edu.institution_name,
+                institution_name: edu.institutionName,
                 degree: edu.degree,
-                field_of_study: edu.field_of_study,
+                field_of_study: edu.fieldOfStudy,
                 location: edu.location,
-                start_date: edu.start_date,
-                end_date: edu.is_current ? null : edu.end_date,
-                is_current: edu.is_current,
+                start_date: edu.startDate,
+                end_date: edu.isCurrent ? null : edu.endDate,
+                is_current: edu.isCurrent,
                 gpa: edu.gpa,
                 description: edu.description,
               };
@@ -937,9 +894,9 @@ function CreateResumePageContent() {
                         <label className="block text-sm font-medium mb-1">Company Name</label>
                         <input
                           type="text"
-                          value={exp.company_name}
+                          value={exp.companyName}
                           onChange={(e) =>
-                            updateWorkExperience(exp.id, 'company_name', e.target.value)
+                            updateWorkExperience(exp.id, 'companyName', e.target.value)
                           }
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           placeholder="株式会社例"
@@ -950,9 +907,9 @@ function CreateResumePageContent() {
                         <label className="block text-sm font-medium mb-1">Position Title</label>
                         <input
                           type="text"
-                          value={exp.position_title}
+                          value={exp.positionTitle}
                           onChange={(e) =>
-                            updateWorkExperience(exp.id, 'position_title', e.target.value)
+                            updateWorkExperience(exp.id, 'positionTitle', e.target.value)
                           }
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           placeholder="ソフトウェアエンジニア"
@@ -974,9 +931,9 @@ function CreateResumePageContent() {
                         <label className="flex items-center">
                           <input
                             type="checkbox"
-                            checked={exp.is_current}
+                            checked={exp.isCurrent}
                             onChange={(e) =>
-                              updateWorkExperience(exp.id, 'is_current', e.target.checked)
+                              updateWorkExperience(exp.id, 'isCurrent', e.target.checked)
                             }
                             className="mr-2"
                           />
@@ -988,22 +945,22 @@ function CreateResumePageContent() {
                         <label className="block text-sm font-medium mb-1">Start Date</label>
                         <input
                           type="month"
-                          value={exp.start_date}
+                          value={exp.startDate}
                           onChange={(e) =>
-                            updateWorkExperience(exp.id, 'start_date', e.target.value)
+                            updateWorkExperience(exp.id, 'startDate', e.target.value)
                           }
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
 
-                      {!exp.is_current && (
+                      {!exp.isCurrent && (
                         <div>
                           <label className="block text-sm font-medium mb-1">End Date</label>
                           <input
                             type="month"
-                            value={exp.end_date}
+                            value={exp.endDate}
                             onChange={(e) =>
-                              updateWorkExperience(exp.id, 'end_date', e.target.value)
+                              updateWorkExperience(exp.id, 'endDate', e.target.value)
                             }
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
@@ -1070,9 +1027,9 @@ function CreateResumePageContent() {
                         <label className="block text-sm font-medium mb-1">Institution Name</label>
                         <input
                           type="text"
-                          value={edu.institution_name}
+                          value={edu.institutionName}
                           onChange={(e) =>
-                            updateEducation(edu.id, 'institution_name', e.target.value)
+                            updateEducation(edu.id, 'institutionName', e.target.value)
                           }
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           placeholder="東京大学"
@@ -1094,9 +1051,9 @@ function CreateResumePageContent() {
                         <label className="block text-sm font-medium mb-1">Field of Study</label>
                         <input
                           type="text"
-                          value={edu.field_of_study}
+                          value={edu.fieldOfStudy}
                           onChange={(e) =>
-                            updateEducation(edu.id, 'field_of_study', e.target.value)
+                            updateEducation(edu.id, 'fieldOfStudy', e.target.value)
                           }
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           placeholder="情報工学"
@@ -1118,20 +1075,20 @@ function CreateResumePageContent() {
                         <label className="block text-sm font-medium mb-1">Start Date</label>
                         <input
                           type="month"
-                          value={edu.start_date}
-                          onChange={(e) => updateEducation(edu.id, 'start_date', e.target.value)}
+                          value={edu.startDate}
+                          onChange={(e) => updateEducation(edu.id, 'startDate', e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium mb-1">
-                          {edu.is_current ? 'Expected Graduation' : 'End Date'}
+                          {edu.isCurrent ? 'Expected Graduation' : 'End Date'}
                         </label>
                         <input
                           type="month"
-                          value={edu.end_date}
-                          onChange={(e) => updateEducation(edu.id, 'end_date', e.target.value)}
+                          value={edu.endDate}
+                          onChange={(e) => updateEducation(edu.id, 'endDate', e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
@@ -1140,9 +1097,9 @@ function CreateResumePageContent() {
                         <label className="flex items-center">
                           <input
                             type="checkbox"
-                            checked={edu.is_current}
+                            checked={edu.isCurrent}
                             onChange={(e) =>
-                              updateEducation(edu.id, 'is_current', e.target.checked)
+                              updateEducation(edu.id, 'isCurrent', e.target.checked)
                             }
                             className="mr-2"
                           />
@@ -1256,40 +1213,6 @@ function CreateResumePageContent() {
             </div>
 
             <div className="max-w-md">
-              <div>
-                <label
-                  className="block text-sm font-medium mb-2"
-                  style={{ color: 'var(--text-primary)' }}
-                >
-                  Resume Status (ステータス)
-                </label>
-                <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value={ResumeStatus.DRAFT}>📝 Draft (下書き) - Private only</option>
-                  <option value={ResumeStatus.PUBLISHED}>
-                    🌐 Published (公開中) - Public & Searchable
-                  </option>
-                </select>
-              </div>
-
-              {/* Status indicator */}
-              <div className="mt-3 p-3 rounded-lg border">
-                {formData.status === ResumeStatus.DRAFT ? (
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                    <span className="text-sm">Private - Only visible to you</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 text-green-600">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span className="text-sm">Public - Searchable & Downloadable by employers</span>
-                  </div>
-                )}
-              </div>
             </div>
           </Card>
 

@@ -1,12 +1,6 @@
-import { forwardRef, InputHTMLAttributes, ReactNode } from 'react';
+import { forwardRef } from 'react';
 import { clsx } from 'clsx';
-
-interface RadioGroupProps {
-  children: ReactNode;
-  className?: string;
-  value?: string;
-  onValueChange?: (value: string) => void;
-}
+import type { RadioGroupProps, RadioGroupItemProps } from '@/types/components';
 
 const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(
   ({ children, className, ...props }, ref) => {
@@ -19,11 +13,6 @@ const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(
 );
 
 RadioGroup.displayName = 'RadioGroup';
-
-interface RadioGroupItemProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
-  value: string;
-  className?: string;
-}
 
 const RadioGroupItem = forwardRef<HTMLInputElement, RadioGroupItemProps>(
   ({ className, ...props }, ref) => {

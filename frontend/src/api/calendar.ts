@@ -159,32 +159,32 @@ export const calendarApi = {
 
   // Calendar connection methods for settings page
   async getConnections(): Promise<ApiResponse<CalendarConnection[]>> {
-    const response = await apiClient.get<CalendarConnection[]>('/api/calendar/accounts');
+    const response = await apiClient.get<CalendarConnection[]>(API_ENDPOINTS.CALENDAR.ACCOUNTS.BASE);
     return { data: response.data, success: true };
   },
 
   async getGoogleAuthUrl(): Promise<ApiResponse<{ auth_url: string }>> {
-    const response = await apiClient.get<{ auth_url: string }>('/api/calendar/oauth/google/start');
+    const response = await apiClient.get<{ auth_url: string }>(API_ENDPOINTS.CALENDAR_OAUTH.GOOGLE_START);
     return { data: response.data, success: true };
   },
 
   async getOutlookAuthUrl(): Promise<ApiResponse<{ auth_url: string }>> {
     const response = await apiClient.get<{ auth_url: string }>(
-      '/api/calendar/oauth/microsoft/start'
+      API_ENDPOINTS.CALENDAR_OAUTH.MICROSOFT_START
     );
     return { data: response.data, success: true };
   },
 
   async deleteConnection(connectionId: number): Promise<ApiResponse<{ message: string }>> {
     const response = await apiClient.delete<{ message: string }>(
-      `/api/calendar/accounts/${connectionId}`
+      API_ENDPOINTS.CALENDAR.ACCOUNTS.BY_ID(connectionId)
     );
     return { data: response.data, success: true };
   },
 
   async syncCalendar(connectionId: number): Promise<ApiResponse<{ message: string }>> {
     const response = await apiClient.post<{ message: string }>(
-      `/api/calendar/accounts/${connectionId}/sync`
+      API_ENDPOINTS.CALENDAR.ACCOUNTS.SYNC(connectionId)
     );
     return { data: response.data, success: true };
   },
@@ -194,7 +194,7 @@ export const calendarApi = {
     updates: Record<string, unknown>
   ): Promise<ApiResponse<CalendarConnection>> {
     const response = await apiClient.put<CalendarConnection>(
-      `/api/calendar/accounts/${connectionId}`,
+      API_ENDPOINTS.CALENDAR.ACCOUNTS.BY_ID(connectionId),
       updates
     );
     return { data: response.data, success: true };
@@ -203,12 +203,12 @@ export const calendarApi = {
   // ==================== INTERNAL CALENDAR EVENTS ====================
 
   async createInternalEvent(eventData: CalendarEventCreate): Promise<ApiResponse<CalendarEventInfo>> {
-    const response = await apiClient.post<CalendarEventInfo>('/api/calendar/events', eventData);
+    const response = await apiClient.post<CalendarEventInfo>(API_ENDPOINTS.CALENDAR.EVENTS, eventData);
     return { data: response.data, success: true };
   },
 
   async getInternalEvent(eventId: number): Promise<ApiResponse<CalendarEventInfo>> {
-    const response = await apiClient.get<CalendarEventInfo>(`/api/calendar/events/${eventId}`);
+    const response = await apiClient.get<CalendarEventInfo>(API_ENDPOINTS.CALENDAR.EVENT_BY_ID(eventId));
     return { data: response.data, success: true };
   },
 
@@ -217,14 +217,14 @@ export const calendarApi = {
     eventData: CalendarEventUpdate
   ): Promise<ApiResponse<CalendarEventInfo>> {
     const response = await apiClient.put<CalendarEventInfo>(
-      `/api/calendar/events/${eventId}`,
+      API_ENDPOINTS.CALENDAR.EVENT_BY_ID(eventId),
       eventData
     );
     return { data: response.data, success: true };
   },
 
   async deleteInternalEvent(eventId: number): Promise<ApiResponse<{ message: string }>> {
-    const response = await apiClient.delete<{ message: string }>(`/api/calendar/events/${eventId}`);
+    const response = await apiClient.delete<{ message: string }>(API_ENDPOINTS.CALENDAR.EVENT_BY_ID(eventId));
     return { data: response.data, success: true };
   },
 
@@ -237,21 +237,21 @@ export const calendarApi = {
     if (params.status) queryParams.set('status', params.status);
 
     const response = await apiClient.get<CalendarEventListResponse>(
-      `/api/calendar/events/range?${queryParams.toString()}`
+      `${API_ENDPOINTS.CALENDAR.RANGE}?${queryParams.toString()}`
     );
     return { data: response.data, success: true };
   },
 
   async getUpcomingEvents(limit: number = 10): Promise<ApiResponse<CalendarEventInfo[]>> {
     const response = await apiClient.get<CalendarEventInfo[]>(
-      `/api/calendar/events/upcoming?limit=${limit}`
+      `${API_ENDPOINTS.CALENDAR.UPCOMING}?limit=${limit}`
     );
     return { data: response.data, success: true };
   },
 
   async bulkCreateEvents(bulkData: CalendarEventBulkCreate): Promise<ApiResponse<CalendarEventBulkResponse>> {
     const response = await apiClient.post<CalendarEventBulkResponse>(
-      '/api/calendar/events/bulk',
+      API_ENDPOINTS.CALENDAR_EVENTS_BULK,
       bulkData
     );
     return { data: response.data, success: true };
@@ -269,7 +269,7 @@ export const calendarApi = {
     });
 
     const response = await apiClient.get<{ events: CalendarEventInfo[]; total: number }>(
-      `/api/calendar/events/search?${params.toString()}`
+      `${API_ENDPOINTS.CALENDAR.SEARCH}?${params.toString()}`
     );
     return { data: response.data, success: true };
   },
@@ -284,7 +284,7 @@ export const calendarApi = {
     });
 
     const response = await apiClient.get<ConsolidatedCalendarData>(
-      `/api/calendar/consolidated?${params.toString()}`
+      `${API_ENDPOINTS.CALENDAR.CONSOLIDATED}?${params.toString()}`
     );
     return { data: response.data, success: true };
   },

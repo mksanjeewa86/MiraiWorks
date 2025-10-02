@@ -23,41 +23,11 @@ import {
   LoadingSpinner,
 } from '@/components/ui';
 import { ArrowLeft, Plus, Trash2, Save } from 'lucide-react';
+import { ExamFormData, QuestionFormData } from '@/types/exam';
 import { toast } from 'sonner';
 import { ExamQuestionForm } from './exam-question-form';
 
-interface ExamFormData {
-  title: string;
-  description: string;
-  exam_type: string;
-  time_limit_minutes: number | null;
-  max_attempts: number;
-  passing_score: number | null;
-  is_randomized: boolean;
-  allow_web_usage: boolean;
-  monitor_web_usage: boolean;
-  require_face_verification: boolean;
-  face_check_interval_minutes: number;
-  show_results_immediately: boolean;
-  show_correct_answers: boolean;
-  show_score: boolean;
-  instructions: string;
-}
 
-interface QuestionFormData {
-  question_text: string;
-  question_type: string;
-  points: number;
-  time_limit_seconds: number | null;
-  is_required: boolean;
-  options: Record<string, string>;
-  correct_answers: string[];
-  max_length: number | null;
-  min_length: number | null;
-  rating_scale: number | null;
-  explanation: string;
-  tags: string[];
-}
 
 const ExamType = {
   APTITUDE: 'aptitude',

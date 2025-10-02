@@ -1,15 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
+import { UseTranscriptionResult } from '@/types/hooks';
 import { TranscriptionSegment, TranscriptionState } from '../types/video';
 import { apiClient } from '../api/apiClient';
 
-interface UseTranscriptionResult extends TranscriptionState {
-  setTranscriptionLanguage: (language: string) => void;
-  startTranscription: () => Promise<void>;
-  stopTranscription: () => Promise<void>;
-  addSegment: (segment: Omit<TranscriptionSegment, 'id' | 'created_at'>) => void;
-  searchTranscript: (query: string) => void;
-  exportTranscript: (format: 'txt' | 'pdf' | 'srt') => Promise<string | null>;
-}
 
 export const useTranscription = (
   callId?: string,

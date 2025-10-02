@@ -13,23 +13,7 @@ import {
   MicrophoneIcon as MicrophoneIconSolid,
   VideoCameraIcon as VideoCameraIconSolid,
 } from '@heroicons/react/24/solid';
-
-interface VideoControlsProps {
-  isMuted: boolean;
-  isVideoOn: boolean;
-  isScreenSharing: boolean;
-  onToggleAudio: () => void;
-  onToggleVideo: () => void;
-  onStartScreenShare: () => void;
-  onStopScreenShare: () => void;
-  onEndCall: () => void;
-  onToggleTranscription: () => void;
-  showTranscription: boolean;
-  onToggleChat: () => void;
-  showChat: boolean;
-  onToggleFullScreen: () => void;
-  isFullScreen: boolean;
-}
+import type { VideoControlsProps } from '@/types/components';
 
 export const VideoControls: React.FC<VideoControlsProps> = ({
   isMuted,

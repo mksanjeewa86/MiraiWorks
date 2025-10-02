@@ -19,13 +19,7 @@ import { Button } from '@/components/ui';
 import { useToast } from '@/contexts/ToastContext';
 import { interviewsApi } from '@/api/interviews';
 import type { Interview, InterviewEditFormData } from '@/types/interview';
-
-interface InterviewEditModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  interviewId: number;
-  onSuccess: () => void;
-}
+import type { InterviewEditModalProps } from '@/types/components';
 
 export default function InterviewEditModal({ isOpen, onClose, interviewId, onSuccess }: InterviewEditModalProps) {
   const { showToast } = useToast();

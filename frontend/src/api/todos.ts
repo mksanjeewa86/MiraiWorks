@@ -123,27 +123,27 @@ export const todosApi = {
 
   // Assignment workflow methods
   async publishAssignment(id: number): Promise<AssignmentWorkflowResponse> {
-    const response = await apiClient.post<AssignmentWorkflowResponse>(`/api/assignments/${id}/publish`);
+    const response = await apiClient.post<AssignmentWorkflowResponse>(API_ENDPOINTS.ASSIGNMENTS.PUBLISH(id));
     return response.data as AssignmentWorkflowResponse;
   },
 
   async makeDraftAssignment(id: number): Promise<AssignmentWorkflowResponse> {
-    const response = await apiClient.post<AssignmentWorkflowResponse>(`/api/assignments/${id}/make-draft`);
+    const response = await apiClient.post<AssignmentWorkflowResponse>(API_ENDPOINTS.ASSIGNMENTS.MAKE_DRAFT(id));
     return response.data as AssignmentWorkflowResponse;
   },
 
   async submitAssignment(id: number, submission: AssignmentSubmission): Promise<AssignmentWorkflowResponse> {
-    const response = await apiClient.post<AssignmentWorkflowResponse>(`/api/assignments/${id}/submit`, submission);
+    const response = await apiClient.post<AssignmentWorkflowResponse>(API_ENDPOINTS.ASSIGNMENTS.SUBMIT(id), submission);
     return response.data as AssignmentWorkflowResponse;
   },
 
   async reviewAssignment(id: number, review: AssignmentReview): Promise<AssignmentWorkflowResponse> {
-    const response = await apiClient.post<AssignmentWorkflowResponse>(`/api/assignments/${id}/review`, review);
+    const response = await apiClient.post<AssignmentWorkflowResponse>(API_ENDPOINTS.ASSIGNMENTS.REVIEW(id), review);
     return response.data as AssignmentWorkflowResponse;
   },
 
   async getAssignmentsForReview(): Promise<Todo[]> {
-    const response = await apiClient.get<Todo[]>('/api/assignments/pending-review');
+    const response = await apiClient.get<Todo[]>(API_ENDPOINTS.ASSIGNMENTS.PENDING_REVIEW);
     return response.data as Todo[];
   },
 };

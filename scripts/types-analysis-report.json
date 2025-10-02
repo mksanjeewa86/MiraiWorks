@@ -1,0 +1,1088 @@
+{
+  "summary": {
+    "totalFiles": 63,
+    "totalTypes": 135,
+    "exportedTypes": 28,
+    "nonExportedTypes": 107
+  },
+  "byDomain": {
+    "api": 30,
+    "hooks": 5,
+    "components": 56,
+    "app": 44,
+    "other": 0
+  },
+  "files": {
+    "api\\admin-security.ts": [
+      {
+        "type": "interface",
+        "name": "FileSecurityInfo",
+        "exported": true,
+        "line": 5,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\api\\admin-security.ts"
+      },
+      {
+        "type": "interface",
+        "name": "SecurityStats",
+        "exported": true,
+        "line": 22,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\api\\admin-security.ts"
+      },
+      {
+        "type": "interface",
+        "name": "VirusScanResult",
+        "exported": true,
+        "line": 32,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\api\\admin-security.ts"
+      },
+      {
+        "type": "interface",
+        "name": "BulkSecurityAction",
+        "exported": true,
+        "line": 39,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\api\\admin-security.ts"
+      },
+      {
+        "type": "interface",
+        "name": "SecurityLog",
+        "exported": true,
+        "line": 45,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\api\\admin-security.ts"
+      }
+    ],
+    "api\\audit-logs.ts": [
+      {
+        "type": "interface",
+        "name": "AuditLogEntry",
+        "exported": true,
+        "line": 5,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\api\\audit-logs.ts"
+      },
+      {
+        "type": "interface",
+        "name": "AuditLogFilters",
+        "exported": true,
+        "line": 23,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\api\\audit-logs.ts"
+      },
+      {
+        "type": "interface",
+        "name": "AuditLogStats",
+        "exported": true,
+        "line": 34,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\api\\audit-logs.ts"
+      },
+      {
+        "type": "interface",
+        "name": "SystemActivity",
+        "exported": true,
+        "line": 52,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\api\\audit-logs.ts"
+      }
+    ],
+    "api\\bulk-operations.ts": [
+      {
+        "type": "interface",
+        "name": "BulkOperation",
+        "exported": true,
+        "line": 5,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\api\\bulk-operations.ts"
+      },
+      {
+        "type": "interface",
+        "name": "BulkImportRequest",
+        "exported": true,
+        "line": 27,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\api\\bulk-operations.ts"
+      },
+      {
+        "type": "interface",
+        "name": "BulkExportRequest",
+        "exported": true,
+        "line": 38,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\api\\bulk-operations.ts"
+      },
+      {
+        "type": "interface",
+        "name": "BulkUpdateRequest",
+        "exported": true,
+        "line": 49,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\api\\bulk-operations.ts"
+      },
+      {
+        "type": "interface",
+        "name": "BulkDeleteRequest",
+        "exported": true,
+        "line": 59,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\api\\bulk-operations.ts"
+      },
+      {
+        "type": "interface",
+        "name": "ImportValidationResult",
+        "exported": true,
+        "line": 69,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\api\\bulk-operations.ts"
+      },
+      {
+        "type": "interface",
+        "name": "DataMigrationJob",
+        "exported": true,
+        "line": 81,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\api\\bulk-operations.ts"
+      }
+    ],
+    "api\\positions.ts": [
+      {
+        "type": "type",
+        "name": "PositionFilterValue",
+        "exported": false,
+        "line": 5,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\api\\positions.ts"
+      },
+      {
+        "type": "type",
+        "name": "PositionFilters",
+        "exported": false,
+        "line": 6,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\api\\positions.ts"
+      }
+    ],
+    "api\\system-monitoring.ts": [
+      {
+        "type": "interface",
+        "name": "SystemHealth",
+        "exported": true,
+        "line": 5,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\api\\system-monitoring.ts"
+      },
+      {
+        "type": "interface",
+        "name": "ServiceStatus",
+        "exported": true,
+        "line": 25,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\api\\system-monitoring.ts"
+      },
+      {
+        "type": "interface",
+        "name": "PerformanceMetrics",
+        "exported": true,
+        "line": 33,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\api\\system-monitoring.ts"
+      },
+      {
+        "type": "interface",
+        "name": "SystemConfiguration",
+        "exported": true,
+        "line": 57,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\api\\system-monitoring.ts"
+      },
+      {
+        "type": "interface",
+        "name": "SystemAlert",
+        "exported": true,
+        "line": 81,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\api\\system-monitoring.ts"
+      },
+      {
+        "type": "interface",
+        "name": "ResourceUsage",
+        "exported": true,
+        "line": 95,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\api\\system-monitoring.ts"
+      }
+    ],
+    "api\\users.ts": [
+      {
+        "type": "interface",
+        "name": "UserFilters",
+        "exported": true,
+        "line": 5,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\api\\users.ts"
+      }
+    ],
+    "api\\workflows.ts": [
+      {
+        "type": "interface",
+        "name": "RecruitmentProcess",
+        "exported": true,
+        "line": 7,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\api\\workflows.ts"
+      },
+      {
+        "type": "interface",
+        "name": "ProcessNode",
+        "exported": true,
+        "line": 22,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\api\\workflows.ts"
+      },
+      {
+        "type": "interface",
+        "name": "CandidateProcess",
+        "exported": true,
+        "line": 37,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\api\\workflows.ts"
+      },
+      {
+        "type": "interface",
+        "name": "CreateProcessData",
+        "exported": true,
+        "line": 48,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\api\\workflows.ts"
+      },
+      {
+        "type": "interface",
+        "name": "CreateNodeData",
+        "exported": true,
+        "line": 55,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\api\\workflows.ts"
+      }
+    ],
+    "app\\admin\\exams\\create\\exam-question-form.tsx": [
+      {
+        "type": "interface",
+        "name": "QuestionFormData",
+        "exported": false,
+        "line": 27,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\admin\\exams\\create\\exam-question-form.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "ExamQuestionFormProps",
+        "exported": false,
+        "line": 42,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\admin\\exams\\create\\exam-question-form.tsx"
+      }
+    ],
+    "app\\admin\\exams\\create\\page.tsx": [
+      {
+        "type": "interface",
+        "name": "ExamFormData",
+        "exported": false,
+        "line": 29,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\admin\\exams\\create\\page.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "QuestionFormData",
+        "exported": false,
+        "line": 47,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\admin\\exams\\create\\page.tsx"
+      }
+    ],
+    "app\\admin\\exams\\page.tsx": [
+      {
+        "type": "interface",
+        "name": "Exam",
+        "exported": false,
+        "line": 42,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\admin\\exams\\page.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "ExamListResponse",
+        "exported": false,
+        "line": 62,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\admin\\exams\\page.tsx"
+      }
+    ],
+    "app\\admin\\exams\\[id]\\preview\\page.tsx": [
+      {
+        "type": "interface",
+        "name": "ExamInfo",
+        "exported": false,
+        "line": 21,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\admin\\exams\\[id]\\preview\\page.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "Question",
+        "exported": false,
+        "line": 43,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\admin\\exams\\[id]\\preview\\page.tsx"
+      }
+    ],
+    "app\\admin\\exams\\[id]\\statistics\\page.tsx": [
+      {
+        "type": "interface",
+        "name": "ExamStatistics",
+        "exported": false,
+        "line": 22,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\admin\\exams\\[id]\\statistics\\page.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "ExamInfo",
+        "exported": false,
+        "line": 34,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\admin\\exams\\[id]\\statistics\\page.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "SessionSummary",
+        "exported": false,
+        "line": 48,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\admin\\exams\\[id]\\statistics\\page.tsx"
+      }
+    ],
+    "app\\auth\\register\\page.tsx": [
+      {
+        "type": "type",
+        "name": "RegisterFormData",
+        "exported": false,
+        "line": 33,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\auth\\register\\page.tsx"
+      }
+    ],
+    "app\\calendar\\page.tsx": [
+      {
+        "type": "interface",
+        "name": "SelectionRange",
+        "exported": false,
+        "line": 30,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\calendar\\page.tsx"
+      }
+    ],
+    "app\\exams\\page.tsx": [
+      {
+        "type": "interface",
+        "name": "ExamAssignment",
+        "exported": false,
+        "line": 13,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\exams\\page.tsx"
+      }
+    ],
+    "app\\exams\\results\\[sessionId]\\page.tsx": [
+      {
+        "type": "interface",
+        "name": "Question",
+        "exported": false,
+        "line": 26,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\exams\\results\\[sessionId]\\page.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "Answer",
+        "exported": false,
+        "line": 37,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\exams\\results\\[sessionId]\\page.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "SessionInfo",
+        "exported": false,
+        "line": 49,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\exams\\results\\[sessionId]\\page.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "MonitoringEvent",
+        "exported": false,
+        "line": 70,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\exams\\results\\[sessionId]\\page.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "ExamResults",
+        "exported": false,
+        "line": 78,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\exams\\results\\[sessionId]\\page.tsx"
+      }
+    ],
+    "app\\exams\\take\\[examId]\\exam-question.tsx": [
+      {
+        "type": "interface",
+        "name": "Question",
+        "exported": false,
+        "line": 12,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\exams\\take\\[examId]\\exam-question.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "Answer",
+        "exported": false,
+        "line": 26,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\exams\\take\\[examId]\\exam-question.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "ExamQuestionProps",
+        "exported": false,
+        "line": 34,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\exams\\take\\[examId]\\exam-question.tsx"
+      }
+    ],
+    "app\\exams\\take\\[examId]\\exam-timer.tsx": [
+      {
+        "type": "interface",
+        "name": "ExamTimerProps",
+        "exported": false,
+        "line": 7,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\exams\\take\\[examId]\\exam-timer.tsx"
+      }
+    ],
+    "app\\exams\\take\\[examId]\\face-verification.tsx": [
+      {
+        "type": "interface",
+        "name": "FaceVerificationProps",
+        "exported": false,
+        "line": 10,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\exams\\take\\[examId]\\face-verification.tsx"
+      }
+    ],
+    "app\\exams\\take\\[examId]\\page.tsx": [
+      {
+        "type": "interface",
+        "name": "Question",
+        "exported": false,
+        "line": 22,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\exams\\take\\[examId]\\page.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "SessionInfo",
+        "exported": false,
+        "line": 36,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\exams\\take\\[examId]\\page.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "ExamTakeResponse",
+        "exported": false,
+        "line": 52,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\exams\\take\\[examId]\\page.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "Answer",
+        "exported": false,
+        "line": 60,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\exams\\take\\[examId]\\page.tsx"
+      }
+    ],
+    "app\\exams\\take\\[examId]\\web-usage-monitor.tsx": [
+      {
+        "type": "interface",
+        "name": "WebUsageMonitorProps",
+        "exported": false,
+        "line": 6,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\exams\\take\\[examId]\\web-usage-monitor.tsx"
+      }
+    ],
+    "app\\positions\\page.tsx": [
+      {
+        "type": "interface",
+        "name": "Position",
+        "exported": false,
+        "line": 32,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\positions\\page.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "NewPositionFormData",
+        "exported": false,
+        "line": 47,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\positions\\page.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "NewPositionModalProps",
+        "exported": false,
+        "line": 804,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\positions\\page.tsx"
+      }
+    ],
+    "app\\public\\resume\\[slug]\\page.tsx": [
+      {
+        "type": "interface",
+        "name": "PublicResumeInfo",
+        "exported": false,
+        "line": 9,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\public\\resume\\[slug]\\page.tsx"
+      }
+    ],
+    "app\\resumes\\create\\page.tsx": [
+      {
+        "type": "interface",
+        "name": "WorkExperience",
+        "exported": false,
+        "line": 14,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\resumes\\create\\page.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "Education",
+        "exported": false,
+        "line": 27,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\resumes\\create\\page.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "ResumeFormData",
+        "exported": false,
+        "line": 40,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\resumes\\create\\page.tsx"
+      }
+    ],
+    "app\\resumes\\[id]\\edit\\page.tsx": [
+      {
+        "type": "interface",
+        "name": "ExtendedResume",
+        "exported": false,
+        "line": 24,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\resumes\\[id]\\edit\\page.tsx"
+      }
+    ],
+    "app\\users\\[id]\\edit\\page.tsx": [
+      {
+        "type": "interface",
+        "name": "UserFormData",
+        "exported": false,
+        "line": 22,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\users\\[id]\\edit\\page.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "ActionState",
+        "exported": false,
+        "line": 27,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\users\\[id]\\edit\\page.tsx"
+      }
+    ],
+    "app\\workflows\\page.tsx": [
+      {
+        "type": "interface",
+        "name": "ViewWorkflowModalProps",
+        "exported": false,
+        "line": 726,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\workflows\\page.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "WorkflowEditorModalProps",
+        "exported": false,
+        "line": 861,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\workflows\\page.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "LinearWorkflowStep",
+        "exported": false,
+        "line": 868,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\workflows\\page.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "WorkflowCandidate",
+        "exported": false,
+        "line": 882,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\workflows\\page.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "WorkflowViewer",
+        "exported": false,
+        "line": 888,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\app\\workflows\\page.tsx"
+      }
+    ],
+    "components\\calendar\\CalendarSidebar.tsx": [
+      {
+        "type": "type",
+        "name": "ProviderKey",
+        "exported": false,
+        "line": 32,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\calendar\\CalendarSidebar.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "ConnectionListProps",
+        "exported": false,
+        "line": 118,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\calendar\\CalendarSidebar.tsx"
+      }
+    ],
+    "components\\interview\\InterviewNotes.tsx": [
+      {
+        "type": "interface",
+        "name": "InterviewNotesProps",
+        "exported": false,
+        "line": 8,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\interview\\InterviewNotes.tsx"
+      }
+    ],
+    "components\\interviews\\InterviewEditModal.tsx": [
+      {
+        "type": "interface",
+        "name": "InterviewEditModalProps",
+        "exported": false,
+        "line": 23,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\interviews\\InterviewEditModal.tsx"
+      }
+    ],
+    "components\\interviews\\InterviewModal.tsx": [
+      {
+        "type": "interface",
+        "name": "InterviewModalProps",
+        "exported": false,
+        "line": 37,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\interviews\\InterviewModal.tsx"
+      }
+    ],
+    "components\\mbti\\MBTITestButton.tsx": [
+      {
+        "type": "interface",
+        "name": "MBTITestButtonProps",
+        "exported": false,
+        "line": 6,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\mbti\\MBTITestButton.tsx"
+      }
+    ],
+    "components\\mbti\\MBTITypeAvatar.tsx": [
+      {
+        "type": "interface",
+        "name": "MBTITypeAvatarProps",
+        "exported": false,
+        "line": 4,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\mbti\\MBTITypeAvatar.tsx"
+      }
+    ],
+    "components\\profile\\CandidateProfile.tsx": [
+      {
+        "type": "interface",
+        "name": "CandidateProfileProps",
+        "exported": false,
+        "line": 18,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\profile\\CandidateProfile.tsx"
+      }
+    ],
+    "components\\resume\\ResumePreview.tsx": [
+      {
+        "type": "interface",
+        "name": "ResumePreviewProps",
+        "exported": false,
+        "line": 10,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\resume\\ResumePreview.tsx"
+      }
+    ],
+    "components\\todos\\AssignmentWorkflow.tsx": [
+      {
+        "type": "interface",
+        "name": "AssignmentWorkflowProps",
+        "exported": false,
+        "line": 20,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\todos\\AssignmentWorkflow.tsx"
+      }
+    ],
+    "components\\ui\\alert.tsx": [
+      {
+        "type": "interface",
+        "name": "AlertProps",
+        "exported": false,
+        "line": 4,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\alert.tsx"
+      }
+    ],
+    "components\\ui\\checkbox.tsx": [
+      {
+        "type": "interface",
+        "name": "CheckboxProps",
+        "exported": false,
+        "line": 4,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\checkbox.tsx"
+      }
+    ],
+    "components\\ui\\confirmation-modal.tsx": [
+      {
+        "type": "interface",
+        "name": "ConfirmationModalProps",
+        "exported": false,
+        "line": 5,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\confirmation-modal.tsx"
+      }
+    ],
+    "components\\ui\\dialog.tsx": [
+      {
+        "type": "interface",
+        "name": "DialogContextValue",
+        "exported": false,
+        "line": 5,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\dialog.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "DialogProps",
+        "exported": false,
+        "line": 20,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\dialog.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "DialogTriggerProps",
+        "exported": false,
+        "line": 44,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\dialog.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "DialogPortalProps",
+        "exported": false,
+        "line": 87,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\dialog.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "DialogOverlayProps",
+        "exported": false,
+        "line": 100,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\dialog.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "DialogContentProps",
+        "exported": false,
+        "line": 121,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\dialog.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "DialogHeaderProps",
+        "exported": false,
+        "line": 174,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\dialog.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "DialogFooterProps",
+        "exported": false,
+        "line": 187,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\dialog.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "DialogTitleProps",
+        "exported": false,
+        "line": 202,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\dialog.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "DialogDescriptionProps",
+        "exported": false,
+        "line": 223,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\dialog.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "DialogCloseProps",
+        "exported": false,
+        "line": 240,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\dialog.tsx"
+      }
+    ],
+    "components\\ui\\dropdown-menu.tsx": [
+      {
+        "type": "interface",
+        "name": "DropdownMenuContextValue",
+        "exported": false,
+        "line": 4,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\dropdown-menu.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "DropdownMenuProps",
+        "exported": false,
+        "line": 19,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\dropdown-menu.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "DropdownMenuTriggerProps",
+        "exported": false,
+        "line": 34,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\dropdown-menu.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "DropdownMenuContentProps",
+        "exported": false,
+        "line": 81,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\dropdown-menu.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "DropdownMenuItemProps",
+        "exported": false,
+        "line": 132,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\dropdown-menu.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "DropdownMenuSeparatorProps",
+        "exported": false,
+        "line": 186,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\dropdown-menu.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "DropdownMenuLabelProps",
+        "exported": false,
+        "line": 198,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\dropdown-menu.tsx"
+      }
+    ],
+    "components\\ui\\label.tsx": [
+      {
+        "type": "interface",
+        "name": "LabelProps",
+        "exported": false,
+        "line": 4,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\label.tsx"
+      }
+    ],
+    "components\\ui\\loading-spinner.tsx": [
+      {
+        "type": "interface",
+        "name": "LoadingSpinnerProps",
+        "exported": false,
+        "line": 3,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\loading-spinner.tsx"
+      }
+    ],
+    "components\\ui\\progress.tsx": [
+      {
+        "type": "interface",
+        "name": "ProgressProps",
+        "exported": false,
+        "line": 3,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\progress.tsx"
+      }
+    ],
+    "components\\ui\\radio-group.tsx": [
+      {
+        "type": "interface",
+        "name": "RadioGroupProps",
+        "exported": false,
+        "line": 4,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\radio-group.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "RadioGroupItemProps",
+        "exported": false,
+        "line": 23,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\radio-group.tsx"
+      }
+    ],
+    "components\\ui\\select.tsx": [
+      {
+        "type": "interface",
+        "name": "SelectProps",
+        "exported": false,
+        "line": 4,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\select.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "SelectContentProps",
+        "exported": false,
+        "line": 38,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\select.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "SelectItemProps",
+        "exported": false,
+        "line": 47,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\select.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "SelectTriggerProps",
+        "exported": false,
+        "line": 61,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\select.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "SelectValueProps",
+        "exported": false,
+        "line": 78,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\select.tsx"
+      }
+    ],
+    "components\\ui\\separator.tsx": [
+      {
+        "type": "interface",
+        "name": "SeparatorProps",
+        "exported": false,
+        "line": 4,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\separator.tsx"
+      }
+    ],
+    "components\\ui\\slider.tsx": [
+      {
+        "type": "interface",
+        "name": "SliderProps",
+        "exported": false,
+        "line": 4,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\slider.tsx"
+      }
+    ],
+    "components\\ui\\switch.tsx": [
+      {
+        "type": "interface",
+        "name": "SwitchProps",
+        "exported": false,
+        "line": 4,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\switch.tsx"
+      }
+    ],
+    "components\\ui\\textarea.tsx": [
+      {
+        "type": "interface",
+        "name": "TextareaProps",
+        "exported": false,
+        "line": 4,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\ui\\textarea.tsx"
+      }
+    ],
+    "components\\video\\ChatPanel.tsx": [
+      {
+        "type": "interface",
+        "name": "ChatMessage",
+        "exported": false,
+        "line": 6,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\video\\ChatPanel.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "ChatPanelProps",
+        "exported": false,
+        "line": 15,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\video\\ChatPanel.tsx"
+      }
+    ],
+    "components\\video\\ConnectionStatus.tsx": [
+      {
+        "type": "interface",
+        "name": "ConnectionStatusProps",
+        "exported": false,
+        "line": 9,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\video\\ConnectionStatus.tsx"
+      }
+    ],
+    "components\\video\\LanguageSelector.tsx": [
+      {
+        "type": "interface",
+        "name": "LanguageSelectorProps",
+        "exported": false,
+        "line": 3,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\video\\LanguageSelector.tsx"
+      }
+    ],
+    "components\\video\\ParticipantVideo.tsx": [
+      {
+        "type": "interface",
+        "name": "ParticipantVideoProps",
+        "exported": false,
+        "line": 4,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\video\\ParticipantVideo.tsx"
+      }
+    ],
+    "components\\video\\RecordingConsent.tsx": [
+      {
+        "type": "interface",
+        "name": "RecordingConsentProps",
+        "exported": false,
+        "line": 6,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\video\\RecordingConsent.tsx"
+      }
+    ],
+    "components\\video\\ScreenShareView.tsx": [
+      {
+        "type": "interface",
+        "name": "ScreenShareViewProps",
+        "exported": false,
+        "line": 9,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\video\\ScreenShareView.tsx"
+      }
+    ],
+    "components\\video\\TranscriptionPanel.tsx": [
+      {
+        "type": "interface",
+        "name": "TranscriptionSegment",
+        "exported": false,
+        "line": 8,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\video\\TranscriptionPanel.tsx"
+      },
+      {
+        "type": "interface",
+        "name": "TranscriptionPanelProps",
+        "exported": false,
+        "line": 19,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\video\\TranscriptionPanel.tsx"
+      }
+    ],
+    "components\\video\\VideoCallRoom.tsx": [
+      {
+        "type": "interface",
+        "name": "VideoCallRoomProps",
+        "exported": false,
+        "line": 18,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\video\\VideoCallRoom.tsx"
+      }
+    ],
+    "components\\video\\VideoControls.tsx": [
+      {
+        "type": "interface",
+        "name": "VideoControlsProps",
+        "exported": false,
+        "line": 17,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\components\\video\\VideoControls.tsx"
+      }
+    ],
+    "hooks\\useInterviewNote.ts": [
+      {
+        "type": "interface",
+        "name": "UseInterviewNoteResult",
+        "exported": false,
+        "line": 5,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\hooks\\useInterviewNote.ts"
+      }
+    ],
+    "hooks\\useTranscription.ts": [
+      {
+        "type": "interface",
+        "name": "UseTranscriptionResult",
+        "exported": false,
+        "line": 5,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\hooks\\useTranscription.ts"
+      }
+    ],
+    "hooks\\useVideoCall.ts": [
+      {
+        "type": "interface",
+        "name": "UseVideoCallResult",
+        "exported": false,
+        "line": 5,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\hooks\\useVideoCall.ts"
+      },
+      {
+        "type": "interface",
+        "name": "UseVideoCallOptions",
+        "exported": false,
+        "line": 15,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\hooks\\useVideoCall.ts"
+      }
+    ],
+    "hooks\\useWebRTC.ts": [
+      {
+        "type": "interface",
+        "name": "UseWebRTCResult",
+        "exported": false,
+        "line": 4,
+        "filePath": "C:\\Users\\mksan\\OneDrive\\ドキュメント\\projects\\MiraiWorks\\frontend\\src\\hooks\\useWebRTC.ts"
+      }
+    ]
+  }
+}

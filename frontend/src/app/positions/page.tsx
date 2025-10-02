@@ -7,6 +7,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { PREFECTURES } from '@/utils/prefectures';
 import { positionsApi } from '@/api/positions';
 import type { Position as ApiPosition, PositionCreate } from '@/types';
+import type { NewPositionFormData, LocalPosition } from '@/types/position';
+import type { NewPositionModalProps } from '@/types/pages';
 import {
   BriefcaseBusiness,
   Search,
@@ -29,38 +31,7 @@ import {
 } from 'lucide-react';
 
 // Types
-interface Position extends Omit<ApiPosition, 'requirements'> {
-  company: string;
-  applications: number;
-  views: number;
-  postedDate: string;
-  deadline: string;
-  requirements: string[];
-  remote: boolean;
-  urgent: boolean;
-  type: 'full-time' | 'part-time' | 'contract' | 'internship' | 'freelance' | 'temporary';
-  level: 'entry' | 'mid' | 'senior' | 'executive';
-  salaryMin: number;
-  salaryMax: number;
-}
 
-interface NewPositionFormData {
-  title: string;
-  department: string;
-  location: string;
-  job_type: Position['job_type'];
-  experience_level: Position['experience_level'];
-  salaryMin: string;
-  salaryMax: string;
-  status: Position['status'];
-  postedDate: string;
-  deadline: string;
-  description: string;
-  requirements: string;
-  benefits: string;
-  remote_type: Position['remote_type'];
-  is_urgent: boolean;
-}
 
 const formatDateInput = (date: Date) => date.toISOString().split('T')[0];
 
@@ -97,7 +68,7 @@ const LOCATION_OPTIONS = [...PREFECTURE_LOCATION_OPTIONS, { label: 'Remote', val
 
 const FILTER_LOCATION_OPTIONS = [{ label: 'All Locations', value: 'all' }, ...LOCATION_OPTIONS];
 // Helper function to map API data to frontend format
-const mapApiPositionToLocal = (apiPosition: ApiPosition): Position => {
+const mapApiPositionToLocal = (apiPosition: ApiPosition): LocalPosition => {
   return {
     ...apiPosition,
     company: apiPosition.company_name || 'Unknown Company',
@@ -110,16 +81,16 @@ const mapApiPositionToLocal = (apiPosition: ApiPosition): Position => {
     salaryMax: apiPosition.salary_max || 0,
     remote: apiPosition.remote_type === 'remote' || apiPosition.remote_type === 'hybrid',
     urgent: apiPosition.is_urgent || false,
-    type: (apiPosition.job_type?.replace('_', '-') || 'full-time') as Position['type'],
+    type: (apiPosition.job_type?.replace('_', '-') || 'full-time') as LocalPosition['type'],
     level: (apiPosition.experience_level?.replace('_level', '').replace('_', '') ||
-      'mid') as Position['level'],
+      'mid') as LocalPosition['level'],
   };
 };
 
 function PositionsPageContent() {
   const { user, isLoading: authLoading } = useAuth();
-  const [positions, setPositions] = useState<Position[]>([]);
-  const [filteredPositions, setFilteredPositions] = useState<Position[]>([]);
+  const [positions, setPositions] = useState<LocalPosition[]>([]);
+  const [filteredPositions, setFilteredPositions] = useState<LocalPosition[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -277,7 +248,7 @@ function PositionsPageContent() {
     }
   };
   // Helper functions
-  const getStatusBadge = (status: Position['status']) => {
+  const getStatusBadge = (status: LocalPosition['status']) => {
     const styles = {
       draft: 'bg-gray-100 text-gray-800 border-gray-200',
       published: 'bg-green-100 text-green-800 border-green-200',
@@ -287,7 +258,7 @@ function PositionsPageContent() {
     };
     return styles[status] || styles.draft;
   };
-  const getTypeBadge = (type: Position['type']) => {
+  const getTypeBadge = (type: LocalPosition['type']) => {
     const styles = {
       'full-time': 'bg-blue-50 text-blue-700 border-blue-200',
       'part-time': 'bg-purple-50 text-purple-700 border-purple-200',
@@ -298,7 +269,7 @@ function PositionsPageContent() {
     };
     return styles[type] || styles['full-time'];
   };
-  const getLevelBadge = (level: Position['level']) => {
+  const getLevelBadge = (level: LocalPosition['level']) => {
     const styles = {
       entry: 'bg-green-50 text-green-700 border-green-200',
       mid: 'bg-blue-50 text-blue-700 border-blue-200',
@@ -799,12 +770,6 @@ function PositionsPageContent() {
       </div>
     </AppLayout>
   );
-}
-
-interface NewPositionModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (data: NewPositionFormData) => void;
 }
 
 function NewPositionModal({ isOpen, onClose, onSubmit }: NewPositionModalProps) {

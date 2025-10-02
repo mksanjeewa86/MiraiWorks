@@ -758,5 +758,544 @@ make test-ci
 
 **Remember: Clean architecture is maintainable architecture! 🏛️**
 
-*Last updated: December 2024*
+---
+
+# 🎨 **FRONTEND ARCHITECTURE RULES**
+
+## **Core Frontend Architecture Pattern**
+
+```
+📁 frontend/src/
+├── 📁 api/              # API client functions ONLY
+├── 📁 components/       # React components
+├── 📁 contexts/         # React contexts
+├── 📁 hooks/            # Custom React hooks
+├── 📁 types/            # TypeScript type definitions ONLY
+├── 📁 app/              # Next.js app router pages
+├── 📁 lib/              # Utility functions
+└── 📁 styles/           # Global styles
+```
+
+---
+
+## 📋 **STRICT FRONTEND RULES BY LAYER**
+
+### 🟦 **1. TYPES (`src/types/`)**
+**Purpose**: TypeScript type definitions and interfaces ONLY
+
+#### ✅ **ALLOWED**:
+- **All TypeScript interfaces**
+- **All TypeScript type definitions**
+- **Enums and const objects**
+- **Type utilities and helpers**
+- **Domain model types**
+
+#### ❌ **FORBIDDEN**:
+- **React components** → Move to `src/components/`
+- **API calls** → Move to `src/api/`
+- **Business logic** → Move to `src/hooks/` or `src/lib/`
+- **React hooks** → Move to `src/hooks/`
+- **Inline type definitions in other files** → Centralize in `src/types/`
+
+#### 📝 **Example**:
+```typescript
+// ✅ GOOD - types/user.ts
+export interface User {
+  id: number;
+  email: string;
+  full_name: string;
+  roles: UserRole[];
+}
+
+export interface UserRole {
+  role: Role;
+}
+
+export interface Role {
+  name: string;
+  permissions: string[];
+}
+
+export enum UserStatus {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+  SUSPENDED = 'suspended',
+}
+
+// ❌ BAD - Don't define types inline in components
+// components/UserCard.tsx
+interface User {  // Move to types/user.ts!
+  id: number;
+  name: string;
+}
+```
+
+#### 🗂️ **Type File Organization**:
+```
+📁 types/
+├── index.ts              # Common types, ApiResponse, etc.
+├── user.ts              # User, UserRole, UserFilters
+├── todo.ts              # Todo, TodoFormData, TodoStatus
+├── interview.ts         # Interview, InterviewFormData
+├── workflow.ts          # RecruitmentProcess, ProcessNode
+├── admin.ts             # Admin-specific types
+├── hooks.ts             # Hook return types
+└── components.ts        # Shared component prop types
+```
+
+---
+
+### 🟩 **2. API (`src/api/`)**
+**Purpose**: API client functions and HTTP requests ONLY
+
+#### ✅ **ALLOWED**:
+- **HTTP request functions** (GET, POST, PUT, DELETE)
+- **API endpoint definitions**
+- **Request/response handling**
+- **API client configuration**
+- **Error handling for API calls**
+
+#### ❌ **FORBIDDEN**:
+- **React components** → Move to `src/components/`
+- **Type definitions** → Move to `src/types/`
+- **React hooks** → Move to `src/hooks/`
+- **UI logic** → Move to `src/components/`
+- **State management** → Move to `src/contexts/` or `src/hooks/`
+
+#### 📝 **Example**:
+```typescript
+// ✅ GOOD - api/users.ts
+import { apiClient } from './apiClient';
+import type { ApiResponse } from '@/types';
+import type { User, UserFilters } from '@/types/user';
+
+export const usersApi = {
+  async getUsers(filters?: UserFilters): Promise<ApiResponse<User[]>> {
+    const response = await apiClient.get<User[]>('/api/users', { params: filters });
+    return { data: response.data, success: true };
+  },
+
+  async createUser(userData: CreateUserData): Promise<ApiResponse<User>> {
+    const response = await apiClient.post<User>('/api/users', userData);
+    return { data: response.data, success: true };
+  },
+};
+
+// ❌ BAD - Don't define types in API files
+export interface User {  // Move to types/user.ts!
+  id: number;
+  name: string;
+}
+
+// ❌ BAD - Don't create hooks in API files
+export function useUsers() {  // Move to hooks/useUsers.ts!
+  const [users, setUsers] = useState([]);
+  // ...
+}
+```
+
+---
+
+### 🟨 **3. HOOKS (`src/hooks/`)**
+**Purpose**: Custom React hooks for shared logic
+
+#### ✅ **ALLOWED**:
+- **Custom React hooks**
+- **State management logic**
+- **Side effect handling**
+- **API call orchestration**
+- **Data fetching and caching**
+
+#### ❌ **FORBIDDEN**:
+- **Type definitions** → Move to `src/types/`
+- **API client functions** → Move to `src/api/`
+- **React components** → Move to `src/components/`
+- **Inline type definitions** → Move to `src/types/`
+
+#### 📝 **Example**:
+```typescript
+// ✅ GOOD - hooks/useUsers.ts
+import { useState, useEffect } from 'react';
+import { usersApi } from '@/api/users';
+import type { User, UserFilters } from '@/types/user';
+
+export function useUsers(filters?: UserFilters) {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setLoading(true);
+      try {
+        const response = await usersApi.getUsers(filters);
+        setUsers(response.data || []);
+      } catch (err) {
+        setError('Failed to load users');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, [filters]);
+
+  return { users, loading, error };
+}
+
+// ❌ BAD - Don't define types in hooks
+interface User {  // Move to types/user.ts!
+  id: number;
+  name: string;
+}
+
+// ❌ BAD - Don't make API calls directly
+export function useUsers() {
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    fetch('/api/users')  // Use API client from api/!
+      .then(res => res.json())
+      .then(setUsers);
+  }, []);
+}
+```
+
+---
+
+### 🟧 **4. COMPONENTS (`src/components/`)**
+**Purpose**: React components ONLY
+
+#### ✅ **ALLOWED**:
+- **React functional components**
+- **Component-specific prop interfaces** (with "Props" suffix, kept inline in the component file)
+- **JSX/TSX markup**
+- **Component styling**
+- **Event handlers (local to component)**
+- **Context value interfaces** (for React Context, kept inline)
+
+#### ❌ **FORBIDDEN**:
+- **Shared type definitions** → Move to `src/types/`
+- **Domain model types** → Move to `src/types/`
+- **API response/request types** → Move to `src/types/`
+- **API calls** → Move to `src/api/` and use via hooks
+- **Complex business logic** → Move to `src/hooks/` or `src/lib/`
+- **Global state management** → Move to `src/contexts/`
+
+#### 📌 **IMPORTANT CLARIFICATION**:
+**Component Props interfaces MUST stay inline** in the component file. They should NOT be moved to types/ folder because:
+- They are component-specific
+- They improve component readability
+- They are tightly coupled to the component implementation
+- Moving them would make components harder to understand
+
+**Examples of interfaces that SHOULD stay inline:**
+- `UserCardProps` - Component props
+- `DialogContextValue` - React Context value type
+- `ButtonProps extends HTMLAttributes<HTMLButtonElement>` - Component props extending HTML attributes
+
+#### 📝 **Example**:
+```typescript
+// ✅ GOOD - components/UserCard.tsx
+import type { User } from '@/types/user';
+
+interface UserCardProps {  // Component-specific props - OK
+  user: User;
+  onEdit: (user: User) => void;
+  onDelete: (id: number) => void;
+}
+
+export default function UserCard({ user, onEdit, onDelete }: UserCardProps) {
+  return (
+    <div>
+      <h3>{user.full_name}</h3>
+      <p>{user.email}</p>
+      <button onClick={() => onEdit(user)}>Edit</button>
+      <button onClick={() => onDelete(user.id)}>Delete</button>
+    </div>
+  );
+}
+
+// ❌ BAD - Don't make API calls directly in components
+export default function UserCard({ userId }: { userId: number }) {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    fetch(`/api/users/${userId}`)  // Use hooks and API client!
+      .then(res => res.json())
+      .then(setUser);
+  }, [userId]);
+}
+
+// ❌ BAD - Don't define shared types in components
+interface User {  // Move to types/user.ts!
+  id: number;
+  name: string;
+}
+```
+
+---
+
+### 🟪 **5. PAGES (`src/app/`)**
+**Purpose**: Next.js page components and routing
+
+#### ✅ **ALLOWED**:
+- **Page components**
+- **Layout components**
+- **Route-specific logic**
+- **Server components** (when using Next.js 13+)
+- **Page-specific state management**
+
+#### ❌ **FORBIDDEN**:
+- **Shared type definitions** → Move to `src/types/`
+- **Reusable components** → Move to `src/components/`
+- **API client functions** → Move to `src/api/`
+- **Shared hooks** → Move to `src/hooks/`
+
+---
+
+## 🎯 **STRICT TYPE MANAGEMENT RULES**
+
+### **Type Definition Rules:**
+
+1. **📍 ALL types MUST be in `src/types/` folder**
+   - No inline interfaces in components (except Props)
+   - No inline types in API files
+   - No inline types in hooks
+   - No inline types in pages
+
+2. **🗂️ Group related types in domain files**:
+   - `types/user.ts` - All user-related types
+   - `types/todo.ts` - All todo-related types
+   - `types/interview.ts` - All interview-related types
+   - `types/workflow.ts` - All workflow-related types
+
+3. **📤 Export all types properly**:
+   ```typescript
+   // types/user.ts
+   export interface User { ... }
+   export interface UserRole { ... }
+   export type UserFilters = { ... };
+   ```
+
+4. **📥 Import types from centralized location**:
+   ```typescript
+   // components/UserCard.tsx
+   import type { User } from '@/types/user';
+
+   // api/users.ts
+   import type { User, UserFilters } from '@/types/user';
+
+   // hooks/useUsers.ts
+   import type { User } from '@/types/user';
+   ```
+
+---
+
+## 🚫 **COMMON FRONTEND VIOLATIONS**
+
+### ❌ **NEVER DO THIS**:
+
+```typescript
+// ❌ DON'T: Define types inline in components
+// components/UserList.tsx
+interface User {  // Move to types/user.ts!
+  id: number;
+  name: string;
+}
+
+// ❌ DON'T: Define types inline in API files
+// api/users.ts
+interface UserResponse {  // Move to types/user.ts!
+  users: User[];
+  total: number;
+}
+
+// ❌ DON'T: Make API calls directly in components
+function UserList() {
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    fetch('/api/users')  // Use hooks and API client!
+      .then(res => res.json())
+      .then(setUsers);
+  }, []);
+}
+
+// ❌ DON'T: Put business logic in components
+function UserCard({ user }) {
+  const handleSubmit = async () => {
+    // Complex validation logic
+    // API calls
+    // Error handling
+    // All should be in hooks or API layer!
+  };
+}
+```
+
+### ✅ **DO THIS INSTEAD**:
+
+```typescript
+// ✅ Define types centrally
+// types/user.ts
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+}
+
+export interface UserListResponse {
+  users: User[];
+  total: number;
+}
+
+// ✅ Create API client functions
+// api/users.ts
+import type { User, UserListResponse } from '@/types/user';
+
+export const usersApi = {
+  async getUsers(): Promise<ApiResponse<UserListResponse>> {
+    const response = await apiClient.get<UserListResponse>('/api/users');
+    return { data: response.data, success: true };
+  },
+};
+
+// ✅ Create custom hooks for data fetching
+// hooks/useUsers.ts
+import { usersApi } from '@/api/users';
+import type { User } from '@/types/user';
+
+export function useUsers() {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setLoading(true);
+      const response = await usersApi.getUsers();
+      setUsers(response.data?.users || []);
+      setLoading(false);
+    };
+    fetchUsers();
+  }, []);
+
+  return { users, loading };
+}
+
+// ✅ Keep components clean and simple
+// components/UserList.tsx
+import { useUsers } from '@/hooks/useUsers';
+import type { User } from '@/types/user';
+
+export default function UserList() {
+  const { users, loading } = useUsers();
+
+  if (loading) return <div>Loading...</div>;
+
+  return (
+    <div>
+      {users.map(user => <UserCard key={user.id} user={user} />)}
+    </div>
+  );
+}
+```
+
+---
+
+## 📊 **FRONTEND ARCHITECTURE VALIDATION**
+
+### **Before committing, verify:**
+
+```bash
+# Check for inline type definitions in components
+grep -r "^interface\|^type " src/components/ src/app/ | grep -v "Props"
+
+# Check for API calls in components
+grep -r "fetch\|axios\|apiClient" src/components/ src/app/
+
+# Check for types outside types/ folder
+grep -r "^export interface\|^export type" src/ --exclude-dir=types
+
+# Verify all types are exported
+ls src/types/*.ts | xargs grep "^export"
+```
+
+---
+
+## 🎯 **FRONTEND DEVELOPMENT WORKFLOW**
+
+### **When adding new features:**
+
+1. **🎨 Define types first** (`src/types/`)
+   - Create or update type files
+   - Define interfaces and types
+   - Export all types
+
+2. **🌐 Create API functions** (`src/api/`)
+   - Create API client functions
+   - Import types from `src/types/`
+   - Handle requests/responses
+
+3. **🔧 Create custom hooks** (`src/hooks/`) *if needed*
+   - Data fetching hooks
+   - State management hooks
+   - Import types and API functions
+
+4. **🎨 Build components** (`src/components/`)
+   - Import types from `src/types/`
+   - Use hooks for data
+   - Keep components clean
+
+5. **📄 Create pages** (`src/app/`)
+   - Use components and hooks
+   - Handle routing
+   - Page-specific logic
+
+---
+
+## 📝 **FRONTEND QUICK REFERENCE**
+
+| Layer | Purpose | Contains | Never Contains |
+|-------|---------|----------|----------------|
+| **types/** | Type definitions | Interfaces, types, enums | Components, API calls, hooks |
+| **api/** | API clients | HTTP requests, endpoints | Types, hooks, components |
+| **hooks/** | Custom hooks | State logic, data fetching | Types, components |
+| **components/** | UI components | JSX, component logic | Shared types, API calls |
+| **app/** | Pages/routes | Page components, routing | Shared types, API functions |
+
+---
+
+## ✅ **FRONTEND PRE-COMMIT CHECKLIST**
+
+Before committing frontend code:
+
+- [ ] ✅ All types are in `src/types/` folder
+- [ ] ✅ No inline type definitions (except component Props)
+- [ ] ✅ All API calls use `src/api/` functions
+- [ ] ✅ Components use hooks for data fetching
+- [ ] ✅ No business logic in components
+- [ ] ✅ Proper type imports from `@/types/`
+- [ ] ✅ Build passes without TypeScript errors
+- [ ] ✅ No duplicate type definitions
+- [ ] ✅ All types are properly exported
+
+---
+
+## 🚨 **FRONTEND VIOLATIONS RESULT IN**:
+- **PR rejection**
+- **Refactoring requirements**
+- **Type consolidation**
+- **Architecture review**
+
+---
+
+**Remember: Clean type organization leads to maintainable code! 📐**
+
+**⚠️ ALL TYPES IN types/ FOLDER! ⚠️**
+
+**🎯 NO INLINE TYPE DEFINITIONS! 🎯**
+
+---
+
+*Last updated: January 2025*
 *Enforced by: Claude Code Assistant & CI/CD Pipeline*

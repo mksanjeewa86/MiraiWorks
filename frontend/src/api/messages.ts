@@ -223,7 +223,7 @@ export const messagesApi = {
 
   async getRestrictedUserIds(): Promise<ApiResponse<{ restricted_user_ids: number[] }>> {
     const response = await apiClient.get<{ restricted_user_ids: number[] }>(
-      '/api/messages/restricted-users'
+      API_ENDPOINTS.MESSAGES_EXTENDED.RESTRICTED_USERS
     );
     return { data: response.data, success: true };
   },

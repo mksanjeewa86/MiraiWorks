@@ -33,16 +33,7 @@ import { interviewsApi } from '@/api/interviews';
 import { candidatesApi } from '@/api/candidates';
 import type { Interview, InterviewFormData } from '@/types/interview';
 import type { UserManagement } from '@/types/user';
-
-interface InterviewModalProps {
-  isOpen: boolean;
-  mode: 'create' | 'edit';
-  interviewId?: number;
-  onClose: () => void;
-  onSuccess: (interview: Interview | InterviewFormData) => void;
-  defaultData?: Partial<InterviewFormData>;
-  workflowContext?: boolean; // If true, don't save to DB, just return data
-}
+import type { InterviewModalProps } from '@/types/components';
 
 export default function InterviewModal({
   isOpen,

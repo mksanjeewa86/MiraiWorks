@@ -350,17 +350,23 @@ export interface PublicResumeInfo {
   id: number;
   title: string;
   full_name?: string;
+  email?: string;
+  phone?: string;
+  location?: string;
   professional_summary?: string;
-  resume_format: ResumeFormat;
-  resume_language: ResumeLanguage;
-  view_count: number;
+  resume_format?: ResumeFormat;
+  resume_language?: ResumeLanguage;
+  view_count?: number;
   last_viewed_at?: string;
-  can_download_pdf: boolean;
+  can_download_pdf?: boolean;
+  created_at?: string;
+  updated_at?: string;
 
   // Limited related data
-  experiences: WorkExperience[];
-  educations: Education[];
-  skills: Skill[];
+  experiences?: WorkExperience[];
+  work_experiences?: WorkExperience[];
+  educations?: Education[];
+  skills?: Skill[];
 }
 
 export interface ResumePublicSettings {
@@ -442,44 +448,6 @@ export interface ResumeStats {
 // FORM DATA INTERFACES
 // ============================================================================
 
-export interface ResumeFormData {
-  title: string;
-  description?: string;
-
-  // Personal information
-  full_name?: string;
-  email?: string;
-  phone?: string;
-  location?: string;
-  website?: string;
-  linkedin_url?: string;
-  github_url?: string;
-
-  // Professional summary
-  professional_summary?: string;
-  objective?: string;
-
-  // Template and styling
-  template_id?: string;
-  resume_format?: ResumeFormat;
-  resume_language?: ResumeLanguage;
-  theme_color?: string;
-  font_family?: string;
-
-  // Japanese-specific fields
-  furigana_name?: string;
-  birth_date?: string;
-  gender?: string;
-  nationality?: string;
-  marital_status?: string;
-  emergency_contact?: Record<string, any>;
-
-  // Settings
-  visibility?: ResumeVisibility;
-  is_public?: boolean;
-  can_download_pdf?: boolean;
-}
-
 export interface WorkExperienceFormData {
   company_name: string;
   position_title: string;
@@ -518,7 +486,7 @@ export interface ResumeBuilderProps {
   mode: 'create' | 'edit';
 }
 
-export interface ResumePreviewProps {
+export interface ResumeTemplatePreviewProps {
   resume: Resume;
   template?: string;
   format?: ResumeFormat;
@@ -565,3 +533,46 @@ export interface BulkActionResult {
   errors: string[];
 }
 
+
+// ============================================================================
+// RESUME FORMS & EXTENSIONS
+// ============================================================================
+
+// Resume Form Data (from app/resumes/create/page.tsx)
+export interface ResumeFormData {
+  title: string;
+  description: string;
+  last_name: string;
+  first_name: string;
+  furigana_last_name?: string;
+  furigana_first_name?: string;
+  email: string;
+  phone: string;
+  postal_code: string;
+  prefecture: string;
+  city: string;
+  address_line: string;
+  website?: string;
+  linkedin_url?: string;
+  github_url?: string;
+  professional_summary?: string;
+  objective?: string;
+  work_experiences: WorkExperience[];
+  educations: Education[];
+  skills: string[];
+  template_id?: string;
+  resume_format?: ResumeFormat;
+  resume_language?: ResumeLanguage;
+  birth_date?: string;
+  gender?: string;
+  nationality?: string;
+  marital_status?: string;
+}
+
+// Extended Resume (from app/resumes/[id]/edit/page.tsx)
+export interface ExtendedResume extends Resume {
+  work_experiences?: WorkExperience[];
+  educations?: Education[];
+}
+
+// Duplicate removed - using PublicResumeInfo from line 349

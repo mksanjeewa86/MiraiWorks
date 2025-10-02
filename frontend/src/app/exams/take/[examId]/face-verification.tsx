@@ -6,11 +6,7 @@ import { Button } from '@/components/ui';
 import { Camera, AlertTriangle } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui';
 import { toast } from 'sonner';
-
-interface FaceVerificationProps {
-  sessionId: number;
-  onComplete: (success: boolean) => void;
-}
+import type { FaceVerificationProps } from '@/types/components';
 
 export function FaceVerification({ sessionId, onComplete }: FaceVerificationProps) {
   const [isOpen, setIsOpen] = useState(true);

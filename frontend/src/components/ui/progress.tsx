@@ -1,11 +1,5 @@
 import { clsx } from 'clsx';
-
-interface ProgressProps {
-  value: number;
-  max?: number;
-  className?: string;
-  size?: 'sm' | 'md' | 'lg';
-}
+import type { ProgressProps } from '@/types/components';
 
 const sizeClasses = {
   sm: 'h-2',

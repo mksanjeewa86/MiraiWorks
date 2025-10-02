@@ -318,33 +318,6 @@ export interface ExamStatistics {
 // COMPONENT PROP INTERFACES
 // ============================================================================
 
-export interface ExamQuestionProps {
-  question: Question;
-  answer?: Answer;
-  onAnswerChange: (answer: Partial<Answer>) => void;
-}
-
-export interface ExamQuestionFormProps {
-  question: QuestionFormData;
-  onSave: (question: QuestionFormData) => void;
-  onCancel: () => void;
-}
-
-export interface ExamTimerProps {
-  timeRemaining: number; // in seconds
-  onTimeUp: () => void;
-}
-
-export interface FaceVerificationProps {
-  sessionId: number;
-  onComplete: (success: boolean) => void;
-}
-
-export interface WebUsageMonitorProps {
-  onWebUsageDetected: (eventType: string, eventData: any) => void;
-  allowWebUsage: boolean;
-}
-
 // ============================================================================
 // UTILITY TYPES
 // ============================================================================
@@ -353,3 +326,85 @@ export type ExamStatusType = keyof typeof ExamStatus;
 export type ExamTypeType = keyof typeof ExamType;
 export type QuestionTypeType = keyof typeof QuestionType;
 export type SessionStatusType = keyof typeof SessionStatus;
+
+// ============================================================================
+// EXAM ASSIGNMENTS & FORMS
+// ============================================================================
+
+// Exam Assignment (from app/exams/page.tsx)
+export interface ExamAssignment {
+  id: number;
+  exam_id: number;
+  due_date: string | null;
+  custom_time_limit_minutes: number | null;
+  custom_max_attempts: number | null;
+  is_active: boolean;
+  completed: boolean;
+  exam_title: string;
+  exam_type: string;
+  sessions_count: number;
+}
+
+// Exam List Response (from app/admin/exams/page.tsx)
+export interface ExamListResponse {
+  exams: Exam[];
+  total: number;
+  page: number;
+  page_size: number;
+  has_more: boolean;
+}
+
+// Exam Statistics (from app/admin/exams/[id]/statistics/page.tsx)
+export interface ExamStatistics {
+  exam_id: number;
+  total_sessions: number;
+  completed_sessions: number;
+  average_score: number | null;
+  average_time_minutes: number | null;
+  pass_rate: number;
+  score_distribution: Record<string, number>;
+  question_analytics: QuestionAnalytics[];
+  time_distribution: Record<string, number>;
+  recent_sessions: SessionSummary[];
+}
+
+export interface QuestionAnalytics {
+  question_id: number;
+  question_text: string;
+  correct_count: number;
+  incorrect_count: number;
+  skip_count: number;
+  average_time_seconds: number;
+}
+
+// Question Form Data (from app/admin/exams/create/page.tsx & exam-question-form.tsx)
+export interface QuestionCreateFormData {
+  question_text: string;
+  question_type: string;
+  points: number;
+  is_required: boolean;
+  options?: string[];
+  correct_answer?: string | number;
+  correct_answers?: (string | number)[];
+  time_limit_seconds?: number;
+  explanation?: string;
+  difficulty_level?: string;
+  tags?: string[];
+}
+
+// Exam Take Response (from app/exams/take/[examId]/page.tsx)
+export interface ExamTakeResponse {
+  session: SessionInfo;
+  questions: Question[];
+  answers: Answer[];
+}
+
+// Monitoring Event (from app/exams/results/[sessionId]/page.tsx)
+export interface MonitoringEvent {
+  id: number;
+  event_type: string;
+  event_data: any;
+  timestamp: string;
+}
+
+// Exam Results (from app/exams/results/[sessionId]/page.tsx)

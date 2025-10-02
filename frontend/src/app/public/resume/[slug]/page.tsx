@@ -1,4 +1,5 @@
 'use client';
+import { PublicResumeInfo } from '@/types/resume';
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -6,19 +7,6 @@ import { Download, Eye, Calendar, User, Globe, Share2, ExternalLink } from 'luci
 import { ResumeFormat } from '@/types/resume';
 import { resumesApi } from '@/api/resumes';
 
-interface PublicResumeInfo {
-  id: number;
-  title: string;
-  full_name?: string;
-  professional_summary?: string;
-  resume_format: ResumeFormat;
-  resume_language: string;
-  view_count: number;
-  last_viewed_at?: string;
-  can_download_pdf: boolean;
-  theme_color: string;
-  font_family: string;
-}
 
 function PublicResumePageContent() {
   const params = useParams();
@@ -188,7 +176,7 @@ function PublicResumePageContent() {
                   {resume.full_name || resume.title}
                 </h1>
                 <p className="text-sm text-gray-600">
-                  {getFormatDisplayName(resume.resume_format)}
+                  {resume.resume_format && getFormatDisplayName(resume.resume_format)}
                 </p>
               </div>
             </div>
@@ -246,7 +234,7 @@ function PublicResumePageContent() {
               <div>
                 <div className="font-medium text-gray-900">Format</div>
                 <div className="text-sm text-gray-600">
-                  {getFormatDisplayName(resume.resume_format)}
+                  {resume.resume_format ? getFormatDisplayName(resume.resume_format) : 'N/A'}
                 </div>
               </div>
             </div>
@@ -290,8 +278,8 @@ function PublicResumePageContent() {
                 className="resume-preview-public"
                 dangerouslySetInnerHTML={{ __html: previewHtml }}
                 style={{
-                  fontFamily: resume.font_family || 'Inter',
-                  ['--theme-color' as any]: resume.theme_color || '#2563eb',
+                  fontFamily: (resume as any).font_family || 'Inter',
+                  ['--theme-color' as any]: (resume as any).theme_color || '#2563eb',
                 }}
               />
             ) : (

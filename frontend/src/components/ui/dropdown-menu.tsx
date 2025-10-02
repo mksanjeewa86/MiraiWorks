@@ -1,10 +1,14 @@
 import React, { forwardRef, createContext, useContext, useState } from 'react';
 import { clsx } from 'clsx';
-
-interface DropdownMenuContextValue {
-  open: boolean;
-  setOpen: (open: boolean) => void;
-}
+import type {
+  DropdownMenuContextValue,
+  DropdownMenuProps,
+  DropdownMenuTriggerProps,
+  DropdownMenuContentProps,
+  DropdownMenuItemProps,
+  DropdownMenuSeparatorProps,
+  DropdownMenuLabelProps
+} from '@/types/components';
 
 const DropdownMenuContext = createContext<DropdownMenuContextValue | undefined>(undefined);
 
@@ -16,11 +20,6 @@ const useDropdownMenu = () => {
   return context;
 };
 
-interface DropdownMenuProps {
-  children: React.ReactNode;
-  className?: string;
-}
-
 const DropdownMenu = ({ children, className }: DropdownMenuProps) => {
   const [open, setOpen] = useState(false);
 
@@ -30,12 +29,6 @@ const DropdownMenu = ({ children, className }: DropdownMenuProps) => {
     </DropdownMenuContext.Provider>
   );
 };
-
-interface DropdownMenuTriggerProps {
-  asChild?: boolean;
-  children: React.ReactNode;
-  className?: string;
-}
 
 const DropdownMenuTrigger = forwardRef<HTMLButtonElement, DropdownMenuTriggerProps>(
   ({ asChild = false, children, className, ...props }, ref) => {
@@ -77,13 +70,6 @@ const DropdownMenuTrigger = forwardRef<HTMLButtonElement, DropdownMenuTriggerPro
 );
 
 DropdownMenuTrigger.displayName = 'DropdownMenuTrigger';
-
-interface DropdownMenuContentProps {
-  children: React.ReactNode;
-  className?: string;
-  align?: 'start' | 'center' | 'end';
-  side?: 'top' | 'right' | 'bottom' | 'left';
-}
 
 const DropdownMenuContent = forwardRef<HTMLDivElement, DropdownMenuContentProps>(
   ({ children, className, align = 'start', side = 'bottom', ...props }, ref) => {
@@ -128,14 +114,6 @@ const DropdownMenuContent = forwardRef<HTMLDivElement, DropdownMenuContentProps>
 );
 
 DropdownMenuContent.displayName = 'DropdownMenuContent';
-
-interface DropdownMenuItemProps {
-  children: React.ReactNode;
-  className?: string;
-  asChild?: boolean;
-  disabled?: boolean;
-  onClick?: () => void;
-}
 
 const DropdownMenuItem = forwardRef<HTMLDivElement, DropdownMenuItemProps>(
   ({ children, className, asChild = false, disabled = false, onClick, ...props }, ref) => {
@@ -183,10 +161,6 @@ const DropdownMenuItem = forwardRef<HTMLDivElement, DropdownMenuItemProps>(
 
 DropdownMenuItem.displayName = 'DropdownMenuItem';
 
-interface DropdownMenuSeparatorProps {
-  className?: string;
-}
-
 const DropdownMenuSeparator = forwardRef<HTMLDivElement, DropdownMenuSeparatorProps>(
   ({ className, ...props }, ref) => (
     <div ref={ref} className={clsx('my-1 h-px bg-gray-200', className)} {...props} />
@@ -194,11 +168,6 @@ const DropdownMenuSeparator = forwardRef<HTMLDivElement, DropdownMenuSeparatorPr
 );
 
 DropdownMenuSeparator.displayName = 'DropdownMenuSeparator';
-
-interface DropdownMenuLabelProps {
-  children: React.ReactNode;
-  className?: string;
-}
 
 const DropdownMenuLabel = forwardRef<HTMLDivElement, DropdownMenuLabelProps>(
   ({ children, className, ...props }, ref) => (

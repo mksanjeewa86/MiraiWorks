@@ -5,7 +5,9 @@ import type { CSSProperties } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
-import { recruitmentWorkflowsApi, workflowIntegrationService, type RecruitmentProcess, type ProcessNode, type CreateNodeData } from '@/api/workflows';
+import { recruitmentWorkflowsApi, workflowIntegrationService } from '@/api/workflows';
+import type { RecruitmentProcess, ProcessNode, CreateNodeData, LinearWorkflowStep, WorkflowCandidate, WorkflowViewer } from '@/types/workflow';
+import type { ViewWorkflowModalProps, WorkflowEditorModalProps } from '@/types/pages';
 import { interviewsApi } from '@/api/interviews';
 import { todosApi } from '@/api/todos';
 import TaskModal from '@/components/todos/TaskModal';
@@ -723,13 +725,6 @@ function RecruitmentWorkflowsPageContent() {
 }
 
 // New Workflow Modal
-interface ViewWorkflowModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  process: RecruitmentProcess | null;
-  onEdit?: (process: RecruitmentProcess) => void;
-}
-
 function ViewWorkflowModal({ isOpen, onClose, process, onEdit }: ViewWorkflowModalProps) {
   if (!isOpen || !process) return null;
 
@@ -858,39 +853,6 @@ function ViewWorkflowModal({ isOpen, onClose, process, onEdit }: ViewWorkflowMod
 }
 
 // Linear Workflow Editor Modal
-interface WorkflowEditorModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  process: RecruitmentProcess | null;
-  onSave: (process: RecruitmentProcess) => void;
-}
-
-interface LinearWorkflowStep {
-  id: string;
-  type: 'interview' | 'todo';
-  title: string;
-  description?: string;
-  config?: any;
-  order: number;
-  realId?: number; // Actual backend node ID
-  isIntegrated?: boolean; // Whether this step creates a real interview/todo
-  interview_id?: number; // Linked interview ID (for interview steps)
-  todo_id?: number; // Linked todo ID (for todo steps)
-}
-
-interface WorkflowCandidate {
-  id: number;
-  name: string;
-  email: string;
-}
-
-interface WorkflowViewer {
-  id: number;
-  name: string;
-  email: string;
-  role: 'viewer' | 'reviewer' | 'manager';
-}
-
 function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEditorModalProps) {
   const [steps, setSteps] = useState<LinearWorkflowStep[]>([]);
   const [selectedStep, setSelectedStep] = useState<LinearWorkflowStep | null>(null);
@@ -1030,13 +992,8 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
           alert('Failed to load interview for editing');
         }
       } else {
-        // Create new interview from step - use formData if exists
-        if (step.formData) {
-          // If formData exists, pass it to populate the modal
-          setEditingInterview(step.formData as any);
-        } else {
-          setEditingInterview(null);
-        }
+        // Create new interview from step
+        setEditingInterview(null);
         setIsInterviewModalOpen(true);
       }
     } else if (step.type === 'todo') {
@@ -1051,13 +1008,8 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
           alert('Failed to load todo for editing');
         }
       } else {
-        // Create new todo from step - use formData if exists
-        if (step.formData) {
-          // If formData exists, pass it to populate the modal
-          setEditingTodo(step.formData as any);
-        } else {
-          setEditingTodo(null);
-        }
+        // Create new todo from step
+        setEditingTodo(null);
         setIsTodoModalOpen(true);
       }
     }

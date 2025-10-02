@@ -1,11 +1,6 @@
-import { forwardRef, HTMLAttributes } from 'react';
+import { forwardRef } from 'react';
 import { clsx } from 'clsx';
-
-interface SeparatorProps extends HTMLAttributes<HTMLDivElement> {
-  orientation?: 'horizontal' | 'vertical';
-  decorative?: boolean;
-  className?: string;
-}
+import type { SeparatorProps } from '@/types/components';
 
 const Separator = forwardRef<HTMLDivElement, SeparatorProps>(
   ({ className, orientation = 'horizontal', decorative = true, ...props }, ref) => {

@@ -161,3 +161,14 @@ export interface CalendarEventInput {
   attendees?: string[];
   status?: string;
 }
+
+// ============================================================================
+// CALENDAR UI TYPES
+// ============================================================================
+
+// Selection Range (from app/calendar/page.tsx)
+export interface SelectionRange {
+  start: Date;
+  end: Date;
+  allDay: boolean;
+}

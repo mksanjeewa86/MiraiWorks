@@ -6,30 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui';
 import { Badge } from '@/components/ui';
 import { Calendar, Clock, Users, BookOpen, Play, Eye } from 'lucide-react';
+import { ExamAssignment } from '@/types/exam';
 import { useAuth } from '@/contexts/auth-context';
 import { LoadingSpinner } from '@/components/ui';
 import { toast } from 'sonner';
 
-interface ExamAssignment {
-  id: number;
-  exam_id: number;
-  due_date: string | null;
-  custom_time_limit_minutes: number | null;
-  custom_max_attempts: number | null;
-  is_active: boolean;
-  completed: boolean;
-  exam_title: string;
-  exam_type: string;
-  sessions_count: number;
-  latest_session: {
-    id: number;
-    status: string;
-    percentage: number | null;
-    passed: boolean | null;
-    started_at: string | null;
-    completed_at: string | null;
-  } | null;
-}
 
 const ExamStatus = {
   NOT_STARTED: 'not_started',

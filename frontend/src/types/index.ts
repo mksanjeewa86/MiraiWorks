@@ -51,3 +51,9 @@ export * from './exam';
 
 // Context types
 export * from './contexts';
+
+// Admin & System Management types
+export * from './admin';
+
+// Workflow types
+export * from './workflow';

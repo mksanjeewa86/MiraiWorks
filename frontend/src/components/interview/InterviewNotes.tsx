@@ -4,11 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { StickyNote, Edit3, Save, X, Trash2 } from 'lucide-react';
 import { useInterviewNote } from '@/hooks/useInterviewNote';
 import { useToast } from '@/contexts/ToastContext';
-
-interface InterviewNotesProps {
-  interviewId: number;
-  className?: string;
-}
+import type { InterviewNotesProps } from '@/types/components';
 
 const InterviewNotes: React.FC<InterviewNotesProps> = ({ interviewId, className = '' }) => {
   const { note, loading, error, updateNote, deleteNote } = useInterviewNote(interviewId);

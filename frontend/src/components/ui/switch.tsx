@@ -1,12 +1,6 @@
-import { forwardRef, InputHTMLAttributes } from 'react';
+import { forwardRef } from 'react';
 import { clsx } from 'clsx';
-
-interface SwitchProps
-  extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'onCheckedChange'> {
-  className?: string;
-  checked?: boolean;
-  onCheckedChange?: (checked: boolean) => void;
-}
+import type { SwitchProps } from '@/types/components';
 
 const Switch = forwardRef<HTMLInputElement, SwitchProps>(
   ({ className, checked, onCheckedChange, ...props }, ref) => {

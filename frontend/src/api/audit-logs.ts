@@ -1,71 +1,12 @@
 import { apiClient } from './apiClient';
+import { API_ENDPOINTS } from './config';
 import type { ApiResponse } from '@/types';
-
-// Audit Log Types
-export interface AuditLogEntry {
-  id: number;
-  actor_id?: number;
-  action: string;
-  entity_type: string;
-  entity_id?: number;
-  entity_data?: Record<string, any>;
-  changes?: Record<string, any>;
-  ip_address?: string;
-  user_agent?: string;
-  timestamp: string;
-  actor?: {
-    id: number;
-    full_name: string;
-    email: string;
-  };
-}
-
-export interface AuditLogFilters {
-  actor_id?: number;
-  action?: string;
-  entity_type?: string;
-  entity_id?: number;
-  start_date?: string;
-  end_date?: string;
-  ip_address?: string;
-  search?: string;
-}
-
-export interface AuditLogStats {
-  total_entries: number;
-  unique_actors: number;
-  actions_today: number;
-  top_actions: Array<{
-    action: string;
-    count: number;
-  }>;
-  top_entity_types: Array<{
-    entity_type: string;
-    count: number;
-  }>;
-  recent_activity_trend: Array<{
-    date: string;
-    count: number;
-  }>;
-}
-
-export interface SystemActivity {
-  login_attempts: {
-    successful: number;
-    failed: number;
-    unique_users: number;
-  };
-  data_changes: {
-    creates: number;
-    updates: number;
-    deletes: number;
-  };
-  security_events: {
-    suspicious_activities: number;
-    blocked_attempts: number;
-    admin_actions: number;
-  };
-}
+import type {
+  AuditLogEntry,
+  AuditLogFilters,
+  AuditLogStats,
+  SystemActivity,
+} from '@/types/admin';
 
 export const auditLogsApi = {
   // Core Audit Log Functions
@@ -96,12 +37,12 @@ export const auditLogsApi = {
       total: number;
       page: number;
       size: number;
-    }>(`/api/admin/audit-logs?${params.toString()}`);
+    }>(`${API_ENDPOINTS.ADMIN_EXTENDED.AUDIT_LOGS.BASE}?${params.toString()}`);
     return { data: response.data, success: true };
   },
 
   async getAuditLogById(logId: number): Promise<ApiResponse<AuditLogEntry>> {
-    const response = await apiClient.get<AuditLogEntry>(`/api/admin/audit-logs/${logId}`);
+    const response = await apiClient.get<AuditLogEntry>(`${API_ENDPOINTS.ADMIN_EXTENDED.AUDIT_LOGS.BASE}/${logId}`);
     return { data: response.data, success: true };
   },
 
@@ -114,7 +55,7 @@ export const auditLogsApi = {
     if (endDate) params.set('end_date', endDate);
 
     const query = params.toString();
-    const url = query ? `/api/admin/audit-logs/stats?${query}` : '/api/admin/audit-logs/stats';
+    const url = query ? `${API_ENDPOINTS.ADMIN_EXTENDED.AUDIT_LOGS.STATS}?${query}` : API_ENDPOINTS.ADMIN_EXTENDED.AUDIT_LOGS.STATS;
 
     const response = await apiClient.get<AuditLogStats>(url);
     return { data: response.data, success: true };
@@ -129,7 +70,7 @@ export const auditLogsApi = {
     if (endDate) params.set('end_date', endDate);
 
     const query = params.toString();
-    const url = query ? `/api/admin/audit-logs/activity?${query}` : '/api/admin/audit-logs/activity';
+    const url = query ? `${API_ENDPOINTS.ADMIN_EXTENDED.AUDIT_LOGS.ACTIVITY}?${query}` : API_ENDPOINTS.ADMIN_EXTENDED.AUDIT_LOGS.ACTIVITY;
 
     const response = await apiClient.get<SystemActivity>(url);
     return { data: response.data, success: true };
@@ -156,7 +97,7 @@ export const auditLogsApi = {
       total: number;
       page: number;
       size: number;
-    }>(`/api/admin/audit-logs/entity/${entityType}/${entityId}?${params.toString()}`);
+    }>(`${API_ENDPOINTS.ADMIN_EXTENDED.AUDIT_LOGS.BASE}/entity/${entityType}/${entityId}?${params.toString()}`);
     return { data: response.data, success: true };
   },
 
@@ -184,7 +125,7 @@ export const auditLogsApi = {
       total: number;
       page: number;
       size: number;
-    }>(`/api/admin/audit-logs/user/${userId}?${params.toString()}`);
+    }>(`${API_ENDPOINTS.ADMIN_EXTENDED.AUDIT_LOGS.BASE}/user/${userId}?${params.toString()}`);
     return { data: response.data, success: true };
   },
 
@@ -209,7 +150,7 @@ export const auditLogsApi = {
       total: number;
       page: number;
       size: number;
-    }>(`/api/admin/audit-logs/security?${params.toString()}`);
+    }>(`${API_ENDPOINTS.ADMIN_EXTENDED.AUDIT_LOGS.BASE}/security?${params.toString()}`);
     return { data: response.data, success: true };
   },
 
@@ -233,7 +174,7 @@ export const auditLogsApi = {
       total: number;
       page: number;
       size: number;
-    }>(`/api/admin/audit-logs/failed-logins?${params.toString()}`);
+    }>(`${API_ENDPOINTS.ADMIN_EXTENDED.AUDIT_LOGS.BASE}/failed-logins?${params.toString()}`);
     return { data: response.data, success: true };
   },
 
@@ -259,7 +200,7 @@ export const auditLogsApi = {
     const response = await apiClient.post<{
       download_url: string;
       expires_at: string;
-    }>('/api/admin/audit-logs/export', params);
+    }>(API_ENDPOINTS.ADMIN_EXTENDED.AUDIT_LOGS.EXPORT, params);
     return { data: response.data, success: true };
   },
 
@@ -271,7 +212,7 @@ export const auditLogsApi = {
     const response = await apiClient.get<{
       actions: string[];
       entity_types: string[];
-    }>('/api/admin/audit-logs/filter-options');
+    }>(API_ENDPOINTS.ADMIN_EXTENDED.AUDIT_LOGS.FILTER_OPTIONS);
     return { data: response.data, success: true };
   },
 };

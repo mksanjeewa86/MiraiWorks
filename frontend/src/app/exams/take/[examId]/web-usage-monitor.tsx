@@ -2,11 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
-
-interface WebUsageMonitorProps {
-  onWebUsageDetected: (eventType: string, eventData: any) => void;
-  allowWebUsage: boolean;
-}
+import type { WebUsageMonitorProps } from '@/types/components';
 
 export function WebUsageMonitor({ onWebUsageDetected, allowWebUsage }: WebUsageMonitorProps) {
   const lastFocusTime = useRef<number>(Date.now());

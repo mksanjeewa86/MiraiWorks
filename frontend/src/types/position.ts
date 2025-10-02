@@ -109,3 +109,55 @@ export interface PositionUpdate {
   seo_description?: string;
   social_image_url?: string;
 }
+
+// Position Filter Types
+export type PositionFilterValue = string | number | boolean | undefined;
+export type PositionFilters = Record<string, PositionFilterValue>;
+
+// ============================================================================
+// POSITION FORMS & EXTENSIONS
+// ============================================================================
+
+// New Position Form Data (from app/positions/page.tsx)
+export interface NewPositionFormData {
+  title: string;
+  department: string;
+  location: string;
+  job_type: Position['job_type'];
+  experience_level: Position['experience_level'];
+  salaryMin: string;
+  salaryMax: string;
+  status: Position['status'];
+  postedDate: string;
+  deadline: string;
+  description: string;
+  requirements: string;
+  benefits: string;
+  remote_type: Position['remote_type'];
+  is_urgent: boolean;
+}
+
+// Local Position (UI-specific extended type from app/positions/page.tsx)
+export interface LocalPosition {
+  id: number;
+  title: string;
+  company: string;
+  applications: number;
+  views: number;
+  postedDate: string;
+  deadline: string;
+  requirements: string[];
+  remote: boolean;
+  urgent: boolean;
+  type: 'full-time' | 'part-time' | 'contract' | 'internship' | 'freelance' | 'temporary';
+  level: 'entry' | 'mid' | 'senior' | 'executive';
+  salaryMin: number;
+  salaryMax: number;
+  location?: string;
+  department?: string;
+  description?: string;
+  status: Position['status'];
+  job_type: Position['job_type'];
+  experience_level: Position['experience_level'];
+  company_id: number;
+}

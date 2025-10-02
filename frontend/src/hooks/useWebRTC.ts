@@ -1,14 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { WebRTCState, ConnectionQuality } from '../types/video';
-
-interface UseWebRTCResult extends WebRTCState {
-  connect: () => Promise<void>;
-  disconnect: () => Promise<void>;
-  toggleAudio: () => void;
-  toggleVideo: () => void;
-  startScreenShare: () => Promise<void>;
-  stopScreenShare: () => void;
-}
+import type { UseWebRTCResult } from '../types/hooks';
 
 export const useWebRTC = (roomId?: string, userId?: number): UseWebRTCResult => {
   const [state, setState] = useState<WebRTCState>({

@@ -22,65 +22,12 @@ import {
 } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui';
 import { toast } from 'sonner';
+import { Question, AnswerInfo, SessionInfo, MonitoringEvent, ExamResults } from '@/types/exam';
 
-interface Question {
-  id: number;
-  question_text: string;
-  question_type: string;
-  order_index: number;
-  points: number;
-  options: Record<string, string> | null;
-  correct_answers: string[] | null;
-  explanation: string | null;
-}
 
-interface Answer {
-  id: number;
-  question_id: number;
-  answer_text: string | null;
-  selected_options: string[] | null;
-  is_correct: boolean | null;
-  points_earned: number;
-  points_possible: number;
-  time_spent_seconds: number | null;
-  answered_at: string;
-}
 
-interface SessionInfo {
-  id: number;
-  exam_id: number;
-  status: string;
-  attempt_number: number;
-  started_at: string;
-  completed_at: string;
-  score: number;
-  max_score: number;
-  percentage: number;
-  passed: boolean | null;
-  total_questions: number;
-  questions_answered: number;
-  web_usage_detected: boolean;
-  web_usage_count: number;
-  face_verification_failed: boolean;
-  face_check_count: number;
-  exam_title: string;
-  exam_type: string;
-}
 
-interface MonitoringEvent {
-  id: number;
-  event_type: string;
-  event_data: any;
-  severity: string;
-  timestamp: string;
-}
 
-interface ExamResults {
-  session: SessionInfo;
-  answers: Answer[];
-  questions?: Question[];
-  monitoring_events?: MonitoringEvent[];
-}
 
 export default function ExamResultsPage() {
   const params = useParams();
@@ -150,7 +97,7 @@ export default function ExamResultsPage() {
         };
   };
 
-  const getQuestionResult = (answer: Answer, question?: Question) => {
+  const getQuestionResult = (answer: AnswerInfo, question?: Question) => {
     if (answer.is_correct === null) {
       return { icon: AlertTriangle, color: 'text-yellow-600', text: 'Pending Review' };
     }
@@ -214,15 +161,15 @@ export default function ExamResultsPage() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <div className={`text-3xl font-bold ${getScoreColor(session.percentage)}`}>
-                  {session.percentage.toFixed(1)}%
+                <div className={`text-3xl font-bold ${getScoreColor(session.percentage ?? 0)}`}>
+                  {session.percentage?.toFixed(1) ?? 'N/A'}%
                 </div>
                 <div className="text-sm text-gray-500">
                   {session.score} / {session.max_score} points
                 </div>
               </div>
               <div className="flex flex-col items-center">
-                <Trophy className={`h-8 w-8 ${getScoreColor(session.percentage)}`} />
+                <Trophy className={`h-8 w-8 ${getScoreColor(session.percentage ?? 0)}`} />
                 {passStatus && (
                   <Badge className={`mt-2 ${passStatus.color}`}>
                     <passStatus.icon className="h-3 w-3 mr-1" />
@@ -243,7 +190,7 @@ export default function ExamResultsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-2xl font-bold text-gray-900">
-                  {formatDuration(session.started_at, session.completed_at)}
+                  {formatDuration(session.started_at ?? new Date().toISOString(), session.completed_at ?? new Date().toISOString())}
                 </div>
                 <div className="text-sm text-gray-500">
                   {session.questions_answered} / {session.total_questions} answered
@@ -453,11 +400,11 @@ export default function ExamResultsPage() {
           <div className="grid gap-4 md:grid-cols-2 text-sm">
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-gray-400" />
-              <span>Started: {new Date(session.started_at).toLocaleString()}</span>
+              <span>Started: {new Date(session.started_at ?? new Date()).toLocaleString()}</span>
             </div>
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-gray-400" />
-              <span>Completed: {new Date(session.completed_at).toLocaleString()}</span>
+              <span>Completed: {new Date(session.completed_at ?? new Date()).toLocaleString()}</span>
             </div>
             <div className="flex items-center gap-2">
               <BookOpen className="h-4 w-4 text-gray-400" />

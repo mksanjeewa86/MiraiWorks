@@ -1,16 +1,7 @@
 import { apiClient } from './apiClient';
+import { API_ENDPOINTS } from './config';
 import type { ApiResponse } from '@/types';
-import type { UserManagement } from '@/types/user';
-
-export interface UserFilters {
-  search?: string;
-  company_id?: number;
-  limit?: number;
-  offset?: number;
-  is_active?: boolean;
-  size?: number;
-  include_deleted?: boolean;
-}
+import type { UserManagement, UserFilters } from '@/types/user';
 
 export const usersApi = {
   async getUsers(filters?: UserFilters): Promise<
@@ -33,7 +24,7 @@ export const usersApi = {
     if (filters?.include_deleted !== undefined)
       params.set('include_deleted', filters.include_deleted.toString());
 
-    const url = params.toString() ? `/api/admin/users?${params.toString()}` : '/api/admin/users';
+    const url = params.toString() ? `${API_ENDPOINTS.ADMIN.USERS}?${params.toString()}` : API_ENDPOINTS.ADMIN.USERS;
     const response = await apiClient.get<{
       users: UserManagement[];
       total: number;
@@ -45,12 +36,12 @@ export const usersApi = {
   },
 
   async getById(id: number): Promise<ApiResponse<UserManagement>> {
-    const response = await apiClient.get<UserManagement>(`/api/admin/users/${id}`);
+    const response = await apiClient.get<UserManagement>(API_ENDPOINTS.ADMIN.USER_BY_ID(id));
     return { data: response.data, success: true };
   },
 
   async create(userData: Partial<UserManagement>): Promise<ApiResponse<UserManagement>> {
-    const response = await apiClient.post<UserManagement>('/api/admin/users', userData);
+    const response = await apiClient.post<UserManagement>(API_ENDPOINTS.ADMIN.USERS, userData);
     return { data: response.data, success: true };
   },
 
@@ -58,12 +49,12 @@ export const usersApi = {
     id: number,
     userData: Partial<UserManagement>
   ): Promise<ApiResponse<UserManagement>> {
-    const response = await apiClient.put<UserManagement>(`/api/admin/users/${id}`, userData);
+    const response = await apiClient.put<UserManagement>(API_ENDPOINTS.ADMIN.USER_BY_ID(id), userData);
     return { data: response.data, success: true };
   },
 
   async delete(id: number): Promise<ApiResponse<void>> {
-    await apiClient.delete<void>(`/api/admin/users/${id}`);
+    await apiClient.delete<void>(API_ENDPOINTS.ADMIN.USER_BY_ID(id));
     return { data: undefined, success: true };
   },
 
@@ -88,32 +79,32 @@ export const usersApi = {
   },
 
   async suspendUser(id: number): Promise<ApiResponse<UserManagement>> {
-    const response = await apiClient.post<UserManagement>(`/api/admin/users/${id}/suspend`);
+    const response = await apiClient.post<UserManagement>(`${API_ENDPOINTS.ADMIN.USER_BY_ID(id)}/suspend`);
     return { data: response.data, success: true };
   },
 
   async unsuspendUser(id: number): Promise<ApiResponse<UserManagement>> {
-    const response = await apiClient.post<UserManagement>(`/api/admin/users/${id}/unsuspend`);
+    const response = await apiClient.post<UserManagement>(`${API_ENDPOINTS.ADMIN.USER_BY_ID(id)}/unsuspend`);
     return { data: response.data, success: true };
   },
 
   async resetPassword(id: number): Promise<ApiResponse<{ message: string }>> {
     const response = await apiClient.post<{ message: string }>(
-      `/api/admin/users/${id}/reset-password`
+      `${API_ENDPOINTS.ADMIN.USER_BY_ID(id)}/reset-password`
     );
     return { data: response.data, success: true };
   },
 
   async resendActivation(id: number): Promise<ApiResponse<{ message: string }>> {
     const response = await apiClient.post<{ message: string }>(
-      `/api/admin/users/${id}/resend-activation`
+      `${API_ENDPOINTS.ADMIN.USER_BY_ID(id)}/resend-activation`
     );
     return { data: response.data, success: true };
   },
 
   // Bulk operations
   async bulkDelete(userIds: number[]): Promise<ApiResponse<{ message: string }>> {
-    const response = await apiClient.post<{ message: string }>('/api/admin/users/bulk/delete', {
+    const response = await apiClient.post<{ message: string }>(API_ENDPOINTS.ADMIN_EXTENDED.USERS_BULK.DELETE, {
       user_ids: userIds,
     });
     return { data: response.data, success: true };
@@ -121,7 +112,7 @@ export const usersApi = {
 
   async bulkResetPassword(userIds: number[]): Promise<ApiResponse<{ message: string }>> {
     const response = await apiClient.post<{ message: string }>(
-      '/api/admin/users/bulk/reset-password',
+      API_ENDPOINTS.ADMIN_EXTENDED.USERS_BULK.RESET_PASSWORD,
       { user_ids: userIds }
     );
     return { data: response.data, success: true };
@@ -129,21 +120,21 @@ export const usersApi = {
 
   async bulkResendActivation(userIds: number[]): Promise<ApiResponse<{ message: string }>> {
     const response = await apiClient.post<{ message: string }>(
-      '/api/admin/users/bulk/resend-activation',
+      API_ENDPOINTS.ADMIN_EXTENDED.USERS_BULK.RESEND_ACTIVATION,
       { user_ids: userIds }
     );
     return { data: response.data, success: true };
   },
 
   async bulkSuspend(userIds: number[]): Promise<ApiResponse<{ message: string }>> {
-    const response = await apiClient.post<{ message: string }>('/api/admin/users/bulk/suspend', {
+    const response = await apiClient.post<{ message: string }>(API_ENDPOINTS.ADMIN_EXTENDED.USERS_BULK.SUSPEND, {
       user_ids: userIds,
     });
     return { data: response.data, success: true };
   },
 
   async bulkUnsuspend(userIds: number[]): Promise<ApiResponse<{ message: string }>> {
-    const response = await apiClient.post<{ message: string }>('/api/admin/users/bulk/unsuspend', {
+    const response = await apiClient.post<{ message: string }>(API_ENDPOINTS.ADMIN_EXTENDED.USERS_BULK.UNSUSPEND, {
       user_ids: userIds,
     });
     return { data: response.data, success: true };

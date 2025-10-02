@@ -1,11 +1,19 @@
 import React, { forwardRef, createContext, useContext, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { clsx } from 'clsx';
-
-interface DialogContextValue {
-  open: boolean;
-  setOpen: (open: boolean) => void;
-}
+import type {
+  DialogContextValue,
+  DialogProps,
+  DialogTriggerProps,
+  DialogPortalProps,
+  DialogOverlayProps,
+  DialogContentProps,
+  DialogHeaderProps,
+  DialogFooterProps,
+  DialogTitleProps,
+  DialogDescriptionProps,
+  DialogCloseProps
+} from '@/types/components';
 
 const DialogContext = createContext<DialogContextValue | undefined>(undefined);
 
@@ -16,13 +24,6 @@ const useDialog = () => {
   }
   return context;
 };
-
-interface DialogProps {
-  open?: boolean;
-  defaultOpen?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  children: React.ReactNode;
-}
 
 const Dialog = ({ open, defaultOpen = false, onOpenChange, children }: DialogProps) => {
   const [internalOpen, setInternalOpen] = React.useState(defaultOpen);
@@ -40,12 +41,6 @@ const Dialog = ({ open, defaultOpen = false, onOpenChange, children }: DialogPro
     <DialogContext.Provider value={{ open: isOpen, setOpen }}>{children}</DialogContext.Provider>
   );
 };
-
-interface DialogTriggerProps {
-  asChild?: boolean;
-  children: React.ReactNode;
-  className?: string;
-}
 
 const DialogTrigger = forwardRef<HTMLButtonElement, DialogTriggerProps>(
   ({ asChild = false, children, className, ...props }, ref) => {
@@ -84,11 +79,6 @@ const DialogTrigger = forwardRef<HTMLButtonElement, DialogTriggerProps>(
 
 DialogTrigger.displayName = 'DialogTrigger';
 
-interface DialogPortalProps {
-  children: React.ReactNode;
-  container?: HTMLElement;
-}
-
 const DialogPortal = ({ children, container }: DialogPortalProps) => {
   if (typeof window === 'undefined') return null;
 
@@ -96,10 +86,6 @@ const DialogPortal = ({ children, container }: DialogPortalProps) => {
 
   return createPortal(children, portalContainer);
 };
-
-interface DialogOverlayProps {
-  className?: string;
-}
 
 const DialogOverlay = forwardRef<HTMLDivElement, DialogOverlayProps>(
   ({ className, ...props }, ref) => {
@@ -117,14 +103,6 @@ const DialogOverlay = forwardRef<HTMLDivElement, DialogOverlayProps>(
 );
 
 DialogOverlay.displayName = 'DialogOverlay';
-
-interface DialogContentProps {
-  children: React.ReactNode;
-  className?: string;
-  closeButton?: boolean;
-  onEscapeKeyDown?: (event: KeyboardEvent) => void;
-  onPointerDownOutside?: (event: PointerEvent) => void;
-}
 
 const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
   (
@@ -171,11 +149,6 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
 
 DialogContent.displayName = 'DialogContent';
 
-interface DialogHeaderProps {
-  children: React.ReactNode;
-  className?: string;
-}
-
 const DialogHeader = ({ children, className }: DialogHeaderProps) => {
   return (
     <div className={clsx('flex flex-col space-y-1.5 text-center sm:text-left', className)}>
@@ -183,11 +156,6 @@ const DialogHeader = ({ children, className }: DialogHeaderProps) => {
     </div>
   );
 };
-
-interface DialogFooterProps {
-  children: React.ReactNode;
-  className?: string;
-}
 
 const DialogFooter = ({ children, className }: DialogFooterProps) => {
   return (
@@ -198,11 +166,6 @@ const DialogFooter = ({ children, className }: DialogFooterProps) => {
     </div>
   );
 };
-
-interface DialogTitleProps {
-  children: React.ReactNode;
-  className?: string;
-}
 
 const DialogTitle = forwardRef<HTMLHeadingElement, DialogTitleProps>(
   ({ children, className, ...props }, ref) => {
@@ -220,11 +183,6 @@ const DialogTitle = forwardRef<HTMLHeadingElement, DialogTitleProps>(
 
 DialogTitle.displayName = 'DialogTitle';
 
-interface DialogDescriptionProps {
-  children: React.ReactNode;
-  className?: string;
-}
-
 const DialogDescription = forwardRef<HTMLParagraphElement, DialogDescriptionProps>(
   ({ children, className, ...props }, ref) => {
     return (
@@ -236,12 +194,6 @@ const DialogDescription = forwardRef<HTMLParagraphElement, DialogDescriptionProp
 );
 
 DialogDescription.displayName = 'DialogDescription';
-
-interface DialogCloseProps {
-  asChild?: boolean;
-  children: React.ReactNode;
-  className?: string;
-}
 
 const DialogClose = forwardRef<HTMLButtonElement, DialogCloseProps>(
   ({ asChild = false, children, className, ...props }, ref) => {

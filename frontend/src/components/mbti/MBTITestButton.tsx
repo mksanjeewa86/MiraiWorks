@@ -2,12 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PuzzlePieceIcon, PlayIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import { mbtiApi } from '@/api/mbti';
 import type { MBTITestProgress } from '@/types/mbti';
-
-interface MBTITestButtonProps {
-  onStartTest: () => void;
-  className?: string;
-  language?: 'en' | 'ja';
-}
+import type { MBTITestButtonProps } from '@/types/components';
 
 const MBTITestButton: React.FC<MBTITestButtonProps> = ({
   onStartTest,

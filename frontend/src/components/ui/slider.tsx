@@ -1,17 +1,6 @@
 import React, { forwardRef, useState, useRef, useEffect } from 'react';
 import { clsx } from 'clsx';
-
-interface SliderProps {
-  value?: number[];
-  defaultValue?: number[];
-  onValueChange?: (value: number[]) => void;
-  min?: number;
-  max?: number;
-  step?: number;
-  disabled?: boolean;
-  className?: string;
-  orientation?: 'horizontal' | 'vertical';
-}
+import type { SliderProps } from '@/types/components';
 
 const Slider = forwardRef<HTMLDivElement, SliderProps>(
   (
