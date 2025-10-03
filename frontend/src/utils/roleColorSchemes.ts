@@ -6,7 +6,7 @@
 import type { ColorScheme } from '@/types/ui';
 
 export const roleColorSchemes: Record<string, ColorScheme> = {
-  super_admin: {
+  admin: {
     // Deep purple/violet theme for super admins
     background: 'bg-violet-950',
     backgroundOverlay: 'bg-violet-900/30',
@@ -33,7 +33,7 @@ export const roleColorSchemes: Record<string, ColorScheme> = {
     statusIndicatorShadow: 'shadow-violet-400/50',
   },
 
-  company_admin: {
+  hr_manager: {
     // Deep blue theme for company admins
     background: 'bg-blue-950',
     backgroundOverlay: 'bg-blue-900/30',
@@ -61,7 +61,7 @@ export const roleColorSchemes: Record<string, ColorScheme> = {
   },
 
   recruiter: {
-    // Deep emerald/green theme for recruiters
+    // Deep emerald/green theme for company users
     background: 'bg-emerald-950',
     backgroundOverlay: 'bg-emerald-900/30',
     border: 'border-emerald-700/30',
@@ -85,33 +85,6 @@ export const roleColorSchemes: Record<string, ColorScheme> = {
 
     statusIndicator: 'bg-emerald-400',
     statusIndicatorShadow: 'shadow-emerald-400/50',
-  },
-
-  employer: {
-    // Deep orange/amber theme for employers
-    background: 'bg-orange-950',
-    backgroundOverlay: 'bg-orange-900/30',
-    border: 'border-orange-700/30',
-    headerBackground: 'bg-orange-900/50',
-
-    brandBackground: 'bg-orange-600',
-    brandAccent: 'bg-orange-500',
-
-    textPrimary: 'text-white',
-    textSecondary: 'text-orange-200/80',
-
-    buttonBorder: 'border-orange-600/30 hover:border-orange-500/50',
-    buttonHover: 'hover:bg-orange-800/50',
-    buttonActive: 'bg-orange-600',
-
-    avatarBackground: 'bg-orange-600',
-    avatarRing: 'ring-orange-600/50',
-
-    activeIndicator: 'bg-orange-300',
-    activeIndicatorShadow: 'shadow-orange-300/50',
-
-    statusIndicator: 'bg-orange-400',
-    statusIndicatorShadow: 'shadow-orange-400/50',
   },
 
   candidate: {
@@ -156,7 +129,7 @@ export function getRoleColorScheme(userRoles?: Array<{ role: { name: string } }>
   }
 
   // Priority order for roles (highest to lowest)
-  const rolePriority = ['super_admin', 'company_admin', 'recruiter', 'employer', 'candidate'];
+  const rolePriority = ['admin', 'hr_manager', 'recruiter', 'candidate'];
 
   // Find the highest priority role
   for (const priority of rolePriority) {

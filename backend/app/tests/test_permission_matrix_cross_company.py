@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import pytest
+import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,7 +15,7 @@ from app.models.recruitment_process import RecruitmentProcess
 from app.models.resume import Resume
 from app.models.user import User
 from app.schemas.user import UserRole
-from app.services.auth_service import AuthService
+from app.services.auth_service import auth_service
 
 
 class TestCrossCompanyAccessPrevention:
@@ -23,148 +24,205 @@ class TestCrossCompanyAccessPrevention:
     Tests ensure users cannot access resources from other companies.
     """
 
-    @pytest.fixture
-    async def setup_cross_company_scenario(self, db: AsyncSession):
+    @pytest_asyncio.fixture
+    async def setup_cross_company_scenario(self, db_session: AsyncSession, test_roles: dict):
         """Setup scenario with multiple companies and users for cross-company testing."""
 
+        from app.utils.constants import CompanyType
+        
         # Create Company A
         company_a = Company(
             name="TechCorp A",
+            type=CompanyType.EMPLOYER,
+            email="admin@techcorp-a.com",
+            phone="+81-3-1234-5678",
             description="Technology Company A",
-            industry="Technology",
-            size="medium",
-            location="Tokyo",
-            is_active=True
+            city="Tokyo",
+            is_active="1"
         )
-        db.add(company_a)
-        await db.flush()
+        db_session.add(company_a)
+        await db_session.flush()
 
         # Create Company B
         company_b = Company(
             name="TechCorp B",
+            type=CompanyType.EMPLOYER,
+            email="admin@techcorp-b.com",
+            phone="+81-6-1234-5678",
             description="Technology Company B",
-            industry="Technology",
-            size="large",
-            location="Osaka",
-            is_active=True
+            city="Osaka",
+            is_active="1"
         )
-        db.add(company_b)
-        await db.flush()
+        db_session.add(company_b)
+        await db_session.flush()
 
+        from app.services.auth_service import auth_service
+        from app.models.role import UserRole as UserRoleModel
+        from app.utils.constants import UserRole as UserRoleEnum
+        
         # Create Company Admin for Company A
         company_admin_a = User(
             email="admin_a@techcorp-a.com",
-            hashed_password="hashed_password",
+            hashed_password=auth_service.get_password_hash("password123"),
             company_id=company_a.id,
-            role=UserRole.COMPANY_ADMIN,
             is_active=True,
-            is_verified=True,
             first_name="Admin",
             last_name="CompanyA"
         )
-        db.add(company_admin_a)
+        db_session.add(company_admin_a)
+        await db_session.flush()
 
         # Create Company Admin for Company B
         company_admin_b = User(
             email="admin_b@techcorp-b.com",
-            hashed_password="hashed_password",
+            hashed_password=auth_service.get_password_hash("password123"),
             company_id=company_b.id,
-            role=UserRole.COMPANY_ADMIN,
             is_active=True,
-            is_verified=True,
             first_name="Admin",
             last_name="CompanyB"
         )
-        db.add(company_admin_b)
+        db_session.add(company_admin_b)
+        await db_session.flush()
 
         # Create Recruiter for Company A
         recruiter_a = User(
             email="recruiter_a@techcorp-a.com",
-            hashed_password="hashed_password",
+            hashed_password=auth_service.get_password_hash("password123"),
             company_id=company_a.id,
-            role=UserRole.RECRUITER,
             is_active=True,
-            is_verified=True,
             first_name="Recruiter",
             last_name="CompanyA"
         )
-        db.add(recruiter_a)
+        db_session.add(recruiter_a)
+        await db_session.flush()
 
         # Create Recruiter for Company B
         recruiter_b = User(
             email="recruiter_b@techcorp-b.com",
-            hashed_password="hashed_password",
+            hashed_password=auth_service.get_password_hash("password123"),
             company_id=company_b.id,
-            role=UserRole.RECRUITER,
             is_active=True,
-            is_verified=True,
             first_name="Recruiter",
             last_name="CompanyB"
         )
-        db.add(recruiter_b)
+        db_session.add(recruiter_b)
+        await db_session.flush()
 
         # Create Employer for Company A
         employer_a = User(
             email="employer_a@techcorp-a.com",
-            hashed_password="hashed_password",
+            hashed_password=auth_service.get_password_hash("password123"),
             company_id=company_a.id,
-            role=UserRole.EMPLOYER,
             is_active=True,
-            is_verified=True,
             first_name="Employer",
             last_name="CompanyA"
         )
-        db.add(employer_a)
+        db_session.add(employer_a)
+        await db_session.flush()
 
         # Create Employer for Company B
         employer_b = User(
             email="employer_b@techcorp-b.com",
-            hashed_password="hashed_password",
+            hashed_password=auth_service.get_password_hash("password123"),
             company_id=company_b.id,
-            role=UserRole.EMPLOYER,
             is_active=True,
-            is_verified=True,
             first_name="Employer",
             last_name="CompanyB"
         )
-        db.add(employer_b)
+        db_session.add(employer_b)
+        await db_session.flush()
 
         # Create Independent Candidates
         candidate_a = User(
             email="candidate_a@email.com",
-            hashed_password="hashed_password",
+            hashed_password=auth_service.get_password_hash("password123"),
             company_id=None,
-            role=UserRole.CANDIDATE,
             is_active=True,
-            is_verified=True,
             first_name="Candidate",
             last_name="A"
         )
-        db.add(candidate_a)
+        db_session.add(candidate_a)
+        await db_session.flush()
 
         candidate_b = User(
             email="candidate_b@email.com",
-            hashed_password="hashed_password",
+            hashed_password=auth_service.get_password_hash("password123"),
             company_id=None,
-            role=UserRole.CANDIDATE,
             is_active=True,
-            is_verified=True,
             first_name="Candidate",
             last_name="B"
         )
-        db.add(candidate_b)
+        db_session.add(candidate_b)
+        await db_session.flush()
 
-        await db.commit()
-        await db.refresh(company_a)
-        await db.refresh(company_b)
-        await db.refresh(company_admin_a)
-        await db.refresh(company_admin_b)
-        await db.refresh(recruiter_a)
-        await db.refresh(recruiter_b)
-        await db.refresh(employer_a)
-        await db.refresh(employer_b)
-        await db.refresh(candidate_a)
-        await db.refresh(candidate_b)
+        # Assign roles to users
+        # Company Admin A
+        admin_role_a = UserRoleModel(
+            user_id=company_admin_a.id,
+            role_id=test_roles[UserRoleEnum.COMPANY_ADMIN.value].id
+        )
+        db_session.add(admin_role_a)
+
+        # Company Admin B
+        admin_role_b = UserRoleModel(
+            user_id=company_admin_b.id,
+            role_id=test_roles[UserRoleEnum.COMPANY_ADMIN.value].id
+        )
+        db_session.add(admin_role_b)
+
+        # Recruiter A
+        recruiter_role_a = UserRoleModel(
+            user_id=recruiter_a.id,
+            role_id=test_roles[UserRoleEnum.RECRUITER.value].id
+        )
+        db_session.add(recruiter_role_a)
+
+        # Recruiter B
+        recruiter_role_b = UserRoleModel(
+            user_id=recruiter_b.id,
+            role_id=test_roles[UserRoleEnum.RECRUITER.value].id
+        )
+        db_session.add(recruiter_role_b)
+
+        # Employer A
+        employer_role_a = UserRoleModel(
+            user_id=employer_a.id,
+            role_id=test_roles[UserRoleEnum.EMPLOYER.value].id
+        )
+        db_session.add(employer_role_a)
+
+        # Employer B
+        employer_role_b = UserRoleModel(
+            user_id=employer_b.id,
+            role_id=test_roles[UserRoleEnum.EMPLOYER.value].id
+        )
+        db_session.add(employer_role_b)
+
+        # Candidate A
+        candidate_role_a = UserRoleModel(
+            user_id=candidate_a.id,
+            role_id=test_roles[UserRoleEnum.CANDIDATE.value].id
+        )
+        db_session.add(candidate_role_a)
+
+        # Candidate B
+        candidate_role_b = UserRoleModel(
+            user_id=candidate_b.id,
+            role_id=test_roles[UserRoleEnum.CANDIDATE.value].id
+        )
+        db_session.add(candidate_role_b)
+
+        await db_session.commit()
+        await db_session.refresh(company_a)
+        await db_session.refresh(company_b)
+        await db_session.refresh(company_admin_a)
+        await db_session.refresh(company_admin_b)
+        await db_session.refresh(recruiter_a)
+        await db_session.refresh(recruiter_b)
+        await db_session.refresh(employer_a)
+        await db_session.refresh(employer_b)
+        await db_session.refresh(candidate_a)
+        await db_session.refresh(candidate_b)
 
         return {
             "company_a": company_a,
@@ -181,10 +239,10 @@ class TestCrossCompanyAccessPrevention:
 
     def _create_auth_headers(self, user: User) -> dict:
         """Create authentication headers for a user."""
-        auth_service = AuthService()
-        access_token = auth_service.create_access_token(data={"sub": user.email})
+        access_token = auth_service.create_access_token(data={"sub": str(user.id), "email": user.email})
         return {"Authorization": f"Bearer {access_token}"}
 
+    @pytest.mark.asyncio
     async def test_company_admin_cannot_access_other_company_users(
         self, client: AsyncClient, setup_cross_company_scenario: dict
     ):
@@ -214,6 +272,7 @@ class TestCrossCompanyAccessPrevention:
         )
         assert response.status_code == 403
 
+    @pytest.mark.asyncio
     async def test_company_admin_cannot_create_users_in_other_companies(
         self, client: AsyncClient, setup_cross_company_scenario: dict
     ):
@@ -237,8 +296,9 @@ class TestCrossCompanyAccessPrevention:
         )
         assert response.status_code == 403
 
+    @pytest.mark.asyncio
     async def test_recruiter_cannot_access_other_company_positions(
-        self, client: AsyncClient, db: AsyncSession, setup_cross_company_scenario: dict
+        self, client: AsyncClient, db_session: AsyncSession, setup_cross_company_scenario: dict
     ):
         """Test Recruiter cannot access positions from other companies."""
         scenario = setup_cross_company_scenario
@@ -255,9 +315,9 @@ class TestCrossCompanyAccessPrevention:
             status="published",
             slug="software-engineer-b"
         )
-        db.add(position_b)
-        await db.commit()
-        await db.refresh(position_b)
+        db_session.add(position_b)
+        await db_session.commit()
+        await db_session.refresh(position_b)
 
         recruiter_a_headers = self._create_auth_headers(scenario["recruiter_a"])
 
@@ -276,8 +336,9 @@ class TestCrossCompanyAccessPrevention:
         )
         assert response.status_code == 403
 
+    @pytest.mark.asyncio
     async def test_employer_cannot_access_other_company_interviews(
-        self, client: AsyncClient, db: AsyncSession, setup_cross_company_scenario: dict
+        self, client: AsyncClient, db_session: AsyncSession, setup_cross_company_scenario: dict
     ):
         """Test Employer cannot access interviews from other companies."""
         scenario = setup_cross_company_scenario
@@ -294,8 +355,8 @@ class TestCrossCompanyAccessPrevention:
             status="published",
             slug="backend-developer-b"
         )
-        db.add(position_b)
-        await db.flush()
+        db_session.add(position_b)
+        await db_session.flush()
 
         interview_b = Interview(
             position_id=position_b.id,
@@ -306,9 +367,9 @@ class TestCrossCompanyAccessPrevention:
             interview_type="technical",
             status="scheduled"
         )
-        db.add(interview_b)
-        await db.commit()
-        await db.refresh(interview_b)
+        db_session.add(interview_b)
+        await db_session.commit()
+        await db_session.refresh(interview_b)
 
         employer_a_headers = self._create_auth_headers(scenario["employer_a"])
 
@@ -327,6 +388,7 @@ class TestCrossCompanyAccessPrevention:
         )
         assert response.status_code == 403
 
+    @pytest.mark.asyncio
     async def test_cross_company_messaging_restrictions(
         self, client: AsyncClient, setup_cross_company_scenario: dict
     ):
@@ -365,8 +427,9 @@ class TestCrossCompanyAccessPrevention:
         )
         assert response.status_code == 403
 
+    @pytest.mark.asyncio
     async def test_cross_company_file_access_prevention(
-        self, client: AsyncClient, db: AsyncSession, setup_cross_company_scenario: dict
+        self, client: AsyncClient, db_session: AsyncSession, setup_cross_company_scenario: dict
     ):
         """Test file access restrictions between companies."""
         scenario = setup_cross_company_scenario
@@ -382,9 +445,9 @@ class TestCrossCompanyAccessPrevention:
             owner_id=scenario["employer_b"].id,
             is_available=True
         )
-        db.add(file_b)
-        await db.commit()
-        await db.refresh(file_b)
+        db_session.add(file_b)
+        await db_session.commit()
+        await db_session.refresh(file_b)
 
         employer_a_headers = self._create_auth_headers(scenario["employer_a"])
 
@@ -402,8 +465,9 @@ class TestCrossCompanyAccessPrevention:
         )
         assert response.status_code == 403
 
+    @pytest.mark.asyncio
     async def test_cross_company_resume_access_prevention(
-        self, client: AsyncClient, db: AsyncSession, setup_cross_company_scenario: dict
+        self, client: AsyncClient, db_session: AsyncSession, setup_cross_company_scenario: dict
     ):
         """Test resume access restrictions between companies."""
         scenario = setup_cross_company_scenario
@@ -417,9 +481,9 @@ class TestCrossCompanyAccessPrevention:
             experience_years=3,
             is_public=False
         )
-        db.add(resume_a)
-        await db.commit()
-        await db.refresh(resume_a)
+        db_session.add(resume_a)
+        await db_session.commit()
+        await db_session.refresh(resume_a)
 
         # Company B recruiter tries to access private resume
         recruiter_b_headers = self._create_auth_headers(scenario["recruiter_b"])
@@ -430,6 +494,7 @@ class TestCrossCompanyAccessPrevention:
         )
         assert response.status_code == 403
 
+    @pytest.mark.asyncio
     async def test_cross_company_todo_assignment_prevention(
         self, client: AsyncClient, setup_cross_company_scenario: dict
     ):
@@ -472,8 +537,9 @@ class TestCrossCompanyAccessPrevention:
         )
         assert response.status_code == 403
 
+    @pytest.mark.asyncio
     async def test_cross_company_recruitment_process_isolation(
-        self, client: AsyncClient, db: AsyncSession, setup_cross_company_scenario: dict
+        self, client: AsyncClient, db_session: AsyncSession, setup_cross_company_scenario: dict
     ):
         """Test recruitment process isolation between companies."""
         scenario = setup_cross_company_scenario
@@ -486,8 +552,8 @@ class TestCrossCompanyAccessPrevention:
             created_by=scenario["company_admin_b"].id,
             is_active=True
         )
-        db.add(recruitment_process_b)
-        await db.flush()
+        db_session.add(recruitment_process_b)
+        await db_session.flush()
 
         # Create process node for Company B
         process_node_b = ProcessNode(
@@ -497,10 +563,10 @@ class TestCrossCompanyAccessPrevention:
             order_index=1,
             is_active=True
         )
-        db.add(process_node_b)
-        await db.commit()
-        await db.refresh(recruitment_process_b)
-        await db.refresh(process_node_b)
+        db_session.add(process_node_b)
+        await db_session.commit()
+        await db_session.refresh(recruitment_process_b)
+        await db_session.refresh(process_node_b)
 
         # Company A admin tries to access Company B recruitment process
         admin_a_headers = self._create_auth_headers(scenario["company_admin_a"])
@@ -521,8 +587,9 @@ class TestCrossCompanyAccessPrevention:
         )
         assert response.status_code == 403
 
+    @pytest.mark.asyncio
     async def test_cross_company_candidate_process_isolation(
-        self, client: AsyncClient, db: AsyncSession, setup_cross_company_scenario: dict
+        self, client: AsyncClient, db_session: AsyncSession, setup_cross_company_scenario: dict
     ):
         """Test candidate process isolation between companies."""
         scenario = setup_cross_company_scenario
@@ -539,8 +606,8 @@ class TestCrossCompanyAccessPrevention:
             status="published",
             slug="data-scientist-b"
         )
-        db.add(position_b)
-        await db.flush()
+        db_session.add(position_b)
+        await db_session.flush()
 
         recruitment_process_b = RecruitmentProcess(
             name="Data Science Hiring",
@@ -549,8 +616,8 @@ class TestCrossCompanyAccessPrevention:
             created_by=scenario["recruiter_b"].id,
             is_active=True
         )
-        db.add(recruitment_process_b)
-        await db.flush()
+        db_session.add(recruitment_process_b)
+        await db_session.flush()
 
         # Create candidate process for Company B
         candidate_process_b = CandidateProcess(
@@ -560,9 +627,9 @@ class TestCrossCompanyAccessPrevention:
             current_stage="application_review",
             status="in_progress"
         )
-        db.add(candidate_process_b)
-        await db.commit()
-        await db.refresh(candidate_process_b)
+        db_session.add(candidate_process_b)
+        await db_session.commit()
+        await db_session.refresh(candidate_process_b)
 
         # Company A recruiter tries to access Company B candidate process
         recruiter_a_headers = self._create_auth_headers(scenario["recruiter_a"])
@@ -583,6 +650,7 @@ class TestCrossCompanyAccessPrevention:
         )
         assert response.status_code == 403
 
+    @pytest.mark.asyncio
     async def test_cross_company_bulk_operations_prevention(
         self, client: AsyncClient, setup_cross_company_scenario: dict
     ):
@@ -617,6 +685,7 @@ class TestCrossCompanyAccessPrevention:
         )
         assert response.status_code == 403
 
+    @pytest.mark.asyncio
     async def test_cross_company_search_isolation(
         self, client: AsyncClient, setup_cross_company_scenario: dict
     ):
@@ -645,6 +714,7 @@ class TestCrossCompanyAccessPrevention:
         )
         assert response.status_code == 200
 
+    @pytest.mark.asyncio
     async def test_cross_company_statistics_isolation(
         self, client: AsyncClient, setup_cross_company_scenario: dict
     ):
@@ -673,6 +743,7 @@ class TestCrossCompanyAccessPrevention:
         )
         assert response.status_code == 200
 
+    @pytest.mark.asyncio
     async def test_cross_company_export_isolation(
         self, client: AsyncClient, setup_cross_company_scenario: dict
     ):

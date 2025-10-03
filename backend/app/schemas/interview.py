@@ -10,6 +10,7 @@ class InterviewCreate(BaseModel):
     candidate_id: int
     recruiter_id: int
     employer_company_id: int
+    workflow_id: Optional[int] = None
     title: str
     description: Optional[str] = None
     position_title: Optional[str] = None
@@ -25,6 +26,7 @@ class InterviewCreate(BaseModel):
 
 
 class InterviewUpdate(BaseModel):
+    workflow_id: Optional[int] = None
     title: Optional[str] = None
     description: Optional[str] = None
     position_title: Optional[str] = None
@@ -108,6 +110,7 @@ class InterviewInfo(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    workflow_id: Optional[int] = None
     title: str
     description: Optional[str] = None
     position_title: Optional[str] = None
@@ -171,6 +174,7 @@ class InterviewsListRequest(BaseModel):
     candidate_id: Optional[int] = None
     recruiter_id: Optional[int] = None
     employer_company_id: Optional[int] = None
+    workflow_id: Optional[int] = None
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
     limit: int = 50

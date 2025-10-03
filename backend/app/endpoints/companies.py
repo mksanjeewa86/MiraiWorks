@@ -206,15 +206,19 @@ async def create_company(
     db.add(admin_user)
     await db.flush()
 
-    role_query = select(Role).where(Role.name == UserRoleEnum.COMPANY_ADMIN)
+    role_query = select(Role).where(Role.name == UserRoleEnum.COMPANY_ADMIN.value)
     role_result = await db.execute(role_query)
     admin_role = role_result.scalar_one_or_none()
 
     if not admin_role:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Admin role not found in system",
+        # Try to create the role if it doesn't exist
+        admin_role = Role(
+            name=UserRoleEnum.COMPANY_ADMIN.value,
+            description="Company Administrator role"
         )
+        db.add(admin_role)
+        await db.flush()
+        logger.info(f"Created missing {UserRoleEnum.COMPANY_ADMIN.value} role")
 
     user_role = UserRole(user_id=admin_user.id, role_id=admin_role.id)
     db.add(user_role)

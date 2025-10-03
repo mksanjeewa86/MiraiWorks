@@ -22,6 +22,7 @@ class TodoBase(BaseModel):
     due_date: Optional[datetime] = None
     status: Optional[str] = Field(default=TodoStatus.PENDING.value)
     assigned_user_id: Optional[int] = None
+    workflow_id: Optional[int] = None
     visibility: Optional[str] = Field(default=TodoVisibility.PRIVATE.value)
     viewer_ids: list[int] | None = None
 
@@ -116,6 +117,7 @@ class TodoUpdate(BaseModel):
     due_date: Optional[datetime] = None
     status: Optional[str] = None
     assigned_user_id: Optional[int] = None
+    workflow_id: Optional[int] = None
     visibility: Optional[str] = None
     viewer_ids: list[int] | None = None
 
@@ -176,6 +178,7 @@ class TodoRead(BaseModel):
     created_by: Optional[int] = None  # Add created_by field
     last_updated_by: Optional[int] = None  # Add last_updated_by field
     assigned_user_id: Optional[int] = None
+    workflow_id: Optional[int] = None
     title: str
     description: Optional[str] = None
     notes: Optional[str] = None

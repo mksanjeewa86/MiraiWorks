@@ -47,8 +47,8 @@ elif os.getenv("GITHUB_ACTIONS"):
     # GitHub Actions default
     TEST_DATABASE_URL = "mysql+asyncmy://changeme:changeme@127.0.0.1:3307/miraiworks_test"
 else:
-    # Local Docker development
-    TEST_DATABASE_URL = "mysql+asyncmy://changeme:changeme@localhost:3307/miraiworks_test"
+    # Local development with MySQL 8.4
+    TEST_DATABASE_URL = "mysql+asyncmy://hrms:hrms@localhost:3306/miraiworks_test"
 
 # Create test engine with optimized settings for fast tests
 test_engine = create_async_engine(
@@ -159,8 +159,8 @@ def setup_test_environment():
     if os.getenv("GITHUB_ACTIONS") or os.getenv("DATABASE_URL"):
         print("Running in CI/CD environment - using managed database service")
         yield
-    else:
-        # Local development - manage Docker container
+    elif os.getenv("USE_DOCKER", "false").lower() == "true":
+        # Only use Docker if explicitly requested
         if not start_test_database():
             pytest.exit("Failed to start MySQL test database")
 
@@ -169,6 +169,10 @@ def setup_test_environment():
 
         # Don't stop database for faster subsequent runs
         print("Test session complete - database kept running")
+    else:
+        # Local development - use existing MySQL instance
+        print("Using local MySQL instance for testing")
+        yield
 
 @pytest.fixture(scope="session")
 def event_loop():
@@ -275,11 +279,22 @@ async def client():
 @pytest_asyncio.fixture
 async def test_roles(db_session):
     """Create test roles."""
+    from sqlalchemy import select
+    
     roles = {}
     for role_name in UserRoleEnum:
-        role = Role(name=role_name.value, description=f"Test {role_name.value} role")
-        db_session.add(role)
-        roles[role_name.value] = role
+        # Check if role already exists
+        result = await db_session.execute(
+            select(Role).where(Role.name == role_name.value)
+        )
+        existing_role = result.scalar_one_or_none()
+        
+        if existing_role:
+            roles[role_name.value] = existing_role
+        else:
+            role = Role(name=role_name.value, description=f"Test {role_name.value} role")
+            db_session.add(role)
+            roles[role_name.value] = role
 
     await db_session.commit()
 

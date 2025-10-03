@@ -336,6 +336,7 @@ class TestMBTIEndpoints:
             {
                 "question_number": 100,
                 "dimension": "E_I",
+                "direction": "+",
                 "question_text_en": "Do you prefer working in groups?",
                 "question_text_ja": "グループで働くことを好みますか？",
                 "option_a_en": "Yes, I love collaboration",

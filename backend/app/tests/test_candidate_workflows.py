@@ -32,6 +32,7 @@ async def test_admin_can_list_candidates(
     db_session: AsyncSession,
     test_roles: dict[str, Role],
     test_admin_user: User,
+    test_company,  # Add test_company dependency
 ):
     await ensure_role(db_session, test_roles, UserRoleEnum.CANDIDATE)
 
@@ -39,7 +40,7 @@ async def test_admin_can_list_candidates(
         email="workflow.candidate@example.com",
         first_name="Workflow",
         last_name="Candidate",
-        company_id=test_admin_user.company_id,
+        company_id=test_company.id,  # Use test_company.id directly for safety
         hashed_password=auth_service.get_password_hash("candidatepass"),
         is_active=True,
     )

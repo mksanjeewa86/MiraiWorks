@@ -99,6 +99,11 @@ class TestTodoManagementPermissionMatrix:
         test_roles: dict,
     ):
         """Test that Super Admin can assign todos to any user."""
+        # Create super admin user
+        super_admin = await self._create_user_with_role(
+            db_session, test_company, test_roles, UserRoleEnum.SUPER_ADMIN, "superadmin@test.com"
+        )
+        
         # Create users in different companies
         user1 = await self._create_user_with_role(
             db_session, test_company, test_roles, UserRoleEnum.RECRUITER, "recruiter1@test.com"
@@ -108,19 +113,19 @@ class TestTodoManagementPermissionMatrix:
             db_session, other_company, test_roles, UserRoleEnum.RECRUITER, "recruiter2@test.com"
         )
 
-        # Create todo
-        todo = await self._create_todo(db_session, None, "Super Admin Todo")
+        # Create todo with super admin as owner
+        todo = await self._create_todo(db_session, super_admin.id, "Super Admin Todo")
 
         # Super admin should be able to assign to any user
-        assign_data = {"assignee_id": user1.id}
-        response = await client.post(
+        assign_data = {"assigned_user_id": user1.id}
+        response = await client.put(
             f"/api/todos/{todo.id}/assign", json=assign_data, headers=super_admin_auth_headers
         )
         assert response.status_code == 200
 
         # Should also be able to assign to user from different company
-        assign_data = {"assignee_id": user2.id}
-        response = await client.post(
+        assign_data = {"assigned_user_id": user2.id}
+        response = await client.put(
             f"/api/todos/{todo.id}/assign", json=assign_data, headers=super_admin_auth_headers
         )
         assert response.status_code == 200
@@ -150,15 +155,15 @@ class TestTodoManagementPermissionMatrix:
         todo = await self._create_todo(db_session, company_admin.id, "Company Admin Todo")
 
         # Should be able to assign to same company user
-        assign_data = {"assignee_id": company_user.id}
-        response = await client.post(
+        assign_data = {"assigned_user_id": company_user.id}
+        response = await client.put(
             f"/api/todos/{todo.id}/assign", json=assign_data, headers=headers
         )
         assert response.status_code == 200
 
         # Should NOT be able to assign to other company user
-        assign_data = {"assignee_id": other_user.id}
-        response = await client.post(
+        assign_data = {"assigned_user_id": other_user.id}
+        response = await client.put(
             f"/api/todos/{todo.id}/assign", json=assign_data, headers=headers
         )
         assert response.status_code == 403
@@ -189,15 +194,15 @@ class TestTodoManagementPermissionMatrix:
         todo = await self._create_todo(db_session, recruiter.id, "Recruiter Todo")
 
         # Should be able to assign to same company user
-        assign_data = {"assignee_id": company_user.id}
-        response = await client.post(
+        assign_data = {"assigned_user_id": company_user.id}
+        response = await client.put(
             f"/api/todos/{todo.id}/assign", json=assign_data, headers=headers
         )
         assert response.status_code == 200
 
         # Should NOT be able to assign to other company user
-        assign_data = {"assignee_id": other_user.id}
-        response = await client.post(
+        assign_data = {"assigned_user_id": other_user.id}
+        response = await client.put(
             f"/api/todos/{todo.id}/assign", json=assign_data, headers=headers
         )
         assert response.status_code == 403
@@ -228,15 +233,15 @@ class TestTodoManagementPermissionMatrix:
         todo = await self._create_todo(db_session, employer.id, "Employer Todo")
 
         # Should be able to assign to same company user
-        assign_data = {"assignee_id": company_user.id}
-        response = await client.post(
+        assign_data = {"assigned_user_id": company_user.id}
+        response = await client.put(
             f"/api/todos/{todo.id}/assign", json=assign_data, headers=headers
         )
         assert response.status_code == 200
 
         # Should NOT be able to assign to other company user
-        assign_data = {"assignee_id": other_user.id}
-        response = await client.post(
+        assign_data = {"assigned_user_id": other_user.id}
+        response = await client.put(
             f"/api/todos/{todo.id}/assign", json=assign_data, headers=headers
         )
         assert response.status_code == 403
@@ -262,8 +267,8 @@ class TestTodoManagementPermissionMatrix:
         todo = await self._create_todo(db_session, candidate.id, "Candidate Todo")
 
         # Should NOT be able to assign to others
-        assign_data = {"assignee_id": other_user.id}
-        response = await client.post(
+        assign_data = {"assigned_user_id": other_user.id}
+        response = await client.put(
             f"/api/todos/{todo.id}/assign", json=assign_data, headers=headers
         )
 
@@ -390,13 +395,13 @@ class TestTodoManagementPermissionMatrix:
         update_data = {"title": "Updated Todo"}
 
         # Owner should be able to update
-        response = await client.put(
+        response = await client.post(
             f"/api/todos/{todo.id}", json=update_data, headers=owner_headers
         )
         assert response.status_code == 200
 
         # Assignee should be able to update
-        response = await client.put(
+        response = await client.post(
             f"/api/todos/{todo.id}", json=update_data, headers=assignee_headers
         )
         assert response.status_code == 200
@@ -422,7 +427,7 @@ class TestTodoManagementPermissionMatrix:
 
         update_data = {"title": "Unauthorized Update"}
 
-        response = await client.put(
+        response = await client.post(
             f"/api/todos/{todo.id}", json=update_data, headers=other_user_headers
         )
 
@@ -667,7 +672,7 @@ class TestTodoManagementPermissionMatrix:
             ("GET", f"/api/todos/{todo.id}"),
             ("PUT", f"/api/todos/{todo.id}"),
             ("DELETE", f"/api/todos/{todo.id}"),
-            ("POST", f"/api/todos/{todo.id}/assign"),
+            ("PUT", f"/api/todos/{todo.id}/assign"),
             ("POST", f"/api/todos/{todo.id}/complete"),
             ("GET", f"/api/todos/{todo.id}/attachments"),
             ("POST", f"/api/todos/{todo.id}/attachments"),

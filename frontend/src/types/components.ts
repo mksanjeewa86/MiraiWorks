@@ -319,7 +319,8 @@ export interface NavItem {
   name: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
-  roles: string[];
+  roles?: string[];
+  contexts?: string[];
   color: string;
   lightColor: string;
 }

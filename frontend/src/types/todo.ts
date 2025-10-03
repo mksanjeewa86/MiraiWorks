@@ -8,6 +8,7 @@ export interface Todo {
   id: number;
   owner_id: number;
   assigned_user_id?: number | null;
+  workflow_id?: number | null;
   title: string;
   description?: string | null;
   notes?: string | null;
@@ -50,6 +51,7 @@ export interface TodoPayload {
   due_date?: string | null;
   status?: TodoStatus;
   assigned_user_id?: number | null;
+  workflow_id?: number | null;
   visibility?: TodoVisibility;
   viewer_ids?: number[];
   todo_type?: TodoType;

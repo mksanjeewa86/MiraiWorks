@@ -4,6 +4,7 @@ export interface Interview {
   candidate_id: number;
   recruiter_id: number;
   employer_company_id: number;
+  workflow_id?: number;
   title: string;
   description?: string;
   position_title?: string;

@@ -27,31 +27,55 @@ const navigationItems: NavItem[] = [
     name: 'Dashboard',
     href: '/dashboard',
     icon: LayoutDashboard,
-    roles: ['candidate', 'recruiter', 'employer', 'company_admin', 'super_admin'],
+    contexts: ['super_admin', 'company_admin_employer', 'company_admin_recruiter', 'user_employer', 'user_recruiter', 'candidate'],
     color: 'bg-blue-600',
     lightColor: 'bg-blue-500',
   },
   {
-    name: 'Jobs',
+    name: 'Companies',
+    href: '/companies',
+    icon: Building2,
+    contexts: ['super_admin'], // Only super admin can manage all companies
+    color: 'bg-amber-600',
+    lightColor: 'bg-amber-500',
+  },
+  {
+    name: 'Company Users',
+    href: '/users',
+    icon: Users,
+    contexts: ['company_admin_employer', 'company_admin_recruiter'], // Only company admins
+    color: 'bg-cyan-600',
+    lightColor: 'bg-cyan-500',
+  },
+  {
+    name: 'Job Search',
     href: '/jobs',
     icon: Briefcase,
-    roles: ['candidate'],
+    contexts: ['candidate'], // Only candidates search for jobs
     color: 'bg-emerald-600',
     lightColor: 'bg-emerald-500',
   },
   {
-    name: 'Positions',
+    name: 'Job Postings',
     href: '/positions',
     icon: Briefcase,
-    roles: ['employer', 'company_admin'],
+    contexts: ['company_admin_employer', 'user_employer'], // Employee companies post jobs
     color: 'bg-emerald-600',
     lightColor: 'bg-emerald-500',
+  },
+  {
+    name: 'Client Companies',
+    href: '/clients',
+    icon: Building2,
+    contexts: ['company_admin_recruiter', 'user_recruiter'], // Recruitment companies manage clients
+    color: 'bg-blue-600',
+    lightColor: 'bg-blue-500',
   },
   {
     name: 'Workflows',
     href: '/workflows',
     icon: GitBranch,
-    roles: ['employer', 'company_admin'],
+    contexts: ['company_admin_employer', 'user_employer', 'company_admin_recruiter'], // Recruitment workflows
     color: 'bg-violet-600',
     lightColor: 'bg-violet-500',
   },
@@ -59,7 +83,7 @@ const navigationItems: NavItem[] = [
     name: 'Candidates',
     href: '/candidates',
     icon: Users,
-    roles: ['recruiter', 'company_admin'],
+    contexts: ['company_admin_employer', 'user_employer', 'company_admin_recruiter', 'user_recruiter'],
     color: 'bg-purple-600',
     lightColor: 'bg-purple-500',
   },
@@ -67,7 +91,7 @@ const navigationItems: NavItem[] = [
     name: 'Messages',
     href: '/messages',
     icon: MessageSquare,
-    roles: ['candidate', 'recruiter', 'employer', 'company_admin', 'super_admin'],
+    contexts: ['super_admin', 'company_admin_employer', 'company_admin_recruiter', 'user_employer', 'user_recruiter', 'candidate'],
     color: 'bg-orange-600',
     lightColor: 'bg-orange-500',
   },
@@ -75,7 +99,7 @@ const navigationItems: NavItem[] = [
     name: 'Calendar',
     href: '/calendar',
     icon: Calendar,
-    roles: ['candidate', 'recruiter', 'employer', 'company_admin'],
+    contexts: ['company_admin_employer', 'company_admin_recruiter', 'user_employer', 'user_recruiter', 'candidate'],
     color: 'bg-red-600',
     lightColor: 'bg-red-500',
   },
@@ -83,7 +107,7 @@ const navigationItems: NavItem[] = [
     name: 'Todos',
     href: '/todos',
     icon: CheckSquare,
-    roles: ['candidate', 'recruiter', 'employer', 'company_admin', 'super_admin'],
+    contexts: ['super_admin', 'company_admin_employer', 'company_admin_recruiter', 'user_employer', 'user_recruiter', 'candidate'],
     color: 'bg-lime-600',
     lightColor: 'bg-lime-500',
   },
@@ -91,7 +115,7 @@ const navigationItems: NavItem[] = [
     name: 'Interviews',
     href: '/interviews',
     icon: Video,
-    roles: ['candidate', 'recruiter', 'employer', 'company_admin'],
+    contexts: ['company_admin_employer', 'company_admin_recruiter', 'user_employer', 'user_recruiter', 'candidate'],
     color: 'bg-indigo-600',
     lightColor: 'bg-indigo-500',
   },
@@ -99,7 +123,15 @@ const navigationItems: NavItem[] = [
     name: 'Resume',
     href: '/resumes',
     icon: FileText,
-    roles: ['candidate'],
+    contexts: ['candidate'], // Only candidates manage resumes
+    color: 'bg-teal-600',
+    lightColor: 'bg-teal-500',
+  },
+  {
+    name: 'My Applications',
+    href: '/applications',
+    icon: FileText,
+    contexts: ['candidate'], // Only candidates track applications
     color: 'bg-teal-600',
     lightColor: 'bg-teal-500',
   },
@@ -107,31 +139,23 @@ const navigationItems: NavItem[] = [
     name: 'Profile',
     href: '/profile',
     icon: User,
-    roles: ['candidate', 'recruiter', 'employer', 'company_admin', 'super_admin'],
+    contexts: ['super_admin', 'company_admin_employer', 'company_admin_recruiter', 'user_employer', 'user_recruiter', 'candidate'],
     color: 'bg-pink-600',
     lightColor: 'bg-pink-500',
   },
   {
-    name: 'Companies',
-    href: '/companies',
-    icon: Building2,
-    roles: ['super_admin'],
-    color: 'bg-amber-600',
-    lightColor: 'bg-amber-500',
-  },
-  {
-    name: 'Users',
-    href: '/users',
-    icon: Users,
-    roles: ['super_admin', 'company_admin'],
-    color: 'bg-cyan-600',
-    lightColor: 'bg-cyan-500',
+    name: 'Company Settings',
+    href: '/settings',
+    icon: Settings,
+    contexts: ['company_admin_employer', 'company_admin_recruiter'], // Only company admins
+    color: 'bg-gray-600',
+    lightColor: 'bg-gray-500',
   },
   {
     name: 'Settings',
     href: '/settings',
     icon: Settings,
-    roles: ['candidate', 'recruiter', 'employer', 'company_admin', 'super_admin'],
+    contexts: ['super_admin', 'user_employer', 'user_recruiter', 'candidate'], // Personal settings
     color: 'bg-gray-600',
     lightColor: 'bg-gray-500',
   },
@@ -152,10 +176,41 @@ export default function Sidebar({
   const colorScheme = getRoleColorScheme(user?.roles);
   const roleDisplayName = getRoleDisplayName(user?.roles);
 
-  // Filter navigation items based on user role
+  // Get user context (role + company type)
+  const getUserContext = (user: any): string => {
+    if (!user?.roles?.length) return 'unknown';
+    
+    const userRole = user.roles[0]?.role.name;
+    
+    if (userRole === 'admin' && !user.company_id) {
+      return 'super_admin';
+    }
+    
+    if ((userRole === 'admin' || userRole === 'hr_manager') && user.company) {
+      const companyType = user.company.type?.toLowerCase();
+      return `company_admin_${companyType}`;
+    }
+    
+    if (userRole === 'recruiter' && user.company) {
+      const companyType = user.company.type?.toLowerCase();
+      return `user_${companyType}`;
+    }
+    
+    if (userRole === 'candidate') {
+      return 'candidate';
+    }
+    
+    return 'unknown';
+  };
+
+  const userContext = getUserContext(user);
+
+  // Filter navigation items based on user context
   const allVisibleItems = navigationItems.filter((item) => {
     if (!user?.roles?.length) return false;
-    return user.roles.some((userRole) => item.roles.includes(userRole.role.name));
+    return item.contexts?.includes(userContext) || item.roles?.some((role) => 
+      user.roles.some((userRole) => userRole.role.name === role)
+    );
   });
 
   // Separate main navigation from settings/profile
