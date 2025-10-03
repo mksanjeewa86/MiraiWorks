@@ -491,7 +491,9 @@ print(f"Soft deleted interviews: {interview_count.scalar()}")
 - [x] Indexes created for performance
 - [x] Foreign key constraints added
 - [x] Documentation written
-- [ ] Integration tests added
+- [x] Integration tests added
+- [x] Backend schemas updated
+- [ ] pytest-asyncio compatibility issue fixed (requires upgrade to 0.23+)
 - [ ] Frontend updated to use workflow_id
 
 ---

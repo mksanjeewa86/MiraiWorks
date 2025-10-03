@@ -22,6 +22,7 @@ class InterviewCreate(BaseModel):
     meeting_url: Optional[str] = None
     video_call_type: Optional[str] = None
     notes: Optional[str] = None
+    workflow_id: Optional[int] = None
 
 
 class InterviewUpdate(BaseModel):
@@ -37,6 +38,7 @@ class InterviewUpdate(BaseModel):
     scheduled_start: Optional[datetime] = None
     scheduled_end: Optional[datetime] = None
     timezone: Optional[str] = None
+    workflow_id: Optional[int] = None
 
 
 class ProposalCreate(BaseModel):
@@ -128,6 +130,7 @@ class InterviewInfo(BaseModel):
 
     notes: Optional[str] = None
     preparation_notes: Optional[str] = None
+    workflow_id: Optional[int] = None
     created_by: Optional[int] = None
     confirmed_by: Optional[int] = None
     confirmed_at: Optional[datetime] = None

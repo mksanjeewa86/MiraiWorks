@@ -24,6 +24,7 @@ class TodoBase(BaseModel):
     assigned_user_id: Optional[int] = None
     visibility: Optional[str] = Field(default=TodoVisibility.PRIVATE.value)
     viewer_ids: list[int] | None = None
+    workflow_id: Optional[int] = None
 
     # Assignment workflow fields
     todo_type: Optional[str] = Field(default=TodoType.REGULAR.value)
