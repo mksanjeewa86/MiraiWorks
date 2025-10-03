@@ -431,7 +431,7 @@ async def test_admin_user(db_session, test_company, test_roles):
 
     # Assign company admin role
     user_role = UserRole(
-        user_id=user.id, role_id=test_roles[UserRoleEnum.COMPANY_ADMIN.value].id
+        user_id=user.id, role_id=test_roles[UserRoleEnum.ADMIN.value].id
     )
     db_session.add(user_role)
     await db_session.commit()
@@ -456,7 +456,7 @@ async def test_employer_user(db_session, test_company, test_roles):
     await db_session.refresh(user)
 
     user_role = UserRole(
-        user_id=user.id, role_id=test_roles[UserRoleEnum.EMPLOYER.value].id
+        user_id=user.id, role_id=test_roles[UserRoleEnum.MEMBER.value].id
     )
     db_session.add(user_role)
     await db_session.commit()
@@ -506,7 +506,7 @@ async def test_super_admin(db_session, test_roles):
 
     # Assign super admin role
     user_role = UserRole(
-        user_id=user.id, role_id=test_roles[UserRoleEnum.SUPER_ADMIN.value].id
+        user_id=user.id, role_id=test_roles[UserRoleEnum.SYSTEM_ADMIN.value].id
     )
     db_session.add(user_role)
     await db_session.commit()
@@ -635,7 +635,7 @@ async def test_users(db_session, test_company, test_roles):
     await db_session.refresh(recruiter)
 
     recruiter_role = UserRole(
-        user_id=recruiter.id, role_id=test_roles[UserRoleEnum.EMPLOYER.value].id
+        user_id=recruiter.id, role_id=test_roles[UserRoleEnum.MEMBER.value].id
     )
     db_session.add(recruiter_role)
 
@@ -689,7 +689,7 @@ async def test_users(db_session, test_company, test_roles):
     await db_session.refresh(other_recruiter)
 
     other_recruiter_role = UserRole(
-        user_id=other_recruiter.id, role_id=test_roles[UserRoleEnum.EMPLOYER.value].id
+        user_id=other_recruiter.id, role_id=test_roles[UserRoleEnum.MEMBER.value].id
     )
     db_session.add(other_recruiter_role)
 

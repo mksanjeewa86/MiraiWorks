@@ -38,7 +38,7 @@ class TestUsersManagement:
         # Assign super admin role
         user_role = UserRole(
             user_id=super_admin.id,
-            role_id=test_roles[UserRoleEnum.SUPER_ADMIN.value].id,
+            role_id=test_roles[UserRoleEnum.SYSTEM_ADMIN.value].id,
         )
         db_session.add(user_role)
         await db_session.commit()
@@ -597,7 +597,7 @@ class TestUsersManagement:
         # Add company_admin role using test_roles fixture
         user_role = UserRole(
             user_id=company_admin.id,
-            role_id=test_roles[UserRoleEnum.COMPANY_ADMIN.value].id,
+            role_id=test_roles[UserRoleEnum.ADMIN.value].id,
         )
         db_session.add(user_role)
         await db_session.commit()
@@ -631,7 +631,7 @@ class TestUsersManagement:
             "first_name": "New",
             "last_name": "User",
             "company_id": test_company.id,
-            "roles": ["super_admin"],
+            "roles": ["system_admin"],
         }
 
         response = await client.post(
@@ -639,7 +639,7 @@ class TestUsersManagement:
         )
 
         assert response.status_code == 403
-        assert "super_admin" in response.json()["detail"].lower()
+        assert "system_admin" in response.json()["detail"].lower()
 
     @pytest.mark.asyncio
     async def test_company_admin_cannot_create_user_for_other_company(
@@ -671,7 +671,7 @@ class TestUsersManagement:
 
         user_role = UserRole(
             user_id=company_admin.id,
-            role_id=test_roles[UserRoleEnum.COMPANY_ADMIN.value].id,
+            role_id=test_roles[UserRoleEnum.ADMIN.value].id,
         )
         db_session.add(user_role)
         await db_session.commit()
@@ -685,7 +685,7 @@ class TestUsersManagement:
             name="Other Company",
             email="contact@other.com",
             phone="090-1234-5678",
-            type="recruiter",
+            type="member",
         )
         db_session.add(other_company)
         await db_session.commit()
@@ -716,7 +716,7 @@ class TestUsersManagement:
             "first_name": "New",
             "last_name": "User",
             "company_id": other_company.id,
-            "roles": ["recruiter"],
+            "roles": ["member"],
         }
 
         response = await client.post(
@@ -756,7 +756,7 @@ class TestUsersManagement:
 
         user_role = UserRole(
             user_id=company_admin.id,
-            role_id=test_roles[UserRoleEnum.COMPANY_ADMIN.value].id,
+            role_id=test_roles[UserRoleEnum.ADMIN.value].id,
         )
         db_session.add(user_role)
         await db_session.commit()
@@ -770,7 +770,7 @@ class TestUsersManagement:
             name="Other Company",
             email="contact@other.com",
             phone="090-1234-5678",
-            type="recruiter",
+            type="member",
         )
         db_session.add(other_company)
 
@@ -847,7 +847,7 @@ class TestUsersManagement:
 
         user_role = UserRole(
             user_id=company_admin.id,
-            role_id=test_roles[UserRoleEnum.COMPANY_ADMIN.value].id,
+            role_id=test_roles[UserRoleEnum.ADMIN.value].id,
         )
         db_session.add(user_role)
         await db_session.commit()
@@ -890,14 +890,14 @@ class TestUsersManagement:
         headers = {"Authorization": f"Bearer {token_data['access_token']}"}
 
         # Try to update user with super_admin role
-        update_data = {"roles": ["super_admin"]}
+        update_data = {"roles": ["system_admin"]}
 
         response = await client.put(
             f"/api/admin/users/{regular_user.id}", json=update_data, headers=headers
         )
 
         assert response.status_code == 403
-        assert "super_admin" in response.json()["detail"].lower()
+        assert "system_admin" in response.json()["detail"].lower()
 
     @pytest.mark.asyncio
     async def test_company_admin_cannot_move_user_to_other_company(
@@ -929,7 +929,7 @@ class TestUsersManagement:
 
         user_role = UserRole(
             user_id=company_admin.id,
-            role_id=test_roles[UserRoleEnum.COMPANY_ADMIN.value].id,
+            role_id=test_roles[UserRoleEnum.ADMIN.value].id,
         )
         db_session.add(user_role)
         await db_session.commit()
@@ -943,7 +943,7 @@ class TestUsersManagement:
             name="Other Company",
             email="contact@other.com",
             phone="090-1234-5678",
-            type="recruiter",
+            type="member",
         )
         db_session.add(other_company)
 
@@ -1230,7 +1230,7 @@ class TestUsersManagement:
         data = response.json()
         assert "users" in data
         for user in data["users"]:
-            assert "recruiter" in [role.lower() for role in user["roles"]]
+            assert "member" in [role.lower() for role in user["roles"]]
 
     @pytest.mark.asyncio
     async def test_get_users_filter_by_role_company_admin(
@@ -1245,7 +1245,7 @@ class TestUsersManagement:
         data = response.json()
         assert "users" in data
         for user in data["users"]:
-            assert "company_admin" in [role.lower() for role in user["roles"]]
+            assert "admin" in [role.lower() for role in user["roles"]]
 
     @pytest.mark.asyncio
     async def test_get_users_search_by_first_name(

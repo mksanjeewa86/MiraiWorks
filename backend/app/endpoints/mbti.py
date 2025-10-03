@@ -227,7 +227,7 @@ async def bulk_create_questions(
     """Bulk create MBTI questions (admin only)."""
     # Check if user is admin
     user_roles = await TodoPermissionService.get_user_roles(db, current_user.id)
-    if UserRoleEnum.COMPANY_ADMIN.value not in user_roles and UserRoleEnum.SUPER_ADMIN.value not in user_roles:
+    if UserRoleEnum.ADMIN.value not in user_roles and UserRoleEnum.SYSTEM_ADMIN.value not in user_roles:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
 
     questions = await mbti_question.bulk_create_questions(db, questions_data)

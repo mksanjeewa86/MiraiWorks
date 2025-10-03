@@ -339,8 +339,8 @@ function CompaniesPageContent() {
                 }}
               >
                 <option value="">All Types</option>
-                <option value="employer">Employer</option>
-                <option value="recruiter">Recruiter</option>
+                <option value="member">Employer</option>
+                <option value="member">Recruiter</option>
               </select>
             </div>
 
@@ -641,7 +641,7 @@ function CompaniesPageContent() {
 
 export default function CompaniesPage() {
   return (
-    <ProtectedRoute allowedRoles={['super_admin']}>
+    <ProtectedRoute allowedRoles={['system_admin']}>
       <CompaniesPageContent />
     </ProtectedRoute>
   );

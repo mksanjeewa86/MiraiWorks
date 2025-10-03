@@ -6,35 +6,62 @@
 import type { ColorScheme } from '@/types/ui';
 
 export const roleColorSchemes: Record<string, ColorScheme> = {
-  super_admin: {
-    // Deep purple/violet theme for super admins
-    background: 'bg-violet-950',
-    backgroundOverlay: 'bg-violet-900/30',
-    border: 'border-violet-700/30',
-    headerBackground: 'bg-violet-900/50',
+  system_admin: {
+    // Deep red theme for system admins
+    background: 'bg-red-950',
+    backgroundOverlay: 'bg-red-900/30',
+    border: 'border-red-700/30',
+    headerBackground: 'bg-red-900/50',
 
-    brandBackground: 'bg-violet-600',
-    brandAccent: 'bg-violet-500',
+    brandBackground: 'bg-red-600',
+    brandAccent: 'bg-red-500',
 
     textPrimary: 'text-white',
-    textSecondary: 'text-violet-200/80',
+    textSecondary: 'text-red-200/80',
 
-    buttonBorder: 'border-violet-600/30 hover:border-violet-500/50',
-    buttonHover: 'hover:bg-violet-800/50',
-    buttonActive: 'bg-violet-600',
+    buttonBorder: 'border-red-600/30 hover:border-red-500/50',
+    buttonHover: 'hover:bg-red-800/50',
+    buttonActive: 'bg-red-600',
 
-    avatarBackground: 'bg-violet-600',
-    avatarRing: 'ring-violet-600/50',
+    avatarBackground: 'bg-red-600',
+    avatarRing: 'ring-red-600/50',
 
-    activeIndicator: 'bg-violet-300',
-    activeIndicatorShadow: 'shadow-violet-300/50',
+    activeIndicator: 'bg-red-300',
+    activeIndicatorShadow: 'shadow-red-300/50',
 
-    statusIndicator: 'bg-violet-400',
-    statusIndicatorShadow: 'shadow-violet-400/50',
+    statusIndicator: 'bg-red-400',
+    statusIndicatorShadow: 'shadow-red-400/50',
   },
 
-  company_admin: {
-    // Deep blue theme for company admins
+  admin: {
+    // Deep green theme for company admins
+    background: 'bg-green-950',
+    backgroundOverlay: 'bg-green-900/30',
+    border: 'border-green-700/30',
+    headerBackground: 'bg-green-900/50',
+
+    brandBackground: 'bg-green-600',
+    brandAccent: 'bg-green-500',
+
+    textPrimary: 'text-white',
+    textSecondary: 'text-green-200/80',
+
+    buttonBorder: 'border-green-600/30 hover:border-green-500/50',
+    buttonHover: 'hover:bg-green-800/50',
+    buttonActive: 'bg-green-600',
+
+    avatarBackground: 'bg-green-600',
+    avatarRing: 'ring-green-600/50',
+
+    activeIndicator: 'bg-green-300',
+    activeIndicatorShadow: 'shadow-green-300/50',
+
+    statusIndicator: 'bg-green-400',
+    statusIndicatorShadow: 'shadow-green-400/50',
+  },
+
+  member: {
+    // Deep blue theme for members
     background: 'bg-blue-950',
     backgroundOverlay: 'bg-blue-900/30',
     border: 'border-blue-700/30',
@@ -60,35 +87,8 @@ export const roleColorSchemes: Record<string, ColorScheme> = {
     statusIndicatorShadow: 'shadow-blue-400/50',
   },
 
-  recruiter: {
-    // Deep emerald/green theme for recruiters
-    background: 'bg-emerald-950',
-    backgroundOverlay: 'bg-emerald-900/30',
-    border: 'border-emerald-700/30',
-    headerBackground: 'bg-emerald-900/50',
-
-    brandBackground: 'bg-emerald-600',
-    brandAccent: 'bg-emerald-500',
-
-    textPrimary: 'text-white',
-    textSecondary: 'text-emerald-200/80',
-
-    buttonBorder: 'border-emerald-600/30 hover:border-emerald-500/50',
-    buttonHover: 'hover:bg-emerald-800/50',
-    buttonActive: 'bg-emerald-600',
-
-    avatarBackground: 'bg-emerald-600',
-    avatarRing: 'ring-emerald-600/50',
-
-    activeIndicator: 'bg-emerald-300',
-    activeIndicatorShadow: 'shadow-emerald-300/50',
-
-    statusIndicator: 'bg-emerald-400',
-    statusIndicatorShadow: 'shadow-emerald-400/50',
-  },
-
-  employer: {
-    // Deep orange/amber theme for employers
+  candidate: {
+    // Deep orange theme for candidates
     background: 'bg-orange-950',
     backgroundOverlay: 'bg-orange-900/30',
     border: 'border-orange-700/30',
@@ -113,33 +113,6 @@ export const roleColorSchemes: Record<string, ColorScheme> = {
     statusIndicator: 'bg-orange-400',
     statusIndicatorShadow: 'shadow-orange-400/50',
   },
-
-  candidate: {
-    // Deep cyan/teal theme for candidates
-    background: 'bg-cyan-950',
-    backgroundOverlay: 'bg-cyan-900/30',
-    border: 'border-cyan-700/30',
-    headerBackground: 'bg-cyan-900/50',
-
-    brandBackground: 'bg-cyan-600',
-    brandAccent: 'bg-cyan-500',
-
-    textPrimary: 'text-white',
-    textSecondary: 'text-cyan-200/80',
-
-    buttonBorder: 'border-cyan-600/30 hover:border-cyan-500/50',
-    buttonHover: 'hover:bg-cyan-800/50',
-    buttonActive: 'bg-cyan-600',
-
-    avatarBackground: 'bg-cyan-600',
-    avatarRing: 'ring-cyan-600/50',
-
-    activeIndicator: 'bg-cyan-300',
-    activeIndicatorShadow: 'shadow-cyan-300/50',
-
-    statusIndicator: 'bg-cyan-400',
-    statusIndicatorShadow: 'shadow-cyan-400/50',
-  },
 };
 
 // Default color scheme (fallback)
@@ -156,7 +129,7 @@ export function getRoleColorScheme(userRoles?: Array<{ role: { name: string } }>
   }
 
   // Priority order for roles (highest to lowest)
-  const rolePriority = ['super_admin', 'company_admin', 'recruiter', 'employer', 'candidate'];
+  const rolePriority = ['system_admin', 'admin', 'member', 'candidate'];
 
   // Find the highest priority role
   for (const priority of rolePriority) {

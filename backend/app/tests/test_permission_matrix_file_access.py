@@ -244,10 +244,10 @@ class TestFileAccessControl:
     ):
         """Test that Company Admin can access company-permitted files."""
         company_admin = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.COMPANY_ADMIN, "companyadmin@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.ADMIN, "companyadmin@test.com"
         )
         company_user = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.RECRUITER, "recruiter@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
         )
 
         admin_headers = await self._get_auth_headers(client, company_admin)
@@ -272,12 +272,12 @@ class TestFileAccessControl:
     ):
         """Test that Company Admin cannot access files from other companies."""
         company_admin = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.COMPANY_ADMIN, "companyadmin@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.ADMIN, "companyadmin@test.com"
         )
 
         other_company = await self._create_other_company(db_session)
         other_user = await self._create_user_with_role(
-            db_session, other_company, test_roles, UserRoleEnum.RECRUITER, "otherrecruiter@test.com"
+            db_session, other_company, test_roles, UserRoleEnum.MEMBER, "otherrecruiter@test.com"
         )
 
         admin_headers = await self._get_auth_headers(client, company_admin)
@@ -306,10 +306,10 @@ class TestFileAccessControl:
         other_company = await self._create_other_company(db_session)
 
         user1 = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.RECRUITER, "recruiter1@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter1@test.com"
         )
         user2 = await self._create_user_with_role(
-            db_session, other_company, test_roles, UserRoleEnum.RECRUITER, "recruiter2@test.com"
+            db_session, other_company, test_roles, UserRoleEnum.MEMBER, "recruiter2@test.com"
         )
 
         user1_headers = await self._get_auth_headers(client, user1)
@@ -426,10 +426,10 @@ class TestFileAccessControl:
     ):
         """Test sharing files with specific users."""
         owner = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.RECRUITER, "owner@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "owner@test.com"
         )
         recipient = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.EMPLOYER, "recipient@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recipient@test.com"
         )
 
         owner_headers = await self._get_auth_headers(client, owner)
@@ -491,7 +491,7 @@ class TestFileAccessControl:
             company_id=company.id if company else None,
             hashed_password=auth_service.get_password_hash("testpass123"),
             is_active=True,
-            is_admin=(role in [UserRoleEnum.SUPER_ADMIN, UserRoleEnum.COMPANY_ADMIN]),
+            is_admin=(role in [UserRoleEnum.SYSTEM_ADMIN, UserRoleEnum.ADMIN]),
             require_2fa=False,
         )
         db_session.add(user)

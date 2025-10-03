@@ -175,7 +175,7 @@ class TestRecruitmentWorkflowLogic:
         """Test permission checking logic"""
         # Mock role permissions
         role_permissions = {
-            "recruiter": ["view_process", "execute_nodes", "schedule_interviews"],
+            "member": ["view_process", "execute_nodes", "schedule_interviews"],
             "observer": ["view_process"],
             "admin": ["view_process", "execute_nodes", "override_results"]
         }
@@ -183,9 +183,9 @@ class TestRecruitmentWorkflowLogic:
         # Custom permissions override role defaults
         custom_permissions = {"execute_nodes": True}
 
-        assert self._has_permission("recruiter", "view_process", role_permissions, {})
-        assert self._has_permission("recruiter", "execute_nodes", role_permissions, {})
-        assert not self._has_permission("recruiter", "override_results", role_permissions, {})
+        assert self._has_permission("member", "view_process", role_permissions, {})
+        assert self._has_permission("member", "execute_nodes", role_permissions, {})
+        assert not self._has_permission("member", "override_results", role_permissions, {})
 
         # Observer with custom execute permission
         assert self._has_permission("observer", "execute_nodes", role_permissions, custom_permissions)

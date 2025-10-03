@@ -39,8 +39,8 @@ function AddUserPageContent() {
 
   // Get user's role
   const userRole = user?.roles?.[0]?.role?.name;
-  const isCompanyAdmin = userRole === 'company_admin';
-  const isSuperAdmin = userRole === 'super_admin';
+  const isCompanyAdmin = userRole === 'admin';
+  const isSuperAdmin = userRole === 'system_admin';
 
   // Filter companies based on search
   useEffect(() => {
@@ -59,23 +59,23 @@ function AddUserPageContent() {
     if (isSuperAdmin) {
       return [
         { value: 'candidate', label: 'Candidate' },
-        { value: 'recruiter', label: 'Recruiter' },
-        { value: 'employer', label: 'Employer' },
-        { value: 'company_admin', label: 'Company Admin' },
-        { value: 'super_admin', label: 'Super Admin' },
+        { value: 'member', label: 'Recruiter' },
+        { value: 'member', label: 'Employer' },
+        { value: 'admin', label: 'Company Admin' },
+        { value: 'system_admin', label: 'Super Admin' },
       ];
     } else if (isCompanyAdmin) {
       return [
         { value: 'candidate', label: 'Candidate' },
-        { value: 'recruiter', label: 'Recruiter' },
-        { value: 'employer', label: 'Employer' },
-        { value: 'company_admin', label: 'Company Admin' },
+        { value: 'member', label: 'Recruiter' },
+        { value: 'member', label: 'Employer' },
+        { value: 'admin', label: 'Company Admin' },
       ];
     } else {
       return [
         { value: 'candidate', label: 'Candidate' },
-        { value: 'recruiter', label: 'Recruiter' },
-        { value: 'employer', label: 'Employer' },
+        { value: 'member', label: 'Recruiter' },
+        { value: 'member', label: 'Employer' },
       ];
     }
   };
@@ -87,18 +87,18 @@ function AddUserPageContent() {
       setFormData((prev) => ({
         ...prev,
         company_id: user.company.id.toString(),
-        role: user.company.type === 'employer' ? 'employer' : 'recruiter',
+        role: 'member', // Default role for company users
       }));
     }
   }, [user, isCompanyAdmin]);
 
-  // Auto-set default role based on selected company type (for super admins)
+  // Auto-set default role based on selected company type (for system admins)
   useEffect(() => {
     if (isSuperAdmin && formData.company_id && !formData.role) {
       const selectedCompany = companies.find((c) => c.id.toString() === formData.company_id);
       if (selectedCompany) {
-        const role = selectedCompany.type === 'employer' ? 'employer' : 'recruiter';
-        setFormData((prev) => ({ ...prev, role }));
+        // Default role for company users is 'member' regardless of company type
+        setFormData((prev) => ({ ...prev, role: 'member' }));
       }
     }
   }, [formData.company_id, formData.role, companies, isSuperAdmin]);
@@ -366,8 +366,7 @@ function AddUserPageContent() {
                   <strong className="text-gray-900 dark:text-white">{user.company.name}</strong>
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                  New users will be assigned the{' '}
-                  {user.company.type === 'employer' ? 'employer' : 'recruiter'} role
+                  New users will be assigned the member role
                 </p>
               </div>
             )}

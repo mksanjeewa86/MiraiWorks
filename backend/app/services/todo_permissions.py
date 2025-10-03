@@ -29,9 +29,9 @@ class TodoPermissionService:
 
     @staticmethod
     async def is_employer(db: AsyncSession, user_id: int) -> bool:
-        """Check if user has employer role."""
+        """Check if user has member role (formerly employer)."""
         roles = await TodoPermissionService.get_user_roles(db, user_id)
-        return UserRoleEnum.EMPLOYER.value in roles
+        return UserRoleEnum.MEMBER.value in roles
 
     @staticmethod
     async def is_candidate(db: AsyncSession, user_id: int) -> bool:
@@ -41,9 +41,9 @@ class TodoPermissionService:
 
     @staticmethod
     async def is_recruiter(db: AsyncSession, user_id: int) -> bool:
-        """Check if user has recruiter role."""
+        """Check if user has member role (formerly recruiter)."""
         roles = await TodoPermissionService.get_user_roles(db, user_id)
-        return UserRoleEnum.RECRUITER.value in roles
+        return UserRoleEnum.MEMBER.value in roles
 
     @staticmethod
     async def can_create_todo(db: AsyncSession, user_id: int) -> bool:

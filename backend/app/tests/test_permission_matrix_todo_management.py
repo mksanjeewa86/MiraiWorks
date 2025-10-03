@@ -42,9 +42,9 @@ class TestTodoManagementPermissionMatrix:
         """Test that all authenticated users can create todos."""
         roles_to_test = [
             UserRoleEnum.CANDIDATE,
-            UserRoleEnum.RECRUITER,
-            UserRoleEnum.EMPLOYER,
-            UserRoleEnum.COMPANY_ADMIN,
+            UserRoleEnum.MEMBER,
+            UserRoleEnum.MEMBER,
+            UserRoleEnum.ADMIN,
         ]
 
         for role in roles_to_test:
@@ -101,11 +101,11 @@ class TestTodoManagementPermissionMatrix:
         """Test that Super Admin can assign todos to any user."""
         # Create users in different companies
         user1 = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.RECRUITER, "recruiter1@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter1@test.com"
         )
         other_company = await self._create_other_company(db_session)
         user2 = await self._create_user_with_role(
-            db_session, other_company, test_roles, UserRoleEnum.RECRUITER, "recruiter2@test.com"
+            db_session, other_company, test_roles, UserRoleEnum.MEMBER, "recruiter2@test.com"
         )
 
         # Create todo
@@ -135,15 +135,15 @@ class TestTodoManagementPermissionMatrix:
     ):
         """Test that Company Admin can only assign todos to their company users."""
         company_admin = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.COMPANY_ADMIN, "companyadmin@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.ADMIN, "companyadmin@test.com"
         )
         company_user = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.RECRUITER, "recruiter@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
         )
 
         other_company = await self._create_other_company(db_session)
         other_user = await self._create_user_with_role(
-            db_session, other_company, test_roles, UserRoleEnum.RECRUITER, "otherrecruiter@test.com"
+            db_session, other_company, test_roles, UserRoleEnum.MEMBER, "otherrecruiter@test.com"
         )
 
         headers = await self._get_auth_headers(client, company_admin)
@@ -174,15 +174,15 @@ class TestTodoManagementPermissionMatrix:
     ):
         """Test that Recruiter can only assign todos to their company users."""
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.RECRUITER, "recruiter@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
         )
         company_user = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.EMPLOYER, "employer@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "employer@test.com"
         )
 
         other_company = await self._create_other_company(db_session)
         other_user = await self._create_user_with_role(
-            db_session, other_company, test_roles, UserRoleEnum.RECRUITER, "otherrecruiter@test.com"
+            db_session, other_company, test_roles, UserRoleEnum.MEMBER, "otherrecruiter@test.com"
         )
 
         headers = await self._get_auth_headers(client, recruiter)
@@ -213,15 +213,15 @@ class TestTodoManagementPermissionMatrix:
     ):
         """Test that Employer can only assign todos to their company users."""
         employer = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.EMPLOYER, "employer@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "employer@test.com"
         )
         company_user = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.RECRUITER, "recruiter@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
         )
 
         other_company = await self._create_other_company(db_session)
         other_user = await self._create_user_with_role(
-            db_session, other_company, test_roles, UserRoleEnum.EMPLOYER, "otheremployer@test.com"
+            db_session, other_company, test_roles, UserRoleEnum.MEMBER, "otheremployer@test.com"
         )
 
         headers = await self._get_auth_headers(client, employer)
@@ -255,7 +255,7 @@ class TestTodoManagementPermissionMatrix:
             db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
         )
         other_user = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.RECRUITER, "recruiter@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
         )
 
         headers = await self._get_auth_headers(client, candidate)
@@ -282,10 +282,10 @@ class TestTodoManagementPermissionMatrix:
     ):
         """Test that users can view their own and assigned todos."""
         user = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.RECRUITER, "recruiter@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
         )
         other_user = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.EMPLOYER, "employer@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "employer@test.com"
         )
 
         headers = await self._get_auth_headers(client, user)
@@ -322,10 +322,10 @@ class TestTodoManagementPermissionMatrix:
     ):
         """Test that users cannot view todos they didn't create or aren't assigned to."""
         user1 = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.RECRUITER, "recruiter1@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter1@test.com"
         )
         user2 = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.RECRUITER, "recruiter2@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter2@test.com"
         )
 
         user1_headers = await self._get_auth_headers(client, user1)
@@ -349,7 +349,7 @@ class TestTodoManagementPermissionMatrix:
     ):
         """Test that Super Admin can view any todo."""
         user = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.RECRUITER, "recruiter@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
         )
 
         # Create todo
@@ -376,10 +376,10 @@ class TestTodoManagementPermissionMatrix:
     ):
         """Test that todo owner and assignee can update todos."""
         owner = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.RECRUITER, "owner@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "owner@test.com"
         )
         assignee = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.EMPLOYER, "assignee@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "assignee@test.com"
         )
 
         todo = await self._create_todo(db_session, owner.id, "Todo to Update", assignee_id=assignee.id)
@@ -411,10 +411,10 @@ class TestTodoManagementPermissionMatrix:
     ):
         """Test that non-related users cannot update todos."""
         owner = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.RECRUITER, "owner@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "owner@test.com"
         )
         other_user = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.EMPLOYER, "other@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "other@test.com"
         )
 
         todo = await self._create_todo(db_session, owner.id, "Protected Todo")
@@ -441,10 +441,10 @@ class TestTodoManagementPermissionMatrix:
     ):
         """Test that only todo owner can delete todos."""
         owner = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.RECRUITER, "owner@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "owner@test.com"
         )
         assignee = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.EMPLOYER, "assignee@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "assignee@test.com"
         )
 
         todo = await self._create_todo(db_session, owner.id, "Todo to Delete", assignee_id=assignee.id)
@@ -474,7 +474,7 @@ class TestTodoManagementPermissionMatrix:
     ):
         """Test that Super Admin can delete any todo."""
         user = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.RECRUITER, "recruiter@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
         )
         todo = await self._create_todo(db_session, user.id, "Todo to Delete by Admin")
 
@@ -498,10 +498,10 @@ class TestTodoManagementPermissionMatrix:
     ):
         """Test that assigned user can mark todos as complete."""
         owner = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.RECRUITER, "owner@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "owner@test.com"
         )
         assignee = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.EMPLOYER, "assignee@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "assignee@test.com"
         )
 
         todo = await self._create_todo(db_session, owner.id, "Todo to Complete", assignee_id=assignee.id)
@@ -523,10 +523,10 @@ class TestTodoManagementPermissionMatrix:
     ):
         """Test that non-assigned users cannot mark todos as complete."""
         owner = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.RECRUITER, "owner@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "owner@test.com"
         )
         other_user = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.EMPLOYER, "other@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "other@test.com"
         )
 
         todo = await self._create_todo(db_session, owner.id, "Protected Todo")
@@ -549,10 +549,10 @@ class TestTodoManagementPermissionMatrix:
     ):
         """Test that related users can manage todo attachments."""
         owner = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.RECRUITER, "owner@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "owner@test.com"
         )
         assignee = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.EMPLOYER, "assignee@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "assignee@test.com"
         )
 
         todo = await self._create_todo(db_session, owner.id, "Todo with Attachments", assignee_id=assignee.id)
@@ -592,10 +592,10 @@ class TestTodoManagementPermissionMatrix:
     ):
         """Test that assigned user can request deadline extensions."""
         owner = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.RECRUITER, "owner@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "owner@test.com"
         )
         assignee = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.EMPLOYER, "assignee@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "assignee@test.com"
         )
 
         todo = await self._create_todo(db_session, owner.id, "Todo with Extension", assignee_id=assignee.id)
@@ -624,10 +624,10 @@ class TestTodoManagementPermissionMatrix:
     ):
         """Test that non-assigned users cannot request extensions."""
         owner = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.RECRUITER, "owner@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "owner@test.com"
         )
         other_user = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.EMPLOYER, "other@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "other@test.com"
         )
 
         todo = await self._create_todo(db_session, owner.id, "Protected Todo")
@@ -657,7 +657,7 @@ class TestTodoManagementPermissionMatrix:
     ):
         """Test unauthenticated access to todo endpoints."""
         user = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.RECRUITER, "recruiter@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
         )
         todo = await self._create_todo(db_session, user.id, "Test Todo")
 
@@ -705,7 +705,7 @@ class TestTodoManagementPermissionMatrix:
             company_id=company.id if company else None,
             hashed_password=auth_service.get_password_hash("testpass123"),
             is_active=True,
-            is_admin=(role in [UserRoleEnum.SUPER_ADMIN, UserRoleEnum.COMPANY_ADMIN]),
+            is_admin=(role in [UserRoleEnum.SYSTEM_ADMIN, UserRoleEnum.ADMIN]),
             require_2fa=False,
         )
         db_session.add(user)

@@ -344,9 +344,9 @@ async def test_admin_user(db_session, test_company, test_roles):
     await db_session.commit()
     await db_session.refresh(user)
 
-    # Assign company admin role
+    # Assign admin role
     user_role = UserRole(
-        user_id=user.id, role_id=test_roles[UserRoleEnum.COMPANY_ADMIN.value].id
+        user_id=user.id, role_id=test_roles[UserRoleEnum.ADMIN.value].id
     )
     db_session.add(user_role)
     await db_session.commit()
@@ -355,13 +355,13 @@ async def test_admin_user(db_session, test_company, test_roles):
 
 @pytest_asyncio.fixture
 async def test_employer_user(db_session, test_company, test_roles):
-    """Create employer user with company association."""
+    """Create member user with company association (employer context via company type)."""
     user = User(
         email="employer@example.com",
-        first_name="Employer",
+        first_name="Member",
         last_name="User",
         company_id=test_company.id,
-        hashed_password=auth_service.get_password_hash("employerpassword123"),
+        hashed_password=auth_service.get_password_hash("memberpassword123"),
         is_active=True,
         is_admin=False,
     )
@@ -370,7 +370,7 @@ async def test_employer_user(db_session, test_company, test_roles):
     await db_session.refresh(user)
 
     user_role = UserRole(
-        user_id=user.id, role_id=test_roles[UserRoleEnum.EMPLOYER.value].id
+        user_id=user.id, role_id=test_roles[UserRoleEnum.MEMBER.value].id
     )
     db_session.add(user_role)
     await db_session.commit()
@@ -401,14 +401,14 @@ async def test_candidate_only_user(db_session, test_roles):
     return user
 
 @pytest_asyncio.fixture
-async def test_super_admin(db_session, test_roles):
-    """Create test super admin user."""
+async def test_system_admin(db_session, test_roles):
+    """Create test system admin user."""
     user = User(
-        email="superadmin@example.com",
-        first_name="Super",
+        email="systemadmin@example.com",
+        first_name="System",
         last_name="Admin",
-        company_id=None,  # Super admin has no company
-        hashed_password=auth_service.get_password_hash("superpassword123"),
+        company_id=None,  # System admin has no company
+        hashed_password=auth_service.get_password_hash("systempassword123"),
         is_active=True,
         is_admin=True,
     )
@@ -416,14 +416,17 @@ async def test_super_admin(db_session, test_roles):
     await db_session.commit()
     await db_session.refresh(user)
 
-    # Assign super admin role
+    # Assign system admin role
     user_role = UserRole(
-        user_id=user.id, role_id=test_roles[UserRoleEnum.SUPER_ADMIN.value].id
+        user_id=user.id, role_id=test_roles[UserRoleEnum.SYSTEM_ADMIN.value].id
     )
     db_session.add(user_role)
     await db_session.commit()
 
     return user
+
+# Alias for backward compatibility
+test_super_admin = test_system_admin
 
 @pytest_asyncio.fixture
 async def auth_headers(client, test_employer_user):

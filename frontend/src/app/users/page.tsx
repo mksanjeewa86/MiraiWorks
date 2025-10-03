@@ -560,9 +560,9 @@ function UsersPageContent() {
                 }}
               >
                 <option value="">All Roles</option>
-                <option value="company_admin">Company Admin</option>
-                <option value="recruiter">Recruiter</option>
-                <option value="employer">Employer</option>
+                <option value="admin">Company Admin</option>
+                <option value="member">Recruiter</option>
+                <option value="member">Employer</option>
                 <option value="candidate">Candidate</option>
               </select>
             </div>

@@ -12,11 +12,10 @@ from app.utils.constants import CompanyType
 
 # Roles data
 ROLES_DATA = [
-    {"name": "super_admin", "description": "Super administrator with full system access"},
-    {"name": "company_admin", "description": "Company administrator with full company access"},
-    {"name": "recruiter", "description": "Recruiter with candidate and position management access"},
-    {"name": "employer", "description": "Employer with position management access"},
-    {"name": "candidate", "description": "Candidate with profile and application access"},
+    {"name": "system_admin", "description": "System-level administrator with full access"},
+    {"name": "admin", "description": "Company administrator (context: company type)"},
+    {"name": "member", "description": "Company member (context: company type)"},
+    {"name": "candidate", "description": "Job candidate with profile and application access"},
 ]
 
 # Companies data
@@ -109,7 +108,7 @@ def get_users_data(companies):
             "phone": "+81-3-1111-1111",
             "is_active": True,
             "is_admin": True,
-            "role": "super_admin",
+            "role": "system_admin",
         },
         {
             "company_id": companies[0].id,  # MiraiWorks システム
@@ -131,7 +130,7 @@ def get_users_data(companies):
             "phone": "+81-3-3333-3333",
             "is_active": True,
             "is_admin": False,
-            "role": "recruiter",
+            "role": "member",
         },
         # System admin
         {
@@ -143,7 +142,7 @@ def get_users_data(companies):
             "phone": "+81-3-1111-2222",
             "is_active": True,
             "is_admin": True,
-            "role": "super_admin",
+            "role": "system_admin",
         },
         {
             "company_id": companies[1].id,  # テックコーポレーション
@@ -154,7 +153,7 @@ def get_users_data(companies):
             "phone": "+81-3-2222-3333",
             "is_active": True,
             "is_admin": False,
-            "role": "company_admin",
+            "role": "admin",
         },
         {
             "company_id": companies[2].id,  # イノベートラボ株式会社
@@ -165,7 +164,7 @@ def get_users_data(companies):
             "phone": "+81-6-3333-4444",
             "is_active": True,
             "is_admin": False,
-            "role": "recruiter",
+            "role": "member",
         },
         {
             "company_id": companies[3].id,  # データドリブン・アナリティクス
@@ -176,7 +175,7 @@ def get_users_data(companies):
             "phone": "+81-45-4444-5555",
             "is_active": True,
             "is_admin": False,
-            "role": "employer",
+            "role": "member",
         },
         {
             "company_id": companies[4].id,  # クラウドスケール・システムズ
@@ -187,7 +186,7 @@ def get_users_data(companies):
             "phone": "+81-52-5555-6666",
             "is_active": True,
             "is_admin": False,
-            "role": "company_admin",
+            "role": "admin",
         },
         {
             "company_id": companies[5].id,  # ネクストジェン・リクルーティング
@@ -198,7 +197,7 @@ def get_users_data(companies):
             "phone": "+81-92-6666-7777",
             "is_active": True,
             "is_admin": False,
-            "role": "recruiter",
+            "role": "member",
         },
     ]
 
@@ -338,69 +337,69 @@ def get_company_profiles_data():
 
 
 async def create_user_connections(db, users, roles):
-    """Create user connections between admin users and super admin."""
+    """Create user connections between admin users and system admin."""
     connections_created = 0
 
-    # Find super admin user
-    super_admin_user = None
+    # Find system admin user
+    system_admin_user = None
     for user, role_name in users:
-        if role_name == "super_admin":
-            super_admin_user = user
+        if role_name == "system_admin":
+            system_admin_user = user
             break
 
-    if not super_admin_user:
-        print("   - No super admin found, skipping user connections")
+    if not system_admin_user:
+        print("   - No system admin found, skipping user connections")
         return 0
 
-    # Connect all admin users (company_admin) to super admin
+    # Connect all admin users to system admin
     for user, role_name in users:
-        if role_name == "company_admin" and user.id != super_admin_user.id:
+        if role_name == "admin" and user.id != system_admin_user.id:
             connection = UserConnection(
                 user_id=user.id,
-                connected_user_id=super_admin_user.id,
+                connected_user_id=system_admin_user.id,
                 is_active=True,
                 creation_type="automatic",
                 created_by=None
             )
             db.add(connection)
             connections_created += 1
-            print(f"   - Connected {user.email} (company_admin) to {super_admin_user.email} (super_admin) [AUTOMATIC]")
+            print(f"   - Connected {user.email} (admin) to {system_admin_user.email} (system_admin) [AUTOMATIC]")
 
-    # Connect recruiters to super admin as well for coordination
+    # Connect members to system admin as well for coordination
     for user, role_name in users:
-        if role_name == "recruiter" and user.id != super_admin_user.id:
+        if role_name == "member" and user.id != system_admin_user.id:
             connection = UserConnection(
                 user_id=user.id,
-                connected_user_id=super_admin_user.id,
+                connected_user_id=system_admin_user.id,
                 is_active=True,
                 creation_type="automatic",
                 created_by=None
             )
             db.add(connection)
             connections_created += 1
-            print(f"   - Connected {user.email} (recruiter) to {super_admin_user.email} (super_admin) [AUTOMATIC]")
+            print(f"   - Connected {user.email} (member) to {system_admin_user.email} (system_admin) [AUTOMATIC]")
 
-    # Connect candidate to recruiters for demonstration
+    # Connect candidate to members (recruiters) for demonstration
     candidate_user = None
-    recruiter_users = []
+    member_users = []
     for user, role_name in users:
         if role_name == "candidate":
             candidate_user = user
-        elif role_name == "recruiter":
-            recruiter_users.append(user)
+        elif role_name == "member":
+            member_users.append(user)
 
-    if candidate_user and recruiter_users:
-        for recruiter_user in recruiter_users:
+    if candidate_user and member_users:
+        for member_user in member_users:
             connection = UserConnection(
                 user_id=candidate_user.id,
-                connected_user_id=recruiter_user.id,
+                connected_user_id=member_user.id,
                 is_active=True,
                 creation_type="automatic",
                 created_by=None
             )
             db.add(connection)
             connections_created += 1
-            print(f"   - Connected {candidate_user.email} (candidate) to {recruiter_user.email} (recruiter) [AUTOMATIC]")
+            print(f"   - Connected {candidate_user.email} (candidate) to {member_user.email} (member) [AUTOMATIC]")
 
     await db.commit()
     print(f"   - Created {connections_created} user connections")
@@ -445,24 +444,24 @@ async def seed_auth_data(db):
         user_role = user_data.pop("role")
 
         # Set created_by based on user type
-        if user_role == "super_admin":
-            user_data["created_by"] = None  # Super admin is self-created (system user)
+        if user_role == "system_admin":
+            user_data["created_by"] = None  # System admin is self-created (system user)
         elif user_role == "candidate":
             user_data["created_by"] = None  # Candidates self-register
         else:
-            # Other users (company_admin, recruiter, employer) are created by super admin
+            # Other users (admin, member) are created by system admin
             if super_admin_user:
                 user_data["created_by"] = super_admin_user.id
             else:
-                user_data["created_by"] = None  # Fallback if super admin not created yet
+                user_data["created_by"] = None  # Fallback if system admin not created yet
 
         user = User(**user_data)
         db.add(user)
         await db.flush()
         users.append((user, user_role))
 
-        # Store reference to super admin for other users
-        if user_role == "super_admin":
+        # Store reference to system admin for other users
+        if user_role == "system_admin":
             super_admin_user = user
 
         print(f"   - Created user '{user.email}' (created_by: {user_data.get('created_by', 'None')})")
@@ -475,7 +474,7 @@ async def seed_auth_data(db):
         user_role = UserRole(
             user_id=user.id,
             role_id=roles[role_name].id,
-            scope=f"company_{user.company_id}" if role_name != "super_admin" else "global"
+            scope=f"company_{user.company_id}" if role_name != "system_admin" else "global"
         )
         db.add(user_role)
         print(f"   - Assigned role '{role_name}' to user '{user.email}'")

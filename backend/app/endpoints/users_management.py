@@ -38,7 +38,7 @@ async def get_super_admin_user(db: AsyncSession) -> User | None:
         .join(Role)
         .where(
             and_(
-                Role.name == UserRoleEnum.SUPER_ADMIN.value,
+                Role.name == UserRoleEnum.SYSTEM_ADMIN.value,
                 User.is_active is True,
                 User.is_deleted is False,
             )
@@ -155,7 +155,7 @@ async def create_user(
         user_data.company_id = current_user.company_id
 
         # Company admin role restrictions
-        forbidden_roles = [UserRoleEnum.SUPER_ADMIN]
+        forbidden_roles = [UserRoleEnum.SYSTEM_ADMIN]
         for role in user_data.roles:
             if role in forbidden_roles:
                 raise HTTPException(
@@ -163,9 +163,9 @@ async def create_user(
                     detail=f"Company admins cannot assign {role.value} role",
                 )
 
-        # Limit company_admin role assignment to prevent privilege escalation
+        # Limit admin role assignment to prevent privilege escalation
         company_admin_roles = [
-            role for role in user_data.roles if role == UserRoleEnum.COMPANY_ADMIN
+            role for role in user_data.roles if role == UserRoleEnum.ADMIN
         ]
         if len(company_admin_roles) > 0:
             # Check if current user is the only company admin
@@ -212,7 +212,7 @@ async def create_user(
 
     # Check if user should be admin based on roles
     is_admin_user = user_data.is_admin or False
-    admin_roles = [UserRoleEnum.COMPANY_ADMIN, UserRoleEnum.SUPER_ADMIN]
+    admin_roles = [UserRoleEnum.ADMIN, UserRoleEnum.SYSTEM_ADMIN]
     if any(role in admin_roles for role in user_data.roles):
         is_admin_user = True
 
@@ -715,7 +715,7 @@ async def update_user(
 
         # Company admin role restrictions for updates
         if user_data.roles is not None:
-            forbidden_roles = [UserRoleEnum.SUPER_ADMIN]
+            forbidden_roles = [UserRoleEnum.SYSTEM_ADMIN]
             for role in user_data.roles:
                 if role in forbidden_roles:
                     raise HTTPException(

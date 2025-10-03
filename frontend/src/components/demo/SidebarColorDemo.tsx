@@ -8,7 +8,7 @@ import { roleColorSchemes } from '@/utils/roleColorSchemes';
  * This is a development utility to visualize the color schemes
  */
 export default function SidebarColorDemo() {
-  const [selectedRole, setSelectedRole] = useState<string>('super_admin');
+  const [selectedRole, setSelectedRole] = useState<string>('system_admin');
 
   const roles = Object.keys(roleColorSchemes);
   const colorScheme = roleColorSchemes[selectedRole];

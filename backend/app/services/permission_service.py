@@ -22,7 +22,7 @@ class PermissionService:
         user_roles = await self._get_user_roles(db, user)
 
         return any(
-            role in [UserRole.RECRUITER, UserRole.EMPLOYER, UserRole.COMPANY_ADMIN]
+            role in [UserRole.MEMBER, UserRole.MEMBER, UserRole.ADMIN]
             for role in user_roles
         )
 
@@ -65,7 +65,7 @@ class PermissionService:
         """Get all roles for a user."""
         # TODO: Implement actual role fetching from database
         # This should query the user_roles table
-        return [UserRole.RECRUITER]  # Placeholder
+        return [UserRole.MEMBER]  # Placeholder
 
 
 permission_service = PermissionService()

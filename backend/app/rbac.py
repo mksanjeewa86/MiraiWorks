@@ -41,12 +41,13 @@ PERMISSIONS = {
 
 # Role permissions mapping
 ROLE_PERMISSIONS: dict[UserRole, set[str]] = {
-    UserRole.SUPER_ADMIN: {
-        # Super admin has all permissions
+    UserRole.SYSTEM_ADMIN: {
+        # System admin has all permissions across all companies
         *PERMISSIONS.keys()
     },
-    UserRole.COMPANY_ADMIN: {
+    UserRole.ADMIN: {
         # Company admin can manage users within their company
+        # Context (recruiter/employer) determined by company.type
         "users.create",
         "users.read",
         "users.update",
@@ -56,7 +57,7 @@ ROLE_PERMISSIONS: dict[UserRole, set[str]] = {
         "companies.update",
         "messages.read",
         "messages.delete",
-        "interviews.create",  # Added missing permission
+        "interviews.create",
         "interviews.read",
         "interviews.update",
         "interviews.cancel",
@@ -65,8 +66,9 @@ ROLE_PERMISSIONS: dict[UserRole, set[str]] = {
         "admin.notifications",
         "admin.password_reset",
     },
-    UserRole.RECRUITER: {
-        "users.read",  # Limited to candidates and employers they work with
+    UserRole.MEMBER: {
+        # Company member (recruiter or employer based on company.type)
+        "users.read",  # Limited to candidates and users they work with
         "messages.create",
         "messages.read",
         "interviews.create",
@@ -81,22 +83,8 @@ ROLE_PERMISSIONS: dict[UserRole, set[str]] = {
         "calendar.write",
         "calendar.integrate",
     },
-    UserRole.EMPLOYER: {
-        "users.read",  # Limited to candidates through recruiters
-        "messages.create",
-        "messages.read",
-        "interviews.create",
-        "interviews.read",
-        "interviews.update",
-        "interviews.propose",
-        "interviews.accept",
-        "interviews.cancel",
-        "resumes.read",
-        "calendar.read",
-        "calendar.write",
-        "calendar.integrate",
-    },
     UserRole.CANDIDATE: {
+        # Job candidate (no company affiliation)
         "users.read",
         "users.update",  # Own profile only
         "messages.create",
@@ -127,4 +115,4 @@ def has_permission(user_role: UserRole, permission: str) -> bool:
 
 def is_admin_role(role: UserRole) -> bool:
     """Check if role is an admin role requiring 2FA."""
-    return role in {UserRole.SUPER_ADMIN, UserRole.COMPANY_ADMIN}
+    return role in {UserRole.SYSTEM_ADMIN, UserRole.ADMIN}

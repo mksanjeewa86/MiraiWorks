@@ -82,7 +82,7 @@ class TestCompanies:
         company_data = {
             "name": "New Test Company",
             "email": "newcompany@example.com",
-            "type": "employer",
+            "type": "member",
             "phone": "+1-555-123-4567",
             "description": "A test company for testing purposes",
             "website": "https://newcompany.example.com",
@@ -228,7 +228,7 @@ class TestCompanies:
         company_data = {
             "name": "Test Company",
             "email": "invalid-email",
-            "type": "employer",
+            "type": "member",
             "phone": "+1-555-123-4567",
         }
 
@@ -263,7 +263,7 @@ class TestCompanies:
         company_data = {
             "name": "Duplicate Company",
             "email": test_company.email,  # Duplicate email
-            "type": "employer",
+            "type": "member",
             "phone": "+1-555-123-4567",
         }
 
@@ -421,7 +421,7 @@ class TestCompanies:
         company_data = {
             "name": "Company with Admin",
             "email": "companywithmin@example.com",
-            "type": "employer",
+            "type": "member",
             "phone": "+1-555-123-4567",
             "admin_first_name": "Admin",
             "admin_last_name": "User",
@@ -457,7 +457,7 @@ class TestCompanies:
         company_data = {
             "name": "A" * 300,  # Very long name
             "email": "longname@example.com",
-            "type": "employer",
+            "type": "member",
             "phone": "+1-555-123-4567",
         }
 
@@ -523,7 +523,7 @@ class TestCompanies:
         self, client: AsyncClient, super_admin_auth_headers: dict
     ):
         """Test company creation with all valid company types."""
-        valid_types = ["employer", "recruiter"]
+        valid_types = ["member", "member"]
 
         for i, company_type in enumerate(valid_types):
             company_data = {
@@ -621,7 +621,7 @@ class TestCompanies:
         data = response.json()
         assert "companies" in data
         for company in data["companies"]:
-            assert company["type"] == "employer"
+            assert company["type"] == "member"
 
     @pytest.mark.asyncio
     async def test_get_companies_filter_by_type_recruiter(
@@ -637,7 +637,7 @@ class TestCompanies:
         data = response.json()
         assert "companies" in data
         for company in data["companies"]:
-            assert company["type"] == "recruiter"
+            assert company["type"] == "member"
 
     @pytest.mark.asyncio
     async def test_get_companies_filter_by_is_active_true(
@@ -874,7 +874,7 @@ class TestCompanies:
         data = response.json()
         assert "companies" in data
         for company in data["companies"]:
-            assert company["type"] == "employer"
+            assert company["type"] == "member"
             assert company["is_active"] is True
 
     @pytest.mark.asyncio
@@ -891,7 +891,7 @@ class TestCompanies:
         data = response.json()
         assert "companies" in data
         for company in data["companies"]:
-            assert company["type"] == "employer"
+            assert company["type"] == "member"
 
     @pytest.mark.asyncio
     async def test_get_companies_combined_filters_all_parameters(
@@ -909,7 +909,7 @@ class TestCompanies:
         assert data["page"] == 1
         assert data["size"] == 10
         for company in data["companies"]:
-            assert company["type"] == "employer"
+            assert company["type"] == "member"
             assert company["is_active"] is True
             assert company["is_demo"] is False
             assert company["is_deleted"] is False
@@ -1012,7 +1012,7 @@ class TestCompanies:
         assert employer_response.status_code == 200
         employer_data = employer_response.json()
         employer_companies = [
-            c for c in employer_data["companies"] if c["type"] == "employer"
+            c for c in employer_data["companies"] if c["type"] == "member"
         ]
         assert len(employer_companies) >= 1
 
@@ -1025,7 +1025,7 @@ class TestCompanies:
         assert recruiter_response.status_code == 200
         recruiter_data = recruiter_response.json()
         recruiter_companies = [
-            c for c in recruiter_data["companies"] if c["type"] == "recruiter"
+            c for c in recruiter_data["companies"] if c["type"] == "member"
         ]
         assert len(recruiter_companies) >= 1
 
@@ -1066,5 +1066,5 @@ class TestCompanies:
         assert data["size"] == 5
         assert len(data["companies"]) <= 5
         for company in data["companies"]:
-            assert company["type"] == "employer"
+            assert company["type"] == "member"
             assert company["is_active"] is True

@@ -93,7 +93,7 @@ function MessagesPageContent() {
         })
       : [];
 
-    return Boolean(normalizedRoles.some((name) => name === 'super_admin') || user?.id === 7);
+    return Boolean(normalizedRoles.some((name) => name === 'system_admin') || user?.id === 7);
   }, [user]);
 
   const superAdminIdSet = useMemo(() => new Set(superAdminIds), [superAdminIds]);
@@ -760,7 +760,7 @@ function MessagesPageContent() {
             participants = response.data?.participants || [];
 
             // Filter participants for super admin (same logic as users API)
-            if (user?.roles?.some((role) => role.role.name === 'super_admin') || user?.id === 7) {
+            if (user?.roles?.some((role) => role.role.name === 'system_admin') || user?.id === 7) {
               participants = participants.filter((p) => {
                 // For now, show participants with company_name (indicating they're company users)
                 return p.company_name && p.company_name.trim() !== '';
@@ -798,13 +798,13 @@ function MessagesPageContent() {
             if (usersResponse.data?.users?.length) {
               // Convert users to participant format and exclude current user
               let filteredUsers = usersResponse.data.users.filter((u) => u.id !== user?.id);
-              filteredUsers = filteredUsers.filter((u) => !u.roles.includes('super_admin'));
+              filteredUsers = filteredUsers.filter((u) => !u.roles.includes('system_admin'));
 
               // For super admin, only show company admins (users who can receive messages)
               // Check multiple ways to identify super admin
               const isSuperAdmin =
                 user?.roles?.some(
-                  (role) => (role as { role: { name: string } }).role?.name === 'super_admin'
+                  (role) => (role as { role: { name: string } }).role?.name === 'system_admin'
                 ) ||
                 user?.id === 7 ||
                 (user && !user.company_id && user.is_admin); // Super admin typically has no company_id but is admin
@@ -812,7 +812,7 @@ function MessagesPageContent() {
               if (isSuperAdmin) {
                 filteredUsers = filteredUsers.filter((u) => {
                   const isCompanyAdmin =
-                    u.roles.includes('company_admin') ||
+                    u.roles.includes('admin') ||
                     u.roles.includes('admin') ||
                     (u.is_admin === true && u.company_id);
                   return isCompanyAdmin;

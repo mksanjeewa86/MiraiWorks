@@ -68,12 +68,12 @@ async def test_send_message_creates_record(
     test_employer_user: User,
     test_roles: dict[str, Role],
 ):
-    await ensure_role(db_session, test_roles, UserRoleEnum.RECRUITER)
+    await ensure_role(db_session, test_roles, UserRoleEnum.MEMBER)
     recipient = await create_user_with_role(
         db_session,
         roles=test_roles,
         email="recipient@test.com",
-        role=UserRoleEnum.RECRUITER,
+        role=UserRoleEnum.MEMBER,
         company_id=test_employer_user.company_id,
     )
 
@@ -103,12 +103,12 @@ async def test_get_conversations_returns_latest(
     test_employer_user: User,
     test_roles: dict[str, Role],
 ):
-    await ensure_role(db_session, test_roles, UserRoleEnum.RECRUITER)
+    await ensure_role(db_session, test_roles, UserRoleEnum.MEMBER)
     partner = await create_user_with_role(
         db_session,
         roles=test_roles,
         email="dm-partner@test.com",
-        role=UserRoleEnum.RECRUITER,
+        role=UserRoleEnum.MEMBER,
         company_id=test_employer_user.company_id,
     )
 
@@ -144,12 +144,12 @@ async def test_get_messages_with_user_returns_thread(
     test_employer_user: User,
     test_roles: dict[str, Role],
 ):
-    await ensure_role(db_session, test_roles, UserRoleEnum.RECRUITER)
+    await ensure_role(db_session, test_roles, UserRoleEnum.MEMBER)
     partner = await create_user_with_role(
         db_session,
         roles=test_roles,
         email="thread-user@test.com",
-        role=UserRoleEnum.RECRUITER,
+        role=UserRoleEnum.MEMBER,
         company_id=test_employer_user.company_id,
     )
 
@@ -190,12 +190,12 @@ async def test_mark_messages_as_read(
     test_employer_user: User,
     test_roles: dict[str, Role],
 ):
-    await ensure_role(db_session, test_roles, UserRoleEnum.RECRUITER)
+    await ensure_role(db_session, test_roles, UserRoleEnum.MEMBER)
     sender = await create_user_with_role(
         db_session,
         roles=test_roles,
         email="unread@test.com",
-        role=UserRoleEnum.RECRUITER,
+        role=UserRoleEnum.MEMBER,
         company_id=test_employer_user.company_id,
     )
 
@@ -230,12 +230,12 @@ async def test_search_messages_finds_matches(
     test_employer_user: User,
     test_roles: dict[str, Role],
 ):
-    await ensure_role(db_session, test_roles, UserRoleEnum.RECRUITER)
+    await ensure_role(db_session, test_roles, UserRoleEnum.MEMBER)
     partner = await create_user_with_role(
         db_session,
         roles=test_roles,
         email="search-user@test.com",
-        role=UserRoleEnum.RECRUITER,
+        role=UserRoleEnum.MEMBER,
         company_id=test_employer_user.company_id,
     )
 

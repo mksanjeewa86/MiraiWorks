@@ -59,7 +59,7 @@ async def create_interview_record(
         db_session,
         roles=roles,
         email=f"recruiter+{uuid4().hex}@example.com",
-        role=UserRoleEnum.RECRUITER,
+        role=UserRoleEnum.MEMBER,
         company_id=employer_user.company_id,
         first_name="Recruiter",
         last_name="User",

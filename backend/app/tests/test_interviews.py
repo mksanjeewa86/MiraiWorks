@@ -60,7 +60,7 @@ async def create_sample_interview(
     recruiter = await create_user_with_role(
         db_session,
         email=f"recruiter+{uuid4().hex[:8]}@example.com",
-        role=roles_map[UserRoleEnum.RECRUITER.value],
+        role=roles_map[UserRoleEnum.MEMBER.value],
         company_id=employer_user.company_id,
         first_name="Recruiter",
         last_name="User",
@@ -96,7 +96,7 @@ async def create_interview_model(
     recruiter = await create_user_with_role(
         db_session,
         email=f"svc-recruiter+{uuid4().hex[:8]}@example.com",
-        role=roles_map[UserRoleEnum.RECRUITER.value],
+        role=roles_map[UserRoleEnum.MEMBER.value],
         company_id=employer_user.company_id,
         first_name="Recruiter",
         last_name="Service",
@@ -147,7 +147,7 @@ async def test_create_interview_success(
 
     assert interview["title"] == payload["title"]
     assert interview["candidate"]["id"] == test_candidate_only_user.id
-    assert interview["recruiter"]["id"] == recruiter.id
+    assert interview["member"]["id"] == recruiter.id
     assert interview["status"] == InterviewStatus.PENDING_SCHEDULE.value
 
 
@@ -162,14 +162,14 @@ async def test_create_interview_rejects_non_candidate(
     recruiter = await create_user_with_role(
         db_session,
         email="recruiter@example.com",
-        role=test_roles[UserRoleEnum.RECRUITER.value],
+        role=test_roles[UserRoleEnum.MEMBER.value],
         company_id=test_employer_user.company_id,
     )
 
     non_candidate = await create_user_with_role(
         db_session,
         email="notcandidate@example.com",
-        role=test_roles[UserRoleEnum.EMPLOYER.value],
+        role=test_roles[UserRoleEnum.MEMBER.value],
         company_id=test_employer_user.company_id,
     )
 

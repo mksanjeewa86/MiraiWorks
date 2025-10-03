@@ -32,7 +32,7 @@ class TestCompanyManagementPermissionMatrix:
         company_data = {
             "name": "New Super Admin Company",
             "email": "newsupercompany@example.com",
-            "type": "employer",
+            "type": "member",
             "phone": "+1-555-123-4567",
             "description": "A company created by super admin",
         }
@@ -220,7 +220,7 @@ class TestCompanyManagementPermissionMatrix:
         company_data = {
             "name": "Unauthorized Company",
             "email": "unauthorized@example.com",
-            "type": "employer",
+            "type": "member",
             "phone": "+1-555-123-4567",
         }
 
@@ -312,7 +312,7 @@ class TestCompanyManagementPermissionMatrix:
     ):
         """Test that Recruiter cannot access any company management endpoints."""
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.RECRUITER, "recruiter@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
         )
         headers = await self._get_auth_headers(client, recruiter)
 
@@ -330,7 +330,7 @@ class TestCompanyManagementPermissionMatrix:
         company_data = {
             "name": "Unauthorized Company",
             "email": "unauthorized@example.com",
-            "type": "employer",
+            "type": "member",
         }
         response = await client.post(
             "/api/admin/companies", json=company_data, headers=headers
@@ -361,7 +361,7 @@ class TestCompanyManagementPermissionMatrix:
     ):
         """Test that Employer cannot access any company management endpoints."""
         employer = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.EMPLOYER, "employer@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "employer@test.com"
         )
         headers = await self._get_auth_headers(client, employer)
 
@@ -480,7 +480,7 @@ class TestCompanyManagementPermissionMatrix:
         # Try to update critical fields that might affect ownership
         restricted_updates = [
             {"email": "newemail@example.com"},  # Primary contact email
-            {"type": "recruiter"},  # Company type change
+            {"type": "member"},  # Company type change
             {"is_active": False},  # Deactivation
         ]
 
@@ -533,7 +533,7 @@ class TestCompanyManagementPermissionMatrix:
     ) -> User:
         """Create a company admin user."""
         return await self._create_user_with_role(
-            db_session, company, test_roles, UserRoleEnum.COMPANY_ADMIN, email
+            db_session, company, test_roles, UserRoleEnum.ADMIN, email
         )
 
     async def _create_user_with_role(
@@ -552,7 +552,7 @@ class TestCompanyManagementPermissionMatrix:
             company_id=company.id,
             hashed_password=auth_service.get_password_hash("testpass123"),
             is_active=True,
-            is_admin=(role in [UserRoleEnum.SUPER_ADMIN, UserRoleEnum.COMPANY_ADMIN]),
+            is_admin=(role in [UserRoleEnum.SYSTEM_ADMIN, UserRoleEnum.ADMIN]),
             require_2fa=False,
         )
         db_session.add(user)

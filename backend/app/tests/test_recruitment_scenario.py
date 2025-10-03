@@ -103,14 +103,14 @@ async def test_interview_created_for_job_candidate(
     result = await db_session.execute(
         select(UserRole).where(
             UserRole.user_id == test_employer_user.id,
-            UserRole.role_id == test_roles[UserRoleEnum.RECRUITER.value].id,
+            UserRole.role_id == test_roles[UserRoleEnum.MEMBER.value].id,
         )
     )
     if result.scalar_one_or_none() is None:
         db_session.add(
             UserRole(
                 user_id=test_employer_user.id,
-                role_id=test_roles[UserRoleEnum.RECRUITER.value].id,
+                role_id=test_roles[UserRoleEnum.MEMBER.value].id,
             )
         )
         await db_session.commit()

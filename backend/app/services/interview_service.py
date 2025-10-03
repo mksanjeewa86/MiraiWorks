@@ -425,8 +425,8 @@ class InterviewService:
 
         recruiter_roles = user_role_names.get(recruiter_id, [])
         if not (
-            UserRole.RECRUITER.value in recruiter_roles
-            or UserRole.COMPANY_ADMIN.value in recruiter_roles
+            UserRole.MEMBER.value in recruiter_roles
+            or UserRole.ADMIN.value in recruiter_roles
         ):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

@@ -13,7 +13,7 @@ import { PREFECTURES } from '@/utils/prefectures';
 
 const emptyFormData: CompanyFormData = {
   name: '',
-  type: 'employer',
+  type: 'recruiter',
   email: '',
   phone: '',
   website: '',
@@ -150,8 +150,8 @@ function AddCompanyContent() {
                     backgroundSize: '16px',
                   }}
                 >
-                  <option value="employer">Employer</option>
-                  <option value="recruiter">Recruiter</option>
+                  <option value="member">Employer</option>
+                  <option value="member">Recruiter</option>
                 </select>
               </div>
 
@@ -372,7 +372,7 @@ function AddCompanyContent() {
 
 export default function AddCompanyPage() {
   return (
-    <ProtectedRoute allowedRoles={['super_admin']}>
+    <ProtectedRoute allowedRoles={['system_admin']}>
       <AddCompanyContent />
     </ProtectedRoute>
   );

@@ -177,14 +177,17 @@ async def get_current_user_with_company(
     return current_user
 
 
-async def require_super_admin(current_user: User = Depends(get_current_user)) -> User:
-    """Require user to be a super admin."""
-    # Check if user has super_admin role
+async def require_system_admin(current_user: User = Depends(get_current_user)) -> User:
+    """Require user to be a system admin."""
+    # Check if user has system_admin role
     user_roles = [user_role.role.name for user_role in current_user.user_roles]
 
-    if UserRole.SUPER_ADMIN not in user_roles:
+    if UserRole.SYSTEM_ADMIN.value not in user_roles:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Super admin access required"
+            status_code=status.HTTP_403_FORBIDDEN, detail="System admin access required"
         )
 
     return current_user
+
+# Alias for backward compatibility (will be deprecated)
+require_super_admin = require_system_admin

@@ -75,8 +75,8 @@ export const PAGE_INFO_MAP: Record<string, PageInfo> = {
     description: 'Monitor and manage the entire platform.',
   },
   '/admin/dashboard': {
-    title: 'Super Admin Dashboard',
-    description: 'Welcome back, Super Admin! Monitor and manage the entire platform.',
+    title: 'System Admin Dashboard',
+    description: 'Welcome back, System Admin! Monitor and manage the entire platform.',
   },
   '/admin/users': {
     title: 'User Management',

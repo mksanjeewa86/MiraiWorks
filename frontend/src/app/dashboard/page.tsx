@@ -16,13 +16,13 @@ function DashboardPageContent() {
     switch (user?.roles?.[0]?.role?.name) {
       case 'candidate':
         return <CandidateDashboard />;
-      case 'recruiter':
+      case 'member':
         return <RecruiterDashboard />;
-      case 'employer':
+      case 'member':
         return <EmployerDashboard />;
-      case 'company_admin':
+      case 'admin':
         return <CompanyAdminDashboard />;
-      case 'super_admin':
+      case 'system_admin':
         return <SuperAdminDashboard />;
       default:
         return <CandidateDashboard />;

@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud import company as company_crud
 from app.database import get_db
-from app.dependencies import require_super_admin
+from app.dependencies import get_current_active_user, require_super_admin
 from app.models import Company, Role, User, UserRole, UserSettings
 from app.schemas.company import (
     CompanyAdminStatus,
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 @router.get("/companies", response_model=CompanyListResponse)
 async def get_companies(
-    current_user: User = Depends(require_super_admin),
+    current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
@@ -39,17 +39,56 @@ async def get_companies(
     is_demo: bool | None = Query(None),
     include_deleted: bool = Query(False),
 ):
-    """Get companies with filtering, pagination and search."""
-    companies, total = await company_crud.get_companies(
-        db=db,
-        page=page,
-        size=size,
-        search=search,
-        company_type=company_type,
-        is_active=is_active,
-        is_demo=is_demo,
-        include_deleted=include_deleted,
-    )
+    """Get companies with filtering, pagination and search.
+
+    - System admins can see all companies
+    - Company admins can only see their own company
+    """
+    # Check user role
+    user_roles = [user_role.role.name for user_role in current_user.user_roles]
+    is_system_admin = UserRoleEnum.SYSTEM_ADMIN.value in user_roles
+    is_admin = UserRoleEnum.ADMIN.value in user_roles
+
+    # Only admins and system admins can access this endpoint
+    if not (is_system_admin or is_admin):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required"
+        )
+
+    # For company admins, filter to only their company
+    if is_admin and not is_system_admin:
+        if not current_user.company_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Company admin must be associated with a company"
+            )
+        # Get only the user's company
+        company = await company_crud.company.get(db, current_user.company_id)
+        if not company:
+            return CompanyListResponse(
+                companies=[],
+                total=0,
+                page=1,
+                size=size,
+                pages=0,
+            )
+
+        # Return single company as a list
+        companies = [company]
+        total = 1
+    else:
+        # System admin can see all companies
+        companies, total = await company_crud.get_companies(
+            db=db,
+            page=page,
+            size=size,
+            search=search,
+            company_type=company_type,
+            is_active=is_active,
+            is_demo=is_demo,
+            include_deleted=include_deleted,
+        )
 
     company_responses = [
         CompanyResponse(
@@ -206,7 +245,7 @@ async def create_company(
     db.add(admin_user)
     await db.flush()
 
-    role_query = select(Role).where(Role.name == UserRoleEnum.COMPANY_ADMIN)
+    role_query = select(Role).where(Role.name == UserRoleEnum.ADMIN)
     role_result = await db.execute(role_query)
     admin_role = role_result.scalar_one_or_none()
 

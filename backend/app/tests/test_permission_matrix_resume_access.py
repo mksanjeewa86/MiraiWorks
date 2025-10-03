@@ -245,7 +245,7 @@ class TestResumeAccessControl:
     ):
         """Test that Company Admin cannot create resumes."""
         company_admin = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.COMPANY_ADMIN, "companyadmin@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.ADMIN, "companyadmin@test.com"
         )
         headers = await self._get_auth_headers(client, company_admin)
 
@@ -270,7 +270,7 @@ class TestResumeAccessControl:
     ):
         """Test that Recruiter cannot create resumes."""
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.RECRUITER, "recruiter@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
         )
         headers = await self._get_auth_headers(client, recruiter)
 
@@ -295,7 +295,7 @@ class TestResumeAccessControl:
     ):
         """Test that Employer cannot create resumes."""
         employer = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.EMPLOYER, "employer@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "employer@test.com"
         )
         headers = await self._get_auth_headers(client, employer)
 
@@ -391,7 +391,7 @@ class TestResumeAccessControl:
     ):
         """Test that Company Admin can view applied candidate resumes from their company."""
         company_admin = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.COMPANY_ADMIN, "companyadmin@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.ADMIN, "companyadmin@test.com"
         )
         candidate = await self._create_user_with_role(
             db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
@@ -418,7 +418,7 @@ class TestResumeAccessControl:
     ):
         """Test that Company Admin cannot view resumes of candidates who haven't applied."""
         company_admin = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.COMPANY_ADMIN, "companyadmin@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.ADMIN, "companyadmin@test.com"
         )
         candidate = await self._create_user_with_role(
             db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
@@ -442,7 +442,7 @@ class TestResumeAccessControl:
     ):
         """Test that Company Admin cannot view resumes from other company candidates."""
         company_admin = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.COMPANY_ADMIN, "companyadmin@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.ADMIN, "companyadmin@test.com"
         )
 
         other_company = await self._create_other_company(db_session)
@@ -467,7 +467,7 @@ class TestResumeAccessControl:
     ):
         """Test that Recruiter can view applied candidate resumes from their company."""
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.RECRUITER, "recruiter@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
         )
         candidate = await self._create_user_with_role(
             db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
@@ -494,7 +494,7 @@ class TestResumeAccessControl:
     ):
         """Test that Recruiter cannot view resumes of candidates who haven't applied."""
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.RECRUITER, "recruiter@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
         )
         candidate = await self._create_user_with_role(
             db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
@@ -517,7 +517,7 @@ class TestResumeAccessControl:
     ):
         """Test that Employer can view applied candidate resumes from their company."""
         employer = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.EMPLOYER, "employer@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "employer@test.com"
         )
         candidate = await self._create_user_with_role(
             db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
@@ -548,7 +548,7 @@ class TestResumeAccessControl:
         other_company = await self._create_other_company(db_session)
 
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.RECRUITER, "recruiter@test.com"
+            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
         )
         other_candidate = await self._create_user_with_role(
             db_session, other_company, test_roles, UserRoleEnum.CANDIDATE, "othercandidate@test.com"
@@ -691,7 +691,7 @@ class TestResumeAccessControl:
             company_id=company.id if company else None,
             hashed_password=auth_service.get_password_hash("testpass123"),
             is_active=True,
-            is_admin=(role in [UserRoleEnum.SUPER_ADMIN, UserRoleEnum.COMPANY_ADMIN]),
+            is_admin=(role in [UserRoleEnum.SYSTEM_ADMIN, UserRoleEnum.ADMIN]),
             require_2fa=False,
         )
         db_session.add(user)

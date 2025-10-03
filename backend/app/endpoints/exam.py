@@ -51,7 +51,7 @@ async def create_exam(
     current_user: User = Depends(get_current_user_with_company)
 ):
     """Create a new exam with questions."""
-    require_roles(current_user, [UserRole.COMPANY_ADMIN, UserRole.COMPANY_RECRUITER])
+    require_roles(current_user, [UserRole.ADMIN, UserRole.COMPANY_RECRUITER])
 
     # Verify company access
     if exam_data.company_id != current_user.company_id:
@@ -90,7 +90,7 @@ async def get_company_exams(
     current_user: User = Depends(get_current_user_with_company)
 ):
     """Get exams for current user's company."""
-    require_roles(current_user, [UserRole.COMPANY_ADMIN, UserRole.COMPANY_RECRUITER])
+    require_roles(current_user, [UserRole.ADMIN, UserRole.COMPANY_RECRUITER])
 
     exams = await exam_crud.get_by_company(
         db=db,
@@ -118,7 +118,7 @@ async def get_exam_details(
     current_user: User = Depends(get_current_user_with_company)
 ):
     """Get detailed exam information."""
-    require_roles(current_user, [UserRole.COMPANY_ADMIN, UserRole.COMPANY_RECRUITER])
+    require_roles(current_user, [UserRole.ADMIN, UserRole.COMPANY_RECRUITER])
 
     exam = await exam_crud.get_with_details(db=db, id=exam_id)
     if not exam:
@@ -144,7 +144,7 @@ async def update_exam(
     current_user: User = Depends(get_current_user_with_company)
 ):
     """Update exam details."""
-    require_roles(current_user, [UserRole.COMPANY_ADMIN, UserRole.COMPANY_RECRUITER])
+    require_roles(current_user, [UserRole.ADMIN, UserRole.COMPANY_RECRUITER])
 
     exam = await exam_crud.get(db=db, id=exam_id)
     if not exam:
@@ -170,7 +170,7 @@ async def delete_exam(
     current_user: User = Depends(get_current_user_with_company)
 ):
     """Delete an exam."""
-    require_roles(current_user, [UserRole.COMPANY_ADMIN, UserRole.COMPANY_RECRUITER])
+    require_roles(current_user, [UserRole.ADMIN, UserRole.COMPANY_RECRUITER])
 
     exam = await exam_crud.get(db=db, id=exam_id)
     if not exam:
@@ -196,7 +196,7 @@ async def get_exam_statistics(
     current_user: User = Depends(get_current_user_with_company)
 ):
     """Get comprehensive exam statistics."""
-    require_roles(current_user, [UserRole.COMPANY_ADMIN, UserRole.COMPANY_RECRUITER])
+    require_roles(current_user, [UserRole.ADMIN, UserRole.COMPANY_RECRUITER])
 
     exam = await exam_crud.get(db=db, id=exam_id)
     if not exam:
@@ -224,7 +224,7 @@ async def get_exam_questions(
     current_user: User = Depends(get_current_user_with_company)
 ):
     """Get all questions for an exam."""
-    require_roles(current_user, [UserRole.COMPANY_ADMIN, UserRole.COMPANY_RECRUITER])
+    require_roles(current_user, [UserRole.ADMIN, UserRole.COMPANY_RECRUITER])
 
     exam = await exam_crud.get(db=db, id=exam_id)
     if not exam:
@@ -251,7 +251,7 @@ async def add_exam_question(
     current_user: User = Depends(get_current_user_with_company)
 ):
     """Add a new question to an exam."""
-    require_roles(current_user, [UserRole.COMPANY_ADMIN, UserRole.COMPANY_RECRUITER])
+    require_roles(current_user, [UserRole.ADMIN, UserRole.COMPANY_RECRUITER])
 
     exam = await exam_crud.get(db=db, id=exam_id)
     if not exam:
@@ -279,7 +279,7 @@ async def update_exam_question(
     current_user: User = Depends(get_current_user_with_company)
 ):
     """Update an exam question."""
-    require_roles(current_user, [UserRole.COMPANY_ADMIN, UserRole.COMPANY_RECRUITER])
+    require_roles(current_user, [UserRole.ADMIN, UserRole.COMPANY_RECRUITER])
 
     question = await exam_question_crud.get(db=db, id=question_id)
     if not question:
@@ -307,7 +307,7 @@ async def delete_exam_question(
     current_user: User = Depends(get_current_user_with_company)
 ):
     """Delete an exam question."""
-    require_roles(current_user, [UserRole.COMPANY_ADMIN, UserRole.COMPANY_RECRUITER])
+    require_roles(current_user, [UserRole.ADMIN, UserRole.COMPANY_RECRUITER])
 
     question = await exam_question_crud.get(db=db, id=question_id)
     if not question:
@@ -338,7 +338,7 @@ async def create_exam_assignments(
     current_user: User = Depends(get_current_user_with_company)
 ):
     """Assign exam to candidates."""
-    require_roles(current_user, [UserRole.COMPANY_ADMIN, UserRole.COMPANY_RECRUITER])
+    require_roles(current_user, [UserRole.ADMIN, UserRole.COMPANY_RECRUITER])
 
     exam = await exam_crud.get(db=db, id=exam_id)
     if not exam:
@@ -370,7 +370,7 @@ async def get_exam_assignments(
     current_user: User = Depends(get_current_user_with_company)
 ):
     """Get all assignments for an exam."""
-    require_roles(current_user, [UserRole.COMPANY_ADMIN, UserRole.COMPANY_RECRUITER])
+    require_roles(current_user, [UserRole.ADMIN, UserRole.COMPANY_RECRUITER])
 
     exam = await exam_crud.get(db=db, id=exam_id)
     if not exam:
@@ -764,7 +764,7 @@ async def get_exam_sessions(
     current_user: User = Depends(get_current_user_with_company)
 ):
     """Get all sessions for an exam (employer view)."""
-    require_roles(current_user, [UserRole.COMPANY_ADMIN, UserRole.COMPANY_RECRUITER])
+    require_roles(current_user, [UserRole.ADMIN, UserRole.COMPANY_RECRUITER])
 
     exam = await exam_crud.get(db=db, id=exam_id)
     if not exam:

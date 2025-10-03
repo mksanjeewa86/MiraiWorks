@@ -49,7 +49,7 @@ async def test_company_admin_user_creation_e2e_flow(
         name="E2E Test Company",
         email="e2e@company.com",
         phone="03-1234-5678",
-        type="employer",
+        type="member",
     )
     db_session.add(test_company)
     await db_session.commit()
@@ -71,7 +71,7 @@ async def test_company_admin_user_creation_e2e_flow(
     await db_session.refresh(company_admin)
 
     # Step 3: Assign company_admin role
-    company_admin_role = roles[UserRoleEnum.COMPANY_ADMIN.value]
+    company_admin_role = roles[UserRoleEnum.ADMIN.value]
     user_role = UserRole(user_id=company_admin.id, role_id=company_admin_role.id)
     db_session.add(user_role)
     await db_session.commit()
@@ -106,7 +106,7 @@ async def test_company_admin_user_creation_e2e_flow(
     }
 
     # Simulate auto-setting company and role (from useEffect)
-    auto_role = "employer" if test_company.type == "employer" else "recruiter"
+    auto_role = "member" if test_company.type == "member" else "member"
 
     frontend_form_data["company_id"] = str(test_company.id)
     frontend_form_data["role"] = auto_role
@@ -183,7 +183,7 @@ async def test_company_admin_user_creation_e2e_flow(
         "first_name": "Invalid",
         "last_name": "User",
         "company_id": test_company.id,
-        "roles": ["super_admin"],
+        "roles": ["system_admin"],
     }
 
     forbidden_response = await client.post(
@@ -192,14 +192,14 @@ async def test_company_admin_user_creation_e2e_flow(
 
     assert forbidden_response.status_code == 403
     error_detail = forbidden_response.json()["detail"]
-    assert "super_admin" in error_detail.lower()
+    assert "system_admin" in error_detail.lower()
 
     # Try to create user for different company (should fail)
     other_company = Company(
         name="Other Company",
         email="other@company.com",
         phone="03-9876-5432",
-        type="recruiter",
+        type="member",
     )
     db_session.add(other_company)
     await db_session.commit()
@@ -210,7 +210,7 @@ async def test_company_admin_user_creation_e2e_flow(
         "first_name": "Other",
         "last_name": "User",
         "company_id": other_company.id,
-        "roles": ["recruiter"],
+        "roles": ["member"],
     }
 
     other_company_response = await client.post(

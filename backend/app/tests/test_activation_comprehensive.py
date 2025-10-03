@@ -29,7 +29,7 @@ class TestAccountActivation:
             name="Test Activation Company",
             email="activation@test.com",
             phone="03-1234-5678",
-            type="employer",
+            type="member",
         )
         db_session.add(company)
         await db_session.commit()
@@ -336,7 +336,7 @@ class TestAccountActivation:
             name="Admin Test Company",
             email="admin@company.com",
             phone="03-1234-5678",
-            type="employer",
+            type="member",
             is_active="0",  # Company starts inactive (stored as string)
         )
         db_session.add(company)
@@ -345,7 +345,7 @@ class TestAccountActivation:
 
         # Create company admin role
         admin_role = Role(
-            name=UserRoleEnum.COMPANY_ADMIN, description="Company Administrator"
+            name=UserRoleEnum.ADMIN, description="Company Administrator"
         )
         db_session.add(admin_role)
         await db_session.commit()

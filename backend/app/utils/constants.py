@@ -2,11 +2,10 @@ from enum import Enum
 
 
 class UserRole(str, Enum):
-    SUPER_ADMIN = "super_admin"
-    COMPANY_ADMIN = "company_admin"
-    RECRUITER = "recruiter"
-    EMPLOYER = "employer"
-    CANDIDATE = "candidate"
+    SYSTEM_ADMIN = "system_admin"  # System-level administrator
+    ADMIN = "admin"  # Company administrator (context: company_type)
+    MEMBER = "member"  # Company member (context: company_type)
+    CANDIDATE = "candidate"  # Job candidate (no company affiliation)
 
 
 class CompanyType(str, Enum):

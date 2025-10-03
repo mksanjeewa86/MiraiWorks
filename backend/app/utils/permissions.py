@@ -71,9 +71,9 @@ def requires_role(required_roles: list[UserRole]):
 
 def check_company_access(user: User, target_company_id: int | None) -> bool:
     """Check if user has access to the target company."""
-    # Super admin has access to all companies
+    # System admin has access to all companies
     user_roles = [UserRole(ur.role.name) for ur in user.user_roles]
-    if UserRole.SUPER_ADMIN in user_roles:
+    if UserRole.SYSTEM_ADMIN in user_roles:
         return True
 
     # Users can only access their own company

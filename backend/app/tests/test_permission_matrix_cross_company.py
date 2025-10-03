@@ -225,7 +225,7 @@ class TestCrossCompanyAccessPrevention:
         user_data = {
             "email": "newuser@company-b.com",
             "company_id": scenario["company_b"].id,
-            "role": "recruiter",
+            "role": "member",
             "first_name": "New",
             "last_name": "User"
         }

@@ -123,9 +123,9 @@ class TestPermissionMatrixEdgeCases:
 
         return {
             "company": company,
-            "super_admin": super_admin,
-            "company_admin": company_admin,
-            "recruiter": recruiter,
+            "system_admin": super_admin,
+            "admin": company_admin,
+            "member": recruiter,
             "candidate": candidate,
             "inactive_user": inactive_user,
             "unverified_user": unverified_user
@@ -156,7 +156,7 @@ class TestPermissionMatrixEdgeCases:
     ):
         """Test that expired tokens are rejected."""
         scenario = setup_edge_case_scenario
-        expired_token = self._create_expired_token(scenario["company_admin"])
+        expired_token = self._create_expired_token(scenario["admin"])
         headers = {"Authorization": f"Bearer {expired_token}"}
 
         # Try to access protected endpoint with expired token
@@ -166,7 +166,7 @@ class TestPermissionMatrixEdgeCases:
         # Try to create user with expired token
         user_data = {
             "email": "newuser@edgecase.com",
-            "role": "recruiter",
+            "role": "member",
             "company_id": scenario["company"].id
         }
 
@@ -238,10 +238,10 @@ class TestPermissionMatrixEdgeCases:
     ):
         """Test that permissions are updated when user role changes."""
         scenario = setup_edge_case_scenario
-        super_admin_headers = self._create_auth_headers(scenario["super_admin"])
+        super_admin_headers = self._create_auth_headers(scenario["system_admin"])
 
         # Recruiter initially can create positions
-        recruiter_headers = self._create_auth_headers(scenario["recruiter"])
+        recruiter_headers = self._create_auth_headers(scenario["member"])
         position_data = {
             "title": "Initial Position",
             "description": "Position before role change"
@@ -260,10 +260,10 @@ class TestPermissionMatrixEdgeCases:
         assert response.status_code == 200
 
         # Refresh the recruiter object to get updated role
-        await db.refresh(scenario["recruiter"])
+        await db.refresh(scenario["member"])
 
         # Create new auth headers with updated role
-        updated_headers = self._create_auth_headers(scenario["recruiter"])
+        updated_headers = self._create_auth_headers(scenario["member"])
 
         # Now as candidate, should not be able to create positions
         position_data = {
@@ -279,10 +279,10 @@ class TestPermissionMatrixEdgeCases:
     ):
         """Test that users from deactivated companies cannot access resources."""
         scenario = setup_edge_case_scenario
-        super_admin_headers = self._create_auth_headers(scenario["super_admin"])
+        super_admin_headers = self._create_auth_headers(scenario["system_admin"])
 
         # Company admin initially can access users
-        admin_headers = self._create_auth_headers(scenario["company_admin"])
+        admin_headers = self._create_auth_headers(scenario["admin"])
         response = await client.get("/api/admin/users", headers=admin_headers)
         assert response.status_code == 200
 
@@ -307,8 +307,8 @@ class TestPermissionMatrixEdgeCases:
     ):
         """Test permission checks under concurrent access scenarios."""
         scenario = setup_edge_case_scenario
-        admin_headers = self._create_auth_headers(scenario["company_admin"])
-        recruiter_headers = self._create_auth_headers(scenario["recruiter"])
+        admin_headers = self._create_auth_headers(scenario["admin"])
+        recruiter_headers = self._create_auth_headers(scenario["member"])
 
         # Multiple users trying to create positions simultaneously
         position_data_1 = {
@@ -337,7 +337,7 @@ class TestPermissionMatrixEdgeCases:
     ):
         """Test permissions at resource limits and quotas."""
         scenario = setup_edge_case_scenario
-        admin_headers = self._create_auth_headers(scenario["company_admin"])
+        admin_headers = self._create_auth_headers(scenario["admin"])
 
         # Test creating maximum allowed resources
         # Company admin should be able to create multiple users up to limit
@@ -360,7 +360,7 @@ class TestPermissionMatrixEdgeCases:
         scenario = setup_edge_case_scenario
 
         # Create position
-        recruiter_headers = self._create_auth_headers(scenario["recruiter"])
+        recruiter_headers = self._create_auth_headers(scenario["member"])
         position_data = {
             "title": "Full Stack Developer",
             "description": "Complex role"
@@ -404,12 +404,12 @@ class TestPermissionMatrixEdgeCases:
         scenario = setup_edge_case_scenario
 
         # Super admin should inherit all company admin permissions
-        super_admin_headers = self._create_auth_headers(scenario["super_admin"])
+        super_admin_headers = self._create_auth_headers(scenario["system_admin"])
 
         # Create user in company (should work as Super Admin)
         user_data = {
             "email": "inherited@edgecase.com",
-            "role": "employer",
+            "role": "member",
             "company_id": scenario["company"].id,
             "first_name": "Inherited",
             "last_name": "User"
@@ -434,7 +434,7 @@ class TestPermissionMatrixEdgeCases:
         scenario = setup_edge_case_scenario
 
         # Create a file
-        recruiter_headers = self._create_auth_headers(scenario["recruiter"])
+        recruiter_headers = self._create_auth_headers(scenario["member"])
         file_info = Attachment(
             original_filename="Test Document.pdf",
             s3_key="test/documents/test_document.pdf",
@@ -442,7 +442,7 @@ class TestPermissionMatrixEdgeCases:
             file_size=1024,
             mime_type="application/pdf",
             sha256_hash="1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
-            owner_id=scenario["recruiter"].id,
+            owner_id=scenario["member"].id,
             is_available=True
         )
         db.add(file_info)
@@ -453,13 +453,13 @@ class TestPermissionMatrixEdgeCases:
         todo_data = {
             "title": "Review Document",
             "description": "Review the uploaded document",
-            "assigned_to": scenario["recruiter"].id,
+            "assigned_to": scenario["member"].id,
             "related_file_id": file_info.id,
             "priority": "medium",
             "due_date": "2024-02-01"
         }
 
-        company_admin_headers = self._create_auth_headers(scenario["company_admin"])
+        company_admin_headers = self._create_auth_headers(scenario["admin"])
         todo_response = await client.post("/api/todos", json=todo_data, headers=company_admin_headers)
         assert todo_response.status_code == 201
 
@@ -496,14 +496,14 @@ class TestPermissionMatrixEdgeCases:
     ):
         """Test edge cases around session invalidation."""
         scenario = setup_edge_case_scenario
-        recruiter_headers = self._create_auth_headers(scenario["recruiter"])
+        recruiter_headers = self._create_auth_headers(scenario["member"])
 
         # User can initially access resource
         response = await client.get("/api/positions", headers=recruiter_headers)
         assert response.status_code == 200
 
         # Deactivate user
-        super_admin_headers = self._create_auth_headers(scenario["super_admin"])
+        super_admin_headers = self._create_auth_headers(scenario["system_admin"])
         update_data = {"is_active": False}
         response = await client.put(
             f"/api/admin/users/{scenario['recruiter'].id}",
@@ -513,7 +513,7 @@ class TestPermissionMatrixEdgeCases:
         assert response.status_code == 200
 
         # Refresh user object
-        await db.refresh(scenario["recruiter"])
+        await db.refresh(scenario["member"])
 
         # Same token should now be invalid
         response = await client.get("/api/positions", headers=recruiter_headers)
@@ -524,7 +524,7 @@ class TestPermissionMatrixEdgeCases:
     ):
         """Test transitions between different permission states."""
         scenario = setup_edge_case_scenario
-        super_admin_headers = self._create_auth_headers(scenario["super_admin"])
+        super_admin_headers = self._create_auth_headers(scenario["system_admin"])
 
         # Create a user with minimum permissions (candidate)
         minimal_user = User(
@@ -549,7 +549,7 @@ class TestPermissionMatrixEdgeCases:
 
         # Promote to recruiter
         update_data = {
-            "role": "recruiter",
+            "role": "member",
             "company_id": scenario["company"].id
         }
         response = await client.put(
@@ -580,12 +580,12 @@ class TestPermissionMatrixEdgeCases:
     ):
         """Test data consistency in permission-controlled operations."""
         scenario = setup_edge_case_scenario
-        admin_headers = self._create_auth_headers(scenario["company_admin"])
+        admin_headers = self._create_auth_headers(scenario["admin"])
 
         # Create user and immediately try to assign permissions
         user_data = {
             "email": "consistency@edgecase.com",
-            "role": "recruiter",
+            "role": "member",
             "company_id": scenario["company"].id,
             "first_name": "Consistency",
             "last_name": "Test"

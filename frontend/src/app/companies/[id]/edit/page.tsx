@@ -18,7 +18,7 @@ function EditCompanyContent() {
   const [company, setCompany] = useState<Company | null>(null);
   const [formData, setFormData] = useState<CompanyFormData>({
     name: '',
-    type: 'employer',
+    type: 'recruiter',
     email: '',
     phone: '',
     website: '',
@@ -266,8 +266,8 @@ function EditCompanyContent() {
                     backgroundSize: '16px',
                   }}
                 >
-                  <option value="employer">Employer</option>
-                  <option value="recruiter">Recruiter</option>
+                  <option value="member">Employer</option>
+                  <option value="member">Recruiter</option>
                 </select>
               </div>
 
@@ -583,7 +583,7 @@ function EditCompanyContent() {
 
 export default function EditCompanyPage() {
   return (
-    <ProtectedRoute allowedRoles={['super_admin']}>
+    <ProtectedRoute allowedRoles={['system_admin']}>
       <EditCompanyContent />
     </ProtectedRoute>
   );

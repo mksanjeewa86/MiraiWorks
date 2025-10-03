@@ -554,13 +554,13 @@ class TestProcessViewer:
         viewer = ProcessViewer(
             process_id=1,
             user_id=50,
-            role="recruiter",
+            role="member",
             added_by=10
         )
 
         assert viewer.process_id == 1
         assert viewer.user_id == 50
-        assert viewer.role == "recruiter"
+        assert viewer.role == "member"
         assert viewer.is_recruiter
         assert not viewer.is_observer
         assert not viewer.is_admin
@@ -572,7 +572,7 @@ class TestProcessViewer:
         recruiter = ProcessViewer(
             process_id=1,
             user_id=50,
-            role="recruiter",
+            role="member",
             added_by=10
         )
 
@@ -612,7 +612,7 @@ class TestProcessViewer:
         recruiter = ProcessViewer(
             process_id=1,
             user_id=50,
-            role="recruiter",
+            role="member",
             added_by=10
         )
 

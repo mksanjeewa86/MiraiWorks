@@ -85,7 +85,7 @@ async def create_all_tables_and_seed_data(db):
         CREATE TABLE IF NOT EXISTS companies (
             id INT AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(255) NOT NULL,
-            type ENUM('RECRUITER', 'EMPLOYER') NOT NULL,
+            type ENUM('MEMBER', 'MEMBER') NOT NULL,
             email VARCHAR(255) NOT NULL,
             phone VARCHAR(50) NOT NULL,
             website VARCHAR(255),
@@ -113,8 +113,8 @@ async def create_all_tables_and_seed_data(db):
         """,
         """
         INSERT IGNORE INTO companies (id, name, type, email, phone, website, postal_code, prefecture, city, description, is_active, is_demo, is_deleted) VALUES
-        (1, 'MiraiWorks', 'RECRUITER', 'contact@miraiworks.com', '+1-555-0123', 'https://miraiworks.com', '94105', 'California', 'San Francisco', 'Leading HR technology company specializing in recruitment and talent management solutions.', '1', FALSE, FALSE),
-        (2, 'TechCorp Solutions', 'EMPLOYER', 'hr@techcorp.com', '+1-555-0456', 'https://techcorp.com', '10001', 'New York', 'New York', 'Enterprise software development company.', '1', FALSE, FALSE)
+        (1, 'MiraiWorks', 'MEMBER', 'contact@miraiworks.com', '+1-555-0123', 'https://miraiworks.com', '94105', 'California', 'San Francisco', 'Leading HR technology company specializing in recruitment and talent management solutions.', '1', FALSE, FALSE),
+        (2, 'TechCorp Solutions', 'MEMBER', 'hr@techcorp.com', '+1-555-0456', 'https://techcorp.com', '10001', 'New York', 'New York', 'Enterprise software development company.', '1', FALSE, FALSE)
         """,
         # Create users table and seed data
         """
@@ -674,7 +674,7 @@ async def main():
             print("   Email: admin@miraiworks.com")
             print("   Password: password")
 
-            print("\nRECRUITER ACCESS:")
+            print("\nMEMBER ACCESS:")
             print("   Email: recruiter@miraiworks.com")
             print("   Password: password")
 

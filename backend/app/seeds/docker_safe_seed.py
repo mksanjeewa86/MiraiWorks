@@ -383,7 +383,7 @@ async def main():
             print("   Email: admin@miraiworks.com")
             print("   Password: password")
 
-            print("\nRECRUITER ACCESS:")
+            print("\nMEMBER ACCESS:")
             print("   Email: recruiter@miraiworks.com")
             print("   Password: password")
 
