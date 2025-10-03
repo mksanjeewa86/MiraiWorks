@@ -136,6 +136,14 @@ class User(Base):
         cascade="all, delete-orphan"
     )
 
+    # Company follows (candidates following companies)
+    followed_companies = relationship(
+        "CompanyFollow",
+        foreign_keys="CompanyFollow.candidate_id",
+        back_populates="candidate",
+        cascade="all, delete-orphan"
+    )
+
     # Creator relationship (who created this user)
     creator = relationship("User", remote_side="User.id", post_update=True)
 

@@ -33,6 +33,12 @@ from app.models.meeting import (
 from app.models.message import Message
 from app.models.notification import Notification
 from app.models.position import CompanyProfile, Position, PositionApplication
+from app.models.candidate_process import CandidateProcess
+from app.models.node_connection import NodeConnection
+from app.models.node_execution import NodeExecution
+from app.models.process_node import ProcessNode
+from app.models.process_viewer import ProcessViewer
+from app.models.recruitment_process import RecruitmentProcess
 from app.models.resume import (
     Certification,
     Education,
@@ -50,6 +56,8 @@ from app.models.todo_extension_request import TodoExtensionRequest
 from app.models.todo_viewer import TodoViewer
 from app.models.user import User
 from app.models.user_connection import UserConnection
+from app.models.company_follow import CompanyFollow
+from app.models.company_connection import CompanyConnection
 from app.models.user_settings import UserSettings
 from app.models.video_call import (
     CallParticipant,
@@ -63,6 +71,8 @@ __all__ = [
     "Company",
     "User",
     "UserConnection",
+    "CompanyFollow",
+    "CompanyConnection",
     "ConnectionInvitation",
     "Role",
     "UserRole",
@@ -92,6 +102,12 @@ __all__ = [
     "CompanyProfile",
     "Position",
     "PositionApplication",
+    "CandidateProcess",
+    "NodeConnection",
+    "NodeExecution",
+    "ProcessNode",
+    "ProcessViewer",
+    "RecruitmentProcess",
     "UserSettings",
     "Todo",
     "TodoAttachment",

@@ -49,6 +49,28 @@ class Company(Base):
     )
     exams = relationship("Exam", back_populates="company", cascade="all, delete-orphan")
     recruitment_processes = relationship("RecruitmentProcess", back_populates="employer_company", cascade="all, delete-orphan")
+    
+    # Company follow relationships
+    followers = relationship(
+        "CompanyFollow",
+        foreign_keys="CompanyFollow.company_id",
+        back_populates="company",
+        cascade="all, delete-orphan"
+    )
+    
+    # Company connection relationships
+    sent_connection_requests = relationship(
+        "CompanyConnection",
+        foreign_keys="CompanyConnection.requesting_company_id",
+        back_populates="requesting_company",
+        cascade="all, delete-orphan"
+    )
+    received_connection_requests = relationship(
+        "CompanyConnection",
+        foreign_keys="CompanyConnection.target_company_id",
+        back_populates="target_company",
+        cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<Company(id={self.id}, name='{self.name}', type='{self.type}')>"
