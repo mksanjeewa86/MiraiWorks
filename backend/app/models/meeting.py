@@ -196,9 +196,7 @@ class MeetingRecording(Base):
 
     # Access control
     is_public: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    access_expires_at: Mapped[datetime | None] = mapped_column(
-        DateTime, nullable=True
-    )
+    access_expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # Metadata
     recorded_by: Mapped[int] = mapped_column(

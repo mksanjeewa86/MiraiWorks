@@ -1,5 +1,6 @@
 from datetime import date, datetime
 
+from app.config.endpoints import API_ROUTES
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,12 +19,14 @@ from app.schemas.holiday import (
 router = APIRouter()
 
 
-@router.get("/", response_model=HolidayListResponse)
+@router.get(API_ROUTES.HOLIDAYS.BASE, response_model=HolidayListResponse)
 async def get_holidays(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
     year: int | None = Query(None, description="Filter by year"),
-    country: CountryCode | None = Query(CountryCode.JAPAN, description="Filter by country"),
+    country: CountryCode | None = Query(
+        CountryCode.JAPAN, description="Filter by country"
+    ),
     month: int | None = Query(None, ge=1, le=12, description="Filter by month"),
     is_national: bool | None = Query(None, description="Filter by national holidays"),
     date_from: date | None = Query(None, description="Filter holidays from this date"),
@@ -62,18 +65,17 @@ async def get_holidays(
         holidays = [h for h in holidays if h.is_national == is_national]
 
     return HolidayListResponse(
-        holidays=holidays,
-        total=len(holidays),
-        year=year,
-        country=country.value
+        holidays=holidays, total=len(holidays), year=year, country=country.value
     )
 
 
-@router.get("/upcoming", response_model=list[HolidayInfo])
+@router.get(API_ROUTES.HOLIDAYS.UPCOMING, response_model=list[HolidayInfo])
 async def get_upcoming_holidays(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
-    limit: int = Query(10, ge=1, le=50, description="Number of upcoming holidays to return"),
+    limit: int = Query(
+        10, ge=1, le=50, description="Number of upcoming holidays to return"
+    ),
     country: CountryCode = Query(CountryCode.JAPAN, description="Country code"),
     from_date: date | None = Query(None, description="Start date (default: today)"),
 ):
@@ -87,7 +89,7 @@ async def get_upcoming_holidays(
     return holidays
 
 
-@router.get("/check/{holiday_date}", response_model=dict)
+@router.get(API_ROUTES.HOLIDAYS.CHECK, response_model=dict)
 async def check_holiday(
     holiday_date: date,
     db: AsyncSession = Depends(get_db),
@@ -103,14 +105,10 @@ async def check_holiday(
     if is_holiday:
         holiday_info = await holiday_crud.get_by_date(db, holiday_date=holiday_date)
 
-    return {
-        "date": holiday_date,
-        "is_holiday": is_holiday,
-        "holiday": holiday_info
-    }
+    return {"date": holiday_date, "is_holiday": is_holiday, "holiday": holiday_info}
 
 
-@router.get("/{holiday_id}", response_model=HolidayInfo)
+@router.get(API_ROUTES.HOLIDAYS.BY_ID, response_model=HolidayInfo)
 async def get_holiday(
     holiday_id: int,
     db: AsyncSession = Depends(get_db),
@@ -123,7 +121,7 @@ async def get_holiday(
     return holiday
 
 
-@router.post("/", response_model=HolidayInfo)
+@router.post(API_ROUTES.HOLIDAYS.BASE, response_model=HolidayInfo)
 async def create_holiday(
     holiday_in: HolidayCreate,
     db: AsyncSession = Depends(get_db),
@@ -134,19 +132,18 @@ async def create_holiday(
     existing_holiday = await holiday_crud.get_by_date(db, holiday_date=holiday_in.date)
     if existing_holiday:
         raise HTTPException(
-            status_code=400,
-            detail=f"Holiday already exists for date {holiday_in.date}"
+            status_code=400, detail=f"Holiday already exists for date {holiday_in.date}"
         )
 
     # Add year to holiday data
     holiday_data = holiday_in.dict()
-    holiday_data['year'] = holiday_in.date.year
+    holiday_data["year"] = holiday_in.date.year
 
     holiday = await holiday_crud.create(db, obj_in=holiday_data)
     return holiday
 
 
-@router.post("/bulk", response_model=list[HolidayInfo])
+@router.post(API_ROUTES.HOLIDAYS.BULK, response_model=list[HolidayInfo])
 async def create_holidays_bulk(
     holidays_in: list[HolidayCreate],
     db: AsyncSession = Depends(get_db),
@@ -163,14 +160,14 @@ async def create_holidays_bulk(
     if existing_dates:
         raise HTTPException(
             status_code=400,
-            detail=f"Holidays already exist for dates: {existing_dates}"
+            detail=f"Holidays already exist for dates: {existing_dates}",
         )
 
     holidays = await holiday_crud.create_multiple(db, holidays=holidays_in)
     return holidays
 
 
-@router.put("/{holiday_id}", response_model=HolidayInfo)
+@router.put(API_ROUTES.HOLIDAYS.BY_ID, response_model=HolidayInfo)
 async def update_holiday(
     holiday_id: int,
     holiday_update: HolidayUpdate,
@@ -184,14 +181,14 @@ async def update_holiday(
 
     # Update year if date is changed
     update_data = holiday_update.dict(exclude_unset=True)
-    if 'date' in update_data:
-        update_data['year'] = update_data['date'].year
+    if "date" in update_data:
+        update_data["year"] = update_data["date"].year
 
     holiday = await holiday_crud.update(db, db_obj=holiday, obj_in=update_data)
     return holiday
 
 
-@router.delete("/{holiday_id}")
+@router.delete(API_ROUTES.HOLIDAYS.BY_ID)
 async def delete_holiday(
     holiday_id: int,
     db: AsyncSession = Depends(get_db),

@@ -45,6 +45,15 @@ function UsersPageContent() {
     icon?: React.ReactNode;
   }>({ isOpen: false, title: '', message: '', onConfirm: () => {} });
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [viewingUser, setViewingUser] = useState<UserManagement | null>(null);
+
+  // Prevent body scroll on this page
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<UserFilters>({
@@ -137,6 +146,10 @@ function UsersPageContent() {
   };
 
   const handleSelectUser = (userId: number) => {
+    const user = users.find((u) => u.id === userId);
+    // Don't allow selection of deleted users
+    if (user?.is_deleted) return;
+
     const newSelected = new Set(selectedUsers);
     if (newSelected.has(userId)) {
       newSelected.delete(userId);
@@ -147,10 +160,12 @@ function UsersPageContent() {
   };
 
   const handleSelectAll = () => {
-    if (selectedUsers.size === users.length) {
+    // Only select non-deleted users
+    const selectableUsers = users.filter((u) => !u.is_deleted);
+    if (selectedUsers.size === selectableUsers.length) {
       setSelectedUsers(new Set());
     } else {
-      setSelectedUsers(new Set(users.map((user) => user.id)));
+      setSelectedUsers(new Set(selectableUsers.map((user) => user.id)));
     }
   };
 
@@ -432,19 +447,20 @@ function UsersPageContent() {
           </div>
         )}
 
-        <div className="flex items-center justify-between mb-6">
-          <div></div>
-          <Link
-            href="/users/add"
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Add User</span>
-          </Link>
-        </div>
+        {selectedUsers.size === 0 && (
+          <div className="flex items-center justify-end mb-6 mt-6 min-h-[56px]">
+            <Link
+              href="/users/add"
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Add User</span>
+            </Link>
+          </div>
+        )}
 
         {selectedUsers.size > 0 && (
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6 mt-6 min-h-[56px]">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <span className="text-blue-700 dark:text-blue-300 font-medium">
@@ -560,9 +576,9 @@ function UsersPageContent() {
                 }}
               >
                 <option value="">All Roles</option>
-                <option value="admin">Company Admin</option>
-                <option value="member">Recruiter</option>
-                <option value="member">Employer</option>
+                <option value="system_admin">System Administrator</option>
+                <option value="admin">Administrator</option>
+                <option value="member">Member</option>
                 <option value="candidate">Candidate</option>
               </select>
             </div>
@@ -612,11 +628,14 @@ function UsersPageContent() {
               </Link>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div
+              className="overflow-x-auto"
+              style={{ maxHeight: 'calc(100vh - 350px)', overflowY: 'auto' }}
+            >
               <table className="w-full">
-                <thead className="bg-gray-50 dark:bg-gray-900">
+                <thead className="bg-gray-50 dark:bg-gray-900 sticky top-0 z-10">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-12">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-12 bg-gray-50 dark:bg-gray-900">
                       <input
                         type="checkbox"
                         checked={users.length > 0 && selectedUsers.size === users.length}
@@ -624,22 +643,22 @@ function UsersPageContent() {
                         className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                       />
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-900">
                       User
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-900">
                       Company
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-900">
                       Contact
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-900">
                       Role
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-900">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"></th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-900"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -647,20 +666,26 @@ function UsersPageContent() {
                     <tr
                       key={user.id}
                       className={`cursor-pointer transition-colors ${
-                        selectedUsers.has(user.id)
-                          ? 'bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30'
-                          : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+                        user.is_deleted
+                          ? selectedUsers.has(user.id)
+                            ? 'bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/40'
+                            : 'bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30'
+                          : selectedUsers.has(user.id)
+                            ? 'bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30'
+                            : 'hover:bg-gray-50 dark:hover:bg-gray-700'
                       }`}
                       onClick={() => handleSelectUser(user.id)}
                     >
                       <td className="px-6 py-4">
-                        <input
-                          type="checkbox"
-                          checked={selectedUsers.has(user.id)}
-                          onChange={() => handleSelectUser(user.id)}
-                          onClick={(e) => e.stopPropagation()}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                        />
+                        {!user.is_deleted && (
+                          <input
+                            type="checkbox"
+                            checked={selectedUsers.has(user.id)}
+                            onChange={() => handleSelectUser(user.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          />
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center">
@@ -775,13 +800,23 @@ function UsersPageContent() {
                           className="flex items-center justify-end"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <Link
-                            href={`/users/${user.id}/edit`}
-                            className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 flex items-center space-x-1"
-                          >
-                            <Edit className="h-3 w-3" />
-                            <span>Edit</span>
-                          </Link>
+                          {user.is_deleted ? (
+                            <button
+                              onClick={() => setViewingUser(user)}
+                              className="bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-700 flex items-center space-x-1"
+                            >
+                              <Users className="h-3 w-3" />
+                              <span>Details</span>
+                            </button>
+                          ) : (
+                            <Link
+                              href={`/users/${user.id}/edit`}
+                              className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 flex items-center space-x-1"
+                            >
+                              <Edit className="h-3 w-3" />
+                              <span>Edit</span>
+                            </Link>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -833,6 +868,180 @@ function UsersPageContent() {
           confirmButtonClass={confirmationModal.confirmButtonClass}
           icon={confirmationModal.icon}
         />
+
+        {/* User Details Modal */}
+        {viewingUser && (
+          <div className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-3xl border border-slate-200 dark:border-gray-700 shadow-[0_30px_80px_-20px_rgba(15,23,42,0.2)] max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+              {/* Header */}
+              <div className="flex-shrink-0 px-6 pt-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                        <Users className="h-5 w-5" />
+                      </span>
+                      <div>
+                        <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                          User Details
+                        </h2>
+                        <p className="text-sm text-slate-500 dark:text-gray-400">
+                          View information about this user
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setViewingUser(null)}
+                    className="rounded-lg border border-slate-200 dark:border-gray-600 p-2 text-slate-500 dark:text-gray-400 transition hover:bg-slate-100 dark:hover:bg-gray-700 hover:text-slate-700 dark:hover:text-gray-200"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto px-6 py-6 min-h-0">
+                <div className="space-y-6">
+                  {/* Basic Information Section */}
+                  <div className="rounded-2xl border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-gray-900/20 p-6">
+                    <h3 className="text-sm font-semibold text-slate-700 dark:text-gray-300 mb-4">
+                      Basic Information
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-500 dark:text-gray-400">
+                          Name
+                        </label>
+                        <p className="mt-1 text-slate-900 dark:text-white">
+                          {viewingUser.first_name} {viewingUser.last_name}
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-slate-500 dark:text-gray-400">
+                          Email
+                        </label>
+                        <p className="mt-1 text-slate-900 dark:text-white">{viewingUser.email}</p>
+                      </div>
+
+                      {viewingUser.phone && (
+                        <div>
+                          <label className="block text-sm font-medium text-slate-500 dark:text-gray-400">
+                            Phone
+                          </label>
+                          <p className="mt-1 text-slate-900 dark:text-white">{viewingUser.phone}</p>
+                        </div>
+                      )}
+
+                      {viewingUser.company_name && (
+                        <div>
+                          <label className="block text-sm font-medium text-slate-500 dark:text-gray-400">
+                            Company
+                          </label>
+                          <p className="mt-1 text-slate-900 dark:text-white">
+                            {viewingUser.company_name}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Roles & Permissions Section */}
+                  <div className="rounded-2xl border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-gray-900/20 p-6">
+                    <h3 className="text-sm font-semibold text-slate-700 dark:text-gray-300 mb-4">
+                      Roles & Permissions
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-500 dark:text-gray-400">
+                          Roles
+                        </label>
+                        <div className="mt-1 flex flex-wrap gap-2">
+                          {viewingUser.is_admin && (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300">
+                              <Shield className="h-3 w-3 mr-1" />
+                              Admin
+                            </span>
+                          )}
+                          {viewingUser.roles.map((role: string) => (
+                            <span
+                              key={role}
+                              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300"
+                            >
+                              {role.replace('_', ' ')}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {viewingUser.require_2fa && (
+                        <div>
+                          <label className="block text-sm font-medium text-slate-500 dark:text-gray-400">
+                            Security
+                          </label>
+                          <div className="mt-1">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
+                              <ShieldCheck className="h-3 w-3 mr-1" />
+                              2FA Enabled
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Status Section */}
+                  <div className="rounded-2xl border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-gray-900/20 p-6">
+                    <h3 className="text-sm font-semibold text-slate-700 dark:text-gray-300 mb-4">
+                      Status
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-500 dark:text-gray-400">
+                          Account Status
+                        </label>
+                        <div className="mt-1 flex flex-wrap gap-2">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-900/40 dark:text-gray-300">
+                            <UserX className="h-3 w-3 mr-1" />
+                            Deleted
+                          </span>
+                          {viewingUser.is_suspended && (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-300">
+                              <PowerOff className="h-3 w-3 mr-1" />
+                              Suspended
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {viewingUser.deleted_at && (
+                        <div>
+                          <label className="block text-sm font-medium text-slate-500 dark:text-gray-400">
+                            Deleted At
+                          </label>
+                          <p className="mt-1 text-slate-900 dark:text-white">
+                            {new Date(viewingUser.deleted_at).toLocaleString()}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex-shrink-0 gap-3 border-t border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-6 py-4 flex justify-end">
+                <button
+                  onClick={() => setViewingUser(null)}
+                  className="min-w-[120px] border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-gray-600 px-4 py-2 rounded-lg transition"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </AppLayout>
   );

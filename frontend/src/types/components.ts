@@ -4,7 +4,7 @@ import type {
   CalendarConnection,
   TodoWithAssignedUser,
   RecruitmentProcess,
-  LinearWorkflowStep
+  LinearWorkflowStep,
 } from '@/types';
 import type { ChatMessage, TranscriptionSegment } from '@/types/video';
 import type { Interview, InterviewFormData, InterviewEditFormData } from '@/types/interview';
@@ -12,7 +12,13 @@ import type { SelectionRange } from '@/types/calendar';
 import type { MBTITestProgress } from '@/types/mbti';
 import type { UserManagement } from '@/types/user';
 import type { Question, Answer, QuestionFormData } from '@/types/exam';
-import type { LabelHTMLAttributes, InputHTMLAttributes, HTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react';
+import type {
+  LabelHTMLAttributes,
+  InputHTMLAttributes,
+  HTMLAttributes,
+  SelectHTMLAttributes,
+  TextareaHTMLAttributes,
+} from 'react';
 
 // ====================
 // VIDEO COMPONENTS
@@ -196,7 +202,9 @@ export interface CalendarSidebarProps {
   onFiltersChange: (filters: CalendarFilters) => void;
   onCreateEvent: () => void;
   connections: CalendarConnection[];
-  onConnectProvider: (provider: import('@/types/calendar').CalendarProvider) => void | Promise<void>;
+  onConnectProvider: (
+    provider: import('@/types/calendar').CalendarProvider
+  ) => void | Promise<void>;
   onDisconnect: (connectionId: number) => void | Promise<void>;
   onSync: (connectionId: number) => void | Promise<void>;
   loadingConnections: boolean;
@@ -353,7 +361,15 @@ export interface AlertProps {
 
 export interface BadgeProps {
   children: React.ReactNode;
-  variant?: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'destructive' | 'default' | 'outline';
+  variant?:
+    | 'primary'
+    | 'secondary'
+    | 'success'
+    | 'warning'
+    | 'error'
+    | 'destructive'
+    | 'default'
+    | 'outline';
   size?: 'sm' | 'md' | 'lg';
   className?: string;
 }
@@ -553,7 +569,8 @@ export interface SeparatorProps extends HTMLAttributes<HTMLDivElement> {
   decorative?: boolean;
 }
 
-export interface SwitchProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'onCheckedChange'> {
+export interface SwitchProps
+  extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'onCheckedChange'> {
   className?: string;
   checked?: boolean;
   onCheckedChange?: (checked: boolean) => void;

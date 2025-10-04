@@ -19,7 +19,7 @@ class TestRecruitmentProcess:
             name="Software Engineer Process",
             description="Technical interview process",
             employer_company_id=1,
-            created_by=1
+            created_by=1,
         )
 
         assert process.name == "Software Engineer Process"
@@ -33,9 +33,7 @@ class TestRecruitmentProcess:
     def test_activate_process(self):
         """Test activating a process"""
         process = RecruitmentProcess(
-            name="Test Process",
-            employer_company_id=1,
-            created_by=1
+            name="Test Process", employer_company_id=1, created_by=1
         )
 
         process.activate(activated_by=1)
@@ -49,9 +47,7 @@ class TestRecruitmentProcess:
     def test_archive_process(self):
         """Test archiving a process"""
         process = RecruitmentProcess(
-            name="Test Process",
-            employer_company_id=1,
-            created_by=1
+            name="Test Process", employer_company_id=1, created_by=1
         )
 
         process.archive(archived_by=1)
@@ -62,10 +58,7 @@ class TestRecruitmentProcess:
     def test_activate_non_draft_process_fails(self):
         """Test that only draft processes can be activated"""
         process = RecruitmentProcess(
-            name="Test Process",
-            employer_company_id=1,
-            created_by=1,
-            status="active"
+            name="Test Process", employer_company_id=1, created_by=1, status="active"
         )
 
         with pytest.raises(ValueError, match="Only draft processes can be activated"):
@@ -83,7 +76,7 @@ class TestProcessNode:
             title="Technical Interview",
             description="Coding interview with senior engineer",
             sequence_order=1,
-            created_by=1
+            created_by=1,
         )
 
         assert node.node_type == "interview"
@@ -101,7 +94,7 @@ class TestProcessNode:
             node_type="interview",
             title="Interview",
             sequence_order=1,
-            created_by=1
+            created_by=1,
         )
 
         node.activate(updated_by=2)
@@ -117,7 +110,7 @@ class TestProcessNode:
             node_type="interview",
             title="Interview",
             sequence_order=1,
-            created_by=1
+            created_by=1,
         )
 
         assert node.can_be_deleted()
@@ -130,7 +123,7 @@ class TestProcessNode:
             node_type="interview",
             title="Start Interview",
             sequence_order=1,
-            created_by=1
+            created_by=1,
         )
 
         assert start_node.is_start_node
@@ -141,7 +134,7 @@ class TestProcessNode:
             node_type="todo",
             title="Assignment",
             sequence_order=2,
-            created_by=1
+            created_by=1,
         )
 
         assert not regular_node.is_start_node
@@ -152,10 +145,7 @@ class TestCandidateProcess:
 
     def test_create_candidate_process(self):
         """Test creating a candidate process"""
-        candidate_process = CandidateProcess(
-            candidate_id=100,
-            process_id=1
-        )
+        candidate_process = CandidateProcess(candidate_id=100, process_id=1)
 
         assert candidate_process.candidate_id == 100
         assert candidate_process.process_id == 1
@@ -165,10 +155,7 @@ class TestCandidateProcess:
 
     def test_start_candidate_process(self):
         """Test starting a candidate process"""
-        candidate_process = CandidateProcess(
-            candidate_id=100,
-            process_id=1
-        )
+        candidate_process = CandidateProcess(candidate_id=100, process_id=1)
 
         candidate_process.start(first_node_id=10)
 
@@ -180,15 +167,11 @@ class TestCandidateProcess:
     def test_complete_candidate_process(self):
         """Test completing a candidate process"""
         candidate_process = CandidateProcess(
-            candidate_id=100,
-            process_id=1,
-            status="in_progress"
+            candidate_id=100, process_id=1, status="in_progress"
         )
 
         candidate_process.complete(
-            final_result="hired",
-            overall_score=85.5,
-            notes="Excellent candidate"
+            final_result="hired", overall_score=85.5, notes="Excellent candidate"
         )
 
         assert candidate_process.status == "completed"
@@ -202,10 +185,7 @@ class TestCandidateProcess:
     def test_fail_candidate_process(self):
         """Test failing a candidate process"""
         candidate_process = CandidateProcess(
-            candidate_id=100,
-            process_id=1,
-            status="in_progress",
-            current_node_id=5
+            candidate_id=100, process_id=1, status="in_progress", current_node_id=5
         )
 
         candidate_process.fail(reason="Failed technical interview", failed_at_node_id=5)
@@ -220,9 +200,7 @@ class TestCandidateProcess:
     def test_withdraw_candidate_process(self):
         """Test withdrawing from a process"""
         candidate_process = CandidateProcess(
-            candidate_id=100,
-            process_id=1,
-            status="in_progress"
+            candidate_id=100, process_id=1, status="in_progress"
         )
 
         candidate_process.withdraw(reason="Accepted another offer")
@@ -237,9 +215,7 @@ class TestCandidateProcess:
     def test_put_on_hold_and_resume(self):
         """Test putting process on hold and resuming"""
         candidate_process = CandidateProcess(
-            candidate_id=100,
-            process_id=1,
-            status="in_progress"
+            candidate_id=100, process_id=1, status="in_progress"
         )
 
         # Put on hold
@@ -253,10 +229,7 @@ class TestCandidateProcess:
 
     def test_assign_recruiter(self):
         """Test assigning a recruiter"""
-        candidate_process = CandidateProcess(
-            candidate_id=100,
-            process_id=1
-        )
+        candidate_process = CandidateProcess(candidate_id=100, process_id=1)
 
         candidate_process.assign_recruiter(recruiter_id=50)
 
@@ -266,9 +239,7 @@ class TestCandidateProcess:
     def test_advance_to_node(self):
         """Test advancing to next node"""
         candidate_process = CandidateProcess(
-            candidate_id=100,
-            process_id=1,
-            current_node_id=1
+            candidate_id=100, process_id=1, current_node_id=1
         )
 
         candidate_process.advance_to_node(next_node_id=2)
@@ -277,10 +248,7 @@ class TestCandidateProcess:
 
     def test_progress_percentage_calculation(self):
         """Test progress percentage calculation"""
-        candidate_process = CandidateProcess(
-            candidate_id=100,
-            process_id=1
-        )
+        candidate_process = CandidateProcess(candidate_id=100, process_id=1)
 
         # This would require executions relationship to work properly
         # For now, test that the property exists and returns a number
@@ -291,9 +259,7 @@ class TestCandidateProcess:
     def test_start_already_started_process_fails(self):
         """Test that starting an already started process fails"""
         candidate_process = CandidateProcess(
-            candidate_id=100,
-            process_id=1,
-            status="in_progress"
+            candidate_id=100, process_id=1, status="in_progress"
         )
 
         with pytest.raises(ValueError, match="Process has already been started"):
@@ -302,20 +268,18 @@ class TestCandidateProcess:
     def test_put_on_hold_non_active_process_fails(self):
         """Test that only in-progress processes can be put on hold"""
         candidate_process = CandidateProcess(
-            candidate_id=100,
-            process_id=1,
-            status="completed"
+            candidate_id=100, process_id=1, status="completed"
         )
 
-        with pytest.raises(ValueError, match="Only in-progress processes can be put on hold"):
+        with pytest.raises(
+            ValueError, match="Only in-progress processes can be put on hold"
+        ):
             candidate_process.put_on_hold()
 
     def test_resume_non_hold_process_fails(self):
         """Test that only processes on hold can be resumed"""
         candidate_process = CandidateProcess(
-            candidate_id=100,
-            process_id=1,
-            status="in_progress"
+            candidate_id=100, process_id=1, status="in_progress"
         )
 
         with pytest.raises(ValueError, match="Only processes on hold can be resumed"):
@@ -327,10 +291,7 @@ class TestNodeExecution:
 
     def test_create_node_execution(self):
         """Test creating a node execution"""
-        execution = NodeExecution(
-            candidate_process_id=1,
-            node_id=10
-        )
+        execution = NodeExecution(candidate_process_id=1, node_id=10)
 
         assert execution.candidate_process_id == 1
         assert execution.node_id == 10
@@ -341,11 +302,7 @@ class TestNodeExecution:
 
     def test_start_execution(self):
         """Test starting an execution"""
-        execution = NodeExecution(
-            candidate_process_id=1,
-            node_id=10,
-            status="pending"
-        )
+        execution = NodeExecution(candidate_process_id=1, node_id=10, status="pending")
 
         execution.start(assigned_to=50)
 
@@ -357,9 +314,7 @@ class TestNodeExecution:
     def test_complete_execution(self):
         """Test completing an execution"""
         execution = NodeExecution(
-            candidate_process_id=1,
-            node_id=10,
-            status="in_progress"
+            candidate_process_id=1, node_id=10, status="in_progress"
         )
         execution.started_at = datetime.utcnow()
 
@@ -368,7 +323,7 @@ class TestNodeExecution:
             completed_by=25,
             score=90.0,
             feedback="Great performance",
-            execution_data={"details": "test"}
+            execution_data={"details": "test"},
         )
 
         assert execution.status == "completed"
@@ -383,9 +338,7 @@ class TestNodeExecution:
     def test_fail_execution(self):
         """Test failing an execution"""
         execution = NodeExecution(
-            candidate_process_id=1,
-            node_id=10,
-            status="in_progress"
+            candidate_process_id=1, node_id=10, status="in_progress"
         )
 
         execution.fail(completed_by=25, reason="Did not meet requirements")
@@ -399,11 +352,7 @@ class TestNodeExecution:
 
     def test_skip_execution(self):
         """Test skipping an execution"""
-        execution = NodeExecution(
-            candidate_process_id=1,
-            node_id=10,
-            status="pending"
-        )
+        execution = NodeExecution(candidate_process_id=1, node_id=10, status="pending")
 
         execution.skip(completed_by=25, reason="Node no longer required")
 
@@ -415,11 +364,7 @@ class TestNodeExecution:
 
     def test_schedule_execution(self):
         """Test scheduling an execution"""
-        execution = NodeExecution(
-            candidate_process_id=1,
-            node_id=10,
-            status="pending"
-        )
+        execution = NodeExecution(candidate_process_id=1, node_id=10, status="pending")
 
         due_date = datetime.utcnow() + timedelta(days=2)
         execution.schedule(due_date=due_date)
@@ -430,9 +375,7 @@ class TestNodeExecution:
     def test_await_input(self):
         """Test marking execution as awaiting input"""
         execution = NodeExecution(
-            candidate_process_id=1,
-            node_id=10,
-            status="in_progress"
+            candidate_process_id=1, node_id=10, status="in_progress"
         )
 
         execution.await_input()
@@ -441,10 +384,7 @@ class TestNodeExecution:
 
     def test_link_interview(self):
         """Test linking an interview to execution"""
-        execution = NodeExecution(
-            candidate_process_id=1,
-            node_id=10
-        )
+        execution = NodeExecution(candidate_process_id=1, node_id=10)
 
         execution.link_interview(interview_id=100)
 
@@ -452,10 +392,7 @@ class TestNodeExecution:
 
     def test_link_todo(self):
         """Test linking a todo to execution"""
-        execution = NodeExecution(
-            candidate_process_id=1,
-            node_id=10
-        )
+        execution = NodeExecution(candidate_process_id=1, node_id=10)
 
         execution.link_todo(todo_id=200)
 
@@ -463,10 +400,7 @@ class TestNodeExecution:
 
     def test_add_review(self):
         """Test adding reviewer notes"""
-        execution = NodeExecution(
-            candidate_process_id=1,
-            node_id=10
-        )
+        execution = NodeExecution(candidate_process_id=1, node_id=10)
 
         execution.add_review(reviewer_id=30, notes="Good technical skills")
 
@@ -475,10 +409,7 @@ class TestNodeExecution:
 
     def test_duration_calculation(self):
         """Test execution duration calculation"""
-        execution = NodeExecution(
-            candidate_process_id=1,
-            node_id=10
-        )
+        execution = NodeExecution(candidate_process_id=1, node_id=10)
 
         start_time = datetime.utcnow()
         end_time = start_time + timedelta(minutes=45)
@@ -494,7 +425,7 @@ class TestNodeExecution:
             candidate_process_id=1,
             node_id=10,
             status="in_progress",
-            due_date=datetime.utcnow() - timedelta(hours=1)
+            due_date=datetime.utcnow() - timedelta(hours=1),
         )
 
         assert execution.is_overdue
@@ -507,39 +438,27 @@ class TestNodeExecution:
         """Test invalid state transitions"""
         # Cannot start completed execution
         execution = NodeExecution(
-            candidate_process_id=1,
-            node_id=10,
-            status="completed"
+            candidate_process_id=1, node_id=10, status="completed"
         )
 
         with pytest.raises(ValueError):
             execution.start()
 
         # Cannot complete pending execution
-        execution2 = NodeExecution(
-            candidate_process_id=1,
-            node_id=10,
-            status="pending"
-        )
+        execution2 = NodeExecution(candidate_process_id=1, node_id=10, status="pending")
 
         with pytest.raises(ValueError):
             execution2.complete(result="pass", completed_by=1)
 
         # Cannot await input from non-progress state
-        execution3 = NodeExecution(
-            candidate_process_id=1,
-            node_id=10,
-            status="pending"
-        )
+        execution3 = NodeExecution(candidate_process_id=1, node_id=10, status="pending")
 
         with pytest.raises(ValueError):
             execution3.await_input()
 
         # Cannot schedule non-pending execution
         execution4 = NodeExecution(
-            candidate_process_id=1,
-            node_id=10,
-            status="completed"
+            candidate_process_id=1, node_id=10, status="completed"
         )
 
         with pytest.raises(ValueError):
@@ -551,12 +470,7 @@ class TestProcessViewer:
 
     def test_create_process_viewer(self):
         """Test creating a process viewer"""
-        viewer = ProcessViewer(
-            process_id=1,
-            user_id=50,
-            role="member",
-            added_by=10
-        )
+        viewer = ProcessViewer(process_id=1, user_id=50, role="member", added_by=10)
 
         assert viewer.process_id == 1
         assert viewer.user_id == 50
@@ -569,12 +483,7 @@ class TestProcessViewer:
     def test_viewer_permissions(self):
         """Test viewer permission checks"""
         # Recruiter
-        recruiter = ProcessViewer(
-            process_id=1,
-            user_id=50,
-            role="member",
-            added_by=10
-        )
+        recruiter = ProcessViewer(process_id=1, user_id=50, role="member", added_by=10)
 
         assert recruiter.can_execute
         assert recruiter.can_view_all_candidates
@@ -582,12 +491,7 @@ class TestProcessViewer:
         assert recruiter.can_record_results
 
         # Observer
-        observer = ProcessViewer(
-            process_id=1,
-            user_id=51,
-            role="observer",
-            added_by=10
-        )
+        observer = ProcessViewer(process_id=1, user_id=51, role="observer", added_by=10)
 
         assert not observer.can_execute
         assert observer.can_view_all_candidates
@@ -595,12 +499,7 @@ class TestProcessViewer:
         assert not observer.can_record_results
 
         # Admin
-        admin = ProcessViewer(
-            process_id=1,
-            user_id=52,
-            role="admin",
-            added_by=10
-        )
+        admin = ProcessViewer(process_id=1, user_id=52, role="admin", added_by=10)
 
         assert admin.can_execute
         assert admin.can_view_all_candidates
@@ -609,12 +508,7 @@ class TestProcessViewer:
 
     def test_has_permission_with_defaults(self):
         """Test permission checking with role defaults"""
-        recruiter = ProcessViewer(
-            process_id=1,
-            user_id=50,
-            role="member",
-            added_by=10
-        )
+        recruiter = ProcessViewer(process_id=1, user_id=50, role="member", added_by=10)
 
         assert recruiter.has_permission("view_process")
         assert recruiter.has_permission("execute_nodes")
@@ -631,8 +525,8 @@ class TestProcessViewer:
             permissions={
                 "view_process": True,
                 "execute_nodes": True,  # Custom permission for observer
-                "override_results": False
-            }
+                "override_results": False,
+            },
         )
 
         assert viewer.has_permission("view_process")
@@ -641,12 +535,7 @@ class TestProcessViewer:
 
     def test_grant_and_revoke_permissions(self):
         """Test granting and revoking permissions"""
-        viewer = ProcessViewer(
-            process_id=1,
-            user_id=50,
-            role="observer",
-            added_by=10
-        )
+        viewer = ProcessViewer(process_id=1, user_id=50, role="observer", added_by=10)
 
         # Grant permission
         viewer.grant_permission("execute_nodes")
@@ -665,10 +554,7 @@ class TestNodeConnection:
     def test_create_node_connection(self):
         """Test creating a node connection"""
         connection = NodeConnection(
-            process_id=1,
-            source_node_id=10,
-            target_node_id=20,
-            condition_type="success"
+            process_id=1, source_node_id=10, target_node_id=20, condition_type="success"
         )
 
         assert connection.process_id == 1
@@ -682,10 +568,7 @@ class TestNodeConnection:
     def test_evaluate_condition_success(self):
         """Test evaluating success conditions"""
         connection = NodeConnection(
-            process_id=1,
-            source_node_id=10,
-            target_node_id=20,
-            condition_type="success"
+            process_id=1, source_node_id=10, target_node_id=20, condition_type="success"
         )
 
         assert connection.evaluate_condition("pass")
@@ -697,10 +580,7 @@ class TestNodeConnection:
     def test_evaluate_condition_failure(self):
         """Test evaluating failure conditions"""
         connection = NodeConnection(
-            process_id=1,
-            source_node_id=10,
-            target_node_id=20,
-            condition_type="failure"
+            process_id=1, source_node_id=10, target_node_id=20, condition_type="failure"
         )
 
         assert connection.evaluate_condition("fail")
@@ -712,10 +592,7 @@ class TestNodeConnection:
     def test_evaluate_condition_always(self):
         """Test evaluating always conditions"""
         connection = NodeConnection(
-            process_id=1,
-            source_node_id=10,
-            target_node_id=20,
-            condition_type="always"
+            process_id=1, source_node_id=10, target_node_id=20, condition_type="always"
         )
 
         assert connection.evaluate_condition("pass")
@@ -729,7 +606,7 @@ class TestNodeConnection:
             source_node_id=10,
             target_node_id=20,
             condition_type="conditional",
-            condition_config={"required_result": "excellent"}
+            condition_config={"required_result": "excellent"},
         )
 
         assert connection.evaluate_condition("excellent")
@@ -743,7 +620,7 @@ class TestNodeConnection:
             source_node_id=10,
             target_node_id=20,
             condition_type="conditional",
-            condition_config={"min_score": 80}
+            condition_config={"min_score": 80},
         )
 
         assert connection.evaluate_condition("pass", {"score": 85})
@@ -758,7 +635,7 @@ class TestNodeConnection:
             process_id=1,
             source_node_id=10,
             target_node_id=20,
-            condition_type="conditional"
+            condition_type="conditional",
         )
 
         assert not connection.evaluate_condition("pass")

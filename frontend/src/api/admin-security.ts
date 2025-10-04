@@ -12,7 +12,9 @@ import type {
 export const adminSecurityApi = {
   // File Security Management
   async getSecurityStats(): Promise<ApiResponse<SecurityStats>> {
-    const response = await apiClient.get<SecurityStats>(API_ENDPOINTS.ADMIN_EXTENDED.SECURITY.STATS);
+    const response = await apiClient.get<SecurityStats>(
+      API_ENDPOINTS.ADMIN_EXTENDED.SECURITY.STATS
+    );
     return { data: response.data, success: true };
   },
 
@@ -21,12 +23,14 @@ export const adminSecurityApi = {
     size = 20,
     status?: string,
     search?: string
-  ): Promise<ApiResponse<{
-    files: FileSecurityInfo[];
-    total: number;
-    page: number;
-    size: number;
-  }>> {
+  ): Promise<
+    ApiResponse<{
+      files: FileSecurityInfo[];
+      total: number;
+      page: number;
+      size: number;
+    }>
+  > {
     const params = new URLSearchParams();
     params.set('page', page.toString());
     params.set('size', size.toString());
@@ -71,11 +75,13 @@ export const adminSecurityApi = {
     return { data: response.data, success: true };
   },
 
-  async bulkSecurityAction(action: BulkSecurityAction): Promise<ApiResponse<{
-    success_count: number;
-    error_count: number;
-    errors: string[];
-  }>> {
+  async bulkSecurityAction(action: BulkSecurityAction): Promise<
+    ApiResponse<{
+      success_count: number;
+      error_count: number;
+      errors: string[];
+    }>
+  > {
     const response = await apiClient.post<{
       success_count: number;
       error_count: number;
@@ -88,12 +94,14 @@ export const adminSecurityApi = {
     page = 1,
     size = 20,
     action?: string
-  ): Promise<ApiResponse<{
-    logs: SecurityLog[];
-    total: number;
-    page: number;
-    size: number;
-  }>> {
+  ): Promise<
+    ApiResponse<{
+      logs: SecurityLog[];
+      total: number;
+      page: number;
+      size: number;
+    }>
+  > {
     const params = new URLSearchParams();
     params.set('page', page.toString());
     params.set('size', size.toString());
@@ -109,12 +117,14 @@ export const adminSecurityApi = {
   },
 
   // Antivirus Service Management
-  async getAntivirusStatus(): Promise<ApiResponse<{
-    service_available: boolean;
-    last_check: string;
-    version?: string;
-    database_version?: string;
-  }>> {
+  async getAntivirusStatus(): Promise<
+    ApiResponse<{
+      service_available: boolean;
+      last_check: string;
+      version?: string;
+      database_version?: string;
+    }>
+  > {
     const response = await apiClient.get<{
       service_available: boolean;
       last_check: string;
@@ -124,10 +134,12 @@ export const adminSecurityApi = {
     return { data: response.data, success: true };
   },
 
-  async runBulkScan(limit = 10): Promise<ApiResponse<{
-    scanned_count: number;
-    results: VirusScanResult[];
-  }>> {
+  async runBulkScan(limit = 10): Promise<
+    ApiResponse<{
+      scanned_count: number;
+      results: VirusScanResult[];
+    }>
+  > {
     const response = await apiClient.post<{
       scanned_count: number;
       results: VirusScanResult[];

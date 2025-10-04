@@ -20,6 +20,11 @@ export const API_ENDPOINTS = {
     USER_BY_ID: (id: string | number) => `/api/admin/users/${id}`,
   },
 
+  // General Users endpoints (non-admin)
+  USERS: {
+    BASE: '/api/users',
+  },
+
   // Auth endpoints
   AUTH: {
     LOGIN: '/api/auth/login',
@@ -75,6 +80,7 @@ export const API_ENDPOINTS = {
     STATUS: (id: string | number) => `/api/interviews/${id}/status`,
     SCHEDULE: (id: string | number) => `/api/interviews/${id}/schedule`,
     NOTES: (id: string | number) => `/api/interviews/${id}/notes`,
+    VIDEO_CALL: (id: string | number) => `/api/interviews/${id}/video-call`,
   },
 
   // Message endpoints (New unified system)
@@ -176,7 +182,23 @@ export const API_ENDPOINTS = {
   // User endpoints
   USER: {
     PROFILE: '/api/auth/me',
+    UPDATE_PROFILE: '/api/user/profile',
     SETTINGS: '/api/user/settings',
+  },
+
+  // Video Call endpoints
+  VIDEO_CALLS: {
+    BY_ID: (id: string | number) => `/api/video-calls/${id}`,
+    BY_ROOM: (roomCode: string) => `/api/video-calls/room/${roomCode}`,
+    JOIN: (id: string | number) => `/api/video-calls/${id}/join`,
+    JOIN_ROOM: (roomCode: string) => `/api/video-calls/room/${roomCode}/join`,
+    LEAVE: (id: string | number) => `/api/video-calls/${id}/leave`,
+    LEAVE_ROOM: (roomCode: string) => `/api/video-calls/room/${roomCode}/leave`,
+    CONSENT: (id: string | number) => `/api/video-calls/${id}/consent`,
+    CONSENT_ROOM: (roomCode: string) => `/api/video-calls/room/${roomCode}/consent`,
+    TRANSCRIPT: (id: string | number) => `/api/video-calls/${id}/transcript`,
+    TRANSCRIPT_SEGMENTS: (id: string | number) => `/api/video-calls/${id}/transcript/segments`,
+    TRANSCRIPT_DOWNLOAD: (id: string | number) => `/api/video-calls/${id}/transcript/download`,
   },
 
   // MBTI endpoints
@@ -200,8 +222,46 @@ export const API_ENDPOINTS = {
   // Exam endpoints
   EXAMS: {
     BASE: '/api/exam/exams',
+    BY_ID: (id: number | string) => `/api/exam/exams/${id}`,
     TAKE: '/api/exam/exams/take',
     MY_ASSIGNMENTS: '/api/exam/my-assignments',
+    STATISTICS: (id: number | string) => `/api/exam/exams/${id}/statistics`,
+    EXPORT_PDF: (id: number | string) => `/api/exam/exams/${id}/export/pdf`,
+    EXPORT_EXCEL: (id: number | string) => `/api/exam/exams/${id}/export/excel`,
+    QUESTIONS: (examId: number | string) => `/api/exam/exams/${examId}/questions`,
+    ASSIGNMENTS: (examId: number | string) => `/api/exam/exams/${examId}/assignments`,
+    SESSIONS: (examId: number | string) => `/api/exam/exams/${examId}/sessions`,
+  },
+
+  // Exam Question endpoints
+  EXAM_QUESTIONS: {
+    BY_ID: (questionId: number | string) => `/api/exam/questions/${questionId}`,
+  },
+
+  // Exam Assignment endpoints
+  EXAM_ASSIGNMENTS: {
+    BY_ID: (assignmentId: number | string) => `/api/exam/assignments/${assignmentId}`,
+  },
+
+  // Exam Session endpoints
+  EXAM_SESSIONS: {
+    BY_ID: (sessionId: number | string) => `/api/exam/sessions/${sessionId}`,
+    ANSWERS: (sessionId: number | string) => `/api/exam/sessions/${sessionId}/answers`,
+    COMPLETE: (sessionId: number | string) => `/api/exam/sessions/${sessionId}/complete`,
+    RESULTS: (sessionId: number | string) => `/api/exam/sessions/${sessionId}/results`,
+    DETAILS: (sessionId: number | string) => `/api/exam/sessions/${sessionId}/details`,
+    SUSPEND: (sessionId: number | string) => `/api/exam/sessions/${sessionId}/suspend`,
+    RESET: (sessionId: number | string) => `/api/exam/sessions/${sessionId}/reset`,
+    MONITORING: (sessionId: number | string) => `/api/exam/sessions/${sessionId}/monitoring`,
+    FACE_VERIFICATION: (sessionId: number | string) =>
+      `/api/exam/sessions/${sessionId}/face-verification`,
+  },
+
+  // Exam Template endpoints
+  EXAM_TEMPLATES: {
+    BASE: '/api/exam/templates',
+    BY_ID: (templateId: number | string) => `/api/exam/templates/${templateId}`,
+    FROM_EXAM: (examId: number | string) => `/api/exam/templates/from-exam/${examId}`,
   },
 
   // Assignment endpoints
@@ -243,7 +303,8 @@ export const API_ENDPOINTS = {
       FILES: '/api/admin/security/files',
       FILE_BY_ID: (fileId: number | string) => `/api/admin/security/files/${fileId}`,
       SCAN_FILE: (fileId: number | string) => `/api/admin/security/files/${fileId}/scan`,
-      QUARANTINE_FILE: (fileId: number | string) => `/api/admin/security/files/${fileId}/quarantine`,
+      QUARANTINE_FILE: (fileId: number | string) =>
+        `/api/admin/security/files/${fileId}/quarantine`,
       RESTORE_FILE: (fileId: number | string) => `/api/admin/security/files/${fileId}/restore`,
       LOGS: '/api/admin/security/logs',
       BULK_ACTION: '/api/admin/security/bulk-action',
@@ -305,6 +366,7 @@ export const API_ENDPOINTS = {
   MESSAGES_EXTENDED: {
     UPLOAD: '/api/messages/upload',
     UPLOAD_CHUNK: '/api/messages/upload/chunk',
+    UPLOAD_COMPLETE: '/api/messages/upload/complete',
     RESTRICTED_USERS: '/api/messages/restricted-users',
   },
 } as const;

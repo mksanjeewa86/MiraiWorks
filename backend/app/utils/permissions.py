@@ -134,13 +134,13 @@ async def get_user_roles(user: User) -> list[UserRole]:
 def is_super_admin(user: User) -> bool:
     """Check if user is super admin."""
     user_roles = [UserRole(ur.role.name) for ur in user.user_roles]
-    return UserRole.SUPER_ADMIN in user_roles
+    return UserRole.SYSTEM_ADMIN in user_roles
 
 
 def is_company_admin(user: User) -> bool:
     """Check if user is company admin or super admin."""
     user_roles = [UserRole(ur.role.name) for ur in user.user_roles]
-    return UserRole.COMPANY_ADMIN in user_roles or UserRole.SUPER_ADMIN in user_roles
+    return UserRole.ADMIN in user_roles or UserRole.SYSTEM_ADMIN in user_roles
 
 
 def can_manage_users(user: User, target_company_id: int | None = None) -> bool:

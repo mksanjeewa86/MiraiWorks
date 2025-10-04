@@ -11,11 +11,7 @@ class HolidayService:
     """Service for holiday-related business logic"""
 
     async def get_holidays_for_calendar(
-        self,
-        db: AsyncSession,
-        start_date: date,
-        end_date: date,
-        country: str = "JP"
+        self, db: AsyncSession, start_date: date, end_date: date, country: str = "JP"
     ) -> list[Holiday]:
         """Get holidays for calendar view within date range"""
         return await holiday_crud.get_by_date_range(
@@ -23,10 +19,7 @@ class HolidayService:
         )
 
     async def is_holiday_date(
-        self,
-        db: AsyncSession,
-        check_date: date,
-        country: str = "JP"
+        self, db: AsyncSession, check_date: date, country: str = "JP"
     ) -> bool:
         """Check if a specific date is a holiday"""
         return await holiday_crud.check_is_holiday(
@@ -34,19 +27,13 @@ class HolidayService:
         )
 
     async def get_holiday_info(
-        self,
-        db: AsyncSession,
-        check_date: date,
-        country: str = "JP"
+        self, db: AsyncSession, check_date: date, country: str = "JP"
     ) -> Holiday | None:
         """Get holiday information for a specific date"""
         return await holiday_crud.get_by_date(db, holiday_date=check_date)
 
     async def get_next_holiday(
-        self,
-        db: AsyncSession,
-        from_date: date | None = None,
-        country: str = "JP"
+        self, db: AsyncSession, from_date: date | None = None, country: str = "JP"
     ) -> Holiday | None:
         """Get the next upcoming holiday"""
         start_date = from_date or date.today()
@@ -63,113 +50,113 @@ class HolidayService:
                 "name_en": "New Year's Day",
                 "date": date(2025, 1, 1),
                 "description": "新年を祝う日",
-                "description_en": "The first day of the year"
+                "description_en": "The first day of the year",
             },
             {
                 "name": "成人の日",
                 "name_en": "Coming of Age Day",
                 "date": date(2025, 1, 13),
                 "description": "大人になったことを祝う日",
-                "description_en": "Day to celebrate becoming an adult"
+                "description_en": "Day to celebrate becoming an adult",
             },
             {
                 "name": "建国記念の日",
                 "name_en": "National Foundation Day",
                 "date": date(2025, 2, 11),
                 "description": "日本の建国を記念する日",
-                "description_en": "Day to commemorate the founding of Japan"
+                "description_en": "Day to commemorate the founding of Japan",
             },
             {
                 "name": "天皇誕生日",
                 "name_en": "The Emperor's Birthday",
                 "date": date(2025, 2, 23),
                 "description": "天皇陛下の誕生日を祝う日",
-                "description_en": "Day to celebrate the Emperor's birthday"
+                "description_en": "Day to celebrate the Emperor's birthday",
             },
             {
                 "name": "春分の日",
                 "name_en": "Spring Equinox Day",
                 "date": date(2025, 3, 20),
                 "description": "春の彼岸の中日",
-                "description_en": "Vernal equinox day"
+                "description_en": "Vernal equinox day",
             },
             {
                 "name": "昭和の日",
                 "name_en": "Showa Day",
                 "date": date(2025, 4, 29),
                 "description": "昭和天皇の誕生日",
-                "description_en": "Emperor Showa's birthday"
+                "description_en": "Emperor Showa's birthday",
             },
             {
                 "name": "憲法記念日",
                 "name_en": "Constitution Memorial Day",
                 "date": date(2025, 5, 3),
                 "description": "日本国憲法の施行を記念する日",
-                "description_en": "Day to commemorate the Japanese Constitution"
+                "description_en": "Day to commemorate the Japanese Constitution",
             },
             {
                 "name": "みどりの日",
                 "name_en": "Greenery Day",
                 "date": date(2025, 5, 4),
                 "description": "自然に親しむとともにその恩恵に感謝し、豊かな心をはぐくむ日",
-                "description_en": "Day to commune with nature and be grateful for its blessings"
+                "description_en": "Day to commune with nature and be grateful for its blessings",
             },
             {
                 "name": "こどもの日",
                 "name_en": "Children's Day",
                 "date": date(2025, 5, 5),
                 "description": "こどもの人格を重んじ、こどもの幸福をはかるとともに、母に感謝する日",
-                "description_en": "Day to respect children's personalities and promote their happiness"
+                "description_en": "Day to respect children's personalities and promote their happiness",
             },
             {
                 "name": "海の日",
                 "name_en": "Marine Day",
                 "date": date(2025, 7, 21),
                 "description": "海の恩恵に感謝するとともに、海洋国日本の繁栄を願う日",
-                "description_en": "Day to give thanks for the ocean's bounty and pray for Japan's prosperity"
+                "description_en": "Day to give thanks for the ocean's bounty and pray for Japan's prosperity",
             },
             {
                 "name": "山の日",
                 "name_en": "Mountain Day",
                 "date": date(2025, 8, 11),
                 "description": "山に親しむ機会を得て、山の恩恵に感謝する日",
-                "description_en": "Day to become familiar with mountains and appreciate their benefits"
+                "description_en": "Day to become familiar with mountains and appreciate their benefits",
             },
             {
                 "name": "敬老の日",
                 "name_en": "Respect for the Aged Day",
                 "date": date(2025, 9, 15),
                 "description": "多年にわたり社会につくしてきた老人を敬愛し、長寿を祝う日",
-                "description_en": "Day to honor elderly people and celebrate their longevity"
+                "description_en": "Day to honor elderly people and celebrate their longevity",
             },
             {
                 "name": "秋分の日",
                 "name_en": "Autumn Equinox Day",
                 "date": date(2025, 9, 23),
                 "description": "祖先をうやまい、なくなった人々をしのぶ日",
-                "description_en": "Day to honor ancestors and remember deceased family members"
+                "description_en": "Day to honor ancestors and remember deceased family members",
             },
             {
                 "name": "スポーツの日",
                 "name_en": "Sports Day",
                 "date": date(2025, 10, 13),
                 "description": "スポーツにしたしみ、健康な心身をつちかう日",
-                "description_en": "Day to enjoy sports and develop a healthy mind and body"
+                "description_en": "Day to enjoy sports and develop a healthy mind and body",
             },
             {
                 "name": "文化の日",
                 "name_en": "Culture Day",
                 "date": date(2025, 11, 3),
                 "description": "自由と平和を愛し、文化をすすめる日",
-                "description_en": "Day to promote culture and love freedom and peace"
+                "description_en": "Day to promote culture and love freedom and peace",
             },
             {
                 "name": "勤労感謝の日",
                 "name_en": "Labor Thanksgiving Day",
                 "date": date(2025, 11, 23),
                 "description": "勤労をたっとび、生産を祝い、国民たがいに感謝しあう日",
-                "description_en": "Day to honor labor, celebrate production, and give thanks to each other"
-            }
+                "description_en": "Day to honor labor, celebrate production, and give thanks to each other",
+            },
         ]
 
         holiday_objects = []
@@ -182,7 +169,7 @@ class HolidayService:
                 is_national=True,
                 is_recurring=True,
                 description=holiday_data["description"],
-                description_en=holiday_data["description_en"]
+                description_en=holiday_data["description_en"],
             )
             holiday_objects.append(holiday_create)
 
@@ -192,7 +179,9 @@ class HolidayService:
             return existing_holidays
 
         # Create holidays
-        created_holidays = await holiday_crud.create_multiple(db, holidays=holiday_objects)
+        created_holidays = await holiday_crud.create_multiple(
+            db, holidays=holiday_objects
+        )
         return created_holidays
 
     def format_holiday_for_calendar(self, holiday: Holiday) -> dict:
@@ -214,8 +203,8 @@ class HolidayService:
                 "description": holiday.description,
                 "descriptionEn": holiday.description_en,
                 "country": holiday.country,
-                "isNational": holiday.is_national
-            }
+                "isNational": holiday.is_national,
+            },
         }
 
 

@@ -89,7 +89,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     async def soft_delete(self, db: AsyncSession, *, id: int) -> ModelType:
         """Soft delete object by id (set is_deleted=True, deleted_at=now)."""
         obj = await self.get(db, id)
-        if obj and hasattr(obj, 'is_deleted') and hasattr(obj, 'deleted_at'):
+        if obj and hasattr(obj, "is_deleted") and hasattr(obj, "deleted_at"):
             obj.is_deleted = True
             obj.deleted_at = datetime.utcnow()
             db.add(obj)

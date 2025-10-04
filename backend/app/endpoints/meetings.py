@@ -1,3 +1,4 @@
+from app.config.endpoints import API_ROUTES
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
@@ -19,7 +20,7 @@ from app.utils.permissions import requires_permission
 router = APIRouter(prefix="/meetings", tags=["meetings"])
 
 
-@router.post("/", response_model=MeetingResponse)
+@router.post(API_ROUTES.MEETINGS.BASE, response_model=MeetingResponse)
 async def create_meeting(
     meeting_data: MeetingCreate,
     db: Session = Depends(get_db),
@@ -30,7 +31,7 @@ async def create_meeting(
     return meeting_service.create_meeting(meeting_data, current_user)
 
 
-@router.get("/", response_model=MeetingListResponse)
+@router.get(API_ROUTES.MEETINGS.BASE, response_model=MeetingListResponse)
 async def list_meetings(
     status: str = Query(None, description="Filter by meeting status"),
     meeting_type: str = Query(None, description="Filter by meeting type"),
@@ -60,7 +61,7 @@ async def list_meetings(
     return MeetingListResponse(**result)
 
 
-@router.get("/{meeting_id}", response_model=MeetingResponse)
+@router.get(API_ROUTES.MEETINGS.BY_ID, response_model=MeetingResponse)
 async def get_meeting(
     meeting_id: int,
     db: Session = Depends(get_db),
@@ -71,7 +72,7 @@ async def get_meeting(
     return meeting_service.get_meeting_by_id(meeting_id, current_user)
 
 
-@router.get("/room/{room_id}", response_model=MeetingResponse)
+@router.get(API_ROUTES.MEETINGS.BY_ROOM, response_model=MeetingResponse)
 async def get_meeting_by_room_id(
     room_id: str,
     db: Session = Depends(get_db),
@@ -82,7 +83,7 @@ async def get_meeting_by_room_id(
     return meeting_service.get_meeting_by_room_id(room_id, current_user)
 
 
-@router.put("/{meeting_id}", response_model=MeetingResponse)
+@router.put(API_ROUTES.MEETINGS.BY_ID, response_model=MeetingResponse)
 async def update_meeting(
     meeting_id: int,
     update_data: MeetingUpdate,
@@ -94,7 +95,7 @@ async def update_meeting(
     return meeting_service.update_meeting(meeting_id, update_data, current_user)
 
 
-@router.post("/join/{room_id}", response_model=MeetingJoinResponse)
+@router.post(API_ROUTES.MEETINGS.JOIN, response_model=MeetingJoinResponse)
 async def join_meeting(
     room_id: str,
     join_request: MeetingJoinRequest,
@@ -108,7 +109,7 @@ async def join_meeting(
     )
 
 
-@router.post("/leave/{room_id}")
+@router.post(API_ROUTES.MEETINGS.LEAVE)
 async def leave_meeting(
     room_id: str,
     db: Session = Depends(get_db),
@@ -119,7 +120,7 @@ async def leave_meeting(
     return meeting_service.leave_meeting(room_id, current_user)
 
 
-@router.delete("/{meeting_id}")
+@router.delete(API_ROUTES.MEETINGS.BY_ID)
 @requires_permission("meeting.delete")
 async def delete_meeting(
     meeting_id: int,
@@ -144,7 +145,7 @@ async def delete_meeting(
 
 
 # Recording endpoints
-@router.get("/{meeting_id}/recordings")
+@router.get(API_ROUTES.MEETINGS.RECORDINGS)
 async def list_meeting_recordings(
     meeting_id: int,
     db: Session = Depends(get_db),
@@ -169,7 +170,7 @@ async def list_meeting_recordings(
     }
 
 
-@router.get("/{meeting_id}/transcripts")
+@router.get(API_ROUTES.MEETINGS.TRANSCRIPTS)
 async def list_meeting_transcripts(
     meeting_id: int,
     db: Session = Depends(get_db),
@@ -194,7 +195,7 @@ async def list_meeting_transcripts(
     }
 
 
-@router.get("/{meeting_id}/summaries")
+@router.get(API_ROUTES.MEETINGS.SUMMARIES)
 async def list_meeting_summaries(
     meeting_id: int,
     db: Session = Depends(get_db),
@@ -219,7 +220,7 @@ async def list_meeting_summaries(
     }
 
 
-@router.get("/{meeting_id}/transcripts/{transcript_id}")
+@router.get(API_ROUTES.MEETINGS.TRANSCRIPT_BY_ID)
 async def get_meeting_transcript(
     meeting_id: int,
     transcript_id: int,
@@ -250,7 +251,7 @@ async def get_meeting_transcript(
     }
 
 
-@router.get("/{meeting_id}/summaries/{summary_id}")
+@router.get(API_ROUTES.MEETINGS.SUMMARY_BY_ID)
 async def get_meeting_summary(
     meeting_id: int,
     summary_id: int,

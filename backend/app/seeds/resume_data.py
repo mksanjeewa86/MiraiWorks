@@ -34,7 +34,11 @@ async def seed_resume_data(db, auth_result):
     auth_result["companies_list"]
 
     # Use first few users for resume creation
-    candidate_users = [users_list[1][0], users_list[2][0], users_list[3][0]]  # Skip admin
+    candidate_users = [
+        users_list[1][0],
+        users_list[2][0],
+        users_list[3][0],
+    ]  # Skip admin
     created_resumes = []
 
     for i, user in enumerate(candidate_users):
@@ -48,7 +52,7 @@ async def seed_resume_data(db, auth_result):
 
     return {
         "resumes": len(created_resumes),
-        "formats": ["rirekisho", "shokumu_keirekisho", "international", "modern"]
+        "formats": ["rirekisho", "shokumu_keirekisho", "international", "modern"],
     }
 
 
@@ -98,7 +102,7 @@ async def create_rirekisho_resume(db, user, user_index):
             "relationship": "配偶者" if user_index == 0 else "親",
             "phone": f"090-{8765 + user_index}-4321",
             "commute_time": str(30 + user_index * 15),
-            "dependents": str(user_index)
+            "dependents": str(user_index),
         },
         "professional_summary": f"""
 新卒でIT企業に入社し、{3 + user_index}年間Webアプリケーション開発に従事してまいりました。
@@ -120,7 +124,7 @@ async def create_rirekisho_resume(db, user, user_index):
         "is_public": False,
         "can_download_pdf": True,
         "can_edit": True,
-        "can_delete": True
+        "can_delete": True,
     }
 
     resume = Resume(**resume_data)
@@ -141,7 +145,7 @@ async def create_rirekisho_resume(db, user, user_index):
             "gpa": f"{3.5 + user_index * 0.1:.1f}/4.0",
             "honors": "優秀賞" if user_index == 0 else None,
             "display_order": 1,
-            "is_visible": True
+            "is_visible": True,
         }
     ]
 
@@ -150,7 +154,11 @@ async def create_rirekisho_resume(db, user, user_index):
         db.add(education)
 
     # Add work experience
-    companies = ["株式会社テックイノベーション", "株式会社ウェブソリューションズ", "株式会社デジタルクリエイト"]
+    companies = [
+        "株式会社テックイノベーション",
+        "株式会社ウェブソリューションズ",
+        "株式会社デジタルクリエイト",
+    ]
     experiences = [
         {
             "resume_id": resume.id,
@@ -163,11 +171,11 @@ async def create_rirekisho_resume(db, user, user_index):
             "achievements": [
                 "社内システムの開発チームリーダーとして3名のメンバーを指導",
                 "既存システムのパフォーマンス改善により処理速度を30%向上",
-                "新人研修プログラムの立案・実施"
+                "新人研修プログラムの立案・実施",
             ],
             "technologies": ["Python", "Django", "JavaScript", "PostgreSQL", "Git"],
             "display_order": 1,
-            "is_visible": True
+            "is_visible": True,
         }
     ]
 
@@ -184,7 +192,7 @@ async def create_rirekisho_resume(db, user, user_index):
             "issue_date": datetime(2013 + user_index, 10, 15),
             "does_not_expire": True,
             "display_order": 1,
-            "is_visible": True
+            "is_visible": True,
         }
     ]
 
@@ -223,12 +231,14 @@ React/TypeScriptを使用した開発が得意です。
         "theme_color": "#059669",
         "font_family": "Yu Gothic",
         "is_primary": False,
-        "public_url_slug": generate_slug(f"職務経歴書 システムエンジニア {names[user_index]}"),
+        "public_url_slug": generate_slug(
+            f"職務経歴書 システムエンジニア {names[user_index]}"
+        ),
         "share_token": generate_share_token(),
         "is_public": False,
         "can_download_pdf": True,
         "can_edit": True,
-        "can_delete": True
+        "can_delete": True,
     }
 
     resume = Resume(**resume_data)
@@ -237,11 +247,46 @@ React/TypeScriptを使用した開発が得意です。
 
     # Add technical skills
     skills = [
-        {"resume_id": resume.id, "name": "Python", "category": "プログラミング言語", "proficiency_level": 5, "proficiency_label": "エキスパート", "display_order": 1},
-        {"resume_id": resume.id, "name": "JavaScript", "category": "プログラミング言語", "proficiency_level": 4, "proficiency_label": "上級", "display_order": 2},
-        {"resume_id": resume.id, "name": "React", "category": "フレームワーク", "proficiency_level": 4, "proficiency_label": "上級", "display_order": 3},
-        {"resume_id": resume.id, "name": "Django", "category": "フレームワーク", "proficiency_level": 5, "proficiency_label": "エキスパート", "display_order": 4},
-        {"resume_id": resume.id, "name": "PostgreSQL", "category": "データベース", "proficiency_level": 4, "proficiency_label": "上級", "display_order": 5},
+        {
+            "resume_id": resume.id,
+            "name": "Python",
+            "category": "プログラミング言語",
+            "proficiency_level": 5,
+            "proficiency_label": "エキスパート",
+            "display_order": 1,
+        },
+        {
+            "resume_id": resume.id,
+            "name": "JavaScript",
+            "category": "プログラミング言語",
+            "proficiency_level": 4,
+            "proficiency_label": "上級",
+            "display_order": 2,
+        },
+        {
+            "resume_id": resume.id,
+            "name": "React",
+            "category": "フレームワーク",
+            "proficiency_level": 4,
+            "proficiency_label": "上級",
+            "display_order": 3,
+        },
+        {
+            "resume_id": resume.id,
+            "name": "Django",
+            "category": "フレームワーク",
+            "proficiency_level": 5,
+            "proficiency_label": "エキスパート",
+            "display_order": 4,
+        },
+        {
+            "resume_id": resume.id,
+            "name": "PostgreSQL",
+            "category": "データベース",
+            "proficiency_level": 4,
+            "proficiency_label": "上級",
+            "display_order": 5,
+        },
     ]
 
     for skill_data in skills:
@@ -275,16 +320,20 @@ Passionate about clean code, performance optimization, and continuous learning.
         "resume_format": ResumeFormat.INTERNATIONAL,
         "resume_language": ResumeLanguage.ENGLISH,
         "status": ResumeStatus.PUBLISHED,
-        "visibility": ResumeVisibility.PUBLIC if user_index == 0 else ResumeVisibility.PRIVATE,
+        "visibility": ResumeVisibility.PUBLIC
+        if user_index == 0
+        else ResumeVisibility.PRIVATE,
         "theme_color": "#7c3aed",
         "font_family": "Inter",
         "is_primary": False,
-        "public_url_slug": generate_slug(f"Software Engineer Resume {english_names[user_index]}"),
+        "public_url_slug": generate_slug(
+            f"Software Engineer Resume {english_names[user_index]}"
+        ),
         "share_token": generate_share_token(),
         "is_public": user_index == 0,
         "can_download_pdf": True,
         "can_edit": True,
-        "can_delete": True
+        "can_delete": True,
     }
 
     resume = Resume(**resume_data)
@@ -298,15 +347,15 @@ Passionate about clean code, performance optimization, and continuous learning.
             "name": "Japanese",
             "proficiency": "Native",
             "display_order": 1,
-            "is_visible": True
+            "is_visible": True,
         },
         {
             "resume_id": resume.id,
             "name": "English",
             "proficiency": f"Professional Working Proficiency (TOEIC {800 + user_index * 25})",
             "display_order": 2,
-            "is_visible": True
-        }
+            "is_visible": True,
+        },
     ]
 
     for lang_data in languages:
@@ -343,12 +392,14 @@ Combining technical expertise with design sensibility to create user-centered so
         "theme_color": "#f59e0b",
         "font_family": "Poppins",
         "is_primary": False,
-        "public_url_slug": generate_slug(f"Creative Developer Portfolio {creative_names[user_index]}"),
+        "public_url_slug": generate_slug(
+            f"Creative Developer Portfolio {creative_names[user_index]}"
+        ),
         "share_token": generate_share_token(),
         "is_public": False,
         "can_download_pdf": True,
         "can_edit": True,
-        "can_delete": True
+        "can_delete": True,
     }
 
     resume = Resume(**resume_data)
@@ -369,7 +420,7 @@ Combining technical expertise with design sensibility to create user-centered so
             "project_url": f"https://project{user_index + 1}.example.com",
             "github_url": f"https://github.com/{creative_names[user_index].lower().replace(' ', '')}/project{user_index + 1}",
             "display_order": 1,
-            "is_visible": True
+            "is_visible": True,
         }
     ]
 

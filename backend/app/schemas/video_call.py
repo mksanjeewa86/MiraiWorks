@@ -90,11 +90,11 @@ class TranscriptionSegmentCreate(BaseModel):
     end_time: float = Field(..., ge=0)
     confidence: Optional[float] = Field(None, ge=0, le=1)
 
-    @field_validator('end_time')
+    @field_validator("end_time")
     @classmethod
     def validate_end_after_start(cls, v, info):
-        if 'start_time' in info.data and v <= info.data['start_time']:
-            raise ValueError('end_time must be greater than start_time')
+        if "start_time" in info.data and v <= info.data["start_time"]:
+            raise ValueError("end_time must be greater than start_time")
         return v
 
 

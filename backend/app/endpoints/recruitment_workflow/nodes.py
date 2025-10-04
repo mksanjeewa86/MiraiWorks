@@ -103,17 +103,20 @@ async def _shift_sequence_numbers(
     updates: list[dict[str, int]] = []
     for node in existing_nodes:
         if node.sequence_order >= starting_order:
-            updates.append({"node_id": node.id, "sequence_order": node.sequence_order + 1})
+            updates.append(
+                {"node_id": node.id, "sequence_order": node.sequence_order + 1}
+            )
 
     if updates:
         await process_node.reorder_nodes(
             db,
             process_id=process_id,
             node_sequence_updates=updates,
-            updated_by=updated_by
+            updated_by=updated_by,
         )
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
 
 async def _create_node(
     db: AsyncSession,
@@ -123,7 +126,7 @@ async def _create_node(
     actor: User,
 ):
     # Exclude integration fields (create_interview, create_todo) from node creation
-    payload = node_data.model_dump(exclude={'create_interview', 'create_todo'})
+    payload = node_data.model_dump(exclude={"create_interview", "create_todo"})
     payload["process_id"] = process_id
     payload.setdefault("config", {})
 
@@ -165,7 +168,9 @@ async def _create_interview_integration(
 
     scheduled_end: datetime | None = None
     if integration.scheduled_at and integration.duration_minutes:
-        scheduled_end = integration.scheduled_at + timedelta(minutes=integration.duration_minutes)
+        scheduled_end = integration.scheduled_at + timedelta(
+            minutes=integration.duration_minutes
+        )
 
     interview_type = integration.interview_type
     if not interview_type:
@@ -244,7 +249,7 @@ async def _create_todo_integration(
 
 
 @router.post(
-    "/{process_id}/nodes",
+    API_ROUTES.WORKFLOWS.NODES,
     response_model=ProcessNodeInfo,
     status_code=status.HTTP_201_CREATED,
 )
@@ -268,7 +273,7 @@ async def create_process_node_endpoint(
 
 
 @router.post(
-    "/{process_id}/nodes/create-with-integration",
+    API_ROUTES.WORKFLOWS.NODE_WITH_INTEGRATION,
     status_code=status.HTTP_201_CREATED,
 )
 async def create_process_node_with_integration(
@@ -315,7 +320,7 @@ async def create_process_node_with_integration(
 
 
 @router.put(
-    "/{process_id}/nodes/{node_id}",
+    API_ROUTES.WORKFLOWS.NODE_BY_ID,
     response_model=ProcessNodeInfo,
 )
 async def update_process_node_endpoint(
@@ -348,7 +353,11 @@ async def update_process_node_endpoint(
     return _serialise_node(updated_node)
 
 
-@router.delete("/{process_id}/nodes/{node_id}", status_code=status.HTTP_204_NO_CONTENT, response_class=Response)
+@router.delete(
+    API_ROUTES.WORKFLOWS.NODE_BY_ID,
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_class=Response,
+)
 async def delete_process_node_endpoint(
     process_id: int,
     node_id: int,
@@ -386,7 +395,9 @@ async def delete_process_node_endpoint(
         include_inactive=True,
     )
     updates: list[dict[str, int]] = []
-    for order, workflow_node in enumerate(sorted(remaining_nodes, key=lambda n: n.sequence_order), start=1):
+    for order, workflow_node in enumerate(
+        sorted(remaining_nodes, key=lambda n: n.sequence_order), start=1
+    ):
         if workflow_node.sequence_order != order:
             updates.append({"node_id": workflow_node.id, "sequence_order": order})
 
@@ -399,4 +410,3 @@ async def delete_process_node_endpoint(
         )
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
-

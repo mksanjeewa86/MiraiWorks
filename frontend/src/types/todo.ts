@@ -2,7 +2,13 @@
 export type TodoVisibility = 'private' | 'public' | 'viewer';
 export type TodoType = 'regular' | 'assignment';
 export type TodoPublishStatus = 'draft' | 'published';
-export type AssignmentStatus = 'not_started' | 'in_progress' | 'submitted' | 'under_review' | 'approved' | 'rejected';
+export type AssignmentStatus =
+  | 'not_started'
+  | 'in_progress'
+  | 'submitted'
+  | 'under_review'
+  | 'approved'
+  | 'rejected';
 
 export interface Todo {
   id: number;

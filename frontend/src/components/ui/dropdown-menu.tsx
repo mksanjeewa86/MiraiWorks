@@ -7,7 +7,7 @@ import type {
   DropdownMenuContentProps,
   DropdownMenuItemProps,
   DropdownMenuSeparatorProps,
-  DropdownMenuLabelProps
+  DropdownMenuLabelProps,
 } from '@/types/components';
 
 const DropdownMenuContext = createContext<DropdownMenuContextValue | undefined>(undefined);

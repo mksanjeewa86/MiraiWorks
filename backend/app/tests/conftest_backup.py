@@ -48,10 +48,14 @@ from app.utils.constants import UserRole as UserRoleEnum
 
 if os.getenv("GITHUB_ACTIONS"):
     # GitHub Actions uses service containers
-    TEST_DATABASE_URL = "mysql+asyncmy://changeme:changeme@127.0.0.1:3307/miraiworks_test"
+    TEST_DATABASE_URL = (
+        "mysql+asyncmy://changeme:changeme@127.0.0.1:3307/miraiworks_test"
+    )
 else:
     # Local Docker development
-    TEST_DATABASE_URL = "mysql+asyncmy://changeme:changeme@localhost:3307/miraiworks_test"
+    TEST_DATABASE_URL = (
+        "mysql+asyncmy://changeme:changeme@localhost:3307/miraiworks_test"
+    )
 
 # Create test engine with more conservative settings for CI/CD
 test_engine = create_async_engine(
@@ -65,7 +69,7 @@ test_engine = create_async_engine(
     connect_args={
         "autocommit": False,
         "connect_timeout": 20,
-    }
+    },
 )
 
 TestingSessionLocal = async_sessionmaker(
@@ -94,10 +98,19 @@ def start_test_database():
     # Check if container is already running and healthy
     try:
         result = subprocess.run(
-            ["docker", "ps", "--filter", "name=miraiworks-mysql-test", "--filter", "health=healthy", "--format", "{{.Names}}"],
+            [
+                "docker",
+                "ps",
+                "--filter",
+                "name=miraiworks-mysql-test",
+                "--filter",
+                "health=healthy",
+                "--format",
+                "{{.Names}}",
+            ],
             capture_output=True,
             text=True,
-            check=True
+            check=True,
         )
         if "miraiworks-mysql-test" in result.stdout:
             print("MySQL test database is already running and healthy")
@@ -110,7 +123,7 @@ def start_test_database():
         subprocess.run(
             ["docker-compose", "-f", "docker-compose.test.yml", "down", "-v"],
             cwd=str(BACKEND_DIR.parent),
-            capture_output=True
+            capture_output=True,
         )
 
     # Start the test database
@@ -118,7 +131,7 @@ def start_test_database():
         subprocess.run(
             ["docker-compose", "-f", "docker-compose.test.yml", "up", "-d"],
             check=True,
-            cwd=str(BACKEND_DIR.parent)
+            cwd=str(BACKEND_DIR.parent),
         )
         print("Started MySQL test database")
 
@@ -129,19 +142,35 @@ def start_test_database():
             try:
                 # Check health status
                 result = subprocess.run(
-                    ["docker", "inspect", "--format={{.State.Health.Status}}", "miraiworks-mysql-test"],
+                    [
+                        "docker",
+                        "inspect",
+                        "--format={{.State.Health.Status}}",
+                        "miraiworks-mysql-test",
+                    ],
                     capture_output=True,
                     text=True,
-                    timeout=5
+                    timeout=5,
                 )
                 if result.returncode == 0 and "healthy" in result.stdout:
                     print("MySQL is ready and healthy!")
                     # Additional verification with a connection test
                     test_result = subprocess.run(
-                        ["docker", "exec", "miraiworks-mysql-test", "mysqladmin", "ping", "-h", "localhost", "-u", "changeme", "-pchangeme"],
+                        [
+                            "docker",
+                            "exec",
+                            "miraiworks-mysql-test",
+                            "mysqladmin",
+                            "ping",
+                            "-h",
+                            "localhost",
+                            "-u",
+                            "changeme",
+                            "-pchangeme",
+                        ],
                         capture_output=True,
                         text=True,
-                        timeout=5
+                        timeout=5,
                     )
                     if test_result.returncode == 0:
                         return True
@@ -165,7 +194,7 @@ def stop_test_database():
         subprocess.run(
             ["docker-compose", "-f", "docker-compose.test.yml", "down", "-v"],
             check=True,
-            cwd=str(BACKEND_DIR.parent)
+            cwd=str(BACKEND_DIR.parent),
         )
         print("Stopped MySQL test database")
     except subprocess.CalledProcessError as e:
@@ -207,6 +236,7 @@ async def force_drop_all_tables():
             async with test_engine.begin() as conn:
                 # Disable foreign key checks
                 from sqlalchemy import text
+
                 await conn.execute(text("SET FOREIGN_KEY_CHECKS = 0"))
 
                 # Get all table names
@@ -218,7 +248,9 @@ async def force_drop_all_tables():
                     try:
                         await conn.execute(text(f"DROP TABLE IF EXISTS `{table_name}`"))
                     except Exception as drop_error:
-                        print(f"Warning: Failed to drop table {table_name}: {drop_error}")
+                        print(
+                            f"Warning: Failed to drop table {table_name}: {drop_error}"
+                        )
 
                 # Re-enable foreign key checks
                 await conn.execute(text("SET FOREIGN_KEY_CHECKS = 1"))
@@ -252,16 +284,24 @@ async def setup_database_schema():
         try:
             async with test_engine.begin() as conn:
                 # Create all tables without checking if they exist first (checkfirst=False)
-                await conn.run_sync(lambda sync_conn: Base.metadata.create_all(sync_conn, checkfirst=False))
+                await conn.run_sync(
+                    lambda sync_conn: Base.metadata.create_all(
+                        sync_conn, checkfirst=False
+                    )
+                )
             print("Database schema created successfully")
             break
         except Exception as e:
             if attempt == max_retries - 1:
-                print(f"Failed to create database schema after {max_retries} attempts: {e}")
+                print(
+                    f"Failed to create database schema after {max_retries} attempts: {e}"
+                )
                 raise e
             # Wait between retries
             await asyncio.sleep(3)
-            print(f"Retrying database schema creation... (attempt {attempt + 1}/{max_retries})")
+            print(
+                f"Retrying database schema creation... (attempt {attempt + 1}/{max_retries})"
+            )
 
     yield
 
@@ -307,6 +347,7 @@ async def setup_database():
                 try:
                     async with test_engine.begin() as conn:
                         from sqlalchemy import text
+
                         await conn.execute(text("SET FOREIGN_KEY_CHECKS = 0"))
                         for table_name in table_names:
                             await conn.execute(text(f"DELETE FROM `{table_name}`"))
@@ -695,14 +736,12 @@ async def test_users(db_session, test_company, test_roles):
 
     await db_session.commit()
 
-    users['recruiter'] = recruiter
-    users['candidate'] = candidate
-    users['other_candidate'] = other_candidate
-    users['other_recruiter'] = other_recruiter
+    users["recruiter"] = recruiter
+    users["candidate"] = candidate
+    users["other_candidate"] = other_candidate
+    users["other_recruiter"] = other_recruiter
 
     return users
-
-
 
 
 @pytest_asyncio.fixture
@@ -715,14 +754,16 @@ async def test_todo_with_attachments(db_session, test_users):
     from app.schemas.todo import TodoCreate
     from app.schemas.todo_attachment import TodoAttachmentCreate
 
-    user = test_users['recruiter']
+    user = test_users["recruiter"]
 
     # Create todo
     todo_data = TodoCreate(
         title="Test Todo with Attachments",
-        description="Testing file attachments functionality"
+        description="Testing file attachments functionality",
     )
-    test_todo = await todo_crud.create_with_owner(db_session, obj_in=todo_data, owner_id=user.id)
+    test_todo = await todo_crud.create_with_owner(
+        db_session, obj_in=todo_data, owner_id=user.id
+    )
 
     # Create temporary files for testing
     temp_files = []
@@ -730,7 +771,9 @@ async def test_todo_with_attachments(db_session, test_users):
 
     for i in range(2):
         # Create temporary file
-        with tempfile.NamedTemporaryFile(delete=False, suffix=f'_test_{i}.txt') as temp_file:
+        with tempfile.NamedTemporaryFile(
+            delete=False, suffix=f"_test_{i}.txt"
+        ) as temp_file:
             content = f"Test content for attachment {i}".encode()
             temp_file.write(content)
             temp_path = temp_file.name
@@ -746,7 +789,7 @@ async def test_todo_with_attachments(db_session, test_users):
             mime_type="text/plain",
             file_extension=".txt",
             description=f"Test attachment {i}",
-            uploaded_by=user.id
+            uploaded_by=user.id,
         )
 
         attachment = await todo_attachment.create_attachment(
@@ -755,10 +798,10 @@ async def test_todo_with_attachments(db_session, test_users):
         attachments.append(attachment)
 
     return {
-        'todo': test_todo,
-        'user': user,
-        'attachments': attachments,
-        'temp_files': temp_files
+        "todo": test_todo,
+        "user": user,
+        "attachments": attachments,
+        "temp_files": temp_files,
     }
 
 
@@ -785,7 +828,9 @@ async def get_auth_headers_for_user(client, user):
         json={"email": user.email, "password": password},
     )
 
-    assert response.status_code == 200, f"Login failed for user {user.email}: {response.text}"
+    assert (
+        response.status_code == 200
+    ), f"Login failed for user {user.email}: {response.text}"
     token_data = response.json()
     return {"Authorization": f"Bearer {token_data['access_token']}"}
 
@@ -802,14 +847,14 @@ async def test_video_call(db_session, test_users):
     from app.models.video_call import VideoCall
     from app.schemas.video_call import VideoCallCreate
 
-    recruiter = test_users['recruiter']
-    candidate = test_users['candidate']
+    recruiter = test_users["recruiter"]
+    candidate = test_users["candidate"]
 
     call_data = VideoCallCreate(
         candidate_id=candidate.id,
         scheduled_at=datetime.now(UTC) + timedelta(hours=1),
         enable_transcription=True,
-        transcription_language="ja"
+        transcription_language="ja",
     )
 
     video_call = await video_call_crud.create_with_interviewer(
@@ -820,10 +865,7 @@ async def test_video_call(db_session, test_users):
     await db_session.commit()
     result = await db_session.execute(
         select(VideoCall)
-        .options(
-            selectinload(VideoCall.interviewer),
-            selectinload(VideoCall.candidate)
-        )
+        .options(selectinload(VideoCall.interviewer), selectinload(VideoCall.candidate))
         .where(VideoCall.id == video_call.id)
     )
     video_call = result.scalar_one()

@@ -17,7 +17,7 @@ class UserConnectionService:
         user_id: int,
         connected_user_id: int,
         creation_type: str = "manual",
-        created_by: int | None = None
+        created_by: int | None = None,
     ) -> UserConnection:
         """Create a connection between two users.
 
@@ -44,7 +44,7 @@ class UserConnectionService:
             connected_user_id=connected_user_id,
             is_active=True,
             creation_type=creation_type,
-            created_by=created_by
+            created_by=created_by,
         )
 
         db.add(connection)
@@ -52,11 +52,7 @@ class UserConnectionService:
         await db.refresh(connection)
         return connection
 
-    async def get_connected_users(
-        self,
-        db: AsyncSession,
-        user_id: int
-    ) -> list[User]:
+    async def get_connected_users(self, db: AsyncSession, user_id: int) -> list[User]:
         """Get all users connected to this user."""
 
         # Get all active connections where user is involved
@@ -64,9 +60,9 @@ class UserConnectionService:
             and_(
                 or_(
                     UserConnection.user_id == user_id,
-                    UserConnection.connected_user_id == user_id
+                    UserConnection.connected_user_id == user_id,
                 ),
-                UserConnection.is_active is True
+                UserConnection.is_active is True,
             )
         )
 
@@ -89,7 +85,7 @@ class UserConnectionService:
             and_(
                 User.id.in_(connected_user_ids),
                 User.is_active is True,
-                User.is_deleted is False
+                User.is_deleted is False,
             )
         )
 
@@ -97,10 +93,7 @@ class UserConnectionService:
         return list(result.scalars().all())
 
     async def disconnect_users(
-        self,
-        db: AsyncSession,
-        user_id: int,
-        connected_user_id: int
+        self, db: AsyncSession, user_id: int, connected_user_id: int
     ) -> bool:
         """Disconnect two users."""
 
@@ -112,10 +105,7 @@ class UserConnectionService:
         return False
 
     async def _get_connection(
-        self,
-        db: AsyncSession,
-        user_id: int,
-        connected_user_id: int
+        self, db: AsyncSession, user_id: int, connected_user_id: int
     ) -> UserConnection:
         """Get connection between two users (either direction)."""
 
@@ -123,12 +113,12 @@ class UserConnectionService:
             or_(
                 and_(
                     UserConnection.user_id == user_id,
-                    UserConnection.connected_user_id == connected_user_id
+                    UserConnection.connected_user_id == connected_user_id,
                 ),
                 and_(
                     UserConnection.user_id == connected_user_id,
-                    UserConnection.connected_user_id == user_id
-                )
+                    UserConnection.connected_user_id == user_id,
+                ),
             )
         )
 

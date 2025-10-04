@@ -38,8 +38,7 @@ class PermissionService:
 
         # Participants can access their own video calls
         return (
-            video_call.interviewer_id == user.id or
-            video_call.candidate_id == user.id
+            video_call.interviewer_id == user.id or video_call.candidate_id == user.id
         )
 
     async def can_end_video_call(

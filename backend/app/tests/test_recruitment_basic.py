@@ -8,13 +8,11 @@ async def test_basic_recruitment_process(client, auth_headers):
     # Create a recruitment process
     process_data = {
         "name": "Basic Test Process",
-        "description": "A simple test process"
+        "description": "A simple test process",
     }
 
     response = await client.post(
-        "/api/recruitment-processes/",
-        json=process_data,
-        headers=auth_headers
+        "/api/recruitment-processes/", json=process_data, headers=auth_headers
     )
 
     print(f"Response status: {response.status_code}")
@@ -23,7 +21,11 @@ async def test_basic_recruitment_process(client, auth_headers):
 
     # Check if we get successful creation or at least a meaningful error
     # (might fail due to missing required fields, but shouldn't be 401/404)
-    assert response.status_code in [201, 400, 422]  # Created, bad request, or validation error
+    assert response.status_code in [
+        201,
+        400,
+        422,
+    ]  # Created, bad request, or validation error
 
     if response.status_code == 201:
         data = response.json()

@@ -35,11 +35,7 @@ const QuestionType = {
   RATING: 'rating',
 } as const;
 
-export function ExamQuestionForm({
-  question,
-  onSave,
-  onCancel,
-}: ExamQuestionFormProps) {
+export function ExamQuestionForm({ question, onSave, onCancel }: ExamQuestionFormProps) {
   const [formData, setFormData] = useState<QuestionFormData>(question);
   const [newOption, setNewOption] = useState('');
   const [newTag, setNewTag] = useState('');

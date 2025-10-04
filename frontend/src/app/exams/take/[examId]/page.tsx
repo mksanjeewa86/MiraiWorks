@@ -6,23 +6,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui';
 import { Button } from '@/components/ui';
 import { Progress } from '@/components/ui';
 import { Badge } from '@/components/ui';
-import {
-  AlertTriangle,
-  Clock,
-  ChevronLeft,
-  ChevronRight,
-} from 'lucide-react';
+import { AlertTriangle, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui';
 import { toast } from 'sonner';
 import { ExamQuestion } from './exam-question';
 import { ExamTimer } from './exam-timer';
 import { FaceVerification } from './face-verification';
 import { WebUsageMonitor } from './web-usage-monitor';
+import { API_ENDPOINTS } from '@/api/config';
 import { Question, SessionInfo, ExamTakeResponse, Answer } from '@/types/exam';
-
-
-
-
 
 export default function TakeExamPage() {
   const params = useParams();
@@ -80,7 +72,7 @@ export default function TakeExamPage() {
 
   const startExam = async () => {
     try {
-      const response = await fetch('/api/exam/exams/take', {
+      const response = await fetch(API_ENDPOINTS.EXAMS.TAKE, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -157,10 +149,12 @@ export default function TakeExamPage() {
   }, []);
 
   const saveAnswer = async (questionId: number, answer: Answer) => {
+    if (!examData) return;
+
     try {
       const timeSpent = Math.floor((Date.now() - questionStartTime) / 1000);
 
-      await fetch(`/api/exam/sessions/${examData?.session.id}/answers`, {
+      await fetch(API_ENDPOINTS.EXAM_SESSIONS.ANSWERS(examData.session.id), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -204,7 +198,7 @@ export default function TakeExamPage() {
       }
 
       // Complete the exam
-      await fetch(`/api/exam/sessions/${examData.session.id}/complete`, {
+      await fetch(API_ENDPOINTS.EXAM_SESSIONS.COMPLETE(examData.session.id), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('access_token')}`,
@@ -235,7 +229,7 @@ export default function TakeExamPage() {
     if (!examData?.session.monitor_web_usage) return;
 
     try {
-      await fetch(`/api/exam/sessions/${examData.session.id}/monitoring`, {
+      await fetch(API_ENDPOINTS.EXAM_SESSIONS.MONITORING(examData.session.id), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

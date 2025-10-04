@@ -43,10 +43,18 @@ class TestInterviewManagementPermissionMatrix:
         """Test that Super Admin can create interviews for any company."""
         # Create participants
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         position = await self._create_position_for_company(db_session, test_company)
 
@@ -79,7 +87,9 @@ class TestInterviewManagementPermissionMatrix:
         test_roles: dict,
     ):
         """Test that Super Admin can view any interview."""
-        interview = await self._create_interview_for_company(db_session, test_company, test_roles)
+        interview = await self._create_interview_for_company(
+            db_session, test_company, test_roles
+        )
 
         response = await client.get(
             f"/api/interviews/{interview.id}", headers=super_admin_auth_headers
@@ -99,7 +109,9 @@ class TestInterviewManagementPermissionMatrix:
         test_roles: dict,
     ):
         """Test that Super Admin can update any interview."""
-        interview = await self._create_interview_for_company(db_session, test_company, test_roles)
+        interview = await self._create_interview_for_company(
+            db_session, test_company, test_roles
+        )
 
         update_data = {
             "location": "Updated by Super Admin",
@@ -107,7 +119,9 @@ class TestInterviewManagementPermissionMatrix:
         }
 
         response = await client.put(
-            f"/api/interviews/{interview.id}", json=update_data, headers=super_admin_auth_headers
+            f"/api/interviews/{interview.id}",
+            json=update_data,
+            headers=super_admin_auth_headers,
         )
 
         assert response.status_code == 200
@@ -125,12 +139,16 @@ class TestInterviewManagementPermissionMatrix:
         test_roles: dict,
     ):
         """Test that Super Admin can cancel any interview."""
-        interview = await self._create_interview_for_company(db_session, test_company, test_roles)
+        interview = await self._create_interview_for_company(
+            db_session, test_company, test_roles
+        )
 
         cancel_data = {"reason": "Cancelled by Super Admin"}
 
         response = await client.post(
-            f"/api/interviews/{interview.id}/cancel", json=cancel_data, headers=super_admin_auth_headers
+            f"/api/interviews/{interview.id}/cancel",
+            json=cancel_data,
+            headers=super_admin_auth_headers,
         )
 
         assert response.status_code == 200
@@ -147,7 +165,9 @@ class TestInterviewManagementPermissionMatrix:
         test_roles: dict,
     ):
         """Test that Super Admin can delete any interview."""
-        interview = await self._create_interview_for_company(db_session, test_company, test_roles)
+        interview = await self._create_interview_for_company(
+            db_session, test_company, test_roles
+        )
 
         response = await client.delete(
             f"/api/interviews/{interview.id}", headers=super_admin_auth_headers
@@ -169,13 +189,25 @@ class TestInterviewManagementPermissionMatrix:
     ):
         """Test that Company Admin can create interviews for their company."""
         company_admin = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.ADMIN, "companyadmin@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.ADMIN,
+            "companyadmin@test.com",
         )
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         position = await self._create_position_for_company(db_session, test_company)
 
@@ -208,12 +240,22 @@ class TestInterviewManagementPermissionMatrix:
     ):
         """Test that Company Admin cannot create interviews for other companies."""
         company_admin = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.ADMIN, "companyadmin@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.ADMIN,
+            "companyadmin@test.com",
         )
         other_company = await self._create_other_company(db_session)
-        other_position = await self._create_position_for_company(db_session, other_company)
+        other_position = await self._create_position_for_company(
+            db_session, other_company
+        )
         other_candidate = await self._create_user_with_role(
-            db_session, other_company, test_roles, UserRoleEnum.CANDIDATE, "othercandidate@test.com"
+            db_session,
+            other_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "othercandidate@test.com",
         )
 
         headers = await self._get_auth_headers(client, company_admin)
@@ -242,24 +284,36 @@ class TestInterviewManagementPermissionMatrix:
     ):
         """Test that Company Admin can only view company-related interviews."""
         company_admin = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.ADMIN, "companyadmin@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.ADMIN,
+            "companyadmin@test.com",
         )
 
         # Create interview in own company
-        own_interview = await self._create_interview_for_company(db_session, test_company, test_roles)
+        own_interview = await self._create_interview_for_company(
+            db_session, test_company, test_roles
+        )
 
         # Create interview in other company
         other_company = await self._create_other_company(db_session)
-        other_interview = await self._create_interview_for_company(db_session, other_company, test_roles)
+        other_interview = await self._create_interview_for_company(
+            db_session, other_company, test_roles
+        )
 
         headers = await self._get_auth_headers(client, company_admin)
 
         # Should be able to view own company interview
-        response = await client.get(f"/api/interviews/{own_interview.id}", headers=headers)
+        response = await client.get(
+            f"/api/interviews/{own_interview.id}", headers=headers
+        )
         assert response.status_code == 200
 
         # Should NOT be able to view other company interview
-        response = await client.get(f"/api/interviews/{other_interview.id}", headers=headers)
+        response = await client.get(
+            f"/api/interviews/{other_interview.id}", headers=headers
+        )
         assert response.status_code == 403
         assert "not related" in response.json()["detail"].lower()
 
@@ -273,12 +327,20 @@ class TestInterviewManagementPermissionMatrix:
     ):
         """Test that Company Admin can only update company-related interviews."""
         company_admin = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.ADMIN, "companyadmin@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.ADMIN,
+            "companyadmin@test.com",
         )
 
-        own_interview = await self._create_interview_for_company(db_session, test_company, test_roles)
+        own_interview = await self._create_interview_for_company(
+            db_session, test_company, test_roles
+        )
         other_company = await self._create_other_company(db_session)
-        other_interview = await self._create_interview_for_company(db_session, other_company, test_roles)
+        other_interview = await self._create_interview_for_company(
+            db_session, other_company, test_roles
+        )
 
         headers = await self._get_auth_headers(client, company_admin)
         update_data = {"location": "Updated by Company Admin"}
@@ -308,10 +370,18 @@ class TestInterviewManagementPermissionMatrix:
     ):
         """Test that Recruiter can create interviews for their company."""
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         position = await self._create_position_for_company(db_session, test_company)
 
@@ -343,12 +413,22 @@ class TestInterviewManagementPermissionMatrix:
     ):
         """Test that Recruiter cannot create interviews for other companies."""
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
         other_company = await self._create_other_company(db_session)
-        other_position = await self._create_position_for_company(db_session, other_company)
+        other_position = await self._create_position_for_company(
+            db_session, other_company
+        )
         other_candidate = await self._create_user_with_role(
-            db_session, other_company, test_roles, UserRoleEnum.CANDIDATE, "othercandidate@test.com"
+            db_session,
+            other_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "othercandidate@test.com",
         )
 
         headers = await self._get_auth_headers(client, recruiter)
@@ -377,9 +457,15 @@ class TestInterviewManagementPermissionMatrix:
     ):
         """Test that Recruiter can manage interviews related to their company."""
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
-        interview = await self._create_interview_for_company(db_session, test_company, test_roles)
+        interview = await self._create_interview_for_company(
+            db_session, test_company, test_roles
+        )
 
         headers = await self._get_auth_headers(client, recruiter)
 
@@ -413,10 +499,18 @@ class TestInterviewManagementPermissionMatrix:
     ):
         """Test that Employer can create interviews for their company."""
         employer = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "employer@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "employer@test.com",
         )
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         position = await self._create_position_for_company(db_session, test_company)
 
@@ -448,9 +542,15 @@ class TestInterviewManagementPermissionMatrix:
     ):
         """Test that Employer can manage interviews related to their company."""
         employer = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "employer@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "employer@test.com",
         )
-        interview = await self._create_interview_for_company(db_session, test_company, test_roles)
+        interview = await self._create_interview_for_company(
+            db_session, test_company, test_roles
+        )
 
         headers = await self._get_auth_headers(client, employer)
 
@@ -477,10 +577,18 @@ class TestInterviewManagementPermissionMatrix:
     ):
         """Test that Candidate cannot create interviews."""
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
         position = await self._create_position_for_company(db_session, test_company)
 
@@ -510,24 +618,40 @@ class TestInterviewManagementPermissionMatrix:
     ):
         """Test that Candidate can only view their own interviews."""
         candidate1 = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate1@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate1@test.com",
         )
         candidate2 = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate2@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate2@test.com",
         )
 
         # Create interviews for both candidates
-        own_interview = await self._create_interview_for_candidate(db_session, test_company, test_roles, candidate1)
-        other_interview = await self._create_interview_for_candidate(db_session, test_company, test_roles, candidate2)
+        own_interview = await self._create_interview_for_candidate(
+            db_session, test_company, test_roles, candidate1
+        )
+        other_interview = await self._create_interview_for_candidate(
+            db_session, test_company, test_roles, candidate2
+        )
 
         headers = await self._get_auth_headers(client, candidate1)
 
         # Can view own interview
-        response = await client.get(f"/api/interviews/{own_interview.id}", headers=headers)
+        response = await client.get(
+            f"/api/interviews/{own_interview.id}", headers=headers
+        )
         assert response.status_code == 200
 
         # Cannot view other candidate's interview
-        response = await client.get(f"/api/interviews/{other_interview.id}", headers=headers)
+        response = await client.get(
+            f"/api/interviews/{other_interview.id}", headers=headers
+        )
         assert response.status_code == 403
         assert "not your interview" in response.json()["detail"].lower()
 
@@ -541,14 +665,26 @@ class TestInterviewManagementPermissionMatrix:
     ):
         """Test that Candidate can only update their own interviews."""
         candidate1 = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate1@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate1@test.com",
         )
         candidate2 = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate2@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate2@test.com",
         )
 
-        own_interview = await self._create_interview_for_candidate(db_session, test_company, test_roles, candidate1)
-        other_interview = await self._create_interview_for_candidate(db_session, test_company, test_roles, candidate2)
+        own_interview = await self._create_interview_for_candidate(
+            db_session, test_company, test_roles, candidate1
+        )
+        other_interview = await self._create_interview_for_candidate(
+            db_session, test_company, test_roles, candidate2
+        )
 
         headers = await self._get_auth_headers(client, candidate1)
         update_data = {"candidate_notes": "Updated by candidate"}
@@ -576,27 +712,43 @@ class TestInterviewManagementPermissionMatrix:
     ):
         """Test that Candidate can only cancel their own interviews."""
         candidate1 = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate1@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate1@test.com",
         )
         candidate2 = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate2@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate2@test.com",
         )
 
-        own_interview = await self._create_interview_for_candidate(db_session, test_company, test_roles, candidate1)
-        other_interview = await self._create_interview_for_candidate(db_session, test_company, test_roles, candidate2)
+        own_interview = await self._create_interview_for_candidate(
+            db_session, test_company, test_roles, candidate1
+        )
+        other_interview = await self._create_interview_for_candidate(
+            db_session, test_company, test_roles, candidate2
+        )
 
         headers = await self._get_auth_headers(client, candidate1)
         cancel_data = {"reason": "Cancelled by candidate"}
 
         # Can cancel own interview
         response = await client.post(
-            f"/api/interviews/{own_interview.id}/cancel", json=cancel_data, headers=headers
+            f"/api/interviews/{own_interview.id}/cancel",
+            json=cancel_data,
+            headers=headers,
         )
         assert response.status_code == 200
 
         # Cannot cancel other candidate's interview
         response = await client.post(
-            f"/api/interviews/{other_interview.id}/cancel", json=cancel_data, headers=headers
+            f"/api/interviews/{other_interview.id}/cancel",
+            json=cancel_data,
+            headers=headers,
         )
         assert response.status_code == 403
         assert "not your interview" in response.json()["detail"].lower()
@@ -611,13 +763,21 @@ class TestInterviewManagementPermissionMatrix:
     ):
         """Test that Candidate cannot delete interviews even their own."""
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
-        own_interview = await self._create_interview_for_candidate(db_session, test_company, test_roles, candidate)
+        own_interview = await self._create_interview_for_candidate(
+            db_session, test_company, test_roles, candidate
+        )
 
         headers = await self._get_auth_headers(client, candidate)
 
-        response = await client.delete(f"/api/interviews/{own_interview.id}", headers=headers)
+        response = await client.delete(
+            f"/api/interviews/{own_interview.id}", headers=headers
+        )
         assert response.status_code == 403
         assert "cannot delete" in response.json()["detail"].lower()
 
@@ -633,9 +793,15 @@ class TestInterviewManagementPermissionMatrix:
     ):
         """Test that interview proposal operations respect company scoping."""
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
-        interview = await self._create_interview_for_company(db_session, test_company, test_roles)
+        interview = await self._create_interview_for_company(
+            db_session, test_company, test_roles
+        )
 
         headers = await self._get_auth_headers(client, recruiter)
 
@@ -646,12 +812,16 @@ class TestInterviewManagementPermissionMatrix:
         }
 
         response = await client.post(
-            f"/api/interviews/{interview.id}/proposals", json=proposal_data, headers=headers
+            f"/api/interviews/{interview.id}/proposals",
+            json=proposal_data,
+            headers=headers,
         )
         assert response.status_code == 201
 
         # Can view proposals for company interview
-        response = await client.get(f"/api/interviews/{interview.id}/proposals", headers=headers)
+        response = await client.get(
+            f"/api/interviews/{interview.id}/proposals", headers=headers
+        )
         assert response.status_code == 200
 
     # ===== CALENDAR AND STATISTICS PERMISSIONS =====
@@ -666,12 +836,17 @@ class TestInterviewManagementPermissionMatrix:
     ):
         """Test that interview calendar respects company scoping."""
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
         headers = await self._get_auth_headers(client, recruiter)
 
         response = await client.get(
-            "/api/interviews/calendar?start_date=2024-01-01&end_date=2024-12-31", headers=headers
+            "/api/interviews/calendar?start_date=2024-01-01&end_date=2024-12-31",
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -689,7 +864,11 @@ class TestInterviewManagementPermissionMatrix:
     ):
         """Test that interview statistics respect company scoping."""
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
         headers = await self._get_auth_headers(client, recruiter)
 
@@ -710,7 +889,11 @@ class TestInterviewManagementPermissionMatrix:
     ):
         """Test that Candidate cannot view interview statistics."""
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         headers = await self._get_auth_headers(client, candidate)
 
@@ -729,7 +912,9 @@ class TestInterviewManagementPermissionMatrix:
         test_roles: dict,
     ):
         """Test unauthenticated access to interview endpoints."""
-        interview = await self._create_interview_for_company(db_session, test_company, test_roles)
+        interview = await self._create_interview_for_company(
+            db_session, test_company, test_roles
+        )
 
         endpoints = [
             ("GET", "/api/interviews"),
@@ -791,7 +976,12 @@ class TestInterviewManagementPermissionMatrix:
 
         return user
 
-    async def _create_position_for_company(self, db_session: AsyncSession, company: Company, posted_by_user: User | None = None) -> Position:
+    async def _create_position_for_company(
+        self,
+        db_session: AsyncSession,
+        company: Company,
+        posted_by_user: User | None = None,
+    ) -> Position:
         """Create a position for a company."""
         # Create a default user if none provided
         if posted_by_user is None:
@@ -827,10 +1017,18 @@ class TestInterviewManagementPermissionMatrix:
     ) -> Interview:
         """Create an interview for a company."""
         recruiter = await self._create_user_with_role(
-            db_session, company, test_roles, UserRoleEnum.MEMBER, f"recruiter{company.id}@test.com"
+            db_session,
+            company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            f"recruiter{company.id}@test.com",
         )
         candidate = await self._create_user_with_role(
-            db_session, company, test_roles, UserRoleEnum.CANDIDATE, f"candidate{company.id}@test.com"
+            db_session,
+            company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            f"candidate{company.id}@test.com",
         )
         position = await self._create_position_for_company(db_session, company)
 
@@ -850,11 +1048,19 @@ class TestInterviewManagementPermissionMatrix:
         return interview
 
     async def _create_interview_for_candidate(
-        self, db_session: AsyncSession, company: Company, test_roles: dict, candidate: User
+        self,
+        db_session: AsyncSession,
+        company: Company,
+        test_roles: dict,
+        candidate: User,
     ) -> Interview:
         """Create an interview for a specific candidate."""
         recruiter = await self._create_user_with_role(
-            db_session, company, test_roles, UserRoleEnum.MEMBER, f"recruiter{candidate.id}@test.com"
+            db_session,
+            company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            f"recruiter{candidate.id}@test.com",
         )
         position = await self._create_position_for_company(db_session, company)
 

@@ -1,13 +1,23 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { BriefcaseIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
+import { CalendarDaysIcon, ClipboardDocumentCheckIcon } from '@heroicons/react/24/solid';
 import { useAuth } from '@/contexts/AuthContext';
 import { dashboardApi } from '@/api/dashboard';
-import { Card } from '@/components/ui';
-import { Badge } from '@/components/ui';
-import { LoadingSpinner } from '@/components/ui';
-import { Button } from '@/components/ui';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import {
+  DashboardContentGate,
+  DashboardHeader,
+  DashboardMetricCard,
+} from '@/components/dashboard/common';
+import { SimpleAreaChart, SimpleBarChart } from '@/components/dashboard/Charts';
 import type { CandidateDashboardStats } from '@/types/dashboard';
+import type { ActivityItem } from '@/types';
 import MBTITestButton from '@/components/mbti/MBTITestButton';
 import MBTITestModal from '@/components/mbti/MBTITestModal';
 import MBTIResultCard from '@/components/mbti/MBTIResultCard';
@@ -16,15 +26,26 @@ import type { MBTITestSummary } from '@/types/mbti';
 
 export default function CandidateDashboard() {
   const { user } = useAuth();
+  const router = useRouter();
   const [stats, setStats] = useState<CandidateDashboardStats | null>(null);
+  const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activityLoading, setActivityLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activityError, setActivityError] = useState<string | null>(null);
   const [showMBTITest, setShowMBTITest] = useState(false);
   const [mbtiSummary, setMbtiSummary] = useState<MBTITestSummary | null>(null);
   const [mbtiLoading, setMbtiLoading] = useState(false);
 
+  useEffect(() => {
+    loadDashboardData();
+    loadRecentActivity();
+    loadMBTISummary();
+  }, []);
+
   const loadDashboardData = async () => {
     try {
+      setLoading(true);
       const response = await dashboardApi.getStats();
       setStats(response.data as CandidateDashboardStats);
       setError(null);
@@ -35,29 +56,31 @@ export default function CandidateDashboard() {
     }
   };
 
-  useEffect(() => {
-    loadDashboardData();
-    loadMBTISummary();
-  }, []);
+  const loadRecentActivity = async () => {
+    try {
+      setActivityLoading(true);
+      const response = await dashboardApi.getRecentActivity(8);
+      setRecentActivity(response.data ?? []);
+      setActivityError(null);
+    } catch (err: unknown) {
+      setActivityError(err instanceof Error ? err.message : 'Failed to load activity');
+    } finally {
+      setActivityLoading(false);
+    }
+  };
 
   const loadMBTISummary = async () => {
     try {
       setMbtiLoading(true);
-
-      // First check the test progress to avoid 404 errors
       const progress = await mbtiApi.getProgress();
-
-      // Only try to get summary if test is completed
       if (progress.status === 'completed') {
         const summary = await mbtiApi.getSummary('ja');
         setMbtiSummary(summary);
       } else {
-        // User hasn't completed the test yet - this is normal, no error needed
         setMbtiSummary(null);
       }
     } catch (err) {
-      // Only log actual errors, not expected 404s
-      console.log('Could not load MBTI data:', err);
+      console.info('Could not load MBTI data', err);
       setMbtiSummary(null);
     } finally {
       setMbtiLoading(false);
@@ -68,24 +91,96 @@ export default function CandidateDashboard() {
     await loadMBTISummary();
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'scheduled':
-      case 'pending':
-        return 'warning';
-      case 'completed':
-      case 'accepted':
-        return 'success';
-      case 'cancelled':
-      case 'rejected':
-        return 'error';
+  const metrics = useMemo(() => {
+    if (!stats) {
+      return [] as {
+        label: string;
+        value: number | string;
+        helperText?: string;
+        trendLabel?: string;
+        trendTone?: 'positive' | 'negative' | 'neutral';
+        icon: React.ReactElement;
+      }[];
+    }
+
+    return [
+      {
+        label: 'Active applications',
+        value: stats.total_applications ?? 0,
+        helperText: 'Across all active job submissions',
+        trendLabel: `${stats.application_stats?.find((s) => s.status === 'in_review')?.count ?? 0} in review`,
+        trendTone: 'neutral' as const,
+        icon: <ClipboardDocumentCheckIcon className="h-6 w-6" />,
+      },
+      {
+        label: 'Interviews scheduled',
+        value: stats.interviews_scheduled ?? 0,
+        helperText: 'Upcoming meetings in the next weeks',
+        trendLabel: `${stats.interviews_completed ?? 0} completed`,
+        trendTone: 'positive' as const,
+        icon: <CalendarDaysIcon className="h-6 w-6" />,
+      },
+      {
+        label: 'Resumes on file',
+        value: stats.resumes_created ?? 0,
+        helperText: 'Keep resumes updated for better matches',
+        trendLabel: `${stats.recent_resumes?.[0]?.title ? 'Most recent updated' : 'No updates yet'}`,
+        trendTone: (stats.recent_resumes?.length ? 'positive' : 'neutral') as
+          | 'positive'
+          | 'negative'
+          | 'neutral',
+        icon: <BriefcaseIcon className="h-6 w-6" />,
+      },
+      {
+        label: 'Unread conversations',
+        value: stats.activeConversations ?? 0,
+        helperText: 'Messages from recruiters and companies',
+        trendLabel: 'Stay responsive to stand out',
+        trendTone: 'neutral' as const,
+        icon: <ChatBubbleLeftRightIcon className="h-6 w-6" />,
+      },
+    ];
+  }, [stats]);
+
+  const applicationChartData = useMemo(() => {
+    return (stats?.application_stats ?? []).map((item) => ({
+      name: item.status,
+      value: item.count,
+    }));
+  }, [stats]);
+
+  const interviewTimelineData = useMemo(() => {
+    return (stats?.recent_interviews ?? [])
+      .filter((interview) => Boolean(interview.scheduled_at))
+      .map((interview) => ({
+        name: new Date(interview.scheduled_at as string).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+        }),
+        value: 1,
+      }));
+  }, [stats]);
+
+  const renderActivityBadge = (type?: ActivityItem['type']) => {
+    switch (type) {
+      case 'interview':
+        return <Badge variant="primary">Interview</Badge>;
+      case 'message':
+        return <Badge variant="secondary">Message</Badge>;
+      case 'resume':
+        return <Badge variant="success">Resume</Badge>;
+      case 'user':
+        return <Badge variant="outline">Profile</Badge>;
       default:
-        return 'secondary';
+        return <Badge variant="outline">Update</Badge>;
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+  const formatDateTime = (value?: string) => {
+    if (!value) return 'N/A';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return 'N/A';
+    return date.toLocaleString('en-US', {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
@@ -93,347 +188,241 @@ export default function CandidateDashboard() {
     });
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <LoadingSpinner className="w-8 h-8" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-6">
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-          <h2 className="text-lg font-semibold text-red-800 dark:text-red-200">
-            Error Loading Dashboard
-          </h2>
-          <p className="text-red-600 dark:text-red-400 mt-2">{error}</p>
-          <Button onClick={loadDashboardData} className="mt-4">
-            Try Again
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
-          Candidate Dashboard
-        </h1>
-        <p className="mt-1" style={{ color: 'var(--text-secondary)' }}>
-          Welcome back, {user?.full_name}! Here&apos;s your career progress.
-        </p>
-      </div>
+    <div className="space-y-6 p-6">
+      <DashboardHeader
+        title="Candidate control center"
+        subtitle={`Welcome back${user?.full_name ? `, ${user.full_name}` : ''}`}
+        description="Track your applications, interviews, and career growth in one place."
+        actions={
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={loadDashboardData}>
+              Refresh
+            </Button>
+            <Button size="sm" onClick={() => router.push('/app/jobs')}>
+              Discover roles
+            </Button>
+          </div>
+        }
+        meta={`Last updated ${new Date().toLocaleTimeString()}`}
+      />
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
+      <DashboardContentGate loading={loading} error={error} onRetry={loadDashboardData}>
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {metrics.map((metric) => (
+            <DashboardMetricCard
+              key={metric.label}
+              label={metric.label}
+              value={metric.value}
+              helperText={metric.helperText}
+              trendLabel={metric.trendLabel}
+              trendTone={metric.trendTone}
+              icon={metric.icon}
+            />
+          ))}
+        </section>
+
+        <section className="grid gap-6 lg:grid-cols-3">
+          <Card className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 lg:col-span-2">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+                Application pipeline
+              </h2>
+              <Badge variant="outline">Status breakdown</Badge>
+            </div>
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              Monitor how your applications are progressing across the pipeline.
+            </p>
+            <div className="mt-6 h-[260px]">
+              {applicationChartData.length ? (
+                <SimpleBarChart data={applicationChartData} dataKey="value" color="#6366F1" />
+              ) : (
+                <div className="flex h-full items-center justify-center text-sm text-gray-500">
+                  No application data yet.
+                </div>
+              )}
+            </div>
+          </Card>
+
+          <Card className="flex flex-col justify-between gap-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
             <div>
-              <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
-                Applications
-              </p>
-              <p className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                {stats?.total_applications || 0}
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+                Interview cadence
+              </h2>
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                A quick look at your upcoming interview schedule.
               </p>
             </div>
-            <div
-              className="w-12 h-12 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: 'rgba(108, 99, 255, 0.1)' }}
-            >
-              <span className="text-2xl">📝</span>
+            <div className="h-[220px]">
+              {interviewTimelineData.length ? (
+                <SimpleAreaChart data={interviewTimelineData} dataKey="value" color="#22C55E" />
+              ) : (
+                <div className="flex h-full items-center justify-center text-sm text-gray-500">
+                  Interviews will appear here once scheduled.
+                </div>
+              )}
             </div>
-          </div>
-        </Card>
+          </Card>
+        </section>
 
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
-                Interviews Scheduled
-              </p>
-              <p className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                {stats?.interviews_scheduled || 0}
-              </p>
+        <section className="grid gap-6 xl:grid-cols-2">
+          <Card className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+                Upcoming interviews
+              </h2>
+              <Badge variant="secondary">Next 5</Badge>
             </div>
-            <div
-              className="w-12 h-12 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)' }}
-            >
-              <span className="text-2xl">📅</span>
+            <div className="mt-4 space-y-4">
+              {stats?.recent_interviews?.length ? (
+                stats.recent_interviews.slice(0, 5).map((interview) => (
+                  <div
+                    key={interview.id}
+                    className="flex items-center justify-between rounded-xl border border-gray-100 px-4 py-3 dark:border-gray-800"
+                  >
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                        {interview.title}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {interview.company_name} • {formatDateTime(interview.scheduled_at)}
+                      </p>
+                    </div>
+                    <Badge variant="outline">{interview.status}</Badge>
+                  </div>
+                ))
+              ) : (
+                <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-gray-200 p-6 text-center text-sm text-gray-500 dark:border-gray-800">
+                  <CalendarDaysIcon className="h-6 w-6" />
+                  <p>No interviews on your calendar yet.</p>
+                  <Button variant="outline" size="sm">
+                    Browse opportunities
+                  </Button>
+                </div>
+              )}
             </div>
-          </div>
-        </Card>
+          </Card>
 
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
-                Interviews Completed
-              </p>
-              <p className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                {stats?.interviews_completed || 0}
-              </p>
+          <Card className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+                Recent resumes
+              </h2>
+              <Badge variant="outline">Updates</Badge>
             </div>
-            <div
-              className="w-12 h-12 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: 'rgba(168, 85, 247, 0.1)' }}
-            >
-              <span className="text-2xl">✅</span>
+            <div className="mt-4 space-y-4">
+              {stats?.recent_resumes?.length ? (
+                stats.recent_resumes.slice(0, 5).map((resume) => (
+                  <div
+                    key={resume.id}
+                    className="flex items-center justify-between rounded-xl border border-gray-100 px-4 py-3 dark:border-gray-800"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                        {resume.title}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Updated {formatDateTime(resume.updated_at)}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={resume.is_public ? 'success' : 'secondary'}>
+                        {resume.is_public ? 'Public' : 'Private'}
+                      </Badge>
+                      <Button variant="outline" size="sm">
+                        Edit
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-gray-200 p-6 text-center text-sm text-gray-500 dark:border-gray-800">
+                  <ClipboardDocumentCheckIcon className="h-6 w-6" />
+                  <p>No resumes created yet.</p>
+                  <Button size="sm">Create resume</Button>
+                </div>
+              )}
             </div>
-          </div>
-        </Card>
+          </Card>
+        </section>
 
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
-                Resumes Created
-              </p>
-              <p className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                {stats?.resumes_created || 0}
-              </p>
+        <section className="grid gap-6 lg:grid-cols-3">
+          <Card className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 lg:col-span-2">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+                Career activity feed
+              </h2>
+              <Badge variant="outline">Live updates</Badge>
             </div>
-            <div
-              className="w-12 h-12 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: 'rgba(251, 146, 60, 0.1)' }}
-            >
-              <span className="text-2xl">📄</span>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* MBTI Personality Test Section */}
-      <div className="mb-8">
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
-              MBTI性格診断
-            </h3>
-            {mbtiSummary && <Badge variant="success">診断完了</Badge>}
-          </div>
-
-          {mbtiLoading ? (
-            <div className="flex justify-center py-8">
-              <LoadingSpinner className="w-8 h-8" />
-            </div>
-          ) : mbtiSummary ? (
-            <MBTIResultCard summary={mbtiSummary} language="ja" showDetails={false} />
-          ) : (
-            <div className="text-center py-6">
-              <div className="mb-4">
-                <span className="text-5xl">🧠</span>
+            {activityLoading ? (
+              <div className="flex h-40 items-center justify-center">
+                <LoadingSpinner className="h-6 w-6" />
               </div>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
-                あなたの性格タイプを診断して、プロフィールに表示しましょう
-              </p>
-              <MBTITestButton onStartTest={() => setShowMBTITest(true)} language="ja" />
-            </div>
-          )}
-        </Card>
-      </div>
+            ) : activityError ? (
+              <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-800/60 dark:bg-red-900/20 dark:text-red-200">
+                {activityError}
+              </div>
+            ) : recentActivity.length ? (
+              <div className="mt-4 space-y-4">
+                {recentActivity.map((activity) => (
+                  <div
+                    key={activity.id}
+                    className="flex items-start justify-between rounded-xl border border-gray-100 px-4 py-3 dark:border-gray-800"
+                  >
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                        {activity.title}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {activity.description}
+                      </p>
+                      <p className="text-xs text-gray-400">{formatDateTime(activity.timestamp)}</p>
+                    </div>
+                    {renderActivityBadge(activity.type)}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex h-full items-center justify-center rounded-xl border border-dashed border-gray-200 p-6 text-sm text-gray-500 dark:border-gray-800">
+                Activity will appear here as you start engaging with the platform.
+              </div>
+            )}
+          </Card>
 
-      {/* MBTI Test Modal */}
+          <Card className="flex flex-col gap-4 rounded-2xl border border-gray-100 bg-gradient-to-br from-indigo-50 via-white to-indigo-50 p-6 shadow-sm dark:border-indigo-900/40 dark:from-indigo-950 dark:via-slate-950 dark:to-indigo-950">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+                MBTI insights
+              </h2>
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                Discover strengths and tailored role recommendations based on your personality
+                profile.
+              </p>
+            </div>
+            {mbtiLoading ? (
+              <div className="flex h-32 items-center justify-center">
+                <LoadingSpinner className="h-6 w-6" />
+              </div>
+            ) : mbtiSummary ? (
+              <MBTIResultCard summary={mbtiSummary} language="ja" showDetails={false} />
+            ) : (
+              <div className="flex flex-col gap-3 rounded-xl border border-dashed border-indigo-200 p-4 text-sm text-gray-600 dark:border-indigo-900/60 dark:text-gray-300">
+                <p>
+                  Complete the MBTI career alignment assessment to unlock personalized coaching
+                  tips.
+                </p>
+                <MBTITestButton onStartTest={() => setShowMBTITest(true)} />
+              </div>
+            )}
+          </Card>
+        </section>
+      </DashboardContentGate>
+
       <MBTITestModal
         isOpen={showMBTITest}
         onClose={() => setShowMBTITest(false)}
         onComplete={handleMBTIComplete}
       />
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Application Status Breakdown */}
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
-            Application Status
-          </h3>
-          <div className="space-y-4">
-            {stats?.application_stats?.length ? (
-              stats.application_stats.map((stat, index) => (
-                <div key={index} className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <Badge variant={getStatusColor(stat.status)}>{stat.status}</Badge>
-                  </div>
-                  <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>
-                    {stat.count}
-                  </span>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-4">
-                <span className="text-3xl mb-2 block">💼</span>
-                <p style={{ color: 'var(--text-muted)' }}>No applications yet</p>
-                <Button className="mt-4" size="sm">
-                  Start Applying
-                </Button>
-              </div>
-            )}
-          </div>
-        </Card>
-
-        {/* Progress Chart */}
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
-            This Month&apos;s Progress
-          </h3>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span style={{ color: 'var(--text-secondary)' }}>Applications Sent</span>
-              <div className="flex items-center space-x-2">
-                <div className="w-24 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                  <div className="bg-brand-primary h-2 rounded-full" style={{ width: '65%' }}></div>
-                </div>
-                <span className="text-sm font-semibold">13/20</span>
-              </div>
-            </div>
-            <div className="flex justify-between items-center">
-              <span style={{ color: 'var(--text-secondary)' }}>Interviews Attended</span>
-              <div className="flex items-center space-x-2">
-                <div className="w-24 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                  <div className="bg-green-600 h-2 rounded-full" style={{ width: '80%' }}></div>
-                </div>
-                <span className="text-sm font-semibold">4/5</span>
-              </div>
-            </div>
-            <div className="flex justify-between items-center">
-              <span style={{ color: 'var(--text-secondary)' }}>Resume Updates</span>
-              <div className="flex items-center space-x-2">
-                <div className="w-24 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                  <div className="bg-purple-600 h-2 rounded-full" style={{ width: '40%' }}></div>
-                </div>
-                <span className="text-sm font-semibold">2/5</span>
-              </div>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Upcoming Interviews */}
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
-            Upcoming Interviews
-          </h3>
-          <div className="space-y-4">
-            {stats?.recent_interviews?.length ? (
-              stats.recent_interviews.slice(0, 5).map((interview) => (
-                <div
-                  key={interview.id}
-                  className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-800 last:border-b-0"
-                >
-                  <div className="flex-1">
-                    <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                      {interview.title}
-                    </p>
-                    <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                      {interview.company_name} • {formatDate(interview.scheduled_at || '')}
-                    </p>
-                  </div>
-                  <Badge variant={getStatusColor(interview.status)}>{interview.status}</Badge>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-8">
-                <span className="text-4xl mb-4 block">📅</span>
-                <p style={{ color: 'var(--text-muted)' }}>No interviews scheduled</p>
-                <Button variant="outline" className="mt-4" size="sm">
-                  Schedule Interview
-                </Button>
-              </div>
-            )}
-          </div>
-        </Card>
-
-        {/* Recent Resume Activity */}
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
-            Recent Resumes
-          </h3>
-          <div className="space-y-4">
-            {stats?.recent_resumes?.length ? (
-              stats.recent_resumes.slice(0, 5).map((resume) => (
-                <div
-                  key={resume.id}
-                  className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-800 last:border-b-0"
-                >
-                  <div className="flex-1">
-                    <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                      {resume.title}
-                    </p>
-                    <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                      Updated {formatDate(resume.updated_at)}
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge variant={resume.is_public ? 'success' : 'secondary'}>
-                      {resume.is_public ? 'Public' : 'Private'}
-                    </Badge>
-                    <Button variant="outline" size="sm">
-                      Edit
-                    </Button>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-8">
-                <span className="text-4xl mb-4 block">📄</span>
-                <p style={{ color: 'var(--text-muted)' }}>No resumes created yet</p>
-                <Button className="mt-4" size="sm">
-                  Create Resume
-                </Button>
-              </div>
-            )}
-          </div>
-        </Card>
-      </div>
-
-      {/* Quick Actions */}
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
-          Quick Actions
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Button className="flex items-center justify-center gap-2 p-4">
-            <span>📝</span>
-            Create Resume
-          </Button>
-          <Button variant="outline" className="flex items-center justify-center gap-2 p-4">
-            <span>🔍</span>
-            Browse Jobs
-          </Button>
-          <Button variant="outline" className="flex items-center justify-center gap-2 p-4">
-            <span>📅</span>
-            Schedule Interview
-          </Button>
-          <Button variant="outline" className="flex items-center justify-center gap-2 p-4">
-            <span>💬</span>
-            Message Recruiter
-          </Button>
-        </div>
-      </Card>
-
-      {/* Career Tips */}
-      <Card className="p-6 mt-6">
-        <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
-          Career Tips
-        </h3>
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-          <div className="flex items-start space-x-3">
-            <span className="text-2xl">💡</span>
-            <div>
-              <h4 className="font-semibold text-blue-900 dark:text-blue-100">Tip of the Day</h4>
-              <p className="text-blue-800 dark:text-blue-200 mt-1">
-                Keep your resume updated regularly. Employers value candidates who showcase their
-                latest achievements and skills.
-              </p>
-            </div>
-          </div>
-        </div>
-      </Card>
     </div>
   );
 }

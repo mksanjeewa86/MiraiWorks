@@ -1,4 +1,8 @@
+from app.config.endpoints import API_ROUTES
+from app.config.endpoints import API_ROUTES
 from fastapi import APIRouter, HTTPException, Query
+from app.config.endpoints import API_ROUTES
+from app.config.endpoints import API_ROUTES
 from fastapi.responses import HTMLResponse
 
 from app.services.email_preview_service import email_preview_service
@@ -8,7 +12,7 @@ from app.services.email_preview_service import email_preview_service
 router = APIRouter(prefix="/api/dev/email-preview", tags=["Email Preview"])
 
 
-@router.get("/", response_class=HTMLResponse)
+@router.get(API_ROUTES.EMAIL_PREVIEW.BASE, response_class=HTMLResponse)
 async def email_preview_dashboard():
     """Email preview dashboard with links to all templates."""
     templates = email_preview_service.get_available_templates()
@@ -191,7 +195,7 @@ async def email_preview_dashboard():
     return html
 
 
-@router.get("/template", response_class=HTMLResponse)
+@router.get(API_ROUTES.EMAIL_PREVIEW.TEMPLATE, response_class=HTMLResponse)
 async def preview_template(
     name: str = Query(..., description="Template path (e.g., auth/activation)"),
     format: str = Query("html", description="Format: html or text"),
@@ -252,7 +256,7 @@ async def preview_template(
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@router.get("/all", response_class=HTMLResponse)
+@router.get(API_ROUTES.EMAIL_PREVIEW.ALL, response_class=HTMLResponse)
 async def preview_all_templates():
     """Preview all email templates on one page."""
     try:
@@ -350,7 +354,7 @@ async def preview_all_templates():
         )
 
 
-@router.get("/templates")
+@router.get(API_ROUTES.EMAIL_PREVIEW.TEMPLATES)
 async def list_templates():
     """Get list of available email templates."""
     return {

@@ -23,21 +23,23 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
         db_obj = VideoCall(
             **obj_in.model_dump(),
             interviewer_id=interviewer_id,
-            room_id=self._generate_room_id()
+            room_id=self._generate_room_id(),
         )
         db.add(db_obj)
         await db.commit()
         await db.refresh(db_obj)
         return db_obj
 
-    async def get_by_room_id(self, db: AsyncSession, *, room_id: str) -> VideoCall | None:
+    async def get_by_room_id(
+        self, db: AsyncSession, *, room_id: str
+    ) -> VideoCall | None:
         """Get video call by room ID."""
-        result = await db.execute(
-            select(VideoCall).where(VideoCall.room_id == room_id)
-        )
+        result = await db.execute(select(VideoCall).where(VideoCall.room_id == room_id))
         return result.scalar_one_or_none()
 
-    async def get_by_interview_id(self, db: AsyncSession, *, interview_id: int) -> VideoCall | None:
+    async def get_by_interview_id(
+        self, db: AsyncSession, *, interview_id: int
+    ) -> VideoCall | None:
         """Get video call by interview ID."""
         result = await db.execute(
             select(VideoCall)
@@ -53,8 +55,8 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
         result = await db.execute(
             select(VideoCall)
             .where(
-                (VideoCall.interviewer_id == user_id) |
-                (VideoCall.candidate_id == user_id)
+                (VideoCall.interviewer_id == user_id)
+                | (VideoCall.candidate_id == user_id)
             )
             .order_by(VideoCall.scheduled_at.desc())
             .offset(skip)
@@ -70,10 +72,10 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
             select(VideoCall)
             .where(
                 and_(
-                    (VideoCall.interviewer_id == user_id) |
-                    (VideoCall.candidate_id == user_id),
+                    (VideoCall.interviewer_id == user_id)
+                    | (VideoCall.candidate_id == user_id),
                     VideoCall.scheduled_at >= from_datetime,
-                    VideoCall.status.in_(["scheduled", "in_progress"])
+                    VideoCall.status.in_(["scheduled", "in_progress"]),
                 )
             )
             .order_by(VideoCall.scheduled_at.asc())
@@ -88,7 +90,12 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
         return await self.update(db, db_obj=db_obj, obj_in=update_data)
 
     async def add_participant(
-        self, db: AsyncSession, *, video_call_id: int, user_id: int, device_info: dict | None = None
+        self,
+        db: AsyncSession,
+        *,
+        video_call_id: int,
+        user_id: int,
+        device_info: dict | None = None,
     ) -> CallParticipant:
         """Add a participant to the video call or return existing participant."""
         # Check if participant already exists
@@ -96,7 +103,7 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
             select(CallParticipant).where(
                 and_(
                     CallParticipant.video_call_id == video_call_id,
-                    CallParticipant.user_id == user_id
+                    CallParticipant.user_id == user_id,
                 )
             )
         )
@@ -118,7 +125,7 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
             video_call_id=video_call_id,
             user_id=user_id,
             joined_at=datetime.utcnow(),
-            device_info=device_info
+            device_info=device_info,
         )
         db.add(participant)
         await db.commit()
@@ -133,7 +140,7 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
             select(CallParticipant).where(
                 and_(
                     CallParticipant.video_call_id == video_call_id,
-                    CallParticipant.user_id == user_id
+                    CallParticipant.user_id == user_id,
                 )
             )
         )
@@ -153,7 +160,7 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
             select(RecordingConsent).where(
                 and_(
                     RecordingConsent.video_call_id == video_call_id,
-                    RecordingConsent.user_id == user_id
+                    RecordingConsent.user_id == user_id,
                 )
             )
         )
@@ -167,7 +174,7 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
                 video_call_id=video_call_id,
                 user_id=user_id,
                 consented=consented,
-                consented_at=datetime.utcnow() if consented else None
+                consented_at=datetime.utcnow() if consented else None,
             )
             db.add(consent)
 
@@ -190,10 +197,7 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
         self, db: AsyncSession, *, video_call_id: int, segment_data: dict
     ) -> TranscriptionSegment:
         """Save a real-time transcription segment."""
-        segment = TranscriptionSegment(
-            video_call_id=video_call_id,
-            **segment_data
-        )
+        segment = TranscriptionSegment(video_call_id=video_call_id, **segment_data)
         db.add(segment)
         await db.commit()
         await db.refresh(segment)
@@ -223,9 +227,7 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
 
         if not transcription:
             transcription = CallTranscription(
-                video_call_id=video_call_id,
-                processing_status=status,
-                **kwargs
+                video_call_id=video_call_id, processing_status=status, **kwargs
             )
             db.add(transcription)
         else:
@@ -242,11 +244,10 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
     ) -> list[CallParticipant]:
         """Get active participants (those who haven't left yet)."""
         result = await db.execute(
-            select(CallParticipant)
-            .where(
+            select(CallParticipant).where(
                 and_(
                     CallParticipant.video_call_id == video_call_id,
-                    CallParticipant.left_at.is_(None)
+                    CallParticipant.left_at.is_(None),
                 )
             )
         )
@@ -256,7 +257,9 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
         self, db: AsyncSession, *, video_call_id: int
     ) -> None:
         """Mark all participants as having left the call."""
-        active_participants = await self.get_active_participants(db, video_call_id=video_call_id)
+        active_participants = await self.get_active_participants(
+            db, video_call_id=video_call_id
+        )
 
         current_time = datetime.utcnow()
         for participant in active_participants:
@@ -271,7 +274,7 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
 
         # Generate a Google Meet style room code: xxx-yyyy-zzz
         def generate_segment(length: int) -> str:
-            return ''.join(random.choices(string.ascii_lowercase, k=length))
+            return "".join(random.choices(string.ascii_lowercase, k=length))
 
         # Create three segments separated by dashes
         segment1 = generate_segment(3)

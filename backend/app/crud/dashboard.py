@@ -8,6 +8,7 @@ from app.models.interview import Interview
 from app.models.message import Message
 from app.models.resume import Resume
 from app.models.user import User
+from app.models.exam import Exam, ExamAssignment, ExamSession
 
 
 class CRUDDashboard:
@@ -41,12 +42,45 @@ class CRUDDashboard:
         )
         active_conversations = active_conversations_result.scalar() or 0
 
+        # Exam statistics
+        total_exams_result = await db.execute(select(func.count(Exam.id)))
+        total_exams = total_exams_result.scalar() or 0
+
+        total_exam_assignments_result = await db.execute(
+            select(func.count(ExamAssignment.id))
+        )
+        total_exam_assignments = total_exam_assignments_result.scalar() or 0
+
+        total_exam_sessions_result = await db.execute(
+            select(func.count(ExamSession.id))
+        )
+        total_exam_sessions = total_exam_sessions_result.scalar() or 0
+
+        completed_exam_sessions_result = await db.execute(
+            select(func.count(ExamSession.id)).where(ExamSession.status == "completed")
+        )
+        completed_exam_sessions = completed_exam_sessions_result.scalar() or 0
+
+        # Average exam score (for completed sessions with scores)
+        avg_score_result = await db.execute(
+            select(func.avg(ExamSession.final_score)).where(
+                ExamSession.status == "completed",
+                ExamSession.final_score.isnot(None),
+            )
+        )
+        avg_exam_score = avg_score_result.scalar()
+
         return {
             "total_users": total_users,
             "total_companies": total_companies,
             "total_interviews": total_interviews,
             "total_resumes": total_resumes,
             "active_conversations": active_conversations,
+            "total_exams": total_exams,
+            "total_exam_assignments": total_exam_assignments,
+            "total_exam_sessions": total_exam_sessions,
+            "completed_exam_sessions": completed_exam_sessions,
+            "avg_exam_score": round(avg_exam_score, 2) if avg_exam_score else None,
         }
 
     async def get_recent_users(self, db: AsyncSession, limit: int = 10) -> list[User]:
@@ -95,6 +129,19 @@ class CRUDDashboard:
             select(Resume)
             .where(Resume.created_at >= seven_days_ago)
             .order_by(Resume.created_at.desc())
+            .limit(limit)
+        )
+        return result.scalars().all()
+
+    async def get_recent_exam_sessions(
+        self, db: AsyncSession, limit: int = 10
+    ) -> list[ExamSession]:
+        """Get recent exam sessions (last 7 days)."""
+        seven_days_ago = datetime.utcnow() - timedelta(days=7)
+        result = await db.execute(
+            select(ExamSession)
+            .where(ExamSession.created_at >= seven_days_ago)
+            .order_by(ExamSession.created_at.desc())
             .limit(limit)
         )
         return result.scalars().all()

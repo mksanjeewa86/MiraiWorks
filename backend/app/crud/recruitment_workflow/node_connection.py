@@ -9,12 +9,8 @@ from app.models.node_connection import NodeConnection
 
 
 class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
-
     async def create(
-        self,
-        db: AsyncSession,
-        *,
-        obj_in: dict[str, Any]
+        self, db: AsyncSession, *, obj_in: dict[str, Any]
     ) -> NodeConnection:
         """Create a new node connection"""
         db_obj = NodeConnection(**obj_in)
@@ -24,17 +20,14 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
         return db_obj
 
     async def get_by_process_id(
-        self,
-        db: AsyncSession,
-        *,
-        process_id: int
+        self, db: AsyncSession, *, process_id: int
     ) -> list[NodeConnection]:
         """Get all connections for a process"""
         result = await db.execute(
             select(NodeConnection)
             .options(
                 selectinload(NodeConnection.source_node),
-                selectinload(NodeConnection.target_node)
+                selectinload(NodeConnection.target_node),
             )
             .where(NodeConnection.process_id == process_id)
             .order_by(desc(NodeConnection.created_at))
@@ -42,10 +35,7 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
         return result.scalars().all()
 
     async def get_outgoing_connections(
-        self,
-        db: AsyncSession,
-        *,
-        source_node_id: int
+        self, db: AsyncSession, *, source_node_id: int
     ) -> list[NodeConnection]:
         """Get outgoing connections from a node"""
         result = await db.execute(
@@ -57,10 +47,7 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
         return result.scalars().all()
 
     async def get_incoming_connections(
-        self,
-        db: AsyncSession,
-        *,
-        target_node_id: int
+        self, db: AsyncSession, *, target_node_id: int
     ) -> list[NodeConnection]:
         """Get incoming connections to a node"""
         result = await db.execute(
@@ -72,19 +59,14 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
         return result.scalars().all()
 
     async def get_connection(
-        self,
-        db: AsyncSession,
-        *,
-        source_node_id: int,
-        target_node_id: int
+        self, db: AsyncSession, *, source_node_id: int, target_node_id: int
     ) -> NodeConnection | None:
         """Get specific connection between two nodes"""
         result = await db.execute(
-            select(NodeConnection)
-            .where(
+            select(NodeConnection).where(
                 and_(
                     NodeConnection.source_node_id == source_node_id,
-                    NodeConnection.target_node_id == target_node_id
+                    NodeConnection.target_node_id == target_node_id,
                 )
             )
         )
@@ -100,7 +82,7 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
         condition_type: str = "success",
         condition_config: dict[str, Any] | None = None,
         label: str | None = None,
-        description: str | None = None
+        description: str | None = None,
     ) -> NodeConnection:
         """Create a connection between two nodes"""
         # Check if connection already exists
@@ -118,7 +100,7 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
             "condition_type": condition_type,
             "condition_config": condition_config,
             "label": label,
-            "description": description
+            "description": description,
         }
 
         return await self.create(db, obj_in=connection_data)
@@ -131,7 +113,7 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
         condition_type: str | None = None,
         condition_config: dict[str, Any] | None = None,
         label: str | None = None,
-        description: str | None = None
+        description: str | None = None,
     ) -> NodeConnection:
         """Update a node connection"""
         if condition_type is not None:
@@ -151,10 +133,7 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
         return connection
 
     async def delete_connection(
-        self,
-        db: AsyncSession,
-        *,
-        connection: NodeConnection
+        self, db: AsyncSession, *, connection: NodeConnection
     ) -> bool:
         """Delete a node connection"""
         await db.delete(connection)
@@ -162,19 +141,15 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
         return True
 
     async def delete_connections_for_node(
-        self,
-        db: AsyncSession,
-        *,
-        node_id: int
+        self, db: AsyncSession, *, node_id: int
     ) -> bool:
         """Delete all connections for a node (both incoming and outgoing)"""
         # Get all connections
         connections = await db.execute(
-            select(NodeConnection)
-            .where(
+            select(NodeConnection).where(
                 or_(
                     NodeConnection.source_node_id == node_id,
-                    NodeConnection.target_node_id == node_id
+                    NodeConnection.target_node_id == node_id,
                 )
             )
         )
@@ -187,11 +162,7 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
         return True
 
     async def bulk_create_connections(
-        self,
-        db: AsyncSession,
-        *,
-        process_id: int,
-        connections: list[dict[str, Any]]
+        self, db: AsyncSession, *, process_id: int, connections: list[dict[str, Any]]
     ) -> list[NodeConnection]:
         """Create multiple connections at once"""
         new_connections = []
@@ -201,7 +172,7 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
             existing = await self.get_connection(
                 db,
                 source_node_id=conn_data["source_node_id"],
-                target_node_id=conn_data["target_node_id"]
+                target_node_id=conn_data["target_node_id"],
             )
 
             if not existing:
@@ -212,7 +183,7 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
                     condition_type=conn_data.get("condition_type", "success"),
                     condition_config=conn_data.get("condition_config"),
                     label=conn_data.get("label"),
-                    description=conn_data.get("description")
+                    description=conn_data.get("description"),
                 )
                 db.add(connection)
                 new_connections.append(connection)
@@ -225,10 +196,7 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
         return new_connections
 
     async def validate_process_flow(
-        self,
-        db: AsyncSession,
-        *,
-        process_id: int
+        self, db: AsyncSession, *, process_id: int
     ) -> dict[str, Any]:
         """Validate the flow of a process"""
         # Get all connections and nodes for the process
@@ -252,11 +220,13 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
 
         orphaned_nodes = node_ids - connected_nodes
         if len(orphaned_nodes) > 1:  # Allow one orphaned node (could be start or end)
-            issues.append({
-                "type": "orphaned_nodes",
-                "message": f"Found {len(orphaned_nodes)} orphaned nodes",
-                "node_ids": list(orphaned_nodes)
-            })
+            issues.append(
+                {
+                    "type": "orphaned_nodes",
+                    "message": f"Found {len(orphaned_nodes)} orphaned nodes",
+                    "node_ids": list(orphaned_nodes),
+                }
+            )
 
         # Check for cycles
         def has_cycle(node_id: int, visited: set, rec_stack: set) -> bool:
@@ -281,37 +251,44 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
         for node in nodes:
             if node.id not in visited:
                 if has_cycle(node.id, visited, set()):
-                    issues.append({
-                        "type": "cycle_detected",
-                        "message": "Process contains cycles which may cause infinite loops"
-                    })
+                    issues.append(
+                        {
+                            "type": "cycle_detected",
+                            "message": "Process contains cycles which may cause infinite loops",
+                        }
+                    )
                     break
 
         # Check for unreachable nodes
         # Find start nodes (no incoming connections or sequence_order = 1)
-        start_nodes = [n for n in nodes if n.sequence_order == 1 or
-                      not any(c.target_node_id == n.id for c in connections)]
+        start_nodes = [
+            n
+            for n in nodes
+            if n.sequence_order == 1
+            or not any(c.target_node_id == n.id for c in connections)
+        ]
 
         if not start_nodes:
-            issues.append({
-                "type": "no_start_node",
-                "message": "Process has no clear start node"
-            })
+            issues.append(
+                {"type": "no_start_node", "message": "Process has no clear start node"}
+            )
         elif len(start_nodes) > 1:
-            warnings.append({
-                "type": "multiple_start_nodes",
-                "message": f"Process has {len(start_nodes)} potential start nodes"
-            })
+            warnings.append(
+                {
+                    "type": "multiple_start_nodes",
+                    "message": f"Process has {len(start_nodes)} potential start nodes",
+                }
+            )
 
         # Check for unreachable end states
-        end_nodes = [n for n in nodes if
-                    not any(c.source_node_id == n.id for c in connections)]
+        end_nodes = [
+            n for n in nodes if not any(c.source_node_id == n.id for c in connections)
+        ]
 
         if not end_nodes:
-            warnings.append({
-                "type": "no_end_node",
-                "message": "Process has no clear end node"
-            })
+            warnings.append(
+                {"type": "no_end_node", "message": "Process has no clear end node"}
+            )
 
         return {
             "is_valid": len(issues) == 0,
@@ -320,15 +297,11 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
             "total_nodes": len(nodes),
             "total_connections": len(connections),
             "start_nodes": len(start_nodes),
-            "end_nodes": len(end_nodes)
+            "end_nodes": len(end_nodes),
         }
 
     async def get_process_paths(
-        self,
-        db: AsyncSession,
-        *,
-        process_id: int,
-        start_node_id: int | None = None
+        self, db: AsyncSession, *, process_id: int, start_node_id: int | None = None
     ) -> list[list[int]]:
         """Get all possible paths through the process"""
         connections = await self.get_by_process_id(db, process_id=process_id)

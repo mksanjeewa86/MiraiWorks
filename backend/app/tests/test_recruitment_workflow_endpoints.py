@@ -1,4 +1,3 @@
-
 import pytest
 from httpx import AsyncClient
 
@@ -16,16 +15,13 @@ class TestRecruitmentProcessEndpoints:
             process_data = {
                 "name": "Software Engineer Process",
                 "description": "Technical interview process for software engineers",
-                "settings": {
-                    "category": "engineering",
-                    "difficulty": "senior"
-                }
+                "settings": {"category": "engineering", "difficulty": "senior"},
             }
 
             response = await client.post(
                 "/api/recruitment-processes/",
                 json=process_data,
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 201
@@ -41,15 +37,11 @@ class TestRecruitmentProcessEndpoints:
     async def test_create_recruitment_process_unauthorized(self):
         """Test recruitment process creation without proper authorization"""
         async with AsyncClient(app=app, base_url="http://test") as client:
-            process_data = {
-                "name": "Test Process",
-                "description": "Test description"
-            }
+            process_data = {"name": "Test Process", "description": "Test description"}
 
             # No authorization header
             response = await client.post(
-                "/api/recruitment-processes/",
-                json=process_data
+                "/api/recruitment-processes/", json=process_data
             )
             assert response.status_code == 401
 
@@ -57,7 +49,7 @@ class TestRecruitmentProcessEndpoints:
             response = await client.post(
                 "/api/recruitment-processes/",
                 json=process_data,
-                headers={"Authorization": "Bearer recruiter_token"}
+                headers={"Authorization": "Bearer recruiter_token"},
             )
             assert response.status_code == 403
 
@@ -69,7 +61,7 @@ class TestRecruitmentProcessEndpoints:
             response = await client.post(
                 "/api/recruitment-processes/",
                 json={},
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
             assert response.status_code == 422
 
@@ -77,7 +69,7 @@ class TestRecruitmentProcessEndpoints:
             response = await client.post(
                 "/api/recruitment-processes/",
                 json={"name": ""},
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
             assert response.status_code == 422
 
@@ -87,7 +79,7 @@ class TestRecruitmentProcessEndpoints:
         async with AsyncClient(app=app, base_url="http://test") as client:
             response = await client.get(
                 "/api/recruitment-processes/",
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 200
@@ -97,21 +89,21 @@ class TestRecruitmentProcessEndpoints:
             # Test with pagination
             response = await client.get(
                 "/api/recruitment-processes/?skip=0&limit=10",
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
             assert response.status_code == 200
 
             # Test with status filter
             response = await client.get(
                 "/api/recruitment-processes/?status=draft",
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
             assert response.status_code == 200
 
             # Test with search
             response = await client.get(
                 "/api/recruitment-processes/?search=engineer",
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
             assert response.status_code == 200
 
@@ -122,7 +114,7 @@ class TestRecruitmentProcessEndpoints:
             process_id = 1
             response = await client.get(
                 f"/api/recruitment-processes/{process_id}",
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 200
@@ -139,7 +131,7 @@ class TestRecruitmentProcessEndpoints:
         async with AsyncClient(app=app, base_url="http://test") as client:
             response = await client.get(
                 "/api/recruitment-processes/999999",
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 404
@@ -154,7 +146,7 @@ class TestRecruitmentProcessEndpoints:
             # Recruiter without access
             response = await client.get(
                 f"/api/recruitment-processes/{process_id}",
-                headers={"Authorization": "Bearer unauthorized_recruiter_token"}
+                headers={"Authorization": "Bearer unauthorized_recruiter_token"},
             )
             assert response.status_code == 403
 
@@ -166,13 +158,13 @@ class TestRecruitmentProcessEndpoints:
             update_data = {
                 "name": "Updated Process Name",
                 "description": "Updated description",
-                "settings": {"updated": True}
+                "settings": {"updated": True},
             }
 
             response = await client.put(
                 f"/api/recruitment-processes/{process_id}",
                 json=update_data,
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 200
@@ -185,14 +177,12 @@ class TestRecruitmentProcessEndpoints:
         """Test that updating active processes requires force flag"""
         async with AsyncClient(app=app, base_url="http://test") as client:
             process_id = 1  # Assume this is an active process
-            update_data = {
-                "name": "Updated Name"
-            }
+            update_data = {"name": "Updated Name"}
 
             response = await client.put(
                 f"/api/recruitment-processes/{process_id}",
                 json=update_data,
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 409  # Conflict for active process
@@ -207,7 +197,7 @@ class TestRecruitmentProcessEndpoints:
             response = await client.post(
                 f"/api/recruitment-processes/{process_id}/activate",
                 json=activation_data,
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 200
@@ -225,7 +215,7 @@ class TestRecruitmentProcessEndpoints:
             response = await client.post(
                 f"/api/recruitment-processes/{process_id}/activate",
                 json=activation_data,
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 422
@@ -241,7 +231,7 @@ class TestRecruitmentProcessEndpoints:
             response = await client.post(
                 f"/api/recruitment-processes/{process_id}/activate",
                 json=activation_data,
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 200
@@ -258,7 +248,7 @@ class TestRecruitmentProcessEndpoints:
             response = await client.post(
                 f"/api/recruitment-processes/{process_id}/archive",
                 json=archive_data,
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 200
@@ -274,13 +264,13 @@ class TestRecruitmentProcessEndpoints:
             clone_data = {
                 "new_name": "Cloned Process",
                 "clone_candidates": False,
-                "clone_viewers": True
+                "clone_viewers": True,
             }
 
             response = await client.post(
                 f"/api/recruitment-processes/{process_id}/clone",
                 json=clone_data,
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 200
@@ -297,7 +287,7 @@ class TestRecruitmentProcessEndpoints:
 
             response = await client.delete(
                 f"/api/recruitment-processes/{process_id}",
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 204
@@ -310,7 +300,7 @@ class TestRecruitmentProcessEndpoints:
 
             response = await client.delete(
                 f"/api/recruitment-processes/{process_id}",
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 409
@@ -324,7 +314,7 @@ class TestRecruitmentProcessEndpoints:
 
             response = await client.get(
                 f"/api/recruitment-processes/{process_id}/validate",
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 200
@@ -344,7 +334,7 @@ class TestRecruitmentProcessEndpoints:
 
             response = await client.get(
                 f"/api/recruitment-processes/{process_id}/analytics",
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 200
@@ -365,7 +355,7 @@ class TestRecruitmentProcessEndpoints:
 
             response = await client.get(
                 f"/api/recruitment-processes/company/{company_id}/statistics",
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 200
@@ -381,7 +371,7 @@ class TestRecruitmentProcessEndpoints:
         async with AsyncClient(app=app, base_url="http://test") as client:
             response = await client.get(
                 "/api/recruitment-processes/templates/",
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 200
@@ -391,7 +381,7 @@ class TestRecruitmentProcessEndpoints:
             # Test with filters
             response = await client.get(
                 "/api/recruitment-processes/templates/?category=engineering&public_only=true",
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
             assert response.status_code == 200
 
@@ -403,13 +393,13 @@ class TestRecruitmentProcessEndpoints:
             process_data = {
                 "name": "New Process from Template",
                 "description": "Created from template",
-                "clone_viewers": True
+                "clone_viewers": True,
             }
 
             response = await client.post(
                 f"/api/recruitment-processes/templates/{template_id}/apply",
                 json=process_data,
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 200
@@ -422,18 +412,15 @@ class TestRecruitmentProcessEndpoints:
         """Test applying non-existent template"""
         async with AsyncClient(app=app, base_url="http://test") as client:
             template_id = 999999
-            process_data = {
-                "name": "New Process from Template"
-            }
+            process_data = {"name": "New Process from Template"}
 
             response = await client.post(
                 f"/api/recruitment-processes/templates/{template_id}/apply",
                 json=process_data,
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 404
-
 
     @pytest.mark.asyncio
     async def test_create_process_node_interview(self):
@@ -445,16 +432,13 @@ class TestRecruitmentProcessEndpoints:
                 "description": "Kick-off conversation",
                 "sequence_order": 0,
                 "position": {"x": 120, "y": 220},
-                "config": {
-                    "interview_type": "video",
-                    "duration_minutes": 45
-                }
+                "config": {"interview_type": "video", "duration_minutes": 45},
             }
 
             response = await client.post(
                 "/api/recruitment-processes/1/nodes",
                 json=node_payload,
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 201
@@ -474,20 +458,18 @@ class TestRecruitmentProcessEndpoints:
                 "description": "Solve provided assignment",
                 "sequence_order": 0,
                 "position": {"x": 320, "y": 220},
-                "config": {
-                    "due_in_days": 5
-                },
+                "config": {"due_in_days": 5},
                 "create_todo": {
                     "due_in_days": 5,
                     "priority": "high",
-                    "is_assignment": True
-                }
+                    "is_assignment": True,
+                },
             }
 
             response = await client.post(
                 "/api/recruitment-processes/1/nodes/create-with-integration",
                 json=node_payload,
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 201
@@ -508,20 +490,23 @@ class TestCandidateProcessEndpoints:
             assignment_data = {
                 "candidate_id": 100,
                 "assigned_recruiter_id": 50,
-                "start_immediately": False
+                "start_immediately": False,
             }
 
             response = await client.post(
                 f"/api/recruitment-processes/{process_id}/candidates",
                 json=assignment_data,
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 201
             data = response.json()
             assert data["candidate_id"] == assignment_data["candidate_id"]
             assert data["process_id"] == process_id
-            assert data["assigned_recruiter_id"] == assignment_data["assigned_recruiter_id"]
+            assert (
+                data["assigned_recruiter_id"]
+                == assignment_data["assigned_recruiter_id"]
+            )
             assert data["status"] == "not_started"
 
     @pytest.mark.asyncio
@@ -532,13 +517,13 @@ class TestCandidateProcessEndpoints:
             assignment_data = {
                 "candidate_id": 101,
                 "assigned_recruiter_id": 50,
-                "start_immediately": True
+                "start_immediately": True,
             }
 
             response = await client.post(
                 f"/api/recruitment-processes/{process_id}/candidates",
                 json=assignment_data,
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 201
@@ -553,13 +538,13 @@ class TestCandidateProcessEndpoints:
             process_id = 1
             assignment_data = {
                 "candidate_id": 100,  # Same candidate as previous test
-                "assigned_recruiter_id": 50
+                "assigned_recruiter_id": 50,
             }
 
             response = await client.post(
                 f"/api/recruitment-processes/{process_id}/candidates",
                 json=assignment_data,
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 409
@@ -574,13 +559,13 @@ class TestCandidateProcessEndpoints:
                 "candidate_ids": [200, 201, 202],
                 "assigned_recruiter_id": 50,
                 "start_immediately": False,
-                "send_notifications": True
+                "send_notifications": True,
             }
 
             response = await client.post(
                 f"/api/recruitment-processes/{process_id}/candidates/bulk",
                 json=bulk_data,
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 200
@@ -591,7 +576,10 @@ class TestCandidateProcessEndpoints:
             for candidate_process in data:
                 assert candidate_process["process_id"] == process_id
                 assert candidate_process["candidate_id"] in bulk_data["candidate_ids"]
-                assert candidate_process["assigned_recruiter_id"] == bulk_data["assigned_recruiter_id"]
+                assert (
+                    candidate_process["assigned_recruiter_id"]
+                    == bulk_data["assigned_recruiter_id"]
+                )
 
     @pytest.mark.asyncio
     async def test_bulk_assign_invalid_data(self):
@@ -603,7 +591,7 @@ class TestCandidateProcessEndpoints:
             response = await client.post(
                 f"/api/recruitment-processes/{process_id}/candidates/bulk",
                 json={"candidate_ids": []},
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
             assert response.status_code == 422
 
@@ -611,7 +599,7 @@ class TestCandidateProcessEndpoints:
             response = await client.post(
                 f"/api/recruitment-processes/{process_id}/candidates/bulk",
                 json={"candidate_ids": [100, 100, 101]},
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
             assert response.status_code == 422
 
@@ -623,7 +611,7 @@ class TestCandidateProcessEndpoints:
 
             response = await client.get(
                 f"/api/recruitment-processes/{process_id}/candidates",
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 200
@@ -633,14 +621,14 @@ class TestCandidateProcessEndpoints:
             # Test with status filter
             response = await client.get(
                 f"/api/recruitment-processes/{process_id}/candidates?status=in_progress",
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
             assert response.status_code == 200
 
             # Test with pagination
             response = await client.get(
                 f"/api/recruitment-processes/{process_id}/candidates?skip=0&limit=10",
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
             assert response.status_code == 200
 
@@ -652,7 +640,7 @@ class TestCandidateProcessEndpoints:
 
             response = await client.get(
                 f"/api/recruitment-processes/candidate-processes/{candidate_process_id}",
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 200
@@ -672,7 +660,7 @@ class TestCandidateProcessEndpoints:
 
             response = await client.get(
                 f"/api/recruitment-processes/candidate-processes/{candidate_process_id}",
-                headers={"Authorization": "Bearer candidate_token"}
+                headers={"Authorization": "Bearer candidate_token"},
             )
 
             assert response.status_code == 200
@@ -685,7 +673,7 @@ class TestCandidateProcessEndpoints:
 
             response = await client.get(
                 f"/api/recruitment-processes/candidate-processes/{candidate_process_id}",
-                headers={"Authorization": "Bearer other_candidate_token"}
+                headers={"Authorization": "Bearer other_candidate_token"},
             )
 
             assert response.status_code == 403
@@ -697,13 +685,13 @@ class TestCandidateProcessEndpoints:
             candidate_process_id = 1
             start_data = {
                 "send_notification": True,
-                "custom_message": "Welcome to our recruitment process!"
+                "custom_message": "Welcome to our recruitment process!",
             }
 
             response = await client.post(
                 f"/api/recruitment-processes/candidate-processes/{candidate_process_id}/start",
                 json=start_data,
-                headers={"Authorization": "Bearer recruiter_token"}
+                headers={"Authorization": "Bearer recruiter_token"},
             )
 
             assert response.status_code == 200
@@ -722,7 +710,7 @@ class TestCandidateProcessEndpoints:
             response = await client.post(
                 f"/api/recruitment-processes/candidate-processes/{candidate_process_id}/start",
                 json=start_data,
-                headers={"Authorization": "Bearer recruiter_token"}
+                headers={"Authorization": "Bearer recruiter_token"},
             )
 
             assert response.status_code == 409
@@ -737,13 +725,13 @@ class TestCandidateProcessEndpoints:
                 "status": "completed",
                 "final_result": "hired",
                 "overall_score": 88.5,
-                "reason": "Excellent performance throughout the process"
+                "reason": "Excellent performance throughout the process",
             }
 
             response = await client.put(
                 f"/api/recruitment-processes/candidate-processes/{candidate_process_id}/status",
                 json=status_data,
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 200
@@ -759,13 +747,13 @@ class TestCandidateProcessEndpoints:
             candidate_process_id = 2
             status_data = {
                 "status": "failed",
-                "reason": "Did not meet technical requirements"
+                "reason": "Did not meet technical requirements",
             }
 
             response = await client.put(
                 f"/api/recruitment-processes/candidate-processes/{candidate_process_id}/status",
                 json=status_data,
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 200
@@ -786,7 +774,7 @@ class TestCandidateProcessEndpoints:
             response = await client.put(
                 f"/api/recruitment-processes/candidate-processes/{candidate_process_id}/status",
                 json=status_data,
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 422
@@ -800,7 +788,7 @@ class TestCandidateProcessEndpoints:
 
             response = await client.get(
                 f"/api/recruitment-processes/candidate-processes/{candidate_process_id}/timeline",
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 200
@@ -818,7 +806,7 @@ class TestCandidateProcessEndpoints:
         async with AsyncClient(app=app, base_url="http://test") as client:
             response = await client.get(
                 "/api/recruitment-processes/my-processes",
-                headers={"Authorization": "Bearer candidate_token"}
+                headers={"Authorization": "Bearer candidate_token"},
             )
 
             assert response.status_code == 200
@@ -837,7 +825,7 @@ class TestCandidateProcessEndpoints:
         async with AsyncClient(app=app, base_url="http://test") as client:
             response = await client.get(
                 "/api/recruitment-processes/my-processes",
-                headers={"Authorization": "Bearer recruiter_token"}
+                headers={"Authorization": "Bearer recruiter_token"},
             )
 
             assert response.status_code == 200
@@ -856,7 +844,7 @@ class TestCandidateProcessEndpoints:
 
             response = await client.get(
                 f"/api/recruitment-processes/recruiters/{recruiter_id}/workload",
-                headers={"Authorization": "Bearer employer_token"}
+                headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 200
@@ -876,7 +864,7 @@ class TestCandidateProcessEndpoints:
 
             response = await client.get(
                 f"/api/recruitment-processes/recruiters/{recruiter_id}/workload",
-                headers={"Authorization": f"Bearer recruiter_{recruiter_id}_token"}
+                headers={"Authorization": f"Bearer recruiter_{recruiter_id}_token"},
             )
 
             assert response.status_code == 200
@@ -889,12 +877,10 @@ class TestCandidateProcessEndpoints:
 
             response = await client.get(
                 f"/api/recruitment-processes/recruiters/{recruiter_id}/workload",
-                headers={"Authorization": "Bearer other_recruiter_token"}
+                headers={"Authorization": "Bearer other_recruiter_token"},
             )
 
             assert response.status_code == 403
-
-
 
 
 if __name__ == "__main__":

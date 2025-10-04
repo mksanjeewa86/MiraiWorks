@@ -19,10 +19,14 @@ class Holiday(Base):
     description = Column(String(500), nullable=True)
     description_en = Column(String(500), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
 
     def __str__(self) -> str:
-        return f"Holiday(name='{self.name}', date={self.date}, country='{self.country}')"
+        return (
+            f"Holiday(name='{self.name}', date={self.date}, country='{self.country}')"
+        )
 
     def __repr__(self) -> str:
         return self.__str__()

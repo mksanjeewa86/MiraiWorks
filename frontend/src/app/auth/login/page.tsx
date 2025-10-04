@@ -85,7 +85,8 @@ export default function LoginPage() {
                 Work smarter with MiraiWorks
               </h1>
               <p className="mt-6 max-w-md text-base text-white/80">
-                Centralize hiring, onboarding, people analytics, and team feedback in one connected workspace designed for modern HR teams.
+                Centralize hiring, onboarding, people analytics, and team feedback in one connected
+                workspace designed for modern HR teams.
               </p>
             </div>
 
@@ -119,7 +120,9 @@ export default function LoginPage() {
           <div className="flex flex-col justify-center p-8 sm:p-12">
             <div className="mb-10 text-center lg:hidden">
               <Brand className="justify-center" />
-              <h2 className="mt-6 text-3xl font-semibold text-slate-900 dark:text-white">Welcome back</h2>
+              <h2 className="mt-6 text-3xl font-semibold text-slate-900 dark:text-white">
+                Welcome back
+              </h2>
               <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
                 Sign in to your account to continue
               </p>
@@ -143,7 +146,10 @@ export default function LoginPage() {
               )}
 
               <div className="space-y-1.5">
-                <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-200">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-slate-700 dark:text-slate-200"
+                >
                   Email
                 </label>
                 <input
@@ -160,7 +166,10 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="password" className="block text-sm font-medium text-slate-700 dark:text-slate-200">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-slate-700 dark:text-slate-200"
+                >
                   Password
                 </label>
                 <div className="relative">
@@ -180,17 +189,16 @@ export default function LoginPage() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/60 text-slate-500 transition hover:bg-white/80 dark:bg-gray-800/80 dark:text-slate-300 dark:hover:bg-gray-800"
                   >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
 
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <label htmlFor="remember-me" className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-300">
+                <label
+                  htmlFor="remember-me"
+                  className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-300"
+                >
                   <input
                     id="remember-me"
                     type="checkbox"
@@ -226,18 +234,27 @@ export default function LoginPage() {
             <div className="mt-10 space-y-4 text-center">
               <p className="text-sm text-slate-500 dark:text-slate-400">
                 By continuing you agree to our{' '}
-                <Link href="/legal/terms" className="font-medium text-brand-primary hover:text-brand-primary-dark">
+                <Link
+                  href="/legal/terms"
+                  className="font-medium text-brand-primary hover:text-brand-primary-dark"
+                >
                   Terms of Service
                 </Link>{' '}
                 and{' '}
-                <Link href="/legal/privacy" className="font-medium text-brand-primary hover:text-brand-primary-dark">
+                <Link
+                  href="/legal/privacy"
+                  className="font-medium text-brand-primary hover:text-brand-primary-dark"
+                >
                   Privacy Policy
                 </Link>
                 .
               </p>
               <p className="text-sm text-slate-500 dark:text-slate-400">
                 Don&apos;t have an account?{' '}
-                <Link href="/auth/register" className="font-medium text-brand-primary hover:text-brand-primary-dark">
+                <Link
+                  href="/auth/register"
+                  className="font-medium text-brand-primary hover:text-brand-primary-dark"
+                >
                   Create one now
                 </Link>
               </p>

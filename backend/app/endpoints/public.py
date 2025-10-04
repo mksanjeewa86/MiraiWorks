@@ -1,6 +1,8 @@
 import logging
 
+from app.config.endpoints import API_ROUTES
 from fastapi import APIRouter, Depends, HTTPException, Query
+from app.config.endpoints import API_ROUTES
 from fastapi.responses import PlainTextResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,7 +18,7 @@ resume_service = ResumeService()
 pdf_service = PDFService()
 
 
-@router.get("/resume/{slug}")
+@router.get(API_ROUTES.PUBLIC.RESUME)
 async def get_public_resume_detail(
     slug: str,
     db: AsyncSession = Depends(get_db),
@@ -30,13 +32,15 @@ async def get_public_resume_detail(
         html_content = await pdf_service.get_resume_as_html(resume, resume.template_id)
     except Exception as exc:
         logger.error("Failed to render public resume preview: %s", exc)
-        raise HTTPException(status_code=500, detail="Failed to render resume preview") from exc
+        raise HTTPException(
+            status_code=500, detail="Failed to render resume preview"
+        ) from exc
 
     resume_info = PublicResumeInfo.model_validate(resume, from_attributes=True)
     return {"resume": resume_info.model_dump(), "html": html_content}
 
 
-@router.post("/resume/{slug}/view")
+@router.post(API_ROUTES.PUBLIC.RESUME_VIEW)
 async def track_public_resume_view(
     slug: str,
     db: AsyncSession = Depends(get_db),
@@ -48,7 +52,7 @@ async def track_public_resume_view(
     return {"message": "View tracked"}
 
 
-@router.post("/resume/{slug}/download-pdf")
+@router.post(API_ROUTES.PUBLIC.RESUME_DOWNLOAD)
 async def generate_public_resume_pdf(
     slug: str,
     db: AsyncSession = Depends(get_db),
@@ -70,7 +74,7 @@ async def generate_public_resume_pdf(
     return {"pdf_url": pdf_result.get("pdf_url")}
 
 
-@router.get("/stats")
+@router.get(API_ROUTES.PUBLIC.STATS)
 async def get_public_stats():
     """Get public platform statistics."""
     return {
@@ -87,7 +91,7 @@ async def get_public_stats():
     }
 
 
-@router.get("/positions")
+@router.get(API_ROUTES.PUBLIC.POSITIONS)
 async def get_public_positions(
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
@@ -107,7 +111,7 @@ async def get_public_positions(
     }
 
 
-@router.get("/positions/search")
+@router.get(API_ROUTES.PUBLIC.POSITIONS_SEARCH)
 async def search_public_positions(
     q: str = Query(..., min_length=1),
     limit: int = Query(20, ge=1, le=100),
@@ -135,7 +139,7 @@ async def search_public_positions(
     }
 
 
-@router.get("/companies")
+@router.get(API_ROUTES.PUBLIC.COMPANIES)
 async def get_public_companies(
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
@@ -154,7 +158,7 @@ async def get_public_companies(
     }
 
 
-@router.get("/companies/search")
+@router.get(API_ROUTES.PUBLIC.COMPANIES_SEARCH)
 async def search_public_companies(
     q: str = Query(..., min_length=1),
     limit: int = Query(20, ge=1, le=100),
@@ -174,7 +178,7 @@ async def search_public_companies(
     }
 
 
-@router.get("/sitemap.xml", response_class=Response)
+@router.get(API_ROUTES.PUBLIC.SITEMAP, response_class=Response)
 async def get_sitemap():
     """Generate sitemap.xml for SEO."""
     sitemap_content = """<?xml version="1.0" encoding="UTF-8"?>
@@ -208,7 +212,7 @@ async def get_sitemap():
     )
 
 
-@router.get("/robots.txt", response_class=PlainTextResponse)
+@router.get(API_ROUTES.PUBLIC.ROBOTS, response_class=PlainTextResponse)
 async def get_robots_txt():
     """Generate robots.txt for search engine crawlers."""
     robots_content = """User-agent: *
@@ -232,7 +236,7 @@ Sitemap: http://localhost:3000/api/public/sitemap.xml
     )
 
 
-@router.get("/rss/positions.xml", response_class=Response)
+@router.get(API_ROUTES.PUBLIC.RSS_POSITIONS, response_class=Response)
 async def get_positions_rss():
     """Generate RSS feed for position listings."""
     rss_content = """<?xml version="1.0" encoding="UTF-8"?>
@@ -261,4 +265,3 @@ async def get_positions_rss():
         media_type="application/rss+xml",
         headers={"Content-Type": "application/rss+xml"},
     )
-

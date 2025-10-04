@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import Brand from '@/components/common/Brand';
 import ForgotPasswordForm from '@/components/auth/ForgotPasswordForm';
-import { API_CONFIG } from '@/api/config';
+import { API_CONFIG, API_ENDPOINTS } from '@/api/config';
 
 export default function ForgotPasswordPage() {
   const [error, setError] = useState<string>('');
@@ -17,7 +17,7 @@ export default function ForgotPasswordPage() {
 
     try {
       // Call forgot password API
-      const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/forgot-password`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.AUTH.FORGOT_PASSWORD}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

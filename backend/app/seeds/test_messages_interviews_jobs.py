@@ -7,7 +7,9 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-async def seed_sample_data(db: AsyncSession, auth_result: dict[str, Any]) -> dict[str, int]:
+async def seed_sample_data(
+    db: AsyncSession, auth_result: dict[str, Any]
+) -> dict[str, int]:
     """
     Placeholder function for seeding sample messages, interviews, and jobs data.
 

@@ -30,7 +30,7 @@ class VideoCallOptimizer:
             "cleaned_old_segments": 0,
             "archived_calls": 0,
             "optimized_indexes": False,
-            "vacuum_performed": False
+            "vacuum_performed": False,
         }
 
         try:
@@ -38,8 +38,10 @@ class VideoCallOptimizer:
             cutoff_date = datetime.now(UTC) - self.old_calls_threshold
 
             # Delete old transcription segments to free up space
-            old_segments_query = select(TranscriptionSegment).join(VideoCall).where(
-                VideoCall.ended_at < cutoff_date
+            old_segments_query = (
+                select(TranscriptionSegment)
+                .join(VideoCall)
+                .where(VideoCall.ended_at < cutoff_date)
             )
             old_segments = await db.execute(old_segments_query)
             segments_to_delete = old_segments.scalars().all()
@@ -50,10 +52,7 @@ class VideoCallOptimizer:
 
             # Archive completed calls older than threshold
             old_calls_query = select(VideoCall).where(
-                and_(
-                    VideoCall.status == "completed",
-                    VideoCall.ended_at < cutoff_date
-                )
+                and_(VideoCall.status == "completed", VideoCall.ended_at < cutoff_date)
             )
             old_calls = await db.execute(old_calls_query)
             calls_to_archive = old_calls.scalars().all()
@@ -78,19 +77,23 @@ class VideoCallOptimizer:
             await db.rollback()
             raise
 
-    async def optimize_transcription_performance(self, db: AsyncSession) -> dict[str, Any]:
+    async def optimize_transcription_performance(
+        self, db: AsyncSession
+    ) -> dict[str, Any]:
         """Optimize transcription processing performance."""
         optimizations = {
             "batched_segments": 0,
             "compressed_texts": 0,
-            "indexed_searches": 0
+            "indexed_searches": 0,
         }
 
         try:
             # Batch process pending transcription segments
-            pending_segments_query = select(TranscriptionSegment).where(
-                TranscriptionSegment.processed_at.is_(None)
-            ).limit(100)  # Process in batches
+            pending_segments_query = (
+                select(TranscriptionSegment)
+                .where(TranscriptionSegment.processed_at.is_(None))
+                .limit(100)
+            )  # Process in batches
 
             pending_segments = await db.execute(pending_segments_query)
             segments_to_process = pending_segments.scalars().all()
@@ -126,7 +129,7 @@ class VideoCallOptimizer:
             # Get system metrics
             cpu_percent = psutil.cpu_percent(interval=1)
             memory = psutil.virtual_memory()
-            disk = psutil.disk_usage('/')
+            disk = psutil.disk_usage("/")
 
             # Get process-specific metrics
             process = psutil.Process()
@@ -139,7 +142,7 @@ class VideoCallOptimizer:
                 "disk_usage_percent": disk.percent,
                 "disk_free_gb": disk.free / (1024**3),
                 "process_memory_mb": process_memory.rss / (1024**2),
-                "timestamp": datetime.now(UTC).isoformat()
+                "timestamp": datetime.now(UTC).isoformat(),
             }
 
             # Log warnings for high resource usage
@@ -170,8 +173,8 @@ class VideoCallOptimizer:
             "connection_timeouts": {
                 "ice_gathering": 5000,  # 5 seconds
                 "ice_connection": 10000,  # 10 seconds
-                "dtls_handshake": 15000   # 15 seconds
-            }
+                "dtls_handshake": 15000,  # 15 seconds
+            },
         }
 
         # Simulate WebRTC optimization
@@ -192,7 +195,7 @@ class VideoCallOptimizer:
             stuck_calls_query = select(VideoCall).where(
                 and_(
                     VideoCall.status == "in_progress",
-                    VideoCall.started_at < timeout_threshold
+                    VideoCall.started_at < timeout_threshold,
                 )
             )
 
@@ -223,16 +226,16 @@ class VideoCallOptimizer:
     def _compress_text(self, text: str) -> str:
         """Compress text for storage optimization."""
         # Simple text compression (in production, use proper compression)
-        lines = text.split('\n')
+        lines = text.split("\n")
         compressed_lines = []
 
         for line in lines:
             # Remove extra whitespace
-            line = ' '.join(line.split())
+            line = " ".join(line.split())
             if line:  # Skip empty lines
                 compressed_lines.append(line)
 
-        return '\n'.join(compressed_lines)
+        return "\n".join(compressed_lines)
 
     async def _optimize_search_indexes(self, db: AsyncSession) -> int:
         """Optimize search indexes for transcription."""
@@ -264,16 +267,24 @@ async def run_optimization_cycle(db: AsyncSession) -> dict[str, Any]:
         "system_metrics": {},
         "webrtc_optimization": {},
         "session_cleanup_count": 0,
-        "errors": []
+        "errors": [],
     }
 
     try:
         # Run all optimizations
-        results["database_optimization"] = await video_optimizer.optimize_database_performance(db)
-        results["transcription_optimization"] = await video_optimizer.optimize_transcription_performance(db)
+        results[
+            "database_optimization"
+        ] = await video_optimizer.optimize_database_performance(db)
+        results[
+            "transcription_optimization"
+        ] = await video_optimizer.optimize_transcription_performance(db)
         results["system_metrics"] = await video_optimizer.monitor_system_resources()
-        results["webrtc_optimization"] = await video_optimizer.optimize_webrtc_performance()
-        results["session_cleanup_count"] = await video_optimizer.cleanup_inactive_sessions(db)
+        results[
+            "webrtc_optimization"
+        ] = await video_optimizer.optimize_webrtc_performance()
+        results[
+            "session_cleanup_count"
+        ] = await video_optimizer.cleanup_inactive_sessions(db)
 
         results["completed_at"] = datetime.now(UTC).isoformat()
 

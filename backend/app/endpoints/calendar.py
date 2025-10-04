@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime, timedelta
 
+from app.config.endpoints import API_ROUTES
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -35,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 
 # OAuth endpoints
-@router.get("/oauth/google/start")
+@router.get(API_ROUTES.CALENDAR.GOOGLE_OAUTH_START)
 async def start_google_oauth(
     current_user: User = Depends(get_current_active_user), state: str | None = None
 ):
@@ -49,7 +50,7 @@ async def start_google_oauth(
         )
 
 
-@router.get("/oauth/google/callback")
+@router.get(API_ROUTES.CALENDAR.GOOGLE_OAUTH_CALLBACK)
 async def google_oauth_callback(
     code: str = Query(...),
     state: str | None = Query(None),
@@ -132,7 +133,7 @@ async def google_oauth_callback(
     }
 
 
-@router.get("/oauth/microsoft/start")
+@router.get(API_ROUTES.CALENDAR.MICROSOFT_OAUTH_START)
 async def start_microsoft_oauth(
     current_user: User = Depends(get_current_active_user), state: str | None = None
 ):
@@ -141,7 +142,7 @@ async def start_microsoft_oauth(
     return {"auth_url": auth_url}
 
 
-@router.get("/oauth/microsoft/callback")
+@router.get(API_ROUTES.CALENDAR.MICROSOFT_OAUTH_CALLBACK)
 async def microsoft_oauth_callback(
     code: str = Query(...),
     state: str | None = Query(None),
@@ -230,7 +231,7 @@ async def microsoft_oauth_callback(
 
 
 # Calendar account management
-@router.get("/accounts", response_model=list[CalendarAccountInfo])
+@router.get(API_ROUTES.CALENDAR.ACCOUNTS, response_model=list[CalendarAccountInfo])
 async def get_calendar_accounts(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
@@ -256,7 +257,7 @@ async def get_calendar_accounts(
     ]
 
 
-@router.delete("/accounts/{account_id}")
+@router.delete(API_ROUTES.CALENDAR.ACCOUNT_BY_ID)
 async def disconnect_calendar_account(
     account_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -278,7 +279,7 @@ async def disconnect_calendar_account(
     return {"message": "Calendar account disconnected successfully"}
 
 
-@router.post("/accounts/{account_id}/sync", response_model=CalendarSyncResponse)
+@router.post(API_ROUTES.CALENDAR.ACCOUNT_SYNC, response_model=CalendarSyncResponse)
 async def sync_calendar_account(
     account_id: int,
     sync_request: CalendarSyncRequest,
@@ -325,7 +326,7 @@ async def sync_calendar_account(
         return CalendarSyncResponse(success=False, synced_events=0, errors=[str(e)])
 
 
-@router.get("/calendars")
+@router.get(API_ROUTES.CALENDAR.CALENDARS)
 async def get_calendars(
     account_id: int | None = Query(None),
     current_user: User = Depends(get_current_active_user),
@@ -374,7 +375,7 @@ async def get_calendars(
     return {"calendars": all_calendars}
 
 
-@router.get("/events", response_model=EventsListResponse)
+@router.get(API_ROUTES.CALENDAR.EVENTS, response_model=EventsListResponse)
 async def get_events(
     startDate: str | None = Query(None),
     endDate: str | None = Query(None),
@@ -390,20 +391,17 @@ async def get_events(
     if not startDate:
         start_date = datetime.utcnow()
     else:
-        start_date = datetime.fromisoformat(startDate.replace('Z', '+00:00'))
+        start_date = datetime.fromisoformat(startDate.replace("Z", "+00:00"))
 
     if not endDate:
         end_date = start_date + timedelta(days=30)
     else:
-        end_date = datetime.fromisoformat(endDate.replace('Z', '+00:00'))
+        end_date = datetime.fromisoformat(endDate.replace("Z", "+00:00"))
 
     try:
         # Get consolidated calendar data from service
         calendar_data = await calendar_service.get_consolidated_calendar(
-            db,
-            user_id=current_user.id,
-            start_date=start_date,
-            end_date=end_date
+            db, user_id=current_user.id, start_date=start_date, end_date=end_date
         )
 
         all_events = []
@@ -416,7 +414,9 @@ async def get_events(
                 description=event.get("description"),
                 location=event.get("location"),
                 start_datetime=datetime.fromisoformat(event["start"]),
-                end_datetime=datetime.fromisoformat(event["end"]) if event["end"] else None,
+                end_datetime=datetime.fromisoformat(event["end"])
+                if event["end"]
+                else None,
                 timezone="UTC",
                 is_all_day=event["allDay"],
                 is_recurring=False,  # Will be enhanced later for recurring events
@@ -424,7 +424,7 @@ async def get_events(
                 attendees=[],
                 status=event["status"],
                 created_at=datetime.utcnow(),  # This should come from the event data
-                updated_at=datetime.utcnow()   # This should come from the event data
+                updated_at=datetime.utcnow(),  # This should come from the event data
             )
             all_events.append(event_info)
 
@@ -444,7 +444,7 @@ async def get_events(
                 attendees=[],
                 status="confirmed",
                 created_at=datetime.utcnow(),
-                updated_at=datetime.utcnow()
+                updated_at=datetime.utcnow(),
             )
             all_events.append(holiday_event)
 
@@ -462,7 +462,7 @@ async def get_events(
         logger.error(f"Failed to get calendar events: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve calendar events"
+            detail="Failed to retrieve calendar events",
         )
 
     # Original implementation (commented out for testing):
@@ -588,7 +588,7 @@ async def get_events(
 
 
 # Webhook endpoints
-@router.post("/webhooks/google")
+@router.post(API_ROUTES.CALENDAR.WEBHOOKS_GOOGLE)
 async def google_calendar_webhook(request: Request, db: AsyncSession = Depends(get_db)):
     """Handle Google Calendar webhook notifications."""
     # Verify webhook (simplified - should validate signature in production)
@@ -609,7 +609,7 @@ async def google_calendar_webhook(request: Request, db: AsyncSession = Depends(g
     return {"status": "received"}
 
 
-@router.post("/webhooks/microsoft")
+@router.post(API_ROUTES.CALENDAR.WEBHOOKS_MICROSOFT)
 async def microsoft_calendar_webhook(
     webhook_data: CalendarWebhookData,
     validation_token: str | None = Query(None),
@@ -637,7 +637,10 @@ async def microsoft_calendar_webhook(
 
 # ==================== INTERNAL CALENDAR EVENT ENDPOINTS ====================
 
-@router.post("/events", response_model=CalendarEventInfo, status_code=201)
+
+@router.post(
+    API_ROUTES.CALENDAR.EVENTS, response_model=CalendarEventInfo, status_code=201
+)
 async def create_calendar_event(
     event_data: CalendarEventCreate,
     current_user: User = Depends(get_current_active_user),
@@ -646,21 +649,16 @@ async def create_calendar_event(
     """Create a new internal calendar event."""
     try:
         event = await calendar_service.create_event(
-            db,
-            event_in=event_data,
-            creator_id=current_user.id
+            db, event_in=event_data, creator_id=current_user.id
         )
         logger.info(f"Created calendar event: {event.title} for user {current_user.id}")
         return event
     except Exception as e:
         logger.error(f"Failed to create calendar event: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@router.get("/events/{event_id}", response_model=CalendarEventInfo)
+@router.get(API_ROUTES.CALENDAR.EVENT_BY_ID, response_model=CalendarEventInfo)
 async def get_calendar_event(
     event_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -670,19 +668,19 @@ async def get_calendar_event(
     try:
         # Get event from database
         from app.crud.calendar_event import calendar_event
+
         event = await calendar_event.get(db, id=event_id)
 
         if not event:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Event not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
             )
 
         # Check if user has permission to view this event
         if event.creator_id != current_user.id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to view this event"
+                detail="Not authorized to view this event",
             )
 
         return CalendarEventInfo.model_validate(event)
@@ -693,11 +691,11 @@ async def get_calendar_event(
         logger.error(f"Failed to get calendar event {event_id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve event"
+            detail="Failed to retrieve event",
         )
 
 
-@router.put("/events/{event_id}", response_model=CalendarEventInfo)
+@router.put(API_ROUTES.CALENDAR.EVENT_BY_ID, response_model=CalendarEventInfo)
 async def update_calendar_event(
     event_id: int,
     event_data: CalendarEventUpdate,
@@ -707,16 +705,12 @@ async def update_calendar_event(
     """Update a calendar event."""
     try:
         updated_event = await calendar_service.update_event(
-            db,
-            event_id=event_id,
-            event_in=event_data,
-            user_id=current_user.id
+            db, event_id=event_id, event_in=event_data, user_id=current_user.id
         )
 
         if not updated_event:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Event not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
             )
 
         logger.info(f"Updated calendar event {event_id} for user {current_user.id}")
@@ -725,19 +719,16 @@ async def update_calendar_event(
     except HTTPException:
         raise
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
     except Exception as e:
         logger.error(f"Failed to update calendar event {event_id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update event"
+            detail="Failed to update event",
         )
 
 
-@router.delete("/events/{event_id}")
+@router.delete(API_ROUTES.CALENDAR.EVENT_BY_ID)
 async def delete_calendar_event(
     event_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -746,15 +737,12 @@ async def delete_calendar_event(
     """Delete a calendar event."""
     try:
         deleted = await calendar_service.delete_event(
-            db,
-            event_id=event_id,
-            user_id=current_user.id
+            db, event_id=event_id, user_id=current_user.id
         )
 
         if not deleted:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Event not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
             )
 
         logger.info(f"Deleted calendar event {event_id} for user {current_user.id}")
@@ -763,21 +751,19 @@ async def delete_calendar_event(
     except HTTPException:
         raise
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
     except Exception as e:
         logger.error(f"Failed to delete calendar event {event_id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to delete event"
+            detail="Failed to delete event",
         )
 
 
 # ==================== ADDITIONAL CALENDAR ENDPOINTS ====================
 
-@router.get("/events/range", response_model=CalendarEventListResponse)
+
+@router.get(API_ROUTES.CALENDAR.EVENTS_RANGE, response_model=CalendarEventListResponse)
 async def get_events_in_range(
     start_date: datetime = Query(...),
     end_date: datetime = Query(...),
@@ -792,31 +778,26 @@ async def get_events_in_range(
             start_date=start_date,
             end_date=end_date,
             event_type=event_type,
-            status=status
+            status=status,
         )
 
         events = await calendar_service.get_user_events(
-            db,
-            user_id=current_user.id,
-            query_params=query_params
+            db, user_id=current_user.id, query_params=query_params
         )
 
         return CalendarEventListResponse(
-            events=events,
-            total=len(events),
-            start_date=start_date,
-            end_date=end_date
+            events=events, total=len(events), start_date=start_date, end_date=end_date
         )
 
     except Exception as e:
         logger.error(f"Failed to get events in range: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve events"
+            detail="Failed to retrieve events",
         )
 
 
-@router.get("/events/upcoming", response_model=list[CalendarEventInfo])
+@router.get(API_ROUTES.CALENDAR.EVENTS_UPCOMING, response_model=list[CalendarEventInfo])
 async def get_upcoming_events(
     limit: int = Query(10, ge=1, le=50),
     current_user: User = Depends(get_current_active_user),
@@ -825,9 +806,7 @@ async def get_upcoming_events(
     """Get upcoming calendar events for the user."""
     try:
         events = await calendar_service.get_upcoming_events(
-            db,
-            user_id=current_user.id,
-            limit=limit
+            db, user_id=current_user.id, limit=limit
         )
         return events
 
@@ -835,11 +814,11 @@ async def get_upcoming_events(
         logger.error(f"Failed to get upcoming events: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve upcoming events"
+            detail="Failed to retrieve upcoming events",
         )
 
 
-@router.post("/events/bulk", response_model=CalendarEventBulkResponse)
+@router.post(API_ROUTES.CALENDAR.EVENTS_BULK, response_model=CalendarEventBulkResponse)
 async def bulk_create_events(
     bulk_data: CalendarEventBulkCreate,
     current_user: User = Depends(get_current_active_user),
@@ -848,27 +827,22 @@ async def bulk_create_events(
     """Create multiple calendar events at once."""
     try:
         created_events = await calendar_service.bulk_create_events(
-            db,
-            events_data=bulk_data.events,
-            creator_id=current_user.id
+            db, events_data=bulk_data.events, creator_id=current_user.id
         )
 
         return CalendarEventBulkResponse(
             created_events=created_events,
             failed_events=[],
             total_created=len(created_events),
-            total_failed=0
+            total_failed=0,
         )
 
     except Exception as e:
         logger.error(f"Failed to bulk create events: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@router.get("/events/search")
+@router.get(API_ROUTES.CALENDAR.EVENTS_SEARCH)
 async def search_events(
     q: str = Query(..., min_length=1),
     skip: int = Query(0, ge=0),
@@ -879,11 +853,7 @@ async def search_events(
     """Search calendar events by title, description, or location."""
     try:
         events = await calendar_service.search_events(
-            db,
-            user_id=current_user.id,
-            search_term=q,
-            skip=skip,
-            limit=limit
+            db, user_id=current_user.id, search_term=q, skip=skip, limit=limit
         )
         return {"events": events, "total": len(events)}
 
@@ -891,5 +861,5 @@ async def search_events(
         logger.error(f"Failed to search events: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to search events"
+            detail="Failed to search events",
         )

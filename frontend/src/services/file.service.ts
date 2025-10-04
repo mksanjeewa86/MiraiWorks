@@ -5,6 +5,7 @@ import {
   FileValidationOptions,
   ValidationResult,
 } from '@/types/file';
+import { API_ENDPOINTS } from '@/api/config';
 
 export class FileService {
   // Upload service constants
@@ -56,7 +57,7 @@ export class FileService {
     try {
       const response = await new Promise<Response>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        xhr.open('POST', '/api/messages/upload');
+        xhr.open('POST', API_ENDPOINTS.MESSAGES_EXTENDED.UPLOAD);
 
         xhr.upload.onprogress = (e: ProgressEvent) => {
           if (onProgress && e.lengthComputable) {
@@ -145,7 +146,7 @@ export class FileService {
       }
     }
 
-    const response = await fetch(`/api/messages/upload/complete`, {
+    const response = await fetch(API_ENDPOINTS.MESSAGES_EXTENDED.UPLOAD_COMPLETE, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ uploadId, fileName: file.name }),
@@ -177,7 +178,7 @@ export class FileService {
     formData.append('chunk', chunk);
     formData.append('params', JSON.stringify(params));
 
-    const response = await fetch('/api/messages/upload/chunk', {
+    const response = await fetch(API_ENDPOINTS.MESSAGES_EXTENDED.UPLOAD_CHUNK, {
       method: 'POST',
       body: formData,
     });

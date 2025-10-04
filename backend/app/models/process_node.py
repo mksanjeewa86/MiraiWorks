@@ -28,15 +28,19 @@ if TYPE_CHECKING:
 class ProcessNode(Base):
     __tablename__ = "process_nodes"
     __table_args__ = (
-        UniqueConstraint('process_id', 'sequence_order', name='uq_process_node_sequence'),
+        UniqueConstraint(
+            "process_id", "sequence_order", name="uq_process_node_sequence"
+        ),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
     # Process relationship
     process_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("recruitment_processes.id", ondelete="CASCADE"),
-        nullable=False, index=True
+        Integer,
+        ForeignKey("recruitment_processes.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
 
     # Node configuration
@@ -55,7 +59,9 @@ class ProcessNode(Base):
     config: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     requirements: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     instructions: Mapped[str | None] = mapped_column(Text, nullable=True)
-    estimated_duration_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    estimated_duration_minutes: Mapped[int | None] = mapped_column(
+        Integer, nullable=True
+    )
 
     # Node behavior
     status: Mapped[str] = mapped_column(
@@ -81,7 +87,7 @@ class ProcessNode(Base):
         DateTime(timezone=True),
         default=datetime.utcnow,
         onupdate=datetime.utcnow,
-        nullable=False
+        nullable=False,
     )
 
     # Relationships
@@ -100,13 +106,13 @@ class ProcessNode(Base):
         "NodeConnection",
         foreign_keys="NodeConnection.source_node_id",
         back_populates="source_node",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
     )
     incoming_connections: Mapped[list[NodeConnection]] = relationship(
         "NodeConnection",
         foreign_keys="NodeConnection.target_node_id",
         back_populates="target_node",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
     )
 
     # Executions

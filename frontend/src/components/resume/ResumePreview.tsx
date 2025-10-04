@@ -24,11 +24,11 @@ export default function ResumePreview({
 
   // Enhanced preview control functions
   const handleZoomIn = () => {
-    setZoomLevel(prev => Math.min(prev + 25, 200));
+    setZoomLevel((prev) => Math.min(prev + 25, 200));
   };
 
   const handleZoomOut = () => {
-    setZoomLevel(prev => Math.max(prev - 25, 50));
+    setZoomLevel((prev) => Math.max(prev - 25, 50));
   };
 
   const handleResetZoom = () => {
@@ -123,11 +123,21 @@ export default function ResumePreview({
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-gray-700">Zoom:</span>
-                <Button variant="ghost" size="sm" onClick={handleZoomOut} disabled={zoomLevel <= 50}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleZoomOut}
+                  disabled={zoomLevel <= 50}
+                >
                   <ZoomOut className="h-4 w-4" />
                 </Button>
                 <span className="text-sm font-mono w-12 text-center">{zoomLevel}%</span>
-                <Button variant="ghost" size="sm" onClick={handleZoomIn} disabled={zoomLevel >= 200}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleZoomIn}
+                  disabled={zoomLevel >= 200}
+                >
                   <ZoomIn className="h-4 w-4" />
                 </Button>
                 <Button variant="ghost" size="sm" onClick={handleResetZoom}>
@@ -139,7 +149,9 @@ export default function ResumePreview({
                 <span className="text-sm font-medium text-gray-700">View:</span>
                 <select
                   value={previewMode}
-                  onChange={(e) => setPreviewMode(e.target.value as 'desktop' | 'tablet' | 'mobile')}
+                  onChange={(e) =>
+                    setPreviewMode(e.target.value as 'desktop' | 'tablet' | 'mobile')
+                  }
                   className="text-sm border rounded px-2 py-1"
                 >
                   <option value="desktop">Desktop</option>
@@ -156,12 +168,24 @@ export default function ResumePreview({
                 </Button>
                 <div className="absolute top-full right-0 mt-2 w-64 bg-black text-white text-xs rounded-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
                   <div className="space-y-1">
-                    <div><kbd className="bg-gray-700 px-1 rounded">Ctrl+F</kbd> - Toggle Fullscreen</div>
-                    <div><kbd className="bg-gray-700 px-1 rounded">Ctrl/Cmd + +</kbd> - Zoom In</div>
-                    <div><kbd className="bg-gray-700 px-1 rounded">Ctrl/Cmd + -</kbd> - Zoom Out</div>
-                    <div><kbd className="bg-gray-700 px-1 rounded">Ctrl/Cmd + 0</kbd> - Reset Zoom</div>
-                    <div><kbd className="bg-gray-700 px-1 rounded">Ctrl/Cmd + P</kbd> - Print</div>
-                    <div><kbd className="bg-gray-700 px-1 rounded">Esc</kbd> - Exit Fullscreen</div>
+                    <div>
+                      <kbd className="bg-gray-700 px-1 rounded">Ctrl+F</kbd> - Toggle Fullscreen
+                    </div>
+                    <div>
+                      <kbd className="bg-gray-700 px-1 rounded">Ctrl/Cmd + +</kbd> - Zoom In
+                    </div>
+                    <div>
+                      <kbd className="bg-gray-700 px-1 rounded">Ctrl/Cmd + -</kbd> - Zoom Out
+                    </div>
+                    <div>
+                      <kbd className="bg-gray-700 px-1 rounded">Ctrl/Cmd + 0</kbd> - Reset Zoom
+                    </div>
+                    <div>
+                      <kbd className="bg-gray-700 px-1 rounded">Ctrl/Cmd + P</kbd> - Print
+                    </div>
+                    <div>
+                      <kbd className="bg-gray-700 px-1 rounded">Esc</kbd> - Exit Fullscreen
+                    </div>
                   </div>
                 </div>
               </div>
@@ -169,7 +193,11 @@ export default function ResumePreview({
                 <Printer className="h-4 w-4" />
               </Button>
               <Button variant="ghost" size="sm" onClick={toggleFullscreen}>
-                {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                {isFullscreen ? (
+                  <Minimize2 className="h-4 w-4" />
+                ) : (
+                  <Maximize2 className="h-4 w-4" />
+                )}
               </Button>
               <Button
                 variant="ghost"
@@ -187,11 +215,7 @@ export default function ResumePreview({
       {/* Show Controls Button when hidden */}
       {!showPreviewControls && showControls && (
         <div className="mb-6 text-center">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowPreviewControls(true)}
-          >
+          <Button variant="outline" size="sm" onClick={() => setShowPreviewControls(true)}>
             <Eye className="h-4 w-4 mr-2" />
             Show Preview Controls
           </Button>
@@ -206,9 +230,7 @@ export default function ResumePreview({
               <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
                 Resume Preview
               </h2>
-              <p className="text-sm text-gray-600">
-                Live preview of your resume
-              </p>
+              <p className="text-sm text-gray-600">Live preview of your resume</p>
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <span>Zoom: {zoomLevel}%</span>
@@ -293,7 +315,8 @@ export default function ResumePreview({
           }
 
           /* Hide controls when printing */
-          [class*="Button"], [class*="Card"]:not(.resume-preview) {
+          [class*='Button'],
+          [class*='Card']:not(.resume-preview) {
             display: none !important;
           }
         }
@@ -325,27 +348,27 @@ export default function ResumePreview({
         }
 
         /* Zoom-specific adjustments */
-        .resume-preview[style*="scale(0.5)"] {
+        .resume-preview[style*='scale(0.5)'] {
           margin-bottom: -50%;
         }
 
-        .resume-preview[style*="scale(0.75)"] {
+        .resume-preview[style*='scale(0.75)'] {
           margin-bottom: -25%;
         }
 
-        .resume-preview[style*="scale(1.25)"] {
+        .resume-preview[style*='scale(1.25)'] {
           margin-bottom: 25%;
         }
 
-        .resume-preview[style*="scale(1.5)"] {
+        .resume-preview[style*='scale(1.5)'] {
           margin-bottom: 50%;
         }
 
-        .resume-preview[style*="scale(1.75)"] {
+        .resume-preview[style*='scale(1.75)'] {
           margin-bottom: 75%;
         }
 
-        .resume-preview[style*="scale(2)"] {
+        .resume-preview[style*='scale(2)'] {
           margin-bottom: 100%;
         }
       `}</style>

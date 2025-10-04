@@ -16,7 +16,11 @@ import {
 import { format } from 'date-fns';
 import type { CalendarEvent } from '@/types/interview';
 import type { CalendarConnection } from '@/types/calendar';
-import type { CalendarSidebarProps, CalendarFilters, ConnectionListProps } from '@/types/components';
+import type {
+  CalendarSidebarProps,
+  CalendarFilters,
+  ConnectionListProps,
+} from '@/types/components';
 
 const providerMeta = {
   google: {
@@ -90,7 +94,9 @@ const EmptyUpcomingState = () => (
   <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/60 p-6 text-center min-h-0">
     <CalendarDays className="mb-3 h-8 w-8 text-slate-400" />
     <p className="text-sm font-semibold text-slate-600">No upcoming events</p>
-    <p className="mt-1 text-xs text-slate-500">Create an event or connect a calendar to get started.</p>
+    <p className="mt-1 text-xs text-slate-500">
+      Create an event or connect a calendar to get started.
+    </p>
   </div>
 );
 
@@ -137,7 +143,12 @@ const ConnectionsSection: React.FC<ConnectionListProps> = ({
           className="flex items-center justify-between rounded-lg border border-dashed border-slate-300 bg-white px-3 py-2 text-left text-sm font-medium text-slate-600 shadow-sm transition hover:border-blue-400 hover:bg-blue-50/50"
         >
           <span>{providerMeta[provider].label}</span>
-          <span className={clsx('rounded-full px-2 py-0.5 text-xs font-semibold', providerMeta[provider].accentClass)}>
+          <span
+            className={clsx(
+              'rounded-full px-2 py-0.5 text-xs font-semibold',
+              providerMeta[provider].accentClass
+            )}
+          >
             Connect
           </span>
         </button>
@@ -156,7 +167,12 @@ const ConnectionsSection: React.FC<ConnectionListProps> = ({
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className={clsx('rounded-full px-2 py-0.5 text-[11px] font-semibold', provider.accentClass)}>
+                    <span
+                      className={clsx(
+                        'rounded-full px-2 py-0.5 text-[11px] font-semibold',
+                        provider.accentClass
+                      )}
+                    >
                       {provider.label}
                     </span>
                     <span
@@ -245,7 +261,9 @@ export default function CalendarSidebar({
     <div
       className={clsx(
         'fixed inset-0 z-40 flex bg-slate-900/40 transition-opacity duration-200 lg:relative lg:inset-auto lg:z-auto lg:bg-transparent',
-        isOpen ? 'opacity-100' : 'pointer-events-none opacity-0 lg:pointer-events-auto lg:opacity-100'
+        isOpen
+          ? 'opacity-100'
+          : 'pointer-events-none opacity-0 lg:pointer-events-auto lg:opacity-100'
       )}
     >
       <div className="flex-1 lg:hidden" onClick={onClose} role="presentation" />
@@ -258,7 +276,9 @@ export default function CalendarSidebar({
         <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 lg:py-5">
           <div>
             <h2 className="text-base font-semibold text-slate-800">Planner</h2>
-            <p className="text-xs text-slate-500">Keep track of interviews, tasks, and synced events.</p>
+            <p className="text-xs text-slate-500">
+              Keep track of interviews, tasks, and synced events.
+            </p>
           </div>
           <button
             type="button"
@@ -285,7 +305,9 @@ export default function CalendarSidebar({
                 <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/60 p-6 text-center">
                   <CalendarDays className="mb-3 h-8 w-8 text-slate-400" />
                   <p className="text-sm font-semibold text-slate-600">No upcoming events</p>
-                  <p className="mt-1 text-xs text-slate-500">Create an event or connect a calendar to get started.</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Create an event or connect a calendar to get started.
+                  </p>
                 </div>
               ) : (
                 <div className="flex-1 space-y-3 overflow-y-auto">
@@ -301,7 +323,9 @@ export default function CalendarSidebar({
                         <div className="flex items-start justify-between gap-2">
                           <div>
                             <p className="text-sm font-semibold text-slate-800">{event.title}</p>
-                            <p className="mt-1 text-xs text-slate-500">{formatTimeRange(event.startDatetime, event.endDatetime)}</p>
+                            <p className="mt-1 text-xs text-slate-500">
+                              {formatTimeRange(event.startDatetime, event.endDatetime)}
+                            </p>
                             {event.location && (
                               <p className="mt-1 text-xs text-slate-400">{event.location}</p>
                             )}

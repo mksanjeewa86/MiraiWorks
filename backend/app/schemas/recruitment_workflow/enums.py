@@ -3,6 +3,7 @@ from enum import Enum
 
 class ProcessStatus(str, Enum):
     """Status values for recruitment processes"""
+
     DRAFT = "draft"
     ACTIVE = "active"
     ARCHIVED = "archived"
@@ -11,6 +12,7 @@ class ProcessStatus(str, Enum):
 
 class NodeType(str, Enum):
     """Types of nodes in a recruitment process"""
+
     INTERVIEW = "interview"
     TODO = "todo"
     ASSESSMENT = "assessment"
@@ -19,6 +21,7 @@ class NodeType(str, Enum):
 
 class NodeStatus(str, Enum):
     """Status values for process nodes"""
+
     DRAFT = "draft"
     ACTIVE = "active"
     INACTIVE = "inactive"
@@ -26,6 +29,7 @@ class NodeStatus(str, Enum):
 
 class CandidateProcessStatus(str, Enum):
     """Status values for candidate processes"""
+
     NOT_STARTED = "not_started"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
@@ -36,6 +40,7 @@ class CandidateProcessStatus(str, Enum):
 
 class ExecutionStatus(str, Enum):
     """Status values for node executions"""
+
     PENDING = "pending"
     SCHEDULED = "scheduled"
     IN_PROGRESS = "in_progress"
@@ -47,6 +52,7 @@ class ExecutionStatus(str, Enum):
 
 class ExecutionResult(str, Enum):
     """Result values for node executions"""
+
     PASS = "pass"
     FAIL = "fail"
     PENDING_REVIEW = "pending_review"
@@ -57,6 +63,7 @@ class ExecutionResult(str, Enum):
 
 class ConnectionConditionType(str, Enum):
     """Condition types for node connections"""
+
     SUCCESS = "success"
     FAILURE = "failure"
     CONDITIONAL = "conditional"
@@ -65,6 +72,7 @@ class ConnectionConditionType(str, Enum):
 
 class ViewerRole(str, Enum):
     """Roles for process viewers"""
+
     RECRUITER = "recruiter"
     OBSERVER = "observer"
     ADMIN = "admin"
@@ -73,6 +81,7 @@ class ViewerRole(str, Enum):
 
 class InterviewNodeType(str, Enum):
     """Types of interviews in interview nodes"""
+
     VIDEO = "video"
     PHONE = "phone"
     IN_PERSON = "in_person"
@@ -80,6 +89,7 @@ class InterviewNodeType(str, Enum):
 
 class TodoNodeType(str, Enum):
     """Types of todos in todo nodes"""
+
     ASSIGNMENT = "assignment"
     ASSESSMENT = "assessment"
     DOCUMENT_UPLOAD = "document_upload"
@@ -89,6 +99,7 @@ class TodoNodeType(str, Enum):
 
 class SubmissionType(str, Enum):
     """Types of submissions for todo nodes"""
+
     FILE = "file"
     TEXT = "text"
     CODE = "code"
@@ -98,6 +109,7 @@ class SubmissionType(str, Enum):
 
 class FinalResult(str, Enum):
     """Final results for candidate processes"""
+
     HIRED = "hired"
     REJECTED = "rejected"
     WITHDRAWN = "withdrawn"
@@ -107,6 +119,7 @@ class FinalResult(str, Enum):
 
 class Priority(str, Enum):
     """Priority levels"""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"

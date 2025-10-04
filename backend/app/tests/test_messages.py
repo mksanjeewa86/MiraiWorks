@@ -88,9 +88,7 @@ async def test_send_message_creates_record(
     assert data["recipient_id"] == recipient.id
     assert data["content"] == "Hello there"
 
-    stored = await db_session.execute(
-        select(Message).where(Message.id == data["id"])
-    )
+    stored = await db_session.execute(select(Message).where(Message.id == data["id"]))
     message = stored.scalar_one()
     assert message.content == "Hello there"
 
@@ -123,9 +121,7 @@ async def test_get_conversations_returns_latest(
             ),
         )
 
-    response = await client.get(
-        "/api/messages/conversations", headers=auth_headers
-    )
+    response = await client.get("/api/messages/conversations", headers=auth_headers)
 
     assert response.status_code == 200
     data = response.json()

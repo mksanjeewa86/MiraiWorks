@@ -29,7 +29,9 @@ class TodoAttachment(Base):
 
     # File information
     original_filename: Mapped[str] = mapped_column(String(255), nullable=False)
-    stored_filename: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
+    stored_filename: Mapped[str] = mapped_column(
+        String(255), nullable=False, unique=True
+    )
     file_path: Mapped[str] = mapped_column(String(500), nullable=False)
     file_size: Mapped[int] = mapped_column(BigInteger, nullable=False)  # Size in bytes
     mime_type: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -63,34 +65,40 @@ class TodoAttachment(Base):
     @property
     def is_image(self) -> bool:
         """Check if the file is an image."""
-        image_types = {'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'}
+        image_types = {
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/webp",
+            "image/svg+xml",
+        }
         return self.mime_type in image_types
 
     @property
     def is_document(self) -> bool:
         """Check if the file is a document."""
         doc_types = {
-            'application/pdf',
-            'application/msword',
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'application/vnd.ms-excel',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'application/vnd.ms-powerpoint',
-            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-            'text/plain',
-            'text/csv'
+            "application/pdf",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/vnd.ms-excel",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/vnd.ms-powerpoint",
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            "text/plain",
+            "text/csv",
         }
         return self.mime_type in doc_types
 
     @property
     def is_video(self) -> bool:
         """Check if the file is a video."""
-        return self.mime_type.startswith('video/')
+        return self.mime_type.startswith("video/")
 
     @property
     def is_audio(self) -> bool:
         """Check if the file is audio."""
-        return self.mime_type.startswith('audio/')
+        return self.mime_type.startswith("audio/")
 
     @property
     def file_category(self) -> str:
@@ -114,7 +122,7 @@ class TodoAttachment(Base):
             "document": "DocumentTextIcon",
             "video": "VideoCameraIcon",
             "audio": "SpeakerWaveIcon",
-            "other": "DocumentIcon"
+            "other": "DocumentIcon",
         }
         return icon_map.get(category, "DocumentIcon")
 
@@ -124,7 +132,7 @@ class TodoAttachment(Base):
 
     def get_preview_url(self) -> str | None:
         """Generate preview URL for supported file types."""
-        if self.is_image or self.mime_type == 'application/pdf':
+        if self.is_image or self.mime_type == "application/pdf":
             return f"/api/todos/{self.todo_id}/attachments/{self.id}/preview"
         return None
 

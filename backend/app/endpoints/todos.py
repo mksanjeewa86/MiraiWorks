@@ -3,6 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config.endpoints import API_ROUTES
 from app.crud.todo import todo as todo_crud
 from app.database import get_db
 from app.dependencies import get_current_active_user
@@ -46,7 +47,7 @@ async def _get_todo_or_404(
     return todo_obj
 
 
-@router.get("", response_model=TodoListResponse)
+@router.get(API_ROUTES.TODOS.BASE, response_model=TodoListResponse)
 async def list_todos(
     include_completed: bool = Query(True, description="Include completed todos"),
     include_deleted: bool = Query(False, description="Include deleted todos"),
@@ -77,7 +78,7 @@ async def list_todos(
     return TodoListResponse(items=todos, total=total)
 
 
-@router.put("/{todo_id}/viewers", response_model=TodoRead)
+@router.put(API_ROUTES.TODOS.VIEWERS, response_model=TodoRead)
 async def update_todo_viewers(
     todo_id: int,
     viewers_data: TodoViewersUpdate,
@@ -85,21 +86,25 @@ async def update_todo_viewers(
     current_user: User = Depends(get_current_active_user),
 ):
     """Update viewers for a todo."""
-    todo_obj = await _get_todo_or_404(db, todo_id=todo_id, current_user=current_user, allow_deleted=False)
+    todo_obj = await _get_todo_or_404(
+        db, todo_id=todo_id, current_user=current_user, allow_deleted=False
+    )
 
     # Check if user can assign this todo (only creator can manage viewers)
     if not await TodoPermissionService.can_assign_todo(db, current_user.id, todo_obj):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to manage viewers for this todo"
+            detail="You don't have permission to manage viewers for this todo",
         )
 
     # Validate viewer user IDs exist and are valid
     for user_id in viewers_data.viewer_ids:
-        if not await TodoPermissionService.can_assign_to_user(db, current_user.id, user_id):
+        if not await TodoPermissionService.can_assign_to_user(
+            db, current_user.id, user_id
+        ):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Cannot add user {user_id} as viewer"
+                detail=f"Cannot add user {user_id} as viewer",
             )
 
     todo_obj = await todo_crud.update_viewers(
@@ -108,7 +113,7 @@ async def update_todo_viewers(
     return todo_obj
 
 
-@router.get("/recent", response_model=list[TodoRead])
+@router.get(API_ROUTES.TODOS.RECENT, response_model=list[TodoRead])
 async def get_recent_todos(
     limit: int = Query(5, ge=1, le=20),
     db: AsyncSession = Depends(get_db),
@@ -119,7 +124,9 @@ async def get_recent_todos(
     return todos
 
 
-@router.post("", response_model=TodoRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    API_ROUTES.TODOS.BASE, response_model=TodoRead, status_code=status.HTTP_201_CREATED
+)
 async def create_todo(
     todo_in: TodoCreate,
     db: AsyncSession = Depends(get_db),
@@ -133,7 +140,7 @@ async def create_todo(
     return todo_obj
 
 
-@router.put("/{todo_id}", response_model=TodoRead)
+@router.put(API_ROUTES.TODOS.BY_ID, response_model=TodoRead)
 async def update_todo(
     todo_id: int,
     todo_in: TodoUpdate,
@@ -141,13 +148,15 @@ async def update_todo(
     current_user: User = Depends(get_current_active_user),
 ):
     """Update an existing todo."""
-    todo_obj = await _get_todo_or_404(db, todo_id=todo_id, current_user=current_user, allow_deleted=False)
+    todo_obj = await _get_todo_or_404(
+        db, todo_id=todo_id, current_user=current_user, allow_deleted=False
+    )
 
     # Check if user can edit this todo
     if not await TodoPermissionService.can_edit_todo(db, current_user.id, todo_obj):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to edit this todo"
+            detail="You don't have permission to edit this todo",
         )
 
     todo_obj = await todo_crud.update_todo(
@@ -156,20 +165,22 @@ async def update_todo(
     return todo_obj
 
 
-@router.post("/{todo_id}/complete", response_model=TodoRead)
+@router.post(API_ROUTES.TODOS.COMPLETE, response_model=TodoRead)
 async def complete_todo(
     todo_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
     """Mark a todo as completed."""
-    todo_obj = await _get_todo_or_404(db, todo_id=todo_id, current_user=current_user, allow_deleted=False)
+    todo_obj = await _get_todo_or_404(
+        db, todo_id=todo_id, current_user=current_user, allow_deleted=False
+    )
 
     # Check if user can change status
     if not await TodoPermissionService.can_change_status(db, current_user.id, todo_obj):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to change this todo's status"
+            detail="You don't have permission to change this todo's status",
         )
 
     if todo_obj.status == TodoStatus.COMPLETED.value:
@@ -180,20 +191,22 @@ async def complete_todo(
     return todo_obj
 
 
-@router.post("/{todo_id}/reopen", response_model=TodoRead)
+@router.post(API_ROUTES.TODOS.REOPEN, response_model=TodoRead)
 async def reopen_todo(
     todo_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
     """Reopen a completed or expired todo."""
-    todo_obj = await _get_todo_or_404(db, todo_id=todo_id, current_user=current_user, allow_deleted=False)
+    todo_obj = await _get_todo_or_404(
+        db, todo_id=todo_id, current_user=current_user, allow_deleted=False
+    )
 
     # Check if user can change status
     if not await TodoPermissionService.can_change_status(db, current_user.id, todo_obj):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to change this todo's status"
+            detail="You don't have permission to change this todo's status",
         )
 
     if todo_obj.status == TodoStatus.PENDING.value:
@@ -202,34 +215,38 @@ async def reopen_todo(
     return todo_obj
 
 
-@router.delete("/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(API_ROUTES.TODOS.BY_ID, status_code=status.HTTP_204_NO_CONTENT)
 async def soft_delete_todo(
     todo_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
     """Soft delete a todo."""
-    todo_obj = await _get_todo_or_404(db, todo_id=todo_id, current_user=current_user, allow_deleted=False)
+    todo_obj = await _get_todo_or_404(
+        db, todo_id=todo_id, current_user=current_user, allow_deleted=False
+    )
 
     # Check if user can delete this todo
     if not await TodoPermissionService.can_delete_todo(db, current_user.id, todo_obj):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to delete this todo"
+            detail="You don't have permission to delete this todo",
         )
 
     if not todo_obj.is_deleted:
         await todo_crud.soft_delete(db, todo=todo_obj, deleted_by=current_user.id)
 
 
-@router.post("/{todo_id}/restore", response_model=TodoRead)
+@router.post(API_ROUTES.TODOS.RESTORE, response_model=TodoRead)
 async def restore_todo(
     todo_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
     """Restore a soft deleted todo."""
-    todo_obj = await _get_todo_or_404(db, todo_id=todo_id, current_user=current_user, allow_deleted=True)
+    todo_obj = await _get_todo_or_404(
+        db, todo_id=todo_id, current_user=current_user, allow_deleted=True
+    )
     if not todo_obj.is_deleted:
         return todo_obj
     todo_obj = await todo_crud.restore(db, todo=todo_obj, restored_by=current_user.id)
@@ -237,7 +254,7 @@ async def restore_todo(
 
 
 # Assignment-related endpoints
-@router.get("/assignable-users", response_model=list[AssignableUser])
+@router.get(API_ROUTES.TODOS.ASSIGNABLE_USERS, response_model=list[AssignableUser])
 async def get_assignable_users(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
@@ -247,18 +264,20 @@ async def get_assignable_users(
     return users
 
 
-@router.get("/{todo_id}/details", response_model=TodoWithAssignedUser)
+@router.get(API_ROUTES.TODOS.DETAILS, response_model=TodoWithAssignedUser)
 async def get_todo_with_assigned_user(
     todo_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
     """Get todo details including assigned user information."""
-    todo_obj = await _get_todo_or_404(db, todo_id=todo_id, current_user=current_user, allow_deleted=False)
+    todo_obj = await _get_todo_or_404(
+        db, todo_id=todo_id, current_user=current_user, allow_deleted=False
+    )
     return todo_obj
 
 
-@router.put("/{todo_id}/assign", response_model=TodoRead)
+@router.put(API_ROUTES.TODOS.ASSIGN, response_model=TodoRead)
 async def assign_todo(
     todo_id: int,
     assignment_data: TodoAssignmentUpdate,
@@ -266,13 +285,15 @@ async def assign_todo(
     current_user: User = Depends(get_current_active_user),
 ):
     """Assign a todo to a user with visibility settings."""
-    todo_obj = await _get_todo_or_404(db, todo_id=todo_id, current_user=current_user, allow_deleted=False)
+    todo_obj = await _get_todo_or_404(
+        db, todo_id=todo_id, current_user=current_user, allow_deleted=False
+    )
 
     # Check if user can assign this todo
     if not await TodoPermissionService.can_assign_todo(db, current_user.id, todo_obj):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to assign this todo"
+            detail="You don't have permission to assign this todo",
         )
 
     # If assigning to someone, validate they can be assigned
@@ -282,7 +303,7 @@ async def assign_todo(
         ):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot assign todo to this user"
+                detail="Cannot assign todo to this user",
             )
 
     todo_obj = await todo_crud.assign_todo(
@@ -291,7 +312,7 @@ async def assign_todo(
     return todo_obj
 
 
-@router.get("/assigned", response_model=TodoListResponse)
+@router.get(API_ROUTES.TODOS.ASSIGNED, response_model=TodoListResponse)
 async def list_assigned_todos(
     include_completed: bool = Query(True, description="Include completed todos"),
     limit: int = Query(100, ge=1, le=200),

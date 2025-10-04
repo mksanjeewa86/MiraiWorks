@@ -28,22 +28,20 @@ class TestVideoCallEndpoints:
         self, client: AsyncClient, db_session: AsyncSession, test_users: dict
     ):
         """Test successful video call scheduling."""
-        recruiter = test_users['recruiter']
-        candidate = test_users['candidate']
+        recruiter = test_users["recruiter"]
+        candidate = test_users["candidate"]
 
         call_data = {
             "candidate_id": candidate.id,
             "scheduled_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
             "enable_transcription": True,
-            "transcription_language": "ja"
+            "transcription_language": "ja",
         }
 
         recruiter_headers = await self._get_auth_headers(client, recruiter)
 
         response = await client.post(
-            "/api/video-calls/schedule",
-            json=call_data,
-            headers=recruiter_headers
+            "/api/video-calls/schedule", json=call_data, headers=recruiter_headers
         )
 
         assert response.status_code == 201
@@ -59,11 +57,11 @@ class TestVideoCallEndpoints:
         self, client: AsyncClient, test_users: dict
     ):
         """Test video call scheduling without authentication fails."""
-        candidate = test_users['candidate']
+        candidate = test_users["candidate"]
 
         call_data = {
             "candidate_id": candidate.id,
-            "scheduled_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat()
+            "scheduled_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
         }
 
         response = await client.post("/api/video-calls/schedule", json=call_data)
@@ -74,31 +72,33 @@ class TestVideoCallEndpoints:
         self, client: AsyncClient, test_users: dict
     ):
         """Test video call scheduling with invalid candidate ID."""
-        recruiter = test_users['recruiter']
+        recruiter = test_users["recruiter"]
 
         call_data = {
             "candidate_id": 99999,  # Non-existent candidate
-            "scheduled_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat()
+            "scheduled_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
         }
 
         recruiter_headers = await self._get_auth_headers(client, recruiter)
         response = await client.post(
-            "/api/video-calls/schedule",
-            json=call_data,
-            headers=recruiter_headers
+            "/api/video-calls/schedule", json=call_data, headers=recruiter_headers
         )
 
         assert response.status_code == 201  # Currently allows invalid candidate_id
 
     @pytest.mark.asyncio
     async def test_get_video_call_success(
-        self, client: AsyncClient, db_session: AsyncSession, test_video_call: VideoCall, test_users: dict
+        self,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        test_video_call: VideoCall,
+        test_users: dict,
     ):
         """Test successful video call retrieval."""
-        interviewer = test_users['recruiter']  # Use test_users directly
+        interviewer = test_users["recruiter"]  # Use test_users directly
         response = await client.get(
             f"/api/video-calls/{test_video_call.id}",
-            headers=await self._get_auth_headers(client, interviewer)
+            headers=await self._get_auth_headers(client, interviewer),
         )
 
         assert response.status_code == 200
@@ -111,11 +111,11 @@ class TestVideoCallEndpoints:
         self, client: AsyncClient, test_users: dict
     ):
         """Test video call retrieval with non-existent ID."""
-        recruiter = test_users['recruiter']
+        recruiter = test_users["recruiter"]
 
         response = await client.get(
             "/api/video-calls/99999",
-            headers=await self._get_auth_headers(client, recruiter)
+            headers=await self._get_auth_headers(client, recruiter),
         )
 
         assert response.status_code == 404
@@ -125,23 +125,27 @@ class TestVideoCallEndpoints:
         self, client: AsyncClient, test_video_call: VideoCall, test_users: dict
     ):
         """Test video call retrieval by non-participant."""
-        other_user = test_users['other_recruiter']
+        other_user = test_users["other_recruiter"]
 
         response = await client.get(
             f"/api/video-calls/{test_video_call.id}",
-            headers=await self._get_auth_headers(client, other_user)
+            headers=await self._get_auth_headers(client, other_user),
         )
 
         assert response.status_code == 403
 
     @pytest.mark.asyncio
     async def test_join_video_call_success(
-        self, client: AsyncClient, db_session: AsyncSession, test_video_call: VideoCall, test_users: dict
+        self,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        test_video_call: VideoCall,
+        test_users: dict,
     ):
         """Test successful video call joining."""
         response = await client.post(
             f"/api/video-calls/{test_video_call.id}/join",
-            headers=await self._get_auth_headers(client, test_users['candidate'])
+            headers=await self._get_auth_headers(client, test_users["candidate"]),
         )
 
         assert response.status_code == 200
@@ -165,18 +169,22 @@ class TestVideoCallEndpoints:
         self, client: AsyncClient, test_video_call: VideoCall, test_users: dict
     ):
         """Test video call joining by non-participant."""
-        other_user = test_users['other_recruiter']
+        other_user = test_users["other_recruiter"]
 
         response = await client.post(
             f"/api/video-calls/{test_video_call.id}/join",
-            headers=await self._get_auth_headers(client, other_user)
+            headers=await self._get_auth_headers(client, other_user),
         )
 
         assert response.status_code == 403
 
     @pytest.mark.asyncio
     async def test_end_video_call_success(
-        self, client: AsyncClient, db_session: AsyncSession, test_video_call: VideoCall, test_users: dict
+        self,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        test_video_call: VideoCall,
+        test_users: dict,
     ):
         """Test successful video call ending."""
         # First set call to in_progress
@@ -187,7 +195,7 @@ class TestVideoCallEndpoints:
 
         response = await client.post(
             f"/api/video-calls/{test_video_call.id}/end",
-            headers=await self._get_auth_headers(client, test_users['recruiter'])
+            headers=await self._get_auth_headers(client, test_users["recruiter"]),
         )
 
         assert response.status_code == 200
@@ -205,14 +213,18 @@ class TestVideoCallEndpoints:
         """Test only interviewer can end video call."""
         response = await client.post(
             f"/api/video-calls/{test_video_call.id}/end",
-            headers=await self._get_auth_headers(client, test_users['candidate'])
+            headers=await self._get_auth_headers(client, test_users["candidate"]),
         )
 
         assert response.status_code == 403
 
     @pytest.mark.asyncio
     async def test_record_consent_success(
-        self, client: AsyncClient, db_session: AsyncSession, test_video_call: VideoCall, test_users: dict
+        self,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        test_video_call: VideoCall,
+        test_users: dict,
     ):
         """Test successful recording consent."""
         consent_data = {"consented": True}
@@ -220,7 +232,7 @@ class TestVideoCallEndpoints:
         response = await client.post(
             f"/api/video-calls/{test_video_call.id}/consent",
             json=consent_data,
-            headers=await self._get_auth_headers(client, test_users['candidate'])
+            headers=await self._get_auth_headers(client, test_users["candidate"]),
         )
 
         assert response.status_code == 200
@@ -230,7 +242,11 @@ class TestVideoCallEndpoints:
 
     @pytest.mark.asyncio
     async def test_record_consent_decline(
-        self, client: AsyncClient, db_session: AsyncSession, test_video_call: VideoCall, test_users: dict
+        self,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        test_video_call: VideoCall,
+        test_users: dict,
     ):
         """Test recording consent decline."""
         consent_data = {"consented": False}
@@ -238,7 +254,7 @@ class TestVideoCallEndpoints:
         response = await client.post(
             f"/api/video-calls/{test_video_call.id}/consent",
             json=consent_data,
-            headers=await self._get_auth_headers(client, test_users['recruiter'])
+            headers=await self._get_auth_headers(client, test_users["recruiter"]),
         )
 
         assert response.status_code == 200
@@ -252,7 +268,7 @@ class TestVideoCallEndpoints:
         """Test successful WebRTC token generation."""
         response = await client.get(
             f"/api/video-calls/{test_video_call.id}/token",
-            headers=await self._get_auth_headers(client, test_users['recruiter'])
+            headers=await self._get_auth_headers(client, test_users["recruiter"]),
         )
 
         assert response.status_code == 200
@@ -263,7 +279,11 @@ class TestVideoCallEndpoints:
 
     @pytest.mark.asyncio
     async def test_save_transcript_segment_success(
-        self, client: AsyncClient, db_session: AsyncSession, test_video_call: VideoCall, test_users: dict
+        self,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        test_video_call: VideoCall,
+        test_users: dict,
     ):
         """Test saving transcription segment during call."""
         # Set call to in_progress
@@ -276,13 +296,13 @@ class TestVideoCallEndpoints:
             "segment_text": "Hello, how are you today?",
             "start_time": 10.5,
             "end_time": 13.2,
-            "confidence": 0.95
+            "confidence": 0.95,
         }
 
         response = await client.post(
             f"/api/video-calls/{test_video_call.id}/transcript/segments",
             json=segment_data,
-            headers=await self._get_auth_headers(client, test_users['recruiter'])
+            headers=await self._get_auth_headers(client, test_users["recruiter"]),
         )
 
         assert response.status_code == 200
@@ -299,20 +319,24 @@ class TestVideoCallEndpoints:
             "speaker_id": test_video_call.interviewer_id,
             "segment_text": "Hello",
             "start_time": 10.5,
-            "end_time": 13.2
+            "end_time": 13.2,
         }
 
         response = await client.post(
             f"/api/video-calls/{test_video_call.id}/transcript/segments",
             json=segment_data,
-            headers=await self._get_auth_headers(client, test_users['recruiter'])
+            headers=await self._get_auth_headers(client, test_users["recruiter"]),
         )
 
         assert response.status_code == 400
 
     @pytest.mark.asyncio
     async def test_get_transcript_success(
-        self, client: AsyncClient, db_session: AsyncSession, test_video_call: VideoCall, test_users: dict
+        self,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        test_video_call: VideoCall,
+        test_users: dict,
     ):
         """Test getting call transcript."""
         # Create a transcript
@@ -320,12 +344,12 @@ class TestVideoCallEndpoints:
             db_session,
             video_call_id=test_video_call.id,
             status="completed",
-            transcript_text="Sample transcript text"
+            transcript_text="Sample transcript text",
         )
 
         response = await client.get(
             f"/api/video-calls/{test_video_call.id}/transcript",
-            headers=await self._get_auth_headers(client, test_users['recruiter'])
+            headers=await self._get_auth_headers(client, test_users["recruiter"]),
         )
 
         assert response.status_code == 200
@@ -340,7 +364,7 @@ class TestVideoCallEndpoints:
         """Test getting transcript when not available."""
         response = await client.get(
             f"/api/video-calls/{test_video_call.id}/transcript",
-            headers=await self._get_auth_headers(client, test_users['recruiter'])
+            headers=await self._get_auth_headers(client, test_users["recruiter"]),
         )
 
         assert response.status_code == 200
@@ -351,7 +375,11 @@ class TestVideoCallEndpoints:
 
     @pytest.mark.asyncio
     async def test_download_transcript_success(
-        self, client: AsyncClient, db_session: AsyncSession, test_video_call: VideoCall, test_users: dict
+        self,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        test_video_call: VideoCall,
+        test_users: dict,
     ):
         """Test transcript download."""
         # Create a completed transcript
@@ -359,12 +387,12 @@ class TestVideoCallEndpoints:
             db_session,
             video_call_id=test_video_call.id,
             status="completed",
-            transcript_text="Sample transcript"
+            transcript_text="Sample transcript",
         )
 
         response = await client.get(
             f"/api/video-calls/{test_video_call.id}/transcript/download?format=txt",
-            headers=await self._get_auth_headers(client, test_users['recruiter'])
+            headers=await self._get_auth_headers(client, test_users["recruiter"]),
         )
 
         assert response.status_code == 200
@@ -376,11 +404,10 @@ class TestVideoCallEndpoints:
         self, client: AsyncClient, test_users: dict
     ):
         """Test listing user's video calls."""
-        recruiter = test_users['recruiter']
+        recruiter = test_users["recruiter"]
 
         response = await client.get(
-            "/api/video-calls/",
-            headers=await self._get_auth_headers(client, recruiter)
+            "/api/video-calls/", headers=await self._get_auth_headers(client, recruiter)
         )
 
         assert response.status_code == 200
@@ -392,33 +419,33 @@ class TestVideoCallEndpoints:
         self, client: AsyncClient, test_users: dict
     ):
         """Test that users cannot have multiple concurrent active calls."""
-        recruiter = test_users['recruiter']
-        candidate1 = test_users['candidate']
-        candidate2 = test_users['other_candidate']
+        recruiter = test_users["recruiter"]
+        candidate1 = test_users["candidate"]
+        candidate2 = test_users["other_candidate"]
 
         # Schedule first call
         call_data1 = {
             "candidate_id": candidate1.id,
-            "scheduled_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat()
+            "scheduled_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
         }
 
         response1 = await client.post(
             "/api/video-calls/schedule",
             json=call_data1,
-            headers=await self._get_auth_headers(client, recruiter)
+            headers=await self._get_auth_headers(client, recruiter),
         )
         assert response1.status_code == 201
 
         # Try to schedule overlapping call
         call_data2 = {
             "candidate_id": candidate2.id,
-            "scheduled_at": (datetime.now(UTC) + timedelta(minutes=30)).isoformat()
+            "scheduled_at": (datetime.now(UTC) + timedelta(minutes=30)).isoformat(),
         }
 
         response2 = await client.post(
             "/api/video-calls/schedule",
             json=call_data2,
-            headers=await self._get_auth_headers(client, recruiter)
+            headers=await self._get_auth_headers(client, recruiter),
         )
 
         # Should either succeed or fail with appropriate error

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import DatePicker from 'react-datepicker';
-import "react-datepicker/dist/react-datepicker.css";
+import 'react-datepicker/dist/react-datepicker.css';
 import '@/styles/datepicker.css';
 
 import { ArrowLeft, Save, Video, Phone, Users, AlertCircle } from 'lucide-react';
@@ -136,39 +136,45 @@ function EditInterviewContent() {
     }
   };
 
-  const handleScheduleChange = (field: 'scheduled_start' | 'scheduled_end') => (value: string | null) => {
-    const normalized = value ?? '';
-    setFormData((prev) => {
-      const next = { ...prev, [field]: normalized };
+  const handleScheduleChange =
+    (field: 'scheduled_start' | 'scheduled_end') => (value: string | null) => {
+      const normalized = value ?? '';
+      setFormData((prev) => {
+        const next = { ...prev, [field]: normalized };
 
-      if (field === 'scheduled_start' && normalized) {
-        const startTime = new Date(normalized);
-        if (!Number.isNaN(startTime.getTime())) {
-          const previousStart = prev.scheduled_start ? new Date(prev.scheduled_start) : null;
-          const previousEnd = prev.scheduled_end ? new Date(prev.scheduled_end) : null;
+        if (field === 'scheduled_start' && normalized) {
+          const startTime = new Date(normalized);
+          if (!Number.isNaN(startTime.getTime())) {
+            const previousStart = prev.scheduled_start ? new Date(prev.scheduled_start) : null;
+            const previousEnd = prev.scheduled_end ? new Date(prev.scheduled_end) : null;
 
-          let duration = 60 * 60 * 1000;
-          if (previousStart && !Number.isNaN(previousStart.getTime()) && previousEnd && !Number.isNaN(previousEnd.getTime())) {
-            const diff = previousEnd.getTime() - previousStart.getTime();
-            if (diff > 0) {
-              duration = diff;
+            let duration = 60 * 60 * 1000;
+            if (
+              previousStart &&
+              !Number.isNaN(previousStart.getTime()) &&
+              previousEnd &&
+              !Number.isNaN(previousEnd.getTime())
+            ) {
+              const diff = previousEnd.getTime() - previousStart.getTime();
+              if (diff > 0) {
+                duration = diff;
+              }
             }
+
+            const newEnd = new Date(startTime.getTime() + duration);
+            next.scheduled_end = newEnd.toISOString().slice(0, 16);
           }
-
-          const newEnd = new Date(startTime.getTime() + duration);
-          next.scheduled_end = newEnd.toISOString().slice(0, 16);
         }
-      }
 
-      return next;
-    });
+        return next;
+      });
 
-    setErrors((prev) => ({
-      ...prev,
-      [field]: '',
-      ...(field === 'scheduled_start' ? { scheduled_end: '' } : {}),
-    }));
-  };
+      setErrors((prev) => ({
+        ...prev,
+        [field]: '',
+        ...(field === 'scheduled_start' ? { scheduled_end: '' } : {}),
+      }));
+    };
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -404,7 +410,9 @@ function EditInterviewContent() {
             {/* Schedule */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className={`block text-sm font-medium ${errors.scheduled_start ? 'text-red-700' : 'text-gray-700'}`}>
+                <label
+                  className={`block text-sm font-medium ${errors.scheduled_start ? 'text-red-700' : 'text-gray-700'}`}
+                >
                   Start Time *
                 </label>
                 <DatePicker
@@ -432,7 +440,9 @@ function EditInterviewContent() {
                 )}
               </div>
               <div className="space-y-2">
-                <label className={`block text-sm font-medium ${errors.scheduled_end ? 'text-red-700' : 'text-gray-700'}`}>
+                <label
+                  className={`block text-sm font-medium ${errors.scheduled_end ? 'text-red-700' : 'text-gray-700'}`}
+                >
                   End Time *
                 </label>
                 <DatePicker
@@ -595,5 +605,3 @@ export default function EditInterviewPage() {
     </ProtectedRoute>
   );
 }
-
-

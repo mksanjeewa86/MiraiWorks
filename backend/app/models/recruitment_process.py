@@ -36,10 +36,16 @@ class RecruitmentProcess(Base):
 
     # Relationships
     employer_company_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("companies.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer,
+        ForeignKey("companies.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     position_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("positions.id", ondelete="SET NULL"), nullable=True, index=True
+        Integer,
+        ForeignKey("positions.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
     )
     created_by: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
@@ -69,7 +75,7 @@ class RecruitmentProcess(Base):
         DateTime(timezone=True),
         default=datetime.utcnow,
         onupdate=datetime.utcnow,
-        nullable=False
+        nullable=False,
     )
     activated_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
@@ -79,21 +85,31 @@ class RecruitmentProcess(Base):
     )
 
     # Soft delete
-    is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True)
-    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    is_deleted: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, index=True
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Relationships
     employer_company: Mapped[Company] = relationship(
-        "Company", foreign_keys=[employer_company_id], back_populates="recruitment_processes"
+        "Company",
+        foreign_keys=[employer_company_id],
+        back_populates="recruitment_processes",
     )
     position: Mapped[Position | None] = relationship(
         "Position", foreign_keys=[position_id], back_populates="recruitment_processes"
     )
     creator: Mapped[User] = relationship(
-        "User", foreign_keys=[created_by], back_populates="created_recruitment_processes"
+        "User",
+        foreign_keys=[created_by],
+        back_populates="created_recruitment_processes",
     )
     updater: Mapped[User | None] = relationship(
-        "User", foreign_keys=[updated_by], back_populates="updated_recruitment_processes"
+        "User",
+        foreign_keys=[updated_by],
+        back_populates="updated_recruitment_processes",
     )
 
     nodes: Mapped[list[ProcessNode]] = relationship(

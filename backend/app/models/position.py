@@ -30,12 +30,8 @@ class Position(Base):
         index=True,
     )
     department: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    location: Mapped[str | None] = mapped_column(
-        String(255), nullable=True, index=True
-    )
-    country: Mapped[str | None] = mapped_column(
-        String(100), nullable=True, index=True
-    )
+    location: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    country: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
     city: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
 
     # Position details
@@ -59,12 +55,8 @@ class Position(Base):
     )  # JSON array
 
     # Compensation
-    salary_min: Mapped[int | None] = mapped_column(
-        Integer, nullable=True
-    )  # In cents
-    salary_max: Mapped[int | None] = mapped_column(
-        Integer, nullable=True
-    )  # In cents
+    salary_min: Mapped[int | None] = mapped_column(Integer, nullable=True)  # In cents
+    salary_max: Mapped[int | None] = mapped_column(Integer, nullable=True)  # In cents
     salary_type: Mapped[str | None] = mapped_column(
         String(20), nullable=True, default="annual"
     )
@@ -131,7 +123,9 @@ class Position(Base):
     applications = relationship(
         "PositionApplication", back_populates="position", cascade="all, delete-orphan"
     )
-    recruitment_processes = relationship("RecruitmentProcess", back_populates="position", cascade="all, delete-orphan")
+    recruitment_processes = relationship(
+        "RecruitmentProcess", back_populates="position", cascade="all, delete-orphan"
+    )
 
     # Indexes for performance
     __table_args__ = (
@@ -192,7 +186,6 @@ class Position(Base):
         return self.is_active and not self.external_apply_url
 
 
-
 class PositionApplication(Base):
     __tablename__ = "position_applications"
 
@@ -200,7 +193,10 @@ class PositionApplication(Base):
 
     # References
     position_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("positions.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer,
+        ForeignKey("positions.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     candidate_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
@@ -227,9 +223,7 @@ class PositionApplication(Base):
     )
 
     # Communication
-    last_contacted_at: Mapped[datetime | None] = mapped_column(
-        DateTime, nullable=True
-    )
+    last_contacted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     notes: Mapped[str | None] = mapped_column(
         Text, nullable=True
     )  # Internal recruiter notes
@@ -256,7 +250,6 @@ class PositionApplication(Base):
     resume = relationship("Resume")
     status_updater = relationship("User", foreign_keys=[status_updated_by])
     referrer = relationship("User", foreign_keys=[referrer_id])
-
 
     # Indexes
     __table_args__ = (
@@ -307,9 +300,7 @@ class CompanyProfile(Base):
     gallery_images: Mapped[str | None] = mapped_column(
         Text, nullable=True
     )  # JSON array of image URLs
-    company_video_url: Mapped[str | None] = mapped_column(
-        String(1000), nullable=True
-    )
+    company_video_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
 
     # Contact and social
     contact_email: Mapped[str | None] = mapped_column(String(255), nullable=True)

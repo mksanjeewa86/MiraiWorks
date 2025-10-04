@@ -4,6 +4,7 @@ import Button from '../ui/button';
 import Input from '../ui/input';
 import { LanguageSelector } from './LanguageSelector';
 import { apiClient } from '../../api/apiClient';
+import { API_ENDPOINTS } from '../../api/config';
 import { MagnifyingGlassIcon, ArrowDownTrayIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import type { TranscriptionPanelProps } from '@/types/components';
 
@@ -59,9 +60,14 @@ export const TranscriptionPanel: React.FC<TranscriptionPanelProps> = ({
   };
 
   const handleExport = async (format: 'txt' | 'pdf' | 'srt') => {
+    if (!callId) {
+      console.error('No call ID available for export');
+      return;
+    }
+
     try {
       const response = await apiClient.get<{ download_url: string }>(
-        `/api/video-calls/${callId}/transcript/download?format=${format}`
+        `${API_ENDPOINTS.VIDEO_CALLS.TRANSCRIPT_DOWNLOAD(callId)}?format=${format}`
       );
       window.open(response.data.download_url, '_blank');
     } catch (error) {

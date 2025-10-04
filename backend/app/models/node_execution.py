@@ -28,19 +28,25 @@ if TYPE_CHECKING:
 class NodeExecution(Base):
     __tablename__ = "node_executions"
     __table_args__ = (
-        UniqueConstraint('candidate_process_id', 'node_id', name='uq_candidate_node_execution'),
+        UniqueConstraint(
+            "candidate_process_id", "node_id", name="uq_candidate_node_execution"
+        ),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
     # Core relationships
     candidate_process_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("candidate_processes.id", ondelete="CASCADE"),
-        nullable=False, index=True
+        Integer,
+        ForeignKey("candidate_processes.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     node_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("process_nodes.id", ondelete="CASCADE"),
-        nullable=False, index=True
+        Integer,
+        ForeignKey("process_nodes.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
 
     # Execution status
@@ -59,16 +65,25 @@ class NodeExecution(Base):
 
     # Linked resources (interviews/todos created for this execution)
     interview_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("interviews.id", ondelete="SET NULL"), nullable=True, index=True
+        Integer,
+        ForeignKey("interviews.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
     )
     todo_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("todos.id", ondelete="SET NULL"), nullable=True, index=True
     )
 
     # Timing
-    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    due_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    completed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    due_date: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Actors
     assigned_to: Mapped[int | None] = mapped_column(
@@ -89,16 +104,14 @@ class NodeExecution(Base):
         DateTime(timezone=True),
         default=datetime.utcnow,
         onupdate=datetime.utcnow,
-        nullable=False
+        nullable=False,
     )
 
     # Relationships
     candidate_process: Mapped[CandidateProcess] = relationship(
         "CandidateProcess", back_populates="executions"
     )
-    node: Mapped[ProcessNode] = relationship(
-        "ProcessNode", back_populates="executions"
-    )
+    node: Mapped[ProcessNode] = relationship("ProcessNode", back_populates="executions")
     assignee: Mapped[User | None] = relationship(
         "User", foreign_keys=[assigned_to], back_populates="assigned_node_executions"
     )
@@ -113,9 +126,7 @@ class NodeExecution(Base):
     interview: Mapped[Interview | None] = relationship(
         "Interview", foreign_keys=[interview_id]
     )
-    todo: Mapped[Todo | None] = relationship(
-        "Todo", foreign_keys=[todo_id]
-    )
+    todo: Mapped[Todo | None] = relationship("Todo", foreign_keys=[todo_id])
 
     @property
     def is_pending(self) -> bool:
@@ -164,7 +175,7 @@ class NodeExecution(Base):
         completed_by: int,
         score: float | None = None,
         feedback: str | None = None,
-        execution_data: dict | None = None
+        execution_data: dict | None = None,
     ) -> None:
         """Complete the execution"""
         if self.status not in ["in_progress", "awaiting_input"]:

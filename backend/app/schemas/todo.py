@@ -91,7 +91,9 @@ class TodoBase(BaseModel):
             return TodoPublishStatus.PUBLISHED.value
         allowed = {status.value for status in TodoPublishStatus}
         if value not in allowed:
-            raise ValueError(f"Publish status must be one of: {', '.join(sorted(allowed))}")
+            raise ValueError(
+                f"Publish status must be one of: {', '.join(sorted(allowed))}"
+            )
         return value
 
     @field_validator("assignment_status")
@@ -101,7 +103,9 @@ class TodoBase(BaseModel):
             return value
         allowed = {status.value for status in AssignmentStatus}
         if value not in allowed:
-            raise ValueError(f"Assignment status must be one of: {', '.join(sorted(allowed))}")
+            raise ValueError(
+                f"Assignment status must be one of: {', '.join(sorted(allowed))}"
+            )
         return value
 
 
@@ -237,6 +241,7 @@ class TodoAssignmentUpdate(BaseModel):
 
 class AssignableUser(BaseModel):
     """User that can be assigned to todos."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -252,6 +257,7 @@ class AssignableUser(BaseModel):
 
 class TodoViewer(BaseModel):
     """Todo viewer information."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -263,17 +269,20 @@ class TodoViewer(BaseModel):
 
 class TodoViewersUpdate(BaseModel):
     """Update viewers for a todo."""
+
     viewer_ids: list[int]
 
 
 class TodoWithAssignedUser(TodoRead):
     """Todo with assigned user information."""
+
     assigned_user: Optional[AssignableUser] = None
     viewers: list[TodoViewer] | None = None
 
 
 class TodoExtensionValidation(BaseModel):
     """Validation response for todo extension requests."""
+
     model_config = ConfigDict(from_attributes=True)
 
     can_request_extension: bool
@@ -285,6 +294,7 @@ class TodoExtensionValidation(BaseModel):
 # Assignment workflow schemas
 class TodoPublishUpdate(BaseModel):
     """Update publish status of a todo."""
+
     publish_status: str
 
     @field_validator("publish_status")
@@ -292,17 +302,21 @@ class TodoPublishUpdate(BaseModel):
     def validate_publish_status(cls, value: str) -> str:
         allowed = {status.value for status in TodoPublishStatus}
         if value not in allowed:
-            raise ValueError(f"Publish status must be one of: {', '.join(sorted(allowed))}")
+            raise ValueError(
+                f"Publish status must be one of: {', '.join(sorted(allowed))}"
+            )
         return value
 
 
 class AssignmentSubmission(BaseModel):
     """Submit an assignment for review."""
+
     notes: Optional[str] = None  # Optional submission notes
 
 
 class AssignmentReview(BaseModel):
     """Review an assignment and provide assessment."""
+
     assignment_status: str
     assessment: Optional[str] = None
     score: Optional[int] = Field(default=None, ge=0, le=100)
@@ -312,12 +326,15 @@ class AssignmentReview(BaseModel):
     def validate_assignment_status(cls, value: str) -> str:
         allowed = {AssignmentStatus.APPROVED.value, AssignmentStatus.REJECTED.value}
         if value not in allowed:
-            raise ValueError("Assignment status for review must be either 'approved' or 'rejected'")
+            raise ValueError(
+                "Assignment status for review must be either 'approved' or 'rejected'"
+            )
         return value
 
 
 class AssignmentWorkflowResponse(BaseModel):
     """Response for assignment workflow actions."""
+
     success: bool
     message: str
     todo: Optional[TodoRead] = None

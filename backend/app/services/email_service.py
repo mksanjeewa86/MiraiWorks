@@ -127,7 +127,9 @@ class EmailService:
         logger.info(f"[STUB] Would send welcome email to {email} for role {role}")
         return True
 
-    async def send_registration_completion_email(self, email: str, first_name: str) -> bool:
+    async def send_registration_completion_email(
+        self, email: str, first_name: str
+    ) -> bool:
         """Send registration completion email with login button."""
         subject = "Welcome to MiraiWorks - Registration Complete!"
 
@@ -148,7 +150,9 @@ class EmailService:
             )
             return await self.send_email([email], subject, html_body, text_body)
         except Exception as e:
-            logger.error(f"Failed to render registration completion email template: {e}")
+            logger.error(
+                f"Failed to render registration completion email template: {e}"
+            )
             # Fallback to a simple HTML message if template fails
             html_fallback = f"""
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">

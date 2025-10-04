@@ -312,7 +312,11 @@ class TestCompanyManagementPermissionMatrix:
     ):
         """Test that Recruiter cannot access any company management endpoints."""
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
         headers = await self._get_auth_headers(client, recruiter)
 
@@ -361,7 +365,11 @@ class TestCompanyManagementPermissionMatrix:
     ):
         """Test that Employer cannot access any company management endpoints."""
         employer = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "employer@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "employer@test.com",
         )
         headers = await self._get_auth_headers(client, employer)
 
@@ -380,7 +388,9 @@ class TestCompanyManagementPermissionMatrix:
                 response = await client.get(endpoint, headers=headers)
             elif method == "POST":
                 response = await client.post(
-                    endpoint, json={"name": "Test", "email": "test@test.com"}, headers=headers
+                    endpoint,
+                    json={"name": "Test", "email": "test@test.com"},
+                    headers=headers,
                 )
             elif method == "PUT":
                 response = await client.put(
@@ -401,7 +411,11 @@ class TestCompanyManagementPermissionMatrix:
     ):
         """Test that Candidate cannot access any company management endpoints."""
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         headers = await self._get_auth_headers(client, candidate)
 
@@ -420,7 +434,9 @@ class TestCompanyManagementPermissionMatrix:
                 response = await client.get(endpoint, headers=headers)
             elif method == "POST":
                 response = await client.post(
-                    endpoint, json={"name": "Test", "email": "test@test.com"}, headers=headers
+                    endpoint,
+                    json={"name": "Test", "email": "test@test.com"},
+                    headers=headers,
                 )
             elif method == "PUT":
                 response = await client.put(

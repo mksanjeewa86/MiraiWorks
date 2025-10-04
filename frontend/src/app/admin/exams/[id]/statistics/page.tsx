@@ -3,7 +3,16 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button, Badge, Progress } from '@/components/ui';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Button,
+  Badge,
+  Progress,
+} from '@/components/ui';
 import {
   ArrowLeft,
   Users,
@@ -19,9 +28,8 @@ import {
 import { ExamStatistics, SessionSummary, ExamInfo } from '@/types/exam';
 import { LoadingSpinner } from '@/components/ui';
 import { toast } from 'sonner';
-
-
-
+import { apiClient } from '@/api/apiClient';
+import { API_ENDPOINTS, buildApiUrl } from '@/api/config';
 
 export default function ExamStatisticsPage() {
   const params = useParams();
@@ -41,18 +49,8 @@ export default function ExamStatisticsPage() {
 
   const fetchExamData = async () => {
     try {
-      const response = await fetch(`/api/exam/exams/${examId}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch exam details');
-      }
-
-      const data = await response.json();
-      setExamInfo(data);
+      const response = await apiClient.get<ExamInfo>(API_ENDPOINTS.EXAMS.BY_ID(examId));
+      setExamInfo(response.data);
     } catch (error) {
       console.error('Error fetching exam:', error);
       toast.error('Failed to load exam details');
@@ -61,18 +59,8 @@ export default function ExamStatisticsPage() {
 
   const fetchStatistics = async () => {
     try {
-      const response = await fetch(`/api/exam/exams/${examId}/statistics`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch statistics');
-      }
-
-      const data = await response.json();
-      setStatistics(data);
+      const response = await apiClient.get<ExamStatistics>(API_ENDPOINTS.EXAMS.STATISTICS(examId));
+      setStatistics(response.data);
     } catch (error) {
       console.error('Error fetching statistics:', error);
       toast.error('Failed to load statistics');
@@ -81,18 +69,10 @@ export default function ExamStatisticsPage() {
 
   const fetchSessions = async () => {
     try {
-      const response = await fetch(`/api/exam/exams/${examId}/sessions`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch sessions');
-      }
-
-      const data = await response.json();
-      setSessions(data.sessions || []);
+      const response = await apiClient.get<{ sessions: SessionSummary[] }>(
+        API_ENDPOINTS.EXAMS.SESSIONS(examId)
+      );
+      setSessions(response.data.sessions || []);
     } catch (error) {
       console.error('Error fetching sessions:', error);
       toast.error('Failed to load session data');
@@ -131,9 +111,10 @@ export default function ExamStatisticsPage() {
 
   const exportResults = async () => {
     try {
-      const response = await fetch(`/api/exam/exams/${examId}/export`, {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(buildApiUrl(API_ENDPOINTS.EXAMS.EXPORT_EXCEL(examId)), {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -145,7 +126,7 @@ export default function ExamStatisticsPage() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `exam-${examId}-results.csv`;
+      a.download = `exam-${examId}-results.xlsx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -252,11 +233,6 @@ export default function ExamStatisticsPage() {
                 <div className="text-2xl font-bold text-gray-900">
                   {statistics.average_score ? `${statistics.average_score.toFixed(1)}%` : 'N/A'}
                 </div>
-                {statistics.min_score !== null && statistics.max_score !== null && (
-                  <div className="text-sm text-gray-500">
-                    Range: {statistics.min_score.toFixed(1)}% - {statistics.max_score.toFixed(1)}%
-                  </div>
-                )}
               </div>
               <Target className="h-8 w-8 text-purple-600" />
             </div>

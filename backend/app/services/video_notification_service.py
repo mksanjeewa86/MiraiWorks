@@ -16,7 +16,7 @@ class VideoNotificationService:
         db: AsyncSession,
         video_call: VideoCall,
         interviewer: User,
-        candidate: User
+        candidate: User,
     ) -> None:
         """Send email notification when a video interview is scheduled."""
 
@@ -31,30 +31,38 @@ class VideoNotificationService:
         db: AsyncSession,
         video_call: VideoCall,
         interviewer: User,
-        candidate: User
+        candidate: User,
     ) -> None:
         """Send 24-hour reminder email for video interview."""
 
         # Email to candidate
-        await self._send_candidate_reminder_email(video_call, interviewer, candidate, "24時間")
+        await self._send_candidate_reminder_email(
+            video_call, interviewer, candidate, "24時間"
+        )
 
         # Email to interviewer
-        await self._send_interviewer_reminder_email(video_call, interviewer, candidate, "24時間")
+        await self._send_interviewer_reminder_email(
+            video_call, interviewer, candidate, "24時間"
+        )
 
     async def send_interview_reminder_1h(
         self,
         db: AsyncSession,
         video_call: VideoCall,
         interviewer: User,
-        candidate: User
+        candidate: User,
     ) -> None:
         """Send 1-hour reminder email for video interview."""
 
         # Email to candidate
-        await self._send_candidate_reminder_email(video_call, interviewer, candidate, "1時間")
+        await self._send_candidate_reminder_email(
+            video_call, interviewer, candidate, "1時間"
+        )
 
         # Email to interviewer
-        await self._send_interviewer_reminder_email(video_call, interviewer, candidate, "1時間")
+        await self._send_interviewer_reminder_email(
+            video_call, interviewer, candidate, "1時間"
+        )
 
     async def send_interview_cancelled_notification(
         self,
@@ -63,17 +71,21 @@ class VideoNotificationService:
         interviewer: User,
         candidate: User,
         cancelled_by: User,
-        reason: str | None = None
+        reason: str | None = None,
     ) -> None:
         """Send email notification when a video interview is cancelled."""
 
         # Email to candidate (if not cancelled by candidate)
         if cancelled_by.id != candidate.id:
-            await self._send_candidate_cancelled_email(video_call, interviewer, candidate, cancelled_by, reason)
+            await self._send_candidate_cancelled_email(
+                video_call, interviewer, candidate, cancelled_by, reason
+            )
 
         # Email to interviewer (if not cancelled by interviewer)
         if cancelled_by.id != interviewer.id:
-            await self._send_interviewer_cancelled_email(video_call, interviewer, candidate, cancelled_by, reason)
+            await self._send_interviewer_cancelled_email(
+                video_call, interviewer, candidate, cancelled_by, reason
+            )
 
     async def send_interview_rescheduled_notification(
         self,
@@ -82,22 +94,26 @@ class VideoNotificationService:
         interviewer: User,
         candidate: User,
         old_time: datetime,
-        rescheduled_by: User
+        rescheduled_by: User,
     ) -> None:
         """Send email notification when a video interview is rescheduled."""
 
         # Email to candidate
-        await self._send_candidate_rescheduled_email(video_call, interviewer, candidate, old_time, rescheduled_by)
+        await self._send_candidate_rescheduled_email(
+            video_call, interviewer, candidate, old_time, rescheduled_by
+        )
 
         # Email to interviewer
-        await self._send_interviewer_rescheduled_email(video_call, interviewer, candidate, old_time, rescheduled_by)
+        await self._send_interviewer_rescheduled_email(
+            video_call, interviewer, candidate, old_time, rescheduled_by
+        )
 
     async def send_technical_issue_notification(
         self,
         db: AsyncSession,
         video_call: VideoCall,
         user: User,
-        issue_description: str
+        issue_description: str,
     ) -> None:
         """Send notification about technical issues during video call."""
 
@@ -119,7 +135,7 @@ class VideoNotificationService:
             to_email=user.email,
             subject=subject,
             template_name="video_call_technical_issue",
-            template_data=template_data
+            template_data=template_data,
         )
 
     # Private helper methods
@@ -135,7 +151,9 @@ class VideoNotificationService:
         template_data = {
             "candidate_name": candidate.full_name or candidate.email,
             "interviewer_name": interviewer.full_name or interviewer.email,
-            "company_name": interviewer.company.name if interviewer.company else "未設定",
+            "company_name": interviewer.company.name
+            if interviewer.company
+            else "未設定",
             "scheduled_time": video_call.scheduled_at.strftime("%Y年%m月%d日 %H:%M"),
             "join_url": join_url,
             "room_id": video_call.room_id,
@@ -147,7 +165,7 @@ class VideoNotificationService:
             to_email=candidate.email,
             subject=subject,
             template_name="candidate_video_interview_scheduled",
-            template_data=template_data
+            template_data=template_data,
         )
 
     async def _send_interviewer_scheduled_email(
@@ -172,7 +190,7 @@ class VideoNotificationService:
             to_email=interviewer.email,
             subject=subject,
             template_name="interviewer_video_interview_scheduled",
-            template_data=template_data
+            template_data=template_data,
         )
 
     async def _send_candidate_reminder_email(
@@ -186,7 +204,9 @@ class VideoNotificationService:
         template_data = {
             "candidate_name": candidate.full_name or candidate.email,
             "interviewer_name": interviewer.full_name or interviewer.email,
-            "company_name": interviewer.company.name if interviewer.company else "未設定",
+            "company_name": interviewer.company.name
+            if interviewer.company
+            else "未設定",
             "scheduled_time": video_call.scheduled_at.strftime("%Y年%m月%d日 %H:%M"),
             "timeframe": timeframe,
             "join_url": join_url,
@@ -194,15 +214,15 @@ class VideoNotificationService:
                 "インターネット接続を確認",
                 "カメラとマイクをテスト",
                 "静かな環境を準備",
-                "必要な書類を手元に準備"
-            ]
+                "必要な書類を手元に準備",
+            ],
         }
 
         await email_service.send_template_email(
             to_email=candidate.email,
             subject=subject,
             template_name="candidate_video_interview_reminder",
-            template_data=template_data
+            template_data=template_data,
         )
 
     async def _send_interviewer_reminder_email(
@@ -226,11 +246,16 @@ class VideoNotificationService:
             to_email=interviewer.email,
             subject=subject,
             template_name="interviewer_video_interview_reminder",
-            template_data=template_data
+            template_data=template_data,
         )
 
     async def _send_candidate_cancelled_email(
-        self, video_call: VideoCall, interviewer: User, candidate: User, cancelled_by: User, reason: str | None
+        self,
+        video_call: VideoCall,
+        interviewer: User,
+        candidate: User,
+        cancelled_by: User,
+        reason: str | None,
     ) -> None:
         """Send cancellation notification to candidate."""
         subject = f"ビデオ面接がキャンセルされました - {video_call.scheduled_at.strftime('%m月%d日')}"
@@ -238,7 +263,9 @@ class VideoNotificationService:
         template_data = {
             "candidate_name": candidate.full_name or candidate.email,
             "interviewer_name": interviewer.full_name or interviewer.email,
-            "company_name": interviewer.company.name if interviewer.company else "未設定",
+            "company_name": interviewer.company.name
+            if interviewer.company
+            else "未設定",
             "scheduled_time": video_call.scheduled_at.strftime("%Y年%m月%d日 %H:%M"),
             "cancelled_by_name": cancelled_by.full_name or cancelled_by.email,
             "reason": reason or "理由は提供されていません",
@@ -249,11 +276,16 @@ class VideoNotificationService:
             to_email=candidate.email,
             subject=subject,
             template_name="candidate_video_interview_cancelled",
-            template_data=template_data
+            template_data=template_data,
         )
 
     async def _send_interviewer_cancelled_email(
-        self, video_call: VideoCall, interviewer: User, candidate: User, cancelled_by: User, reason: str | None
+        self,
+        video_call: VideoCall,
+        interviewer: User,
+        candidate: User,
+        cancelled_by: User,
+        reason: str | None,
     ) -> None:
         """Send cancellation notification to interviewer."""
         subject = f"ビデオ面接がキャンセルされました - {candidate.full_name or candidate.email}"
@@ -270,11 +302,16 @@ class VideoNotificationService:
             to_email=interviewer.email,
             subject=subject,
             template_name="interviewer_video_interview_cancelled",
-            template_data=template_data
+            template_data=template_data,
         )
 
     async def _send_candidate_rescheduled_email(
-        self, video_call: VideoCall, interviewer: User, candidate: User, old_time: datetime, rescheduled_by: User
+        self,
+        video_call: VideoCall,
+        interviewer: User,
+        candidate: User,
+        old_time: datetime,
+        rescheduled_by: User,
     ) -> None:
         """Send rescheduled notification to candidate."""
         subject = "ビデオ面接が再スケジュールされました"
@@ -294,11 +331,16 @@ class VideoNotificationService:
             to_email=candidate.email,
             subject=subject,
             template_name="candidate_video_interview_rescheduled",
-            template_data=template_data
+            template_data=template_data,
         )
 
     async def _send_interviewer_rescheduled_email(
-        self, video_call: VideoCall, interviewer: User, candidate: User, old_time: datetime, rescheduled_by: User
+        self,
+        video_call: VideoCall,
+        interviewer: User,
+        candidate: User,
+        old_time: datetime,
+        rescheduled_by: User,
     ) -> None:
         """Send rescheduled notification to interviewer."""
         subject = f"ビデオ面接が再スケジュールされました - {candidate.full_name or candidate.email}"
@@ -318,7 +360,7 @@ class VideoNotificationService:
             to_email=interviewer.email,
             subject=subject,
             template_name="interviewer_video_interview_rescheduled",
-            template_data=template_data
+            template_data=template_data,
         )
 
 

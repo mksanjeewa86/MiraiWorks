@@ -18,16 +18,24 @@ class CalendarEvent(Base):
     location = Column(String(255), nullable=True)
     event_type = Column(String(50), default="event", nullable=False, index=True)
     status = Column(String(20), default="confirmed", nullable=False, index=True)
-    creator_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    creator_id = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
     recurrence_rule = Column(String(255), nullable=True)
-    parent_event_id = Column(Integer, ForeignKey("calendar_events.id", ondelete="CASCADE"), nullable=True)
+    parent_event_id = Column(
+        Integer, ForeignKey("calendar_events.id", ondelete="CASCADE"), nullable=True
+    )
     timezone = Column(String(50), default="UTC", nullable=False)
 
     # Relationships
     creator = relationship("User", back_populates="calendar_events")
-    parent_event = relationship("CalendarEvent", remote_side=[id], back_populates="child_events")
+    parent_event = relationship(
+        "CalendarEvent", remote_side=[id], back_populates="child_events"
+    )
     child_events = relationship("CalendarEvent", back_populates="parent_event")
 
     def __str__(self) -> str:

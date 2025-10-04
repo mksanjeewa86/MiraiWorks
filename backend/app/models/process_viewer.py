@@ -16,19 +16,20 @@ if TYPE_CHECKING:
 class ProcessViewer(Base):
     __tablename__ = "process_viewers"
     __table_args__ = (
-        UniqueConstraint('process_id', 'user_id', name='uq_process_viewer'),
+        UniqueConstraint("process_id", "user_id", name="uq_process_viewer"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
     # Core relationships
     process_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("recruitment_processes.id", ondelete="CASCADE"),
-        nullable=False, index=True
+        Integer,
+        ForeignKey("recruitment_processes.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("users.id", ondelete="CASCADE"),
-        nullable=False, index=True
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
 
     # Role and permissions
@@ -107,7 +108,7 @@ class ProcessViewer(Base):
                 "schedule_interviews",
                 "record_results",
                 "view_results",
-                "add_notes"
+                "add_notes",
             ]
         elif self.role == "admin":
             return [
@@ -119,20 +120,12 @@ class ProcessViewer(Base):
                 "view_results",
                 "add_notes",
                 "override_results",
-                "manage_assignments"
+                "manage_assignments",
             ]
         elif self.role == "observer":
-            return [
-                "view_process",
-                "view_candidates",
-                "view_results"
-            ]
+            return ["view_process", "view_candidates", "view_results"]
         elif self.role == "assistant":
-            return [
-                "view_process",
-                "schedule_interviews",
-                "add_notes"
-            ]
+            return ["view_process", "schedule_interviews", "add_notes"]
         else:
             return ["view_process"]
 

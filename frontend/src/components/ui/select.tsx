@@ -1,6 +1,12 @@
 import { forwardRef } from 'react';
 import { clsx } from 'clsx';
-import type { SelectProps, SelectContentProps, SelectItemProps, SelectTriggerProps, SelectValueProps } from '@/types/components';
+import type {
+  SelectProps,
+  SelectContentProps,
+  SelectItemProps,
+  SelectTriggerProps,
+  SelectValueProps,
+} from '@/types/components';
 
 const Select = forwardRef<HTMLSelectElement, SelectProps>(
   ({ className, children, onValueChange, onChange, ...props }, ref) => {

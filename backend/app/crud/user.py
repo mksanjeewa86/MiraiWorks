@@ -6,6 +6,7 @@ from sqlalchemy.orm import selectinload
 
 from app.crud.base import CRUDBase
 from app.models import User, UserRole
+from app.models.company import Company
 from app.models.role import Role
 from app.schemas.user import UserCreate, UserUpdate
 from app.utils.constants import UserRole as UserRoleEnum
@@ -52,8 +53,12 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         query_conditions = []
 
         # Handle logical deletion
-        if not include_deleted:
-            query_conditions.append(User.is_deleted is False)
+        if include_deleted:
+            # When include_deleted is True, show all users (no filter)
+            pass
+        else:
+            # When include_deleted is False (default), show only non-deleted users
+            query_conditions.append(User.is_deleted == False)
 
         # Apply filters
         if company_id is not None:
@@ -66,6 +71,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
                     User.first_name.ilike(search_term),
                     User.last_name.ilike(search_term),
                     User.email.ilike(search_term),
+                    Company.name.ilike(search_term),
                 )
             )
 
@@ -81,10 +87,14 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         if require_2fa is not None:
             query_conditions.append(User.require_2fa == require_2fa)
 
-        # Build base query
-        base_query = select(User).options(
-            selectinload(User.company),
-            selectinload(User.user_roles).selectinload(UserRole.role),
+        # Build base query with join for company search
+        base_query = (
+            select(User)
+            .outerjoin(Company, User.company_id == Company.id)
+            .options(
+                selectinload(User.company),
+                selectinload(User.user_roles).selectinload(UserRole.role),
+            )
         )
 
         # Handle role filter

@@ -293,7 +293,7 @@ class PDFService:
             import importlib
             from io import BytesIO
 
-            pdf2image = importlib.import_module('pdf2image')
+            pdf2image = importlib.import_module("pdf2image")
             convert_from_bytes = pdf2image.convert_from_bytes
 
             images = convert_from_bytes(pdf_data, first_page=1, last_page=1, dpi=150)
@@ -624,17 +624,22 @@ class PDFService:
             birth_date = f"{resume.birth_date.year}年{resume.birth_date.month}月{resume.birth_date.day}日"
             today = datetime.now()
             age = today.year - resume.birth_date.year
-            if today.month < resume.birth_date.month or (today.month == resume.birth_date.month and today.day < resume.birth_date.day):
+            if today.month < resume.birth_date.month or (
+                today.month == resume.birth_date.month
+                and today.day < resume.birth_date.day
+            ):
                 age -= 1
 
         # Get additional info from emergency_contact if available
         emergency_contact = resume.emergency_contact or {}
         commute_time = emergency_contact.get("commute_time", "30")
         dependents = emergency_contact.get("dependents", "0")
-        spouse = "有" if resume.marital_status and "既婚" in resume.marital_status else "無"
+        spouse = (
+            "有" if resume.marital_status and "既婚" in resume.marital_status else "無"
+        )
         spouse_support = "有" if spouse == "有" else "無"
 
-        creation_date = datetime.now().strftime('%Y年%m月%d日')
+        creation_date = datetime.now().strftime("%Y年%m月%d日")
 
         return template.render(
             resume=resume,
@@ -644,7 +649,7 @@ class PDFService:
             dependents=dependents,
             spouse=spouse,
             spouse_support=spouse_support,
-            creation_date=creation_date
+            creation_date=creation_date,
         )
 
     async def _generate_shokumu_html(self, resume: Resume) -> str:
@@ -947,13 +952,13 @@ class PDFService:
             else:
                 return "1ヶ月未満"
 
-        creation_date = datetime.now().strftime('%Y年%m月%d日')
+        creation_date = datetime.now().strftime("%Y年%m月%d日")
 
         return template.render(
             resume=resume,
             skills_by_category=skills_by_category,
             calculate_duration=calculate_duration,
-            creation_date=creation_date
+            creation_date=creation_date,
         )
 
     async def cleanup_old_pdfs(self, older_than_days: int = 30) -> int:

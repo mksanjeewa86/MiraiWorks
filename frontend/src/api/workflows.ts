@@ -22,7 +22,8 @@ export const recruitmentWorkflowsApi = {
     if (params) {
       const searchParams = new URLSearchParams();
       if (params.status) searchParams.append('status', params.status);
-      if (params.is_template !== undefined) searchParams.append('is_template', params.is_template.toString());
+      if (params.is_template !== undefined)
+        searchParams.append('is_template', params.is_template.toString());
 
       if (searchParams.toString()) {
         url += `?${searchParams.toString()}`;
@@ -34,9 +35,9 @@ export const recruitmentWorkflowsApi = {
     return {
       data: {
         processes: response.data || [],
-        total: (response.data || []).length
+        total: (response.data || []).length,
       },
-      success: true
+      success: true,
     };
   },
 
@@ -48,40 +49,62 @@ export const recruitmentWorkflowsApi = {
 
   // Get specific process with details
   async getProcess(id: number): Promise<ApiResponse<RecruitmentProcess>> {
-    const response = await apiClient.get<RecruitmentProcess>(`${API_ENDPOINTS.WORKFLOWS.BASE}${id}`);
+    const response = await apiClient.get<RecruitmentProcess>(
+      `${API_ENDPOINTS.WORKFLOWS.BASE}${id}`
+    );
     return { data: response.data, success: true };
   },
 
   // Update process
-  async updateProcess(id: number, data: Partial<CreateProcessData>): Promise<ApiResponse<RecruitmentProcess>> {
-    const response = await apiClient.put<RecruitmentProcess>(`${API_ENDPOINTS.WORKFLOWS.BASE}${id}`, data);
+  async updateProcess(
+    id: number,
+    data: Partial<CreateProcessData>
+  ): Promise<ApiResponse<RecruitmentProcess>> {
+    const response = await apiClient.put<RecruitmentProcess>(
+      `${API_ENDPOINTS.WORKFLOWS.BASE}${id}`,
+      data
+    );
     return { data: response.data, success: true };
   },
 
   // Change process status (draft -> active -> inactive -> archived)
   async updateProcessStatus(id: number, status: string): Promise<ApiResponse<RecruitmentProcess>> {
-    const response = await apiClient.put<RecruitmentProcess>(`${API_ENDPOINTS.WORKFLOWS.BASE}${id}/status`, { status });
+    const response = await apiClient.put<RecruitmentProcess>(
+      `${API_ENDPOINTS.WORKFLOWS.BASE}${id}/status`,
+      { status }
+    );
     return { data: response.data, success: true };
   },
 
   // Archive process
   async archiveProcess(id: number): Promise<ApiResponse<RecruitmentProcess>> {
-    const response = await apiClient.post<RecruitmentProcess>(`${API_ENDPOINTS.WORKFLOWS.BASE}${id}/archive`, {});
+    const response = await apiClient.post<RecruitmentProcess>(
+      `${API_ENDPOINTS.WORKFLOWS.BASE}${id}/archive`,
+      {}
+    );
     return { data: response.data, success: true };
   },
 
   // Node management
   async createNode(processId: number, data: CreateNodeData): Promise<ApiResponse<ProcessNode>> {
-    const response = await apiClient.post<ProcessNode>(`${API_ENDPOINTS.WORKFLOWS.BASE}${processId}/nodes`, data);
+    const response = await apiClient.post<ProcessNode>(
+      `${API_ENDPOINTS.WORKFLOWS.BASE}${processId}/nodes`,
+      data
+    );
     return { data: response.data, success: true };
   },
 
   // Create node with integrated interview/todo creation
-  async createNodeWithIntegration(processId: number, data: CreateNodeData): Promise<ApiResponse<{
-    node: ProcessNode;
-    interview?: any;
-    todo?: any;
-  }>> {
+  async createNodeWithIntegration(
+    processId: number,
+    data: CreateNodeData
+  ): Promise<
+    ApiResponse<{
+      node: ProcessNode;
+      interview?: any;
+      todo?: any;
+    }>
+  > {
     const response = await apiClient.post<{
       node: ProcessNode;
       interview?: any;
@@ -90,8 +113,15 @@ export const recruitmentWorkflowsApi = {
     return { data: response.data, success: true };
   },
 
-  async updateNode(processId: number, nodeId: number, data: Partial<CreateNodeData>): Promise<ApiResponse<ProcessNode>> {
-    const response = await apiClient.put<ProcessNode>(`${API_ENDPOINTS.WORKFLOWS.BASE}${processId}/nodes/${nodeId}`, data);
+  async updateNode(
+    processId: number,
+    nodeId: number,
+    data: Partial<CreateNodeData>
+  ): Promise<ApiResponse<ProcessNode>> {
+    const response = await apiClient.put<ProcessNode>(
+      `${API_ENDPOINTS.WORKFLOWS.BASE}${processId}/nodes/${nodeId}`,
+      data
+    );
     return { data: response.data, success: true };
   },
 
@@ -101,7 +131,10 @@ export const recruitmentWorkflowsApi = {
   },
 
   // Candidate management
-  async assignCandidates(processId: number, candidateIds: number[]): Promise<ApiResponse<CandidateProcess[]>> {
+  async assignCandidates(
+    processId: number,
+    candidateIds: number[]
+  ): Promise<ApiResponse<CandidateProcess[]>> {
     const response = await apiClient.post<CandidateProcess[]>(
       `${API_ENDPOINTS.WORKFLOWS.BASE}${processId}/candidates/assign`,
       { candidate_ids: candidateIds }
@@ -109,7 +142,10 @@ export const recruitmentWorkflowsApi = {
     return { data: response.data, success: true };
   },
 
-  async getCandidateProcess(processId: number, candidateId: number): Promise<ApiResponse<CandidateProcess>> {
+  async getCandidateProcess(
+    processId: number,
+    candidateId: number
+  ): Promise<ApiResponse<CandidateProcess>> {
     const response = await apiClient.get<CandidateProcess>(
       `${API_ENDPOINTS.WORKFLOWS.BASE}${processId}/candidates/${candidateId}`
     );
@@ -117,31 +153,38 @@ export const recruitmentWorkflowsApi = {
   },
 
   // Progress candidate to next node and trigger interview/todo creation
-  async progressCandidate(processId: number, candidateId: number, nodeId: number): Promise<ApiResponse<{
-    candidate_process: CandidateProcess;
-    created_interview?: any;
-    created_todo?: any;
-  }>> {
+  async progressCandidate(
+    processId: number,
+    candidateId: number,
+    nodeId: number
+  ): Promise<
+    ApiResponse<{
+      candidate_process: CandidateProcess;
+      created_interview?: any;
+      created_todo?: any;
+    }>
+  > {
     const response = await apiClient.post<{
       candidate_process: CandidateProcess;
       created_interview?: any;
       created_todo?: any;
-    }>(
-      `${API_ENDPOINTS.WORKFLOWS.BASE}${processId}/candidates/${candidateId}/progress`,
-      { next_node_id: nodeId }
-    );
+    }>(`${API_ENDPOINTS.WORKFLOWS.BASE}${processId}/candidates/${candidateId}/progress`, {
+      next_node_id: nodeId,
+    });
     return { data: response.data, success: true };
   },
 
   // Statistics and analytics
-  async getProcessStats(processId: number): Promise<ApiResponse<{
-    total_candidates: number;
-    completed_candidates: number;
-    in_progress_candidates: number;
-    failed_candidates: number;
-    average_completion_time: number;
-    node_completion_rates: { node_id: number; completion_rate: number }[];
-  }>> {
+  async getProcessStats(processId: number): Promise<
+    ApiResponse<{
+      total_candidates: number;
+      completed_candidates: number;
+      in_progress_candidates: number;
+      failed_candidates: number;
+      average_completion_time: number;
+      node_completion_rates: { node_id: number; completion_rate: number }[];
+    }>
+  > {
     const response = await apiClient.get<{
       total_candidates: number;
       completed_candidates: number;
@@ -154,18 +197,20 @@ export const recruitmentWorkflowsApi = {
   },
 
   // Get linked interviews and todos for a process
-  async getProcessIntegrations(processId: number): Promise<ApiResponse<{
-    interviews: any[];
-    todos: any[];
-    nodes_with_links: { node_id: number; interview_id?: number; todo_id?: number; }[];
-  }>> {
+  async getProcessIntegrations(processId: number): Promise<
+    ApiResponse<{
+      interviews: any[];
+      todos: any[];
+      nodes_with_links: { node_id: number; interview_id?: number; todo_id?: number }[];
+    }>
+  > {
     const response = await apiClient.get<{
       interviews: any[];
       todos: any[];
-      nodes_with_links: { node_id: number; interview_id?: number; todo_id?: number; }[];
+      nodes_with_links: { node_id: number; interview_id?: number; todo_id?: number }[];
     }>(`${API_ENDPOINTS.WORKFLOWS.BASE}${processId}/integrations`);
     return { data: response.data, success: true };
-  }
+  },
 };
 
 // Workflow service for managing integrated workflows
@@ -191,16 +236,18 @@ export const workflowIntegrationService = {
         assignment_type?: string;
       };
     }>;
-  }): Promise<ApiResponse<{
-    process: RecruitmentProcess;
-    created_interviews: any[];
-    created_todos: any[];
-  }>> {
+  }): Promise<
+    ApiResponse<{
+      process: RecruitmentProcess;
+      created_interviews: any[];
+      created_todos: any[];
+    }>
+  > {
     // Create the process first
     const processResponse = await recruitmentWorkflowsApi.createProcess({
       name: data.name,
       description: data.description,
-      position_id: data.position_id
+      position_id: data.position_id,
     });
 
     if (!processResponse.success || !processResponse.data) {
@@ -221,9 +268,9 @@ export const workflowIntegrationService = {
         description: step.description,
         sequence_order: i + 1,
         position: {
-          x: 100 + (i * 200), // Simple horizontal layout
-          y: 100
-        }
+          x: 100 + i * 200, // Simple horizontal layout
+          y: 100,
+        },
       };
 
       // Add interview/todo creation data
@@ -233,7 +280,7 @@ export const workflowIntegrationService = {
           duration: step.interview_config.duration || 60,
           interview_type: step.interview_config.interview_type || 'video',
           location: step.interview_config.location,
-          notes: `Auto-generated for workflow: ${data.name}`
+          notes: `Auto-generated for workflow: ${data.name}`,
         };
       }
 
@@ -244,13 +291,16 @@ export const workflowIntegrationService = {
           category: step.todo_config.category || 'coding_test',
           priority: step.todo_config.priority || 'medium',
           is_assignment: step.todo_config.is_assignment !== false,
-          assignment_type: step.todo_config.assignment_type || 'coding'
+          assignment_type: step.todo_config.assignment_type || 'coding',
         };
       }
 
       // Create node with integration
       try {
-        const nodeResponse = await recruitmentWorkflowsApi.createNodeWithIntegration(process.id, nodeData);
+        const nodeResponse = await recruitmentWorkflowsApi.createNodeWithIntegration(
+          process.id,
+          nodeData
+        );
         if (nodeResponse.success && nodeResponse.data) {
           if (nodeResponse.data.interview) {
             createdInterviews.push(nodeResponse.data.interview);
@@ -270,9 +320,9 @@ export const workflowIntegrationService = {
       data: {
         process,
         created_interviews: createdInterviews,
-        created_todos: createdTodos
+        created_todos: createdTodos,
       },
-      success: true
+      success: true,
     };
-  }
+  },
 };

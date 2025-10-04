@@ -6,6 +6,7 @@ from typing import Any
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config.endpoints import API_ROUTES
 from app.database import get_db
 from app.models.calendar_integration import ExternalCalendarAccount, SyncedEvent
 from app.services.google_calendar_service import GoogleCalendarService
@@ -16,7 +17,7 @@ router = APIRouter(tags=["webhooks"])
 logger = logging.getLogger(__name__)
 
 
-@router.post("/google/calendar")
+@router.post(API_ROUTES.WEBHOOKS.GOOGLE_CALENDAR)
 async def google_calendar_webhook(
     request: Request,
     background_tasks: BackgroundTasks,
@@ -60,7 +61,7 @@ async def google_calendar_webhook(
         raise HTTPException(status_code=500, detail="Webhook processing failed")
 
 
-@router.post("/microsoft/calendar")
+@router.post(API_ROUTES.WEBHOOKS.MICROSOFT_CALENDAR)
 async def microsoft_calendar_webhook(
     request: Request,
     background_tasks: BackgroundTasks,
@@ -314,7 +315,7 @@ async def process_calendar_event_update(
         logger.error(f"Error processing calendar event update: {str(e)}")
 
 
-@router.get("/health")
+@router.get(API_ROUTES.WEBHOOKS.HEALTH)
 async def webhook_health():
     """Health check endpoint for webhook services."""
     return {

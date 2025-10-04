@@ -1,7 +1,18 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { CalendarClock, ClipboardList, MinusCircle, PlusCircle, Save, X, Paperclip, Eye, Download, Trash2 } from "lucide-react";
+import { useState, useEffect } from 'react';
+import {
+  CalendarClock,
+  ClipboardList,
+  MinusCircle,
+  PlusCircle,
+  Save,
+  X,
+  Paperclip,
+  Eye,
+  Download,
+  Trash2,
+} from 'lucide-react';
 import {
   Dialog,
   DialogClose,
@@ -15,13 +26,13 @@ import { Button } from '@/components/ui';
 import { Input } from '@/components/ui';
 import { Textarea } from '@/components/ui';
 import { Badge } from '@/components/ui';
-import { useToast } from "@/contexts/ToastContext";
-import { useAuth } from "@/contexts/AuthContext";
-import { todosApi } from "@/api/todos";
-import { todoAttachmentAPI } from "@/api/todo-attachments";
-import UserAssignment from "./UserAssignment";
-import AssignmentWorkflow from "./AssignmentWorkflow";
-import { getTodoPermissions } from "@/utils/todoPermissions";
+import { useToast } from '@/contexts/ToastContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { todosApi } from '@/api/todos';
+import { todoAttachmentAPI } from '@/api/todo-attachments';
+import UserAssignment from './UserAssignment';
+import AssignmentWorkflow from './AssignmentWorkflow';
+import { getTodoPermissions } from '@/utils/todoPermissions';
 import type {
   AssignableUser,
   TaskFormState,
@@ -33,21 +44,21 @@ import type {
   TodoViewersUpdate,
   TodoType,
   TodoPublishStatus,
-} from "@/types/todo";
-import type { TodoAttachment } from "@/types/todo-attachment";
+} from '@/types/todo';
+import type { TodoAttachment } from '@/types/todo-attachment';
 
 const initialFormState: TaskFormState = {
-  title: "",
-  description: "",
-  notes: "",
-  dueDate: "",
-  priority: "",
+  title: '',
+  description: '',
+  notes: '',
+  dueDate: '',
+  priority: '',
 };
 
 const formatDateForInput = (value?: string | null) => {
-  if (!value) return "";
+  if (!value) return '';
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
+  if (Number.isNaN(date.getTime())) return '';
   const offset = date.getTimezoneOffset();
   const local = new Date(date.getTime() - offset * 60_000);
   return local.toISOString().slice(0, 16);
@@ -56,7 +67,13 @@ const formatDateForInput = (value?: string | null) => {
 const toISOStringIfPresent = (value?: string) =>
   value && value.trim() ? new Date(value).toISOString() : undefined;
 
-export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo, workflowContext = false }: TaskModalProps) {
+export default function TaskModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  editingTodo,
+  workflowContext = false,
+}: TaskModalProps) {
   const { showToast } = useToast();
   const { user } = useAuth();
   const [formState, setFormState] = useState<TaskFormState>(initialFormState);
@@ -77,35 +94,36 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo, wor
   const canAssign = !isEditing || (permissions?.canAssign ?? false);
 
   useEffect(() => {
-    console.log("TaskModal useEffect - loading users", {
+    console.log('TaskModal useEffect - loading users', {
       isOpen,
       canAssign,
       user: user?.email || 'no user',
       isEditing,
       hasUser: !!user,
-      isAuthenticated: user !== null
+      isAuthenticated: user !== null,
     });
 
     // Only load users if modal is open, assignment is allowed, and user is authenticated
     if (isOpen && canAssign && user) {
       const loadUsers = async () => {
-        console.log("Starting to load assignable users...");
+        console.log('Starting to load assignable users...');
         setLoadingUsers(true);
         try {
           const users = await todosApi.getAssignableUsers();
-          console.log("Successfully loaded assignable users", users);
+          console.log('Successfully loaded assignable users', users);
           setAssignableUsers(users);
         } catch (error: any) {
-          console.error("Failed to load assignable users", {
+          console.error('Failed to load assignable users', {
             error,
             status: error?.response?.status,
             data: error?.response?.data,
-            message: error?.message
+            message: error?.message,
           });
-          const errorMessage = error?.response?.status === 401
-            ? "Authentication required to load teammates"
-            : "Unable to load teammates for assignment";
-          showToast({ type: "error", title: errorMessage });
+          const errorMessage =
+            error?.response?.status === 401
+              ? 'Authentication required to load teammates'
+              : 'Unable to load teammates for assignment';
+          showToast({ type: 'error', title: errorMessage });
         } finally {
           setLoadingUsers(false);
         }
@@ -115,7 +133,7 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo, wor
     } else {
       // Clear users if conditions not met
       if (!user) {
-        console.log("No user authenticated, clearing assignable users");
+        console.log('No user authenticated, clearing assignable users');
         setAssignableUsers([]);
         setLoadingUsers(false);
       }
@@ -128,10 +146,10 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo, wor
     if (editingTodo) {
       setFormState({
         title: editingTodo.title,
-        description: editingTodo.description ?? "",
-        notes: editingTodo.notes ?? "",
+        description: editingTodo.description ?? '',
+        notes: editingTodo.notes ?? '',
         dueDate: formatDateForInput(editingTodo.due_date),
-        priority: editingTodo.priority ?? "",
+        priority: editingTodo.priority ?? '',
       });
       setAssignment({
         assigned_user_id: editingTodo.assigned_user_id,
@@ -139,7 +157,7 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo, wor
       });
       // Load viewers from existing todo
       const todoWithViewers = editingTodo as TodoWithAssignedUser;
-      setViewers(todoWithViewers.viewers?.map(v => v.user_id) || []);
+      setViewers(todoWithViewers.viewers?.map((v) => v.user_id) || []);
       // Set assignment workflow fields
       setTodoType(editingTodo.todo_type || 'regular');
       setPublishStatus(editingTodo.publish_status || 'published');
@@ -314,7 +332,7 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo, wor
 
     const trimmedTitle = formState.title.trim();
     if (!trimmedTitle) {
-      showToast({ type: "error", title: "Title is required" });
+      showToast({ type: 'error', title: 'Title is required' });
       return;
     }
 
@@ -356,13 +374,13 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo, wor
           });
         }
         onSuccess();
-        showToast({ type: "success", title: "Task updated" });
+        showToast({ type: 'success', title: 'Task updated' });
       } else {
         const created = await todosApi.create(payload);
         if (canAssign && assignment.assigned_user_id) {
           await todosApi.assignTodo(created.id, {
             assigned_user_id: assignment.assigned_user_id,
-            visibility: assignment.visibility ?? "private",
+            visibility: assignment.visibility ?? 'private',
           });
         }
         if (canAssign && viewers.length > 0) {
@@ -375,14 +393,14 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo, wor
         await uploadPendingFiles(created.id);
 
         onSuccess();
-        showToast({ type: "success", title: "Task created" });
+        showToast({ type: 'success', title: 'Task created' });
       }
 
       onClose();
     } catch (error: any) {
-      console.error("Failed to save task", error);
+      console.error('Failed to save task', error);
       const message = error?.response?.data?.detail || "We couldn't save the task.";
-      showToast({ type: "error", title: message });
+      showToast({ type: 'error', title: message });
     } finally {
       setSubmitting(false);
     }
@@ -403,12 +421,12 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo, wor
                 </span>
                 <div>
                   <DialogTitle className="text-xl font-semibold text-slate-900">
-                    {isEditing ? "Edit task" : "Create a new task"}
+                    {isEditing ? 'Edit task' : 'Create a new task'}
                   </DialogTitle>
                   <DialogDescription className="text-sm text-slate-500">
                     {isEditing
-                      ? "Update the details, assignees, or due date for this work item."
-                      : "Capture what needs to happen next and who should own it."}
+                      ? 'Update the details, assignees, or due date for this work item.'
+                      : 'Capture what needs to happen next and who should own it.'}
                   </DialogDescription>
                 </div>
               </div>
@@ -427,7 +445,7 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo, wor
                   label="Title"
                   placeholder="Give the task a clear, action-oriented name"
                   value={formState.title}
-                  onChange={handleInputChange("title")}
+                  onChange={handleInputChange('title')}
                   required
                 />
 
@@ -447,7 +465,9 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo, wor
 
                   {todoType === 'assignment' && (
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-700">Assignment Status</label>
+                      <label className="text-sm font-medium text-slate-700">
+                        Assignment Status
+                      </label>
                       <select
                         value={publishStatus}
                         onChange={(e) => setPublishStatus(e.target.value as TodoPublishStatus)}
@@ -473,7 +493,7 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo, wor
                     label="Priority"
                     placeholder="High, Medium, Low, or custom"
                     value={formState.priority}
-                    onChange={handleInputChange("priority")}
+                    onChange={handleInputChange('priority')}
                     leftIcon={<MinusCircle className="h-4 w-4" />}
                   />
                 </div>
@@ -484,7 +504,7 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo, wor
                     placeholder="Outline context, expectations, or acceptance criteria."
                     rows={4}
                     value={formState.description}
-                    onChange={handleInputChange("description")}
+                    onChange={handleInputChange('description')}
                     className="border border-slate-300 bg-white text-slate-900 focus-visible:ring-blue-500"
                   />
                 </div>
@@ -503,7 +523,10 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo, wor
                               // For editing todos, upload files immediately
                               files.forEach(async (file) => {
                                 try {
-                                  const response = await todoAttachmentAPI.uploadFile(editingTodo.id, file);
+                                  const response = await todoAttachmentAPI.uploadFile(
+                                    editingTodo.id,
+                                    file
+                                  );
                                   handleUploadSuccess(response.attachment);
                                 } catch (error) {
                                   console.error('Failed to upload file:', error);
@@ -535,7 +558,7 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo, wor
                     placeholder="Add quick reminders, meeting notes, or links."
                     rows={3}
                     value={formState.notes}
-                    onChange={handleInputChange("notes")}
+                    onChange={handleInputChange('notes')}
                     className="border border-slate-300 bg-white text-slate-900 focus-visible:ring-blue-500"
                   />
 
@@ -558,7 +581,9 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo, wor
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2">
                                     <Paperclip className="h-3 w-3 text-slate-400 flex-shrink-0" />
-                                    <span className="truncate font-medium">{attachment.original_filename}</span>
+                                    <span className="truncate font-medium">
+                                      {attachment.original_filename}
+                                    </span>
                                   </div>
                                   <div className="text-xs text-slate-500 ml-5">
                                     {(attachment.file_size / 1024 / 1024).toFixed(1)} MB
@@ -639,7 +664,6 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo, wor
                       )}
                     </div>
                   )}
-
                 </div>
               </div>
 
@@ -657,21 +681,23 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo, wor
                     </Badge>
                   </div>
                   <UserAssignment
-                    todo={{
-                      ...formState,
-                      assigned_user_id: assignment.assigned_user_id,
-                      visibility: assignment.visibility || "private",
-                      viewers: viewers.map(viewerId => ({
-                        id: viewerId,
-                        user_id: viewerId,
-                        user: assignableUsers.find(u => u.id === viewerId) || {
+                    todo={
+                      {
+                        ...formState,
+                        assigned_user_id: assignment.assigned_user_id,
+                        visibility: assignment.visibility || 'private',
+                        viewers: viewers.map((viewerId) => ({
                           id: viewerId,
-                          first_name: "Loading...",
-                          last_name: "",
-                          email: "",
-                        },
-                      })),
-                    } as any}
+                          user_id: viewerId,
+                          user: assignableUsers.find((u) => u.id === viewerId) || {
+                            id: viewerId,
+                            first_name: 'Loading...',
+                            last_name: '',
+                            email: '',
+                          },
+                        })),
+                      } as any
+                    }
                     assignableUsers={assignableUsers}
                     onAssign={handleAssignmentChange}
                     onUpdateViewers={handleViewersChange}
@@ -702,13 +728,16 @@ export default function TaskModal({ isOpen, onClose, onSuccess, editingTodo, wor
             <Button
               type="submit"
               loading={submitting}
-              leftIcon={isEditing ? <Save className="h-4 w-4" /> : <PlusCircle className="h-4 w-4" />}
+              leftIcon={
+                isEditing ? <Save className="h-4 w-4" /> : <PlusCircle className="h-4 w-4" />
+              }
               className="min-w-[160px] bg-blue-600 text-white shadow-lg shadow-blue-500/30 hover:bg-blue-600/90"
             >
               {workflowContext
-                ? "Save & Return to Workflow"
-                : (isEditing ? "Save changes" : "Create task")
-              }
+                ? 'Save & Return to Workflow'
+                : isEditing
+                  ? 'Save changes'
+                  : 'Create task'}
             </Button>
           </DialogFooter>
         </form>

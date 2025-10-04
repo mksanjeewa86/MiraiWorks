@@ -1,5 +1,6 @@
 """API endpoints for todo extension requests."""
 
+from app.config.endpoints import API_ROUTES
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -34,8 +35,7 @@ async def _get_extension_request_or_404(
 
     if not extension_request_obj:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Extension request not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Extension request not found"
         )
 
     # Check if user can view this extension request
@@ -43,14 +43,13 @@ async def _get_extension_request_or_404(
         db, current_user.id, extension_request_obj
     ):
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Extension request not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Extension request not found"
         )
 
     return extension_request_obj
 
 
-@router.post("/{todo_id}/extension-requests", response_model=TodoExtensionRequestRead)
+@router.post(API_ROUTES.TODO_EXTENSIONS.CREATE, response_model=TodoExtensionRequestRead)
 async def create_extension_request(
     todo_id: int,
     request_data: TodoExtensionRequestCreate,
@@ -62,15 +61,16 @@ async def create_extension_request(
     todo_obj = await todo_crud.get(db, id=todo_id)
     if not todo_obj:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Todo not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Todo not found"
         )
 
     # Check basic permission to request extension
-    if not await TodoPermissionService.can_request_extension(db, current_user.id, todo_obj):
+    if not await TodoPermissionService.can_request_extension(
+        db, current_user.id, todo_obj
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to request extension for this todo"
+            detail="You don't have permission to request extension for this todo",
         )
 
     # Validate the extension request
@@ -78,21 +78,18 @@ async def create_extension_request(
         db,
         todo=todo_obj,
         requested_by_id=current_user.id,
-        requested_due_date=request_data.requested_due_date
+        requested_due_date=request_data.requested_due_date,
     )
 
     if not validation.can_request_extension:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=validation.reason or "Extension request is not valid"
+            detail=validation.reason or "Extension request is not valid",
         )
 
     # Create the extension request
     extension_request_obj = await todo_extension_request.create_extension_request(
-        db,
-        todo=todo_obj,
-        request_data=request_data,
-        requested_by_id=current_user.id
+        db, todo=todo_obj, request_data=request_data, requested_by_id=current_user.id
     )
 
     # Send notifications and emails
@@ -103,10 +100,12 @@ async def create_extension_request(
     return extension_request_obj
 
 
-@router.get("/extension-requests/validate/{todo_id}", response_model=TodoExtensionValidation)
+@router.get(API_ROUTES.TODO_EXTENSIONS.VALIDATE, response_model=TodoExtensionValidation)
 async def validate_extension_request(
     todo_id: int,
-    requested_due_date: str = Query(..., description="Requested due date in ISO format"),
+    requested_due_date: str = Query(
+        ..., description="Requested due date in ISO format"
+    ),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -115,26 +114,29 @@ async def validate_extension_request(
 
     # Parse the requested due date
     try:
-        requested_date = datetime.fromisoformat(requested_due_date.replace('Z', '+00:00'))
+        requested_date = datetime.fromisoformat(
+            requested_due_date.replace("Z", "+00:00")
+        )
     except ValueError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid date format. Use ISO format."
+            detail="Invalid date format. Use ISO format.",
         )
 
     # Get todo
     todo_obj = await todo_crud.get(db, id=todo_id)
     if not todo_obj:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Todo not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Todo not found"
         )
 
     # Check basic permission to request extension
-    if not await TodoPermissionService.can_request_extension(db, current_user.id, todo_obj):
+    if not await TodoPermissionService.can_request_extension(
+        db, current_user.id, todo_obj
+    ):
         return TodoExtensionValidation(
             can_request_extension=False,
-            reason="You don't have permission to request extension for this todo"
+            reason="You don't have permission to request extension for this todo",
         )
 
     # Validate the extension request
@@ -142,13 +144,13 @@ async def validate_extension_request(
         db,
         todo=todo_obj,
         requested_by_id=current_user.id,
-        requested_due_date=requested_date
+        requested_due_date=requested_date,
     )
 
     return validation
 
 
-@router.put("/extension-requests/{request_id}/respond", response_model=TodoExtensionRequestRead)
+@router.put(API_ROUTES.TODO_EXTENSIONS.RESPOND, response_model=TodoExtensionRequestRead)
 async def respond_to_extension_request(
     request_id: int,
     response_data: TodoExtensionRequestResponse,
@@ -166,14 +168,14 @@ async def respond_to_extension_request(
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to respond to this extension request"
+            detail="You don't have permission to respond to this extension request",
         )
 
     # Check if request is still pending
     if extension_request_obj.status != ExtensionRequestStatus.PENDING.value:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Extension request has already been responded to"
+            detail="Extension request has already been responded to",
         )
 
     # Respond to the request
@@ -181,7 +183,7 @@ async def respond_to_extension_request(
         db,
         request_obj=extension_request_obj,
         response_data=response_data,
-        responded_by_id=current_user.id
+        responded_by_id=current_user.id,
     )
 
     # Send notifications and emails
@@ -192,7 +194,9 @@ async def respond_to_extension_request(
     return extension_request_obj
 
 
-@router.get("/extension-requests/my-requests", response_model=TodoExtensionRequestList)
+@router.get(
+    API_ROUTES.TODO_EXTENSIONS.MY_REQUESTS, response_model=TodoExtensionRequestList
+)
 async def list_my_extension_requests(
     status_filter: ExtensionRequestStatus = Query(None, description="Filter by status"),
     limit: int = Query(100, ge=1, le=200),
@@ -206,7 +210,7 @@ async def list_my_extension_requests(
         requester_id=current_user.id,
         status_filter=status_filter,
         limit=limit,
-        offset=offset
+        offset=offset,
     )
 
     # Get statistics
@@ -217,13 +221,15 @@ async def list_my_extension_requests(
     return TodoExtensionRequestList(
         items=requests,
         total=total,
-        pending_count=stats.get('pending', 0),
-        approved_count=stats.get('approved', 0),
-        rejected_count=stats.get('rejected', 0)
+        pending_count=stats.get("pending", 0),
+        approved_count=stats.get("approved", 0),
+        rejected_count=stats.get("rejected", 0),
     )
 
 
-@router.get("/extension-requests/to-review", response_model=TodoExtensionRequestList)
+@router.get(
+    API_ROUTES.TODO_EXTENSIONS.TO_REVIEW, response_model=TodoExtensionRequestList
+)
 async def list_extension_requests_to_review(
     status_filter: ExtensionRequestStatus = Query(None, description="Filter by status"),
     limit: int = Query(100, ge=1, le=200),
@@ -237,7 +243,7 @@ async def list_extension_requests_to_review(
         creator_id=current_user.id,
         status_filter=status_filter,
         limit=limit,
-        offset=offset
+        offset=offset,
     )
 
     # Get statistics
@@ -248,13 +254,13 @@ async def list_extension_requests_to_review(
     return TodoExtensionRequestList(
         items=requests,
         total=total,
-        pending_count=stats.get('pending', 0),
-        approved_count=stats.get('approved', 0),
-        rejected_count=stats.get('rejected', 0)
+        pending_count=stats.get("pending", 0),
+        approved_count=stats.get("approved", 0),
+        rejected_count=stats.get("rejected", 0),
     )
 
 
-@router.get("/extension-requests/{request_id}", response_model=TodoExtensionRequestRead)
+@router.get(API_ROUTES.TODO_EXTENSIONS.BY_ID, response_model=TodoExtensionRequestRead)
 async def get_extension_request(
     request_id: int,
     db: AsyncSession = Depends(get_db),

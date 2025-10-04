@@ -1,5 +1,6 @@
 from datetime import UTC, datetime
 
+from app.config.endpoints import API_ROUTES
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -26,7 +27,11 @@ from app.services.video_service import video_service
 router = APIRouter(prefix="/video-calls", tags=["video-calls"])
 
 
-@router.post("/schedule", response_model=VideoCallInfo, status_code=status.HTTP_201_CREATED)
+@router.post(
+    API_ROUTES.VIDEO_CALLS.SCHEDULE,
+    response_model=VideoCallInfo,
+    status_code=status.HTTP_201_CREATED,
+)
 async def schedule_video_call(
     call_data: VideoCallCreate,
     current_user: User = Depends(get_current_active_user),
@@ -34,10 +39,12 @@ async def schedule_video_call(
 ):
     """Schedule a new video call for an interview."""
     # Check permissions
-    if not await permission_service.can_schedule_interview(db, current_user, call_data.candidate_id):
+    if not await permission_service.can_schedule_interview(
+        db, current_user, call_data.candidate_id
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to schedule interviews with this candidate"
+            detail="You don't have permission to schedule interviews with this candidate",
         )
 
     # Create video call
@@ -56,7 +63,7 @@ async def schedule_video_call(
     return video_call
 
 
-@router.get("/room/{room_id}", response_model=VideoCallInfo)
+@router.get(API_ROUTES.VIDEO_CALLS.BY_ROOM, response_model=VideoCallInfo)
 async def get_video_call_by_room(
     room_id: str,
     current_user: User = Depends(get_current_active_user),
@@ -67,21 +74,23 @@ async def get_video_call_by_room(
 
     if not video_call:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Video call room not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Video call room not found"
         )
 
     # Check if user is participant
-    if video_call.interviewer_id != current_user.id and video_call.candidate_id != current_user.id:
+    if (
+        video_call.interviewer_id != current_user.id
+        and video_call.candidate_id != current_user.id
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to access this video call"
+            detail="You don't have permission to access this video call",
         )
 
     return video_call
 
 
-@router.get("/{call_id}", response_model=VideoCallInfo)
+@router.get(API_ROUTES.VIDEO_CALLS.BY_ID, response_model=VideoCallInfo)
 async def get_video_call(
     call_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -92,21 +101,23 @@ async def get_video_call(
 
     if not video_call:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Video call not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Video call not found"
         )
 
     # Check if user is participant
-    if video_call.interviewer_id != current_user.id and video_call.candidate_id != current_user.id:
+    if (
+        video_call.interviewer_id != current_user.id
+        and video_call.candidate_id != current_user.id
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to access this video call"
+            detail="You don't have permission to access this video call",
         )
 
     return video_call
 
 
-@router.post("/room/{room_id}/join", response_model=dict)
+@router.post(API_ROUTES.VIDEO_CALLS.JOIN_ROOM, response_model=dict)
 async def join_video_call_by_room(
     room_id: str,
     current_user: User = Depends(get_current_active_user),
@@ -117,15 +128,17 @@ async def join_video_call_by_room(
 
     if not video_call:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Video call room not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Video call room not found"
         )
 
     # Check if user is participant
-    if video_call.interviewer_id != current_user.id and video_call.candidate_id != current_user.id:
+    if (
+        video_call.interviewer_id != current_user.id
+        and video_call.candidate_id != current_user.id
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not a participant in this video call"
+            detail="You are not a participant in this video call",
         )
 
     # Update call status to in_progress if it's the first participant
@@ -139,10 +152,13 @@ async def join_video_call_by_room(
         db, video_call_id=video_call.id, user_id=current_user.id
     )
 
-    return {"message": "Successfully joined the video call", "room_id": video_call.room_id}
+    return {
+        "message": "Successfully joined the video call",
+        "room_id": video_call.room_id,
+    }
 
 
-@router.post("/{call_id}/join", response_model=dict)
+@router.post(API_ROUTES.VIDEO_CALLS.JOIN, response_model=dict)
 async def join_video_call(
     call_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -153,15 +169,17 @@ async def join_video_call(
 
     if not video_call:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Video call not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Video call not found"
         )
 
     # Check if user is participant
-    if video_call.interviewer_id != current_user.id and video_call.candidate_id != current_user.id:
+    if (
+        video_call.interviewer_id != current_user.id
+        and video_call.candidate_id != current_user.id
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not a participant in this video call"
+            detail="You are not a participant in this video call",
         )
 
     # Update call status to in_progress if it's the first participant
@@ -180,10 +198,13 @@ async def join_video_call(
         db, video_call_id=call_id, user_id=current_user.id
     )
 
-    return {"message": "Successfully joined the video call", "room_id": video_call.room_id}
+    return {
+        "message": "Successfully joined the video call",
+        "room_id": video_call.room_id,
+    }
 
 
-@router.post("/room/{room_id}/leave", response_model=dict)
+@router.post(API_ROUTES.VIDEO_CALLS.LEAVE_ROOM, response_model=dict)
 async def leave_video_call_by_room(
     room_id: str,
     current_user: User = Depends(get_current_active_user),
@@ -194,15 +215,17 @@ async def leave_video_call_by_room(
 
     if not video_call:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Video call room not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Video call room not found"
         )
 
     # Check if user is participant
-    if video_call.interviewer_id != current_user.id and video_call.candidate_id != current_user.id:
+    if (
+        video_call.interviewer_id != current_user.id
+        and video_call.candidate_id != current_user.id
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not a participant in this video call"
+            detail="You are not a participant in this video call",
         )
 
     # Update participant left time
@@ -211,19 +234,24 @@ async def leave_video_call_by_room(
     )
 
     # Check if this was the last participant
-    active_participants = await crud.video_call.get_active_participants(db, video_call_id=video_call.id)
+    active_participants = await crud.video_call.get_active_participants(
+        db, video_call_id=video_call.id
+    )
 
     if len(active_participants) == 0:
         # Last participant left, end the call
         video_call = await crud.video_call.update_call_status(
             db, db_obj=video_call, status="completed", ended_at=datetime.now(UTC)
         )
-        return {"message": "Left call and ended session (last participant)", "call_ended": True}
+        return {
+            "message": "Left call and ended session (last participant)",
+            "call_ended": True,
+        }
 
     return {"message": "Successfully left the video call", "call_ended": False}
 
 
-@router.post("/{call_id}/leave", response_model=dict)
+@router.post(API_ROUTES.VIDEO_CALLS.LEAVE, response_model=dict)
 async def leave_video_call(
     call_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -234,15 +262,17 @@ async def leave_video_call(
 
     if not video_call:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Video call not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Video call not found"
         )
 
     # Check if user is participant
-    if video_call.interviewer_id != current_user.id and video_call.candidate_id != current_user.id:
+    if (
+        video_call.interviewer_id != current_user.id
+        and video_call.candidate_id != current_user.id
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not a participant in this video call"
+            detail="You are not a participant in this video call",
         )
 
     # Update participant left time
@@ -251,19 +281,24 @@ async def leave_video_call(
     )
 
     # Check if this was the last participant
-    active_participants = await crud.video_call.get_active_participants(db, video_call_id=call_id)
+    active_participants = await crud.video_call.get_active_participants(
+        db, video_call_id=call_id
+    )
 
     if len(active_participants) == 0:
         # Last participant left, end the call
         video_call = await crud.video_call.update_call_status(
             db, db_obj=video_call, status="completed", ended_at=datetime.now(UTC)
         )
-        return {"message": "Left call and ended session (last participant)", "call_ended": True}
+        return {
+            "message": "Left call and ended session (last participant)",
+            "call_ended": True,
+        }
 
     return {"message": "Successfully left the video call", "call_ended": False}
 
 
-@router.post("/{call_id}/end", response_model=VideoCallInfo)
+@router.post(API_ROUTES.VIDEO_CALLS.END, response_model=VideoCallInfo)
 async def end_video_call(
     call_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -274,15 +309,14 @@ async def end_video_call(
 
     if not video_call:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Video call not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Video call not found"
         )
 
     # Check if user is the interviewer
     if video_call.interviewer_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only the interviewer can force end the video call"
+            detail="Only the interviewer can force end the video call",
         )
 
     # Update all participants left time
@@ -296,7 +330,7 @@ async def end_video_call(
     return video_call
 
 
-@router.post("/room/{room_id}/consent", response_model=RecordingConsentInfo)
+@router.post(API_ROUTES.VIDEO_CALLS.CONSENT_ROOM, response_model=RecordingConsentInfo)
 async def record_consent_by_room(
     room_id: str,
     consent_data: RecordingConsentRequest,
@@ -308,25 +342,30 @@ async def record_consent_by_room(
 
     if not video_call:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Video call room not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Video call room not found"
         )
 
     # Check if user is participant
-    if video_call.interviewer_id != current_user.id and video_call.candidate_id != current_user.id:
+    if (
+        video_call.interviewer_id != current_user.id
+        and video_call.candidate_id != current_user.id
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not a participant in this video call"
+            detail="You are not a participant in this video call",
         )
 
     consent = await crud.video_call.save_recording_consent(
-        db, video_call_id=video_call.id, user_id=current_user.id, consented=consent_data.consented
+        db,
+        video_call_id=video_call.id,
+        user_id=current_user.id,
+        consented=consent_data.consented,
     )
 
     return consent
 
 
-@router.post("/{call_id}/consent", response_model=RecordingConsentInfo)
+@router.post(API_ROUTES.VIDEO_CALLS.CONSENT, response_model=RecordingConsentInfo)
 async def record_consent(
     call_id: int,
     consent_data: RecordingConsentRequest,
@@ -338,25 +377,30 @@ async def record_consent(
 
     if not video_call:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Video call not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Video call not found"
         )
 
     # Check if user is participant
-    if video_call.interviewer_id != current_user.id and video_call.candidate_id != current_user.id:
+    if (
+        video_call.interviewer_id != current_user.id
+        and video_call.candidate_id != current_user.id
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not a participant in this video call"
+            detail="You are not a participant in this video call",
         )
 
     consent = await crud.video_call.save_recording_consent(
-        db, video_call_id=call_id, user_id=current_user.id, consented=consent_data.consented
+        db,
+        video_call_id=call_id,
+        user_id=current_user.id,
+        consented=consent_data.consented,
     )
 
     return consent
 
 
-@router.get("/{call_id}/token", response_model=VideoCallToken)
+@router.get(API_ROUTES.VIDEO_CALLS.TOKEN, response_model=VideoCallToken)
 async def get_video_token(
     call_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -367,28 +411,30 @@ async def get_video_token(
 
     if not video_call:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Video call not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Video call not found"
         )
 
     # Check if user is participant
-    if video_call.interviewer_id != current_user.id and video_call.candidate_id != current_user.id:
+    if (
+        video_call.interviewer_id != current_user.id
+        and video_call.candidate_id != current_user.id
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not a participant in this video call"
+            detail="You are not a participant in this video call",
         )
 
     # Generate token using video service
     token_data = await video_service.generate_token(
         room_id=video_call.room_id,
         user_id=current_user.id,
-        user_name=current_user.full_name or current_user.email
+        user_name=current_user.full_name or current_user.email,
     )
 
     return token_data
 
 
-@router.get("/{call_id}/transcript", response_model=CallTranscriptionInfo)
+@router.get(API_ROUTES.VIDEO_CALLS.TRANSCRIPT, response_model=CallTranscriptionInfo)
 async def get_call_transcript(
     call_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -399,15 +445,17 @@ async def get_call_transcript(
 
     if not video_call:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Video call not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Video call not found"
         )
 
     # Check if user is participant
-    if video_call.interviewer_id != current_user.id and video_call.candidate_id != current_user.id:
+    if (
+        video_call.interviewer_id != current_user.id
+        and video_call.candidate_id != current_user.id
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to access this transcript"
+            detail="You don't have permission to access this transcript",
         )
 
     transcript = await crud.video_call.get_call_transcription(db, video_call_id=call_id)
@@ -415,6 +463,7 @@ async def get_call_transcript(
     if not transcript:
         # Return empty transcript for calls that haven't started transcription yet
         from datetime import datetime
+
         return CallTranscriptionInfo(
             id=0,
             video_call_id=call_id,
@@ -425,13 +474,15 @@ async def get_call_transcript(
             word_count=0,
             created_at=datetime.now(UTC),
             processed_at=None,
-            segments=[]
+            segments=[],
         )
 
     return transcript
 
 
-@router.post("/{call_id}/transcript/segments", response_model=TranscriptionSegmentInfo)
+@router.post(
+    API_ROUTES.VIDEO_CALLS.TRANSCRIPT_SEGMENTS, response_model=TranscriptionSegmentInfo
+)
 async def save_transcript_segment(
     call_id: int,
     segment: TranscriptionSegmentCreate,
@@ -443,22 +494,24 @@ async def save_transcript_segment(
 
     if not video_call:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Video call not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Video call not found"
         )
 
     # Check if user is participant
-    if video_call.interviewer_id != current_user.id and video_call.candidate_id != current_user.id:
+    if (
+        video_call.interviewer_id != current_user.id
+        and video_call.candidate_id != current_user.id
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not a participant in this video call"
+            detail="You are not a participant in this video call",
         )
 
     # Check if call is in progress
     if video_call.status != "in_progress":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Can only save segments during an active call"
+            detail="Can only save segments during an active call",
         )
 
     saved_segment = await crud.video_call.save_transcription_segment(
@@ -468,7 +521,7 @@ async def save_transcript_segment(
     return saved_segment
 
 
-@router.get("/{call_id}/transcript/download")
+@router.get(API_ROUTES.VIDEO_CALLS.TRANSCRIPT_DOWNLOAD)
 async def download_transcript(
     call_id: int,
     format: str = "txt",
@@ -480,15 +533,17 @@ async def download_transcript(
 
     if not video_call:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Video call not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Video call not found"
         )
 
     # Check if user is participant
-    if video_call.interviewer_id != current_user.id and video_call.candidate_id != current_user.id:
+    if (
+        video_call.interviewer_id != current_user.id
+        and video_call.candidate_id != current_user.id
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to download this transcript"
+            detail="You don't have permission to download this transcript",
         )
 
     transcript = await crud.video_call.get_call_transcription(db, video_call_id=call_id)
@@ -496,19 +551,18 @@ async def download_transcript(
     if not transcript or transcript.processing_status != "completed":
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Transcript not available for download"
+            detail="Transcript not available for download",
         )
 
     # Generate download URL using transcription service
     download_url = await video_service.generate_transcript_download(
-        transcript_id=transcript.id,
-        format=format
+        transcript_id=transcript.id, format=format
     )
 
     return {"download_url": download_url}
 
 
-@router.get("/", response_model=list[VideoCallInfo])
+@router.get(API_ROUTES.VIDEO_CALLS.BASE, response_model=list[VideoCallInfo])
 async def list_video_calls(
     skip: int = 0,
     limit: int = 100,

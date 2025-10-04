@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import clsx from "clsx";
-import { addDays, addMonths, addWeeks, endOfWeek, format, startOfWeek } from "date-fns";
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import clsx from 'clsx';
+import { addDays, addMonths, addWeeks, endOfWeek, format, startOfWeek } from 'date-fns';
 import {
   Calendar as CalendarIcon,
   ChevronLeft,
@@ -13,33 +13,32 @@ import {
   Menu,
   Plus,
   RotateCw,
-} from "lucide-react";
-import AppLayout from "@/components/layout/AppLayout";
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import CalendarView from "@/components/calendar/CalendarView";
-import CalendarSidebar from "@/components/calendar/CalendarSidebar";
-import EventModal from "@/components/calendar/EventModal";
-import { calendarApi } from "@/api/calendar";
-import { interviewsApi } from "@/api/interviews";
-import { useAuth } from "@/contexts/AuthContext";
-import type { CalendarEvent, Interview } from "@/types/interview";
-import type { CalendarConnection, CalendarProvider } from "@/types/calendar";
+} from 'lucide-react';
+import AppLayout from '@/components/layout/AppLayout';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import CalendarView from '@/components/calendar/CalendarView';
+import CalendarSidebar from '@/components/calendar/CalendarSidebar';
+import EventModal from '@/components/calendar/EventModal';
+import { calendarApi } from '@/api/calendar';
+import { interviewsApi } from '@/api/interviews';
+import { useAuth } from '@/contexts/AuthContext';
+import type { CalendarEvent, Interview } from '@/types/interview';
+import type { CalendarConnection, CalendarProvider } from '@/types/calendar';
 import type { SelectionRange } from '@/types/calendar';
-import type { CalendarFilters, CalendarViewMode } from "@/types/components";
-import { toast } from "sonner";
-
+import type { CalendarFilters, CalendarViewMode } from '@/types/components';
+import { toast } from 'sonner';
 
 const defaultFilters: CalendarFilters = {
-  search: "",
+  search: '',
 };
 
-const interviewStatusMap: Record<Interview["status"], CalendarEvent["status"]> = {
-  pending_schedule: "tentative",
-  scheduled: "confirmed",
-  confirmed: "confirmed",
-  in_progress: "confirmed",
-  completed: "confirmed",
-  cancelled: "cancelled",
+const interviewStatusMap: Record<Interview['status'], CalendarEvent['status']> = {
+  pending_schedule: 'tentative',
+  scheduled: 'confirmed',
+  confirmed: 'confirmed',
+  in_progress: 'confirmed',
+  completed: 'confirmed',
+  cancelled: 'cancelled',
 };
 
 const toDateOrNull = (value: unknown): Date | null => {
@@ -55,14 +54,13 @@ const toStringArray = (value: unknown): string[] => {
 
   return value
     .map((item) => {
-      if (typeof item === "string") {
+      if (typeof item === 'string') {
         return item;
       }
-      if (item && typeof item === "object") {
+      if (item && typeof item === 'object') {
         const record = item as Record<string, unknown>;
-        const candidate =
-          record.email ?? record.address ?? record.value ?? record.name ?? null;
-        return typeof candidate === "string" ? candidate : null;
+        const candidate = record.email ?? record.address ?? record.value ?? record.name ?? null;
+        return typeof candidate === 'string' ? candidate : null;
       }
       return null;
     })
@@ -97,52 +95,52 @@ const normalizeCalendarEvent = (raw: Record<string, unknown>): CalendarEvent | n
 
   return {
     id,
-    title: String(raw?.title ?? raw?.summary ?? raw?.name ?? "Untitled event"),
-    description: typeof raw?.description === "string" ? (raw.description as string) : "",
-    location: typeof raw?.location === "string" ? (raw.location as string) : "",
+    title: String(raw?.title ?? raw?.summary ?? raw?.name ?? 'Untitled event'),
+    description: typeof raw?.description === 'string' ? (raw.description as string) : '',
+    location: typeof raw?.location === 'string' ? (raw.location as string) : '',
     startDatetime: startDate.toISOString(),
     endDatetime: endDate.toISOString(),
     timezone:
-      typeof raw?.timezone === "string"
+      typeof raw?.timezone === 'string'
         ? (raw.timezone as string)
-        : typeof raw?.time_zone === "string"
-        ? (raw.time_zone as string)
-        : undefined,
+        : typeof raw?.time_zone === 'string'
+          ? (raw.time_zone as string)
+          : undefined,
     isAllDay: Boolean(raw?.isAllDay ?? raw?.all_day ?? raw?.is_all_day ?? false),
     isRecurring: Boolean(raw?.isRecurring ?? raw?.recurring ?? raw?.is_recurring ?? false),
     organizerEmail:
-      typeof raw?.organizerEmail === "string"
+      typeof raw?.organizerEmail === 'string'
         ? (raw.organizerEmail as string)
-        : typeof raw?.organizer_email === "string"
-        ? (raw.organizer_email as string)
-        : (raw?.organizer as { email?: string } | undefined)?.email ?? "",
+        : typeof raw?.organizer_email === 'string'
+          ? (raw.organizer_email as string)
+          : ((raw?.organizer as { email?: string } | undefined)?.email ?? ''),
     organizerName:
-      typeof raw?.organizerName === "string"
+      typeof raw?.organizerName === 'string'
         ? (raw.organizerName as string)
-        : typeof raw?.organizer_name === "string"
-        ? (raw.organizer_name as string)
-        : (raw?.organizer as { name?: string } | undefined)?.name ?? "",
+        : typeof raw?.organizer_name === 'string'
+          ? (raw.organizer_name as string)
+          : ((raw?.organizer as { name?: string } | undefined)?.name ?? ''),
     meetingUrl:
-      typeof raw?.meetingUrl === "string"
+      typeof raw?.meetingUrl === 'string'
         ? (raw.meetingUrl as string)
-        : typeof raw?.meeting_url === "string"
-        ? (raw.meeting_url as string)
-        : "",
+        : typeof raw?.meeting_url === 'string'
+          ? (raw.meeting_url as string)
+          : '',
     attendees: toStringArray(attendeesRaw),
-    status: typeof raw?.status === "string" ? (raw.status as string) : "tentative",
-    type: "calendar",
+    status: typeof raw?.status === 'string' ? (raw.status as string) : 'tentative',
+    type: 'calendar',
     createdAt:
-      typeof raw?.createdAt === "string"
+      typeof raw?.createdAt === 'string'
         ? (raw.createdAt as string)
-        : typeof raw?.created_at === "string"
-        ? (raw.created_at as string)
-        : new Date().toISOString(),
+        : typeof raw?.created_at === 'string'
+          ? (raw.created_at as string)
+          : new Date().toISOString(),
     updatedAt:
-      typeof raw?.updatedAt === "string"
+      typeof raw?.updatedAt === 'string'
         ? (raw.updatedAt as string)
-        : typeof raw?.updated_at === "string"
-        ? (raw.updated_at as string)
-        : new Date().toISOString(),
+        : typeof raw?.updated_at === 'string'
+          ? (raw.updated_at as string)
+          : new Date().toISOString(),
   };
 };
 
@@ -158,43 +156,45 @@ const mapInterviewToEvent = (interview: Interview): CalendarEvent | null => {
 
   return {
     id: `interview-${interview.id}`,
-    title: `Interview: ${interview.position_title || interview.title || "Untitled interview"}`,
-    description: interview.description ?? "",
-    location: interview.location ?? interview.meeting_url ?? "",
+    title: `Interview: ${interview.position_title || interview.title || 'Untitled interview'}`,
+    description: interview.description ?? '',
+    location: interview.location ?? interview.meeting_url ?? '',
     startDatetime: start.toISOString(),
     endDatetime: end.toISOString(),
-    timezone: interview.timezone ?? "UTC",
+    timezone: interview.timezone ?? 'UTC',
     isAllDay: false,
     isRecurring: false,
-    organizerEmail: interview.recruiter?.email ?? "",
-    organizerName: interview.recruiter?.full_name ?? "",
-    meetingUrl: interview.meeting_url ?? "",
+    organizerEmail: interview.recruiter?.email ?? '',
+    organizerName: interview.recruiter?.full_name ?? '',
+    meetingUrl: interview.meeting_url ?? '',
     attendees: [interview.candidate?.email, interview.recruiter?.email].filter(Boolean) as string[],
-    status: interviewStatusMap[interview.status] ?? "tentative",
-    type: "interview",
+    status: interviewStatusMap[interview.status] ?? 'tentative',
+    type: 'interview',
     createdAt: interview.created_at ?? new Date().toISOString(),
     updatedAt: interview.updated_at ?? new Date().toISOString(),
   };
 };
 
-
-const computeRangeForView = (reference: Date, view: CalendarViewMode): { start: Date; end: Date } => {
+const computeRangeForView = (
+  reference: Date,
+  view: CalendarViewMode
+): { start: Date; end: Date } => {
   const start = new Date(reference);
   const end = new Date(reference);
 
-  if (view === "month") {
+  if (view === 'month') {
     start.setDate(1);
     start.setHours(0, 0, 0, 0);
     end.setMonth(end.getMonth() + 1, 0);
     end.setHours(23, 59, 59, 999);
-  } else if (view === "week") {
+  } else if (view === 'week') {
     const weekStart = startOfWeek(reference, { weekStartsOn: 0 });
     const weekEnd = endOfWeek(reference, { weekStartsOn: 0 });
     start.setTime(weekStart.getTime());
     start.setHours(0, 0, 0, 0);
     end.setTime(weekEnd.getTime());
     end.setHours(23, 59, 59, 999);
-  } else if (view === "list") {
+  } else if (view === 'list') {
     start.setHours(0, 0, 0, 0);
     const listEnd = addDays(start, 14);
     end.setTime(listEnd.getTime());
@@ -208,12 +208,11 @@ const computeRangeForView = (reference: Date, view: CalendarViewMode): { start: 
 };
 
 function CalendarPageContent() {
-
   const { user } = useAuth();
   const userId = user?.id ?? null;
   const userCompanyId = user?.company_id ?? null;
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [viewType, setViewType] = useState<CalendarViewMode>("month");
+  const [viewType, setViewType] = useState<CalendarViewMode>('month');
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -232,14 +231,14 @@ function CalendarPageContent() {
   }, []);
 
   const navigateNext = useCallback(() => {
-    setCurrentDate(prevDate => {
-      if (viewType === "month") {
+    setCurrentDate((prevDate) => {
+      if (viewType === 'month') {
         return addMonths(prevDate, 1); // Move to next month
-      } else if (viewType === "week") {
+      } else if (viewType === 'week') {
         return addWeeks(prevDate, 1); // Move to next week
-      } else if (viewType === "day") {
+      } else if (viewType === 'day') {
         return addDays(prevDate, 1); // Move to next day
-      } else if (viewType === "list") {
+      } else if (viewType === 'list') {
         return addWeeks(prevDate, 2); // Move 2 weeks forward for list view
       }
       return prevDate;
@@ -247,14 +246,14 @@ function CalendarPageContent() {
   }, [viewType]);
 
   const navigatePrev = useCallback(() => {
-    setCurrentDate(prevDate => {
-      if (viewType === "month") {
+    setCurrentDate((prevDate) => {
+      if (viewType === 'month') {
         return addMonths(prevDate, -1); // Move to previous month
-      } else if (viewType === "week") {
+      } else if (viewType === 'week') {
         return addWeeks(prevDate, -1); // Move to previous week
-      } else if (viewType === "day") {
+      } else if (viewType === 'day') {
         return addDays(prevDate, -1); // Move to previous day
-      } else if (viewType === "list") {
+      } else if (viewType === 'list') {
         return addWeeks(prevDate, -2); // Move 2 weeks back for list view
       }
       return prevDate;
@@ -267,8 +266,8 @@ function CalendarPageContent() {
       const response = await calendarApi.getConnections();
       setConnections(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
-      console.error("Failed to load calendar connections", error);
-      toast.error("Unable to load calendar connections.");
+      console.error('Failed to load calendar connections', error);
+      toast.error('Unable to load calendar connections.');
     } finally {
       setConnectionsLoading(false);
     }
@@ -290,8 +289,8 @@ function CalendarPageContent() {
 
         const extractCalendarItems = (value: unknown): unknown[] => {
           if (Array.isArray(value)) return value;
-          if (value && typeof value === "object") {
-            for (const key of ["items", "events", "data"]) {
+          if (value && typeof value === 'object') {
+            for (const key of ['items', 'events', 'data']) {
               const candidate = (value as Record<string, unknown>)[key];
               if (Array.isArray(candidate)) {
                 return candidate;
@@ -304,14 +303,14 @@ function CalendarPageContent() {
         combined.push(
           ...extractCalendarItems(payload)
             .map((entry) =>
-              entry && typeof entry === "object"
+              entry && typeof entry === 'object'
                 ? normalizeCalendarEvent(entry as Record<string, unknown>)
                 : null
             )
             .filter((entry): entry is CalendarEvent => Boolean(entry))
         );
       } catch (error) {
-        console.warn("Failed to load calendar events", error);
+        console.warn('Failed to load calendar events', error);
       }
 
       try {
@@ -324,8 +323,8 @@ function CalendarPageContent() {
 
           const extractInterviews = (value: unknown): Interview[] => {
             if (Array.isArray(value)) return value as Interview[];
-            if (value && typeof value === "object") {
-              for (const key of ["items", "interviews", "data"]) {
+            if (value && typeof value === 'object') {
+              for (const key of ['items', 'interviews', 'data']) {
                 const candidate = (value as Record<string, unknown>)[key];
                 if (Array.isArray(candidate)) {
                   return candidate as Interview[];
@@ -342,7 +341,7 @@ function CalendarPageContent() {
           );
         }
       } catch (error) {
-        console.warn("Failed to load interview events", error);
+        console.warn('Failed to load interview events', error);
       }
 
       combined.sort(
@@ -350,8 +349,8 @@ function CalendarPageContent() {
       );
       setEvents(combined);
     } catch (error) {
-      console.error("Unexpected error while loading events", error);
-      toast.error("Unable to load calendar events.");
+      console.error('Unexpected error while loading events', error);
+      toast.error('Unable to load calendar events.');
     } finally {
       setLoading(false);
     }
@@ -372,7 +371,7 @@ function CalendarPageContent() {
       if (searchTerm) {
         const haystack = [event.title, event.description, event.location]
           .filter(Boolean)
-          .join(" ")
+          .join(' ')
           .toLowerCase();
         if (!haystack.includes(searchTerm)) {
           return false;
@@ -399,9 +398,12 @@ function CalendarPageContent() {
     setSidebarOpen(false);
   }, []);
 
-  const handleRangeSelect = useCallback((range: SelectionRange) => {
-    openCreateModal(range);
-  }, [openCreateModal]);
+  const handleRangeSelect = useCallback(
+    (range: SelectionRange) => {
+      openCreateModal(range);
+    },
+    [openCreateModal]
+  );
 
   const handleEventClick = useCallback((event: CalendarEvent) => {
     setIsCreateMode(false);
@@ -416,20 +418,20 @@ function CalendarPageContent() {
     try {
       if (isCreateMode) {
         await calendarApi.createEvent(eventData);
-        toast.success("Event created.");
+        toast.success('Event created.');
       } else if (selectedEvent && /^\d+$/.test(selectedEvent.id)) {
         await calendarApi.updateEvent(Number(selectedEvent.id), eventData);
-        toast.success("Event updated.");
+        toast.success('Event updated.');
       } else {
-        toast.error("This event can only be edited from its source.");
+        toast.error('This event can only be edited from its source.');
         return;
       }
 
       await loadEvents();
       closeModal();
     } catch (error) {
-      console.error("Failed to save event", error);
-      toast.error("Unable to save event. Please try again.");
+      console.error('Failed to save event', error);
+      toast.error('Unable to save event. Please try again.');
       throw error;
     }
   };
@@ -438,15 +440,15 @@ function CalendarPageContent() {
     try {
       if (event.id && /^\d+$/.test(event.id)) {
         await calendarApi.deleteEvent(Number(event.id));
-        toast.success("Event deleted.");
+        toast.success('Event deleted.');
         await loadEvents();
         closeModal();
       } else {
-        toast.error("This event must be managed from the interview workflow.");
+        toast.error('This event must be managed from the interview workflow.');
       }
     } catch (error) {
-      console.error("Failed to delete event", error);
-      toast.error("Unable to delete event.");
+      console.error('Failed to delete event', error);
+      toast.error('Unable to delete event.');
       throw error;
     }
   };
@@ -454,30 +456,30 @@ function CalendarPageContent() {
   const handleConnectProvider = async (provider: CalendarProvider) => {
     try {
       const response =
-        provider === "google"
+        provider === 'google'
           ? await calendarApi.getGoogleAuthUrl()
           : await calendarApi.getOutlookAuthUrl();
       const authUrl = response?.data?.auth_url;
       if (authUrl) {
-        window.open(authUrl, "_blank", "noopener,noreferrer");
-        toast.info("Complete the connection in the new tab, then return to sync.");
+        window.open(authUrl, '_blank', 'noopener,noreferrer');
+        toast.info('Complete the connection in the new tab, then return to sync.');
       } else {
-        throw new Error("Missing auth URL");
+        throw new Error('Missing auth URL');
       }
     } catch (error) {
-      console.error("Failed to start calendar connection", error);
-      toast.error("Unable to start the calendar connection flow.");
+      console.error('Failed to start calendar connection', error);
+      toast.error('Unable to start the calendar connection flow.');
     }
   };
 
   const handleDisconnect = async (connectionId: number) => {
     try {
       await calendarApi.deleteConnection(connectionId);
-      toast.success("Calendar disconnected.");
+      toast.success('Calendar disconnected.');
       await loadConnections();
     } catch (error) {
-      console.error("Failed to disconnect calendar", error);
-      toast.error("Unable to disconnect calendar.");
+      console.error('Failed to disconnect calendar', error);
+      toast.error('Unable to disconnect calendar.');
     }
   };
 
@@ -485,33 +487,36 @@ function CalendarPageContent() {
     try {
       setSyncingConnectionId(connectionId);
       await calendarApi.syncCalendar(connectionId);
-      toast.success("Sync started. It may take a moment to finish.");
+      toast.success('Sync started. It may take a moment to finish.');
       await Promise.all([loadConnections(), loadEvents()]);
     } catch (error) {
-      console.error("Failed to sync calendar", error);
-      toast.error("Unable to trigger sync.");
+      console.error('Failed to sync calendar', error);
+      toast.error('Unable to trigger sync.');
     } finally {
       setSyncingConnectionId(null);
     }
   };
 
   const headerLabel = useMemo(() => {
-    if (viewType === "week") {
+    if (viewType === 'week') {
       const start = startOfWeek(currentDate, { weekStartsOn: 0 });
       const end = endOfWeek(currentDate, { weekStartsOn: 0 });
-      return `${format(start, "MMM d")} - ${format(end, "MMM d, yyyy")}`;
+      return `${format(start, 'MMM d')} - ${format(end, 'MMM d, yyyy')}`;
     }
-    if (viewType === "day") {
-      return format(currentDate, "EEEE, MMM d, yyyy");
+    if (viewType === 'day') {
+      return format(currentDate, 'EEEE, MMM d, yyyy');
     }
-    if (viewType === "list") {
-      return `${format(currentDate, "MMM d")} - ${format(addDays(currentDate, 14), "MMM d, yyyy")}`;
+    if (viewType === 'list') {
+      return `${format(currentDate, 'MMM d')} - ${format(addDays(currentDate, 14), 'MMM d, yyyy')}`;
     }
-    return format(currentDate, "MMMM yyyy");
+    return format(currentDate, 'MMMM yyyy');
   }, [currentDate, viewType]);
 
   return (
-    <AppLayout pageTitle="Calendar" pageDescription="Manage interviews, internal events, and synced calendars.">
+    <AppLayout
+      pageTitle="Calendar"
+      pageDescription="Manage interviews, internal events, and synced calendars."
+    >
       <div className="flex h-screen flex-col bg-slate-100/80">
         <div className="border-b border-slate-200 bg-white/90 backdrop-blur">
           <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between gap-4 px-4 py-4 lg:px-6">
@@ -559,10 +564,10 @@ function CalendarPageContent() {
               <div className="hidden rounded-full border border-slate-200 bg-slate-50 p-1 text-xs font-semibold text-slate-500 lg:flex">
                 {(
                   [
-                    { key: "month", label: "Month", icon: Grid },
-                    { key: "week", label: "Week", icon: List },
-                    { key: "day", label: "Day", icon: Clock },
-                    { key: "list", label: "Agenda", icon: CalendarIcon },
+                    { key: 'month', label: 'Month', icon: Grid },
+                    { key: 'week', label: 'Week', icon: List },
+                    { key: 'day', label: 'Day', icon: Clock },
+                    { key: 'list', label: 'Agenda', icon: CalendarIcon },
                   ] as { key: CalendarViewMode; label: string; icon: typeof Grid }[]
                 ).map(({ key, label, icon: Icon }) => (
                   <button
@@ -570,8 +575,10 @@ function CalendarPageContent() {
                     type="button"
                     onClick={() => setViewType(key)}
                     className={clsx(
-                      "inline-flex items-center gap-1 rounded-full px-3 py-1.5 transition",
-                      viewType === key ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-blue-600"
+                      'inline-flex items-center gap-1 rounded-full px-3 py-1.5 transition',
+                      viewType === key
+                        ? 'bg-white text-blue-600 shadow-sm'
+                        : 'text-slate-500 hover:text-blue-600'
                     )}
                   >
                     <Icon className="h-3.5 w-3.5" />
@@ -667,6 +674,3 @@ export default function CalendarPage() {
     </ProtectedRoute>
   );
 }
-
-
-

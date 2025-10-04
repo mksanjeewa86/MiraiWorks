@@ -23,19 +23,11 @@ import {
   LoadingSpinner,
 } from '@/components/ui';
 import { ArrowLeft, Plus, Trash2, Save } from 'lucide-react';
-import { ExamFormData, QuestionFormData } from '@/types/exam';
+import { ExamFormData, QuestionFormData, ExamType } from '@/types/exam';
 import { toast } from 'sonner';
 import { ExamQuestionForm } from './exam-question-form';
-
-
-
-const ExamType = {
-  APTITUDE: 'aptitude',
-  SKILL: 'skill',
-  KNOWLEDGE: 'knowledge',
-  PERSONALITY: 'personality',
-  CUSTOM: 'custom',
-} as const;
+import { getExamTypesByCategory } from '@/utils/examTypes';
+import { useExamMutations } from '@/hooks/useExams';
 
 const QuestionType = {
   MULTIPLE_CHOICE: 'multiple_choice',
@@ -48,8 +40,9 @@ const QuestionType = {
 
 export default function CreateExamPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const { createExam, loading } = useExamMutations();
   const [activeTab, setActiveTab] = useState<'basic' | 'questions' | 'settings'>('basic');
+  const examTypesByCategory = getExamTypesByCategory();
 
   const [examData, setExamData] = useState<ExamFormData>({
     title: '',
@@ -148,86 +141,38 @@ export default function CreateExamPage() {
     return null;
   };
 
-  const createExam = async () => {
+  const handleCreateExam = async () => {
     const validationError = validateForm();
     if (validationError) {
       toast.error(validationError);
       return;
     }
 
-    setLoading(true);
     try {
-      // Get current user's company_id (this would normally come from auth context)
-      const userResponse = await fetch('/api/auth/me', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-        },
-      });
-
-      if (!userResponse.ok) {
-        throw new Error('Failed to get user info');
+      const createdExam = await createExam(examData, questions);
+      if (createdExam) {
+        router.push(`/admin/exams/${createdExam.id}`);
       }
-
-      const userData = await userResponse.json();
-      const company_id = userData.company_id;
-
-      if (!company_id) {
-        throw new Error('User must be associated with a company');
-      }
-
-      // Prepare exam data
-      const examPayload = {
-        ...examData,
-        company_id,
-      };
-
-      // Prepare questions data
-      const questionsPayload = questions.map((question, index) => ({
-        ...question,
-        order_index: index,
-        exam_id: 0, // Will be set by the API
-      }));
-
-      const response = await fetch('/api/exam/exams', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-        },
-        body: JSON.stringify({
-          ...examPayload,
-          questions: questionsPayload,
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || 'Failed to create exam');
-      }
-
-      const createdExam = await response.json();
-      toast.success('Exam created successfully!');
-      router.push(`/admin/exams/${createdExam.id}`);
     } catch (error) {
-      console.error('Error creating exam:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to create exam');
-    } finally {
-      setLoading(false);
+      // Error already handled by hook
     }
   };
 
-  const saveDraft = async () => {
+  const handleSaveDraft = async () => {
     const validationError = validateForm();
     if (validationError) {
       toast.error(validationError);
       return;
     }
 
-    // Set status to draft and create
-    const originalData = examData;
-    setExamData((prev) => ({ ...prev, status: 'draft' }));
-    await createExam();
-    setExamData(originalData);
+    try {
+      const createdExam = await createExam(examData, questions);
+      if (createdExam) {
+        router.push(`/admin/exams/${createdExam.id}`);
+      }
+    } catch (error) {
+      // Error already handled by hook
+    }
   };
 
   return (
@@ -308,12 +253,19 @@ export default function CreateExamPage() {
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={ExamType.APTITUDE}>適性検査 (Aptitude Test)</SelectItem>
-                    <SelectItem value={ExamType.SKILL}>Skill Test</SelectItem>
-                    <SelectItem value={ExamType.KNOWLEDGE}>Knowledge Test</SelectItem>
-                    <SelectItem value={ExamType.PERSONALITY}>Personality Test</SelectItem>
-                    <SelectItem value={ExamType.CUSTOM}>Custom Test</SelectItem>
+                  <SelectContent className="max-h-[400px]">
+                    {Object.entries(examTypesByCategory).map(([category, types]) => (
+                      <div key={category}>
+                        <div className="px-2 py-1.5 text-xs font-semibold text-gray-500">
+                          {category}
+                        </div>
+                        {types.map((type) => (
+                          <SelectItem key={type.value} value={type.value}>
+                            {type.label}
+                          </SelectItem>
+                        ))}
+                      </div>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -640,11 +592,11 @@ export default function CreateExamPage() {
         </div>
 
         <div className="flex gap-3">
-          <Button variant="outline" onClick={saveDraft} disabled={loading}>
+          <Button variant="outline" onClick={handleSaveDraft} disabled={loading}>
             Save as Draft
           </Button>
 
-          <Button onClick={createExam} disabled={loading}>
+          <Button onClick={handleCreateExam} disabled={loading}>
             {loading ? (
               <>
                 <LoadingSpinner size="sm" className="mr-2" />

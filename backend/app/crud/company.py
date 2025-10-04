@@ -1,4 +1,3 @@
-
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -63,7 +62,7 @@ async def get_companies(
 
     # Handle logical deletion
     if not include_deleted:
-        conditions.append(Company.is_deleted is False)
+        conditions.append(Company.is_deleted == False)
 
     if search:
         search_term = f"%{search}%"

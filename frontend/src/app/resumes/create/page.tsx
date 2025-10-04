@@ -12,9 +12,6 @@ import { resumesApi } from '@/api/resumes';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { PREFECTURES } from '@/utils/prefectures';
 
-
-
-
 // Common nationalities
 const NATIONALITIES = [
   '日本',
@@ -1052,9 +1049,7 @@ function CreateResumePageContent() {
                         <input
                           type="text"
                           value={edu.fieldOfStudy}
-                          onChange={(e) =>
-                            updateEducation(edu.id, 'fieldOfStudy', e.target.value)
-                          }
+                          onChange={(e) => updateEducation(edu.id, 'fieldOfStudy', e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           placeholder="情報工学"
                         />
@@ -1098,9 +1093,7 @@ function CreateResumePageContent() {
                           <input
                             type="checkbox"
                             checked={edu.isCurrent}
-                            onChange={(e) =>
-                              updateEducation(edu.id, 'isCurrent', e.target.checked)
-                            }
+                            onChange={(e) => updateEducation(edu.id, 'isCurrent', e.target.checked)}
                             className="mr-2"
                           />
                           <span className="text-sm">Currently Studying</span>
@@ -1212,8 +1205,7 @@ function CreateResumePageContent() {
               </div>
             </div>
 
-            <div className="max-w-md">
-            </div>
+            <div className="max-w-md"></div>
           </Card>
 
           {/* Submit Buttons */}

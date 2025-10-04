@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config.endpoints import API_ROUTES
 from app.database import get_db
 from app.dependencies import get_current_active_user
 from app.models.user import User
@@ -9,7 +10,7 @@ from app.services.notification_service import notification_service
 router = APIRouter()
 
 
-@router.get("/")
+@router.get(API_ROUTES.NOTIFICATIONS.BASE)
 async def get_notifications(
     limit: int = Query(50, ge=1, le=100),
     unread_only: bool = Query(False),
@@ -38,7 +39,7 @@ async def get_notifications(
     }
 
 
-@router.get("/unread-count")
+@router.get(API_ROUTES.NOTIFICATIONS.UNREAD_COUNT)
 async def get_unread_count(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
@@ -48,7 +49,7 @@ async def get_unread_count(
     return {"unread_count": count}
 
 
-@router.put("/mark-read")
+@router.put(API_ROUTES.NOTIFICATIONS.MARK_READ)
 async def mark_notifications_read(
     notification_ids: list[int],
     current_user: User = Depends(get_current_active_user),
@@ -62,7 +63,7 @@ async def mark_notifications_read(
     return {"message": f"Marked {count} notifications as read"}
 
 
-@router.put("/mark-all-read")
+@router.put(API_ROUTES.NOTIFICATIONS.MARK_ALL_READ)
 async def mark_all_notifications_read(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),

@@ -32,7 +32,6 @@ import {
 
 // Types
 
-
 const formatDateInput = (date: Date) => date.toISOString().split('T')[0];
 
 const getDefaultFormData = (): NewPositionFormData => {

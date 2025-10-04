@@ -12,12 +12,7 @@ class CRUDTodoViewer:
     """CRUD operations for todo viewers."""
 
     async def add_viewers(
-        self,
-        db: AsyncSession,
-        *,
-        todo_id: int,
-        viewer_ids: list[int],
-        added_by: int
+        self, db: AsyncSession, *, todo_id: int, viewer_ids: list[int], added_by: int
     ) -> list[TodoViewer]:
         """Add multiple viewers to a todo."""
         # Remove existing viewers first
@@ -26,11 +21,7 @@ class CRUDTodoViewer:
         # Add new viewers
         viewers = []
         for user_id in viewer_ids:
-            viewer = TodoViewer(
-                todo_id=todo_id,
-                user_id=user_id,
-                added_by=added_by
-            )
+            viewer = TodoViewer(todo_id=todo_id, user_id=user_id, added_by=added_by)
             db.add(viewer)
             viewers.append(viewer)
 
@@ -42,12 +33,7 @@ class CRUDTodoViewer:
 
         return viewers
 
-    async def get_viewers(
-        self,
-        db: AsyncSession,
-        *,
-        todo_id: int
-    ) -> list[TodoViewer]:
+    async def get_viewers(self, db: AsyncSession, *, todo_id: int) -> list[TodoViewer]:
         """Get all viewers for a todo."""
         result = await db.execute(
             select(TodoViewer)
@@ -58,55 +44,33 @@ class CRUDTodoViewer:
         return list(result.scalars().all())
 
     async def remove_viewer(
-        self,
-        db: AsyncSession,
-        *,
-        todo_id: int,
-        user_id: int
+        self, db: AsyncSession, *, todo_id: int, user_id: int
     ) -> bool:
         """Remove a specific viewer from a todo."""
         result = await db.execute(
             delete(TodoViewer).where(
-                TodoViewer.todo_id == todo_id,
-                TodoViewer.user_id == user_id
+                TodoViewer.todo_id == todo_id, TodoViewer.user_id == user_id
             )
         )
         await db.commit()
         return result.rowcount > 0
 
-    async def remove_all_viewers(
-        self,
-        db: AsyncSession,
-        *,
-        todo_id: int
-    ) -> None:
+    async def remove_all_viewers(self, db: AsyncSession, *, todo_id: int) -> None:
         """Remove all viewers from a todo."""
-        await db.execute(
-            delete(TodoViewer).where(TodoViewer.todo_id == todo_id)
-        )
+        await db.execute(delete(TodoViewer).where(TodoViewer.todo_id == todo_id))
         await db.commit()
 
-    async def is_viewer(
-        self,
-        db: AsyncSession,
-        *,
-        todo_id: int,
-        user_id: int
-    ) -> bool:
+    async def is_viewer(self, db: AsyncSession, *, todo_id: int, user_id: int) -> bool:
         """Check if user is a viewer of the todo."""
         result = await db.execute(
             select(TodoViewer).where(
-                TodoViewer.todo_id == todo_id,
-                TodoViewer.user_id == user_id
+                TodoViewer.todo_id == todo_id, TodoViewer.user_id == user_id
             )
         )
         return result.scalars().first() is not None
 
     async def get_user_viewed_todos(
-        self,
-        db: AsyncSession,
-        *,
-        user_id: int
+        self, db: AsyncSession, *, user_id: int
     ) -> list[int]:
         """Get list of todo IDs that user is a viewer of."""
         result = await db.execute(

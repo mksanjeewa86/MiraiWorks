@@ -18,12 +18,7 @@ import {
   Legend,
 } from 'recharts';
 import type { PieLabelRenderProps } from 'recharts';
-import type {
-  LineChartProps,
-  AreaChartProps,
-  BarChartProps,
-  PieChartProps,
-} from '@/types/charts';
+import type { LineChartProps, AreaChartProps, BarChartProps, PieChartProps } from '@/types/charts';
 
 export function SimpleLineChart({
   data,
@@ -193,8 +188,15 @@ export function SimplePieChart({
 }: PieChartProps) {
   const renderLabel = (props: PieLabelRenderProps) => {
     const { cx, cy, midAngle, innerRadius, outerRadius, percent } = props;
-    if (midAngle === undefined || midAngle === null || percent === undefined || percent === null ||
-        innerRadius === undefined || outerRadius === undefined) return null;
+    if (
+      midAngle === undefined ||
+      midAngle === null ||
+      percent === undefined ||
+      percent === null ||
+      innerRadius === undefined ||
+      outerRadius === undefined
+    )
+      return null;
     if (typeof cx !== 'number' || typeof cy !== 'number') return null;
     const RADIAN = Math.PI / 180;
     const radius = Number(innerRadius) + (Number(outerRadius) - Number(innerRadius)) * 0.5;

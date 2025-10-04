@@ -14,7 +14,7 @@ class TestRecruitmentWorkflowLogic:
             "draft": ["active", "archived"],
             "active": ["archived", "inactive"],
             "inactive": ["active", "archived"],
-            "archived": []
+            "archived": [],
         }
 
         for current_status, allowed_next in valid_transitions.items():
@@ -25,7 +25,9 @@ class TestRecruitmentWorkflowLogic:
                 else:
                     # Invalid transition (except self-transition)
                     if current_status != next_status:
-                        assert not self._is_valid_transition(current_status, next_status)
+                        assert not self._is_valid_transition(
+                            current_status, next_status
+                        )
 
     def _is_valid_transition(self, current: str, next_status: str) -> bool:
         """Helper to check if status transition is valid"""
@@ -33,9 +35,11 @@ class TestRecruitmentWorkflowLogic:
             "draft": ["active", "archived"],
             "active": ["archived", "inactive"],
             "inactive": ["active", "archived"],
-            "archived": []
+            "archived": [],
         }
-        return next_status in valid_transitions.get(current, []) or current == next_status
+        return (
+            next_status in valid_transitions.get(current, []) or current == next_status
+        )
 
     def test_node_connection_condition_evaluation(self):
         """Test node connection condition evaluation logic"""
@@ -82,7 +86,7 @@ class TestRecruitmentWorkflowLogic:
             {"status": "completed"},
             {"status": "completed"},
             {"status": "in_progress"},
-            {"status": "pending"}
+            {"status": "pending"},
         ]
 
         total_nodes = len(executions)
@@ -116,7 +120,9 @@ class TestRecruitmentWorkflowLogic:
         # Completed executions are never overdue
         assert not self._is_overdue(due_date_past, "completed", now)
 
-    def _is_overdue(self, due_date: datetime, status: str, current_time: datetime) -> bool:
+    def _is_overdue(
+        self, due_date: datetime, status: str, current_time: datetime
+    ) -> bool:
         """Helper to check if execution is overdue"""
         if status == "completed" or due_date is None:
             return False
@@ -144,12 +150,13 @@ class TestRecruitmentWorkflowLogic:
             "nodes": [
                 {"id": 1, "title": "", "type": "interview"},  # Empty title - issue
                 {"id": 2, "title": "Valid Node", "type": "todo"},
-                {"id": 3, "title": "Another Node", "type": "invalid_type"}  # Invalid type - issue
+                {
+                    "id": 3,
+                    "title": "Another Node",
+                    "type": "invalid_type",
+                },  # Invalid type - issue
             ],
-            "connections": [
-                {"source": 1, "target": 2},
-                {"source": 2, "target": 3}
-            ]
+            "connections": [{"source": 1, "target": 2}, {"source": 2, "target": 3}],
         }
 
         issues = self._validate_workflow(workflow)
@@ -177,7 +184,7 @@ class TestRecruitmentWorkflowLogic:
         role_permissions = {
             "member": ["view_process", "execute_nodes", "schedule_interviews"],
             "observer": ["view_process"],
-            "admin": ["view_process", "execute_nodes", "override_results"]
+            "admin": ["view_process", "execute_nodes", "override_results"],
         }
 
         # Custom permissions override role defaults
@@ -185,13 +192,25 @@ class TestRecruitmentWorkflowLogic:
 
         assert self._has_permission("member", "view_process", role_permissions, {})
         assert self._has_permission("member", "execute_nodes", role_permissions, {})
-        assert not self._has_permission("member", "override_results", role_permissions, {})
+        assert not self._has_permission(
+            "member", "override_results", role_permissions, {}
+        )
 
         # Observer with custom execute permission
-        assert self._has_permission("observer", "execute_nodes", role_permissions, custom_permissions)
-        assert not self._has_permission("observer", "execute_nodes", role_permissions, {})
+        assert self._has_permission(
+            "observer", "execute_nodes", role_permissions, custom_permissions
+        )
+        assert not self._has_permission(
+            "observer", "execute_nodes", role_permissions, {}
+        )
 
-    def _has_permission(self, role: str, permission: str, role_permissions: dict, custom_permissions: dict) -> bool:
+    def _has_permission(
+        self,
+        role: str,
+        permission: str,
+        role_permissions: dict,
+        custom_permissions: dict,
+    ) -> bool:
         """Helper to check permissions"""
         if permission in custom_permissions:
             return custom_permissions[permission]
@@ -236,14 +255,11 @@ class TestRecruitmentWorkflowLogic:
             {"source": 2, "target": 3},
             {"source": 2, "target": 4},  # Branch
             {"source": 3, "target": 5},
-            {"source": 4, "target": 5}
+            {"source": 4, "target": 5},
         ]
 
         paths = self._calculate_paths(1, connections)
-        expected_paths = [
-            [1, 2, 3, 5],
-            [1, 2, 4, 5]
-        ]
+        expected_paths = [[1, 2, 3, 5], [1, 2, 4, 5]]
 
         assert len(paths) == 2
         for path in expected_paths:
@@ -288,7 +304,7 @@ class TestRecruitmentWorkflowValidation:
         valid_config = {
             "interview_type": "video",
             "duration_minutes": 60,
-            "interviewers": [1, 2]
+            "interviewers": [1, 2],
         }
 
         invalid_configs = [
@@ -324,7 +340,7 @@ class TestRecruitmentWorkflowValidation:
         valid_config = {
             "todo_type": "assignment",
             "due_in_days": 3,
-            "submission_type": "file"
+            "submission_type": "file",
         }
 
         invalid_configs = [
@@ -353,10 +369,7 @@ class TestRecruitmentWorkflowValidation:
 
     def test_decision_node_config_validation(self):
         """Test decision node configuration validation"""
-        valid_config = {
-            "decision_makers": [1, 2, 3],
-            "require_unanimous": False
-        }
+        valid_config = {"decision_makers": [1, 2, 3], "require_unanimous": False}
 
         invalid_configs = [
             {"decision_makers": []},  # Empty decision makers

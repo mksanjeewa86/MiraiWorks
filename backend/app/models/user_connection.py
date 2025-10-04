@@ -28,16 +28,10 @@ class UserConnection(Base):
 
     # The two users in this connection
     user_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("users.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     connected_user_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("users.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
 
     # Simple active status
@@ -48,42 +42,34 @@ class UserConnection(Base):
         String(20),
         nullable=False,
         default="manual",
-        comment="Type of creation: 'automatic' or 'manual'"
+        comment="Type of creation: 'automatic' or 'manual'",
     )
     created_by: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
-        comment="User who created this connection (NULL for automatic creation)"
+        comment="User who created this connection (NULL for automatic creation)",
     )
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        nullable=False,
-        default=datetime.utcnow
+        DateTime, nullable=False, default=datetime.utcnow
     )
 
     # Relationships
     user: Mapped["User"] = relationship(
-        "User",
-        foreign_keys=[user_id],
-        back_populates="sent_connections"
+        "User", foreign_keys=[user_id], back_populates="sent_connections"
     )
     connected_user: Mapped["User"] = relationship(
-        "User",
-        foreign_keys=[connected_user_id],
-        back_populates="received_connections"
+        "User", foreign_keys=[connected_user_id], back_populates="received_connections"
     )
     creator: Mapped["User | None"] = relationship(
-        "User",
-        foreign_keys=[created_by],
-        post_update=True
+        "User", foreign_keys=[created_by], post_update=True
     )
 
     # Ensure no duplicate connections
     __table_args__ = (
-        UniqueConstraint('user_id', 'connected_user_id', name='unique_user_connection'),
+        UniqueConstraint("user_id", "connected_user_id", name="unique_user_connection"),
     )
 
     def __repr__(self) -> str:

@@ -42,20 +42,20 @@ export type CalendarProvider = 'google' | 'outlook';
 // ==================== INTERNAL CALENDAR EVENTS ====================
 
 export enum EventType {
-  EVENT = "event",
-  MEETING = "meeting",
-  TASK = "task",
-  APPOINTMENT = "appointment",
-  REMINDER = "reminder",
-  BIRTHDAY = "birthday",
-  DEADLINE = "deadline"
+  EVENT = 'event',
+  MEETING = 'meeting',
+  TASK = 'task',
+  APPOINTMENT = 'appointment',
+  REMINDER = 'reminder',
+  BIRTHDAY = 'birthday',
+  DEADLINE = 'deadline',
 }
 
 export enum EventStatus {
-  CONFIRMED = "confirmed",
-  TENTATIVE = "tentative",
-  CANCELLED = "cancelled",
-  POSTPONED = "postponed"
+  CONFIRMED = 'confirmed',
+  TENTATIVE = 'tentative',
+  CANCELLED = 'cancelled',
+  POSTPONED = 'postponed',
 }
 
 export interface CalendarEventBase {

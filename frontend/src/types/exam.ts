@@ -12,11 +12,29 @@ export enum ExamStatus {
 }
 
 export enum ExamType {
+  // General Categories
   APTITUDE = 'aptitude',
   SKILL = 'skill',
   KNOWLEDGE = 'knowledge',
   PERSONALITY = 'personality',
   CUSTOM = 'custom',
+
+  // Japanese Aptitude Tests (適性検査)
+  SPI = 'spi', // Synthetic Personality Inventory
+  TAMATEBAKO = 'tamatebako', // 玉手箱
+  CAB = 'cab', // Computer Aptitude Battery
+  GAB = 'gab', // General Aptitude Battery
+  TG_WEB = 'tg_web', // TG-WEB
+  CUBIC = 'cubic', // CUBIC
+  NTT = 'ntt_aptitude', // NTT適性検査
+  KRAEPELIN = 'kraepelin', // クレペリン検査
+  SJT = 'sjt', // Situational Judgment Test
+
+  // Technical/Industry-Specific
+  PROGRAMMING_APTITUDE = 'programming_aptitude', // プログラミング適性検査
+  NUMERICAL_ABILITY = 'numerical_ability', // 数理能力検査
+  VERBAL_ABILITY = 'verbal_ability', // 言語能力検査
+  LOGICAL_THINKING = 'logical_thinking', // 論理思考テスト
 }
 
 export enum QuestionType {
@@ -309,9 +327,15 @@ export interface ExamStatistics {
   total_completed: number;
   completion_rate: number;
   average_score: number | null;
-  min_score: number | null;
-  max_score: number | null;
   average_time_minutes: number | null;
+  pass_rate: number | null;
+  question_statistics: Array<{
+    question_number?: number;
+    question_type?: string;
+    correct_percentage?: number;
+    average_time_seconds?: number;
+    [key: string]: any;
+  }>;
 }
 
 // ============================================================================
@@ -352,20 +376,6 @@ export interface ExamListResponse {
   page: number;
   page_size: number;
   has_more: boolean;
-}
-
-// Exam Statistics (from app/admin/exams/[id]/statistics/page.tsx)
-export interface ExamStatistics {
-  exam_id: number;
-  total_sessions: number;
-  completed_sessions: number;
-  average_score: number | null;
-  average_time_minutes: number | null;
-  pass_rate: number;
-  score_distribution: Record<string, number>;
-  question_analytics: QuestionAnalytics[];
-  time_distribution: Record<string, number>;
-  recent_sessions: SessionSummary[];
 }
 
 export interface QuestionAnalytics {

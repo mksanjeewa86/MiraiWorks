@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Save, Calendar, Settings, Trash2, UserX } from 'lucide-react';
 import { PREFECTURES } from '@/utils/prefectures';
@@ -15,6 +15,8 @@ function EditCompanyContent() {
   const router = useRouter();
   const params = useParams();
   const { showToast } = useToast();
+  const [showPrefectureDropdown, setShowPrefectureDropdown] = useState(false);
+  const prefectureDropdownRef = useRef<HTMLDivElement>(null);
   const [company, setCompany] = useState<Company | null>(null);
   const [formData, setFormData] = useState<CompanyFormData>({
     name: '',
@@ -38,6 +40,26 @@ function EditCompanyContent() {
   const [showDeactivateModal, setShowDeactivateModal] = useState(false);
 
   const companyId = params?.id as string;
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        prefectureDropdownRef.current &&
+        !prefectureDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowPrefectureDropdown(false);
+      }
+    };
+
+    if (showPrefectureDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showPrefectureDropdown]);
 
   useEffect(() => {
     const loadCompany = async () => {
@@ -324,14 +346,14 @@ function EditCompanyContent() {
               </div>
 
               {/* Prefecture */}
-              <div>
+              <div className="relative" ref={prefectureDropdownRef}>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   都道府県 (Prefecture)
                 </label>
-                <select
-                  value={formData.prefecture}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, prefecture: e.target.value }))}
-                  className="w-full px-3 py-2 pr-8 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white appearance-none bg-white"
+                <button
+                  type="button"
+                  onClick={() => setShowPrefectureDropdown(!showPrefectureDropdown)}
+                  className="w-full px-3 py-2 pr-8 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white bg-white text-left"
                   style={{
                     backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                     backgroundPosition: 'right 12px center',
@@ -339,13 +361,35 @@ function EditCompanyContent() {
                     backgroundSize: '16px',
                   }}
                 >
-                  <option value="">Select Prefecture</option>
-                  {PREFECTURES.map((prefecture) => (
-                    <option key={prefecture.code} value={prefecture.nameJa}>
-                      {prefecture.nameJa} ({prefecture.nameEn})
-                    </option>
-                  ))}
-                </select>
+                  {formData.prefecture || '選択してください'}
+                </button>
+                {showPrefectureDropdown && (
+                  <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-[400px] overflow-y-auto">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData((prev) => ({ ...prev, prefecture: '' }));
+                        setShowPrefectureDropdown(false);
+                      }}
+                      className="w-full px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-900 dark:text-white"
+                    >
+                      選択してください
+                    </button>
+                    {PREFECTURES.map((prefecture) => (
+                      <button
+                        key={prefecture.code}
+                        type="button"
+                        onClick={() => {
+                          setFormData((prev) => ({ ...prev, prefecture: prefecture.nameJa }));
+                          setShowPrefectureDropdown(false);
+                        }}
+                        className="w-full px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-900 dark:text-white"
+                      >
+                        {prefecture.nameJa} ({prefecture.nameEn})
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* City */}

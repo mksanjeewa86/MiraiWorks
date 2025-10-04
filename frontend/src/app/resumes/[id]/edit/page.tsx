@@ -22,7 +22,6 @@ import {
 import { resumesApi } from '@/api/resumes';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
-
 function EditResumePageContent() {
   const router = useRouter();
   const params = useParams();

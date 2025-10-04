@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { UseTranscriptionResult } from '@/types/hooks';
 import { TranscriptionSegment, TranscriptionState } from '../types/video';
 import { apiClient } from '../api/apiClient';
-
+import { API_ENDPOINTS } from '../api/config';
 
 export const useTranscription = (
   callId?: string,
@@ -186,13 +186,16 @@ export const useTranscription = (
 
   const saveSegmentToBackend = async (segment: TranscriptionSegment) => {
     try {
-      await apiClient.post<TranscriptionSegment>(`/api/video-calls/${callId}/transcript/segments`, {
-        speaker_id: segment.speaker_id,
-        segment_text: segment.segment_text,
-        start_time: segment.start_time,
-        end_time: segment.end_time,
-        confidence: segment.confidence,
-      });
+      await apiClient.post<TranscriptionSegment>(
+        API_ENDPOINTS.VIDEO_CALLS.TRANSCRIPT_SEGMENTS(callId!),
+        {
+          speaker_id: segment.speaker_id,
+          segment_text: segment.segment_text,
+          start_time: segment.start_time,
+          end_time: segment.end_time,
+          confidence: segment.confidence,
+        }
+      );
     } catch (error) {
       console.error('Error saving transcription segment:', error);
     }
@@ -217,7 +220,7 @@ export const useTranscription = (
   const exportTranscript = async (format: 'txt' | 'pdf' | 'srt'): Promise<string | null> => {
     try {
       const response = await apiClient.get<{ download_url: string }>(
-        `/api/video-calls/${callId}/transcript/download?format=${format}`
+        `${API_ENDPOINTS.VIDEO_CALLS.TRANSCRIPT_DOWNLOAD(callId!)}?format=${format}`
       );
       return response.data.download_url;
     } catch (error) {
@@ -236,7 +239,7 @@ export const useTranscription = (
   const loadExistingSegments = async () => {
     try {
       const response = await apiClient.get<{ segments: TranscriptionSegment[] }>(
-        `/api/video-calls/${callId}/transcript`
+        API_ENDPOINTS.VIDEO_CALLS.TRANSCRIPT(callId!)
       );
       if (response.data.segments) {
         setState((prev) => ({

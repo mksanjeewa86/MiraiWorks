@@ -20,18 +20,24 @@ class NodeConnection(Base):
 
     # Process relationship
     process_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("recruitment_processes.id", ondelete="CASCADE"),
-        nullable=False, index=True
+        Integer,
+        ForeignKey("recruitment_processes.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
 
     # Connection endpoints
     source_node_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("process_nodes.id", ondelete="CASCADE"),
-        nullable=False, index=True
+        Integer,
+        ForeignKey("process_nodes.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     target_node_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("process_nodes.id", ondelete="CASCADE"),
-        nullable=False, index=True
+        Integer,
+        ForeignKey("process_nodes.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
 
     # Connection configuration
@@ -54,12 +60,12 @@ class NodeConnection(Base):
     source_node: Mapped[ProcessNode] = relationship(
         "ProcessNode",
         foreign_keys=[source_node_id],
-        back_populates="outgoing_connections"
+        back_populates="outgoing_connections",
     )
     target_node: Mapped[ProcessNode] = relationship(
         "ProcessNode",
         foreign_keys=[target_node_id],
-        back_populates="incoming_connections"
+        back_populates="incoming_connections",
     )
 
     @property
@@ -74,7 +80,9 @@ class NodeConnection(Base):
     def is_conditional(self) -> bool:
         return self.condition_type == "conditional"
 
-    def evaluate_condition(self, execution_result: str, execution_data: dict | None = None) -> bool:
+    def evaluate_condition(
+        self, execution_result: str, execution_data: dict | None = None
+    ) -> bool:
         """Evaluate whether this connection should be taken based on execution result"""
         if self.condition_type == "always":
             return True
@@ -91,7 +99,9 @@ class NodeConnection(Base):
 
         return False
 
-    def _evaluate_custom_condition(self, execution_result: str, execution_data: dict | None = None) -> bool:
+    def _evaluate_custom_condition(
+        self, execution_result: str, execution_data: dict | None = None
+    ) -> bool:
         """Evaluate custom conditions based on condition_config"""
         if not self.condition_config:
             return False

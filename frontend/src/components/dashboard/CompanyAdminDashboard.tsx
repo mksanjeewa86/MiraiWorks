@@ -1,32 +1,38 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { BuildingOffice2Icon, UsersIcon, UserPlusIcon } from '@heroicons/react/24/outline';
+import { CalendarDaysIcon } from '@heroicons/react/24/solid';
+import { Activity } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { dashboardApi } from '@/api/dashboard';
-import { Card } from '@/components/ui';
-import { Badge } from '@/components/ui';
-import { LoadingSpinner } from '@/components/ui';
-import { Button } from '@/components/ui';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import {
-  Users,
-  Building2,
-  UserCheck,
-  UserX,
-  Activity,
-  TrendingUp,
-  Calendar,
-  MessageSquare,
-} from 'lucide-react';
-import { CompanyAdminStats } from '@/types/dashboard';
+  DashboardContentGate,
+  DashboardHeader,
+  DashboardMetricCard,
+} from '@/components/dashboard/common';
+import { SimpleBarChart } from '@/components/dashboard/Charts';
+import type { CompanyAdminStats } from '@/types/dashboard';
 
 export default function CompanyAdminDashboard() {
-  const {} = useAuth();
+  const { user } = useAuth();
+  const router = useRouter();
   const [stats, setStats] = useState<CompanyAdminStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
   const loadDashboardData = async () => {
     try {
+      setLoading(true);
       const response = await dashboardApi.getStats();
       setStats(response.data as CompanyAdminStats);
       setError(null);
@@ -37,27 +43,69 @@ export default function CompanyAdminDashboard() {
     }
   };
 
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
+  const metrics = useMemo(() => {
+    if (!stats) return [];
+    return [
+      {
+        label: 'Total employees',
+        value: stats.total_employees ?? 0,
+        helperText: 'All workforce members',
+        trendLabel: `${stats.active_employees ?? 0} active`,
+        trendTone: 'positive' as const,
+        icon: <UsersIcon className="h-6 w-6" />,
+      },
+      {
+        label: 'Active positions',
+        value: stats.active_positions ?? 0,
+        helperText: 'Open roles across the company',
+        trendLabel: `${stats.total_positions ?? 0} total roles`,
+        trendTone: 'neutral' as const,
+        icon: <BuildingOffice2Icon className="h-6 w-6" />,
+      },
+      {
+        label: 'Pending employees',
+        value: stats.pending_employees ?? 0,
+        helperText: 'Awaiting onboarding approval',
+        trendLabel: `${stats.total_recruiters ?? 0} recruiters supporting`,
+        trendTone: (stats.pending_employees && stats.pending_employees > 0
+          ? 'negative'
+          : 'neutral') as 'positive' | 'negative' | 'neutral',
+        icon: <UserPlusIcon className="h-6 w-6" />,
+      },
+      {
+        label: 'Interviews scheduled',
+        value: stats.interviews_scheduled ?? 0,
+        helperText: 'Upcoming interviews company-wide',
+        trendLabel: `${stats.total_applications ?? 0} applications`,
+        trendTone: 'neutral' as const,
+        icon: <CalendarDaysIcon className="h-6 w-6" />,
+      },
+    ];
+  }, [stats]);
 
-  const getActivityIcon = (type: string) => {
-    switch (type.toLowerCase()) {
-      case 'user_created':
-        return <UserCheck className="h-4 w-4 text-green-600" />;
-      case 'user_deactivated':
-        return <UserX className="h-4 w-4 text-red-600" />;
-      case 'position_created':
-        return <Building2 className="h-4 w-4 text-blue-600" />;
-      case 'interview_scheduled':
-        return <Calendar className="h-4 w-4 text-purple-600" />;
-      default:
-        return <Activity className="h-4 w-4 text-gray-600" />;
-    }
-  };
+  const activityByType = useMemo(() => {
+    const counts = new Map<string, number>();
+    (stats?.recent_activities ?? []).forEach((activity) => {
+      const key = activity.type ?? 'update';
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    });
+    return Array.from(counts.entries()).map(([name, value]) => ({ name, value }));
+  }, [stats]);
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+  const employeeRatios = useMemo(() => {
+    if (!stats) return { active: 0, pending: 0 };
+    const total = Math.max(stats.total_employees ?? 0, 1);
+    return {
+      active: Math.round(((stats.active_employees ?? 0) / total) * 100),
+      pending: Math.round(((stats.pending_employees ?? 0) / total) * 100),
+    };
+  }, [stats]);
+
+  const formatTimestamp = (value?: string) => {
+    if (!value) return 'N/A';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return 'N/A';
+    return date.toLocaleString('en-US', {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
@@ -65,205 +113,190 @@ export default function CompanyAdminDashboard() {
     });
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <LoadingSpinner className="w-8 h-8" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-6">
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-          <h2 className="text-lg font-semibold text-red-800 dark:text-red-200">
-            Error Loading Dashboard
-          </h2>
-          <p className="text-red-600 dark:text-red-400 mt-2">{error}</p>
-          <Button onClick={loadDashboardData} className="mt-4">
-            Try Again
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="p-6">
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
-                Total Employees
-              </p>
-              <p className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                {stats?.total_employees || 0}
-              </p>
-            </div>
-            <div
-              className="w-12 h-12 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)' }}
-            >
-              <Users className="h-6 w-6 text-green-600" />
-            </div>
+    <div className="space-y-6 p-6">
+      <DashboardHeader
+        title="Company administration portal"
+        subtitle={`Hello${user?.full_name ? `, ${user.full_name}` : ''}`}
+        description="Oversee staffing health, approve team members, and keep operations moving."
+        actions={
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={loadDashboardData}>
+              Refresh
+            </Button>
+            <Button size="sm" onClick={() => router.push('/app/employees/new')}>
+              Add employee
+            </Button>
           </div>
-        </Card>
+        }
+        meta={`Snapshot ${new Date().toLocaleTimeString()}`}
+      />
 
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
-                Active Positions
-              </p>
-              <p className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                {stats?.active_positions || 0}
-              </p>
-            </div>
-            <div
-              className="w-12 h-12 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }}
-            >
-              <Building2 className="h-6 w-6 text-blue-600" />
-            </div>
-          </div>
-        </Card>
+      <DashboardContentGate loading={loading} error={error} onRetry={loadDashboardData}>
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {metrics.map((metric) => (
+            <DashboardMetricCard
+              key={metric.label}
+              label={metric.label}
+              value={metric.value}
+              helperText={metric.helperText}
+              trendLabel={metric.trendLabel}
+              trendTone={metric.trendTone}
+              icon={metric.icon}
+            />
+          ))}
+        </section>
 
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
-                Applications
-              </p>
-              <p className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                {stats?.total_applications || 0}
-              </p>
-            </div>
-            <div
-              className="w-12 h-12 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: 'rgba(168, 85, 247, 0.1)' }}
-            >
-              <TrendingUp className="h-6 w-6 text-purple-600" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
-                Interviews Scheduled
-              </p>
-              <p className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                {stats?.interviews_scheduled || 0}
-              </p>
-            </div>
-            <div
-              className="w-12 h-12 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: 'rgba(251, 146, 60, 0.1)' }}
-            >
-              <Calendar className="h-6 w-6 text-orange-600" />
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Employee Status */}
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
-            Employee Status
-          </h3>
-          <div className="space-y-4">
+        <section className="grid gap-6 xl:grid-cols-3">
+          <Card className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 xl:col-span-2">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <Badge variant="success">Active</Badge>
-              </div>
-              <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>
-                {stats?.active_employees || 0}
-              </span>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+                Employee distribution
+              </h2>
+              <Badge variant="outline">Team health</Badge>
             </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <Badge variant="warning">Pending</Badge>
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              View how your workforce is balanced between active, pending, and recruiter members.
+            </p>
+            <div className="mt-6 grid gap-4 md:grid-cols-3">
+              <div className="rounded-xl border border-gray-100 p-4 dark:border-gray-800">
+                <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                  Active
+                </p>
+                <p className="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-50">
+                  {stats?.active_employees ?? 0}
+                </p>
+                <Progress className="mt-3" value={employeeRatios.active} max={100} />
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  {employeeRatios.active}% of total
+                </p>
               </div>
-              <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>
-                {stats?.pending_employees || 0}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <Badge variant="secondary">Recruiters</Badge>
+              <div className="rounded-xl border border-gray-100 p-4 dark:border-gray-800">
+                <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                  Pending
+                </p>
+                <p className="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-50">
+                  {stats?.pending_employees ?? 0}
+                </p>
+                <Progress className="mt-3" value={employeeRatios.pending} max={100} />
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  {employeeRatios.pending}% of total
+                </p>
               </div>
-              <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>
-                {stats?.total_recruiters || 0}
-              </span>
+              <div className="rounded-xl border border-gray-100 p-4 dark:border-gray-800">
+                <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                  Recruiters
+                </p>
+                <p className="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-50">
+                  {stats?.total_recruiters ?? 0}
+                </p>
+                <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+                  Ensure recruiters have the right access and capacity.
+                </p>
+              </div>
             </div>
-          </div>
-        </Card>
+          </Card>
 
-        {/* Recent Activities */}
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
-            Recent Activities
-          </h3>
-          <div className="space-y-4">
-            {stats?.recent_activities?.length ? (
-              stats.recent_activities.slice(0, 5).map((activity) => (
-                <div
-                  key={activity.id}
-                  className="flex items-start space-x-3 py-3 border-b border-gray-100 dark:border-gray-800 last:border-b-0"
-                >
-                  <div className="flex-shrink-0 mt-1">{getActivityIcon(activity.type)}</div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                      {activity.description}
-                    </p>
-                    <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                      by {activity.user_name} • {formatDate(activity.timestamp)}
-                    </p>
-                  </div>
+          <Card className="flex flex-col gap-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+                Activity by category
+              </h2>
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                Track where your team spends most of its time.
+              </p>
+            </div>
+            <div className="h-[220px]">
+              {activityByType.length ? (
+                <SimpleBarChart data={activityByType} dataKey="value" color="#F97316" />
+              ) : (
+                <div className="flex h-full items-center justify-center text-sm text-gray-500">
+                  Recent activity will populate here once actions are logged.
                 </div>
-              ))
-            ) : (
-              <div className="text-center py-8">
-                <Activity
-                  className="h-12 w-12 mx-auto mb-4"
-                  style={{ color: 'var(--text-muted)' }}
-                />
-                <p style={{ color: 'var(--text-muted)' }}>No recent activities</p>
-              </div>
-            )}
-          </div>
-        </Card>
-      </div>
+              )}
+            </div>
+          </Card>
+        </section>
 
-      {/* Quick Actions */}
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
-          Quick Actions
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Button className="flex items-center justify-center gap-2 p-4">
-            <Users className="h-4 w-4" />
-            Manage Employees
-          </Button>
-          <Button variant="outline" className="flex items-center justify-center gap-2 p-4">
-            <Building2 className="h-4 w-4" />
-            Manage Positions
-          </Button>
-          <Button variant="outline" className="flex items-center justify-center gap-2 p-4">
-            <UserCheck className="h-4 w-4" />
-            Review Applications
-          </Button>
-          <Button variant="outline" className="flex items-center justify-center gap-2 p-4">
-            <MessageSquare className="h-4 w-4" />
-            Company Settings
-          </Button>
-        </div>
-      </Card>
+        <section className="grid gap-6 xl:grid-cols-2">
+          <Card className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+                Recent company activity
+              </h2>
+              <Badge variant="outline">Last 5</Badge>
+            </div>
+            <div className="mt-4 space-y-4">
+              {stats?.recent_activities?.length ? (
+                stats.recent_activities.slice(0, 6).map((activity) => (
+                  <div
+                    key={activity.id}
+                    className="flex items-start justify-between rounded-xl border border-gray-100 px-4 py-3 dark:border-gray-800"
+                  >
+                    <div className="flex items-start gap-3">
+                      <Activity className="h-5 w-5 text-indigo-500" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          {activity.description}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          by {activity.user_name}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {formatTimestamp(activity.timestamp)}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge variant="outline">{activity.type}</Badge>
+                  </div>
+                ))
+              ) : (
+                <div className="flex h-full items-center justify-center rounded-xl border border-dashed border-gray-200 p-6 text-sm text-gray-500 dark:border-gray-800">
+                  Company activity will display once actions are performed.
+                </div>
+              )}
+            </div>
+          </Card>
+
+          <Card className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+                Admin quick actions
+              </h2>
+              <Badge variant="outline">Shortcuts</Badge>
+            </div>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <Button
+                className="h-20 flex-col justify-center gap-2"
+                onClick={() => router.push('/app/employees')}
+              >
+                Manage employees
+              </Button>
+              <Button
+                variant="outline"
+                className="h-20 flex-col justify-center gap-2"
+                onClick={() => router.push('/app/positions')}
+              >
+                Manage positions
+              </Button>
+              <Button
+                variant="outline"
+                className="h-20 flex-col justify-center gap-2"
+                onClick={() => router.push('/app/applications')}
+              >
+                Review applications
+              </Button>
+              <Button
+                variant="outline"
+                className="h-20 flex-col justify-center gap-2"
+                onClick={() => router.push('/app/settings')}
+              >
+                Company settings
+              </Button>
+            </div>
+          </Card>
+        </section>
+      </DashboardContentGate>
     </div>
   );
 }

@@ -188,7 +188,9 @@ async def _process_calendar_event(
 
 
 async def _create_calendar_event_for_interview(
-    db: AsyncSession, integration, interview: Interview  # TODO: Fix ExternalCalendarAccount type
+    db: AsyncSession,
+    integration,
+    interview: Interview,  # TODO: Fix ExternalCalendarAccount type
 ):
     """Create a calendar event for an interview."""
     # TODO: Implement when ExternalCalendarAccount model is fixed
@@ -196,7 +198,9 @@ async def _create_calendar_event_for_interview(
 
 
 async def _update_calendar_event_for_interview(
-    db: AsyncSession, integration, interview: Interview  # TODO: Fix ExternalCalendarAccount type
+    db: AsyncSession,
+    integration,
+    interview: Interview,  # TODO: Fix ExternalCalendarAccount type
 ):
     """Update a calendar event for an interview."""
     # TODO: Implement when ExternalCalendarAccount model is fixed
@@ -204,7 +208,9 @@ async def _update_calendar_event_for_interview(
 
 
 async def _delete_calendar_event_for_interview(
-    db: AsyncSession, integration, interview: Interview  # TODO: Fix ExternalCalendarAccount type
+    db: AsyncSession,
+    integration,
+    interview: Interview,  # TODO: Fix ExternalCalendarAccount type
 ):
     """Delete a calendar event for an interview."""
     # TODO: Implement when ExternalCalendarAccount model is fixed

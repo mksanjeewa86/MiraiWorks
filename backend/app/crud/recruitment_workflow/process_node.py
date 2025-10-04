@@ -12,13 +12,8 @@ from app.models.process_node import ProcessNode
 
 
 class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
-
     async def create(
-        self,
-        db: AsyncSession,
-        *,
-        obj_in: dict[str, Any],
-        created_by: int
+        self, db: AsyncSession, *, obj_in: dict[str, Any], created_by: int
     ) -> ProcessNode:
         """Create a new process node"""
         obj_data = obj_in.copy()
@@ -37,11 +32,7 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
         return db_obj
 
     async def get_by_process_id(
-        self,
-        db: AsyncSession,
-        *,
-        process_id: int,
-        include_inactive: bool = False
+        self, db: AsyncSession, *, process_id: int, include_inactive: bool = False
     ) -> list[ProcessNode]:
         """Get all nodes for a process"""
         conditions = [ProcessNode.process_id == process_id]
@@ -57,10 +48,7 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
         return result.scalars().all()
 
     async def get_with_connections(
-        self,
-        db: AsyncSession,
-        *,
-        id: int
+        self, db: AsyncSession, *, id: int
     ) -> ProcessNode | None:
         """Get node with its connections"""
         result = await db.execute(
@@ -68,27 +56,23 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
             .options(
                 selectinload(ProcessNode.outgoing_connections),
                 selectinload(ProcessNode.incoming_connections),
-                selectinload(ProcessNode.executions)
+                selectinload(ProcessNode.executions),
             )
             .where(ProcessNode.id == id)
         )
         return result.scalars().first()
 
     async def get_start_nodes(
-        self,
-        db: AsyncSession,
-        *,
-        process_id: int
+        self, db: AsyncSession, *, process_id: int
     ) -> list[ProcessNode]:
         """Get start nodes for a process (nodes with no incoming connections or sequence_order = 1)"""
         # First try to get node with sequence_order = 1
         result = await db.execute(
-            select(ProcessNode)
-            .where(
+            select(ProcessNode).where(
                 and_(
                     ProcessNode.process_id == process_id,
                     ProcessNode.sequence_order == 1,
-                    ProcessNode.status == "active"
+                    ProcessNode.status == "active",
                 )
             )
         )
@@ -99,8 +83,9 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
 
         # If no node with sequence_order = 1, find nodes with no incoming connections
         subquery = (
-            select(NodeConnection.target_node_id)
-            .where(NodeConnection.process_id == process_id)
+            select(NodeConnection.target_node_id).where(
+                NodeConnection.process_id == process_id
+            )
         ).subquery()
 
         result = await db.execute(
@@ -109,7 +94,7 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
                 and_(
                     ProcessNode.process_id == process_id,
                     ProcessNode.status == "active",
-                    ProcessNode.id.notin_(subquery)
+                    ProcessNode.id.notin_(subquery),
                 )
             )
             .order_by(asc(ProcessNode.sequence_order))
@@ -122,7 +107,7 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
         *,
         node_id: int,
         execution_result: str,
-        execution_data: dict[str, Any] | None = None
+        execution_data: dict[str, Any] | None = None,
     ) -> list[ProcessNode]:
         """Get next nodes based on execution result"""
         # Get outgoing connections
@@ -147,7 +132,7 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
         *,
         db_obj: ProcessNode,
         obj_in: dict[str, Any],
-        updated_by: int
+        updated_by: int,
     ) -> ProcessNode:
         """Update a process node"""
         if isinstance(obj_in, dict):
@@ -172,7 +157,7 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
         *,
         process_id: int,
         node_sequence_updates: list[dict[str, int]],
-        updated_by: int
+        updated_by: int,
     ) -> list[ProcessNode]:
         """Reorder nodes in a process
 
@@ -210,11 +195,7 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
         return result_nodes
 
     async def activate_node(
-        self,
-        db: AsyncSession,
-        *,
-        db_obj: ProcessNode,
-        updated_by: int
+        self, db: AsyncSession, *, db_obj: ProcessNode, updated_by: int
     ) -> ProcessNode:
         """Activate a node"""
         db_obj.activate(updated_by)
@@ -223,11 +204,7 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
         return db_obj
 
     async def deactivate_node(
-        self,
-        db: AsyncSession,
-        *,
-        db_obj: ProcessNode,
-        updated_by: int
+        self, db: AsyncSession, *, db_obj: ProcessNode, updated_by: int
     ) -> ProcessNode:
         """Deactivate a node"""
         db_obj.deactivate(updated_by)
@@ -236,18 +213,12 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
         return db_obj
 
     async def get_node_statistics(
-        self,
-        db: AsyncSession,
-        *,
-        node_id: int
+        self, db: AsyncSession, *, node_id: int
     ) -> dict[str, Any]:
         """Get statistics for a specific node"""
         # Count executions by status
         status_counts = await db.execute(
-            select(
-                NodeExecution.status,
-                func.count(NodeExecution.id).label("count")
-            )
+            select(NodeExecution.status, func.count(NodeExecution.id).label("count"))
             .where(NodeExecution.node_id == node_id)
             .group_by(NodeExecution.status)
         )
@@ -256,15 +227,9 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
 
         # Count executions by result
         result_counts = await db.execute(
-            select(
-                NodeExecution.result,
-                func.count(NodeExecution.id).label("count")
-            )
+            select(NodeExecution.result, func.count(NodeExecution.id).label("count"))
             .where(
-                and_(
-                    NodeExecution.node_id == node_id,
-                    NodeExecution.result.isnot(None)
-                )
+                and_(NodeExecution.node_id == node_id, NodeExecution.result.isnot(None))
             )
             .group_by(NodeExecution.result)
         )
@@ -275,14 +240,16 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
         avg_duration_result = await db.execute(
             select(
                 func.avg(
-                    func.extract('epoch', NodeExecution.completed_at - NodeExecution.started_at) / 60
+                    func.extract(
+                        "epoch", NodeExecution.completed_at - NodeExecution.started_at
+                    )
+                    / 60
                 )
-            )
-            .where(
+            ).where(
                 and_(
                     NodeExecution.node_id == node_id,
                     NodeExecution.started_at.isnot(None),
-                    NodeExecution.completed_at.isnot(None)
+                    NodeExecution.completed_at.isnot(None),
                 )
             )
         )
@@ -291,12 +258,8 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
 
         # Calculate average score
         avg_score_result = await db.execute(
-            select(func.avg(NodeExecution.score))
-            .where(
-                and_(
-                    NodeExecution.node_id == node_id,
-                    NodeExecution.score.isnot(None)
-                )
+            select(func.avg(NodeExecution.score)).where(
+                and_(NodeExecution.node_id == node_id, NodeExecution.score.isnot(None))
             )
         )
 
@@ -304,7 +267,11 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
 
         total_executions = sum(status_dict.values())
         completed_executions = status_dict.get("completed", 0)
-        completion_rate = (completed_executions / total_executions * 100) if total_executions > 0 else 0
+        completion_rate = (
+            (completed_executions / total_executions * 100)
+            if total_executions > 0
+            else 0
+        )
 
         return {
             "total_executions": total_executions,
@@ -312,15 +279,11 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
             "by_result": result_dict,
             "completion_rate": completion_rate,
             "average_duration_minutes": avg_duration,
-            "average_score": avg_score
+            "average_score": avg_score,
         }
 
     async def get_bottleneck_nodes(
-        self,
-        db: AsyncSession,
-        *,
-        process_id: int,
-        limit: int = 5
+        self, db: AsyncSession, *, process_id: int, limit: int = 5
     ) -> list[dict[str, Any]]:
         """Get nodes that are bottlenecks in the process"""
         # Nodes with longest average execution time or lowest completion rate
@@ -331,14 +294,14 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
                 ProcessNode.node_type,
                 func.count(NodeExecution.id).label("total_executions"),
                 func.sum(
-                    func.case(
-                        (NodeExecution.status == "completed", 1),
-                        else_=0
-                    )
+                    func.case((NodeExecution.status == "completed", 1), else_=0)
                 ).label("completed_executions"),
                 func.avg(
-                    func.extract('epoch', NodeExecution.completed_at - NodeExecution.started_at) / 60
-                ).label("avg_duration_minutes")
+                    func.extract(
+                        "epoch", NodeExecution.completed_at - NodeExecution.started_at
+                    )
+                    / 60
+                ).label("avg_duration_minutes"),
             )
             .join(NodeExecution, ProcessNode.id == NodeExecution.node_id, isouter=True)
             .where(ProcessNode.process_id == process_id)
@@ -350,54 +313,48 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
 
         bottlenecks = []
         for row in result:
-            completion_rate = (row.completed_executions / row.total_executions * 100) if row.total_executions > 0 else 0
+            completion_rate = (
+                (row.completed_executions / row.total_executions * 100)
+                if row.total_executions > 0
+                else 0
+            )
             bottleneck_score = (row.avg_duration_minutes or 0) + (100 - completion_rate)
 
-            bottlenecks.append({
-                "node_id": row.id,
-                "node_title": row.title,
-                "node_type": row.node_type,
-                "total_executions": row.total_executions,
-                "completion_rate": completion_rate,
-                "avg_duration_minutes": row.avg_duration_minutes or 0,
-                "bottleneck_score": bottleneck_score
-            })
+            bottlenecks.append(
+                {
+                    "node_id": row.id,
+                    "node_title": row.title,
+                    "node_type": row.node_type,
+                    "total_executions": row.total_executions,
+                    "completion_rate": completion_rate,
+                    "avg_duration_minutes": row.avg_duration_minutes or 0,
+                    "bottleneck_score": bottleneck_score,
+                }
+            )
 
         return sorted(bottlenecks, key=lambda x: x["bottleneck_score"], reverse=True)
 
-    async def can_delete_node(
-        self,
-        db: AsyncSession,
-        *,
-        node_id: int
-    ) -> bool:
+    async def can_delete_node(self, db: AsyncSession, *, node_id: int) -> bool:
         """Check if a node can be safely deleted"""
         # Check if there are any executions
         result = await db.execute(
-            select(func.count(NodeExecution.id))
-            .where(NodeExecution.node_id == node_id)
+            select(func.count(NodeExecution.id)).where(NodeExecution.node_id == node_id)
         )
 
         execution_count = result.scalar() or 0
         return execution_count == 0
 
-    async def delete_with_connections(
-        self,
-        db: AsyncSession,
-        *,
-        node_id: int
-    ) -> bool:
+    async def delete_with_connections(self, db: AsyncSession, *, node_id: int) -> bool:
         """Delete a node and its connections"""
         if not await self.can_delete_node(db, node_id=node_id):
             return False
 
         # Delete connections
         await db.execute(
-            select(NodeConnection)
-            .where(
+            select(NodeConnection).where(
                 or_(
                     NodeConnection.source_node_id == node_id,
-                    NodeConnection.target_node_id == node_id
+                    NodeConnection.target_node_id == node_id,
                 )
             )
         )
@@ -416,7 +373,7 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
         *,
         source_node_id: int,
         new_sequence_order: int,
-        created_by: int
+        created_by: int,
     ) -> ProcessNode:
         """Duplicate a node within the same process"""
         source_node = await self.get(db, id=source_node_id)
@@ -439,7 +396,7 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
             "can_skip": source_node.can_skip,
             "auto_advance": source_node.auto_advance,
             "status": "draft",
-            "created_by": created_by
+            "created_by": created_by,
         }
 
         duplicate_node = ProcessNode(**duplicate_data)

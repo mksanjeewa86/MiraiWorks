@@ -11,12 +11,8 @@ from app.models.node_execution import NodeExecution
 
 
 class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
-
     async def create(
-        self,
-        db: AsyncSession,
-        *,
-        obj_in: dict[str, Any]
+        self, db: AsyncSession, *, obj_in: dict[str, Any]
     ) -> NodeExecution:
         """Create a new node execution"""
         db_obj = NodeExecution(**obj_in)
@@ -26,30 +22,21 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         return db_obj
 
     async def get_by_candidate_process_and_node(
-        self,
-        db: AsyncSession,
-        *,
-        candidate_process_id: int,
-        node_id: int
+        self, db: AsyncSession, *, candidate_process_id: int, node_id: int
     ) -> NodeExecution | None:
         """Get execution by candidate process and node"""
         result = await db.execute(
-            select(NodeExecution)
-            .where(
+            select(NodeExecution).where(
                 and_(
                     NodeExecution.candidate_process_id == candidate_process_id,
-                    NodeExecution.node_id == node_id
+                    NodeExecution.node_id == node_id,
                 )
             )
         )
         return result.scalars().first()
 
     async def get_by_candidate_process_id(
-        self,
-        db: AsyncSession,
-        *,
-        candidate_process_id: int,
-        status: str | None = None
+        self, db: AsyncSession, *, candidate_process_id: int, status: str | None = None
     ) -> list[NodeExecution]:
         """Get all executions for a candidate process"""
         conditions = [NodeExecution.candidate_process_id == candidate_process_id]
@@ -72,7 +59,7 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         node_id: int,
         status: str | None = None,
         skip: int = 0,
-        limit: int = 100
+        limit: int = 100,
     ) -> list[NodeExecution]:
         """Get all executions for a specific node"""
         conditions = [NodeExecution.node_id == node_id]
@@ -83,8 +70,10 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         result = await db.execute(
             select(NodeExecution)
             .options(
-                selectinload(NodeExecution.candidate_process).selectinload(CandidateProcess.candidate),
-                selectinload(NodeExecution.assignee)
+                selectinload(NodeExecution.candidate_process).selectinload(
+                    CandidateProcess.candidate
+                ),
+                selectinload(NodeExecution.assignee),
             )
             .where(and_(*conditions))
             .order_by(desc(NodeExecution.created_at))
@@ -100,7 +89,7 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         user_id: int,
         status: str | None = None,
         skip: int = 0,
-        limit: int = 100
+        limit: int = 100,
     ) -> list[NodeExecution]:
         """Get executions assigned to a specific user"""
         conditions = [NodeExecution.assigned_to == user_id]
@@ -112,7 +101,9 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
             select(NodeExecution)
             .options(
                 selectinload(NodeExecution.node),
-                selectinload(NodeExecution.candidate_process).selectinload(CandidateProcess.candidate)
+                selectinload(NodeExecution.candidate_process).selectinload(
+                    CandidateProcess.candidate
+                ),
             )
             .where(and_(*conditions))
             .order_by(asc(NodeExecution.due_date))
@@ -122,16 +113,12 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         return result.scalars().all()
 
     async def get_overdue_executions(
-        self,
-        db: AsyncSession,
-        *,
-        assigned_to: int | None = None,
-        limit: int = 100
+        self, db: AsyncSession, *, assigned_to: int | None = None, limit: int = 100
     ) -> list[NodeExecution]:
         """Get overdue executions"""
         conditions = [
             NodeExecution.due_date < datetime.utcnow(),
-            NodeExecution.status.in_(["pending", "scheduled", "in_progress"])
+            NodeExecution.status.in_(["pending", "scheduled", "in_progress"]),
         ]
 
         if assigned_to:
@@ -141,8 +128,10 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
             select(NodeExecution)
             .options(
                 selectinload(NodeExecution.node),
-                selectinload(NodeExecution.candidate_process).selectinload(CandidateProcess.candidate),
-                selectinload(NodeExecution.assignee)
+                selectinload(NodeExecution.candidate_process).selectinload(
+                    CandidateProcess.candidate
+                ),
+                selectinload(NodeExecution.assignee),
             )
             .where(and_(*conditions))
             .order_by(asc(NodeExecution.due_date))
@@ -151,23 +140,24 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         return result.scalars().all()
 
     async def get_with_details(
-        self,
-        db: AsyncSession,
-        *,
-        id: int
+        self, db: AsyncSession, *, id: int
     ) -> NodeExecution | None:
         """Get execution with full details"""
         result = await db.execute(
             select(NodeExecution)
             .options(
                 selectinload(NodeExecution.node),
-                selectinload(NodeExecution.candidate_process).selectinload(CandidateProcess.candidate),
-                selectinload(NodeExecution.candidate_process).selectinload(CandidateProcess.process),
+                selectinload(NodeExecution.candidate_process).selectinload(
+                    CandidateProcess.candidate
+                ),
+                selectinload(NodeExecution.candidate_process).selectinload(
+                    CandidateProcess.process
+                ),
                 selectinload(NodeExecution.assignee),
                 selectinload(NodeExecution.completer),
                 selectinload(NodeExecution.reviewer),
                 selectinload(NodeExecution.interview),
-                selectinload(NodeExecution.todo)
+                selectinload(NodeExecution.todo),
             )
             .where(NodeExecution.id == id)
         )
@@ -178,7 +168,7 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         db: AsyncSession,
         *,
         execution: NodeExecution,
-        assigned_to: int | None = None
+        assigned_to: int | None = None,
     ) -> NodeExecution:
         """Start an execution"""
         execution.start(assigned_to)
@@ -195,7 +185,7 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         completed_by: int,
         score: float | None = None,
         feedback: str | None = None,
-        execution_data: dict[str, Any] | None = None
+        execution_data: dict[str, Any] | None = None,
     ) -> NodeExecution:
         """Complete an execution"""
         execution.complete(result, completed_by, score, feedback, execution_data)
@@ -209,7 +199,7 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         *,
         execution: NodeExecution,
         completed_by: int,
-        reason: str | None = None
+        reason: str | None = None,
     ) -> NodeExecution:
         """Fail an execution"""
         execution.fail(completed_by, reason)
@@ -223,7 +213,7 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         *,
         execution: NodeExecution,
         completed_by: int,
-        reason: str | None = None
+        reason: str | None = None,
     ) -> NodeExecution:
         """Skip an execution"""
         execution.skip(completed_by, reason)
@@ -232,11 +222,7 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         return execution
 
     async def schedule_execution(
-        self,
-        db: AsyncSession,
-        *,
-        execution: NodeExecution,
-        due_date: datetime
+        self, db: AsyncSession, *, execution: NodeExecution, due_date: datetime
     ) -> NodeExecution:
         """Schedule an execution"""
         execution.schedule(due_date)
@@ -245,11 +231,7 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         return execution
 
     async def link_interview(
-        self,
-        db: AsyncSession,
-        *,
-        execution: NodeExecution,
-        interview_id: int
+        self, db: AsyncSession, *, execution: NodeExecution, interview_id: int
     ) -> NodeExecution:
         """Link an interview to an execution"""
         execution.link_interview(interview_id)
@@ -258,11 +240,7 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         return execution
 
     async def link_todo(
-        self,
-        db: AsyncSession,
-        *,
-        execution: NodeExecution,
-        todo_id: int
+        self, db: AsyncSession, *, execution: NodeExecution, todo_id: int
     ) -> NodeExecution:
         """Link a todo to an execution"""
         execution.link_todo(todo_id)
@@ -276,12 +254,11 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         *,
         execution_ids: list[int],
         status: str,
-        assigned_to: int | None = None
+        assigned_to: int | None = None,
     ) -> list[NodeExecution]:
         """Bulk update execution status"""
         executions = await db.execute(
-            select(NodeExecution)
-            .where(NodeExecution.id.in_(execution_ids))
+            select(NodeExecution).where(NodeExecution.id.in_(execution_ids))
         )
 
         updated_executions = []
@@ -299,17 +276,12 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         return updated_executions
 
     async def bulk_complete_executions(
-        self,
-        db: AsyncSession,
-        *,
-        completions: list[dict[str, Any]],
-        completed_by: int
+        self, db: AsyncSession, *, completions: list[dict[str, Any]], completed_by: int
     ) -> list[NodeExecution]:
         """Bulk complete executions"""
         execution_ids = [c["execution_id"] for c in completions]
         executions = await db.execute(
-            select(NodeExecution)
-            .where(NodeExecution.id.in_(execution_ids))
+            select(NodeExecution).where(NodeExecution.id.in_(execution_ids))
         )
 
         execution_dict = {e.id: e for e in executions.scalars().all()}
@@ -325,7 +297,7 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
                     completed_by=completed_by,
                     score=completion.get("score"),
                     feedback=completion.get("feedback"),
-                    execution_data=completion.get("execution_data")
+                    execution_data=completion.get("execution_data"),
                 )
                 updated_executions.append(execution)
 
@@ -342,7 +314,7 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         *,
         node_id: int | None = None,
         process_id: int | None = None,
-        candidate_process_id: int | None = None
+        candidate_process_id: int | None = None,
     ) -> dict[str, Any]:
         """Get execution statistics"""
         conditions = []
@@ -351,17 +323,18 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
             conditions.append(NodeExecution.node_id == node_id)
 
         if process_id:
-            conditions.append(NodeExecution.candidate_process.has(process_id=process_id))
+            conditions.append(
+                NodeExecution.candidate_process.has(process_id=process_id)
+            )
 
         if candidate_process_id:
-            conditions.append(NodeExecution.candidate_process_id == candidate_process_id)
+            conditions.append(
+                NodeExecution.candidate_process_id == candidate_process_id
+            )
 
         # Count by status
         status_counts = await db.execute(
-            select(
-                NodeExecution.status,
-                func.count(NodeExecution.id).label("count")
-            )
+            select(NodeExecution.status, func.count(NodeExecution.id).label("count"))
             .where(and_(*conditions) if conditions else True)
             .group_by(NodeExecution.status)
         )
@@ -370,15 +343,11 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
 
         # Count by result
         result_counts = await db.execute(
-            select(
-                NodeExecution.result,
-                func.count(NodeExecution.id).label("count")
-            )
+            select(NodeExecution.result, func.count(NodeExecution.id).label("count"))
             .where(
-                and_(
-                    *conditions,
-                    NodeExecution.result.isnot(None)
-                ) if conditions else NodeExecution.result.isnot(None)
+                and_(*conditions, NodeExecution.result.isnot(None))
+                if conditions
+                else NodeExecution.result.isnot(None)
             )
             .group_by(NodeExecution.result)
         )
@@ -389,34 +358,40 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         avg_duration_result = await db.execute(
             select(
                 func.avg(
-                    func.extract('epoch', NodeExecution.completed_at - NodeExecution.started_at) / 60
+                    func.extract(
+                        "epoch", NodeExecution.completed_at - NodeExecution.started_at
+                    )
+                    / 60
                 )
-            )
-            .where(
+            ).where(
                 and_(
                     *conditions,
                     NodeExecution.started_at.isnot(None),
-                    NodeExecution.completed_at.isnot(None)
-                ) if conditions else and_(
+                    NodeExecution.completed_at.isnot(None),
+                )
+                if conditions
+                else and_(
                     NodeExecution.started_at.isnot(None),
-                    NodeExecution.completed_at.isnot(None)
+                    NodeExecution.completed_at.isnot(None),
                 )
             )
         )
 
         avg_score_result = await db.execute(
-            select(func.avg(NodeExecution.score))
-            .where(
-                and_(
-                    *conditions,
-                    NodeExecution.score.isnot(None)
-                ) if conditions else NodeExecution.score.isnot(None)
+            select(func.avg(NodeExecution.score)).where(
+                and_(*conditions, NodeExecution.score.isnot(None))
+                if conditions
+                else NodeExecution.score.isnot(None)
             )
         )
 
         total_executions = sum(status_dict.values())
         completed_executions = status_dict.get("completed", 0)
-        completion_rate = (completed_executions / total_executions * 100) if total_executions > 0 else 0
+        completion_rate = (
+            (completed_executions / total_executions * 100)
+            if total_executions > 0
+            else 0
+        )
 
         return {
             "total_executions": total_executions,
@@ -424,55 +399,53 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
             "by_result": result_dict,
             "completion_rate": completion_rate,
             "average_duration_minutes": avg_duration_result.scalar() or 0,
-            "average_score": avg_score_result.scalar()
+            "average_score": avg_score_result.scalar(),
         }
 
     async def get_workload_by_assignee(
-        self,
-        db: AsyncSession,
-        *,
-        process_id: int | None = None
+        self, db: AsyncSession, *, process_id: int | None = None
     ) -> list[dict[str, Any]]:
         """Get workload distribution by assignee"""
         conditions = [NodeExecution.assigned_to.isnot(None)]
 
         if process_id:
-            conditions.append(NodeExecution.candidate_process.has(process_id=process_id))
+            conditions.append(
+                NodeExecution.candidate_process.has(process_id=process_id)
+            )
 
         result = await db.execute(
             select(
                 NodeExecution.assigned_to,
                 func.count(NodeExecution.id).label("total_assigned"),
                 func.sum(
-                    func.case(
-                        (NodeExecution.status == "pending", 1),
-                        else_=0
-                    )
+                    func.case((NodeExecution.status == "pending", 1), else_=0)
                 ).label("pending"),
                 func.sum(
-                    func.case(
-                        (NodeExecution.status == "in_progress", 1),
-                        else_=0
-                    )
+                    func.case((NodeExecution.status == "in_progress", 1), else_=0)
                 ).label("in_progress"),
                 func.sum(
                     func.case(
-                        (and_(
-                            NodeExecution.due_date < datetime.utcnow(),
-                            NodeExecution.status.in_(["pending", "scheduled", "in_progress"])
-                        ), 1),
-                        else_=0
+                        (
+                            and_(
+                                NodeExecution.due_date < datetime.utcnow(),
+                                NodeExecution.status.in_(
+                                    ["pending", "scheduled", "in_progress"]
+                                ),
+                            ),
+                            1,
+                        ),
+                        else_=0,
                     )
                 ).label("overdue"),
                 func.sum(
-                    func.case(
-                        (NodeExecution.status == "completed", 1),
-                        else_=0
-                    )
+                    func.case((NodeExecution.status == "completed", 1), else_=0)
                 ).label("completed"),
                 func.avg(
-                    func.extract('epoch', NodeExecution.completed_at - NodeExecution.started_at) / 3600
-                ).label("avg_completion_hours")
+                    func.extract(
+                        "epoch", NodeExecution.completed_at - NodeExecution.started_at
+                    )
+                    / 3600
+                ).label("avg_completion_hours"),
             )
             .where(and_(*conditions))
             .group_by(NodeExecution.assigned_to)
@@ -481,19 +454,27 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
 
         workload = []
         for row in result:
-            completion_rate = (row.completed / row.total_assigned * 100) if row.total_assigned > 0 else 0
+            completion_rate = (
+                (row.completed / row.total_assigned * 100)
+                if row.total_assigned > 0
+                else 0
+            )
 
-            workload.append({
-                "assignee_id": row.assigned_to,
-                "total_assigned": row.total_assigned,
-                "pending": row.pending or 0,
-                "in_progress": row.in_progress or 0,
-                "overdue": row.overdue or 0,
-                "completed": row.completed or 0,
-                "completion_rate": completion_rate,
-                "average_completion_hours": row.avg_completion_hours or 0,
-                "workload_score": (row.pending or 0) + (row.in_progress or 0) * 1.5 + (row.overdue or 0) * 2
-            })
+            workload.append(
+                {
+                    "assignee_id": row.assigned_to,
+                    "total_assigned": row.total_assigned,
+                    "pending": row.pending or 0,
+                    "in_progress": row.in_progress or 0,
+                    "overdue": row.overdue or 0,
+                    "completed": row.completed or 0,
+                    "completion_rate": completion_rate,
+                    "average_completion_hours": row.avg_completion_hours or 0,
+                    "workload_score": (row.pending or 0)
+                    + (row.in_progress or 0) * 1.5
+                    + (row.overdue or 0) * 2,
+                }
+            )
 
         return workload
 

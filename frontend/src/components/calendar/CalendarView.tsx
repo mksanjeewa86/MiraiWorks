@@ -10,10 +10,17 @@ import type { CalendarApi, DateSelectArg, EventClickArg, DatesSetArg } from '@fu
 import type { CalendarEvent } from '@/types/interview';
 import type { CalendarViewProps, CalendarViewMode } from '@/types/components';
 
-const FullCalendar = dynamic(() => import('@fullcalendar/react').then(mod => ({ default: mod.default })), {
-  ssr: false,
-  loading: () => <div className="flex items-center justify-center h-96"><div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" /></div>
-});
+const FullCalendar = dynamic(
+  () => import('@fullcalendar/react').then((mod) => ({ default: mod.default })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center h-96">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
+      </div>
+    ),
+  }
+);
 
 const viewToFullCalendar: Record<CalendarViewMode, string> = {
   month: 'dayGridMonth',
@@ -124,13 +131,13 @@ export default function CalendarView({
   useEffect(() => {
     const applyHolidayStyling = () => {
       // Clear previous holiday classes
-      document.querySelectorAll('.holiday-day').forEach(cell => {
+      document.querySelectorAll('.holiday-day').forEach((cell) => {
         cell.classList.remove('holiday-day');
       });
 
       // Apply holiday styling
-      const holidayEvents = events.filter(event => event.id?.startsWith('holiday-'));
-      holidayEvents.forEach(holiday => {
+      const holidayEvents = events.filter((event) => event.id?.startsWith('holiday-'));
+      holidayEvents.forEach((holiday) => {
         const holidayDate = new Date(holiday.startDatetime);
 
         // Format date correctly to avoid timezone issues
@@ -141,7 +148,7 @@ export default function CalendarView({
 
         // Find all date cells for this holiday
         const dateCells = document.querySelectorAll(`[data-date="${dateStr}"]`);
-        dateCells.forEach(cell => {
+        dateCells.forEach((cell) => {
           cell.classList.add('holiday-day');
         });
       });
@@ -152,71 +159,81 @@ export default function CalendarView({
     return () => clearTimeout(timeoutId);
   }, [events]);
 
-  const handleSelect = useCallback((selection: DateSelectArg) => {
-    if (onRangeSelect) {
-      onRangeSelect({
-        start: selection.start,
-        end: selection.end,
-        allDay: selection.allDay,
-      });
-    }
-  }, [onRangeSelect]);
-
-  const handleEventClick = useCallback((eventClickArg: EventClickArg) => {
-    const rawEvent = (eventClickArg.event.extendedProps?.raw as CalendarEvent | undefined) ?? undefined;
-    if (rawEvent) {
-      onEventClick(rawEvent);
-      return;
-    }
-
-    const now = new Date().toISOString();
-    onEventClick({
-      id: eventClickArg.event.id,
-      title: eventClickArg.event.title,
-      startDatetime: eventClickArg.event.startStr,
-      endDatetime: eventClickArg.event.endStr || eventClickArg.event.startStr,
-      isAllDay: eventClickArg.event.allDay,
-      isRecurring: false,
-      attendees: [],
-      createdAt: now,
-      updatedAt: now,
-    } as CalendarEvent);
-  }, [onEventClick]);
-
-  const handleDatesSet = useCallback((datesSetArg: DatesSetArg) => {
-    calendarApiRef.current = datesSetArg.view.calendar;
-
-    const nextView = fullCalendarToView[datesSetArg.view.type];
-    if (nextView && nextView !== viewType) {
-      onViewChange(nextView);
-    }
-
-    // Only update date if it's actually different to prevent circular updates
-    const newDate = datesSetArg.view.currentStart;
-    if (newDate.getTime() !== currentDate.getTime()) {
-      onDateChange(newDate);
-    }
-
-    // Add holiday styling to date cells
-    setTimeout(() => {
-      const holidayEvents = events.filter(event => event.id?.startsWith('holiday-'));
-      holidayEvents.forEach(holiday => {
-        const holidayDate = new Date(holiday.startDatetime);
-
-        // Format date correctly to avoid timezone issues
-        const year = holidayDate.getFullYear();
-        const month = String(holidayDate.getMonth() + 1).padStart(2, '0');
-        const day = String(holidayDate.getDate()).padStart(2, '0');
-        const dateStr = `${year}-${month}-${day}`;
-
-        // Find all date cells for this holiday
-        const dateCells = document.querySelectorAll(`[data-date="${dateStr}"]`);
-        dateCells.forEach(cell => {
-          cell.classList.add('holiday-day');
+  const handleSelect = useCallback(
+    (selection: DateSelectArg) => {
+      if (onRangeSelect) {
+        onRangeSelect({
+          start: selection.start,
+          end: selection.end,
+          allDay: selection.allDay,
         });
-      });
-    }, 100);
-  }, [viewType, currentDate, onViewChange, onDateChange, events]);
+      }
+    },
+    [onRangeSelect]
+  );
+
+  const handleEventClick = useCallback(
+    (eventClickArg: EventClickArg) => {
+      const rawEvent =
+        (eventClickArg.event.extendedProps?.raw as CalendarEvent | undefined) ?? undefined;
+      if (rawEvent) {
+        onEventClick(rawEvent);
+        return;
+      }
+
+      const now = new Date().toISOString();
+      onEventClick({
+        id: eventClickArg.event.id,
+        title: eventClickArg.event.title,
+        startDatetime: eventClickArg.event.startStr,
+        endDatetime: eventClickArg.event.endStr || eventClickArg.event.startStr,
+        isAllDay: eventClickArg.event.allDay,
+        isRecurring: false,
+        attendees: [],
+        createdAt: now,
+        updatedAt: now,
+      } as CalendarEvent);
+    },
+    [onEventClick]
+  );
+
+  const handleDatesSet = useCallback(
+    (datesSetArg: DatesSetArg) => {
+      calendarApiRef.current = datesSetArg.view.calendar;
+
+      const nextView = fullCalendarToView[datesSetArg.view.type];
+      if (nextView && nextView !== viewType) {
+        onViewChange(nextView);
+      }
+
+      // Only update date if it's actually different to prevent circular updates
+      const newDate = datesSetArg.view.currentStart;
+      if (newDate.getTime() !== currentDate.getTime()) {
+        onDateChange(newDate);
+      }
+
+      // Add holiday styling to date cells
+      setTimeout(() => {
+        const holidayEvents = events.filter((event) => event.id?.startsWith('holiday-'));
+        holidayEvents.forEach((holiday) => {
+          const holidayDate = new Date(holiday.startDatetime);
+
+          // Format date correctly to avoid timezone issues
+          const year = holidayDate.getFullYear();
+          const month = String(holidayDate.getMonth() + 1).padStart(2, '0');
+          const day = String(holidayDate.getDate()).padStart(2, '0');
+          const dateStr = `${year}-${month}-${day}`;
+
+          // Find all date cells for this holiday
+          const dateCells = document.querySelectorAll(`[data-date="${dateStr}"]`);
+          dateCells.forEach((cell) => {
+            cell.classList.add('holiday-day');
+          });
+        });
+      }, 100);
+    },
+    [viewType, currentDate, onViewChange, onDateChange, events]
+  );
 
   return (
     <div className="relative flex-1 overflow-hidden">
@@ -272,4 +289,3 @@ export default function CalendarView({
     </div>
   );
 }
-

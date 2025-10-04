@@ -20,8 +20,6 @@ import { useToast } from '@/contexts/ToastContext';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
-
-
 function EditUserContent() {
   const router = useRouter();
   const params = useParams();

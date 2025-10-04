@@ -15,16 +15,25 @@ export const usersApi = {
   > {
     const params = new URLSearchParams();
 
+    if (filters?.page) params.set('page', filters.page.toString());
     if (filters?.search) params.set('search', filters.search);
     if (filters?.company_id) params.set('company_id', filters.company_id.toString());
     if (filters?.limit) params.set('limit', filters.limit.toString());
     if (filters?.offset) params.set('offset', filters.offset.toString());
     if (filters?.is_active !== undefined) params.set('is_active', filters.is_active.toString());
+    if (filters?.is_admin !== undefined) params.set('is_admin', filters.is_admin.toString());
+    if (filters?.is_suspended !== undefined)
+      params.set('is_suspended', filters.is_suspended.toString());
+    if (filters?.require_2fa !== undefined)
+      params.set('require_2fa', filters.require_2fa.toString());
+    if (filters?.role) params.set('role', filters.role);
     if (filters?.size) params.set('size', filters.size.toString());
     if (filters?.include_deleted !== undefined)
       params.set('include_deleted', filters.include_deleted.toString());
 
-    const url = params.toString() ? `${API_ENDPOINTS.ADMIN.USERS}?${params.toString()}` : API_ENDPOINTS.ADMIN.USERS;
+    const url = params.toString()
+      ? `${API_ENDPOINTS.ADMIN.USERS}?${params.toString()}`
+      : API_ENDPOINTS.ADMIN.USERS;
     const response = await apiClient.get<{
       users: UserManagement[];
       total: number;
@@ -49,7 +58,10 @@ export const usersApi = {
     id: number,
     userData: Partial<UserManagement>
   ): Promise<ApiResponse<UserManagement>> {
-    const response = await apiClient.put<UserManagement>(API_ENDPOINTS.ADMIN.USER_BY_ID(id), userData);
+    const response = await apiClient.put<UserManagement>(
+      API_ENDPOINTS.ADMIN.USER_BY_ID(id),
+      userData
+    );
     return { data: response.data, success: true };
   },
 
@@ -79,12 +91,16 @@ export const usersApi = {
   },
 
   async suspendUser(id: number): Promise<ApiResponse<UserManagement>> {
-    const response = await apiClient.post<UserManagement>(`${API_ENDPOINTS.ADMIN.USER_BY_ID(id)}/suspend`);
+    const response = await apiClient.post<UserManagement>(
+      `${API_ENDPOINTS.ADMIN.USER_BY_ID(id)}/suspend`
+    );
     return { data: response.data, success: true };
   },
 
   async unsuspendUser(id: number): Promise<ApiResponse<UserManagement>> {
-    const response = await apiClient.post<UserManagement>(`${API_ENDPOINTS.ADMIN.USER_BY_ID(id)}/unsuspend`);
+    const response = await apiClient.post<UserManagement>(
+      `${API_ENDPOINTS.ADMIN.USER_BY_ID(id)}/unsuspend`
+    );
     return { data: response.data, success: true };
   },
 
@@ -104,9 +120,12 @@ export const usersApi = {
 
   // Bulk operations
   async bulkDelete(userIds: number[]): Promise<ApiResponse<{ message: string }>> {
-    const response = await apiClient.post<{ message: string }>(API_ENDPOINTS.ADMIN_EXTENDED.USERS_BULK.DELETE, {
-      user_ids: userIds,
-    });
+    const response = await apiClient.post<{ message: string }>(
+      API_ENDPOINTS.ADMIN_EXTENDED.USERS_BULK.DELETE,
+      {
+        user_ids: userIds,
+      }
+    );
     return { data: response.data, success: true };
   },
 
@@ -127,16 +146,22 @@ export const usersApi = {
   },
 
   async bulkSuspend(userIds: number[]): Promise<ApiResponse<{ message: string }>> {
-    const response = await apiClient.post<{ message: string }>(API_ENDPOINTS.ADMIN_EXTENDED.USERS_BULK.SUSPEND, {
-      user_ids: userIds,
-    });
+    const response = await apiClient.post<{ message: string }>(
+      API_ENDPOINTS.ADMIN_EXTENDED.USERS_BULK.SUSPEND,
+      {
+        user_ids: userIds,
+      }
+    );
     return { data: response.data, success: true };
   },
 
   async bulkUnsuspend(userIds: number[]): Promise<ApiResponse<{ message: string }>> {
-    const response = await apiClient.post<{ message: string }>(API_ENDPOINTS.ADMIN_EXTENDED.USERS_BULK.UNSUSPEND, {
-      user_ids: userIds,
-    });
+    const response = await apiClient.post<{ message: string }>(
+      API_ENDPOINTS.ADMIN_EXTENDED.USERS_BULK.UNSUSPEND,
+      {
+        user_ids: userIds,
+      }
+    );
     return { data: response.data, success: true };
   },
 };

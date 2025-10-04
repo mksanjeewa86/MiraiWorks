@@ -36,6 +36,7 @@ function AddUserPageContent() {
   const [companySearch, setCompanySearch] = useState('');
   const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
   const [filteredCompanies, setFilteredCompanies] = useState<Company[]>([]);
+  const [showRoleDropdown, setShowRoleDropdown] = useState(false);
 
   // Get user's role
   const userRole = user?.roles?.[0]?.role?.name;
@@ -59,23 +60,20 @@ function AddUserPageContent() {
     if (isSuperAdmin) {
       return [
         { value: 'candidate', label: 'Candidate' },
-        { value: 'member', label: 'Recruiter' },
-        { value: 'member', label: 'Employer' },
+        { value: 'member', label: 'Member' },
         { value: 'admin', label: 'Company Admin' },
-        { value: 'system_admin', label: 'Super Admin' },
+        { value: 'system_admin', label: 'System Admin' },
       ];
     } else if (isCompanyAdmin) {
       return [
         { value: 'candidate', label: 'Candidate' },
-        { value: 'member', label: 'Recruiter' },
-        { value: 'member', label: 'Employer' },
+        { value: 'member', label: 'Member' },
         { value: 'admin', label: 'Company Admin' },
       ];
     } else {
       return [
         { value: 'candidate', label: 'Candidate' },
-        { value: 'member', label: 'Recruiter' },
-        { value: 'member', label: 'Employer' },
+        { value: 'member', label: 'Member' },
       ];
     }
   };
@@ -91,17 +89,6 @@ function AddUserPageContent() {
       }));
     }
   }, [user, isCompanyAdmin]);
-
-  // Auto-set default role based on selected company type (for system admins)
-  useEffect(() => {
-    if (isSuperAdmin && formData.company_id && !formData.role) {
-      const selectedCompany = companies.find((c) => c.id.toString() === formData.company_id);
-      if (selectedCompany) {
-        // Default role for company users is 'member' regardless of company type
-        setFormData((prev) => ({ ...prev, role: 'member' }));
-      }
-    }
-  }, [formData.company_id, formData.role, companies, isSuperAdmin]);
 
   // Load companies for the dropdown
   useEffect(() => {
@@ -319,24 +306,65 @@ function AddUserPageContent() {
                         {/* Company options */}
                         <div className="max-h-48 overflow-y-auto">
                           {filteredCompanies.length > 0 ? (
-                            filteredCompanies.map((company) => (
-                              <button
-                                key={company.id}
-                                type="button"
-                                onClick={() => {
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    company_id: company.id.toString(),
-                                  }));
-                                  setCompanySearch('');
-                                  setShowCompanyDropdown(false);
-                                }}
-                                className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none"
-                              >
-                                <div className="font-medium">{company.name}</div>
-                                <div className="text-sm text-gray-500">({company.type})</div>
-                              </button>
-                            ))
+                            <>
+                              {/* Employer Companies */}
+                              {filteredCompanies.filter((c) => c.type === 'employer').length >
+                                0 && (
+                                <>
+                                  <div className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 sticky top-0">
+                                    EMPLOYER
+                                  </div>
+                                  {filteredCompanies
+                                    .filter((c) => c.type === 'employer')
+                                    .map((company) => (
+                                      <button
+                                        key={company.id}
+                                        type="button"
+                                        onClick={() => {
+                                          setFormData((prev) => ({
+                                            ...prev,
+                                            company_id: company.id.toString(),
+                                          }));
+                                          setCompanySearch('');
+                                          setShowCompanyDropdown(false);
+                                        }}
+                                        className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none"
+                                      >
+                                        <div className="font-medium">{company.name}</div>
+                                      </button>
+                                    ))}
+                                </>
+                              )}
+
+                              {/* Recruiter Companies */}
+                              {filteredCompanies.filter((c) => c.type === 'recruiter').length >
+                                0 && (
+                                <>
+                                  <div className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 sticky top-0">
+                                    RECRUITER
+                                  </div>
+                                  {filteredCompanies
+                                    .filter((c) => c.type === 'recruiter')
+                                    .map((company) => (
+                                      <button
+                                        key={company.id}
+                                        type="button"
+                                        onClick={() => {
+                                          setFormData((prev) => ({
+                                            ...prev,
+                                            company_id: company.id.toString(),
+                                          }));
+                                          setCompanySearch('');
+                                          setShowCompanyDropdown(false);
+                                        }}
+                                        className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none"
+                                      >
+                                        <div className="font-medium">{company.name}</div>
+                                      </button>
+                                    ))}
+                                </>
+                              )}
+                            </>
                           ) : (
                             <div className="px-3 py-2 text-gray-500 text-sm">
                               No companies found
@@ -373,23 +401,67 @@ function AddUserPageContent() {
 
             {/* User Role Selection (Only for Super Admin) */}
             {isSuperAdmin && formData.company_id && (
-              <div>
+              <div className="relative">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   User Role <span className="text-red-500">*</span>
                 </label>
-                <select
-                  required
-                  value={formData.role}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, role: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                >
-                  <option value="">Select a role...</option>
-                  {getAvailableRoles().map((role) => (
-                    <option key={role.value} value={role.value}>
-                      {role.label}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  {/* Select-like button */}
+                  <button
+                    type="button"
+                    onClick={() => setShowRoleDropdown(!showRoleDropdown)}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-left flex items-center justify-between"
+                  >
+                    <span
+                      className={formData.role ? 'text-gray-900 dark:text-white' : 'text-gray-500'}
+                    >
+                      {formData.role
+                        ? getAvailableRoles().find((r) => r.value === formData.role)?.label ||
+                          'Select a role...'
+                        : 'Select a role...'}
+                    </span>
+                    <svg
+                      className="w-5 h-5 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </button>
+
+                  {/* Dropdown */}
+                  {showRoleDropdown && (
+                    <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-hidden">
+                      <div className="max-h-48 overflow-y-auto">
+                        {getAvailableRoles().map((role) => (
+                          <button
+                            key={role.value}
+                            type="button"
+                            onClick={() => {
+                              setFormData((prev) => ({ ...prev, role: role.value }));
+                              setShowRoleDropdown(false);
+                            }}
+                            className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none"
+                          >
+                            <div className="font-medium">{role.label}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Click outside to close dropdown */}
+                {showRoleDropdown && (
+                  <div className="fixed inset-0 z-5" onClick={() => setShowRoleDropdown(false)} />
+                )}
+
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   Role determines the user&apos;s permissions and access level
                 </p>

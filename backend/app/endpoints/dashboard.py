@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config.endpoints import API_ROUTES
 from app.crud.dashboard import dashboard
 from app.database import get_db
 from app.dependencies import get_current_active_user
@@ -10,7 +11,7 @@ from app.schemas.dashboard import ActivityItem, DashboardStats
 router = APIRouter()
 
 
-@router.get("/stats", response_model=DashboardStats)
+@router.get(API_ROUTES.DASHBOARD.STATS, response_model=DashboardStats)
 async def get_dashboard_stats(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
@@ -20,7 +21,7 @@ async def get_dashboard_stats(
     return DashboardStats(**stats)
 
 
-@router.get("/activity", response_model=list[ActivityItem])
+@router.get(API_ROUTES.DASHBOARD.ACTIVITY, response_model=list[ActivityItem])
 async def get_recent_activity(
     limit: int = Query(default=20, le=100),
     current_user: User = Depends(get_current_active_user),
@@ -29,9 +30,11 @@ async def get_recent_activity(
     """Get recent activity items."""
     recent_activities = []
 
-    # Get recent users and interviews
-    recent_users = await dashboard.get_recent_users(db, limit // 2)
-    recent_interviews = await dashboard.get_recent_interviews(db, limit // 2)
+    # Get recent users, interviews, and exam sessions
+    items_per_type = limit // 3
+    recent_users = await dashboard.get_recent_users(db, items_per_type)
+    recent_interviews = await dashboard.get_recent_interviews(db, items_per_type)
+    recent_exam_sessions = await dashboard.get_recent_exam_sessions(db, items_per_type)
 
     # Convert users to activity items
     for user in recent_users:
@@ -60,6 +63,30 @@ async def get_recent_activity(
                 metadata={
                     "interview_id": interview.id,
                     "interview_status": interview.status,
+                },
+            )
+        )
+
+    # Convert exam sessions to activity items
+    for session in recent_exam_sessions:
+        status_label = session.status.replace("_", " ").title()
+        description = f"Exam {status_label}"
+        if session.status == "completed" and session.final_score is not None:
+            description += f" - Score: {session.final_score:.1f}%"
+
+        recent_activities.append(
+            ActivityItem(
+                id=f"exam_session_{session.id}",
+                type="exam",
+                title="Exam Activity",
+                description=description,
+                timestamp=session.created_at,
+                user_id=session.candidate_id,
+                metadata={
+                    "session_id": session.id,
+                    "exam_id": session.exam_id,
+                    "status": session.status,
+                    "score": session.final_score,
                 },
             )
         )

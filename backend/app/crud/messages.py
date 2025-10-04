@@ -33,9 +33,7 @@ async def get_messages_between_users(
                 ),
             )
         )
-        .options(
-            selectinload(Message.sender), selectinload(Message.recipient)
-        )
+        .options(selectinload(Message.sender), selectinload(Message.recipient))
         .order_by(desc(Message.created_at))
         .offset(offset)
         .limit(limit)
@@ -65,16 +63,12 @@ async def create_message(
     return message
 
 
-async def get_message_by_id(
-    db: AsyncSession, message_id: int
-) -> Message | None:
+async def get_message_by_id(db: AsyncSession, message_id: int) -> Message | None:
     """Get message by ID."""
     result = await db.execute(
         select(Message)
         .where(Message.id == message_id)
-        .options(
-            selectinload(Message.sender), selectinload(Message.recipient)
-        )
+        .options(selectinload(Message.sender), selectinload(Message.recipient))
     )
     return result.scalar_one_or_none()
 
@@ -110,19 +104,11 @@ async def get_conversation_partners(
     # Subquery to get the latest message for each conversation
     latest_message_subquery = (
         select(
-            func.greatest(Message.sender_id, Message.recipient_id).label(
-                "user1"
-            ),
-            func.least(Message.sender_id, Message.recipient_id).label(
-                "user2"
-            ),
+            func.greatest(Message.sender_id, Message.recipient_id).label("user1"),
+            func.least(Message.sender_id, Message.recipient_id).label("user2"),
             func.max(Message.created_at).label("latest_message_time"),
         )
-        .where(
-            or_(
-                Message.sender_id == user_id, Message.recipient_id == user_id
-            )
-        )
+        .where(or_(Message.sender_id == user_id, Message.recipient_id == user_id))
         .group_by(
             func.greatest(Message.sender_id, Message.recipient_id),
             func.least(Message.sender_id, Message.recipient_id),
@@ -143,8 +129,7 @@ async def get_conversation_partners(
             func.count(
                 case(
                     (
-                        Message.read_at.is_(None)
-                        & (Message.recipient_id == user_id),
+                        Message.read_at.is_(None) & (Message.recipient_id == user_id),
                         1,
                     )
                 )
@@ -164,8 +149,7 @@ async def get_conversation_partners(
                         Message.recipient_id == latest_message_subquery.c.user1,
                     ),
                 ),
-                Message.created_at
-                == latest_message_subquery.c.latest_message_time,
+                Message.created_at == latest_message_subquery.c.latest_message_time,
             ),
         )
         .join(
@@ -279,9 +263,7 @@ class CRUDMessage(CRUDBase[Message, dict, dict]):
             messages_query = messages_query.join(Message.sender).where(
                 search_conditions
             )
-            count_query = count_query.join(Message.sender).where(
-                search_conditions
-            )
+            count_query = count_query.join(Message.sender).where(search_conditions)
 
         if search_request.with_user_id:
             user_filter = or_(

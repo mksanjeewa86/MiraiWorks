@@ -582,9 +582,7 @@ async def test_query_workflows_with_todo_count(
 
     # Query todos linked to workflow
     result = await db_session.execute(
-        select(Todo).where(
-            Todo.workflow_id == workflow.id, Todo.is_deleted == False
-        )
+        select(Todo).where(Todo.workflow_id == workflow.id, Todo.is_deleted == False)
     )
     todos = result.scalars().all()
 

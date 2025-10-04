@@ -1,30 +1,30 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { CheckCircle, XCircle, Send, Eye, EyeOff, Star, MessageSquare } from "lucide-react";
+import { useState } from 'react';
+import { CheckCircle, XCircle, Send, Eye, EyeOff, Star, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { Textarea } from '@/components/ui';
 import { Input } from '@/components/ui';
 import { Badge } from '@/components/ui';
-import { useToast } from "@/contexts/ToastContext";
-import { useAuth } from "@/contexts/AuthContext";
-import { todosApi } from "@/api/todos";
+import { useToast } from '@/contexts/ToastContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { todosApi } from '@/api/todos';
 import type {
   Todo,
   TodoWithAssignedUser,
   AssignmentSubmission,
   AssignmentReview,
   AssignmentStatus,
-} from "@/types/todo";
+} from '@/types/todo';
 import type { AssignmentWorkflowProps } from '@/types/components';
 
 export default function AssignmentWorkflow({ todo, onUpdate }: AssignmentWorkflowProps) {
   const { showToast } = useToast();
   const { user } = useAuth();
   const [submitting, setSubmitting] = useState(false);
-  const [submissionNotes, setSubmissionNotes] = useState("");
-  const [reviewNotes, setReviewNotes] = useState("");
-  const [reviewScore, setReviewScore] = useState<number | "">("");
+  const [submissionNotes, setSubmissionNotes] = useState('');
+  const [reviewNotes, setReviewNotes] = useState('');
+  const [reviewScore, setReviewScore] = useState<number | ''>('');
 
   if (!todo.is_assignment) {
     return null;
@@ -41,12 +41,12 @@ export default function AssignmentWorkflow({ todo, onUpdate }: AssignmentWorkflo
     if (!status) return null;
 
     const statusConfig = {
-      not_started: { label: "Not Started", color: "gray" },
-      in_progress: { label: "In Progress", color: "blue" },
-      submitted: { label: "Submitted", color: "yellow" },
-      under_review: { label: "Under Review", color: "purple" },
-      approved: { label: "Approved", color: "green" },
-      rejected: { label: "Rejected", color: "red" },
+      not_started: { label: 'Not Started', color: 'gray' },
+      in_progress: { label: 'In Progress', color: 'blue' },
+      submitted: { label: 'Submitted', color: 'yellow' },
+      under_review: { label: 'Under Review', color: 'purple' },
+      approved: { label: 'Approved', color: 'green' },
+      rejected: { label: 'Rejected', color: 'red' },
     };
 
     const config = statusConfig[status];
@@ -64,10 +64,13 @@ export default function AssignmentWorkflow({ todo, onUpdate }: AssignmentWorkflo
     setSubmitting(true);
     try {
       await todosApi.publishAssignment(todo.id);
-      showToast({ type: "success", title: "Assignment published successfully" });
+      showToast({ type: 'success', title: 'Assignment published successfully' });
       onUpdate();
     } catch (error: any) {
-      showToast({ type: "error", title: error?.response?.data?.detail || "Failed to publish assignment" });
+      showToast({
+        type: 'error',
+        title: error?.response?.data?.detail || 'Failed to publish assignment',
+      });
     } finally {
       setSubmitting(false);
     }
@@ -78,10 +81,13 @@ export default function AssignmentWorkflow({ todo, onUpdate }: AssignmentWorkflo
     setSubmitting(true);
     try {
       await todosApi.makeDraftAssignment(todo.id);
-      showToast({ type: "success", title: "Assignment made draft successfully" });
+      showToast({ type: 'success', title: 'Assignment made draft successfully' });
       onUpdate();
     } catch (error: any) {
-      showToast({ type: "error", title: error?.response?.data?.detail || "Failed to make assignment draft" });
+      showToast({
+        type: 'error',
+        title: error?.response?.data?.detail || 'Failed to make assignment draft',
+      });
     } finally {
       setSubmitting(false);
     }
@@ -95,11 +101,14 @@ export default function AssignmentWorkflow({ todo, onUpdate }: AssignmentWorkflo
         notes: submissionNotes.trim() || undefined,
       };
       await todosApi.submitAssignment(todo.id, submission);
-      showToast({ type: "success", title: "Assignment submitted for review" });
-      setSubmissionNotes("");
+      showToast({ type: 'success', title: 'Assignment submitted for review' });
+      setSubmissionNotes('');
       onUpdate();
     } catch (error: any) {
-      showToast({ type: "error", title: error?.response?.data?.detail || "Failed to submit assignment" });
+      showToast({
+        type: 'error',
+        title: error?.response?.data?.detail || 'Failed to submit assignment',
+      });
     } finally {
       setSubmitting(false);
     }
@@ -116,14 +125,17 @@ export default function AssignmentWorkflow({ todo, onUpdate }: AssignmentWorkflo
       };
       await todosApi.reviewAssignment(todo.id, review);
       showToast({
-        type: "success",
-        title: `Assignment ${reviewStatus} successfully`
+        type: 'success',
+        title: `Assignment ${reviewStatus} successfully`,
       });
-      setReviewNotes("");
-      setReviewScore("");
+      setReviewNotes('');
+      setReviewScore('');
       onUpdate();
     } catch (error: any) {
-      showToast({ type: "error", title: error?.response?.data?.detail || "Failed to review assignment" });
+      showToast({
+        type: 'error',
+        title: error?.response?.data?.detail || 'Failed to review assignment',
+      });
     } finally {
       setSubmitting(false);
     }
@@ -133,7 +145,9 @@ export default function AssignmentWorkflow({ todo, onUpdate }: AssignmentWorkflo
     <div className="space-y-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Badge variant="primary" className="text-xs">Assignment</Badge>
+          <Badge variant="primary" className="text-xs">
+            Assignment
+          </Badge>
           {getStatusBadge(assignmentStatus)}
         </div>
 
@@ -174,7 +188,9 @@ export default function AssignmentWorkflow({ todo, onUpdate }: AssignmentWorkflo
             <EyeOff className="h-4 w-4 mt-0.5 flex-shrink-0" />
             <div>
               <p className="font-medium">Draft Assignment</p>
-              <p className="text-xs mt-1">This assignment is not visible to the assignee or viewers. Publish it when ready.</p>
+              <p className="text-xs mt-1">
+                This assignment is not visible to the assignee or viewers. Publish it when ready.
+              </p>
             </div>
           </div>
         </div>
@@ -191,12 +207,7 @@ export default function AssignmentWorkflow({ todo, onUpdate }: AssignmentWorkflo
             rows={3}
             className="text-sm"
           />
-          <Button
-            size="sm"
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="w-full"
-          >
+          <Button size="sm" onClick={handleSubmit} disabled={submitting} className="w-full">
             <Send className="h-3 w-3" />
             Submit for Review
           </Button>
@@ -222,7 +233,7 @@ export default function AssignmentWorkflow({ todo, onUpdate }: AssignmentWorkflo
               label="Score (0-100)"
               placeholder="Optional numeric score"
               value={reviewScore}
-              onChange={(e) => setReviewScore(e.target.value ? Number(e.target.value) : "")}
+              onChange={(e) => setReviewScore(e.target.value ? Number(e.target.value) : '')}
               min={0}
               max={100}
               leftIcon={<Star className="h-4 w-4" />}
@@ -256,11 +267,13 @@ export default function AssignmentWorkflow({ todo, onUpdate }: AssignmentWorkflo
 
       {/* Assignment Result Display */}
       {assignmentStatus && ['approved', 'rejected'].includes(assignmentStatus) && (
-        <div className={`rounded border p-3 text-sm ${
-          assignmentStatus === 'approved'
-            ? 'border-green-200 bg-green-50 text-green-800'
-            : 'border-red-200 bg-red-50 text-red-800'
-        }`}>
+        <div
+          className={`rounded border p-3 text-sm ${
+            assignmentStatus === 'approved'
+              ? 'border-green-200 bg-green-50 text-green-800'
+              : 'border-red-200 bg-red-50 text-red-800'
+          }`}
+        >
           <div className="flex items-start gap-2">
             {assignmentStatus === 'approved' ? (
               <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />

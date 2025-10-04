@@ -104,26 +104,44 @@ class Interview(Base):
     # Relationships (using noload to prevent lazy loading in async context)
     candidate = relationship("User", foreign_keys=[candidate_id], lazy="noload")
     recruiter = relationship("User", foreign_keys=[recruiter_id], lazy="noload")
-    employer_company = relationship("Company", foreign_keys=[employer_company_id], lazy="noload")
-    recruiter_company = relationship("Company", foreign_keys=[recruiter_company_id], lazy="noload")
+    employer_company = relationship(
+        "Company", foreign_keys=[employer_company_id], lazy="noload"
+    )
+    recruiter_company = relationship(
+        "Company", foreign_keys=[recruiter_company_id], lazy="noload"
+    )
     creator = relationship("User", foreign_keys=[created_by], lazy="noload")
     confirmer = relationship("User", foreign_keys=[confirmed_by], lazy="noload")
     canceller = relationship("User", foreign_keys=[cancelled_by], lazy="noload")
 
     # Workflow relationship
-    workflow = relationship("RecruitmentProcess", foreign_keys=[workflow_id], lazy="noload")
+    workflow = relationship(
+        "RecruitmentProcess", foreign_keys=[workflow_id], lazy="noload"
+    )
 
     proposals = relationship(
-        "InterviewProposal", back_populates="interview", cascade="all, delete-orphan", lazy="noload"
+        "InterviewProposal",
+        back_populates="interview",
+        cascade="all, delete-orphan",
+        lazy="noload",
     )
     synced_events = relationship(
-        "SyncedEvent", back_populates="interview", cascade="all, delete-orphan", lazy="noload"
+        "SyncedEvent",
+        back_populates="interview",
+        cascade="all, delete-orphan",
+        lazy="noload",
     )
     meetings = relationship(
-        "Meeting", back_populates="interview", cascade="all, delete-orphan", lazy="noload"
+        "Meeting",
+        back_populates="interview",
+        cascade="all, delete-orphan",
+        lazy="noload",
     )
     participant_notes = relationship(
-        "InterviewNote", back_populates="interview", cascade="all, delete-orphan", lazy="noload"
+        "InterviewNote",
+        back_populates="interview",
+        cascade="all, delete-orphan",
+        lazy="noload",
     )
 
     def __repr__(self):

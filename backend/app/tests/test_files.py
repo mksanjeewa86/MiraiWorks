@@ -714,9 +714,7 @@ class TestFiles:
         )
 
         # Send the message from sender to recipient
-        await message_service.send_message(
-            db_session, test_user.id, message_data
-        )
+        await message_service.send_message(db_session, test_user.id, message_data)
 
         # Mock storage services to simulate file system behavior
         with patch(

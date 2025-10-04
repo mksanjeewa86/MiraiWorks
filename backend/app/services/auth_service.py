@@ -128,9 +128,7 @@ class AuthService:
         await db.commit()
         return result.rowcount > 0
 
-    async def verify_refresh_token(
-        self, db: AsyncSession, token: str
-    ) -> User | None:
+    async def verify_refresh_token(self, db: AsyncSession, token: str) -> User | None:
         """Verify a refresh token and return the associated user."""
         token_hash = self.hash_token(token)
 

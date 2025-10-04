@@ -52,7 +52,7 @@ class TestUserManagementPermissionMatrix:
         """Test that Super Admin can view users from any company."""
         response = await client.get(
             f"/api/admin/users?company_id={test_company.id}",
-            headers=super_admin_auth_headers
+            headers=super_admin_auth_headers,
         )
 
         assert response.status_code == 200
@@ -341,7 +341,11 @@ class TestUserManagementPermissionMatrix:
     ):
         """Test that Recruiter cannot create users."""
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
         headers = await self._get_auth_headers(client, recruiter)
 
@@ -360,11 +364,19 @@ class TestUserManagementPermissionMatrix:
 
     @pytest.mark.asyncio
     async def test_recruiter_cannot_update_users(
-        self, client: AsyncClient, db_session: AsyncSession, test_company: Company, test_roles: dict
+        self,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        test_company: Company,
+        test_roles: dict,
     ):
         """Test that Recruiter cannot update users."""
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
         target_user = await self._create_user_in_company(db_session, test_company)
 
@@ -378,11 +390,19 @@ class TestUserManagementPermissionMatrix:
 
     @pytest.mark.asyncio
     async def test_recruiter_cannot_delete_users(
-        self, client: AsyncClient, db_session: AsyncSession, test_company: Company, test_roles: dict
+        self,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        test_company: Company,
+        test_roles: dict,
     ):
         """Test that Recruiter cannot delete users."""
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
         target_user = await self._create_user_in_company(db_session, test_company)
 
@@ -395,11 +415,19 @@ class TestUserManagementPermissionMatrix:
 
     @pytest.mark.asyncio
     async def test_recruiter_cannot_suspend_users(
-        self, client: AsyncClient, db_session: AsyncSession, test_company: Company, test_roles: dict
+        self,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        test_company: Company,
+        test_roles: dict,
     ):
         """Test that Recruiter cannot suspend users."""
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
         target_user = await self._create_user_in_company(db_session, test_company)
 
@@ -415,11 +443,19 @@ class TestUserManagementPermissionMatrix:
 
     @pytest.mark.asyncio
     async def test_recruiter_cannot_view_users(
-        self, client: AsyncClient, db_session: AsyncSession, test_company: Company, test_roles: dict
+        self,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        test_company: Company,
+        test_roles: dict,
     ):
         """Test that Recruiter cannot view user management endpoints."""
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
         headers = await self._get_auth_headers(client, recruiter)
 
@@ -428,11 +464,19 @@ class TestUserManagementPermissionMatrix:
 
     @pytest.mark.asyncio
     async def test_employer_cannot_manage_users(
-        self, client: AsyncClient, db_session: AsyncSession, test_company: Company, test_roles: dict
+        self,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        test_company: Company,
+        test_roles: dict,
     ):
         """Test that Employer cannot perform any user management operations."""
         employer = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "employer@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "employer@test.com",
         )
         target_user = await self._create_user_in_company(db_session, test_company)
         headers = await self._get_auth_headers(client, employer)
@@ -449,7 +493,9 @@ class TestUserManagementPermissionMatrix:
             "company_id": test_company.id,
             "role": "candidate",
         }
-        response = await client.post("/api/admin/users", json=user_data, headers=headers)
+        response = await client.post(
+            "/api/admin/users", json=user_data, headers=headers
+        )
         assert response.status_code == 403
 
         # Cannot update users
@@ -461,16 +507,26 @@ class TestUserManagementPermissionMatrix:
         assert response.status_code == 403
 
         # Cannot delete users
-        response = await client.delete(f"/api/admin/users/{target_user.id}", headers=headers)
+        response = await client.delete(
+            f"/api/admin/users/{target_user.id}", headers=headers
+        )
         assert response.status_code == 403
 
     @pytest.mark.asyncio
     async def test_candidate_cannot_manage_users(
-        self, client: AsyncClient, db_session: AsyncSession, test_company: Company, test_roles: dict
+        self,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        test_company: Company,
+        test_roles: dict,
     ):
         """Test that Candidate cannot perform any user management operations."""
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         target_user = await self._create_user_in_company(db_session, test_company)
         headers = await self._get_auth_headers(client, candidate)
@@ -487,7 +543,9 @@ class TestUserManagementPermissionMatrix:
             "company_id": test_company.id,
             "role": "candidate",
         }
-        response = await client.post("/api/admin/users", json=user_data, headers=headers)
+        response = await client.post(
+            "/api/admin/users", json=user_data, headers=headers
+        )
         assert response.status_code == 403
 
         # Cannot update users
@@ -499,7 +557,9 @@ class TestUserManagementPermissionMatrix:
         assert response.status_code == 403
 
         # Cannot delete users
-        response = await client.delete(f"/api/admin/users/{target_user.id}", headers=headers)
+        response = await client.delete(
+            f"/api/admin/users/{target_user.id}", headers=headers
+        )
         assert response.status_code == 403
 
     # ===== BULK OPERATIONS PERMISSION TESTS =====
@@ -537,11 +597,19 @@ class TestUserManagementPermissionMatrix:
 
     @pytest.mark.asyncio
     async def test_non_admin_roles_cannot_bulk_operations(
-        self, client: AsyncClient, db_session: AsyncSession, test_company: Company, test_roles: dict
+        self,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        test_company: Company,
+        test_roles: dict,
     ):
         """Test that non-admin roles cannot perform bulk operations."""
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
         target_user = await self._create_user_in_company(db_session, test_company)
         headers = await self._get_auth_headers(client, recruiter)

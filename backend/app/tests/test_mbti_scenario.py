@@ -17,8 +17,7 @@ class TestMBTIScenarios:
 
         # Step 1: Check initial progress - should be NOT_TAKEN
         progress_response = await client.get(
-            "/api/mbti/progress",
-            headers=candidate_headers
+            "/api/mbti/progress", headers=candidate_headers
         )
         assert progress_response.status_code == 200
         progress_data = progress_response.json()
@@ -28,9 +27,7 @@ class TestMBTIScenarios:
 
         # Step 2: Start the test
         start_response = await client.post(
-            "/api/mbti/start",
-            json={"language": "ja"},
-            headers=candidate_headers
+            "/api/mbti/start", json={"language": "ja"}, headers=candidate_headers
         )
         assert start_response.status_code == 200
         start_data = start_response.json()
@@ -41,8 +38,7 @@ class TestMBTIScenarios:
 
         # Step 3: Check progress after starting - should be IN_PROGRESS
         progress_response = await client.get(
-            "/api/mbti/progress",
-            headers=candidate_headers
+            "/api/mbti/progress", headers=candidate_headers
         )
         assert progress_response.status_code == 200
         progress_data = progress_response.json()
@@ -51,8 +47,7 @@ class TestMBTIScenarios:
 
         # Step 4: Get test questions
         questions_response = await client.get(
-            "/api/mbti/questions?language=ja",
-            headers=candidate_headers
+            "/api/mbti/questions?language=ja", headers=candidate_headers
         )
         assert questions_response.status_code == 200
         questions_data = questions_response.json()
@@ -64,11 +59,8 @@ class TestMBTIScenarios:
             first_question = questions_data[0]
             answer_response = await client.post(
                 "/api/mbti/answer",
-                json={
-                    "question_id": first_question["id"],
-                    "answer": "A"
-                },
-                headers=candidate_headers
+                json={"question_id": first_question["id"], "answer": "A"},
+                headers=candidate_headers,
             )
             assert answer_response.status_code == 200
             answer_data = answer_response.json()
@@ -79,18 +71,14 @@ class TestMBTIScenarios:
                 second_question = questions_data[1]
                 answer_response = await client.post(
                     "/api/mbti/answer",
-                    json={
-                        "question_id": second_question["id"],
-                        "answer": "B"
-                    },
-                    headers=candidate_headers
+                    json={"question_id": second_question["id"], "answer": "B"},
+                    headers=candidate_headers,
                 )
                 assert answer_response.status_code == 200
 
         # Step 6: Verify progress has been updated
         final_progress_response = await client.get(
-            "/api/mbti/progress",
-            headers=candidate_headers
+            "/api/mbti/progress", headers=candidate_headers
         )
         assert final_progress_response.status_code == 200
         final_progress_data = final_progress_response.json()
@@ -104,23 +92,19 @@ class TestMBTIScenarios:
 
         # Start test in Japanese
         start_response = await client.post(
-            "/api/mbti/start",
-            json={"language": "ja"},
-            headers=candidate_headers
+            "/api/mbti/start", json={"language": "ja"}, headers=candidate_headers
         )
         assert start_response.status_code == 200
 
         # Get questions in Japanese
         questions_ja_response = await client.get(
-            "/api/mbti/questions?language=ja",
-            headers=candidate_headers
+            "/api/mbti/questions?language=ja", headers=candidate_headers
         )
         assert questions_ja_response.status_code == 200
 
         # Get questions in English
         questions_en_response = await client.get(
-            "/api/mbti/questions?language=en",
-            headers=candidate_headers
+            "/api/mbti/questions?language=en", headers=candidate_headers
         )
         assert questions_en_response.status_code == 200
 
@@ -139,16 +123,13 @@ class TestMBTIScenarios:
 
         # Start initial test
         start_response = await client.post(
-            "/api/mbti/start",
-            json={"language": "ja"},
-            headers=candidate_headers
+            "/api/mbti/start", json={"language": "ja"}, headers=candidate_headers
         )
         assert start_response.status_code == 200
 
         # Submit an answer
         questions_response = await client.get(
-            "/api/mbti/questions",
-            headers=candidate_headers
+            "/api/mbti/questions", headers=candidate_headers
         )
         assert questions_response.status_code == 200
         questions = questions_response.json()
@@ -156,11 +137,8 @@ class TestMBTIScenarios:
         if questions:
             answer_response = await client.post(
                 "/api/mbti/answer",
-                json={
-                    "question_id": questions[0]["id"],
-                    "answer": "A"
-                },
-                headers=candidate_headers
+                json={"question_id": questions[0]["id"], "answer": "A"},
+                headers=candidate_headers,
             )
             assert answer_response.status_code == 200
 
@@ -168,23 +146,20 @@ class TestMBTIScenarios:
         restart_response = await client.post(
             "/api/mbti/start",
             json={"language": "en"},  # Different language
-            headers=candidate_headers
+            headers=candidate_headers,
         )
         assert restart_response.status_code == 200
 
         # Verify test can still be accessed
         progress_response = await client.get(
-            "/api/mbti/progress",
-            headers=candidate_headers
+            "/api/mbti/progress", headers=candidate_headers
         )
         assert progress_response.status_code == 200
         progress_data = progress_response.json()
         assert progress_data["status"] == MBTITestStatus.IN_PROGRESS.value
 
     @pytest.mark.asyncio
-    async def test_mbti_unauthorized_workflow(
-        self, client: AsyncClient
-    ):
+    async def test_mbti_unauthorized_workflow(self, client: AsyncClient):
         """Test MBTI workflow without authentication."""
 
         # All MBTI endpoints should require authentication
@@ -193,7 +168,7 @@ class TestMBTIScenarios:
             "/api/mbti/progress",
             "/api/mbti/questions",
             "/api/mbti/result",
-            "/api/mbti/summary"
+            "/api/mbti/summary",
         ]
 
         for endpoint in endpoints:
@@ -214,12 +189,14 @@ class TestMBTIScenarios:
         test_endpoints = [
             ("/api/mbti/start", "post", {"language": "ja"}),
             ("/api/mbti/progress", "get", None),
-            ("/api/mbti/questions", "get", None)
+            ("/api/mbti/questions", "get", None),
         ]
 
         for endpoint, method, payload in test_endpoints:
             if method == "post":
-                response = await client.post(endpoint, json=payload, headers=auth_headers)
+                response = await client.post(
+                    endpoint, json=payload, headers=auth_headers
+                )
             else:
                 response = await client.get(endpoint, headers=auth_headers)
 
@@ -234,10 +211,7 @@ class TestMBTIScenarios:
         """Test MBTI type information endpoints (accessible to all authenticated users)."""
 
         # Get all types
-        all_types_response = await client.get(
-            "/api/mbti/types",
-            headers=auth_headers
-        )
+        all_types_response = await client.get("/api/mbti/types", headers=auth_headers)
         assert all_types_response.status_code == 200
         all_types_data = all_types_response.json()
         assert isinstance(all_types_data, list)
@@ -246,16 +220,21 @@ class TestMBTIScenarios:
         # Verify structure of type info
         first_type = all_types_data[0]
         required_fields = [
-            "type_code", "name_en", "name_ja", "description_en",
-            "description_ja", "temperament", "strengths_en", "strengths_ja"
+            "type_code",
+            "name_en",
+            "name_ja",
+            "description_en",
+            "description_ja",
+            "temperament",
+            "strengths_en",
+            "strengths_ja",
         ]
         for field in required_fields:
             assert field in first_type
 
         # Get specific type
         specific_type_response = await client.get(
-            "/api/mbti/types/INTJ",
-            headers=auth_headers
+            "/api/mbti/types/INTJ", headers=auth_headers
         )
         assert specific_type_response.status_code == 200
         specific_type_data = specific_type_response.json()
@@ -264,8 +243,7 @@ class TestMBTIScenarios:
 
         # Test non-existent type
         invalid_type_response = await client.get(
-            "/api/mbti/types/XXXX",
-            headers=auth_headers
+            "/api/mbti/types/XXXX", headers=auth_headers
         )
         assert invalid_type_response.status_code == 404
 
@@ -279,15 +257,13 @@ class TestMBTIScenarios:
         invalid_language_response = await client.post(
             "/api/mbti/start",
             json={"language": "fr"},  # Invalid language
-            headers=candidate_headers
+            headers=candidate_headers,
         )
         assert invalid_language_response.status_code == 422
 
         # Start valid test for further testing
         start_response = await client.post(
-            "/api/mbti/start",
-            json={"language": "ja"},
-            headers=candidate_headers
+            "/api/mbti/start", json={"language": "ja"}, headers=candidate_headers
         )
         assert start_response.status_code == 200
 
@@ -296,16 +272,16 @@ class TestMBTIScenarios:
             "/api/mbti/answer",
             json={
                 "question_id": 1,
-                "answer": "C"  # Invalid answer - must be A or B
+                "answer": "C",  # Invalid answer - must be A or B
             },
-            headers=candidate_headers
+            headers=candidate_headers,
         )
         assert invalid_answer_response.status_code == 422
 
         # Test invalid question format in questions endpoint
         invalid_lang_questions = await client.get(
             "/api/mbti/questions?language=es",  # Invalid language
-            headers=candidate_headers
+            headers=candidate_headers,
         )
         assert invalid_lang_questions.status_code == 422
 
@@ -317,8 +293,7 @@ class TestMBTIScenarios:
 
         # Try to get questions without starting test
         questions_response = await client.get(
-            "/api/mbti/questions",
-            headers=candidate_headers
+            "/api/mbti/questions", headers=candidate_headers
         )
         assert questions_response.status_code == 400
         error = questions_response.json()
@@ -327,11 +302,8 @@ class TestMBTIScenarios:
         # Try to submit answer without starting test
         answer_response = await client.post(
             "/api/mbti/answer",
-            json={
-                "question_id": 1,
-                "answer": "A"
-            },
-            headers=candidate_headers
+            json={"question_id": 1, "answer": "A"},
+            headers=candidate_headers,
         )
         assert answer_response.status_code == 400
         error = answer_response.json()
@@ -339,14 +311,12 @@ class TestMBTIScenarios:
 
         # Try to get result without test
         result_response = await client.get(
-            "/api/mbti/result",
-            headers=candidate_headers
+            "/api/mbti/result", headers=candidate_headers
         )
         assert result_response.status_code == 404
 
         # Try to get summary without completed test
         summary_response = await client.get(
-            "/api/mbti/summary",
-            headers=candidate_headers
+            "/api/mbti/summary", headers=candidate_headers
         )
         assert summary_response.status_code == 404

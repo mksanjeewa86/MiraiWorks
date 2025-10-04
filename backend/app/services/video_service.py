@@ -27,27 +27,21 @@ class VideoService:
             "room_id": room_id,
             "user_id": user_id,
             "user_name": user_name,
-            "exp": int(expires_at.timestamp())
+            "exp": int(expires_at.timestamp()),
         }
 
         # Generate HMAC signature
         payload_json = json.dumps(payload, sort_keys=True)
         signature = hmac.new(
-            settings.coturn_secret.encode(),
-            payload_json.encode(),
-            hashlib.sha256
+            settings.coturn_secret.encode(), payload_json.encode(), hashlib.sha256
         ).digest()
 
         # Combine payload and signature
-        token = base64.b64encode(
-            payload_json.encode() + b"." + signature
-        ).decode('utf-8')
-
-        return VideoCallToken(
-            room_id=room_id,
-            token=token,
-            expires_at=expires_at
+        token = base64.b64encode(payload_json.encode() + b"." + signature).decode(
+            "utf-8"
         )
+
+        return VideoCallToken(room_id=room_id, token=token, expires_at=expires_at)
 
     async def generate_transcript_download(
         self, transcript_id: int, format: str
@@ -71,15 +65,13 @@ class VideoService:
         return {
             "room_id": room_id,
             "ice_servers": [
-                {
-                    "urls": f"stun:{settings.coturn_host}:{settings.coturn_port}"
-                },
+                {"urls": f"stun:{settings.coturn_host}:{settings.coturn_port}"},
                 {
                     "urls": f"turn:{settings.coturn_host}:{settings.coturn_port}",
                     "username": "turnuser",
-                    "credential": settings.coturn_secret
-                }
-            ]
+                    "credential": settings.coturn_secret,
+                },
+            ],
         }
 
     async def start_recording(self, room_id: str) -> str | None:

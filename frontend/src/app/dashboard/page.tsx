@@ -18,7 +18,7 @@ function DashboardPageContent() {
         return <CandidateDashboard />;
       case 'member':
         return <RecruiterDashboard />;
-      case 'member':
+      case 'employer':
         return <EmployerDashboard />;
       case 'admin':
         return <CompanyAdminDashboard />;

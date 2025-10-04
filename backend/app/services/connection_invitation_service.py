@@ -17,7 +17,7 @@ class ConnectionInvitationService:
         db: AsyncSession,
         sender_id: int,
         receiver_id: int,
-        message: str | None = None
+        message: str | None = None,
     ) -> ConnectionInvitation:
         """Send a connection invitation to another user."""
 
@@ -30,7 +30,9 @@ class ConnectionInvitationService:
             raise ValueError("Invitation already sent to this user")
 
         # Check if users are already connected
-        existing_connection = await user_connection_service._get_connection(db, sender_id, receiver_id)
+        existing_connection = await user_connection_service._get_connection(
+            db, sender_id, receiver_id
+        )
         if existing_connection and existing_connection.is_active:
             raise ValueError("Users are already connected")
 
@@ -40,7 +42,7 @@ class ConnectionInvitationService:
             receiver_id=receiver_id,
             status=InvitationStatus.PENDING,
             message=message,
-            sent_at=datetime.utcnow()
+            sent_at=datetime.utcnow(),
         )
 
         db.add(invitation)
@@ -51,11 +53,7 @@ class ConnectionInvitationService:
         return invitation
 
     async def respond_to_invitation(
-        self,
-        db: AsyncSession,
-        invitation_id: int,
-        receiver_id: int,
-        accept: bool
+        self, db: AsyncSession, invitation_id: int, receiver_id: int, accept: bool
     ) -> dict:
         """Respond to a connection invitation (accept or reject)."""
 
@@ -77,7 +75,7 @@ class ConnectionInvitationService:
             await user_connection_service.connect_users(
                 db=db,
                 user_id=invitation.sender_id,
-                connected_user_id=invitation.receiver_id
+                connected_user_id=invitation.receiver_id,
             )
             result_message = "Invitation accepted and connection created"
         else:
@@ -91,14 +89,11 @@ class ConnectionInvitationService:
         return {
             "message": result_message,
             "invitation_id": invitation.id,
-            "status": invitation.status
+            "status": invitation.status,
         }
 
     async def cancel_invitation(
-        self,
-        db: AsyncSession,
-        invitation_id: int,
-        sender_id: int
+        self, db: AsyncSession, invitation_id: int, sender_id: int
     ) -> bool:
         """Cancel a sent invitation."""
 
@@ -119,10 +114,7 @@ class ConnectionInvitationService:
         return True
 
     async def get_sent_invitations(
-        self,
-        db: AsyncSession,
-        sender_id: int,
-        status: InvitationStatus | None = None
+        self, db: AsyncSession, sender_id: int, status: InvitationStatus | None = None
     ) -> list[ConnectionInvitation]:
         """Get invitations sent by user."""
 
@@ -139,10 +131,7 @@ class ConnectionInvitationService:
         return list(result.scalars().all())
 
     async def get_received_invitations(
-        self,
-        db: AsyncSession,
-        receiver_id: int,
-        status: InvitationStatus | None = None
+        self, db: AsyncSession, receiver_id: int, status: InvitationStatus | None = None
     ) -> list[ConnectionInvitation]:
         """Get invitations received by user."""
 
@@ -158,30 +147,25 @@ class ConnectionInvitationService:
         result = await db.execute(query)
         return list(result.scalars().all())
 
-    async def get_pending_invitations(
-        self,
-        db: AsyncSession,
-        user_id: int
-    ) -> dict:
+    async def get_pending_invitations(self, db: AsyncSession, user_id: int) -> dict:
         """Get all pending invitations for user (sent and received)."""
 
         sent = await self.get_sent_invitations(db, user_id, InvitationStatus.PENDING)
-        received = await self.get_received_invitations(db, user_id, InvitationStatus.PENDING)
+        received = await self.get_received_invitations(
+            db, user_id, InvitationStatus.PENDING
+        )
 
         return {
             "sent": sent,
             "received": received,
             "total_sent": len(sent),
-            "total_received": len(received)
+            "total_received": len(received),
         }
 
     # Helper methods
 
     async def _get_pending_invitation(
-        self,
-        db: AsyncSession,
-        sender_id: int,
-        receiver_id: int
+        self, db: AsyncSession, sender_id: int, receiver_id: int
     ) -> ConnectionInvitation | None:
         """Check if pending invitation exists between users."""
 
@@ -189,7 +173,7 @@ class ConnectionInvitationService:
             and_(
                 ConnectionInvitation.sender_id == sender_id,
                 ConnectionInvitation.receiver_id == receiver_id,
-                ConnectionInvitation.status == InvitationStatus.PENDING
+                ConnectionInvitation.status == InvitationStatus.PENDING,
             )
         )
 
@@ -197,9 +181,7 @@ class ConnectionInvitationService:
         return result.scalars().first()
 
     async def _get_invitation_by_id(
-        self,
-        db: AsyncSession,
-        invitation_id: int
+        self, db: AsyncSession, invitation_id: int
     ) -> ConnectionInvitation | None:
         """Get invitation by ID."""
 

@@ -36,12 +36,14 @@ class TestFileAccessControl:
     ):
         """Test that Super Admin can upload files."""
         # Create a temporary file for upload
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as temp_file:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".txt", delete=False
+        ) as temp_file:
             temp_file.write("Super Admin test file content")
             temp_file_path = temp_file.name
 
         try:
-            with open(temp_file_path, 'rb') as file:
+            with open(temp_file_path, "rb") as file:
                 files = {"file": ("test.txt", file, "text/plain")}
                 response = await client.post(
                     "/api/files/upload", files=files, headers=super_admin_auth_headers
@@ -66,12 +68,18 @@ class TestFileAccessControl:
         """Test that Super Admin can download any file."""
         # First upload a file as another user
         other_user = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         other_user_headers = await self._get_auth_headers(client, other_user)
 
         # Upload file as other user
-        file_path = await self._upload_test_file(client, other_user_headers, "other_user_file.txt")
+        file_path = await self._upload_test_file(
+            client, other_user_headers, "other_user_file.txt"
+        )
 
         # Super admin should be able to download it
         response = await client.get(
@@ -93,11 +101,17 @@ class TestFileAccessControl:
         """Test that Super Admin can delete any file."""
         # Upload file as another user
         other_user = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         other_user_headers = await self._get_auth_headers(client, other_user)
 
-        file_path = await self._upload_test_file(client, other_user_headers, "to_delete.txt")
+        file_path = await self._upload_test_file(
+            client, other_user_headers, "to_delete.txt"
+        )
 
         # Super admin should be able to delete it
         response = await client.delete(
@@ -120,7 +134,11 @@ class TestFileAccessControl:
     ):
         """Test that any authenticated user can upload files."""
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         headers = await self._get_auth_headers(client, candidate)
 
@@ -137,7 +155,11 @@ class TestFileAccessControl:
     ):
         """Test that user can download their own files."""
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         headers = await self._get_auth_headers(client, candidate)
 
@@ -160,7 +182,11 @@ class TestFileAccessControl:
     ):
         """Test that user can delete their own files."""
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         headers = await self._get_auth_headers(client, candidate)
 
@@ -185,17 +211,27 @@ class TestFileAccessControl:
         """Test that user cannot download files uploaded by other users."""
         # Create two users
         user1 = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "user1@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "user1@test.com",
         )
         user2 = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "user2@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "user2@test.com",
         )
 
         user1_headers = await self._get_auth_headers(client, user1)
         user2_headers = await self._get_auth_headers(client, user2)
 
         # User1 uploads file
-        file_path = await self._upload_test_file(client, user1_headers, "user1_file.txt")
+        file_path = await self._upload_test_file(
+            client, user1_headers, "user1_file.txt"
+        )
 
         # User2 tries to download user1's file
         response = await client.get(f"/api/files/{file_path}", headers=user2_headers)
@@ -214,17 +250,27 @@ class TestFileAccessControl:
         """Test that user cannot delete files uploaded by other users."""
         # Create two users
         user1 = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "user1@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "user1@test.com",
         )
         user2 = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "user2@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "user2@test.com",
         )
 
         user1_headers = await self._get_auth_headers(client, user1)
         user2_headers = await self._get_auth_headers(client, user2)
 
         # User1 uploads file
-        file_path = await self._upload_test_file(client, user1_headers, "user1_private.txt")
+        file_path = await self._upload_test_file(
+            client, user1_headers, "user1_private.txt"
+        )
 
         # User2 tries to delete user1's file
         response = await client.delete(f"/api/files/{file_path}", headers=user2_headers)
@@ -244,17 +290,27 @@ class TestFileAccessControl:
     ):
         """Test that Company Admin can access company-permitted files."""
         company_admin = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.ADMIN, "companyadmin@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.ADMIN,
+            "companyadmin@test.com",
         )
         company_user = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
 
         admin_headers = await self._get_auth_headers(client, company_admin)
         user_headers = await self._get_auth_headers(client, company_user)
 
         # Company user uploads file
-        file_path = await self._upload_test_file(client, user_headers, "company_file.txt")
+        file_path = await self._upload_test_file(
+            client, user_headers, "company_file.txt"
+        )
 
         # Company admin should be able to access it (if business logic permits)
         response = await client.get(f"/api/files/{file_path}", headers=admin_headers)
@@ -272,19 +328,29 @@ class TestFileAccessControl:
     ):
         """Test that Company Admin cannot access files from other companies."""
         company_admin = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.ADMIN, "companyadmin@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.ADMIN,
+            "companyadmin@test.com",
         )
 
         other_company = await self._create_other_company(db_session)
         other_user = await self._create_user_with_role(
-            db_session, other_company, test_roles, UserRoleEnum.MEMBER, "otherrecruiter@test.com"
+            db_session,
+            other_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "otherrecruiter@test.com",
         )
 
         admin_headers = await self._get_auth_headers(client, company_admin)
         other_user_headers = await self._get_auth_headers(client, other_user)
 
         # Other company user uploads file
-        file_path = await self._upload_test_file(client, other_user_headers, "other_company_file.txt")
+        file_path = await self._upload_test_file(
+            client, other_user_headers, "other_company_file.txt"
+        )
 
         # Company admin should NOT be able to access it
         response = await client.get(f"/api/files/{file_path}", headers=admin_headers)
@@ -306,17 +372,27 @@ class TestFileAccessControl:
         other_company = await self._create_other_company(db_session)
 
         user1 = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter1@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter1@test.com",
         )
         user2 = await self._create_user_with_role(
-            db_session, other_company, test_roles, UserRoleEnum.MEMBER, "recruiter2@test.com"
+            db_session,
+            other_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter2@test.com",
         )
 
         user1_headers = await self._get_auth_headers(client, user1)
         user2_headers = await self._get_auth_headers(client, user2)
 
         # User1 uploads file
-        file_path = await self._upload_test_file(client, user1_headers, "company1_file.txt")
+        file_path = await self._upload_test_file(
+            client, user1_headers, "company1_file.txt"
+        )
 
         # User2 from other company tries to access it
         response = await client.get(f"/api/files/{file_path}", headers=user2_headers)
@@ -336,19 +412,27 @@ class TestFileAccessControl:
     ):
         """Test file upload type validation."""
         user = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         headers = await self._get_auth_headers(client, user)
 
         # Try to upload potentially dangerous file type
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.exe', delete=False) as temp_file:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".exe", delete=False
+        ) as temp_file:
             temp_file.write("fake executable content")
             temp_file_path = temp_file.name
 
         try:
-            with open(temp_file_path, 'rb') as file:
+            with open(temp_file_path, "rb") as file:
                 files = {"file": ("malicious.exe", file, "application/octet-stream")}
-                response = await client.post("/api/files/upload", files=files, headers=headers)
+                response = await client.post(
+                    "/api/files/upload", files=files, headers=headers
+                )
 
             # Should either reject dangerous file types or accept with warnings
             assert response.status_code in [200, 400, 422]
@@ -367,20 +451,28 @@ class TestFileAccessControl:
     ):
         """Test file upload size validation."""
         user = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         headers = await self._get_auth_headers(client, user)
 
         # Create a large file (simulate - actual size depends on system limits)
         large_content = "x" * (1024 * 1024)  # 1MB of content
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as temp_file:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".txt", delete=False
+        ) as temp_file:
             temp_file.write(large_content)
             temp_file_path = temp_file.name
 
         try:
-            with open(temp_file_path, 'rb') as file:
+            with open(temp_file_path, "rb") as file:
                 files = {"file": ("large_file.txt", file, "text/plain")}
-                response = await client.post("/api/files/upload", files=files, headers=headers)
+                response = await client.post(
+                    "/api/files/upload", files=files, headers=headers
+                )
 
             # Should either accept or reject based on size limits
             assert response.status_code in [200, 413, 422]
@@ -401,7 +493,11 @@ class TestFileAccessControl:
     ):
         """Test access to files marked as public."""
         user = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         headers = await self._get_auth_headers(client, user)
 
@@ -429,19 +525,27 @@ class TestFileAccessControl:
             db_session, test_company, test_roles, UserRoleEnum.MEMBER, "owner@test.com"
         )
         recipient = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recipient@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recipient@test.com",
         )
 
         owner_headers = await self._get_auth_headers(client, owner)
         recipient_headers = await self._get_auth_headers(client, recipient)
 
         # Owner uploads file
-        file_path = await self._upload_test_file(client, owner_headers, "shared_file.txt")
+        file_path = await self._upload_test_file(
+            client, owner_headers, "shared_file.txt"
+        )
 
         # If file sharing is supported, share with recipient
         # This would typically involve a separate sharing endpoint
         # For now, test that recipient cannot access by default
-        response = await client.get(f"/api/files/{file_path}", headers=recipient_headers)
+        response = await client.get(
+            f"/api/files/{file_path}", headers=recipient_headers
+        )
 
         assert response.status_code == 403
         assert "not authorized" in response.json()["detail"].lower()
@@ -452,12 +556,14 @@ class TestFileAccessControl:
     async def test_unauthenticated_file_access(self, client: AsyncClient):
         """Test unauthenticated access to file endpoints."""
         # Try to upload without authentication
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as temp_file:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".txt", delete=False
+        ) as temp_file:
             temp_file.write("test content")
             temp_file_path = temp_file.name
 
         try:
-            with open(temp_file_path, 'rb') as file:
+            with open(temp_file_path, "rb") as file:
                 files = {"file": ("test.txt", file, "text/plain")}
                 response = await client.post("/api/files/upload", files=files)
 
@@ -525,14 +631,18 @@ class TestFileAccessControl:
         self, client: AsyncClient, headers: dict, filename: str
     ) -> str:
         """Upload a test file and return the file path."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as temp_file:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".txt", delete=False
+        ) as temp_file:
             temp_file.write(f"Test content for {filename}")
             temp_file_path = temp_file.name
 
         try:
-            with open(temp_file_path, 'rb') as file:
+            with open(temp_file_path, "rb") as file:
                 files = {"file": (filename, file, "text/plain")}
-                response = await client.post("/api/files/upload", files=files, headers=headers)
+                response = await client.post(
+                    "/api/files/upload", files=files, headers=headers
+                )
 
             assert response.status_code == 200
             data = response.json()

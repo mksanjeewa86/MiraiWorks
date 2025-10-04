@@ -12,10 +12,16 @@ from app.utils.constants import CompanyType
 
 # Roles data
 ROLES_DATA = [
-    {"name": "system_admin", "description": "System-level administrator with full access"},
+    {
+        "name": "system_admin",
+        "description": "System-level administrator with full access",
+    },
     {"name": "admin", "description": "Company administrator (context: company type)"},
     {"name": "member", "description": "Company member (context: company type)"},
-    {"name": "candidate", "description": "Job candidate with profile and application access"},
+    {
+        "name": "candidate",
+        "description": "Job candidate with profile and application access",
+    },
 ]
 
 # Companies data
@@ -359,11 +365,13 @@ async def create_user_connections(db, users, roles):
                 connected_user_id=system_admin_user.id,
                 is_active=True,
                 creation_type="automatic",
-                created_by=None
+                created_by=None,
             )
             db.add(connection)
             connections_created += 1
-            print(f"   - Connected {user.email} (admin) to {system_admin_user.email} (system_admin) [AUTOMATIC]")
+            print(
+                f"   - Connected {user.email} (admin) to {system_admin_user.email} (system_admin) [AUTOMATIC]"
+            )
 
     # Connect members to system admin as well for coordination
     for user, role_name in users:
@@ -373,11 +381,13 @@ async def create_user_connections(db, users, roles):
                 connected_user_id=system_admin_user.id,
                 is_active=True,
                 creation_type="automatic",
-                created_by=None
+                created_by=None,
             )
             db.add(connection)
             connections_created += 1
-            print(f"   - Connected {user.email} (member) to {system_admin_user.email} (system_admin) [AUTOMATIC]")
+            print(
+                f"   - Connected {user.email} (member) to {system_admin_user.email} (system_admin) [AUTOMATIC]"
+            )
 
     # Connect candidate to members (recruiters) for demonstration
     candidate_user = None
@@ -395,11 +405,13 @@ async def create_user_connections(db, users, roles):
                 connected_user_id=member_user.id,
                 is_active=True,
                 creation_type="automatic",
-                created_by=None
+                created_by=None,
             )
             db.add(connection)
             connections_created += 1
-            print(f"   - Connected {candidate_user.email} (candidate) to {member_user.email} (member) [AUTOMATIC]")
+            print(
+                f"   - Connected {candidate_user.email} (candidate) to {member_user.email} (member) [AUTOMATIC]"
+            )
 
     await db.commit()
     print(f"   - Created {connections_created} user connections")
@@ -453,7 +465,9 @@ async def seed_auth_data(db):
             if super_admin_user:
                 user_data["created_by"] = super_admin_user.id
             else:
-                user_data["created_by"] = None  # Fallback if system admin not created yet
+                user_data[
+                    "created_by"
+                ] = None  # Fallback if system admin not created yet
 
         user = User(**user_data)
         db.add(user)
@@ -464,7 +478,9 @@ async def seed_auth_data(db):
         if user_role == "system_admin":
             super_admin_user = user
 
-        print(f"   - Created user '{user.email}' (created_by: {user_data.get('created_by', 'None')})")
+        print(
+            f"   - Created user '{user.email}' (created_by: {user_data.get('created_by', 'None')})"
+        )
 
     await db.commit()
 
@@ -474,7 +490,9 @@ async def seed_auth_data(db):
         user_role = UserRole(
             user_id=user.id,
             role_id=roles[role_name].id,
-            scope=f"company_{user.company_id}" if role_name != "system_admin" else "global"
+            scope=f"company_{user.company_id}"
+            if role_name != "system_admin"
+            else "global",
         )
         db.add(user_role)
         print(f"   - Assigned role '{role_name}' to user '{user.email}'")
@@ -498,7 +516,9 @@ async def seed_auth_data(db):
     for i, company in enumerate(companies):
         profile_data = company_profiles_data[i].copy()
         profile_data["company_id"] = company.id
-        profile_data["last_updated_by"] = users[0][0].id if i == 0 else users[min(i, len(users)-1)][0].id
+        profile_data["last_updated_by"] = (
+            users[0][0].id if i == 0 else users[min(i, len(users) - 1)][0].id
+        )
         profile = CompanyProfile(**profile_data)
         db.add(profile)
 
@@ -517,5 +537,5 @@ async def seed_auth_data(db):
         "company_profiles": len(companies),
         "user_connections": user_connections_count,
         "users_list": users,
-        "companies_list": companies
+        "companies_list": companies,
     }

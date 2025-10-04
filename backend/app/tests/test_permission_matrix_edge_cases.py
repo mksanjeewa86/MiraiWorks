@@ -29,7 +29,7 @@ class TestPermissionMatrixEdgeCases:
             industry="Technology",
             size="medium",
             location="Tokyo",
-            is_active=True
+            is_active=True,
         )
         db.add(company)
         await db.flush()
@@ -43,7 +43,7 @@ class TestPermissionMatrixEdgeCases:
             is_active=True,
             is_verified=True,
             first_name="Super",
-            last_name="Admin"
+            last_name="Admin",
         )
         db.add(super_admin)
 
@@ -56,7 +56,7 @@ class TestPermissionMatrixEdgeCases:
             is_active=True,
             is_verified=True,
             first_name="Company",
-            last_name="Admin"
+            last_name="Admin",
         )
         db.add(company_admin)
 
@@ -69,7 +69,7 @@ class TestPermissionMatrixEdgeCases:
             is_active=True,
             is_verified=True,
             first_name="Test",
-            last_name="Recruiter"
+            last_name="Recruiter",
         )
         db.add(recruiter)
 
@@ -82,7 +82,7 @@ class TestPermissionMatrixEdgeCases:
             is_active=True,
             is_verified=True,
             first_name="Test",
-            last_name="Candidate"
+            last_name="Candidate",
         )
         db.add(candidate)
 
@@ -95,7 +95,7 @@ class TestPermissionMatrixEdgeCases:
             is_active=False,
             is_verified=True,
             first_name="Inactive",
-            last_name="User"
+            last_name="User",
         )
         db.add(inactive_user)
 
@@ -108,7 +108,7 @@ class TestPermissionMatrixEdgeCases:
             is_active=True,
             is_verified=False,
             first_name="Unverified",
-            last_name="User"
+            last_name="User",
         )
         db.add(unverified_user)
 
@@ -128,7 +128,7 @@ class TestPermissionMatrixEdgeCases:
             "member": recruiter,
             "candidate": candidate,
             "inactive_user": inactive_user,
-            "unverified_user": unverified_user
+            "unverified_user": unverified_user,
         }
 
     def _create_auth_headers(self, user: User) -> dict:
@@ -167,10 +167,12 @@ class TestPermissionMatrixEdgeCases:
         user_data = {
             "email": "newuser@edgecase.com",
             "role": "member",
-            "company_id": scenario["company"].id
+            "company_id": scenario["company"].id,
         }
 
-        response = await client.post("/api/admin/users", json=user_data, headers=headers)
+        response = await client.post(
+            "/api/admin/users", json=user_data, headers=headers
+        )
         assert response.status_code == 401
 
     async def test_malformed_token_access_denied(
@@ -187,10 +189,12 @@ class TestPermissionMatrixEdgeCases:
         # Try to create position with malformed token
         position_data = {
             "title": "Software Engineer",
-            "description": "Great opportunity"
+            "description": "Great opportunity",
         }
 
-        response = await client.post("/api/positions", json=position_data, headers=headers)
+        response = await client.post(
+            "/api/positions", json=position_data, headers=headers
+        )
         assert response.status_code == 401
 
     async def test_inactive_user_access_denied(
@@ -205,12 +209,11 @@ class TestPermissionMatrixEdgeCases:
         assert response.status_code == 401
 
         # Try to create position
-        position_data = {
-            "title": "Backend Developer",
-            "description": "Backend role"
-        }
+        position_data = {"title": "Backend Developer", "description": "Backend role"}
 
-        response = await client.post("/api/positions", json=position_data, headers=inactive_headers)
+        response = await client.post(
+            "/api/positions", json=position_data, headers=inactive_headers
+        )
         assert response.status_code == 401
 
     async def test_unverified_user_access_restrictions(
@@ -225,12 +228,11 @@ class TestPermissionMatrixEdgeCases:
         assert response.status_code == 401
 
         # Unverified users should not create positions
-        position_data = {
-            "title": "Data Scientist",
-            "description": "Data science role"
-        }
+        position_data = {"title": "Data Scientist", "description": "Data science role"}
 
-        response = await client.post("/api/positions", json=position_data, headers=unverified_headers)
+        response = await client.post(
+            "/api/positions", json=position_data, headers=unverified_headers
+        )
         assert response.status_code == 401
 
     async def test_role_change_permission_update(
@@ -244,10 +246,12 @@ class TestPermissionMatrixEdgeCases:
         recruiter_headers = self._create_auth_headers(scenario["member"])
         position_data = {
             "title": "Initial Position",
-            "description": "Position before role change"
+            "description": "Position before role change",
         }
 
-        response = await client.post("/api/positions", json=position_data, headers=recruiter_headers)
+        response = await client.post(
+            "/api/positions", json=position_data, headers=recruiter_headers
+        )
         assert response.status_code == 201
 
         # Change recruiter to candidate
@@ -255,7 +259,7 @@ class TestPermissionMatrixEdgeCases:
         response = await client.put(
             f"/api/admin/users/{scenario['recruiter'].id}",
             json=update_data,
-            headers=super_admin_headers
+            headers=super_admin_headers,
         )
         assert response.status_code == 200
 
@@ -268,10 +272,12 @@ class TestPermissionMatrixEdgeCases:
         # Now as candidate, should not be able to create positions
         position_data = {
             "title": "Position After Role Change",
-            "description": "This should fail"
+            "description": "This should fail",
         }
 
-        response = await client.post("/api/positions", json=position_data, headers=updated_headers)
+        response = await client.post(
+            "/api/positions", json=position_data, headers=updated_headers
+        )
         assert response.status_code == 403
 
     async def test_company_deactivation_access_denied(
@@ -291,7 +297,7 @@ class TestPermissionMatrixEdgeCases:
         response = await client.put(
             f"/api/admin/companies/{scenario['company'].id}",
             json=company_update,
-            headers=super_admin_headers
+            headers=super_admin_headers,
         )
         assert response.status_code == 200
 
@@ -313,11 +319,11 @@ class TestPermissionMatrixEdgeCases:
         # Multiple users trying to create positions simultaneously
         position_data_1 = {
             "title": "Concurrent Position 1",
-            "description": "First concurrent position"
+            "description": "First concurrent position",
         }
         position_data_2 = {
             "title": "Concurrent Position 2",
-            "description": "Second concurrent position"
+            "description": "Second concurrent position",
         }
 
         # Both should succeed (both have permission)
@@ -325,8 +331,10 @@ class TestPermissionMatrixEdgeCases:
 
         responses = await asyncio.gather(
             client.post("/api/positions", json=position_data_1, headers=admin_headers),
-            client.post("/api/positions", json=position_data_2, headers=recruiter_headers),
-            return_exceptions=True
+            client.post(
+                "/api/positions", json=position_data_2, headers=recruiter_headers
+            ),
+            return_exceptions=True,
         )
 
         assert responses[0].status_code == 201
@@ -347,10 +355,12 @@ class TestPermissionMatrixEdgeCases:
                 "role": "candidate",
                 "company_id": scenario["company"].id,
                 "first_name": f"User{i}",
-                "last_name": "Test"
+                "last_name": "Test",
             }
 
-            response = await client.post("/api/admin/users", json=user_data, headers=admin_headers)
+            response = await client.post(
+                "/api/admin/users", json=user_data, headers=admin_headers
+            )
             assert response.status_code == 201
 
     async def test_cross_functional_permission_validation(
@@ -361,12 +371,11 @@ class TestPermissionMatrixEdgeCases:
 
         # Create position
         recruiter_headers = self._create_auth_headers(scenario["member"])
-        position_data = {
-            "title": "Full Stack Developer",
-            "description": "Complex role"
-        }
+        position_data = {"title": "Full Stack Developer", "description": "Complex role"}
 
-        position_response = await client.post("/api/positions", json=position_data, headers=recruiter_headers)
+        position_response = await client.post(
+            "/api/positions", json=position_data, headers=recruiter_headers
+        )
         assert position_response.status_code == 201
         position = position_response.json()
 
@@ -376,16 +385,20 @@ class TestPermissionMatrixEdgeCases:
             "candidate_id": scenario["candidate"].id,
             "scheduled_at": "2024-02-01T10:00:00",
             "duration_minutes": 60,
-            "interview_type": "technical"
+            "interview_type": "technical",
         }
 
-        interview_response = await client.post("/api/interviews", json=interview_data, headers=recruiter_headers)
+        interview_response = await client.post(
+            "/api/interviews", json=interview_data, headers=recruiter_headers
+        )
         assert interview_response.status_code == 201
         interview = interview_response.json()
 
         # Candidate should be able to view their interview
         candidate_headers = self._create_auth_headers(scenario["candidate"])
-        response = await client.get(f"/api/interviews/{interview['id']}", headers=candidate_headers)
+        response = await client.get(
+            f"/api/interviews/{interview['id']}", headers=candidate_headers
+        )
         assert response.status_code == 200
 
         # But candidate should not be able to modify the interview
@@ -393,7 +406,7 @@ class TestPermissionMatrixEdgeCases:
         response = await client.put(
             f"/api/interviews/{interview['id']}",
             json=update_data,
-            headers=candidate_headers
+            headers=candidate_headers,
         )
         assert response.status_code == 403
 
@@ -412,19 +425,23 @@ class TestPermissionMatrixEdgeCases:
             "role": "member",
             "company_id": scenario["company"].id,
             "first_name": "Inherited",
-            "last_name": "User"
+            "last_name": "User",
         }
 
-        response = await client.post("/api/admin/users", json=user_data, headers=super_admin_headers)
+        response = await client.post(
+            "/api/admin/users", json=user_data, headers=super_admin_headers
+        )
         assert response.status_code == 201
 
         # Super admin should also have recruiter permissions
         position_data = {
             "title": "Inherited Position",
-            "description": "Position created by Super Admin"
+            "description": "Position created by Super Admin",
         }
 
-        response = await client.post("/api/positions", json=position_data, headers=super_admin_headers)
+        response = await client.post(
+            "/api/positions", json=position_data, headers=super_admin_headers
+        )
         assert response.status_code == 201
 
     async def test_nested_resource_permission_validation(
@@ -443,7 +460,7 @@ class TestPermissionMatrixEdgeCases:
             mime_type="application/pdf",
             sha256_hash="1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
             owner_id=scenario["member"].id,
-            is_available=True
+            is_available=True,
         )
         db.add(file_info)
         await db.commit()
@@ -456,26 +473,36 @@ class TestPermissionMatrixEdgeCases:
             "assigned_to": scenario["member"].id,
             "related_file_id": file_info.id,
             "priority": "medium",
-            "due_date": "2024-02-01"
+            "due_date": "2024-02-01",
         }
 
         company_admin_headers = self._create_auth_headers(scenario["admin"])
-        todo_response = await client.post("/api/todos", json=todo_data, headers=company_admin_headers)
+        todo_response = await client.post(
+            "/api/todos", json=todo_data, headers=company_admin_headers
+        )
         assert todo_response.status_code == 201
 
         # Assigned user should be able to view both todo and file
-        response = await client.get(f"/api/todos/{todo_response.json()['id']}", headers=recruiter_headers)
+        response = await client.get(
+            f"/api/todos/{todo_response.json()['id']}", headers=recruiter_headers
+        )
         assert response.status_code == 200
 
-        response = await client.get(f"/api/attachments/{file_info.id}", headers=recruiter_headers)
+        response = await client.get(
+            f"/api/attachments/{file_info.id}", headers=recruiter_headers
+        )
         assert response.status_code == 200
 
         # Candidate should not be able to access either
         candidate_headers = self._create_auth_headers(scenario["candidate"])
-        response = await client.get(f"/api/todos/{todo_response.json()['id']}", headers=candidate_headers)
+        response = await client.get(
+            f"/api/todos/{todo_response.json()['id']}", headers=candidate_headers
+        )
         assert response.status_code == 403
 
-        response = await client.get(f"/api/attachments/{file_info.id}", headers=candidate_headers)
+        response = await client.get(
+            f"/api/attachments/{file_info.id}", headers=candidate_headers
+        )
         assert response.status_code == 403
 
     async def test_api_rate_limiting_permission_interaction(
@@ -489,7 +516,9 @@ class TestPermissionMatrixEdgeCases:
         # Even with rate limiting, permissions should be checked first
         for _i in range(10):
             response = await client.get("/api/admin/users", headers=candidate_headers)
-            assert response.status_code == 403  # Should be permission error, not rate limit
+            assert (
+                response.status_code == 403
+            )  # Should be permission error, not rate limit
 
     async def test_session_invalidation_edge_cases(
         self, client: AsyncClient, db: AsyncSession, setup_edge_case_scenario: dict
@@ -508,7 +537,7 @@ class TestPermissionMatrixEdgeCases:
         response = await client.put(
             f"/api/admin/users/{scenario['recruiter'].id}",
             json=update_data,
-            headers=super_admin_headers
+            headers=super_admin_headers,
         )
         assert response.status_code == 200
 
@@ -535,7 +564,7 @@ class TestPermissionMatrixEdgeCases:
             is_active=True,
             is_verified=True,
             first_name="Minimal",
-            last_name="User"
+            last_name="User",
         )
         db.add(minimal_user)
         await db.commit()
@@ -548,14 +577,11 @@ class TestPermissionMatrixEdgeCases:
         assert response.status_code == 403
 
         # Promote to recruiter
-        update_data = {
-            "role": "member",
-            "company_id": scenario["company"].id
-        }
+        update_data = {"role": "member", "company_id": scenario["company"].id}
         response = await client.put(
             f"/api/admin/users/{minimal_user.id}",
             json=update_data,
-            headers=super_admin_headers
+            headers=super_admin_headers,
         )
         assert response.status_code == 200
 
@@ -566,9 +592,11 @@ class TestPermissionMatrixEdgeCases:
         # Now can create positions
         position_data = {
             "title": "Promoted User Position",
-            "description": "Position after promotion"
+            "description": "Position after promotion",
         }
-        response = await client.post("/api/positions", json=position_data, headers=updated_headers)
+        response = await client.post(
+            "/api/positions", json=position_data, headers=updated_headers
+        )
         assert response.status_code == 201
 
         # But still cannot access all admin functions
@@ -588,10 +616,12 @@ class TestPermissionMatrixEdgeCases:
             "role": "member",
             "company_id": scenario["company"].id,
             "first_name": "Consistency",
-            "last_name": "Test"
+            "last_name": "Test",
         }
 
-        user_response = await client.post("/api/admin/users", json=user_data, headers=admin_headers)
+        user_response = await client.post(
+            "/api/admin/users", json=user_data, headers=admin_headers
+        )
         assert user_response.status_code == 201
         new_user = user_response.json()
 
@@ -601,10 +631,12 @@ class TestPermissionMatrixEdgeCases:
             "description": "First task for new user",
             "assigned_to": new_user["id"],
             "priority": "low",
-            "due_date": "2024-02-15"
+            "due_date": "2024-02-15",
         }
 
-        todo_response = await client.post("/api/todos", json=todo_data, headers=admin_headers)
+        todo_response = await client.post(
+            "/api/todos", json=todo_data, headers=admin_headers
+        )
         assert todo_response.status_code == 201
 
         # Verify the new user can access their assigned todo
@@ -613,9 +645,11 @@ class TestPermissionMatrixEdgeCases:
                 id=new_user["id"],
                 email=new_user["email"],
                 role=UserRole.RECRUITER,
-                company_id=scenario["company"].id
+                company_id=scenario["company"].id,
             )
         )
 
-        response = await client.get(f"/api/todos/{todo_response.json()['id']}", headers=new_user_headers)
+        response = await client.get(
+            f"/api/todos/{todo_response.json()['id']}", headers=new_user_headers
+        )
         assert response.status_code == 200

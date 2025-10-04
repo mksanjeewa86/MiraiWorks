@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config.endpoints import API_ROUTES
 from app.crud.position import position as position_crud
 from app.database import get_db
 from app.dependencies import get_current_active_user, get_optional_current_user
@@ -28,9 +29,13 @@ def _add_legacy_position_keys(model: BaseModel) -> dict[str, Any]:
     return payload
 
 
-@router.post("", response_model=PositionInfo, status_code=status.HTTP_201_CREATED)
 @router.post(
-    "/",
+    API_ROUTES.POSITIONS.BASE,
+    response_model=PositionInfo,
+    status_code=status.HTTP_201_CREATED,
+)
+@router.post(
+    API_ROUTES.POSITIONS.BASE_SLASH,
     response_model=PositionInfo,
     status_code=status.HTTP_201_CREATED,
     include_in_schema=False,
@@ -63,12 +68,18 @@ async def create_position(
     position_data = position_in.model_dump()
     position_data["posted_by"] = current_user.id
 
-    position = await position_crud.create_with_slug(db=db, obj_in=PositionCreate(**position_data))
+    position = await position_crud.create_with_slug(
+        db=db, obj_in=PositionCreate(**position_data)
+    )
     return position
 
 
-@router.get("", response_model=PositionListResponse)
-@router.get("/", response_model=PositionListResponse, include_in_schema=False)
+@router.get(API_ROUTES.POSITIONS.BASE, response_model=PositionListResponse)
+@router.get(
+    API_ROUTES.POSITIONS.BASE_SLASH,
+    response_model=PositionListResponse,
+    include_in_schema=False,
+)
 async def list_positions(
     db: AsyncSession = Depends(get_db),
     skip: int = Query(0, ge=0, description="Number of positions to skip"),
@@ -78,13 +89,19 @@ async def list_positions(
     salary_min: int | None = Query(None, ge=0, description="Minimum salary filter"),
     salary_max: int | None = Query(None, ge=0, description="Maximum salary filter"),
     company_id: int | None = Query(None, description="Filter by company"),
-    search: str | None = Query(None, description="Search in title, description, requirements"),
-    days_since_posted: int | None = Query(None, ge=1, description="Filter positions posted within last N days"),
+    search: str | None = Query(
+        None, description="Search in title, description, requirements"
+    ),
+    days_since_posted: int | None = Query(
+        None, ge=1, description="Filter positions posted within last N days"
+    ),
     status: str | None = Query("published", description="Position status filter"),
     current_user: User | None = Depends(get_optional_current_user),
 ) -> Any:
     """Retrieve positions with optional filtering, adjusting visibility based on the caller."""
-    is_admin_access = bool(current_user and (current_user.is_admin or current_user.company_id))
+    is_admin_access = bool(
+        current_user and (current_user.is_admin or current_user.company_id)
+    )
 
     if not is_admin_access:
         positions, total_count = await position_crud.get_published_positions_with_count(
@@ -106,7 +123,7 @@ async def list_positions(
             updates = {
                 "application_count": 0,
                 "view_count": 0,
-                "company_name": pos.company.name if pos.company else None
+                "company_name": pos.company.name if pos.company else None,
             }
             if not pos.show_salary:
                 updates.update(
@@ -154,7 +171,7 @@ async def list_positions(
     for pos in positions:
         info = PositionInfo.model_validate(pos, from_attributes=True)
         # Populate company_name from relationship
-        if hasattr(pos, 'company') and pos.company:
+        if hasattr(pos, "company") and pos.company:
             info = info.model_copy(update={"company_name": pos.company.name})
         position_infos.append(info)
 
@@ -168,14 +185,17 @@ async def list_positions(
         has_more=has_more,
     )
 
+
 # Search functionality is now integrated into the main list_positions endpoint
 # Use the main endpoint with search parameter instead
 
 
-@router.get("/popular", response_model=list[PositionInfo])
+@router.get(API_ROUTES.POSITIONS.POPULAR, response_model=list[PositionInfo])
 async def get_popular_positions(
     db: AsyncSession = Depends(get_db),
-    limit: int = Query(10, ge=1, le=50, description="Number of popular positions to return"),
+    limit: int = Query(
+        10, ge=1, le=50, description="Number of popular positions to return"
+    ),
 ) -> Any:
     """
     Get most popular positions by view count.
@@ -184,10 +204,12 @@ async def get_popular_positions(
     return positions
 
 
-@router.get("/recent", response_model=list[PositionInfo])
+@router.get(API_ROUTES.POSITIONS.RECENT, response_model=list[PositionInfo])
 async def get_recent_positions(
     db: AsyncSession = Depends(get_db),
-    days: int = Query(7, ge=1, le=30, description="Positions posted in the last N days"),
+    days: int = Query(
+        7, ge=1, le=30, description="Positions posted in the last N days"
+    ),
     limit: int = Query(100, ge=1, le=500),
 ) -> Any:
     """
@@ -197,10 +219,12 @@ async def get_recent_positions(
     return positions
 
 
-@router.get("/expiring", response_model=list[PositionInfo])
+@router.get(API_ROUTES.POSITIONS.EXPIRING, response_model=list[PositionInfo])
 async def get_expiring_positions(
     db: AsyncSession = Depends(get_db),
-    days: int = Query(7, ge=1, le=30, description="Positions expiring in the next N days"),
+    days: int = Query(
+        7, ge=1, le=30, description="Positions expiring in the next N days"
+    ),
     limit: int = Query(100, ge=1, le=500),
     current_user: User = Depends(get_current_active_user),
 ) -> Any:
@@ -213,11 +237,13 @@ async def get_expiring_positions(
             detail="Not enough permissions to view expiring positions",
         )
 
-    positions = await position_crud.get_positions_expiring_soon(db=db, days=days, limit=limit)
+    positions = await position_crud.get_positions_expiring_soon(
+        db=db, days=days, limit=limit
+    )
     return positions
 
 
-@router.get("/statistics", response_model=PositionStatsResponse)
+@router.get(API_ROUTES.POSITIONS.STATISTICS, response_model=PositionStatsResponse)
 async def get_position_statistics(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
@@ -234,7 +260,7 @@ async def get_position_statistics(
     return PositionStatsResponse(**stats)
 
 
-@router.get("/company/{company_id}", response_model=list[PositionInfo])
+@router.get(API_ROUTES.POSITIONS.COMPANY, response_model=list[PositionInfo])
 async def get_company_positions(
     *,
     db: AsyncSession = Depends(get_db),
@@ -259,7 +285,7 @@ async def get_company_positions(
     return positions
 
 
-@router.get("/{position_id}", response_model=PositionInfo)
+@router.get(API_ROUTES.POSITIONS.BY_ID, response_model=PositionInfo)
 async def get_position(*, db: AsyncSession = Depends(get_db), position_id: int) -> Any:
     """
     Get position by ID and increment view count.
@@ -272,12 +298,14 @@ async def get_position(*, db: AsyncSession = Depends(get_db), position_id: int) 
 
     # Increment view count for published positions
     if position.status == "published":
-        position = await position_crud.increment_position_view_count(db=db, position_id=position_id)
+        position = await position_crud.increment_position_view_count(
+            db=db, position_id=position_id
+        )
 
     return position
 
 
-@router.get("/slug/{slug}", response_model=PositionInfo)
+@router.get(API_ROUTES.POSITIONS.BY_SLUG, response_model=PositionInfo)
 async def get_position_by_slug(*, db: AsyncSession = Depends(get_db), slug: str) -> Any:
     """
     Get position by slug and increment view count.
@@ -290,12 +318,14 @@ async def get_position_by_slug(*, db: AsyncSession = Depends(get_db), slug: str)
 
     # Increment view count for published positions
     if position.status == "published":
-        position = await position_crud.increment_position_view_count(db=db, position_id=position.id)
+        position = await position_crud.increment_position_view_count(
+            db=db, position_id=position.id
+        )
 
     return position
 
 
-@router.put("/{position_id}", response_model=PositionInfo)
+@router.put(API_ROUTES.POSITIONS.BY_ID, response_model=PositionInfo)
 async def update_position(
     *,
     db: AsyncSession = Depends(get_db),
@@ -330,7 +360,7 @@ async def update_position(
     return position
 
 
-@router.patch("/bulk/status", response_model=list[PositionInfo])
+@router.patch(API_ROUTES.POSITIONS.BULK_STATUS, response_model=list[PositionInfo])
 async def bulk_update_position_status(
     *,
     db: AsyncSession = Depends(get_db),
@@ -371,7 +401,7 @@ async def bulk_update_position_status(
     return positions
 
 
-@router.patch("/{position_id}/status", response_model=PositionInfo)
+@router.patch(API_ROUTES.POSITIONS.STATUS, response_model=PositionInfo)
 async def update_position_status(
     *,
     db: AsyncSession = Depends(get_db),
@@ -403,7 +433,7 @@ async def update_position_status(
     return updated_position
 
 
-@router.delete("/{position_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(API_ROUTES.POSITIONS.BY_ID, status_code=status.HTTP_204_NO_CONTENT)
 async def delete_position(
     *,
     db: AsyncSession = Depends(get_db),

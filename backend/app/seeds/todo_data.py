@@ -14,7 +14,9 @@ from app.models.todo import Todo
 from app.utils.constants import TodoStatus, TodoVisibility
 
 
-async def seed_todo_data(db: AsyncSession, auth_result: dict[str, Any]) -> dict[str, int]:
+async def seed_todo_data(
+    db: AsyncSession, auth_result: dict[str, Any]
+) -> dict[str, int]:
     """
     Seed todo data for testing the todo management system.
 
@@ -188,15 +190,27 @@ async def seed_todo_data(db: AsyncSession, auth_result: dict[str, Any]) -> dict[
         await db.refresh(todo)
 
     print(f"   ✓ Created {len(created_todos)} todos")
-    print(f"     - Pending: {len([t for t in created_todos if t.status == TodoStatus.PENDING.value])}")
-    print(f"     - In Progress: {len([t for t in created_todos if t.status == TodoStatus.IN_PROGRESS.value])}")
-    print(f"     - Completed: {len([t for t in created_todos if t.status == TodoStatus.COMPLETED.value])}")
+    print(
+        f"     - Pending: {len([t for t in created_todos if t.status == TodoStatus.PENDING.value])}"
+    )
+    print(
+        f"     - In Progress: {len([t for t in created_todos if t.status == TodoStatus.IN_PROGRESS.value])}"
+    )
+    print(
+        f"     - Completed: {len([t for t in created_todos if t.status == TodoStatus.COMPLETED.value])}"
+    )
     print(f"     - Overdue: {len([t for t in created_todos if t.expired_at])}")
 
     return {
         "todos": len(created_todos),
-        "pending": len([t for t in created_todos if t.status == TodoStatus.PENDING.value]),
-        "in_progress": len([t for t in created_todos if t.status == TodoStatus.IN_PROGRESS.value]),
-        "completed": len([t for t in created_todos if t.status == TodoStatus.COMPLETED.value]),
+        "pending": len(
+            [t for t in created_todos if t.status == TodoStatus.PENDING.value]
+        ),
+        "in_progress": len(
+            [t for t in created_todos if t.status == TodoStatus.IN_PROGRESS.value]
+        ),
+        "completed": len(
+            [t for t in created_todos if t.status == TodoStatus.COMPLETED.value]
+        ),
         "overdue": len([t for t in created_todos if t.expired_at]),
     }

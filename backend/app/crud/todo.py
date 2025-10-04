@@ -32,10 +32,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
     async def get(self, db: AsyncSession, id: int) -> Todo | None:
         """Get todo by id, excluding soft-deleted records."""
         result = await db.execute(
-            select(Todo).where(
-                Todo.id == id,
-                Todo.is_deleted == False
-            )
+            select(Todo).where(Todo.id == id, Todo.is_deleted == False)
         )
         return result.scalar_one_or_none()
 
@@ -44,10 +41,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
     ) -> list[Todo]:
         """Get multiple todos, excluding soft-deleted records."""
         result = await db.execute(
-            select(Todo)
-            .where(Todo.is_deleted == False)
-            .offset(skip)
-            .limit(limit)
+            select(Todo).where(Todo.is_deleted == False).offset(skip).limit(limit)
         )
         return result.scalars().all()
 
@@ -87,10 +81,10 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
             select(Todo)
             .options(selectinload(Todo.assigned_user))
             .where(
-                (Todo.owner_id == user_id) |
-                (
-                    (Todo.assigned_user_id == user_id) &
-                    (Todo.publish_status == TodoPublishStatus.PUBLISHED.value)
+                (Todo.owner_id == user_id)
+                | (
+                    (Todo.assigned_user_id == user_id)
+                    & (Todo.publish_status == TodoPublishStatus.PUBLISHED.value)
                 )
             )
         )
@@ -194,7 +188,9 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         await db.refresh(todo)
         return todo
 
-    async def soft_delete(self, db: AsyncSession, *, todo: Todo, deleted_by: int) -> Todo:
+    async def soft_delete(
+        self, db: AsyncSession, *, todo: Todo, deleted_by: int
+    ) -> Todo:
         todo.soft_delete()
         todo.last_updated_by = deleted_by
         db.add(todo)
@@ -218,12 +214,9 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
             select(Todo)
             .options(
                 selectinload(Todo.assigned_user),
-                selectinload(Todo.viewers).selectinload(TodoViewer.user)
+                selectinload(Todo.viewers).selectinload(TodoViewer.user),
             )
-            .where(
-                Todo.id == todo_id,
-                Todo.is_deleted == False
-            )
+            .where(Todo.id == todo_id, Todo.is_deleted == False)
         )
         return result.scalars().first()
 
@@ -249,7 +242,9 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
 
         return await super().update(db, db_obj=todo, obj_in=update_data)
 
-    async def get_assignable_users(self, db: AsyncSession, *, assigner_id: int) -> list[User]:
+    async def get_assignable_users(
+        self, db: AsyncSession, *, assigner_id: int
+    ) -> list[User]:
         """Get users that can be assigned todos by the assigner."""
         return await TodoPermissionService.get_assignable_users(db, assigner_id)
 
@@ -269,7 +264,9 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
             .where(
                 Todo.assigned_user_id == assigned_user_id,
                 Todo.is_deleted is False,
-                Todo.visibility.in_([TodoVisibility.PUBLIC.value, TodoVisibility.VIEWER.value])
+                Todo.visibility.in_(
+                    [TodoVisibility.PUBLIC.value, TodoVisibility.VIEWER.value]
+                ),
             )
         )
 
@@ -300,10 +297,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         """Update viewers for a todo."""
         # Update viewers
         await todo_viewer.add_viewers(
-            db,
-            todo_id=todo.id,
-            viewer_ids=viewers_data.viewer_ids,
-            added_by=updated_by
+            db, todo_id=todo.id, viewer_ids=viewers_data.viewer_ids, added_by=updated_by
         )
 
         # Update last_updated_by
@@ -315,17 +309,12 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         return todo
 
     async def create_with_viewers(
-        self,
-        db: AsyncSession,
-        *,
-        owner_id: int,
-        created_by: int,
-        obj_in: TodoCreate
+        self, db: AsyncSession, *, owner_id: int, created_by: int, obj_in: TodoCreate
     ) -> Todo:
         """Create a todo with viewers."""
         # Extract viewer_ids from the input
         viewer_ids = obj_in.viewer_ids or []
-        obj_data = obj_in.model_dump(exclude={'viewer_ids'})
+        obj_data = obj_in.model_dump(exclude={"viewer_ids"})
 
         # Create the todo first
         obj_data.setdefault("status", TodoStatus.PENDING.value)
@@ -345,10 +334,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         # Add viewers if any
         if viewer_ids:
             await todo_viewer.add_viewers(
-                db,
-                todo_id=db_obj.id,
-                viewer_ids=viewer_ids,
-                added_by=created_by
+                db, todo_id=db_obj.id, viewer_ids=viewer_ids, added_by=created_by
             )
             # Refresh to get viewers
             await db.refresh(db_obj)
@@ -359,7 +345,9 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         self, db: AsyncSession, *, owner_id: int, obj_in: TodoCreate
     ) -> Todo:
         """Create a todo with owner - alias for create_for_user."""
-        return await self.create_for_user(db, owner_id=owner_id, created_by=owner_id, obj_in=obj_in)
+        return await self.create_for_user(
+            db, owner_id=owner_id, created_by=owner_id, obj_in=obj_in
+        )
 
     # Assignment workflow methods
     async def publish_assignment(
@@ -424,7 +412,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         reviewer_id: int,
         assignment_status: str,
         assessment: str = None,
-        score: int = None
+        score: int = None,
     ) -> Todo:
         """Review and assess an assignment."""
         if todo.is_assignment and todo.owner_id == reviewer_id:
@@ -449,11 +437,13 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
             .where(
                 Todo.owner_id == reviewer_id,
                 Todo.todo_type == "assignment",
-                Todo.assignment_status.in_([
-                    AssignmentStatus.SUBMITTED.value,
-                    AssignmentStatus.UNDER_REVIEW.value
-                ]),
-                Todo.is_deleted is False
+                Todo.assignment_status.in_(
+                    [
+                        AssignmentStatus.SUBMITTED.value,
+                        AssignmentStatus.UNDER_REVIEW.value,
+                    ]
+                ),
+                Todo.is_deleted is False,
             )
             .order_by(Todo.submitted_at.asc())
         )
@@ -466,7 +456,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         user_id: int,
         assignment_status: str = None,
         limit: int = 100,
-        offset: int = 0
+        offset: int = 0,
     ) -> tuple[list[Todo], int]:
         """Get assignments for a user (either as assignee or viewer)."""
         # Get assignments where user is assigned or is a viewer
@@ -475,16 +465,16 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
             .options(
                 selectinload(Todo.owner),
                 selectinload(Todo.assigned_user),
-                selectinload(Todo.viewers).selectinload(TodoViewer.user)
+                selectinload(Todo.viewers).selectinload(TodoViewer.user),
             )
             .where(
                 Todo.todo_type == "assignment",
                 Todo.publish_status == TodoPublishStatus.PUBLISHED.value,
                 Todo.is_deleted is False,
                 (
-                    (Todo.assigned_user_id == user_id) |
-                    (Todo.viewers.any(TodoViewer.user_id == user_id))
-                )
+                    (Todo.assigned_user_id == user_id)
+                    | (Todo.viewers.any(TodoViewer.user_id == user_id))
+                ),
             )
         )
 

@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import DatePicker from 'react-datepicker';
-import "react-datepicker/dist/react-datepicker.css";
+import 'react-datepicker/dist/react-datepicker.css';
 import '@/styles/datepicker.css';
 
 import { Save, Video, Phone, Users, AlertCircle, X } from 'lucide-react';
@@ -21,7 +21,12 @@ import { interviewsApi } from '@/api/interviews';
 import type { Interview, InterviewEditFormData } from '@/types/interview';
 import type { InterviewEditModalProps } from '@/types/components';
 
-export default function InterviewEditModal({ isOpen, onClose, interviewId, onSuccess }: InterviewEditModalProps) {
+export default function InterviewEditModal({
+  isOpen,
+  onClose,
+  interviewId,
+  onSuccess,
+}: InterviewEditModalProps) {
   const { showToast } = useToast();
 
   const [originalInterview, setOriginalInterview] = useState<Interview | null>(null);
@@ -121,39 +126,45 @@ export default function InterviewEditModal({ isOpen, onClose, interviewId, onSuc
     }
   };
 
-  const handleScheduleChange = (field: 'scheduled_start' | 'scheduled_end') => (value: string | null) => {
-    const normalized = value ?? '';
-    setFormData((prev) => {
-      const next = { ...prev, [field]: normalized };
+  const handleScheduleChange =
+    (field: 'scheduled_start' | 'scheduled_end') => (value: string | null) => {
+      const normalized = value ?? '';
+      setFormData((prev) => {
+        const next = { ...prev, [field]: normalized };
 
-      if (field === 'scheduled_start' && normalized) {
-        const startTime = new Date(normalized);
-        if (!Number.isNaN(startTime.getTime())) {
-          const previousStart = prev.scheduled_start ? new Date(prev.scheduled_start) : null;
-          const previousEnd = prev.scheduled_end ? new Date(prev.scheduled_end) : null;
+        if (field === 'scheduled_start' && normalized) {
+          const startTime = new Date(normalized);
+          if (!Number.isNaN(startTime.getTime())) {
+            const previousStart = prev.scheduled_start ? new Date(prev.scheduled_start) : null;
+            const previousEnd = prev.scheduled_end ? new Date(prev.scheduled_end) : null;
 
-          let duration = 60 * 60 * 1000;
-          if (previousStart && !Number.isNaN(previousStart.getTime()) && previousEnd && !Number.isNaN(previousEnd.getTime())) {
-            const diff = previousEnd.getTime() - previousStart.getTime();
-            if (diff > 0) {
-              duration = diff;
+            let duration = 60 * 60 * 1000;
+            if (
+              previousStart &&
+              !Number.isNaN(previousStart.getTime()) &&
+              previousEnd &&
+              !Number.isNaN(previousEnd.getTime())
+            ) {
+              const diff = previousEnd.getTime() - previousStart.getTime();
+              if (diff > 0) {
+                duration = diff;
+              }
             }
+
+            const newEnd = new Date(startTime.getTime() + duration);
+            next.scheduled_end = newEnd.toISOString().slice(0, 16);
           }
-
-          const newEnd = new Date(startTime.getTime() + duration);
-          next.scheduled_end = newEnd.toISOString().slice(0, 16);
         }
-      }
 
-      return next;
-    });
+        return next;
+      });
 
-    setErrors((prev) => ({
-      ...prev,
-      [field]: '',
-      ...(field === 'scheduled_start' ? { scheduled_end: '' } : {}),
-    }));
-  };
+      setErrors((prev) => ({
+        ...prev,
+        [field]: '',
+        ...(field === 'scheduled_start' ? { scheduled_end: '' } : {}),
+      }));
+    };
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -407,7 +418,9 @@ export default function InterviewEditModal({ isOpen, onClose, interviewId, onSuc
                           }`}
                         >
                           <type.icon className="h-6 w-6 mx-auto mb-2 text-gray-600" />
-                          <p className="text-sm font-medium text-center text-gray-900">{type.label}</p>
+                          <p className="text-sm font-medium text-center text-gray-900">
+                            {type.label}
+                          </p>
                         </div>
                       </label>
                     ))}
@@ -417,11 +430,15 @@ export default function InterviewEditModal({ isOpen, onClose, interviewId, onSuc
                 {/* Schedule */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className={`block text-sm font-medium ${errors.scheduled_start ? 'text-red-700' : 'text-gray-700'}`}>
+                    <label
+                      className={`block text-sm font-medium ${errors.scheduled_start ? 'text-red-700' : 'text-gray-700'}`}
+                    >
                       Start Time *
                     </label>
                     <DatePicker
-                      selected={formData.scheduled_start ? new Date(formData.scheduled_start) : null}
+                      selected={
+                        formData.scheduled_start ? new Date(formData.scheduled_start) : null
+                      }
                       onChange={(date) => {
                         if (date) {
                           const formatted = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}T${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
@@ -445,7 +462,9 @@ export default function InterviewEditModal({ isOpen, onClose, interviewId, onSuc
                     )}
                   </div>
                   <div className="space-y-2">
-                    <label className={`block text-sm font-medium ${errors.scheduled_end ? 'text-red-700' : 'text-gray-700'}`}>
+                    <label
+                      className={`block text-sm font-medium ${errors.scheduled_end ? 'text-red-700' : 'text-gray-700'}`}
+                    >
                       End Time *
                     </label>
                     <DatePicker
@@ -498,7 +517,9 @@ export default function InterviewEditModal({ isOpen, onClose, interviewId, onSuc
 
                 {formData.interview_type === 'in_person' && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Location *</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Location *
+                    </label>
                     <input
                       type="text"
                       name="location"
@@ -509,7 +530,9 @@ export default function InterviewEditModal({ isOpen, onClose, interviewId, onSuc
                       }`}
                       placeholder="Office address or meeting room"
                     />
-                    {errors.location && <p className="mt-1 text-sm text-red-600">{errors.location}</p>}
+                    {errors.location && (
+                      <p className="mt-1 text-sm text-red-600">{errors.location}</p>
+                    )}
                   </div>
                 )}
 
@@ -531,7 +554,9 @@ export default function InterviewEditModal({ isOpen, onClose, interviewId, onSuc
 
                 {/* Description */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Description
+                  </label>
                   <textarea
                     name="description"
                     value={formData.description}

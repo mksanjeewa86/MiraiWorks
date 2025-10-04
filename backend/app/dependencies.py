@@ -171,8 +171,7 @@ async def get_current_user_with_company(
     """Get current user and ensure they have a company."""
     if not current_user.company_id:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Company association required"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Company association required"
         )
     return current_user
 
@@ -188,6 +187,7 @@ async def require_system_admin(current_user: User = Depends(get_current_user)) -
         )
 
     return current_user
+
 
 # Alias for backward compatibility (will be deprecated)
 require_super_admin = require_system_admin

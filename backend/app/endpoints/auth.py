@@ -43,12 +43,13 @@ from app.services.email_service import email_service
 from app.utils.constants import NotificationType
 from app.utils.logging import get_logger
 from app.utils.permissions import is_company_admin, is_super_admin
+from app.config.endpoints import API_ROUTES
 
 router = APIRouter()
 logger = get_logger(__name__)
 
 
-@router.post("/login", response_model=LoginResponse)
+@router.post(API_ROUTES.AUTH.LOGIN, response_model=LoginResponse)
 async def login(
     request: Request, login_data: LoginRequest, db: AsyncSession = Depends(get_db)
 ):
@@ -165,10 +166,8 @@ async def login(
     )
 
 
-@router.post("/register", response_model=RegisterResponse)
-async def register(
-    register_data: RegisterRequest, db: AsyncSession = Depends(get_db)
-):
+@router.post(API_ROUTES.AUTH.REGISTER, response_model=RegisterResponse)
+async def register(register_data: RegisterRequest, db: AsyncSession = Depends(get_db)):
     """Register a new candidate user."""
     logger.info(
         "New user registration attempt", email=register_data.email, component="auth"
@@ -219,10 +218,7 @@ async def register(
     candidate_role = candidate_role_result.scalar_one_or_none()
 
     if candidate_role:
-        user_role = UserRoleModel(
-            user_id=new_user.id,
-            role_id=candidate_role.id
-        )
+        user_role = UserRoleModel(user_id=new_user.id, role_id=candidate_role.id)
         db.add(user_role)
 
     # Create default user settings
@@ -256,8 +252,7 @@ async def register(
     # Send registration completion email
     try:
         await email_service.send_registration_completion_email(
-            email=new_user.email,
-            first_name=new_user.first_name
+            email=new_user.email, first_name=new_user.first_name
         )
         logger.info(
             "Registration completion email sent successfully",
@@ -299,7 +294,7 @@ async def register(
     )
 
 
-@router.post("/2fa/verify", response_model=TwoFAVerifyResponse)
+@router.post(API_ROUTES.AUTH.TWO_FA_VERIFY, response_model=TwoFAVerifyResponse)
 async def verify_2fa(
     verify_data: TwoFAVerifyRequest, db: AsyncSession = Depends(get_db)
 ):
@@ -349,7 +344,7 @@ async def verify_2fa(
     )
 
 
-@router.post("/refresh", response_model=RefreshTokenResponse)
+@router.post(API_ROUTES.AUTH.REFRESH, response_model=RefreshTokenResponse)
 async def refresh_token(
     refresh_data: RefreshTokenRequest, db: AsyncSession = Depends(get_db)
 ):
@@ -382,7 +377,7 @@ async def refresh_token(
     )
 
 
-@router.post("/logout")
+@router.post(API_ROUTES.AUTH.LOGOUT)
 async def logout(
     logout_data: RefreshTokenRequest | None = None,
     db: AsyncSession = Depends(get_db),
@@ -405,7 +400,7 @@ async def logout(
     return {"message": "Logged out successfully"}
 
 
-@router.post("/password-reset/request")
+@router.post(API_ROUTES.AUTH.PASSWORD_RESET_REQUEST)
 async def request_password_reset(
     reset_data: PWResetSchema, db: AsyncSession = Depends(get_db)
 ):
@@ -484,7 +479,7 @@ async def request_password_reset(
     }
 
 
-@router.post("/password-reset/approve")
+@router.post(API_ROUTES.AUTH.PASSWORD_RESET_APPROVE)
 async def approve_password_reset(
     approve_data: PasswordResetApproveRequest,
     current_user: User = Depends(get_current_active_user),
@@ -543,7 +538,7 @@ async def approve_password_reset(
     return {"message": "Password reset approved and updated"}
 
 
-@router.post("/change-password")
+@router.post(API_ROUTES.AUTH.CHANGE_PASSWORD)
 async def change_password(
     password_data: ChangePasswordRequest,
     current_user: User = Depends(get_current_active_user),
@@ -572,7 +567,7 @@ async def change_password(
     return {"message": "Password changed successfully"}
 
 
-@router.get("/me", response_model=UserInfo)
+@router.get(API_ROUTES.AUTH.ME, response_model=UserInfo)
 async def get_current_user_info(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
@@ -604,7 +599,10 @@ async def get_current_user_info(
     )
 
 
-@router.get("/password-reset/requests", response_model=list[PasswordResetRequestInfo])
+@router.get(
+    API_ROUTES.AUTH.PASSWORD_RESET_REQUESTS,
+    response_model=list[PasswordResetRequestInfo],
+)
 async def get_password_reset_requests(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
@@ -648,7 +646,7 @@ async def get_password_reset_requests(
     ]
 
 
-@router.post("/activate", response_model=ActivateAccountResponse)
+@router.post(API_ROUTES.AUTH.ACTIVATE_ACCOUNT, response_model=ActivateAccountResponse)
 async def activate_account(
     activation_data: ActivateAccountRequest, db: AsyncSession = Depends(get_db)
 ):

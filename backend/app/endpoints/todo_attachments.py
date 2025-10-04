@@ -1,7 +1,9 @@
 import io
 import os
 
+from app.config.endpoints import API_ROUTES
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from app.config.endpoints import API_ROUTES
 from fastapi.responses import FileResponse, StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -25,15 +27,19 @@ router = APIRouter()
 
 
 @router.post(
-    "/todos/{todo_id}/attachments/upload",
+    API_ROUTES.TODO_ATTACHMENTS.UPLOAD,
     response_model=FileUploadResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="Upload file attachment to todo"
+    summary="Upload file attachment to todo",
 )
 async def upload_todo_attachment(
     todo_id: int,
-    file: UploadFile = File(..., description="File to upload (max 25MB, any file type)"),
-    description: str | None = Form(None, description="Optional description for the file"),
+    file: UploadFile = File(
+        ..., description="File to upload (max 25MB, any file type)"
+    ),
+    description: str | None = Form(
+        None, description="Optional description for the file"
+    ),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -73,7 +79,7 @@ async def upload_todo_attachment(
         mime_type=file_info["mime_type"],
         file_extension=file_info.get("file_extension"),
         description=description,
-        uploaded_by=current_user.id
+        uploaded_by=current_user.id,
     )
 
     db_attachment = await todo_attachment.create_attachment(
@@ -82,14 +88,14 @@ async def upload_todo_attachment(
 
     return FileUploadResponse(
         message=f"File '{file.filename}' uploaded successfully",
-        attachment=TodoAttachmentInfo.from_orm_with_computed(db_attachment)
+        attachment=TodoAttachmentInfo.from_orm_with_computed(db_attachment),
     )
 
 
 @router.get(
-    "/todos/{todo_id}/attachments",
+    API_ROUTES.TODO_ATTACHMENTS.LIST,
     response_model=TodoAttachmentList,
-    summary="Get all attachments for a todo"
+    summary="Get all attachments for a todo",
 )
 async def get_todo_attachments(
     todo_id: int,
@@ -122,16 +128,18 @@ async def get_todo_attachments(
     summary = await todo_attachment.get_todo_attachment_summary(db, todo_id=todo_id)
 
     return TodoAttachmentList(
-        attachments=[TodoAttachmentInfo.from_orm_with_computed(att) for att in attachments],
+        attachments=[
+            TodoAttachmentInfo.from_orm_with_computed(att) for att in attachments
+        ],
         total_count=summary["total_count"],
-        total_size_mb=summary["total_size_mb"]
+        total_size_mb=summary["total_size_mb"],
     )
 
 
 @router.get(
-    "/todos/{todo_id}/attachments/{attachment_id}",
+    API_ROUTES.TODO_ATTACHMENTS.BY_ID,
     response_model=TodoAttachmentInfo,
-    summary="Get attachment details"
+    summary="Get attachment details",
 )
 async def get_attachment_details(
     todo_id: int,
@@ -158,10 +166,7 @@ async def get_attachment_details(
     return TodoAttachmentInfo.from_orm_with_computed(db_attachment)
 
 
-@router.get(
-    "/todos/{todo_id}/attachments/{attachment_id}/download",
-    summary="Download attachment file"
-)
+@router.get(API_ROUTES.TODO_ATTACHMENTS.DOWNLOAD, summary="Download attachment file")
 async def download_attachment(
     todo_id: int,
     attachment_id: int,
@@ -192,14 +197,11 @@ async def download_attachment(
     return FileResponse(
         path=db_attachment.file_path,
         filename=db_attachment.original_filename,
-        media_type=db_attachment.mime_type
+        media_type=db_attachment.mime_type,
     )
 
 
-@router.get(
-    "/todos/{todo_id}/attachments/{attachment_id}/preview",
-    summary="Preview attachment file"
-)
+@router.get(API_ROUTES.TODO_ATTACHMENTS.PREVIEW, summary="Preview attachment file")
 async def preview_attachment(
     todo_id: int,
     attachment_id: int,
@@ -223,8 +225,10 @@ async def preview_attachment(
         raise HTTPException(status_code=404, detail="Attachment not found")
 
     # Check if preview is supported
-    if not (db_attachment.is_image or db_attachment.mime_type == 'application/pdf'):
-        raise HTTPException(status_code=400, detail="Preview not supported for this file type")
+    if not (db_attachment.is_image or db_attachment.mime_type == "application/pdf"):
+        raise HTTPException(
+            status_code=400, detail="Preview not supported for this file type"
+        )
 
     # Check if file exists
     if not os.path.exists(db_attachment.file_path):
@@ -238,14 +242,16 @@ async def preview_attachment(
     return StreamingResponse(
         io.BytesIO(file_content),
         media_type=db_attachment.mime_type,
-        headers={"Content-Disposition": f"inline; filename={db_attachment.original_filename}"}
+        headers={
+            "Content-Disposition": f"inline; filename={db_attachment.original_filename}"
+        },
     )
 
 
 @router.put(
-    "/todos/{todo_id}/attachments/{attachment_id}",
+    API_ROUTES.TODO_ATTACHMENTS.BY_ID,
     response_model=TodoAttachmentInfo,
-    summary="Update attachment description"
+    summary="Update attachment description",
 )
 async def update_attachment(
     todo_id: int,
@@ -265,7 +271,10 @@ async def update_attachment(
 
     # Update attachment
     updated_attachment = await todo_attachment.update_attachment_description(
-        db, attachment_id=attachment_id, description=description, user_id=current_user.id
+        db,
+        attachment_id=attachment_id,
+        description=description,
+        user_id=current_user.id,
     )
     if not updated_attachment:
         raise HTTPException(status_code=404, detail="Attachment not found")
@@ -274,9 +283,9 @@ async def update_attachment(
 
 
 @router.delete(
-    "/todos/{todo_id}/attachments/{attachment_id}",
+    API_ROUTES.TODO_ATTACHMENTS.BY_ID,
     status_code=status.HTTP_204_NO_CONTENT,
-    summary="Delete attachment"
+    summary="Delete attachment",
 )
 async def delete_attachment(
     todo_id: int,
@@ -302,9 +311,9 @@ async def delete_attachment(
 
 
 @router.post(
-    "/todos/{todo_id}/attachments/bulk-delete",
+    API_ROUTES.TODO_ATTACHMENTS.BULK_DELETE,
     response_model=BulkDeleteResponse,
-    summary="Delete multiple attachments"
+    summary="Delete multiple attachments",
 )
 async def bulk_delete_attachments(
     todo_id: int,
@@ -329,14 +338,14 @@ async def bulk_delete_attachments(
     return BulkDeleteResponse(
         message=f"Successfully deleted {result['deleted_count']} attachments",
         deleted_count=result["deleted_count"],
-        failed_deletions=result["failed_deletions"]
+        failed_deletions=result["failed_deletions"],
     )
 
 
 @router.get(
-    "/todos/{todo_id}/attachments/stats",
+    API_ROUTES.TODO_ATTACHMENTS.STATS,
     response_model=AttachmentStats,
-    summary="Get attachment statistics"
+    summary="Get attachment statistics",
 )
 async def get_attachment_stats(
     todo_id: int,
@@ -364,17 +373,20 @@ async def get_attachment_stats(
         total_attachments=stats["total_count"],
         total_size_mb=stats["total_size_mb"],
         file_type_counts=file_type_counts,
-        largest_file=TodoAttachmentInfo.from_orm_with_computed(stats["largest_file"]) if stats["largest_file"] else None,
+        largest_file=TodoAttachmentInfo.from_orm_with_computed(stats["largest_file"])
+        if stats["largest_file"]
+        else None,
         recent_attachments=[
-            TodoAttachmentInfo.from_orm_with_computed(att) for att in stats["recent_attachments"]
-        ]
+            TodoAttachmentInfo.from_orm_with_computed(att)
+            for att in stats["recent_attachments"]
+        ],
     )
 
 
 @router.get(
-    "/attachments/my-uploads",
+    API_ROUTES.TODO_ATTACHMENTS.MY_UPLOADS,
     response_model=list[TodoAttachmentInfo],
-    summary="Get user's uploaded attachments"
+    summary="Get user's uploaded attachments",
 )
 async def get_my_uploads(
     skip: int = 0,
@@ -391,8 +403,8 @@ async def get_my_uploads(
 
 
 @router.post(
-    "/admin/attachments/cleanup",
-    summary="Cleanup orphaned attachments (Admin only)"
+    API_ROUTES.TODO_ATTACHMENTS.ADMIN_CLEANUP,
+    summary="Cleanup orphaned attachments (Admin only)",
 )
 async def cleanup_orphaned_attachments(
     db: AsyncSession = Depends(get_db),
@@ -408,5 +420,5 @@ async def cleanup_orphaned_attachments(
     return {
         "message": "Cleanup completed",
         "deleted_db_records": result["deleted_db_records"],
-        "orphaned_file_cleanup": result["file_cleanup"]
+        "orphaned_file_cleanup": result["file_cleanup"],
     }

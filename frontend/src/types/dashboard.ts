@@ -28,12 +28,17 @@ export interface DashboardStats {
   totalInterviews?: number;
   totalResumes?: number;
   activeConversations?: number;
+  totalExams?: number;
+  totalExamAssignments?: number;
+  totalExamSessions?: number;
+  completedExamSessions?: number;
+  avgExamScore?: number;
   recentActivity?: ActivityItem[];
 }
 
 export interface ActivityItem {
   id: string;
-  type: 'interview' | 'message' | 'resume' | 'user' | 'company';
+  type: 'interview' | 'message' | 'resume' | 'user' | 'company' | 'exam';
   title: string;
   description: string;
   timestamp: string;
@@ -111,6 +116,12 @@ export interface SuperAdminStats {
   active_users: number;
   total_positions: number;
   total_applications: number;
+  // Exam system metrics
+  total_exams?: number;
+  total_exam_assignments?: number;
+  total_exam_sessions?: number;
+  completed_exam_sessions?: number;
+  avg_exam_score?: number;
   platform_metrics: {
     daily_signups: number;
     weekly_signups: number;

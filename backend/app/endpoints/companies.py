@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config.endpoints import API_ROUTES
 from app.crud import company as company_crud
 from app.database import get_db
 from app.dependencies import get_current_active_user, require_super_admin
@@ -27,7 +28,7 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-@router.get("/companies", response_model=CompanyListResponse)
+@router.get(API_ROUTES.COMPANIES.BASE, response_model=CompanyListResponse)
 async def get_companies(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
@@ -52,8 +53,7 @@ async def get_companies(
     # Only admins and system admins can access this endpoint
     if not (is_system_admin or is_admin):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin access required"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required"
         )
 
     # For company admins, filter to only their company
@@ -61,11 +61,13 @@ async def get_companies(
         if not current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Company admin must be associated with a company"
+                detail="Company admin must be associated with a company",
             )
         # Get only the user's company
         company = await company_crud.company.get(db, current_user.company_id)
-        if not company:
+
+        # Check if company exists and apply include_deleted filter
+        if not company or (not include_deleted and company.is_deleted):
             return CompanyListResponse(
                 companies=[],
                 total=0,
@@ -131,7 +133,7 @@ async def get_companies(
     )
 
 
-@router.get("/companies/{company_id}", response_model=CompanyResponse)
+@router.get(API_ROUTES.COMPANIES.BY_ID, response_model=CompanyResponse)
 async def get_company(
     company_id: int,
     current_user: User = Depends(require_super_admin),
@@ -176,7 +178,9 @@ async def get_company(
 
 
 @router.post(
-    "/companies", response_model=CompanyResponse, status_code=status.HTTP_201_CREATED
+    API_ROUTES.COMPANIES.CREATE,
+    response_model=CompanyResponse,
+    status_code=status.HTTP_201_CREATED,
 )
 async def create_company(
     company_data: CompanyCreate,
@@ -317,7 +321,7 @@ async def create_company(
     )
 
 
-@router.put("/companies/{company_id}", response_model=CompanyResponse)
+@router.put(API_ROUTES.COMPANIES.UPDATE, response_model=CompanyResponse)
 async def update_company(
     company_id: int,
     company_data: CompanyUpdate,
@@ -386,7 +390,7 @@ async def update_company(
     )
 
 
-@router.delete("/companies/{company_id}")
+@router.delete(API_ROUTES.COMPANIES.DELETE)
 async def delete_company(
     company_id: int,
     current_user: User = Depends(require_super_admin),
@@ -413,7 +417,7 @@ async def delete_company(
     return {"message": "Company deleted successfully"}
 
 
-@router.get("/companies/{company_id}/admin-status", response_model=CompanyAdminStatus)
+@router.get(API_ROUTES.COMPANIES.ADMIN_STATUS, response_model=CompanyAdminStatus)
 async def get_company_admin_status(
     company_id: int,
     current_user: User = Depends(require_super_admin),

@@ -15,13 +15,11 @@ from app.models.todo import Todo
 
 
 class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
-
     async def get(self, db: AsyncSession, id: int) -> RecruitmentProcess | None:
         """Get recruitment process by id, excluding soft-deleted records."""
         result = await db.execute(
             select(RecruitmentProcess).where(
-                RecruitmentProcess.id == id,
-                RecruitmentProcess.is_deleted == False
+                RecruitmentProcess.id == id, RecruitmentProcess.is_deleted == False
             )
         )
         return result.scalar_one_or_none()
@@ -58,27 +56,15 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
         # Cascade soft delete to related interviews
         await db.execute(
             update(Interview)
-            .where(
-                Interview.workflow_id == id,
-                Interview.is_deleted == False
-            )
-            .values(
-                is_deleted=True,
-                deleted_at=datetime.utcnow()
-            )
+            .where(Interview.workflow_id == id, Interview.is_deleted == False)
+            .values(is_deleted=True, deleted_at=datetime.utcnow())
         )
 
         # Cascade soft delete to related todos
         await db.execute(
             update(Todo)
-            .where(
-                Todo.workflow_id == id,
-                Todo.is_deleted == False
-            )
-            .values(
-                is_deleted=True,
-                deleted_at=datetime.utcnow()
-            )
+            .where(Todo.workflow_id == id, Todo.is_deleted == False)
+            .values(is_deleted=True, deleted_at=datetime.utcnow())
         )
 
         await db.commit()
@@ -86,11 +72,7 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
         return workflow
 
     async def create(
-        self,
-        db: AsyncSession,
-        *,
-        obj_in: dict[str, Any],
-        created_by: int
+        self, db: AsyncSession, *, obj_in: dict[str, Any], created_by: int
     ) -> RecruitmentProcess:
         """Create a new recruitment process"""
         obj_data = obj_in.copy()
@@ -103,19 +85,14 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
         return db_obj
 
     async def get_by_company_id(
-        self,
-        db: AsyncSession,
-        *,
-        company_id: int,
-        skip: int = 0,
-        limit: int = 100
+        self, db: AsyncSession, *, company_id: int, skip: int = 0, limit: int = 100
     ) -> list[RecruitmentProcess]:
         """Get all processes for a company, excluding soft-deleted."""
         result = await db.execute(
             select(RecruitmentProcess)
             .where(
                 RecruitmentProcess.employer_company_id == company_id,
-                RecruitmentProcess.is_deleted == False
+                RecruitmentProcess.is_deleted == False,
             )
             .order_by(desc(RecruitmentProcess.created_at))
             .offset(skip)
@@ -124,10 +101,7 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
         return result.scalars().all()
 
     async def get_active_by_company_id(
-        self,
-        db: AsyncSession,
-        *,
-        company_id: int
+        self, db: AsyncSession, *, company_id: int
     ) -> list[RecruitmentProcess]:
         """Get active processes for a company, excluding soft-deleted."""
         result = await db.execute(
@@ -136,7 +110,7 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
                 and_(
                     RecruitmentProcess.employer_company_id == company_id,
                     RecruitmentProcess.status == "active",
-                    RecruitmentProcess.is_deleted == False
+                    RecruitmentProcess.is_deleted == False,
                 )
             )
             .order_by(desc(RecruitmentProcess.activated_at))
@@ -144,10 +118,7 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
         return result.scalars().all()
 
     async def get_with_nodes(
-        self,
-        db: AsyncSession,
-        *,
-        id: int
+        self, db: AsyncSession, *, id: int
     ) -> RecruitmentProcess | None:
         """Get process with its nodes, excluding soft-deleted."""
         result = await db.execute(
@@ -155,27 +126,21 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
             .options(
                 selectinload(RecruitmentProcess.nodes),
                 selectinload(RecruitmentProcess.candidate_processes),
-                selectinload(RecruitmentProcess.viewers)
+                selectinload(RecruitmentProcess.viewers),
             )
-            .where(
-                RecruitmentProcess.id == id,
-                RecruitmentProcess.is_deleted == False
-            )
+            .where(RecruitmentProcess.id == id, RecruitmentProcess.is_deleted == False)
         )
         return result.scalars().first()
 
     async def get_by_job_id(
-        self,
-        db: AsyncSession,
-        *,
-        job_id: int
+        self, db: AsyncSession, *, job_id: int
     ) -> list[RecruitmentProcess]:
         """Get processes associated with a job, excluding soft-deleted."""
         result = await db.execute(
             select(RecruitmentProcess)
             .where(
                 RecruitmentProcess.job_id == job_id,
-                RecruitmentProcess.is_deleted == False
+                RecruitmentProcess.is_deleted == False,
             )
             .order_by(desc(RecruitmentProcess.created_at))
         )
@@ -188,19 +153,21 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
         company_id: int | None = None,
         is_public: bool = False,
         skip: int = 0,
-        limit: int = 100
+        limit: int = 100,
     ) -> list[RecruitmentProcess]:
         """Get process templates, excluding soft-deleted."""
         conditions = [
             RecruitmentProcess.is_template is True,
-            RecruitmentProcess.is_deleted == False
+            RecruitmentProcess.is_deleted == False,
         ]
 
         if company_id is not None:
             conditions.append(
                 or_(
                     RecruitmentProcess.employer_company_id == company_id,
-                    RecruitmentProcess.employer_company_id.is_(None) if is_public else False
+                    RecruitmentProcess.employer_company_id.is_(None)
+                    if is_public
+                    else False,
                 )
             )
 
@@ -219,7 +186,7 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
         *,
         db_obj: RecruitmentProcess,
         obj_in: dict[str, Any],
-        updated_by: int
+        updated_by: int,
     ) -> RecruitmentProcess:
         """Update a recruitment process"""
         if isinstance(obj_in, dict):
@@ -233,11 +200,7 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
         return await super().update(db, db_obj=db_obj, obj_in=update_data)
 
     async def activate(
-        self,
-        db: AsyncSession,
-        *,
-        db_obj: RecruitmentProcess,
-        activated_by: int
+        self, db: AsyncSession, *, db_obj: RecruitmentProcess, activated_by: int
     ) -> RecruitmentProcess:
         """Activate a process"""
         if db_obj.status != "draft":
@@ -249,11 +212,7 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
         return db_obj
 
     async def archive(
-        self,
-        db: AsyncSession,
-        *,
-        db_obj: RecruitmentProcess,
-        archived_by: int
+        self, db: AsyncSession, *, db_obj: RecruitmentProcess, archived_by: int
     ) -> RecruitmentProcess:
         """Archive a process"""
         db_obj.archive(archived_by)
@@ -262,11 +221,7 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
         return db_obj
 
     async def deactivate(
-        self,
-        db: AsyncSession,
-        *,
-        db_obj: RecruitmentProcess,
-        deactivated_by: int
+        self, db: AsyncSession, *, db_obj: RecruitmentProcess, deactivated_by: int
     ) -> RecruitmentProcess:
         """Deactivate a process"""
         db_obj.deactivate(deactivated_by)
@@ -282,7 +237,7 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
         new_name: str,
         created_by: int,
         clone_nodes: bool = True,
-        clone_viewers: bool = True
+        clone_viewers: bool = True,
     ) -> RecruitmentProcess:
         """Clone a process"""
         # Create new process
@@ -294,7 +249,7 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
             "settings": source_process.settings,
             "created_by": created_by,
             "status": "draft",
-            "version": 1
+            "version": 1,
         }
 
         cloned_process = RecruitmentProcess(**clone_data)
@@ -322,7 +277,7 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
                         can_skip=node.can_skip,
                         auto_advance=node.auto_advance,
                         created_by=created_by,
-                        status="draft"
+                        status="draft",
                     )
                     db.add(cloned_node)
 
@@ -335,7 +290,7 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
                         user_id=viewer.user_id,
                         role=viewer.role,
                         permissions=viewer.permissions,
-                        added_by=created_by
+                        added_by=created_by,
                     )
                     db.add(cloned_viewer)
 
@@ -344,21 +299,18 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
         return cloned_process
 
     async def get_statistics(
-        self,
-        db: AsyncSession,
-        *,
-        company_id: int
+        self, db: AsyncSession, *, company_id: int
     ) -> dict[str, Any]:
         """Get process statistics for a company, excluding soft-deleted."""
         # Count processes by status
         status_counts = await db.execute(
             select(
                 RecruitmentProcess.status,
-                func.count(RecruitmentProcess.id).label("count")
+                func.count(RecruitmentProcess.id).label("count"),
             )
             .where(
                 RecruitmentProcess.employer_company_id == company_id,
-                RecruitmentProcess.is_deleted == False
+                RecruitmentProcess.is_deleted == False,
             )
             .group_by(RecruitmentProcess.status)
         )
@@ -368,13 +320,12 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
         # Count candidates by status
         candidate_counts = await db.execute(
             select(
-                CandidateProcess.status,
-                func.count(CandidateProcess.id).label("count")
+                CandidateProcess.status, func.count(CandidateProcess.id).label("count")
             )
             .join(RecruitmentProcess)
             .where(
                 RecruitmentProcess.employer_company_id == company_id,
-                RecruitmentProcess.is_deleted == False
+                RecruitmentProcess.is_deleted == False,
             )
             .group_by(CandidateProcess.status)
         )
@@ -384,13 +335,21 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
         # Calculate completion rate
         total_candidates = sum(candidate_dict.values())
         completed_candidates = candidate_dict.get("completed", 0)
-        completion_rate = (completed_candidates / total_candidates * 100) if total_candidates > 0 else 0
+        completion_rate = (
+            (completed_candidates / total_candidates * 100)
+            if total_candidates > 0
+            else 0
+        )
 
         # Calculate average duration
         avg_duration_result = await db.execute(
             select(
                 func.avg(
-                    func.extract('epoch', CandidateProcess.completed_at - CandidateProcess.started_at) / 86400
+                    func.extract(
+                        "epoch",
+                        CandidateProcess.completed_at - CandidateProcess.started_at,
+                    )
+                    / 86400
                 )
             )
             .join(RecruitmentProcess)
@@ -400,7 +359,7 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
                     RecruitmentProcess.is_deleted == False,
                     CandidateProcess.status == "completed",
                     CandidateProcess.started_at.isnot(None),
-                    CandidateProcess.completed_at.isnot(None)
+                    CandidateProcess.completed_at.isnot(None),
                 )
             )
         )
@@ -416,7 +375,7 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
             "active_candidates": candidate_dict.get("in_progress", 0),
             "completed_candidates": completed_candidates,
             "average_completion_rate": completion_rate,
-            "average_duration_days": avg_duration
+            "average_duration_days": avg_duration,
         }
 
     async def search(
@@ -427,18 +386,18 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
         query: str,
         status: str | None = None,
         skip: int = 0,
-        limit: int = 100
+        limit: int = 100,
     ) -> list[RecruitmentProcess]:
         """Search processes by name or description, excluding soft-deleted."""
         conditions = [
             RecruitmentProcess.employer_company_id == company_id,
-            RecruitmentProcess.is_deleted == False
+            RecruitmentProcess.is_deleted == False,
         ]
 
         if query:
             search_filter = or_(
                 RecruitmentProcess.name.ilike(f"%{query}%"),
-                RecruitmentProcess.description.ilike(f"%{query}%")
+                RecruitmentProcess.description.ilike(f"%{query}%"),
             )
             conditions.append(search_filter)
 
@@ -462,7 +421,7 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
         user_id: int,
         role: str,
         skip: int = 0,
-        limit: int = 100
+        limit: int = 100,
     ) -> list[RecruitmentProcess]:
         """Get processes accessible to a user based on their role, excluding soft-deleted."""
         if role == "employer":
@@ -472,7 +431,7 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
                 .join(RecruitmentProcess.employer_company)
                 .where(
                     RecruitmentProcess.created_by == user_id,
-                    RecruitmentProcess.is_deleted == False
+                    RecruitmentProcess.is_deleted == False,
                 )
                 .order_by(desc(RecruitmentProcess.created_at))
                 .offset(skip)
@@ -485,7 +444,7 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
                 .join(ProcessViewer)
                 .where(
                     ProcessViewer.user_id == user_id,
-                    RecruitmentProcess.is_deleted == False
+                    RecruitmentProcess.is_deleted == False,
                 )
                 .order_by(desc(RecruitmentProcess.created_at))
                 .offset(skip)

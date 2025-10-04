@@ -5,17 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui';
 import { Badge } from '@/components/ui';
 import { Alert, AlertDescription } from '@/components/ui';
-import {
-  Play,
-  Eye,
-  Clock,
-  BookOpen,
-  Shield,
-  Info,
-  CheckCircle,
-  Target,
-  Globe,
-} from 'lucide-react';
+import { Play, Eye, Clock, BookOpen, Shield, Info, CheckCircle, Target, Globe } from 'lucide-react';
 import Link from 'next/link';
 
 export default function DemoExamPage() {

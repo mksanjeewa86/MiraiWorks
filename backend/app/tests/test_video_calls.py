@@ -21,29 +21,37 @@ async def check_video_call_tables():
     async with AsyncSessionLocal() as session:
         # Check table existence
         tables = [
-            'video_calls',
-            'call_participants',
-            'recording_consents',
-            'call_transcriptions',
-            'transcription_segments'
+            "video_calls",
+            "call_participants",
+            "recording_consents",
+            "call_transcriptions",
+            "transcription_segments",
         ]
 
         for table in tables:
             try:
-                result = await session.execute(text(f"""
+                result = await session.execute(
+                    text(
+                        f"""
                     SELECT COUNT(*) as count
                     FROM information_schema.tables
                     WHERE table_schema = DATABASE()
                     AND table_name = '{table}'
-                """))
+                """
+                    )
+                )
                 count = result.fetchone()[0]
-                status = '✅' if count > 0 else '❌'
-                print(f"{status} Table '{table}': {'exists' if count > 0 else 'missing'}")
+                status = "✅" if count > 0 else "❌"
+                print(
+                    f"{status} Table '{table}': {'exists' if count > 0 else 'missing'}"
+                )
 
                 if count > 0:
                     # Get row count
                     try:
-                        result = await session.execute(text(f"SELECT COUNT(*) FROM {table}"))
+                        result = await session.execute(
+                            text(f"SELECT COUNT(*) FROM {table}")
+                        )
                         row_count = result.fetchone()[0]
                         print(f"   📊 Records: {row_count}")
                     except Exception as e:
@@ -68,8 +76,16 @@ async def check_video_call_endpoints():
         ("POST", "/api/video-calls/{call_id}/consent", "Record consent for recording"),
         ("GET", "/api/video-calls/{call_id}/token", "Get WebRTC token"),
         ("GET", "/api/video-calls/{call_id}/transcript", "Get call transcript"),
-        ("POST", "/api/video-calls/{call_id}/transcript/segments", "Save transcript segment"),
-        ("GET", "/api/video-calls/{call_id}/transcript/download", "Download transcript"),
+        (
+            "POST",
+            "/api/video-calls/{call_id}/transcript/segments",
+            "Save transcript segment",
+        ),
+        (
+            "GET",
+            "/api/video-calls/{call_id}/transcript/download",
+            "Download transcript",
+        ),
         ("GET", "/api/video-calls/", "List user's video calls"),
     ]
 
@@ -127,12 +143,16 @@ async def test_video_call_crud_basic():
             print(f"📊 Current video calls in database: {call_count}")
 
             # Check if we can query participants
-            result = await session.execute(text("SELECT COUNT(*) FROM call_participants"))
+            result = await session.execute(
+                text("SELECT COUNT(*) FROM call_participants")
+            )
             participant_count = result.fetchone()[0]
             print(f"📊 Call participants recorded: {participant_count}")
 
             # Check transcriptions
-            result = await session.execute(text("SELECT COUNT(*) FROM call_transcriptions"))
+            result = await session.execute(
+                text("SELECT COUNT(*) FROM call_transcriptions")
+            )
             transcript_count = result.fetchone()[0]
             print(f"📊 Call transcriptions: {transcript_count}")
 
@@ -173,7 +193,9 @@ def show_testing_instructions():
     print("   curl http://localhost:8000/docs")
     print("   ")
     print("   # Get your video calls (requires auth)")
-    print("   curl -H 'Authorization: Bearer YOUR_TOKEN' http://localhost:8000/api/video-calls/")
+    print(
+        "   curl -H 'Authorization: Bearer YOUR_TOKEN' http://localhost:8000/api/video-calls/"
+    )
 
     print("=" * 50)
 
@@ -192,7 +214,9 @@ async def main():
 
     print("\n✅ Video Call System Check Complete!")
     print("🚀 The video call functionality appears to be properly configured.")
-    print("💡 Use the API documentation at http://localhost:8000/docs to test endpoints.")
+    print(
+        "💡 Use the API documentation at http://localhost:8000/docs to test endpoints."
+    )
 
 
 if __name__ == "__main__":

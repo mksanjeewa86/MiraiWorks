@@ -46,13 +46,25 @@ class Resume(BaseModel):
     objective = Column(Text)
 
     # Status and visibility
-    status = Column(SQLEnum(ResumeStatus, values_callable=lambda x: [e.value for e in x]), default=ResumeStatus.DRAFT.value)
-    visibility = Column(SQLEnum(ResumeVisibility, values_callable=lambda x: [e.value for e in x]), default=ResumeVisibility.PRIVATE.value)
+    status = Column(
+        SQLEnum(ResumeStatus, values_callable=lambda x: [e.value for e in x]),
+        default=ResumeStatus.DRAFT.value,
+    )
+    visibility = Column(
+        SQLEnum(ResumeVisibility, values_callable=lambda x: [e.value for e in x]),
+        default=ResumeVisibility.PRIVATE.value,
+    )
 
     # Template and styling
     template_id = Column(String(50), default="modern")
-    resume_format = Column(SQLEnum(ResumeFormat, values_callable=lambda x: [e.value for e in x]), default=ResumeFormat.INTERNATIONAL.value)
-    resume_language = Column(SQLEnum(ResumeLanguage, values_callable=lambda x: [e.value for e in x]), default=ResumeLanguage.ENGLISH.value)
+    resume_format = Column(
+        SQLEnum(ResumeFormat, values_callable=lambda x: [e.value for e in x]),
+        default=ResumeFormat.INTERNATIONAL.value,
+    )
+    resume_language = Column(
+        SQLEnum(ResumeLanguage, values_callable=lambda x: [e.value for e in x]),
+        default=ResumeLanguage.ENGLISH.value,
+    )
     theme_color = Column(String(7), default="#2563eb")  # Hex color
     font_family = Column(String(50), default="Inter")
     custom_css = Column(Text)
@@ -137,10 +149,7 @@ class Resume(BaseModel):
         from sqlalchemy import select
 
         result = await db.execute(
-            select(cls).where(
-                cls.public_url_slug == slug,
-                cls.is_public is True
-            )
+            select(cls).where(cls.public_url_slug == slug, cls.is_public is True)
         )
         return result.scalars().first()
 
@@ -486,7 +495,9 @@ class ResumeMessageAttachment(BaseModel):
     message_id = Column(Integer, ForeignKey("messages.id"), nullable=False)
 
     # Attachment settings
-    auto_attached = Column(Boolean, default=False)  # Automatically attached when contacting
+    auto_attached = Column(
+        Boolean, default=False
+    )  # Automatically attached when contacting
     attachment_format = Column(String(20), default="pdf")  # pdf, json, etc.
 
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -494,4 +505,3 @@ class ResumeMessageAttachment(BaseModel):
     # Relationships
     resume = relationship("Resume")
     # message relationship will be added to Message model
-

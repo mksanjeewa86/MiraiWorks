@@ -14,7 +14,9 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
     async def get_by_slug(self, db: AsyncSession, *, slug: str) -> Position | None:
         """Get position by slug."""
         result = await db.execute(
-            select(Position).where(Position.slug == slug).options(selectinload(Position.company))
+            select(Position)
+            .where(Position.slug == slug)
+            .options(selectinload(Position.company))
         )
         return result.scalar_one_or_none()
 
@@ -114,11 +116,14 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
 
         if days_since_posted:
             from datetime import datetime, timedelta
+
             cutoff_date = datetime.utcnow() - timedelta(days=days_since_posted)
             base_query = base_query.where(Position.published_at >= cutoff_date)
 
         # Get total count by rebuilding the filter conditions without pagination
-        count_query = select(func.count(Position.id)).where(Position.status == "published")
+        count_query = select(func.count(Position.id)).where(
+            Position.status == "published"
+        )
 
         # Apply the same filters for counting
         if location:
@@ -140,6 +145,7 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
             count_query = count_query.where(search_filter)
         if days_since_posted:
             from datetime import datetime, timedelta
+
             cutoff_date = datetime.utcnow() - timedelta(days=days_since_posted)
             count_query = count_query.where(Position.published_at >= cutoff_date)
 
@@ -147,7 +153,12 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
         total_count = count_result.scalar()
 
         # Get paginated results
-        data_query = base_query.order_by(desc(Position.created_at)).offset(skip).limit(limit).options(selectinload(Position.company))
+        data_query = (
+            base_query.order_by(desc(Position.created_at))
+            .offset(skip)
+            .limit(limit)
+            .options(selectinload(Position.company))
+        )
         data_result = await db.execute(data_query)
         positions = data_result.scalars().all()
 
@@ -219,7 +230,6 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
         """Compatibility wrapper for new naming convention."""
         return await self.increment_view_count(db=db, position_id=position_id)
 
-
     async def get_popular_positions(
         self, db: AsyncSession, *, skip: int = 0, limit: int = 10
     ) -> list[Position]:
@@ -242,7 +252,9 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
 
         result = await db.execute(
             select(Position)
-            .where(and_(Position.status == "published", Position.created_at >= cutoff_date))
+            .where(
+                and_(Position.status == "published", Position.created_at >= cutoff_date)
+            )
             .order_by(desc(Position.created_at))
             .offset(skip)
             .limit(limit)
@@ -281,7 +293,9 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
         status_stats = dict(status_counts.all())
 
         # Total applications
-        total_applications = await db.execute(select(func.sum(Position.application_count)))
+        total_applications = await db.execute(
+            select(func.sum(Position.application_count))
+        )
         total_app_count = total_applications.scalar() or 0
 
         # Positions by type
@@ -296,7 +310,9 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
         salary_stats = await db.execute(
             select(
                 Position.job_type,
-                func.avg((Position.salary_min + Position.salary_max) / 2).label("avg_salary"),
+                func.avg((Position.salary_min + Position.salary_max) / 2).label(
+                    "avg_salary"
+                ),
             )
             .where(
                 and_(
@@ -358,9 +374,13 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
         self, db: AsyncSession, *, position_ids: list[int], status: str
     ) -> list[Position]:
         """Compatibility wrapper for new naming convention."""
-        return await self.bulk_update_status(db=db, position_ids=position_ids, status=status)
+        return await self.bulk_update_status(
+            db=db, position_ids=position_ids, status=status
+        )
 
-    async def create_with_slug(self, db: AsyncSession, *, obj_in: PositionCreate) -> Position:
+    async def create_with_slug(
+        self, db: AsyncSession, *, obj_in: PositionCreate
+    ) -> Position:
         """Create position with auto-generated slug."""
         # Generate slug from title
         import re
@@ -389,10 +409,5 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
         return db_obj
 
 
-
 # Create instance
 position = CRUDPosition(Position)
-
-
-
-

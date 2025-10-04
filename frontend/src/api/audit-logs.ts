@@ -1,12 +1,7 @@
 import { apiClient } from './apiClient';
 import { API_ENDPOINTS } from './config';
 import type { ApiResponse } from '@/types';
-import type {
-  AuditLogEntry,
-  AuditLogFilters,
-  AuditLogStats,
-  SystemActivity,
-} from '@/types/admin';
+import type { AuditLogEntry, AuditLogFilters, AuditLogStats, SystemActivity } from '@/types/admin';
 
 export const auditLogsApi = {
   // Core Audit Log Functions
@@ -14,12 +9,14 @@ export const auditLogsApi = {
     page = 1,
     size = 20,
     filters?: AuditLogFilters
-  ): Promise<ApiResponse<{
-    logs: AuditLogEntry[];
-    total: number;
-    page: number;
-    size: number;
-  }>> {
+  ): Promise<
+    ApiResponse<{
+      logs: AuditLogEntry[];
+      total: number;
+      page: number;
+      size: number;
+    }>
+  > {
     const params = new URLSearchParams();
     params.set('page', page.toString());
     params.set('size', size.toString());
@@ -42,7 +39,9 @@ export const auditLogsApi = {
   },
 
   async getAuditLogById(logId: number): Promise<ApiResponse<AuditLogEntry>> {
-    const response = await apiClient.get<AuditLogEntry>(`${API_ENDPOINTS.ADMIN_EXTENDED.AUDIT_LOGS.BASE}/${logId}`);
+    const response = await apiClient.get<AuditLogEntry>(
+      `${API_ENDPOINTS.ADMIN_EXTENDED.AUDIT_LOGS.BASE}/${logId}`
+    );
     return { data: response.data, success: true };
   },
 
@@ -55,7 +54,9 @@ export const auditLogsApi = {
     if (endDate) params.set('end_date', endDate);
 
     const query = params.toString();
-    const url = query ? `${API_ENDPOINTS.ADMIN_EXTENDED.AUDIT_LOGS.STATS}?${query}` : API_ENDPOINTS.ADMIN_EXTENDED.AUDIT_LOGS.STATS;
+    const url = query
+      ? `${API_ENDPOINTS.ADMIN_EXTENDED.AUDIT_LOGS.STATS}?${query}`
+      : API_ENDPOINTS.ADMIN_EXTENDED.AUDIT_LOGS.STATS;
 
     const response = await apiClient.get<AuditLogStats>(url);
     return { data: response.data, success: true };
@@ -70,7 +71,9 @@ export const auditLogsApi = {
     if (endDate) params.set('end_date', endDate);
 
     const query = params.toString();
-    const url = query ? `${API_ENDPOINTS.ADMIN_EXTENDED.AUDIT_LOGS.ACTIVITY}?${query}` : API_ENDPOINTS.ADMIN_EXTENDED.AUDIT_LOGS.ACTIVITY;
+    const url = query
+      ? `${API_ENDPOINTS.ADMIN_EXTENDED.AUDIT_LOGS.ACTIVITY}?${query}`
+      : API_ENDPOINTS.ADMIN_EXTENDED.AUDIT_LOGS.ACTIVITY;
 
     const response = await apiClient.get<SystemActivity>(url);
     return { data: response.data, success: true };
@@ -82,12 +85,14 @@ export const auditLogsApi = {
     entityId: number,
     page = 1,
     size = 20
-  ): Promise<ApiResponse<{
-    logs: AuditLogEntry[];
-    total: number;
-    page: number;
-    size: number;
-  }>> {
+  ): Promise<
+    ApiResponse<{
+      logs: AuditLogEntry[];
+      total: number;
+      page: number;
+      size: number;
+    }>
+  > {
     const params = new URLSearchParams();
     params.set('page', page.toString());
     params.set('size', size.toString());
@@ -97,7 +102,9 @@ export const auditLogsApi = {
       total: number;
       page: number;
       size: number;
-    }>(`${API_ENDPOINTS.ADMIN_EXTENDED.AUDIT_LOGS.BASE}/entity/${entityType}/${entityId}?${params.toString()}`);
+    }>(
+      `${API_ENDPOINTS.ADMIN_EXTENDED.AUDIT_LOGS.BASE}/entity/${entityType}/${entityId}?${params.toString()}`
+    );
     return { data: response.data, success: true };
   },
 
@@ -108,12 +115,14 @@ export const auditLogsApi = {
     size = 20,
     startDate?: string,
     endDate?: string
-  ): Promise<ApiResponse<{
-    logs: AuditLogEntry[];
-    total: number;
-    page: number;
-    size: number;
-  }>> {
+  ): Promise<
+    ApiResponse<{
+      logs: AuditLogEntry[];
+      total: number;
+      page: number;
+      size: number;
+    }>
+  > {
     const params = new URLSearchParams();
     params.set('page', page.toString());
     params.set('size', size.toString());
@@ -134,12 +143,14 @@ export const auditLogsApi = {
     page = 1,
     size = 20,
     severity?: 'low' | 'medium' | 'high' | 'critical'
-  ): Promise<ApiResponse<{
-    events: AuditLogEntry[];
-    total: number;
-    page: number;
-    size: number;
-  }>> {
+  ): Promise<
+    ApiResponse<{
+      events: AuditLogEntry[];
+      total: number;
+      page: number;
+      size: number;
+    }>
+  > {
     const params = new URLSearchParams();
     params.set('page', page.toString());
     params.set('size', size.toString());
@@ -158,12 +169,14 @@ export const auditLogsApi = {
     page = 1,
     size = 20,
     hours = 24
-  ): Promise<ApiResponse<{
-    attempts: AuditLogEntry[];
-    total: number;
-    page: number;
-    size: number;
-  }>> {
+  ): Promise<
+    ApiResponse<{
+      attempts: AuditLogEntry[];
+      total: number;
+      page: number;
+      size: number;
+    }>
+  > {
     const params = new URLSearchParams();
     params.set('page', page.toString());
     params.set('size', size.toString());
@@ -182,10 +195,12 @@ export const auditLogsApi = {
   async exportAuditLogs(
     filters?: AuditLogFilters,
     format: 'csv' | 'json' = 'csv'
-  ): Promise<ApiResponse<{
-    download_url: string;
-    expires_at: string;
-  }>> {
+  ): Promise<
+    ApiResponse<{
+      download_url: string;
+      expires_at: string;
+    }>
+  > {
     const params = new URLSearchParams();
     params.set('format', format);
 
@@ -205,10 +220,12 @@ export const auditLogsApi = {
   },
 
   // Available filter options
-  async getFilterOptions(): Promise<ApiResponse<{
-    actions: string[];
-    entity_types: string[];
-  }>> {
+  async getFilterOptions(): Promise<
+    ApiResponse<{
+      actions: string[];
+      entity_types: string[];
+    }>
+  > {
     const response = await apiClient.get<{
       actions: string[];
       entity_types: string[];

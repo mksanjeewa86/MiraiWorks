@@ -93,7 +93,9 @@ class TestPositionManagementPermissionMatrix:
         }
 
         response = await client.put(
-            f"/api/positions/{job.id}", json=update_data, headers=super_admin_auth_headers
+            f"/api/positions/{job.id}",
+            json=update_data,
+            headers=super_admin_auth_headers,
         )
 
         assert response.status_code == 200
@@ -144,7 +146,11 @@ class TestPositionManagementPermissionMatrix:
     ):
         """Test that Company Admin can create jobs for their own company."""
         company_admin = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.ADMIN, "companyadmin@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.ADMIN,
+            "companyadmin@test.com",
         )
         headers = await self._get_auth_headers(client, company_admin)
 
@@ -178,7 +184,11 @@ class TestPositionManagementPermissionMatrix:
     ):
         """Test that Company Admin cannot create jobs for other companies."""
         company_admin = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.ADMIN, "companyadmin@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.ADMIN,
+            "companyadmin@test.com",
         )
         other_company = await self._create_other_company(db_session)
         headers = await self._get_auth_headers(client, company_admin)
@@ -206,7 +216,11 @@ class TestPositionManagementPermissionMatrix:
     ):
         """Test that Company Admin can update jobs from their own company."""
         company_admin = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.ADMIN, "companyadmin@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.ADMIN,
+            "companyadmin@test.com",
         )
         job = await self._create_position_for_company(db_session, test_company)
         headers = await self._get_auth_headers(client, company_admin)
@@ -231,7 +245,11 @@ class TestPositionManagementPermissionMatrix:
     ):
         """Test that Company Admin cannot update jobs from other companies."""
         company_admin = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.ADMIN, "companyadmin@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.ADMIN,
+            "companyadmin@test.com",
         )
         other_company = await self._create_other_company(db_session)
         other_job = await self._create_position_for_company(db_session, other_company)
@@ -256,7 +274,11 @@ class TestPositionManagementPermissionMatrix:
     ):
         """Test that Company Admin can delete jobs from their own company."""
         company_admin = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.ADMIN, "companyadmin@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.ADMIN,
+            "companyadmin@test.com",
         )
         job = await self._create_position_for_company(db_session, test_company)
         headers = await self._get_auth_headers(client, company_admin)
@@ -277,13 +299,19 @@ class TestPositionManagementPermissionMatrix:
     ):
         """Test that Company Admin cannot delete jobs from other companies."""
         company_admin = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.ADMIN, "companyadmin@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.ADMIN,
+            "companyadmin@test.com",
         )
         other_company = await self._create_other_company(db_session)
         other_job = await self._create_position_for_company(db_session, other_company)
         headers = await self._get_auth_headers(client, company_admin)
 
-        response = await client.delete(f"/api/positions/{other_job.id}", headers=headers)
+        response = await client.delete(
+            f"/api/positions/{other_job.id}", headers=headers
+        )
 
         assert response.status_code == 403
         assert "not authorized" in response.json()["detail"].lower()
@@ -298,7 +326,11 @@ class TestPositionManagementPermissionMatrix:
     ):
         """Test that Company Admin can view their company's job statistics."""
         company_admin = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.ADMIN, "companyadmin@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.ADMIN,
+            "companyadmin@test.com",
         )
         headers = await self._get_auth_headers(client, company_admin)
 
@@ -321,7 +353,11 @@ class TestPositionManagementPermissionMatrix:
     ):
         """Test that Recruiter can create jobs for their own company."""
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
         headers = await self._get_auth_headers(client, recruiter)
 
@@ -349,7 +385,11 @@ class TestPositionManagementPermissionMatrix:
     ):
         """Test that Recruiter cannot create jobs for other companies."""
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
         other_company = await self._create_other_company(db_session)
         headers = await self._get_auth_headers(client, recruiter)
@@ -377,7 +417,11 @@ class TestPositionManagementPermissionMatrix:
     ):
         """Test that Recruiter can update jobs from their own company."""
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
         job = await self._create_position_for_company(db_session, test_company)
         headers = await self._get_auth_headers(client, recruiter)
@@ -402,7 +446,11 @@ class TestPositionManagementPermissionMatrix:
     ):
         """Test that Recruiter cannot update jobs from other companies."""
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
         other_company = await self._create_other_company(db_session)
         other_job = await self._create_position_for_company(db_session, other_company)
@@ -429,7 +477,11 @@ class TestPositionManagementPermissionMatrix:
     ):
         """Test that Employer can create jobs for their own company."""
         employer = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "employer@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "employer@test.com",
         )
         headers = await self._get_auth_headers(client, employer)
 
@@ -457,7 +509,11 @@ class TestPositionManagementPermissionMatrix:
     ):
         """Test that Employer cannot create jobs for other companies."""
         employer = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "employer@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "employer@test.com",
         )
         other_company = await self._create_other_company(db_session)
         headers = await self._get_auth_headers(client, employer)
@@ -485,7 +541,11 @@ class TestPositionManagementPermissionMatrix:
     ):
         """Test that Employer can update jobs from their own company."""
         employer = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "employer@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "employer@test.com",
         )
         job = await self._create_position_for_company(db_session, test_company)
         headers = await self._get_auth_headers(client, employer)
@@ -512,7 +572,11 @@ class TestPositionManagementPermissionMatrix:
     ):
         """Test that Candidate cannot create jobs."""
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         headers = await self._get_auth_headers(client, candidate)
 
@@ -539,7 +603,11 @@ class TestPositionManagementPermissionMatrix:
     ):
         """Test that Candidate cannot update jobs."""
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         job = await self._create_position_for_company(db_session, test_company)
         headers = await self._get_auth_headers(client, candidate)
@@ -563,7 +631,11 @@ class TestPositionManagementPermissionMatrix:
     ):
         """Test that Candidate cannot delete jobs."""
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         job = await self._create_position_for_company(db_session, test_company)
         headers = await self._get_auth_headers(client, candidate)
@@ -583,9 +655,15 @@ class TestPositionManagementPermissionMatrix:
     ):
         """Test that Candidate can view public jobs."""
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
-        job = await self._create_position_for_company(db_session, test_company, status="published")
+        job = await self._create_position_for_company(
+            db_session, test_company, status="published"
+        )
         headers = await self._get_auth_headers(client, candidate)
 
         # Can view public job list
@@ -608,9 +686,15 @@ class TestPositionManagementPermissionMatrix:
     ):
         """Test that Candidate cannot view draft jobs."""
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
-        draft_job = await self._create_position_for_company(db_session, test_company, status="draft")
+        draft_job = await self._create_position_for_company(
+            db_session, test_company, status="draft"
+        )
         headers = await self._get_auth_headers(client, candidate)
 
         response = await client.get(f"/api/positions/{draft_job.id}", headers=headers)
@@ -627,7 +711,11 @@ class TestPositionManagementPermissionMatrix:
     ):
         """Test that Candidate cannot view job statistics."""
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         headers = await self._get_auth_headers(client, candidate)
 
@@ -647,7 +735,11 @@ class TestPositionManagementPermissionMatrix:
     ):
         """Test that company positions endpoint respects company scoping."""
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
         other_company = await self._create_other_company(db_session)
         headers = await self._get_auth_headers(client, recruiter)
@@ -677,7 +769,11 @@ class TestPositionManagementPermissionMatrix:
     ):
         """Test that bulk operations respect company scoping."""
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
         other_company = await self._create_other_company(db_session)
 
@@ -688,10 +784,7 @@ class TestPositionManagementPermissionMatrix:
         headers = await self._get_auth_headers(client, recruiter)
 
         # Try to bulk update jobs including other company job
-        bulk_data = {
-            "position_ids": [own_job.id, other_job.id],
-            "status": "published"
-        }
+        bulk_data = {"position_ids": [own_job.id, other_job.id], "status": "published"}
 
         response = await client.patch(
             "/api/positions/bulk/status", json=bulk_data, headers=headers
@@ -732,7 +825,9 @@ class TestPositionManagementPermissionMatrix:
         assert response.status_code == 401
 
         # Cannot update positions without auth
-        response = await client.put(f"/api/positions/{job.id}", json={"title": "Updated"})
+        response = await client.put(
+            f"/api/positions/{job.id}", json={"title": "Updated"}
+        )
         assert response.status_code == 401
 
         # Cannot delete positions without auth
@@ -779,7 +874,11 @@ class TestPositionManagementPermissionMatrix:
         return user
 
     async def _create_position_for_company(
-        self, db_session: AsyncSession, company: Company, status: str = "published", posted_by_user: User | None = None
+        self,
+        db_session: AsyncSession,
+        company: Company,
+        status: str = "published",
+        posted_by_user: User | None = None,
     ) -> Position:
         """Create a position for a company."""
         # Create a default user if none provided

@@ -61,7 +61,9 @@ class TestPositionEndpoints:
     @pytest.mark.asyncio
     async def test_list_positions_success(self, client: AsyncClient):
         """Test successful position listing."""
-        with patch("app.endpoints.positions.position_crud.get_published_positions_with_count") as mock_get:
+        with patch(
+            "app.endpoints.positions.position_crud.get_published_positions_with_count"
+        ) as mock_get:
             mock_positions = [
                 Position(id=1, title="Position 1", status="published", company_id=1),
                 Position(id=2, title="Position 2", status="published", company_id=1),
@@ -82,7 +84,9 @@ class TestPositionEndpoints:
         with patch("app.crud.position.position.get") as mock_get, patch(
             "app.crud.position.position.increment_position_view_count"
         ) as mock_increment:
-            mock_position = Position(id=1, title="Test Position", status="published", company_id=1)
+            mock_position = Position(
+                id=1, title="Test Position", status="published", company_id=1
+            )
             mock_get.return_value = mock_position
             mock_increment.return_value = mock_position
 
@@ -144,7 +148,9 @@ class TestPositionEndpoints:
     @pytest.mark.asyncio
     async def test_search_positions_success(self, client: AsyncClient):
         """Test successful position search."""
-        with patch("app.endpoints.positions.position_crud.get_published_positions_with_count") as mock_search:
+        with patch(
+            "app.endpoints.positions.position_crud.get_published_positions_with_count"
+        ) as mock_search:
             mock_positions = [Position(id=1, title="Python Developer", company_id=1)]
             mock_search.return_value = (mock_positions, 1)
 
@@ -160,7 +166,9 @@ class TestPositionEndpoints:
     async def test_get_popular_positions_success(self, client: AsyncClient):
         """Test successful popular positions retrieval."""
         with patch("app.crud.position.position.get_popular_positions") as mock_get:
-            mock_positions = [Position(id=1, title="Popular Position", view_count=100, company_id=1)]
+            mock_positions = [
+                Position(id=1, title="Popular Position", view_count=100, company_id=1)
+            ]
             mock_get.return_value = mock_positions
 
             response = await client.get("/api/positions/popular?limit=5")
@@ -192,7 +200,9 @@ class TestPositionEndpoints:
             mock_positions = [Position(id=1, title="Company Position", company_id=1)]
             mock_get.return_value = mock_positions
 
-            response = await client.get("/api/positions/company/1", headers=auth_headers)
+            response = await client.get(
+                "/api/positions/company/1", headers=auth_headers
+            )
 
             assert response.status_code == 200
             data = response.json()
@@ -208,8 +218,12 @@ class TestPositionEndpoints:
         with patch("app.crud.position.position.get") as mock_get, patch(
             "app.crud.position.position.update"
         ) as mock_update:
-            existing_position = Position(id=1, title="Test Position", status="draft", company_id=1)
-            updated_position = Position(id=1, title="Test Position", status="published", company_id=1)
+            existing_position = Position(
+                id=1, title="Test Position", status="draft", company_id=1
+            )
+            updated_position = Position(
+                id=1, title="Test Position", status="published", company_id=1
+            )
 
             mock_get.return_value = existing_position
             mock_update.return_value = updated_position
@@ -229,7 +243,9 @@ class TestPositionEndpoints:
         """Test successful bulk status update."""
         bulk_data = {"position_ids": [1, 2, 3], "status": "closed"}
 
-        with patch("app.crud.position.position.bulk_update_position_status") as mock_bulk:
+        with patch(
+            "app.crud.position.position.bulk_update_position_status"
+        ) as mock_bulk:
             mock_positions = [
                 Position(id=1, status="closed", company_id=1),
                 Position(id=2, status="closed", company_id=1),
@@ -249,7 +265,9 @@ class TestPositionEndpoints:
     # AUTHENTICATION TESTS
 
     @pytest.mark.asyncio
-    async def test_create_position_unauthorized(self, client: AsyncClient, position_data: dict):
+    async def test_create_position_unauthorized(
+        self, client: AsyncClient, position_data: dict
+    ):
         """Test position creation without authentication fails."""
         response = await client.post("/api/positions/", json=position_data)
         assert response.status_code == 401
@@ -293,7 +311,9 @@ class TestPositionEndpoints:
         self, client: AsyncClient, employer_headers: dict
     ):
         """Test statistics access by non-admin fails."""
-        response = await client.get("/api/positions/statistics", headers=employer_headers)
+        response = await client.get(
+            "/api/positions/statistics", headers=employer_headers
+        )
         assert response.status_code == 403
         assert "Admin access required" in response.json()["detail"]
 
@@ -414,7 +434,9 @@ class TestPositionEndpoints:
     @pytest.mark.asyncio
     async def test_list_positions_with_filters(self, client: AsyncClient):
         """Test position listing with various filters."""
-        with patch("app.endpoints.positions.position_crud.get_published_positions_with_count") as mock_get:
+        with patch(
+            "app.endpoints.positions.position_crud.get_published_positions_with_count"
+        ) as mock_get:
             mock_get.return_value = ([], 0)
 
             response = await client.get(
@@ -466,9 +488,7 @@ class TestPositionEndpoints:
             mock_get.return_value = []
 
             # Employer trying to access different company's positions
-            await client.get(
-                "/api/positions/company/999", headers=employer_headers
-            )
+            await client.get("/api/positions/company/999", headers=employer_headers)
             # Should be handled by permission logic in endpoint
             # Implementation depends on how current_user.company_id is mocked
 
@@ -484,4 +504,3 @@ class TestPositionEndpoints:
         )
         # Should handle empty list gracefully
         assert response.status_code in [200, 422]  # Depends on validation
-

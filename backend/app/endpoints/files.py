@@ -6,6 +6,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.config.endpoints import API_ROUTES
 from app.database import get_db
 from app.dependencies import get_current_active_user
 from app.models.message import Message
@@ -18,7 +19,7 @@ router = APIRouter()
 logger = get_logger(__name__)
 
 
-@router.get("/test")
+@router.get(API_ROUTES.FILES.TEST)
 async def test_endpoint():
     """Simple test endpoint to verify routing works."""
 
@@ -165,10 +166,7 @@ async def check_file_access_permission(
         message_result = await db.execute(
             select(Message).where(
                 or_(*file_conditions)
-                & (
-                    (Message.sender_id == user_id)
-                    | (Message.recipient_id == user_id)
-                )
+                & ((Message.sender_id == user_id) | (Message.recipient_id == user_id))
             )
         )
 
@@ -184,14 +182,13 @@ async def check_file_access_permission(
         return False
 
 
-@router.post("/upload")
+@router.post(API_ROUTES.FILES.UPLOAD)
 async def upload_file(
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Upload a file and return its URL and metadata."""
-
 
     logger.info(
         f"Upload request received - filename: {file.filename}, content_type: {file.content_type}, user: {current_user.id}"
@@ -272,7 +269,7 @@ async def upload_file(
         )
 
 
-@router.get("/download/{s3_key:path}")
+@router.get(API_ROUTES.FILES.DOWNLOAD)
 async def download_file(
     s3_key: str,
     download: str | None = None,  # Add query parameter to control download behavior
@@ -374,7 +371,7 @@ async def download_file(
         )
 
 
-@router.delete("/{s3_key:path}")
+@router.delete(API_ROUTES.FILES.DELETE)
 async def delete_file(
     s3_key: str,
     current_user: User = Depends(get_current_active_user),
@@ -444,7 +441,7 @@ async def delete_file(
     )
 
 
-@router.get("/message/{user_id}/{filename}")
+@router.get(API_ROUTES.FILES.MESSAGE_FILE)
 async def serve_message_file(
     user_id: int,
     filename: str,
@@ -467,8 +464,8 @@ async def serve_message_file(
                 Message.file_name == filename,
                 or_(
                     Message.sender_id == current_user.id,
-                    Message.recipient_id == current_user.id
-                )
+                    Message.recipient_id == current_user.id,
+                ),
             )
         )
         message = message_result.scalar_one_or_none()
@@ -476,7 +473,7 @@ async def serve_message_file(
         if not message:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have permission to access this file"
+                detail="You don't have permission to access this file",
             )
 
     # Construct file path
@@ -486,8 +483,7 @@ async def serve_message_file(
     # Ensure file exists
     if not full_file_path.exists():
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="File not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
         )
 
     # Security check - ensure path doesn't escape upload directory
@@ -495,12 +491,12 @@ async def serve_message_file(
         full_file_path.resolve().relative_to(upload_base.resolve())
     except ValueError:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Invalid file path"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Invalid file path"
         )
 
     # Determine media type
     import mimetypes
+
     media_type, _ = mimetypes.guess_type(str(full_file_path))
     if not media_type:
         media_type = "application/octet-stream"
@@ -510,5 +506,5 @@ async def serve_message_file(
         path=str(full_file_path),
         filename=filename,
         media_type=media_type,
-        headers={"Content-Disposition": f"inline; filename={filename}"}
+        headers={"Content-Disposition": f"inline; filename={filename}"},
     )

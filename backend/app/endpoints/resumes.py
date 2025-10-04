@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime
 
+from app.config.endpoints import API_ROUTES
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -44,7 +45,7 @@ logger = logging.getLogger(__name__)
 
 
 # Resume CRUD Operations
-@router.post("/", response_model=ResumeInfo, status_code=201)
+@router.post(API_ROUTES.RESUMES.BASE, response_model=ResumeInfo, status_code=201)
 async def create_resume(
     resume_data: ResumeCreate,
     db: AsyncSession = Depends(get_db),
@@ -61,7 +62,7 @@ async def create_resume(
         raise HTTPException(status_code=500, detail="Failed to create resume")
 
 
-@router.get("/", response_model=ResumeListResponse)
+@router.get(API_ROUTES.RESUMES.BASE, response_model=ResumeListResponse)
 async def list_resumes(
     status: str | None = None,
     limit: int = Query(10, ge=1, le=100),
@@ -99,7 +100,7 @@ async def list_resumes(
 
 
 # Statistics and Analytics - MUST be before /{resume_id} routes
-@router.get("/stats")
+@router.get(API_ROUTES.RESUMES.STATS)
 async def get_resume_statistics(
     db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
@@ -154,7 +155,7 @@ async def get_resume_statistics(
 
 
 # Search and filtering - MUST be before /{resume_id} routes
-@router.get("/search")
+@router.get(API_ROUTES.RESUMES.SEARCH)
 async def search_resumes(
     q: str | None = Query(None),
     limit: int = Query(10, ge=1, le=50),
@@ -171,7 +172,7 @@ async def search_resumes(
     return {"results": [], "total": 0, "query": q}
 
 
-@router.get("/{resume_id}", response_model=ResumeInfo)
+@router.get(API_ROUTES.RESUMES.BY_ID, response_model=ResumeInfo)
 async def get_resume(
     resume_id: int,
     db: AsyncSession = Depends(get_db),
@@ -187,7 +188,7 @@ async def get_resume(
     return resume
 
 
-@router.put("/{resume_id}", response_model=ResumeInfo)
+@router.put(API_ROUTES.RESUMES.BY_ID, response_model=ResumeInfo)
 async def update_resume(
     resume_id: int,
     resume_data: ResumeUpdate,
@@ -206,7 +207,7 @@ async def update_resume(
     return resume
 
 
-@router.delete("/{resume_id}")
+@router.delete(API_ROUTES.RESUMES.BY_ID)
 async def delete_resume(
     resume_id: int,
     db: AsyncSession = Depends(get_db),
@@ -222,7 +223,7 @@ async def delete_resume(
     return {"message": "Resume deleted successfully"}
 
 
-@router.post("/{resume_id}/duplicate", response_model=ResumeInfo)
+@router.post(API_ROUTES.RESUMES.DUPLICATE, response_model=ResumeInfo)
 async def duplicate_resume(
     resume_id: int,
     db: AsyncSession = Depends(get_db),
@@ -239,7 +240,7 @@ async def duplicate_resume(
 
 
 # Work Experience endpoints
-@router.post("/{resume_id}/experiences", response_model=WorkExperienceInfo)
+@router.post(API_ROUTES.RESUMES.EXPERIENCES, response_model=WorkExperienceInfo)
 async def add_work_experience(
     resume_id: int,
     experience_data: WorkExperienceCreate,
@@ -258,7 +259,7 @@ async def add_work_experience(
     return experience
 
 
-@router.put("/experiences/{exp_id}", response_model=WorkExperienceInfo)
+@router.put(API_ROUTES.RESUMES.EXPERIENCE_BY_ID, response_model=WorkExperienceInfo)
 async def update_work_experience(
     exp_id: int,
     experience_data: WorkExperienceCreate,
@@ -277,7 +278,7 @@ async def update_work_experience(
     return experience
 
 
-@router.delete("/experiences/{exp_id}")
+@router.delete(API_ROUTES.RESUMES.EXPERIENCE_BY_ID)
 async def delete_work_experience(
     exp_id: int,
     db: AsyncSession = Depends(get_db),
@@ -289,7 +290,7 @@ async def delete_work_experience(
 
 
 # Education endpoints
-@router.post("/{resume_id}/education", response_model=EducationInfo)
+@router.post(API_ROUTES.RESUMES.EDUCATION, response_model=EducationInfo)
 async def add_education(
     resume_id: int,
     education_data: EducationCreate,
@@ -309,7 +310,7 @@ async def add_education(
 
 
 # Skills endpoints
-@router.post("/{resume_id}/skills", response_model=SkillInfo)
+@router.post(API_ROUTES.RESUMES.SKILLS, response_model=SkillInfo)
 async def add_skill(
     resume_id: int,
     skill_data: SkillCreate,
@@ -327,7 +328,7 @@ async def add_skill(
 
 
 # Projects endpoints
-@router.post("/{resume_id}/projects", response_model=ProjectInfo)
+@router.post(API_ROUTES.RESUMES.PROJECTS, response_model=ProjectInfo)
 async def add_project(
     resume_id: int,
     project_data: ProjectCreate,
@@ -339,7 +340,9 @@ async def add_project(
 
 
 # Template Management
-@router.get("/templates/available", response_model=list[ResumeTemplateInfo])
+@router.get(
+    API_ROUTES.RESUMES.TEMPLATES_AVAILABLE, response_model=list[ResumeTemplateInfo]
+)
 async def get_available_templates(
     include_premium: bool = Query(False),
     db: AsyncSession = Depends(get_db),
@@ -352,7 +355,7 @@ async def get_available_templates(
     return templates
 
 
-@router.post("/{resume_id}/template/{template_id}", response_model=ResumeInfo)
+@router.post(API_ROUTES.RESUMES.APPLY_TEMPLATE, response_model=ResumeInfo)
 async def apply_template(
     resume_id: int,
     template_id: str,
@@ -372,7 +375,7 @@ async def apply_template(
 
 
 # Preview and Export
-@router.get("/{resume_id}/preview", response_class=HTMLResponse)
+@router.get(API_ROUTES.RESUMES.PREVIEW, response_class=HTMLResponse)
 async def preview_resume(
     resume_id: int,
     template_id: str | None = None,
@@ -391,7 +394,7 @@ async def preview_resume(
     return HTMLResponse(content=html_content)
 
 
-@router.post("/{resume_id}/generate-pdf", response_model=PDFGenerationResponse)
+@router.post(API_ROUTES.RESUMES.GENERATE_PDF, response_model=PDFGenerationResponse)
 async def generate_pdf(
     resume_id: int,
     pdf_request: PDFGenerationRequest,
@@ -428,7 +431,7 @@ async def generate_pdf(
 
 
 # Sharing functionality
-@router.post("/{resume_id}/share", response_model=ShareLinkInfo)
+@router.post(API_ROUTES.RESUMES.SHARE, response_model=ShareLinkInfo)
 async def create_share_link(
     resume_id: int,
     share_data: ShareLinkCreate,
@@ -466,7 +469,7 @@ async def create_share_link(
     )
 
 
-@router.get("/shared/{share_token}", response_class=HTMLResponse)
+@router.get(API_ROUTES.RESUMES.SHARED, response_class=HTMLResponse)
 async def view_shared_resume(
     share_token: str,
     password: str | None = Query(None),
@@ -501,7 +504,7 @@ async def view_shared_resume(
 
 
 # Bulk operations
-@router.post("/bulk-action", response_model=BulkActionResult)
+@router.post(API_ROUTES.RESUMES.BULK_ACTION, response_model=BulkActionResult)
 async def bulk_resume_action(
     action_data: BulkResumeAction,
     db: AsyncSession = Depends(get_db),
@@ -547,7 +550,7 @@ async def bulk_resume_action(
 
 
 # Public resume viewing (for published resumes)
-@router.get("/public/{slug}", response_class=HTMLResponse)
+@router.get(API_ROUTES.RESUMES.PUBLIC, response_class=HTMLResponse)
 async def view_public_resume(slug: str, db: AsyncSession = Depends(get_db)):
     """View a public resume by slug."""
     resume_service = ResumeService()
@@ -565,7 +568,7 @@ async def view_public_resume(slug: str, db: AsyncSession = Depends(get_db)):
 
 
 # Resume analytics
-@router.get("/{resume_id}/analytics")
+@router.get(API_ROUTES.RESUMES.ANALYTICS)
 async def get_resume_analytics(
     resume_id: int,
     days: int = Query(30, ge=1, le=365),
@@ -590,7 +593,9 @@ async def get_resume_analytics(
 
 
 # Japanese Resume Format Endpoints
-@router.get("/templates/japanese", response_model=list[JapaneseResumeTemplate])
+@router.get(
+    API_ROUTES.RESUMES.TEMPLATES_JAPANESE, response_model=list[JapaneseResumeTemplate]
+)
 async def get_japanese_templates(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -599,40 +604,83 @@ async def get_japanese_templates(
     templates = [
         JapaneseResumeTemplate(
             format_type="rirekisho",
-            sections=["personal_info", "education", "work_history", "qualifications", "motivation"],
+            sections=[
+                "personal_info",
+                "education",
+                "work_history",
+                "qualifications",
+                "motivation",
+            ],
             field_mappings={
-                "personal_info": ["full_name", "furigana_name", "birth_date", "gender", "nationality", "photo"],
+                "personal_info": [
+                    "full_name",
+                    "furigana_name",
+                    "birth_date",
+                    "gender",
+                    "nationality",
+                    "photo",
+                ],
                 "education": ["institution_name", "degree", "graduation_date"],
-                "work_history": ["company_name", "position", "employment_period", "job_description"],
-                "qualifications": ["certification_name", "issue_date", "issuing_organization"],
-                "motivation": ["self_pr", "motivation", "commute_time", "spouse", "dependents"]
+                "work_history": [
+                    "company_name",
+                    "position",
+                    "employment_period",
+                    "job_description",
+                ],
+                "qualifications": [
+                    "certification_name",
+                    "issue_date",
+                    "issuing_organization",
+                ],
+                "motivation": [
+                    "self_pr",
+                    "motivation",
+                    "commute_time",
+                    "spouse",
+                    "dependents",
+                ],
             },
             validation_rules={
                 "furigana_required": True,
                 "photo_required": True,
-                "birth_date_required": True
-            }
+                "birth_date_required": True,
+            },
         ),
         JapaneseResumeTemplate(
             format_type="shokumu_keirekisho",
-            sections=["career_summary", "detailed_experience", "skills", "achievements", "self_pr"],
+            sections=[
+                "career_summary",
+                "detailed_experience",
+                "skills",
+                "achievements",
+                "self_pr",
+            ],
             field_mappings={
                 "career_summary": ["professional_summary", "total_experience"],
-                "detailed_experience": ["detailed_work_history", "responsibilities", "achievements"],
-                "skills": ["technical_skills", "soft_skills", "languages", "certifications"],
+                "detailed_experience": [
+                    "detailed_work_history",
+                    "responsibilities",
+                    "achievements",
+                ],
+                "skills": [
+                    "technical_skills",
+                    "soft_skills",
+                    "languages",
+                    "certifications",
+                ],
                 "achievements": ["key_accomplishments", "quantified_results"],
-                "self_pr": ["strengths", "career_goals", "why_this_company"]
+                "self_pr": ["strengths", "career_goals", "why_this_company"],
             },
             validation_rules={
                 "detailed_experience_required": True,
-                "career_summary_min_length": 100
-            }
-        )
+                "career_summary_min_length": 100,
+            },
+        ),
     ]
     return templates
 
 
-@router.post("/{resume_id}/convert-to-rirekisho", response_model=ResumeInfo)
+@router.post(API_ROUTES.RESUMES.CONVERT_RIREKISHO, response_model=ResumeInfo)
 async def convert_to_rirekisho(
     resume_id: int,
     rirekisho_data: RirekishoData,
@@ -648,6 +696,7 @@ async def convert_to_rirekisho(
 
     # Convert to Rirekisho format
     from app.utils.constants import ResumeFormat, ResumeLanguage
+
     updated_resume = await resume_service.update_resume(
         db,
         resume_id,
@@ -661,14 +710,14 @@ async def convert_to_rirekisho(
             gender=rirekisho_data.personal_info.get("gender"),
             nationality=rirekisho_data.personal_info.get("nationality"),
             marital_status=rirekisho_data.personal_info.get("marital_status"),
-            emergency_contact=rirekisho_data.personal_info.get("emergency_contact")
-        )
+            emergency_contact=rirekisho_data.personal_info.get("emergency_contact"),
+        ),
     )
 
     return updated_resume
 
 
-@router.post("/{resume_id}/convert-to-shokumu", response_model=ResumeInfo)
+@router.post(API_ROUTES.RESUMES.CONVERT_SHOKUMU, response_model=ResumeInfo)
 async def convert_to_shokumu_keirekisho(
     resume_id: int,
     shokumu_data: ShokumuKeirekishoData,
@@ -684,6 +733,7 @@ async def convert_to_shokumu_keirekisho(
 
     # Convert to Shokumu Keirekisho format
     from app.utils.constants import ResumeFormat, ResumeLanguage
+
     updated_resume = await resume_service.update_resume(
         db,
         resume_id,
@@ -692,15 +742,15 @@ async def convert_to_shokumu_keirekisho(
             resume_format=ResumeFormat.SHOKUMU_KEIREKISHO,
             resume_language=ResumeLanguage.JAPANESE,
             professional_summary=shokumu_data.career_summary,
-            objective=shokumu_data.self_pr
-        )
+            objective=shokumu_data.self_pr,
+        ),
     )
 
     return updated_resume
 
 
 # Public Sharing Endpoints
-@router.post("/{resume_id}/toggle-public", response_model=ResumeInfo)
+@router.post(API_ROUTES.RESUMES.TOGGLE_PUBLIC, response_model=ResumeInfo)
 async def toggle_resume_public(
     resume_id: int,
     db: AsyncSession = Depends(get_db),
@@ -728,14 +778,19 @@ async def toggle_resume_public(
         raise
     except Exception as e:
         logger.error(f"Error toggling resume visibility: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to update resume visibility")
+        raise HTTPException(
+            status_code=500, detail="Failed to update resume visibility"
+        )
 
     if not updated_resume:
-        raise HTTPException(status_code=400, detail="Failed to update resume visibility")
+        raise HTTPException(
+            status_code=400, detail="Failed to update resume visibility"
+        )
 
     return updated_resume
 
-@router.put("/{resume_id}/public-settings", response_model=ResumeInfo)
+
+@router.put(API_ROUTES.RESUMES.PUBLIC_SETTINGS, response_model=ResumeInfo)
 async def update_public_settings(
     resume_id: int,
     settings: ResumePublicSettings,
@@ -751,7 +806,7 @@ async def update_public_settings(
         current_user.id,
         settings.is_public,
         settings.custom_slug,
-        settings.allow_pdf_download
+        settings.allow_pdf_download,
     )
 
     if not resume:
@@ -760,11 +815,8 @@ async def update_public_settings(
     return resume
 
 
-@router.get("/public/{slug}", response_model=PublicResumeInfo)
-async def get_public_resume(
-    slug: str,
-    db: AsyncSession = Depends(get_db)
-):
+@router.get(API_ROUTES.RESUMES.PUBLIC, response_model=PublicResumeInfo)
+async def get_public_resume(slug: str, db: AsyncSession = Depends(get_db)):
     """Get public resume by slug (limited information)."""
     resume_service = ResumeService()
 
@@ -786,16 +838,13 @@ async def get_public_resume(
         theme_color=resume.theme_color,
         font_family=resume.font_family,
         experiences=resume.experiences[:5],  # Limit to first 5
-        educations=resume.educations[:3],    # Limit to first 3
-        skills=resume.skills[:10]            # Limit to first 10
+        educations=resume.educations[:3],  # Limit to first 3
+        skills=resume.skills[:10],  # Limit to first 10
     )
 
 
-@router.get("/public/{slug}/download")
-async def download_public_resume_pdf(
-    slug: str,
-    db: AsyncSession = Depends(get_db)
-):
+@router.get(API_ROUTES.RESUMES.PUBLIC_DOWNLOAD_SLUG)
+async def download_public_resume_pdf(slug: str, db: AsyncSession = Depends(get_db)):
     """Download public resume as PDF."""
     resume_service = ResumeService()
     pdf_service = PDFService()
@@ -820,7 +869,7 @@ async def download_public_resume_pdf(
 
 
 # Email Integration Endpoints
-@router.post("/{resume_id}/send-email")
+@router.post(API_ROUTES.RESUMES.SEND_EMAIL)
 async def send_resume_by_email(
     resume_id: int,
     email_request: EmailResumeRequest,
@@ -845,17 +894,19 @@ async def send_resume_by_email(
             email_request.subject,
             email_request.message,
             email_request.include_pdf,
-            email_request.sender_name or current_user.full_name
+            email_request.sender_name or current_user.full_name,
         )
 
-        return {"message": f"Resume email queued for {len(email_request.recipient_emails)} recipients"}
+        return {
+            "message": f"Resume email queued for {len(email_request.recipient_emails)} recipients"
+        }
     except Exception as e:
         logger.error(f"Error sending resume email: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to send resume email")
 
 
 # Message Attachment Endpoints
-@router.post("/{resume_id}/attach-to-message")
+@router.post(API_ROUTES.RESUMES.ATTACH_TO_MESSAGE)
 async def attach_resume_to_message(
     resume_id: int,
     attachment_request: MessageAttachmentRequest,
@@ -875,20 +926,20 @@ async def attach_resume_to_message(
             resume_id,
             attachment_request.message_id,
             attachment_request.include_pdf,
-            attachment_request.auto_attach
+            attachment_request.auto_attach,
         )
 
         return {
             "message": "Resume attached to message successfully",
             "attachment_id": attachment.id,
-            "format": attachment.attachment_format
+            "format": attachment.attachment_format,
         }
     except Exception as e:
         logger.error(f"Error attaching resume to message: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to attach resume")
 
 
-@router.put("/{resume_id}/auto-attach-settings")
+@router.put(API_ROUTES.RESUMES.AUTO_ATTACH_SETTINGS)
 async def update_auto_attach_settings(
     resume_id: int,
     auto_attach: bool,
@@ -908,12 +959,12 @@ async def update_auto_attach_settings(
     return {
         "message": f"Auto-attach {'enabled' if auto_attach else 'disabled'} for resume",
         "resume_id": resume_id,
-        "auto_attach": auto_attach
+        "auto_attach": auto_attach,
     }
 
 
 # Resume Protection Endpoints (for edit/delete restrictions)
-@router.put("/{resume_id}/protection")
+@router.put(API_ROUTES.RESUMES.PROTECTION)
 async def update_resume_protection(
     resume_id: int,
     can_edit: bool = True,
@@ -928,7 +979,7 @@ async def update_resume_protection(
         db,
         resume_id,
         current_user.id,
-        ResumeUpdate(can_edit=can_edit, can_delete=can_delete)
+        ResumeUpdate(can_edit=can_edit, can_delete=can_delete),
     )
 
     if not resume:
@@ -937,6 +988,5 @@ async def update_resume_protection(
     return {
         "message": "Resume protection settings updated",
         "can_edit": resume.can_edit,
-        "can_delete": resume.can_delete
+        "can_delete": resume.can_delete,
     }
-

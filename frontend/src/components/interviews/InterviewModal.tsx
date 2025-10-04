@@ -2,19 +2,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import DatePicker from 'react-datepicker';
-import "react-datepicker/dist/react-datepicker.css";
+import 'react-datepicker/dist/react-datepicker.css';
 import '@/styles/datepicker.css';
 
-import {
-  Save,
-  Video,
-  Phone,
-  Users,
-  AlertCircle,
-  X,
-  Search,
-  ChevronDown,
-} from 'lucide-react';
+import { Save, Video, Phone, Users, AlertCircle, X, Search, ChevronDown } from 'lucide-react';
 import {
   Dialog,
   DialogClose,
@@ -131,9 +122,7 @@ export default function InterviewModal({
 
         // Set candidate search display
         if (interview.candidate) {
-          setCandidateSearch(
-            `${interview.candidate.full_name} (${interview.candidate.email})`
-          );
+          setCandidateSearch(`${interview.candidate.full_name} (${interview.candidate.email})`);
         }
       } catch (error) {
         console.error('Error fetching interview:', error);
@@ -259,29 +248,30 @@ export default function InterviewModal({
     }
   };
 
-  const handleScheduleChange = (field: 'scheduled_start' | 'scheduled_end') => (date: Date | null) => {
-    if (!date) {
-      setFormData((prev) => ({ ...prev, [field]: '' }));
-      return;
-    }
-
-    // Use local time without timezone conversion
-    const formatted = date.toISOString();
-    setFormData((prev) => {
-      const next = { ...prev, [field]: formatted };
-      if (field === 'scheduled_start') {
-        const newEnd = new Date(date.getTime() + 60 * 60 * 1000);
-        next.scheduled_end = newEnd.toISOString();
+  const handleScheduleChange =
+    (field: 'scheduled_start' | 'scheduled_end') => (date: Date | null) => {
+      if (!date) {
+        setFormData((prev) => ({ ...prev, [field]: '' }));
+        return;
       }
-      return next;
-    });
 
-    setErrors((prev) => ({
-      ...prev,
-      [field]: '',
-      ...(field === 'scheduled_start' ? { scheduled_end: '' } : {}),
-    }));
-  };
+      // Use local time without timezone conversion
+      const formatted = date.toISOString();
+      setFormData((prev) => {
+        const next = { ...prev, [field]: formatted };
+        if (field === 'scheduled_start') {
+          const newEnd = new Date(date.getTime() + 60 * 60 * 1000);
+          next.scheduled_end = newEnd.toISOString();
+        }
+        return next;
+      });
+
+      setErrors((prev) => ({
+        ...prev,
+        [field]: '',
+        ...(field === 'scheduled_start' ? { scheduled_end: '' } : {}),
+      }));
+    };
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -390,7 +380,8 @@ export default function InterviewModal({
 
       showToast({
         type: 'success',
-        title: mode === 'edit' ? 'Interview updated successfully' : 'Interview scheduled successfully',
+        title:
+          mode === 'edit' ? 'Interview updated successfully' : 'Interview scheduled successfully',
       });
 
       if (result.data) {
@@ -443,7 +434,9 @@ export default function InterviewModal({
                 {/* Interview Details Section */}
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-base font-semibold text-gray-900 mb-3">Interview Details</h3>
+                    <h3 className="text-base font-semibold text-gray-900 mb-3">
+                      Interview Details
+                    </h3>
                   </div>
 
                   {/* Interview Title */}
@@ -579,7 +572,9 @@ export default function InterviewModal({
                 {/* Schedule & Settings Section */}
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-base font-semibold text-gray-900 mb-3">Schedule & Settings</h3>
+                    <h3 className="text-base font-semibold text-gray-900 mb-3">
+                      Schedule & Settings
+                    </h3>
                   </div>
 
                   {/* Interview Type */}
@@ -637,7 +632,9 @@ export default function InterviewModal({
                             className="mt-0.5"
                           />
                           <div className="ml-2.5">
-                            <div className="text-sm font-medium text-gray-900">System Generated</div>
+                            <div className="text-sm font-medium text-gray-900">
+                              System Generated
+                            </div>
                             <div className="text-xs text-gray-600">Auto-create video call room</div>
                           </div>
                         </label>
@@ -683,14 +680,19 @@ export default function InterviewModal({
                         Date *
                       </label>
                       <DatePicker
-                        selected={formData.scheduled_start ? new Date(formData.scheduled_start) : null}
+                        selected={
+                          formData.scheduled_start ? new Date(formData.scheduled_start) : null
+                        }
                         onChange={(date) => {
                           if (date) {
                             const newDate = new Date(date);
                             // Keep existing time or set to default
                             if (formData.scheduled_start) {
                               const existingStart = new Date(formData.scheduled_start);
-                              newDate.setHours(existingStart.getHours(), existingStart.getMinutes());
+                              newDate.setHours(
+                                existingStart.getHours(),
+                                existingStart.getMinutes()
+                              );
                             } else {
                               newDate.setHours(10, 0); // Default 10:00
                             }
@@ -731,7 +733,9 @@ export default function InterviewModal({
                         Start Time *
                       </label>
                       <DatePicker
-                        selected={formData.scheduled_start ? new Date(formData.scheduled_start) : null}
+                        selected={
+                          formData.scheduled_start ? new Date(formData.scheduled_start) : null
+                        }
                         onChange={(time) => {
                           if (time && formData.scheduled_start) {
                             // Get the current date from scheduled_start
@@ -893,13 +897,22 @@ export default function InterviewModal({
             type="button"
             onClick={handleSubmit}
             disabled={saving || loading}
-            leftIcon={saving ? <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Save className="h-4 w-4" />}
+            leftIcon={
+              saving ? (
+                <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )
+            }
             className="min-w-[160px] bg-blue-600 text-white hover:bg-blue-600/90"
           >
             {workflowContext
               ? 'Save & Return to Workflow'
-              : (saving ? 'Saving...' : mode === 'edit' ? 'Save Changes' : 'Schedule Interview')
-            }
+              : saving
+                ? 'Saving...'
+                : mode === 'edit'
+                  ? 'Save Changes'
+                  : 'Schedule Interview'}
           </Button>
         </DialogFooter>
       </DialogContent>

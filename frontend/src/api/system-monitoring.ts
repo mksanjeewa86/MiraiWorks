@@ -18,12 +18,16 @@ export const systemMonitoringApi = {
   },
 
   async getServiceStatus(serviceName: string): Promise<ApiResponse<ServiceStatus>> {
-    const response = await apiClient.get<ServiceStatus>(API_ENDPOINTS.ADMIN_EXTENDED.SYSTEM.SERVICES(serviceName));
+    const response = await apiClient.get<ServiceStatus>(
+      API_ENDPOINTS.ADMIN_EXTENDED.SYSTEM.SERVICES(serviceName)
+    );
     return { data: response.data, success: true };
   },
 
   async runHealthCheck(): Promise<ApiResponse<SystemHealth>> {
-    const response = await apiClient.post<SystemHealth>(API_ENDPOINTS.ADMIN_EXTENDED.SYSTEM.HEALTH_CHECK);
+    const response = await apiClient.post<SystemHealth>(
+      API_ENDPOINTS.ADMIN_EXTENDED.SYSTEM.HEALTH_CHECK
+    );
     return { data: response.data, success: true };
   },
 
@@ -48,7 +52,9 @@ export const systemMonitoringApi = {
 
   // System Configuration
   async getSystemConfiguration(): Promise<ApiResponse<SystemConfiguration>> {
-    const response = await apiClient.get<SystemConfiguration>(API_ENDPOINTS.ADMIN_EXTENDED.SYSTEM.CONFIGURATION);
+    const response = await apiClient.get<SystemConfiguration>(
+      API_ENDPOINTS.ADMIN_EXTENDED.SYSTEM.CONFIGURATION
+    );
     return { data: response.data, success: true };
   },
 
@@ -78,12 +84,14 @@ export const systemMonitoringApi = {
     page = 1,
     size = 20,
     resolved?: boolean
-  ): Promise<ApiResponse<{
-    alerts: SystemAlert[];
-    total: number;
-    page: number;
-    size: number;
-  }>> {
+  ): Promise<
+    ApiResponse<{
+      alerts: SystemAlert[];
+      total: number;
+      page: number;
+      size: number;
+    }>
+  > {
     const params = new URLSearchParams();
     params.set('page', page.toString());
     params.set('size', size.toString());
@@ -111,17 +119,22 @@ export const systemMonitoringApi = {
     message: string;
     component: string;
   }): Promise<ApiResponse<SystemAlert>> {
-    const response = await apiClient.post<SystemAlert>(API_ENDPOINTS.ADMIN_EXTENDED.SYSTEM.ALERTS, alert);
+    const response = await apiClient.post<SystemAlert>(
+      API_ENDPOINTS.ADMIN_EXTENDED.SYSTEM.ALERTS,
+      alert
+    );
     return { data: response.data, success: true };
   },
 
   // System Maintenance
-  async getCacheStats(): Promise<ApiResponse<{
-    redis_info: Record<string, any>;
-    cache_hit_rate: number;
-    memory_usage: number;
-    connected_clients: number;
-  }>> {
+  async getCacheStats(): Promise<
+    ApiResponse<{
+      redis_info: Record<string, any>;
+      cache_hit_rate: number;
+      memory_usage: number;
+      connected_clients: number;
+    }>
+  > {
     const response = await apiClient.get<{
       redis_info: Record<string, any>;
       cache_hit_rate: number;
@@ -131,10 +144,12 @@ export const systemMonitoringApi = {
     return { data: response.data, success: true };
   },
 
-  async clearCache(cacheType?: string): Promise<ApiResponse<{
-    cleared_keys: number;
-    cache_types: string[];
-  }>> {
+  async clearCache(cacheType?: string): Promise<
+    ApiResponse<{
+      cleared_keys: number;
+      cache_types: string[];
+    }>
+  > {
     const params = cacheType ? `?type=${cacheType}` : '';
     const response = await apiClient.post<{
       cleared_keys: number;
@@ -143,16 +158,18 @@ export const systemMonitoringApi = {
     return { data: response.data, success: true };
   },
 
-  async getDatabaseStats(): Promise<ApiResponse<{
-    connection_count: number;
-    active_queries: number;
-    database_size: number;
-    table_stats: Array<{
-      table_name: string;
-      row_count: number;
-      size_mb: number;
-    }>;
-  }>> {
+  async getDatabaseStats(): Promise<
+    ApiResponse<{
+      connection_count: number;
+      active_queries: number;
+      database_size: number;
+      table_stats: Array<{
+        table_name: string;
+        row_count: number;
+        size_mb: number;
+      }>;
+    }>
+  > {
     const response = await apiClient.get<{
       connection_count: number;
       active_queries: number;
@@ -167,11 +184,13 @@ export const systemMonitoringApi = {
   },
 
   // Backup & Maintenance
-  async createBackup(): Promise<ApiResponse<{
-    backup_id: string;
-    status: string;
-    started_at: string;
-  }>> {
+  async createBackup(): Promise<
+    ApiResponse<{
+      backup_id: string;
+      status: string;
+      started_at: string;
+    }>
+  > {
     const response = await apiClient.post<{
       backup_id: string;
       status: string;
@@ -180,15 +199,17 @@ export const systemMonitoringApi = {
     return { data: response.data, success: true };
   },
 
-  async getBackupStatus(backupId: string): Promise<ApiResponse<{
-    backup_id: string;
-    status: 'running' | 'completed' | 'failed';
-    progress: number;
-    started_at: string;
-    completed_at?: string;
-    file_size?: number;
-    error_message?: string;
-  }>> {
+  async getBackupStatus(backupId: string): Promise<
+    ApiResponse<{
+      backup_id: string;
+      status: 'running' | 'completed' | 'failed';
+      progress: number;
+      started_at: string;
+      completed_at?: string;
+      file_size?: number;
+      error_message?: string;
+    }>
+  > {
     const response = await apiClient.get<{
       backup_id: string;
       status: 'running' | 'completed' | 'failed';
@@ -207,10 +228,12 @@ export const systemMonitoringApi = {
     start_time: string;
     duration_minutes: number;
     notify_users: boolean;
-  }): Promise<ApiResponse<{
-    maintenance_id: string;
-    scheduled_for: string;
-  }>> {
+  }): Promise<
+    ApiResponse<{
+      maintenance_id: string;
+      scheduled_for: string;
+    }>
+  > {
     const response = await apiClient.post<{
       maintenance_id: string;
       scheduled_for: string;

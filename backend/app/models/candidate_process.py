@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 class CandidateProcess(Base):
     __tablename__ = "candidate_processes"
     __table_args__ = (
-        UniqueConstraint('candidate_id', 'process_id', name='uq_candidate_process'),
+        UniqueConstraint("candidate_id", "process_id", name="uq_candidate_process"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -36,11 +36,16 @@ class CandidateProcess(Base):
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     process_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("recruitment_processes.id", ondelete="CASCADE"),
-        nullable=False, index=True
+        Integer,
+        ForeignKey("recruitment_processes.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     current_node_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("process_nodes.id", ondelete="SET NULL"), nullable=True, index=True
+        Integer,
+        ForeignKey("process_nodes.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
     )
 
     # Status tracking
@@ -52,17 +57,29 @@ class CandidateProcess(Base):
     assigned_recruiter_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
     )
-    assigned_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    assigned_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Progress tracking
-    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    failed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    withdrawn_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    completed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    failed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    withdrawn_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Evaluation
     overall_score: Mapped[float | None] = mapped_column(DECIMAL(5, 2), nullable=True)
-    final_result: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)
+    final_result: Mapped[str | None] = mapped_column(
+        String(50), nullable=True, index=True
+    )
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Timestamps
@@ -73,7 +90,7 @@ class CandidateProcess(Base):
         DateTime(timezone=True),
         default=datetime.utcnow,
         onupdate=datetime.utcnow,
-        nullable=False
+        nullable=False,
     )
 
     # Relationships
@@ -87,11 +104,15 @@ class CandidateProcess(Base):
         "ProcessNode", foreign_keys=[current_node_id]
     )
     assigned_recruiter: Mapped[User | None] = relationship(
-        "User", foreign_keys=[assigned_recruiter_id], back_populates="assigned_candidate_processes"
+        "User",
+        foreign_keys=[assigned_recruiter_id],
+        back_populates="assigned_candidate_processes",
     )
 
     executions: Mapped[list[NodeExecution]] = relationship(
-        "NodeExecution", back_populates="candidate_process", cascade="all, delete-orphan"
+        "NodeExecution",
+        back_populates="candidate_process",
+        cascade="all, delete-orphan",
     )
 
     @property
@@ -121,7 +142,8 @@ class CandidateProcess(Base):
             return 0.0
 
         completed_executions = [
-            execution for execution in self.executions
+            execution
+            for execution in self.executions
             if execution.status == "completed"
         ]
 
@@ -143,7 +165,12 @@ class CandidateProcess(Base):
         self.current_node_id = first_node_id
         self.started_at = datetime.utcnow()
 
-    def complete(self, final_result: str, overall_score: float | None = None, notes: str | None = None) -> None:
+    def complete(
+        self,
+        final_result: str,
+        overall_score: float | None = None,
+        notes: str | None = None,
+    ) -> None:
         """Mark the process as completed"""
         self.status = "completed"
         self.completed_at = datetime.utcnow()
@@ -155,7 +182,9 @@ class CandidateProcess(Base):
         if notes:
             self.notes = notes
 
-    def fail(self, reason: str | None = None, failed_at_node_id: int | None = None) -> None:
+    def fail(
+        self, reason: str | None = None, failed_at_node_id: int | None = None
+    ) -> None:
         """Mark the process as failed"""
         self.status = "failed"
         self.failed_at = datetime.utcnow()

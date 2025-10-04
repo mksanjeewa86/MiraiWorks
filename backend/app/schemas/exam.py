@@ -111,6 +111,7 @@ class ExamQuestionInfo(ExamQuestionBase):
 
 class ExamQuestionPublic(BaseModel):
     """Public version of question (for candidates taking exam)"""
+
     id: int
     question_text: str
     question_type: QuestionType
@@ -260,14 +261,18 @@ class ExamMonitoringEventInfo(BaseModel):
 
 class ExamResultSummary(BaseModel):
     """Summary of exam results for display"""
+
     session: ExamSessionInfo
     answers: list[ExamAnswerInfo]
-    questions: list[ExamQuestionInfo] | None = None  # Include if showing correct answers
+    questions: list[
+        ExamQuestionInfo
+    ] | None = None  # Include if showing correct answers
     monitoring_events: list[ExamMonitoringEventInfo] | None = None
 
 
 class ExamStatistics(BaseModel):
     """Statistics for an exam"""
+
     exam_id: int
     total_assigned: int
     total_started: int
@@ -297,6 +302,7 @@ class ExamSessionListResponse(BaseModel):
 
 class ExamTakeRequest(BaseModel):
     """Request to start taking an exam"""
+
     exam_id: int
     assignment_id: Optional[int] = None
     test_mode: bool = False
@@ -306,6 +312,7 @@ class ExamTakeRequest(BaseModel):
 
 class ExamTakeResponse(BaseModel):
     """Response when starting exam"""
+
     session: ExamSessionInfo
     questions: list[ExamQuestionPublic]
     current_question: Optional[ExamQuestionPublic] = None
@@ -315,6 +322,7 @@ class ExamTakeResponse(BaseModel):
 
 class FaceVerificationSubmit(BaseModel):
     """Face verification data submission"""
+
     session_id: int
     image_data: str  # Base64 encoded image
     timestamp: datetime
@@ -323,6 +331,7 @@ class FaceVerificationSubmit(BaseModel):
 
 class FaceVerificationResponse(BaseModel):
     """Face verification result"""
+
     verified: bool
     confidence_score: float
     message: str

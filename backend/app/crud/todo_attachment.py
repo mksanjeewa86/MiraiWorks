@@ -9,7 +9,9 @@ from app.schemas.todo_attachment import TodoAttachmentCreate, TodoAttachmentUpda
 from app.services.file_storage_service import file_storage_service
 
 
-class CRUDTodoAttachment(CRUDBase[TodoAttachment, TodoAttachmentCreate, TodoAttachmentUpdate]):
+class CRUDTodoAttachment(
+    CRUDBase[TodoAttachment, TodoAttachmentCreate, TodoAttachmentUpdate]
+):
     """CRUD operations for todo attachments."""
 
     async def create_attachment(
@@ -17,7 +19,7 @@ class CRUDTodoAttachment(CRUDBase[TodoAttachment, TodoAttachmentCreate, TodoAtta
         db: AsyncSession,
         *,
         attachment_data: TodoAttachmentCreate,
-        uploader_id: int | None = None
+        uploader_id: int | None = None,
     ) -> TodoAttachment:
         """Create a new todo attachment."""
         db_obj = TodoAttachment(
@@ -38,12 +40,7 @@ class CRUDTodoAttachment(CRUDBase[TodoAttachment, TodoAttachmentCreate, TodoAtta
         return db_obj
 
     async def get_todo_attachments(
-        self,
-        db: AsyncSession,
-        *,
-        todo_id: int,
-        skip: int = 0,
-        limit: int = 100
+        self, db: AsyncSession, *, todo_id: int, skip: int = 0, limit: int = 100
     ) -> list[TodoAttachment]:
         """Get all attachments for a specific todo."""
         query = (
@@ -57,11 +54,7 @@ class CRUDTodoAttachment(CRUDBase[TodoAttachment, TodoAttachmentCreate, TodoAtta
         return result.scalars().all()
 
     async def get_attachment_by_id(
-        self,
-        db: AsyncSession,
-        *,
-        attachment_id: int,
-        todo_id: int | None = None
+        self, db: AsyncSession, *, attachment_id: int, todo_id: int | None = None
     ) -> TodoAttachment | None:
         """Get attachment by ID, optionally filtered by todo_id."""
         conditions = [TodoAttachment.id == attachment_id]
@@ -73,12 +66,7 @@ class CRUDTodoAttachment(CRUDBase[TodoAttachment, TodoAttachmentCreate, TodoAtta
         return result.scalar_one_or_none()
 
     async def get_attachments_by_user(
-        self,
-        db: AsyncSession,
-        *,
-        user_id: int,
-        skip: int = 0,
-        limit: int = 100
+        self, db: AsyncSession, *, user_id: int, skip: int = 0, limit: int = 100
     ) -> list[TodoAttachment]:
         """Get all attachments uploaded by a specific user."""
         query = (
@@ -98,7 +86,7 @@ class CRUDTodoAttachment(CRUDBase[TodoAttachment, TodoAttachmentCreate, TodoAtta
         mime_type_pattern: str,
         todo_id: int | None = None,
         skip: int = 0,
-        limit: int = 100
+        limit: int = 100,
     ) -> list[TodoAttachment]:
         """Get attachments by MIME type pattern (e.g., 'image/%', 'application/pdf')."""
         conditions = [TodoAttachment.mime_type.like(mime_type_pattern)]
@@ -121,7 +109,7 @@ class CRUDTodoAttachment(CRUDBase[TodoAttachment, TodoAttachmentCreate, TodoAtta
         *,
         attachment_id: int,
         description: str | None,
-        user_id: int | None = None
+        user_id: int | None = None,
     ) -> TodoAttachment | None:
         """Update attachment description."""
         conditions = [TodoAttachment.id == attachment_id]
@@ -145,7 +133,7 @@ class CRUDTodoAttachment(CRUDBase[TodoAttachment, TodoAttachmentCreate, TodoAtta
         *,
         attachment_id: int,
         todo_id: int | None = None,
-        cleanup_file: bool = True
+        cleanup_file: bool = True,
     ) -> bool:
         """Delete an attachment and optionally its file."""
         conditions = [TodoAttachment.id == attachment_id]
@@ -178,7 +166,7 @@ class CRUDTodoAttachment(CRUDBase[TodoAttachment, TodoAttachmentCreate, TodoAtta
         *,
         attachment_ids: list[int],
         todo_id: int | None = None,
-        cleanup_files: bool = True
+        cleanup_files: bool = True,
     ) -> dict[str, Any]:
         """Delete multiple attachments in bulk."""
         conditions = [TodoAttachment.id.in_(attachment_ids)]
@@ -199,11 +187,13 @@ class CRUDTodoAttachment(CRUDBase[TodoAttachment, TodoAttachmentCreate, TodoAtta
                 await db.delete(attachment)
                 deleted_count += 1
             except Exception as e:
-                failed_deletions.append({
-                    "attachment_id": attachment.id,
-                    "filename": attachment.original_filename,
-                    "error": str(e)
-                })
+                failed_deletions.append(
+                    {
+                        "attachment_id": attachment.id,
+                        "filename": attachment.original_filename,
+                        "error": str(e),
+                    }
+                )
 
         await db.commit()
 
@@ -215,7 +205,7 @@ class CRUDTodoAttachment(CRUDBase[TodoAttachment, TodoAttachmentCreate, TodoAtta
         return {
             "deleted_count": deleted_count,
             "failed_deletions": failed_deletions,
-            "cleaned_files": len(file_paths) if cleanup_files else 0
+            "cleaned_files": len(file_paths) if cleanup_files else 0,
         }
 
     async def get_attachment_stats(
@@ -223,7 +213,7 @@ class CRUDTodoAttachment(CRUDBase[TodoAttachment, TodoAttachmentCreate, TodoAtta
         db: AsyncSession,
         *,
         todo_id: int | None = None,
-        user_id: int | None = None
+        user_id: int | None = None,
     ) -> dict[str, Any]:
         """Get statistics about attachments."""
         conditions = []
@@ -237,7 +227,9 @@ class CRUDTodoAttachment(CRUDBase[TodoAttachment, TodoAttachmentCreate, TodoAtta
             base_query = base_query.where(and_(*conditions))
 
         # Get total count and size
-        count_query = select(func.count(TodoAttachment.id), func.sum(TodoAttachment.file_size))
+        count_query = select(
+            func.count(TodoAttachment.id), func.sum(TodoAttachment.file_size)
+        )
         if conditions:
             count_query = count_query.where(and_(*conditions))
         count_result = await db.execute(count_query)
@@ -248,8 +240,8 @@ class CRUDTodoAttachment(CRUDBase[TodoAttachment, TodoAttachmentCreate, TodoAtta
         # Get file type distribution
         type_query = select(
             TodoAttachment.mime_type,
-            func.count(TodoAttachment.id).label('count'),
-            func.sum(TodoAttachment.file_size).label('size')
+            func.count(TodoAttachment.id).label("count"),
+            func.sum(TodoAttachment.file_size).label("size"),
         )
         if conditions:
             type_query = type_query.where(and_(*conditions))
@@ -280,35 +272,34 @@ class CRUDTodoAttachment(CRUDBase[TodoAttachment, TodoAttachmentCreate, TodoAtta
             "total_size_mb": total_size / (1024 * 1024) if total_size else 0,
             "file_type_stats": file_type_stats,
             "largest_file": largest_file,
-            "recent_attachments": recent_attachments
+            "recent_attachments": recent_attachments,
         }
 
     def _get_file_category_from_mime(self, mime_type: str) -> str:
         """Get file category from MIME type."""
-        if mime_type.startswith('image/'):
-            return 'image'
-        elif mime_type.startswith('video/'):
-            return 'video'
-        elif mime_type.startswith('audio/'):
-            return 'audio'
+        if mime_type.startswith("image/"):
+            return "image"
+        elif mime_type.startswith("video/"):
+            return "video"
+        elif mime_type.startswith("audio/"):
+            return "audio"
         elif mime_type in {
-            'application/pdf', 'application/msword',
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'application/vnd.ms-excel',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'application/vnd.ms-powerpoint',
-            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-            'text/plain', 'text/csv'
+            "application/pdf",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/vnd.ms-excel",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/vnd.ms-powerpoint",
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            "text/plain",
+            "text/csv",
         }:
-            return 'document'
+            return "document"
         else:
-            return 'other'
+            return "other"
 
     async def get_todo_attachment_summary(
-        self,
-        db: AsyncSession,
-        *,
-        todo_id: int
+        self, db: AsyncSession, *, todo_id: int
     ) -> dict[str, Any]:
         """Get a summary of attachments for a todo."""
         attachments = await self.get_todo_attachments(db, todo_id=todo_id)
@@ -324,13 +315,10 @@ class CRUDTodoAttachment(CRUDBase[TodoAttachment, TodoAttachmentCreate, TodoAtta
             "total_count": len(attachments),
             "total_size_mb": total_size / (1024 * 1024),
             "file_type_counts": file_type_counts,
-            "attachments": attachments
+            "attachments": attachments,
         }
 
-    async def cleanup_orphaned_attachments(
-        self,
-        db: AsyncSession
-    ) -> dict[str, Any]:
+    async def cleanup_orphaned_attachments(self, db: AsyncSession) -> dict[str, Any]:
         """Clean up attachment records for which the physical file no longer exists."""
         query = select(TodoAttachment)
         result = await db.execute(query)
@@ -359,7 +347,7 @@ class CRUDTodoAttachment(CRUDBase[TodoAttachment, TodoAttachmentCreate, TodoAtta
         return {
             "deleted_db_records": deleted_count,
             "orphaned_records": [att.id for att in orphaned_records],
-            "file_cleanup": cleanup_result
+            "file_cleanup": cleanup_result,
         }
 
 

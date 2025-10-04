@@ -26,7 +26,7 @@ class CRUDTodoExtensionRequest(CRUDBase[TodoExtensionRequest, dict, dict]):
         *,
         todo: Todo,
         request_data: TodoExtensionRequestCreate,
-        requested_by_id: int
+        requested_by_id: int,
     ) -> TodoExtensionRequest:
         """Create a new extension request."""
         extension_request = TodoExtensionRequest(
@@ -36,7 +36,7 @@ class CRUDTodoExtensionRequest(CRUDBase[TodoExtensionRequest, dict, dict]):
             current_due_date=todo.due_date,
             requested_due_date=request_data.requested_due_date,
             reason=request_data.reason,
-            status=ExtensionRequestStatus.PENDING.value
+            status=ExtensionRequestStatus.PENDING.value,
         )
 
         db.add(extension_request)
@@ -44,10 +44,7 @@ class CRUDTodoExtensionRequest(CRUDBase[TodoExtensionRequest, dict, dict]):
         await db.refresh(extension_request)
 
         # Load relationships
-        await db.refresh(
-            extension_request,
-            ["requested_by", "creator", "todo"]
-        )
+        await db.refresh(extension_request, ["requested_by", "creator", "todo"])
 
         return extension_request
 
@@ -57,7 +54,7 @@ class CRUDTodoExtensionRequest(CRUDBase[TodoExtensionRequest, dict, dict]):
         *,
         request_obj: TodoExtensionRequest,
         response_data: TodoExtensionRequestResponse,
-        responded_by_id: int
+        responded_by_id: int,
     ) -> TodoExtensionRequest:
         """Respond to an extension request."""
         request_obj.status = response_data.status.value
@@ -77,17 +74,13 @@ class CRUDTodoExtensionRequest(CRUDBase[TodoExtensionRequest, dict, dict]):
 
         # Load relationships
         await db.refresh(
-            request_obj,
-            ["requested_by", "creator", "responded_by", "todo"]
+            request_obj, ["requested_by", "creator", "responded_by", "todo"]
         )
 
         return request_obj
 
     async def get_by_id_with_relationships(
-        self,
-        db: AsyncSession,
-        *,
-        request_id: int
+        self, db: AsyncSession, *, request_id: int
     ) -> TodoExtensionRequest | None:
         """Get extension request by ID with all relationships loaded."""
         query = (
@@ -96,7 +89,7 @@ class CRUDTodoExtensionRequest(CRUDBase[TodoExtensionRequest, dict, dict]):
                 selectinload(TodoExtensionRequest.requested_by),
                 selectinload(TodoExtensionRequest.creator),
                 selectinload(TodoExtensionRequest.responded_by),
-                selectinload(TodoExtensionRequest.todo)
+                selectinload(TodoExtensionRequest.todo),
             )
             .where(TodoExtensionRequest.id == request_id)
         )
@@ -111,7 +104,7 @@ class CRUDTodoExtensionRequest(CRUDBase[TodoExtensionRequest, dict, dict]):
         creator_id: int,
         status_filter: ExtensionRequestStatus | None = None,
         limit: int = 100,
-        offset: int = 0
+        offset: int = 0,
     ) -> tuple[list[TodoExtensionRequest], int]:
         """List extension requests for a creator to review."""
         base_query = (
@@ -120,27 +113,34 @@ class CRUDTodoExtensionRequest(CRUDBase[TodoExtensionRequest, dict, dict]):
                 selectinload(TodoExtensionRequest.requested_by),
                 selectinload(TodoExtensionRequest.creator),
                 selectinload(TodoExtensionRequest.responded_by),
-                selectinload(TodoExtensionRequest.todo)
+                selectinload(TodoExtensionRequest.todo),
             )
             .where(TodoExtensionRequest.creator_id == creator_id)
         )
 
         if status_filter:
-            base_query = base_query.where(TodoExtensionRequest.status == status_filter.value)
+            base_query = base_query.where(
+                TodoExtensionRequest.status == status_filter.value
+            )
 
         # Get total count
-        count_query = (
-            select(func.count(TodoExtensionRequest.id))
-            .where(TodoExtensionRequest.creator_id == creator_id)
+        count_query = select(func.count(TodoExtensionRequest.id)).where(
+            TodoExtensionRequest.creator_id == creator_id
         )
         if status_filter:
-            count_query = count_query.where(TodoExtensionRequest.status == status_filter.value)
+            count_query = count_query.where(
+                TodoExtensionRequest.status == status_filter.value
+            )
 
         total_result = await db.execute(count_query)
         total = total_result.scalar()
 
         # Get paginated results
-        query = base_query.order_by(TodoExtensionRequest.created_at.desc()).limit(limit).offset(offset)
+        query = (
+            base_query.order_by(TodoExtensionRequest.created_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
         result = await db.execute(query)
         requests = result.scalars().all()
 
@@ -153,7 +153,7 @@ class CRUDTodoExtensionRequest(CRUDBase[TodoExtensionRequest, dict, dict]):
         requester_id: int,
         status_filter: ExtensionRequestStatus | None = None,
         limit: int = 100,
-        offset: int = 0
+        offset: int = 0,
     ) -> tuple[list[TodoExtensionRequest], int]:
         """List extension requests made by a user."""
         base_query = (
@@ -162,48 +162,48 @@ class CRUDTodoExtensionRequest(CRUDBase[TodoExtensionRequest, dict, dict]):
                 selectinload(TodoExtensionRequest.requested_by),
                 selectinload(TodoExtensionRequest.creator),
                 selectinload(TodoExtensionRequest.responded_by),
-                selectinload(TodoExtensionRequest.todo)
+                selectinload(TodoExtensionRequest.todo),
             )
             .where(TodoExtensionRequest.requested_by_id == requester_id)
         )
 
         if status_filter:
-            base_query = base_query.where(TodoExtensionRequest.status == status_filter.value)
+            base_query = base_query.where(
+                TodoExtensionRequest.status == status_filter.value
+            )
 
         # Get total count
-        count_query = (
-            select(func.count(TodoExtensionRequest.id))
-            .where(TodoExtensionRequest.requested_by_id == requester_id)
+        count_query = select(func.count(TodoExtensionRequest.id)).where(
+            TodoExtensionRequest.requested_by_id == requester_id
         )
         if status_filter:
-            count_query = count_query.where(TodoExtensionRequest.status == status_filter.value)
+            count_query = count_query.where(
+                TodoExtensionRequest.status == status_filter.value
+            )
 
         total_result = await db.execute(count_query)
         total = total_result.scalar()
 
         # Get paginated results
-        query = base_query.order_by(TodoExtensionRequest.created_at.desc()).limit(limit).offset(offset)
+        query = (
+            base_query.order_by(TodoExtensionRequest.created_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
         result = await db.execute(query)
         requests = result.scalars().all()
 
         return list(requests), total
 
     async def get_pending_request_for_todo(
-        self,
-        db: AsyncSession,
-        *,
-        todo_id: int,
-        requested_by_id: int
+        self, db: AsyncSession, *, todo_id: int, requested_by_id: int
     ) -> TodoExtensionRequest | None:
         """Check if there's already a pending extension request for this todo by this user."""
-        query = (
-            select(TodoExtensionRequest)
-            .where(
-                and_(
-                    TodoExtensionRequest.todo_id == todo_id,
-                    TodoExtensionRequest.requested_by_id == requested_by_id,
-                    TodoExtensionRequest.status == ExtensionRequestStatus.PENDING.value
-                )
+        query = select(TodoExtensionRequest).where(
+            and_(
+                TodoExtensionRequest.todo_id == todo_id,
+                TodoExtensionRequest.requested_by_id == requested_by_id,
+                TodoExtensionRequest.status == ExtensionRequestStatus.PENDING.value,
             )
         )
 
@@ -216,36 +216,33 @@ class CRUDTodoExtensionRequest(CRUDBase[TodoExtensionRequest, dict, dict]):
         *,
         todo: Todo,
         requested_by_id: int,
-        requested_due_date: datetime
+        requested_due_date: datetime,
     ) -> TodoExtensionValidation:
         """Validate if an extension request can be made."""
 
         # Check if todo has a due date
         if not todo.due_date:
             return TodoExtensionValidation(
-                can_request_extension=False,
-                reason="Todo has no due date set"
+                can_request_extension=False, reason="Todo has no due date set"
             )
 
         # Check if todo is completed
         if todo.status == TodoStatus.COMPLETED.value:
             return TodoExtensionValidation(
-                can_request_extension=False,
-                reason="Cannot extend completed todo"
+                can_request_extension=False, reason="Cannot extend completed todo"
             )
 
         # Check if todo is deleted
         if todo.is_deleted:
             return TodoExtensionValidation(
-                can_request_extension=False,
-                reason="Cannot extend deleted todo"
+                can_request_extension=False, reason="Cannot extend deleted todo"
             )
 
         # Check if user is the assigned user
         if todo.assigned_user_id != requested_by_id:
             return TodoExtensionValidation(
                 can_request_extension=False,
-                reason="Only assigned user can request extension"
+                reason="Only assigned user can request extension",
             )
 
         # Check if there's already a pending request
@@ -255,7 +252,7 @@ class CRUDTodoExtensionRequest(CRUDBase[TodoExtensionRequest, dict, dict]):
         if existing_request:
             return TodoExtensionValidation(
                 can_request_extension=False,
-                reason="There is already a pending extension request"
+                reason="There is already a pending extension request",
             )
 
         # Check if requested date is within allowed range (3 days max)
@@ -264,39 +261,35 @@ class CRUDTodoExtensionRequest(CRUDBase[TodoExtensionRequest, dict, dict]):
             return TodoExtensionValidation(
                 can_request_extension=False,
                 max_allowed_due_date=max_allowed_date,
-                reason="Extension cannot exceed 3 days from current due date"
+                reason="Extension cannot exceed 3 days from current due date",
             )
 
         # Check if requested date is not in the past
         if requested_due_date <= datetime.utcnow():
             return TodoExtensionValidation(
                 can_request_extension=False,
-                reason="Extension date cannot be in the past"
+                reason="Extension date cannot be in the past",
             )
 
         # Check if requested date is after current due date
         if requested_due_date <= todo.due_date:
             return TodoExtensionValidation(
                 can_request_extension=False,
-                reason="Extension date must be after current due date"
+                reason="Extension date must be after current due date",
             )
 
         return TodoExtensionValidation(
-            can_request_extension=True,
-            max_allowed_due_date=max_allowed_date
+            can_request_extension=True, max_allowed_due_date=max_allowed_date
         )
 
     async def get_statistics_for_creator(
-        self,
-        db: AsyncSession,
-        *,
-        creator_id: int
+        self, db: AsyncSession, *, creator_id: int
     ) -> dict:
         """Get extension request statistics for a creator."""
         query = (
             select(
                 TodoExtensionRequest.status,
-                func.count(TodoExtensionRequest.id).label('count')
+                func.count(TodoExtensionRequest.id).label("count"),
             )
             .where(TodoExtensionRequest.creator_id == creator_id)
             .group_by(TodoExtensionRequest.status)
@@ -306,10 +299,10 @@ class CRUDTodoExtensionRequest(CRUDBase[TodoExtensionRequest, dict, dict]):
         stats = {row.status: row.count for row in result}
 
         return {
-            'total': sum(stats.values()),
-            'pending': stats.get(ExtensionRequestStatus.PENDING.value, 0),
-            'approved': stats.get(ExtensionRequestStatus.APPROVED.value, 0),
-            'rejected': stats.get(ExtensionRequestStatus.REJECTED.value, 0)
+            "total": sum(stats.values()),
+            "pending": stats.get(ExtensionRequestStatus.PENDING.value, 0),
+            "approved": stats.get(ExtensionRequestStatus.APPROVED.value, 0),
+            "rejected": stats.get(ExtensionRequestStatus.REJECTED.value, 0),
         }
 
 

@@ -1,4 +1,3 @@
-
 import pytest
 
 
@@ -6,22 +5,19 @@ class TestRecruitmentWorkflowScenarios:
     """End-to-end scenario tests for recruitment workflows"""
 
     @pytest.mark.asyncio
-    async def test_complete_recruitment_workflow_success_path(self, client, auth_headers):
+    async def test_complete_recruitment_workflow_success_path(
+        self, client, auth_headers
+    ):
         """Test complete successful recruitment workflow from start to finish"""
         # Step 1: Employer creates a recruitment process
         process_data = {
             "name": "Senior Software Engineer - Technical Track",
             "description": "Complete technical assessment process for senior engineers",
-            "settings": {
-                "category": "engineering",
-                "seniority": "senior"
-            }
+            "settings": {"category": "engineering", "seniority": "senior"},
         }
 
         response = await client.post(
-            "/api/recruitment-processes/",
-            json=process_data,
-            headers=auth_headers
+            "/api/recruitment-processes/", json=process_data, headers=auth_headers
         )
         assert response.status_code == 201
         process = response.json()
@@ -38,9 +34,9 @@ class TestRecruitmentWorkflowScenarios:
                 "config": {
                     "interview_type": "video",
                     "duration_minutes": 30,
-                    "interviewers": [10]
+                    "interviewers": [10],
                 },
-                "is_required": True
+                "is_required": True,
             },
             {
                 "node_type": "todo",
@@ -52,9 +48,9 @@ class TestRecruitmentWorkflowScenarios:
                     "todo_type": "assignment",
                     "submission_type": "file",
                     "due_in_days": 7,
-                    "file_size_limit_mb": 10
+                    "file_size_limit_mb": 10,
                 },
-                "is_required": True
+                "is_required": True,
             },
             {
                 "node_type": "interview",
@@ -65,10 +61,10 @@ class TestRecruitmentWorkflowScenarios:
                 "config": {
                     "interview_type": "video",
                     "duration_minutes": 60,
-                    "interviewers": [11, 12]
+                    "interviewers": [11, 12],
                 },
-                "is_required": True
-            }
+                "is_required": True,
+            },
         ]
 
         # Create each node
@@ -77,7 +73,7 @@ class TestRecruitmentWorkflowScenarios:
             response = await client.post(
                 f"/api/recruitment-processes/{process_id}/nodes",
                 json=node_data,
-                headers=auth_headers
+                headers=auth_headers,
             )
             assert response.status_code == 201
             created_nodes.append(response.json())
@@ -87,7 +83,7 @@ class TestRecruitmentWorkflowScenarios:
         response = await client.post(
             f"/api/recruitment-processes/{process_id}/activate",
             json=activation_data,
-            headers=auth_headers
+            headers=auth_headers,
         )
         assert response.status_code == 200
 
@@ -96,13 +92,13 @@ class TestRecruitmentWorkflowScenarios:
             "candidate_id": 100,
             "recruitment_process_id": process_id,
             "position_id": 1,
-            "initial_stage": "hr_screening"
+            "initial_stage": "hr_screening",
         }
 
         response = await client.post(
             "/api/recruitment-workflows/candidate-processes",
             json=candidate_data,
-            headers=auth_headers
+            headers=auth_headers,
         )
         assert response.status_code == 201
         candidate_process = response.json()
@@ -117,21 +113,21 @@ class TestRecruitmentWorkflowScenarios:
             "feedback": "Candidate shows strong communication skills",
             "execution_data": {
                 "interview_duration_minutes": 25,
-                "interviewer_notes": "Positive impression"
-            }
+                "interviewer_notes": "Positive impression",
+            },
         }
 
         response = await client.put(
             f"/api/recruitment-workflows/candidate-processes/{candidate_process_id}/advance",
             json=completion_data,
-            headers=auth_headers
+            headers=auth_headers,
         )
         assert response.status_code == 200
 
         # Verify candidate advanced to next stage
         response = await client.get(
             f"/api/recruitment-workflows/candidate-processes/{candidate_process_id}",
-            headers=auth_headers
+            headers=auth_headers,
         )
         assert response.status_code == 200
         updated_process = response.json()
@@ -144,14 +140,14 @@ class TestRecruitmentWorkflowScenarios:
             "feedback": "Excellent code quality and problem-solving approach",
             "execution_data": {
                 "submission_url": "https://github.com/candidate/assignment",
-                "completion_time_hours": 48
-            }
+                "completion_time_hours": 48,
+            },
         }
 
         response = await client.put(
             f"/api/recruitment-workflows/candidate-processes/{candidate_process_id}/advance",
             json=assignment_completion,
-            headers=auth_headers
+            headers=auth_headers,
         )
         assert response.status_code == 200
 
@@ -163,21 +159,21 @@ class TestRecruitmentWorkflowScenarios:
             "execution_data": {
                 "interview_duration_minutes": 65,
                 "technical_score": 90,
-                "cultural_fit_score": 85
-            }
+                "cultural_fit_score": 85,
+            },
         }
 
         response = await client.put(
             f"/api/recruitment-workflows/candidate-processes/{candidate_process_id}/advance",
             json=tech_interview_completion,
-            headers=auth_headers
+            headers=auth_headers,
         )
         assert response.status_code == 200
 
         # Step 6: Verify final process state
         response = await client.get(
             f"/api/recruitment-workflows/candidate-processes/{candidate_process_id}",
-            headers=auth_headers
+            headers=auth_headers,
         )
         assert response.status_code == 200
         final_process = response.json()
@@ -188,8 +184,7 @@ class TestRecruitmentWorkflowScenarios:
 
         # Step 7: Verify process analytics
         response = await client.get(
-            f"/api/recruitment-processes/{process_id}/analytics",
-            headers=auth_headers
+            f"/api/recruitment-processes/{process_id}/analytics", headers=auth_headers
         )
         assert response.status_code == 200
         analytics = response.json()

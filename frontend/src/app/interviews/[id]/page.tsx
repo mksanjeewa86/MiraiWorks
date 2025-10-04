@@ -26,6 +26,7 @@ import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { useToast } from '@/contexts/ToastContext';
 import { interviewsApi } from '@/api/interviews';
 import { apiClient } from '@/api/apiClient';
+import { API_ENDPOINTS } from '@/api/config';
 import InterviewNotes from '@/components/interview/InterviewNotes';
 import type { Interview } from '@/types/interview';
 import type { VideoCall } from '@/types/video';
@@ -109,7 +110,7 @@ function InterviewDetailsContent() {
           try {
             // Try to get existing video call
             const videoCallResponse = await apiClient.get<VideoCall>(
-              `/api/interviews/${interviewId}/video-call`
+              API_ENDPOINTS.INTERVIEWS.VIDEO_CALL(interviewId)
             );
             setVideoCall(videoCallResponse.data);
           } catch (videoCallError: unknown) {
@@ -133,7 +134,7 @@ function InterviewDetailsContent() {
               console.log('Creating video call with data:', videoCallData);
 
               const newVideoCall = await apiClient.post<VideoCall>(
-                `/api/interviews/${interviewId}/video-call`,
+                API_ENDPOINTS.INTERVIEWS.VIDEO_CALL(interviewId),
                 videoCallData
               );
               setVideoCall(newVideoCall.data);

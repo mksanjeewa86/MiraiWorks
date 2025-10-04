@@ -1,6 +1,7 @@
 import json
 import logging
 
+from app.config.endpoints import API_ROUTES
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,6 +13,7 @@ from app.database import get_db
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
 
 # Connection manager for video call rooms
 class VideoCallConnectionManager:
@@ -34,11 +36,11 @@ class VideoCallConnectionManager:
         logger.info(f"User {user_id} connected to video call room {room_id}")
 
         # Notify other participants that a new user joined
-        await self.broadcast_to_room(room_id, {
-            "type": "user_joined",
-            "user_id": user_id,
-            "room_id": room_id
-        }, exclude_user=user_id)
+        await self.broadcast_to_room(
+            room_id,
+            {"type": "user_joined", "user_id": user_id, "room_id": room_id},
+            exclude_user=user_id,
+        )
 
     async def disconnect(self, user_id: int):
         """Disconnect a user from their video call room."""
@@ -46,7 +48,10 @@ class VideoCallConnectionManager:
             room_id = self.user_rooms[user_id]
 
             # Remove from active connections
-            if room_id in self.active_connections and user_id in self.active_connections[room_id]:
+            if (
+                room_id in self.active_connections
+                and user_id in self.active_connections[room_id]
+            ):
                 del self.active_connections[room_id][user_id]
 
                 # Clean up empty rooms
@@ -58,24 +63,29 @@ class VideoCallConnectionManager:
             logger.info(f"User {user_id} disconnected from video call room {room_id}")
 
             # Notify other participants that user left
-            await self.broadcast_to_room(room_id, {
-                "type": "user_left",
-                "user_id": user_id,
-                "room_id": room_id
-            }, exclude_user=user_id)
+            await self.broadcast_to_room(
+                room_id,
+                {"type": "user_left", "user_id": user_id, "room_id": room_id},
+                exclude_user=user_id,
+            )
 
     async def send_personal_message(self, message: dict, user_id: int):
         """Send a message to a specific user."""
         if user_id in self.user_rooms:
             room_id = self.user_rooms[user_id]
-            if room_id in self.active_connections and user_id in self.active_connections[room_id]:
+            if (
+                room_id in self.active_connections
+                and user_id in self.active_connections[room_id]
+            ):
                 websocket = self.active_connections[room_id][user_id]
                 try:
                     await websocket.send_text(json.dumps(message))
                 except Exception as e:
                     logger.error(f"Failed to send message to user {user_id}: {e}")
 
-    async def broadcast_to_room(self, room_id: str, message: dict, exclude_user: int = None):
+    async def broadcast_to_room(
+        self, room_id: str, message: dict, exclude_user: int = None
+    ):
         """Broadcast a message to all users in a room."""
         if room_id in self.active_connections:
             for user_id, websocket in self.active_connections[room_id].items():
@@ -84,35 +94,35 @@ class VideoCallConnectionManager:
                 try:
                     await websocket.send_text(json.dumps(message))
                 except Exception as e:
-                    logger.error(f"Failed to broadcast to user {user_id} in room {room_id}: {e}")
+                    logger.error(
+                        f"Failed to broadcast to user {user_id} in room {room_id}: {e}"
+                    )
 
-    async def forward_signaling_message(self, room_id: str, sender_id: int, message: dict):
+    async def forward_signaling_message(
+        self, room_id: str, sender_id: int, message: dict
+    ):
         """Forward WebRTC signaling messages between participants."""
         target_user_id = message.get("target_user_id")
 
         if target_user_id:
             # Send to specific user
-            await self.send_personal_message({
-                **message,
-                "sender_id": sender_id
-            }, target_user_id)
+            await self.send_personal_message(
+                {**message, "sender_id": sender_id}, target_user_id
+            )
         else:
             # Broadcast to all other users in room
-            await self.broadcast_to_room(room_id, {
-                **message,
-                "sender_id": sender_id
-            }, exclude_user=sender_id)
+            await self.broadcast_to_room(
+                room_id, {**message, "sender_id": sender_id}, exclude_user=sender_id
+            )
 
 
 # Global connection manager instance
 manager = VideoCallConnectionManager()
 
 
-@router.websocket("/ws/video/{room_id}")
+@router.websocket(API_ROUTES.WEBSOCKET_VIDEO.WS_VIDEO)
 async def websocket_video_endpoint(
-    websocket: WebSocket,
-    room_id: str,
-    db: AsyncSession = Depends(get_db)
+    websocket: WebSocket, room_id: str, db: AsyncSession = Depends(get_db)
 ):
     """WebSocket endpoint for video call signaling."""
     user_id = None
@@ -145,12 +155,15 @@ async def websocket_video_endpoint(
 
         # Send initial room state
         room_participants = list(manager.active_connections.get(room_id, {}).keys())
-        await manager.send_personal_message({
-            "type": "room_state",
-            "room_id": room_id,
-            "participants": room_participants,
-            "your_user_id": user_id
-        }, user_id)
+        await manager.send_personal_message(
+            {
+                "type": "room_state",
+                "room_id": room_id,
+                "participants": room_participants,
+                "your_user_id": user_id,
+            },
+            user_id,
+        )
 
         # Handle incoming messages
         while True:
@@ -167,22 +180,30 @@ async def websocket_video_endpoint(
 
                 elif message_type == "chat_message":
                     # Forward chat messages
-                    await manager.broadcast_to_room(room_id, {
-                        "type": "chat_message",
-                        "sender_id": user_id,
-                        "message": message.get("message", ""),
-                        "timestamp": message.get("timestamp")
-                    }, exclude_user=user_id)
+                    await manager.broadcast_to_room(
+                        room_id,
+                        {
+                            "type": "chat_message",
+                            "sender_id": user_id,
+                            "message": message.get("message", ""),
+                            "timestamp": message.get("timestamp"),
+                        },
+                        exclude_user=user_id,
+                    )
 
                 elif message_type == "media_state":
                     # Forward media state changes (mute/unmute, video on/off)
-                    await manager.broadcast_to_room(room_id, {
-                        "type": "participant_media_state",
-                        "user_id": user_id,
-                        "is_muted": message.get("is_muted"),
-                        "is_video_on": message.get("is_video_on"),
-                        "is_screen_sharing": message.get("is_screen_sharing")
-                    }, exclude_user=user_id)
+                    await manager.broadcast_to_room(
+                        room_id,
+                        {
+                            "type": "participant_media_state",
+                            "user_id": user_id,
+                            "is_muted": message.get("is_muted"),
+                            "is_video_on": message.get("is_video_on"),
+                            "is_screen_sharing": message.get("is_screen_sharing"),
+                        },
+                        exclude_user=user_id,
+                    )
 
                 else:
                     logger.warning(f"Unknown message type: {message_type}")

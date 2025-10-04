@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui';
 import { LoadingSpinner } from '@/components/ui';
 import { userSettingsApi } from '@/api/userSettings';
 import { UserProfile, UserProfileUpdate } from '@/types';
+import { API_ENDPOINTS } from '@/api/config';
 import {
   Edit,
   MapPin,
@@ -233,7 +234,7 @@ function ProfilePageContent() {
         file_type: string;
         s3_key: string;
         success: boolean;
-      }>('/api/files/upload', {
+      }>(API_ENDPOINTS.FILES.UPLOAD, {
         method: 'POST',
         body: formData,
         headers: {}, // Don't set Content-Type for FormData
@@ -245,7 +246,7 @@ function ProfilePageContent() {
 
         // Save avatar URL to backend
         try {
-          await makeAuthenticatedRequest('/api/user/profile', {
+          await makeAuthenticatedRequest(API_ENDPOINTS.USER.UPDATE_PROFILE, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',

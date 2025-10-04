@@ -80,6 +80,7 @@ class TestAccountActivation:
 
         # Verify database changes - use fresh query to bypass session isolation
         from app.tests.conftest import test_engine
+
         async with test_engine.begin() as conn:
             result = await conn.execute(select(User).where(User.id == user.id))
             updated_user = result.fetchone()
@@ -100,6 +101,7 @@ class TestAccountActivation:
 
         # Verify user settings were created (using direct DB query to bypass session isolation)
         from app.tests.conftest import test_engine
+
         async with test_engine.begin() as conn:
             settings_result = await conn.execute(
                 select(UserSettings).where(UserSettings.user_id == user.id)
@@ -344,9 +346,7 @@ class TestAccountActivation:
         await db_session.refresh(company)
 
         # Create company admin role
-        admin_role = Role(
-            name=UserRoleEnum.ADMIN, description="Company Administrator"
-        )
+        admin_role = Role(name=UserRoleEnum.ADMIN, description="Company Administrator")
         db_session.add(admin_role)
         await db_session.commit()
         await db_session.refresh(admin_role)
@@ -424,6 +424,7 @@ class TestAccountActivation:
 
         # Verify default phone was added - use fresh query to bypass session isolation
         from app.tests.conftest import test_engine
+
         async with test_engine.begin() as conn:
             result = await conn.execute(select(User).where(User.id == user.id))
             updated_user = result.fetchone()

@@ -53,7 +53,9 @@ class ResumeBase(BaseModel):
     custom_css: Optional[str] = None
 
     # Japanese-specific fields
-    furigana_name: Optional[str] = Field(None, max_length=100)  # phonetic name (furigana)
+    furigana_name: Optional[str] = Field(
+        None, max_length=100
+    )  # phonetic name (furigana)
     birth_date: Optional[datetime] = None  # birth date
     gender: Optional[str] = Field(None, max_length=10)  # gender
     nationality: Optional[str] = Field(None, max_length=50)  # nationality
@@ -83,10 +85,10 @@ class ResumeCreate(ResumeBase):
     status: Optional[ResumeStatus] = ResumeStatus.DRAFT
     visibility: Optional[ResumeVisibility] = ResumeVisibility.PRIVATE
 
-    @field_validator('status', mode='before')
+    @field_validator("status", mode="before")
     @classmethod
     def _validate_status(cls, value):
-        return _normalize_enum(ResumeStatus, value, 'status')
+        return _normalize_enum(ResumeStatus, value, "status")
 
 
 class ResumeUpdate(BaseModel):
@@ -121,10 +123,11 @@ class ResumeUpdate(BaseModel):
     status: Optional[ResumeStatus] = None
     visibility: Optional[ResumeVisibility] = None
 
-    @field_validator('status', mode='before')
+    @field_validator("status", mode="before")
     @classmethod
     def _validate_update_status(cls, value):
-        return _normalize_enum(ResumeStatus, value, 'status')
+        return _normalize_enum(ResumeStatus, value, "status")
+
     is_primary: Optional[bool] = None
     is_public: Optional[bool] = None
     can_download_pdf: Optional[bool] = None
@@ -523,15 +526,15 @@ class ResumeInfo(ResumeBase):
     languages: list[LanguageInfo] = []
     references: list[ReferenceInfo] = []
 
-    @field_serializer('status', when_used='json')
+    @field_serializer("status", when_used="json")
     def _serialize_status(self, status: ResumeStatus) -> str:
         return status.value.lower()
 
-    @field_serializer('resume_format', when_used='json')
+    @field_serializer("resume_format", when_used="json")
     def _serialize_resume_format(self, resume_format: ResumeFormat) -> str:
         return resume_format.value
 
-    @field_serializer('resume_language', when_used='json')
+    @field_serializer("resume_language", when_used="json")
     def _serialize_resume_language(self, resume_language: ResumeLanguage) -> str:
         return resume_language.value
 
@@ -630,6 +633,7 @@ class PDFGenerationResponse(BaseModel):
 # Japanese Resume specific schemas
 class RirekishoData(BaseModel):
     """Rirekisho (traditional Japanese resume) specific data structure"""
+
     personal_info: dict = Field(..., description="Personal information including photo")
     education_history: list[dict] = Field([], description="Educational background")
     work_history: list[dict] = Field([], description="Work experience")
@@ -642,9 +646,12 @@ class RirekishoData(BaseModel):
 
 class ShokumuKeirekishoData(BaseModel):
     """Shokumu Keirekisho (career history) specific data structure"""
+
     career_summary: str = Field(..., description="Career summary")
     detailed_experience: list[dict] = Field(..., description="Detailed work experience")
-    skills_and_expertise: dict = Field(..., description="Technical skills and expertise")
+    skills_and_expertise: dict = Field(
+        ..., description="Technical skills and expertise"
+    )
     achievements: list[str] = Field([], description="Key achievements")
     self_pr: str = Field(..., description="Self-promotion section")
 
@@ -652,6 +659,7 @@ class ShokumuKeirekishoData(BaseModel):
 # Public Resume schemas
 class PublicResumeInfo(BaseModel):
     """Public resume view (limited information)"""
+
     model_config = ConfigDict(from_attributes=True)
     id: int
     title: str
@@ -670,16 +678,18 @@ class PublicResumeInfo(BaseModel):
     educations: list[EducationInfo] = []
     skills: list[SkillInfo] = []
 
-    @field_serializer('resume_format', when_used='json')
+    @field_serializer("resume_format", when_used="json")
     def _serialize_public_format(self, resume_format: ResumeFormat) -> str:
         return resume_format.value
 
-    @field_serializer('resume_language', when_used='json')
+    @field_serializer("resume_language", when_used="json")
     def _serialize_public_language(self, resume_language: ResumeLanguage) -> str:
         return resume_language.value
 
+
 class EmailResumeRequest(BaseModel):
     """Request to send resume via email"""
+
     recipient_emails: list[str] = Field(..., min_length=1, max_length=10)
     subject: Optional[str] = Field(None, max_length=200)
     message: Optional[str] = Field(None, max_length=2000)
@@ -697,6 +707,7 @@ class EmailResumeRequest(BaseModel):
 
 class MessageAttachmentRequest(BaseModel):
     """Request to attach resume to message"""
+
     message_id: int
     include_pdf: bool = True
     auto_attach: bool = False
@@ -704,6 +715,7 @@ class MessageAttachmentRequest(BaseModel):
 
 class ResumePublicSettings(BaseModel):
     """Settings for public resume sharing"""
+
     is_public: bool
     custom_slug: Optional[str] = Field(None, max_length=100)
     show_contact_info: bool = True
@@ -715,9 +727,8 @@ class ResumePublicSettings(BaseModel):
 # Resume format templates
 class JapaneseResumeTemplate(BaseModel):
     """Template configuration for Japanese resume formats"""
+
     format_type: ResumeFormat
     sections: list[str] = Field(..., description="Required sections for this format")
     field_mappings: dict = Field(..., description="Field mappings for template")
     validation_rules: dict = Field({}, description="Format-specific validation rules")
-
-

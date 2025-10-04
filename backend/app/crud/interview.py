@@ -17,10 +17,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
     async def get(self, db: AsyncSession, id: int) -> Interview | None:
         """Get interview by id, excluding soft-deleted records."""
         result = await db.execute(
-            select(Interview).where(
-                Interview.id == id,
-                Interview.is_deleted == False
-            )
+            select(Interview).where(Interview.id == id, Interview.is_deleted == False)
         )
         return result.scalar_one_or_none()
 
@@ -43,8 +40,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
         # First get the interview
         result = await db.execute(
             select(Interview).where(
-                Interview.id == interview_id,
-                Interview.is_deleted == False
+                Interview.id == interview_id, Interview.is_deleted == False
             )
         )
         interview = result.scalar_one_or_none()
@@ -72,6 +68,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
         # Load employer company
         if interview.employer_company_id:
             from app.models.company import Company
+
             company_result = await db.execute(
                 select(Company).where(Company.id == interview.employer_company_id)
             )
@@ -86,7 +83,9 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
 
         # Load proposals (keeping selectinload as it might work better for collections)
         proposals_result = await db.execute(
-            select(InterviewProposal).where(InterviewProposal.interview_id == interview_id)
+            select(InterviewProposal).where(
+                InterviewProposal.interview_id == interview_id
+            )
         )
         interview.proposals = proposals_result.scalars().all()
 
@@ -118,7 +117,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
                     Interview.recruiter_id == user_id,
                     Interview.created_by == user_id,
                 ),
-                Interview.is_deleted == False
+                Interview.is_deleted == False,
             )
             .order_by(Interview.scheduled_start.desc())
         )
@@ -149,7 +148,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
                 Interview.recruiter_id == user_id,
                 Interview.created_by == user_id,
             ),
-            Interview.is_deleted == False
+            Interview.is_deleted == False,
         )
 
         if status_filter:
@@ -184,7 +183,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
                 Interview.status.in_(
                     [InterviewStatus.SCHEDULED, InterviewStatus.CONFIRMED]
                 ),
-                Interview.is_deleted == False
+                Interview.is_deleted == False,
             )
             .order_by(Interview.scheduled_start.asc())
             .limit(limit)
@@ -201,7 +200,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
                     Interview.recruiter_id == user_id,
                     Interview.created_by == user_id,
                 ),
-                Interview.is_deleted == False
+                Interview.is_deleted == False,
             )
         )
         total = total_result.scalar() or 0
@@ -214,7 +213,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
                     Interview.created_by == user_id,
                 ),
                 Interview.status == InterviewStatus.SCHEDULED,
-                Interview.is_deleted == False
+                Interview.is_deleted == False,
             )
         )
         scheduled = scheduled_result.scalar() or 0
@@ -227,7 +226,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
                     Interview.created_by == user_id,
                 ),
                 Interview.status == InterviewStatus.COMPLETED,
-                Interview.is_deleted == False
+                Interview.is_deleted == False,
             )
         )
         completed = completed_result.scalar() or 0
@@ -240,7 +239,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
                     Interview.created_by == user_id,
                 ),
                 Interview.status == InterviewStatus.CANCELLED,
-                Interview.is_deleted == False
+                Interview.is_deleted == False,
             )
         )
         cancelled = cancelled_result.scalar() or 0
@@ -269,7 +268,9 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
         # Total interviews
         total_result = await db.execute(
             select(func.count()).select_from(
-                select(Interview).where(base_condition, not_deleted_condition).subquery()
+                select(Interview)
+                .where(base_condition, not_deleted_condition)
+                .subquery()
             )
         )
         total_interviews = total_result.scalar()
@@ -351,7 +352,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
                         InterviewStatus.COMPLETED.value,
                     ]
                 ),
-                Interview.is_deleted == False
+                Interview.is_deleted == False,
             )
         )
 

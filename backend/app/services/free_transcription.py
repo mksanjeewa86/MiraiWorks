@@ -44,7 +44,9 @@ class FreeTranscriptionService:
                     "SpeechRecognition not available (pip install SpeechRecognition)"
                 )
         except Exception:
-            logger.info("SpeechRecognition not available (pip install SpeechRecognition)")
+            logger.info(
+                "SpeechRecognition not available (pip install SpeechRecognition)"
+            )
 
         # Check for whisper.cpp availability
         try:
@@ -55,9 +57,7 @@ class FreeTranscriptionService:
             logger.info("Whisper.cpp not available")
 
     async def transcribe_audio(
-        self,
-        audio_data: bytes,
-        language: str = 'ja'
+        self, audio_data: bytes, language: str = "ja"
     ) -> str | None:
         """Transcribe audio using free methods."""
 
@@ -77,9 +77,7 @@ class FreeTranscriptionService:
         return await self._enhanced_mock_transcription(audio_data, language)
 
     async def _transcribe_with_vosk(
-        self,
-        audio_data: bytes,
-        language: str
+        self, audio_data: bytes, language: str
     ) -> str | None:
         """Transcribe using Vosk (completely free)."""
         try:
@@ -88,19 +86,16 @@ class FreeTranscriptionService:
             import vosk
 
             # Vosk model selection based on language
-            model_paths = {
-                'ja': 'vosk-model-ja-0.22',
-                'en': 'vosk-model-en-us-0.22'
-            }
+            model_paths = {"ja": "vosk-model-ja-0.22", "en": "vosk-model-en-us-0.22"}
 
-            model_path = model_paths.get(language, 'vosk-model-en-us-0.22')
+            model_path = model_paths.get(language, "vosk-model-en-us-0.22")
 
             # Check if model exists, if not use small model
             try:
                 model = vosk.Model(model_path)
             except:
                 # Fallback to small model
-                model = vosk.Model('vosk-model-small-en-us-0.15')
+                model = vosk.Model("vosk-model-small-en-us-0.15")
 
             rec = vosk.KaldiRecognizer(model, 16000)
 
@@ -110,19 +105,17 @@ class FreeTranscriptionService:
             # Process audio
             if rec.AcceptWaveform(audio_wav):
                 result = json.loads(rec.Result())
-                return result.get('text', '')
+                return result.get("text", "")
             else:
                 partial = json.loads(rec.PartialResult())
-                return partial.get('partial', '')
+                return partial.get("partial", "")
 
         except Exception as e:
             logger.error(f"Vosk transcription error: {e}")
             return None
 
     async def _transcribe_with_speechrecognition(
-        self,
-        audio_data: bytes,
-        language: str
+        self, audio_data: bytes, language: str
     ) -> str | None:
         """Transcribe using SpeechRecognition library."""
         try:
@@ -137,8 +130,8 @@ class FreeTranscriptionService:
                 audio = r.record(source)
 
             # Use Google's free tier (limited but free)
-            language_codes = {'ja': 'ja-JP', 'en': 'en-US'}
-            lang_code = language_codes.get(language, 'en-US')
+            language_codes = {"ja": "ja-JP", "en": "en-US"}
+            lang_code = language_codes.get(language, "en-US")
 
             try:
                 # Try Google's free tier first
@@ -157,9 +150,7 @@ class FreeTranscriptionService:
             return None
 
     async def _transcribe_with_whisper_cpp(
-        self,
-        audio_data: bytes,
-        language: str
+        self, audio_data: bytes, language: str
     ) -> str | None:
         """Transcribe using whisper.cpp (free local inference)."""
         try:
@@ -168,27 +159,24 @@ class FreeTranscriptionService:
             import tempfile
 
             # Save audio to temporary file
-            with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
                 temp_file.write(audio_data)
                 temp_file_path = temp_file.name
 
             try:
                 # Run whisper.cpp
-                language_flag = '--language' if language == 'ja' else '--language'
+                language_flag = "--language" if language == "ja" else "--language"
                 cmd = [
-                    'whisper',
+                    "whisper",
                     temp_file_path,
-                    language_flag, language,
-                    '--output-format', 'txt',
-                    '--no-timestamps'
+                    language_flag,
+                    language,
+                    "--output-format",
+                    "txt",
+                    "--no-timestamps",
                 ]
 
-                result = subprocess.run(
-                    cmd,
-                    capture_output=True,
-                    text=True,
-                    timeout=30
-                )
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
 
                 if result.returncode == 0:
                     return result.stdout.strip()
@@ -205,9 +193,7 @@ class FreeTranscriptionService:
             return None
 
     async def _enhanced_mock_transcription(
-        self,
-        audio_data: bytes,
-        language: str
+        self, audio_data: bytes, language: str
     ) -> str | None:
         """Enhanced mock transcription with realistic patterns."""
 
@@ -215,7 +201,7 @@ class FreeTranscriptionService:
         audio_length = len(audio_data) / 16000  # Assume 16kHz sample rate
         await asyncio.sleep(min(audio_length * 0.1, 2.0))  # Max 2 seconds
 
-        if language == 'ja':
+        if language == "ja":
             # Japanese interview responses
             responses = [
                 "はい、わかりました。",
@@ -227,7 +213,7 @@ class FreeTranscriptionService:
                 "ありがとうございます。",
                 "そうですね、その通りです。",
                 "もう少し詳しく説明できますか？",
-                "興味深いプロジェクトですね。"
+                "興味深いプロジェクトですね。",
             ]
         else:
             # English interview responses
@@ -241,16 +227,21 @@ class FreeTranscriptionService:
                 "Thank you very much.",
                 "Yes, that's correct.",
                 "Could you provide more details?",
-                "That sounds like an interesting project."
+                "That sounds like an interesting project.",
             ]
 
         import random
+
         # Add some variability to make it more realistic
         base_response = random.choice(responses)
 
         # Sometimes add thinking pauses
         if random.random() < 0.3:
-            base_response = "えーっと... " + base_response if language == 'ja' else "Well... " + base_response
+            base_response = (
+                "えーっと... " + base_response
+                if language == "ja"
+                else "Well... " + base_response
+            )
 
         return base_response
 
@@ -258,7 +249,7 @@ class FreeTranscriptionService:
         """Convert audio data to WAV format if needed."""
         try:
             # If already WAV, return as-is
-            if audio_data.startswith(b'RIFF'):
+            if audio_data.startswith(b"RIFF"):
                 return audio_data
 
             # Simple conversion - in production you'd use proper audio libraries
@@ -289,9 +280,6 @@ class FreeTranscriptionService:
 free_transcription = FreeTranscriptionService()
 
 
-async def transcribe_audio_free(
-    audio_data: bytes,
-    language: str = 'ja'
-) -> str | None:
+async def transcribe_audio_free(audio_data: bytes, language: str = "ja") -> str | None:
     """Main function for free transcription."""
     return await free_transcription.transcribe_audio(audio_data, language)

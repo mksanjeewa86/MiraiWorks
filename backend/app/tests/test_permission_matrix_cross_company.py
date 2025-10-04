@@ -34,7 +34,7 @@ class TestCrossCompanyAccessPrevention:
             industry="Technology",
             size="medium",
             location="Tokyo",
-            is_active=True
+            is_active=True,
         )
         db.add(company_a)
         await db.flush()
@@ -46,7 +46,7 @@ class TestCrossCompanyAccessPrevention:
             industry="Technology",
             size="large",
             location="Osaka",
-            is_active=True
+            is_active=True,
         )
         db.add(company_b)
         await db.flush()
@@ -60,7 +60,7 @@ class TestCrossCompanyAccessPrevention:
             is_active=True,
             is_verified=True,
             first_name="Admin",
-            last_name="CompanyA"
+            last_name="CompanyA",
         )
         db.add(company_admin_a)
 
@@ -73,7 +73,7 @@ class TestCrossCompanyAccessPrevention:
             is_active=True,
             is_verified=True,
             first_name="Admin",
-            last_name="CompanyB"
+            last_name="CompanyB",
         )
         db.add(company_admin_b)
 
@@ -86,7 +86,7 @@ class TestCrossCompanyAccessPrevention:
             is_active=True,
             is_verified=True,
             first_name="Recruiter",
-            last_name="CompanyA"
+            last_name="CompanyA",
         )
         db.add(recruiter_a)
 
@@ -99,7 +99,7 @@ class TestCrossCompanyAccessPrevention:
             is_active=True,
             is_verified=True,
             first_name="Recruiter",
-            last_name="CompanyB"
+            last_name="CompanyB",
         )
         db.add(recruiter_b)
 
@@ -112,7 +112,7 @@ class TestCrossCompanyAccessPrevention:
             is_active=True,
             is_verified=True,
             first_name="Employer",
-            last_name="CompanyA"
+            last_name="CompanyA",
         )
         db.add(employer_a)
 
@@ -125,7 +125,7 @@ class TestCrossCompanyAccessPrevention:
             is_active=True,
             is_verified=True,
             first_name="Employer",
-            last_name="CompanyB"
+            last_name="CompanyB",
         )
         db.add(employer_b)
 
@@ -138,7 +138,7 @@ class TestCrossCompanyAccessPrevention:
             is_active=True,
             is_verified=True,
             first_name="Candidate",
-            last_name="A"
+            last_name="A",
         )
         db.add(candidate_a)
 
@@ -150,7 +150,7 @@ class TestCrossCompanyAccessPrevention:
             is_active=True,
             is_verified=True,
             first_name="Candidate",
-            last_name="B"
+            last_name="B",
         )
         db.add(candidate_b)
 
@@ -176,7 +176,7 @@ class TestCrossCompanyAccessPrevention:
             "employer_a": employer_a,
             "employer_b": employer_b,
             "candidate_a": candidate_a,
-            "candidate_b": candidate_b
+            "candidate_b": candidate_b,
         }
 
     def _create_auth_headers(self, user: User) -> dict:
@@ -195,7 +195,7 @@ class TestCrossCompanyAccessPrevention:
         # Try to access Company B admin
         response = await client.get(
             f"/api/admin/users/{scenario['company_admin_b'].id}",
-            headers=admin_a_headers
+            headers=admin_a_headers,
         )
         assert response.status_code == 403
 
@@ -203,14 +203,14 @@ class TestCrossCompanyAccessPrevention:
         response = await client.put(
             f"/api/admin/users/{scenario['company_admin_b'].id}",
             json={"first_name": "Modified"},
-            headers=admin_a_headers
+            headers=admin_a_headers,
         )
         assert response.status_code == 403
 
         # Try to delete Company B admin
         response = await client.delete(
             f"/api/admin/users/{scenario['company_admin_b'].id}",
-            headers=admin_a_headers
+            headers=admin_a_headers,
         )
         assert response.status_code == 403
 
@@ -227,13 +227,11 @@ class TestCrossCompanyAccessPrevention:
             "company_id": scenario["company_b"].id,
             "role": "member",
             "first_name": "New",
-            "last_name": "User"
+            "last_name": "User",
         }
 
         response = await client.post(
-            "/api/admin/users",
-            json=user_data,
-            headers=admin_a_headers
+            "/api/admin/users", json=user_data, headers=admin_a_headers
         )
         assert response.status_code == 403
 
@@ -253,7 +251,7 @@ class TestCrossCompanyAccessPrevention:
             job_type="full_time",
             experience_level="mid",
             status="published",
-            slug="software-engineer-b"
+            slug="software-engineer-b",
         )
         db.add(position_b)
         await db.commit()
@@ -263,8 +261,7 @@ class TestCrossCompanyAccessPrevention:
 
         # Try to access Company B position
         response = await client.get(
-            f"/api/positions/{position_b.id}",
-            headers=recruiter_a_headers
+            f"/api/positions/{position_b.id}", headers=recruiter_a_headers
         )
         assert response.status_code == 403
 
@@ -272,7 +269,7 @@ class TestCrossCompanyAccessPrevention:
         response = await client.put(
             f"/api/positions/{position_b.id}",
             json={"title": "Modified Title"},
-            headers=recruiter_a_headers
+            headers=recruiter_a_headers,
         )
         assert response.status_code == 403
 
@@ -292,7 +289,7 @@ class TestCrossCompanyAccessPrevention:
             job_type="full_time",
             experience_level="senior",
             status="published",
-            slug="backend-developer-b"
+            slug="backend-developer-b",
         )
         db.add(position_b)
         await db.flush()
@@ -304,7 +301,7 @@ class TestCrossCompanyAccessPrevention:
             scheduled_at=datetime.utcnow(),
             duration_minutes=60,
             interview_type="technical",
-            status="scheduled"
+            status="scheduled",
         )
         db.add(interview_b)
         await db.commit()
@@ -314,8 +311,7 @@ class TestCrossCompanyAccessPrevention:
 
         # Try to access Company B interview
         response = await client.get(
-            f"/api/interviews/{interview_b.id}",
-            headers=employer_a_headers
+            f"/api/interviews/{interview_b.id}", headers=employer_a_headers
         )
         assert response.status_code == 403
 
@@ -323,7 +319,7 @@ class TestCrossCompanyAccessPrevention:
         response = await client.put(
             f"/api/interviews/{interview_b.id}",
             json={"status": "completed"},
-            headers=employer_a_headers
+            headers=employer_a_headers,
         )
         assert response.status_code == 403
 
@@ -339,13 +335,11 @@ class TestCrossCompanyAccessPrevention:
         message_data = {
             "recipient_id": scenario["company_admin_b"].id,
             "subject": "Cross Company Message",
-            "content": "This should not be allowed"
+            "content": "This should not be allowed",
         }
 
         response = await client.post(
-            "/api/messages",
-            json=message_data,
-            headers=admin_a_headers
+            "/api/messages", json=message_data, headers=admin_a_headers
         )
         assert response.status_code == 403
 
@@ -355,13 +349,11 @@ class TestCrossCompanyAccessPrevention:
         message_data = {
             "recipient_id": scenario["recruiter_b"].id,
             "subject": "Cross Company Recruitment",
-            "content": "This should not be allowed"
+            "content": "This should not be allowed",
         }
 
         response = await client.post(
-            "/api/messages",
-            json=message_data,
-            headers=recruiter_a_headers
+            "/api/messages", json=message_data, headers=recruiter_a_headers
         )
         assert response.status_code == 403
 
@@ -380,7 +372,7 @@ class TestCrossCompanyAccessPrevention:
             mime_type="application/pdf",
             sha256_hash="abcd1234567890abcd1234567890abcd1234567890abcd1234567890abcd1234",
             owner_id=scenario["employer_b"].id,
-            is_available=True
+            is_available=True,
         )
         db.add(file_b)
         await db.commit()
@@ -390,15 +382,13 @@ class TestCrossCompanyAccessPrevention:
 
         # Try to access Company B file
         response = await client.get(
-            f"/api/attachments/{file_b.id}",
-            headers=employer_a_headers
+            f"/api/attachments/{file_b.id}", headers=employer_a_headers
         )
         assert response.status_code == 403
 
         # Try to delete Company B file
         response = await client.delete(
-            f"/api/attachments/{file_b.id}",
-            headers=employer_a_headers
+            f"/api/attachments/{file_b.id}", headers=employer_a_headers
         )
         assert response.status_code == 403
 
@@ -415,7 +405,7 @@ class TestCrossCompanyAccessPrevention:
             content="Experienced developer...",
             skills=["Python", "FastAPI", "React"],
             experience_years=3,
-            is_public=False
+            is_public=False,
         )
         db.add(resume_a)
         await db.commit()
@@ -425,8 +415,7 @@ class TestCrossCompanyAccessPrevention:
         recruiter_b_headers = self._create_auth_headers(scenario["recruiter_b"])
 
         response = await client.get(
-            f"/api/resumes/{resume_a.id}",
-            headers=recruiter_b_headers
+            f"/api/resumes/{resume_a.id}", headers=recruiter_b_headers
         )
         assert response.status_code == 403
 
@@ -444,13 +433,11 @@ class TestCrossCompanyAccessPrevention:
             "description": "This should not be allowed",
             "assigned_to": scenario["recruiter_b"].id,
             "priority": "medium",
-            "due_date": "2024-02-01"
+            "due_date": "2024-02-01",
         }
 
         response = await client.post(
-            "/api/todos",
-            json=todo_data,
-            headers=admin_a_headers
+            "/api/todos", json=todo_data, headers=admin_a_headers
         )
         assert response.status_code == 403
 
@@ -462,13 +449,11 @@ class TestCrossCompanyAccessPrevention:
             "description": "This should not be allowed",
             "assigned_to": scenario["employer_b"].id,
             "priority": "high",
-            "due_date": "2024-02-15"
+            "due_date": "2024-02-15",
         }
 
         response = await client.post(
-            "/api/todos",
-            json=todo_data,
-            headers=recruiter_a_headers
+            "/api/todos", json=todo_data, headers=recruiter_a_headers
         )
         assert response.status_code == 403
 
@@ -484,7 +469,7 @@ class TestCrossCompanyAccessPrevention:
             description="Hiring process for Company B",
             company_id=scenario["company_b"].id,
             created_by=scenario["company_admin_b"].id,
-            is_active=True
+            is_active=True,
         )
         db.add(recruitment_process_b)
         await db.flush()
@@ -495,7 +480,7 @@ class TestCrossCompanyAccessPrevention:
             name="Company B Interview",
             node_type="interview",
             order_index=1,
-            is_active=True
+            is_active=True,
         )
         db.add(process_node_b)
         await db.commit()
@@ -507,7 +492,7 @@ class TestCrossCompanyAccessPrevention:
 
         response = await client.get(
             f"/api/recruitment-workflows/processes/{recruitment_process_b.id}",
-            headers=admin_a_headers
+            headers=admin_a_headers,
         )
         assert response.status_code == 403
 
@@ -517,7 +502,7 @@ class TestCrossCompanyAccessPrevention:
         response = await client.put(
             f"/api/recruitment-workflows/nodes/{process_node_b.id}",
             json={"name": "Modified Node"},
-            headers=recruiter_a_headers
+            headers=recruiter_a_headers,
         )
         assert response.status_code == 403
 
@@ -537,7 +522,7 @@ class TestCrossCompanyAccessPrevention:
             job_type="full_time",
             experience_level="senior",
             status="published",
-            slug="data-scientist-b"
+            slug="data-scientist-b",
         )
         db.add(position_b)
         await db.flush()
@@ -547,7 +532,7 @@ class TestCrossCompanyAccessPrevention:
             description="Data science hiring process",
             company_id=scenario["company_b"].id,
             created_by=scenario["recruiter_b"].id,
-            is_active=True
+            is_active=True,
         )
         db.add(recruitment_process_b)
         await db.flush()
@@ -558,7 +543,7 @@ class TestCrossCompanyAccessPrevention:
             position_id=position_b.id,
             recruitment_process_id=recruitment_process_b.id,
             current_stage="application_review",
-            status="in_progress"
+            status="in_progress",
         )
         db.add(candidate_process_b)
         await db.commit()
@@ -569,7 +554,7 @@ class TestCrossCompanyAccessPrevention:
 
         response = await client.get(
             f"/api/recruitment-workflows/candidate-processes/{candidate_process_b.id}",
-            headers=recruiter_a_headers
+            headers=recruiter_a_headers,
         )
         assert response.status_code == 403
 
@@ -579,7 +564,7 @@ class TestCrossCompanyAccessPrevention:
         response = await client.put(
             f"/api/recruitment-workflows/candidate-processes/{candidate_process_b.id}",
             json={"status": "rejected"},
-            headers=admin_a_headers
+            headers=admin_a_headers,
         )
         assert response.status_code == 403
 
@@ -593,13 +578,11 @@ class TestCrossCompanyAccessPrevention:
         # Try bulk user operation across companies
         bulk_data = {
             "user_ids": [scenario["recruiter_b"].id, scenario["employer_b"].id],
-            "action": "deactivate"
+            "action": "deactivate",
         }
 
         response = await client.post(
-            "/api/admin/users/bulk",
-            json=bulk_data,
-            headers=admin_a_headers
+            "/api/admin/users/bulk", json=bulk_data, headers=admin_a_headers
         )
         assert response.status_code == 403
 
@@ -607,13 +590,11 @@ class TestCrossCompanyAccessPrevention:
         bulk_message_data = {
             "recipient_ids": [scenario["recruiter_b"].id, scenario["employer_b"].id],
             "subject": "Cross Company Announcement",
-            "content": "This should not reach other company"
+            "content": "This should not reach other company",
         }
 
         response = await client.post(
-            "/api/messages/bulk",
-            json=bulk_message_data,
-            headers=admin_a_headers
+            "/api/messages/bulk", json=bulk_message_data, headers=admin_a_headers
         )
         assert response.status_code == 403
 
@@ -626,13 +607,14 @@ class TestCrossCompanyAccessPrevention:
 
         # Search for users should only return Company A users
         response = await client.get(
-            "/api/admin/users/search?query=recruiter",
-            headers=recruiter_a_headers
+            "/api/admin/users/search?query=recruiter", headers=recruiter_a_headers
         )
         assert response.status_code == 200
 
         users = response.json()
-        company_ids = [user.get("company_id") for user in users if user.get("company_id")]
+        company_ids = [
+            user.get("company_id") for user in users if user.get("company_id")
+        ]
 
         # All returned users should be from Company A only
         for company_id in company_ids:
@@ -640,8 +622,7 @@ class TestCrossCompanyAccessPrevention:
 
         # Search for positions should only return Company A positions
         response = await client.get(
-            "/api/positions/search?query=engineer",
-            headers=recruiter_a_headers
+            "/api/positions/search?query=engineer", headers=recruiter_a_headers
         )
         assert response.status_code == 200
 
@@ -654,8 +635,7 @@ class TestCrossCompanyAccessPrevention:
 
         # Company stats should only include own company data
         response = await client.get(
-            "/api/admin/statistics/dashboard",
-            headers=admin_a_headers
+            "/api/admin/statistics/dashboard", headers=admin_a_headers
         )
         assert response.status_code == 200
 
@@ -668,8 +648,7 @@ class TestCrossCompanyAccessPrevention:
 
         # Recruitment stats should only include Company A data
         response = await client.get(
-            "/api/admin/statistics/recruitment",
-            headers=admin_a_headers
+            "/api/admin/statistics/recruitment", headers=admin_a_headers
         )
         assert response.status_code == 200
 
@@ -681,22 +660,18 @@ class TestCrossCompanyAccessPrevention:
         admin_a_headers = self._create_auth_headers(scenario["company_admin_a"])
 
         # Export users should only include Company A users
-        response = await client.get(
-            "/api/admin/export/users",
-            headers=admin_a_headers
-        )
+        response = await client.get("/api/admin/export/users", headers=admin_a_headers)
         assert response.status_code == 200
 
         # Export recruitment data should only include Company A data
         response = await client.get(
-            "/api/admin/export/recruitment-data",
-            headers=admin_a_headers
+            "/api/admin/export/recruitment-data", headers=admin_a_headers
         )
         assert response.status_code == 200
 
         # Try to export other company data directly (should fail)
         response = await client.get(
             f"/api/admin/export/company-data/{scenario['company_b'].id}",
-            headers=admin_a_headers
+            headers=admin_a_headers,
         )
         assert response.status_code == 403

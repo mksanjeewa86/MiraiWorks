@@ -6,7 +6,14 @@ import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
 import { recruitmentWorkflowsApi, workflowIntegrationService } from '@/api/workflows';
-import type { RecruitmentProcess, ProcessNode, CreateNodeData, LinearWorkflowStep, WorkflowCandidate, WorkflowViewer } from '@/types/workflow';
+import type {
+  RecruitmentProcess,
+  ProcessNode,
+  CreateNodeData,
+  LinearWorkflowStep,
+  WorkflowCandidate,
+  WorkflowViewer,
+} from '@/types/workflow';
 import type { ViewWorkflowModalProps, WorkflowEditorModalProps } from '@/types/pages';
 import { interviewsApi } from '@/api/interviews';
 import { todosApi } from '@/api/todos';
@@ -49,7 +56,9 @@ function RecruitmentWorkflowsPageContent() {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<'name' | 'createdAt' | 'candidatesCount' | 'status'>('createdAt');
+  const [sortBy, setSortBy] = useState<'name' | 'createdAt' | 'candidatesCount' | 'status'>(
+    'createdAt'
+  );
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -84,7 +93,7 @@ function RecruitmentWorkflowsPageContent() {
             candidate_processes: process.candidate_processes || [],
             created_at: process.created_at,
             updated_at: process.updated_at,
-            is_template: process.is_template || false
+            is_template: process.is_template || false,
           }));
           setProcesses(mappedProcesses);
         } else {
@@ -159,7 +168,8 @@ function RecruitmentWorkflowsPageContent() {
     total: processes.length,
     active: processes.filter((p) => p.status === 'active').length,
     totalCandidates: processes.reduce((sum, p) => sum + (p.candidate_processes?.length || 0), 0),
-    avgNodes: Math.round(processes.reduce((sum, p) => sum + p.nodes.length, 0) / processes.length) || 0,
+    avgNodes:
+      Math.round(processes.reduce((sum, p) => sum + p.nodes.length, 0) / processes.length) || 0,
   };
 
   // Helper functions
@@ -175,11 +185,16 @@ function RecruitmentWorkflowsPageContent() {
 
   const getNodeTypeIcon = (type: ProcessNode['node_type']) => {
     switch (type) {
-      case 'interview': return <Video className="h-3 w-3" />;
-      case 'todo': return <CheckSquare className="h-3 w-3" />;
-      case 'assessment': return <TrendingUp className="h-3 w-3" />;
-      case 'decision': return <GitBranch className="h-3 w-3" />;
-      default: return <GitBranch className="h-3 w-3" />;
+      case 'interview':
+        return <Video className="h-3 w-3" />;
+      case 'todo':
+        return <CheckSquare className="h-3 w-3" />;
+      case 'assessment':
+        return <TrendingUp className="h-3 w-3" />;
+      case 'decision':
+        return <GitBranch className="h-3 w-3" />;
+      default:
+        return <GitBranch className="h-3 w-3" />;
     }
   };
 
@@ -223,16 +238,16 @@ function RecruitmentWorkflowsPageContent() {
   };
 
   const handleToggleStatus = async (process: RecruitmentProcess) => {
-    const newStatus = process.status === 'draft' ? 'active' :
-                     process.status === 'active' ? 'inactive' : 'active';
+    const newStatus =
+      process.status === 'draft' ? 'active' : process.status === 'active' ? 'inactive' : 'active';
 
     try {
       const response = await recruitmentWorkflowsApi.updateProcessStatus(process.id, newStatus);
       if (response.success) {
         // Update the process status locally
-        setProcesses(prev => prev.map(p =>
-          p.id === process.id ? { ...p, status: newStatus } : p
-        ));
+        setProcesses((prev) =>
+          prev.map((p) => (p.id === process.id ? { ...p, status: newStatus } : p))
+        );
         alert(`Changed ${process.name} status to: ${newStatus}`);
       }
     } catch (err) {
@@ -253,7 +268,7 @@ function RecruitmentWorkflowsPageContent() {
       const response = await recruitmentWorkflowsApi.archiveProcess(process.id);
       if (response.success) {
         // Remove the archived process from the list
-        setProcesses(prev => prev.filter(p => p.id !== process.id));
+        setProcesses((prev) => prev.filter((p) => p.id !== process.id));
         alert(`Archived workflow: ${process.name}`);
       }
     } catch (err) {
@@ -268,7 +283,7 @@ function RecruitmentWorkflowsPageContent() {
       const response = await recruitmentWorkflowsApi.createProcess({
         name: 'New Workflow',
         description: 'Click steps below to build your workflow',
-        is_template: false
+        is_template: false,
       });
 
       if (response.success && response.data) {
@@ -284,10 +299,10 @@ function RecruitmentWorkflowsPageContent() {
           candidate_processes: [],
           created_at: response.data.created_at,
           updated_at: response.data.updated_at,
-          is_template: false
+          is_template: false,
         };
 
-        setProcesses(prev => [newProcess, ...prev]);
+        setProcesses((prev) => [newProcess, ...prev]);
         setEditingProcess(newProcess);
         setIsWorkflowEditorOpen(true);
       }
@@ -328,9 +343,9 @@ function RecruitmentWorkflowsPageContent() {
         }}
         process={editingProcess}
         onSave={(updatedProcess) => {
-          setProcesses(prev => prev.map(p =>
-            p.id === updatedProcess.id ? updatedProcess : p
-          ));
+          setProcesses((prev) =>
+            prev.map((p) => (p.id === updatedProcess.id ? updatedProcess : p))
+          );
           setIsWorkflowEditorOpen(false);
           setEditingProcess(null);
         }}
@@ -434,12 +449,14 @@ function RecruitmentWorkflowsPageContent() {
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 appearance-none bg-white"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                  backgroundPosition: 'right 12px center',
-                  backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px',
-                } as CSSProperties}
+                style={
+                  {
+                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                    backgroundPosition: 'right 12px center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '16px',
+                  } as CSSProperties
+                }
               >
                 <option value="all">All Status</option>
                 <option value="draft">Draft</option>
@@ -555,7 +572,9 @@ function RecruitmentWorkflowsPageContent() {
                       <td className="px-6 py-4">
                         <div className="flex flex-col gap-1">
                           <h3 className="text-sm font-medium text-gray-900">{process.name}</h3>
-                          <p className="text-sm text-gray-600 line-clamp-2">{process.description}</p>
+                          <p className="text-sm text-gray-600 line-clamp-2">
+                            {process.description}
+                          </p>
                           {process.is_template && (
                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 w-fit">
                               Template
@@ -582,7 +601,9 @@ function RecruitmentWorkflowsPageContent() {
                               </div>
                             ))}
                             {process.nodes.length > 4 && (
-                              <span className="text-xs text-gray-500">+{process.nodes.length - 4} more</span>
+                              <span className="text-xs text-gray-500">
+                                +{process.nodes.length - 4} more
+                              </span>
                             )}
                           </div>
                         </div>
@@ -603,21 +624,24 @@ function RecruitmentWorkflowsPageContent() {
                               <div
                                 className="bg-violet-600 h-1.5 rounded-full transition-all duration-300"
                                 style={{
-                                  width: (process.candidate_processes?.length || 0) > 0
-                                    ? `${((process.candidate_processes?.filter((cp: any) => cp.status === 'completed').length || 0) / (process.candidate_processes?.length || 0)) * 100}%`
-                                    : '0%'
+                                  width:
+                                    (process.candidate_processes?.length || 0) > 0
+                                      ? `${((process.candidate_processes?.filter((cp: any) => cp.status === 'completed').length || 0) / (process.candidate_processes?.length || 0)) * 100}%`
+                                      : '0%',
                                 }}
                               />
                             </div>
                             <span className="text-xs text-gray-600">
-                              {process.candidate_processes?.filter((cp: any) => cp.status === 'completed').length || 0}/{process.candidate_processes?.length || 0}
+                              {process.candidate_processes?.filter(
+                                (cp: any) => cp.status === 'completed'
+                              ).length || 0}
+                              /{process.candidate_processes?.length || 0}
                             </span>
                           </div>
                           <span className="text-xs text-gray-500">
                             {(process.candidate_processes?.length || 0) > 0
                               ? `${Math.round(((process.candidate_processes?.filter((cp: any) => cp.status === 'completed').length || 0) / (process.candidate_processes?.length || 0)) * 100)}% complete`
-                              : 'No candidates'
-                            }
+                              : 'No candidates'}
                           </span>
                         </div>
                       </td>
@@ -718,7 +742,6 @@ function RecruitmentWorkflowsPageContent() {
             </div>
           )}
         </div>
-
       </div>
     </AppLayout>
   );
@@ -730,11 +753,16 @@ function ViewWorkflowModal({ isOpen, onClose, process, onEdit }: ViewWorkflowMod
 
   const getNodeTypeIcon = (type: ProcessNode['node_type']) => {
     switch (type) {
-      case 'interview': return <Video className="h-4 w-4 text-blue-600" />;
-      case 'todo': return <CheckSquare className="h-4 w-4 text-green-600" />;
-      case 'assessment': return <TrendingUp className="h-4 w-4 text-purple-600" />;
-      case 'decision': return <GitBranch className="h-4 w-4 text-orange-600" />;
-      default: return <GitBranch className="h-4 w-4 text-gray-600" />;
+      case 'interview':
+        return <Video className="h-4 w-4 text-blue-600" />;
+      case 'todo':
+        return <CheckSquare className="h-4 w-4 text-green-600" />;
+      case 'assessment':
+        return <TrendingUp className="h-4 w-4 text-purple-600" />;
+      case 'decision':
+        return <GitBranch className="h-4 w-4 text-orange-600" />;
+      default:
+        return <GitBranch className="h-4 w-4 text-gray-600" />;
     }
   };
 
@@ -749,7 +777,10 @@ function ViewWorkflowModal({ isOpen, onClose, process, onEdit }: ViewWorkflowMod
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-8" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-8"
+      onClick={onClose}
+    >
       <div
         className="w-full max-w-2xl rounded-xl bg-white shadow-xl max-h-[80vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
@@ -768,11 +799,16 @@ function ViewWorkflowModal({ isOpen, onClose, process, onEdit }: ViewWorkflowMod
           {/* Status and Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-900">{process.candidate_processes?.length || 0}</div>
+              <div className="text-2xl font-bold text-gray-900">
+                {process.candidate_processes?.length || 0}
+              </div>
               <div className="text-sm text-gray-600">Candidates</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{process.candidate_processes?.filter((cp: any) => cp.status === 'completed').length || 0}</div>
+              <div className="text-2xl font-bold text-green-600">
+                {process.candidate_processes?.filter((cp: any) => cp.status === 'completed')
+                  .length || 0}
+              </div>
               <div className="text-sm text-gray-600">Completed</div>
             </div>
             <div className="text-center">
@@ -780,12 +816,17 @@ function ViewWorkflowModal({ isOpen, onClose, process, onEdit }: ViewWorkflowMod
               <div className="text-sm text-gray-600">Steps</div>
             </div>
             <div className="text-center">
-              <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${
-                process.status === 'active' ? 'bg-green-100 text-green-800 border-green-200' :
-                process.status === 'draft' ? 'bg-gray-100 text-gray-800 border-gray-200' :
-                process.status === 'inactive' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
-                'bg-red-100 text-red-800 border-red-200'
-              }`}>
+              <div
+                className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${
+                  process.status === 'active'
+                    ? 'bg-green-100 text-green-800 border-green-200'
+                    : process.status === 'draft'
+                      ? 'bg-gray-100 text-gray-800 border-gray-200'
+                      : process.status === 'inactive'
+                        ? 'bg-yellow-100 text-yellow-800 border-yellow-200'
+                        : 'bg-red-100 text-red-800 border-red-200'
+                }`}
+              >
                 {process.status}
               </div>
             </div>
@@ -797,7 +838,10 @@ function ViewWorkflowModal({ isOpen, onClose, process, onEdit }: ViewWorkflowMod
             {process.nodes.length > 0 ? (
               <div className="space-y-3">
                 {process.nodes.map((node, index) => (
-                  <div key={node.id} className="flex items-center gap-4 p-3 border border-gray-200 rounded-lg">
+                  <div
+                    key={node.id}
+                    className="flex items-center gap-4 p-3 border border-gray-200 rounded-lg"
+                  >
                     <div className="flex items-center justify-center w-8 h-8 bg-violet-100 text-violet-600 rounded-full text-sm font-medium">
                       {index + 1}
                     </div>
@@ -805,17 +849,15 @@ function ViewWorkflowModal({ isOpen, onClose, process, onEdit }: ViewWorkflowMod
                       <div className="flex items-center gap-2 mb-1">
                         {getNodeTypeIcon(node.node_type)}
                         <span className="font-medium text-gray-900">{node.title}</span>
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${getNodeTypeBadge(node.node_type)}`}>
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${getNodeTypeBadge(node.node_type)}`}
+                        >
                           {node.node_type}
                         </span>
                       </div>
                       <p className="text-sm text-gray-600">{node.description}</p>
                     </div>
-                    {index < process.nodes.length - 1 && (
-                      <div className="text-gray-400">
-                        →
-                      </div>
-                    )}
+                    {index < process.nodes.length - 1 && <div className="text-gray-400">→</div>}
                   </div>
                 ))}
               </div>
@@ -888,7 +930,7 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
       // Convert existing nodes to linear steps
       if (process.nodes && process.nodes.length > 0) {
         const linearSteps: LinearWorkflowStep[] = process.nodes
-          .filter(node => node.node_type === 'interview' || node.node_type === 'todo')
+          .filter((node) => node.node_type === 'interview' || node.node_type === 'todo')
           .sort((a, b) => a.sequence_order - b.sequence_order)
           .map((node, index) => ({
             id: `step-${node.id}`,
@@ -900,7 +942,7 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
             realId: node.id,
             isIntegrated: !!(node.interview_id || node.todo_id),
             interview_id: node.interview_id,
-            todo_id: node.todo_id
+            todo_id: node.todo_id,
           }));
         setSteps(linearSteps);
       } else {
@@ -917,37 +959,38 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
       type,
       title: type === 'interview' ? 'New Interview' : 'New Todo',
       description: type === 'interview' ? 'Interview step description' : 'Todo assignment',
-      config: type === 'interview' ? {
-        duration: 60,
-        interview_type: 'video',
-        location: 'Video Call'
-      } : {
-        priority: 'medium',
-        assignment_type: 'general',
-        is_assignment: true
-      },
+      config:
+        type === 'interview'
+          ? {
+              duration: 60,
+              interview_type: 'video',
+              location: 'Video Call',
+            }
+          : {
+              priority: 'medium',
+              assignment_type: 'general',
+              is_assignment: true,
+            },
       order: steps.length + 1,
-      isIntegrated: isCreatingIntegratedRecords
+      isIntegrated: isCreatingIntegratedRecords,
     };
-    setSteps(prev => [...prev, newStep]);
+    setSteps((prev) => [...prev, newStep]);
     setSelectedStep(newStep);
     setShowStepPanel(true);
   };
 
   // Update step properties
   const updateStep = (stepId: string, updates: Partial<LinearWorkflowStep>) => {
-    setSteps(prev => prev.map(step =>
-      step.id === stepId ? { ...step, ...updates } : step
-    ));
+    setSteps((prev) => prev.map((step) => (step.id === stepId ? { ...step, ...updates } : step)));
     if (selectedStep?.id === stepId) {
-      setSelectedStep(prev => prev ? { ...prev, ...updates } : null);
+      setSelectedStep((prev) => (prev ? { ...prev, ...updates } : null));
     }
   };
 
   // Delete step from workflow
   const deleteStep = (stepId: string) => {
-    setSteps(prev => {
-      const filtered = prev.filter(step => step.id !== stepId);
+    setSteps((prev) => {
+      const filtered = prev.filter((step) => step.id !== stepId);
       // Reorder remaining steps
       return filtered.map((step, index) => ({ ...step, order: index + 1 }));
     });
@@ -959,8 +1002,8 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
 
   // Move step up/down in the sequence
   const moveStep = (stepId: string, direction: 'up' | 'down') => {
-    setSteps(prev => {
-      const currentIndex = prev.findIndex(step => step.id === stepId);
+    setSteps((prev) => {
+      const currentIndex = prev.findIndex((step) => step.id === stepId);
       if (currentIndex === -1) return prev;
 
       const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
@@ -1026,10 +1069,10 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
       const newCandidate: WorkflowCandidate = {
         id: candidateId,
         name: candidateInput.includes('@') ? candidateInput.split('@')[0] : `User ${candidateId}`,
-        email: candidateInput.includes('@') ? candidateInput : `user${candidateId}@example.com`
+        email: candidateInput.includes('@') ? candidateInput : `user${candidateId}@example.com`,
       };
 
-      setAssignedCandidates(prev => [...prev, newCandidate]);
+      setAssignedCandidates((prev) => [...prev, newCandidate]);
       setCandidateInput('');
 
       // If process is already created, assign candidate via API
@@ -1054,10 +1097,10 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
         id: viewerId,
         name: viewerInput.includes('@') ? viewerInput.split('@')[0] : `User ${viewerId}`,
         email: viewerInput.includes('@') ? viewerInput : `user${viewerId}@example.com`,
-        role: viewerRole
+        role: viewerRole,
       };
 
-      setWorkflowViewers(prev => [...prev, newViewer]);
+      setWorkflowViewers((prev) => [...prev, newViewer]);
       setViewerInput('');
 
       // Note: API call for adding viewers would go here
@@ -1070,12 +1113,12 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
 
   // Remove candidate from workflow
   const handleRemoveCandidate = (candidateId: number) => {
-    setAssignedCandidates(prev => prev.filter(c => c.id !== candidateId));
+    setAssignedCandidates((prev) => prev.filter((c) => c.id !== candidateId));
   };
 
   // Remove viewer from workflow
   const handleRemoveViewer = (viewerId: number) => {
-    setWorkflowViewers(prev => prev.filter(v => v.id !== viewerId));
+    setWorkflowViewers((prev) => prev.filter((v) => v.id !== viewerId));
   };
 
   // Drag and drop handlers
@@ -1098,14 +1141,14 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
 
     if (!draggedStep) return;
 
-    const currentIndex = steps.findIndex(s => s.id === draggedStep.id);
+    const currentIndex = steps.findIndex((s) => s.id === draggedStep.id);
     if (currentIndex === -1 || currentIndex === targetIndex) {
       handleDragEnd();
       return;
     }
 
     // Reorder steps
-    setSteps(prev => {
+    setSteps((prev) => {
       const newSteps = [...prev];
       const [removed] = newSteps.splice(currentIndex, 1);
       newSteps.splice(targetIndex, 0, removed);
@@ -1118,17 +1161,23 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
 
   const getStepIcon = (type: 'interview' | 'todo') => {
     switch (type) {
-      case 'interview': return <Video className="h-5 w-5" />;
-      case 'todo': return <CheckSquare className="h-5 w-5" />;
-      default: return <Circle className="h-5 w-5" />;
+      case 'interview':
+        return <Video className="h-5 w-5" />;
+      case 'todo':
+        return <CheckSquare className="h-5 w-5" />;
+      default:
+        return <Circle className="h-5 w-5" />;
     }
   };
 
   const getStepColor = (type: 'interview' | 'todo') => {
     switch (type) {
-      case 'interview': return 'bg-blue-500 text-white border-blue-600';
-      case 'todo': return 'bg-green-500 text-white border-green-600';
-      default: return 'bg-gray-400 text-white border-gray-500';
+      case 'interview':
+        return 'bg-blue-500 text-white border-blue-600';
+      case 'todo':
+        return 'bg-green-500 text-white border-green-600';
+      default:
+        return 'bg-gray-400 text-white border-gray-500';
     }
   };
 
@@ -1137,9 +1186,9 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
 
     try {
       // First, delete any existing nodes that are not in our current steps
-      const existingNodeIds = process.nodes?.map(n => n.id) || [];
-      const currentStepNodeIds = steps.filter(s => s.realId).map(s => s.realId!);
-      const nodesToDelete = existingNodeIds.filter(id => !currentStepNodeIds.includes(id));
+      const existingNodeIds = process.nodes?.map((n) => n.id) || [];
+      const currentStepNodeIds = steps.filter((s) => s.realId).map((s) => s.realId!);
+      const nodesToDelete = existingNodeIds.filter((id) => !currentStepNodeIds.includes(id));
 
       for (const nodeId of nodesToDelete) {
         try {
@@ -1160,10 +1209,10 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
           description: step.description,
           sequence_order: step.order,
           position: {
-            x: 100 + (step.order * 200), // Linear horizontal layout
-            y: 200
+            x: 100 + step.order * 200, // Linear horizontal layout
+            y: 200,
           },
-          config: step.config
+          config: step.config,
         };
 
         // Add integration data if creating real records
@@ -1175,7 +1224,7 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
               location: step.config?.location || 'Video Call',
               notes: `Auto-generated for workflow: ${processTitle}`,
               // Use first candidate if available
-              candidate_id: assignedCandidates.length > 0 ? assignedCandidates[0].id : undefined
+              candidate_id: assignedCandidates.length > 0 ? assignedCandidates[0].id : undefined,
             };
           }
 
@@ -1187,7 +1236,7 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
               is_assignment: step.config?.is_assignment !== false,
               assignment_type: step.config?.assignment_type || 'general',
               // Use first candidate if available
-              assigned_to: assignedCandidates.length > 0 ? assignedCandidates[0].id : undefined
+              assigned_to: assignedCandidates.length > 0 ? assignedCandidates[0].id : undefined,
             };
           }
         }
@@ -1200,7 +1249,10 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
           try {
             if (step.isIntegrated && (nodeData.create_interview || nodeData.create_todo)) {
               console.log('Creating node with integration:', { step: step.title, nodeData });
-              const nodeResponse = await recruitmentWorkflowsApi.createNodeWithIntegration(process.id, nodeData);
+              const nodeResponse = await recruitmentWorkflowsApi.createNodeWithIntegration(
+                process.id,
+                nodeData
+              );
               console.log('Node integration response:', nodeResponse);
 
               if (nodeResponse.success && nodeResponse.data) {
@@ -1236,7 +1288,7 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
       if (processTitle !== process.name || processDescription !== process.description) {
         await recruitmentWorkflowsApi.updateProcess(process.id, {
           name: processTitle,
-          description: processDescription
+          description: processDescription,
         });
       }
 
@@ -1247,12 +1299,16 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
         ...process,
         name: processTitle,
         description: processDescription,
-        nodes: []
+        nodes: [],
       };
 
       onSave(updatedProcess);
 
-      console.log('Workflow saved!', { createdInterviews, createdTodos, reloadedNodes: updatedProcess.nodes.length });
+      console.log('Workflow saved!', {
+        createdInterviews,
+        createdTodos,
+        reloadedNodes: updatedProcess.nodes.length,
+      });
 
       let successMessage = '✅ Workflow saved successfully!';
 
@@ -1287,7 +1343,9 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
       alert(successMessage);
     } catch (error) {
       console.error('Failed to save workflow:', error);
-      alert('❌ Failed to save workflow: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      alert(
+        '❌ Failed to save workflow: ' + (error instanceof Error ? error.message : 'Unknown error')
+      );
     }
   };
 
@@ -1323,7 +1381,9 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
               <h3 className="text-lg font-semibold text-gray-900">Basic Information</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Process Name *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Process Name *
+                  </label>
                   <input
                     type="text"
                     value={processTitle}
@@ -1333,7 +1393,9 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Description
+                  </label>
                   <textarea
                     value={processDescription}
                     onChange={(e) => setProcessDescription(e.target.value)}
@@ -1356,7 +1418,9 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
                   <Video className="h-5 w-5 text-blue-500" />
                   <div className="text-left">
                     <div className="font-semibold text-gray-900">Add Interview</div>
-                    <div className="text-xs text-gray-500">Technical, HR, or cultural interview</div>
+                    <div className="text-xs text-gray-500">
+                      Technical, HR, or cultural interview
+                    </div>
                   </div>
                 </button>
                 <button
@@ -1382,124 +1446,144 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
                   <GitBranch className="h-16 w-16 mx-auto text-gray-400 mb-4" />
                   <h4 className="text-xl font-semibold text-gray-900 mb-2">No Steps Yet</h4>
                   <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                    Start building your recruitment workflow by adding interview and todo steps using the buttons above.
+                    Start building your recruitment workflow by adding interview and todo steps
+                    using the buttons above.
                   </p>
                 </div>
               ) : (
                 /* Linear Workflow Steps */
                 <div className="space-y-4">
                   {steps.map((step, index) => {
-                    console.log(`Step ${index}:`, { id: step.id, interview_id: step.interview_id, todo_id: step.todo_id, isIntegrated: step.isIntegrated, realId: step.realId });
+                    console.log(`Step ${index}:`, {
+                      id: step.id,
+                      interview_id: step.interview_id,
+                      todo_id: step.todo_id,
+                      isIntegrated: step.isIntegrated,
+                      realId: step.realId,
+                    });
                     return (
-                    <div key={step.id} className="relative">
-                      <div
-                        draggable
-                        onDragStart={() => handleDragStart(step)}
-                        onDragOver={(e) => handleDragOver(e, index)}
-                        onDragEnd={handleDragEnd}
-                        onDrop={(e) => handleDrop(e, index)}
-                        className={`relative border-2 rounded-xl p-5 cursor-move transition-all shadow-sm hover:shadow-md ${
-                          draggedStep?.id === step.id
-                            ? 'opacity-50 border-violet-500 bg-violet-100'
-                            : dragOverIndex === index && draggedStep?.id !== step.id
-                            ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-300'
-                            : 'border-gray-200 bg-white hover:border-gray-300'
-                        }`}
-                      >
-                        {/* Drop indicator line at top */}
-                        {dragOverIndex === index && draggedStep?.id !== step.id && (
-                          <div className="absolute -top-1 left-0 right-0 h-1 bg-blue-500 rounded-full shadow-lg animate-pulse" />
-                        )}
+                      <div key={step.id} className="relative">
+                        <div
+                          draggable
+                          onDragStart={() => handleDragStart(step)}
+                          onDragOver={(e) => handleDragOver(e, index)}
+                          onDragEnd={handleDragEnd}
+                          onDrop={(e) => handleDrop(e, index)}
+                          className={`relative border-2 rounded-xl p-5 cursor-move transition-all shadow-sm hover:shadow-md ${
+                            draggedStep?.id === step.id
+                              ? 'opacity-50 border-violet-500 bg-violet-100'
+                              : dragOverIndex === index && draggedStep?.id !== step.id
+                                ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-300'
+                                : 'border-gray-200 bg-white hover:border-gray-300'
+                          }`}
+                        >
+                          {/* Drop indicator line at top */}
+                          {dragOverIndex === index && draggedStep?.id !== step.id && (
+                            <div className="absolute -top-1 left-0 right-0 h-1 bg-blue-500 rounded-full shadow-lg animate-pulse" />
+                          )}
 
-                        <div className="flex items-center gap-4">
-                          {/* Step Number */}
-                          <div className="flex-shrink-0 w-11 h-11 bg-gradient-to-br from-violet-500 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-md">
-                            {step.order}
-                          </div>
+                          <div className="flex items-center gap-4">
+                            {/* Step Number */}
+                            <div className="flex-shrink-0 w-11 h-11 bg-gradient-to-br from-violet-500 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-md">
+                              {step.order}
+                            </div>
 
-                          {/* Step Icon and Type */}
-                          <div className={`flex-shrink-0 w-14 h-14 rounded-xl border-2 ${getStepColor(step.type)} flex items-center justify-center shadow-sm`}>
-                            {getStepIcon(step.type)}
-                          </div>
+                            {/* Step Icon and Type */}
+                            <div
+                              className={`flex-shrink-0 w-14 h-14 rounded-xl border-2 ${getStepColor(step.type)} flex items-center justify-center shadow-sm`}
+                            >
+                              {getStepIcon(step.type)}
+                            </div>
 
-                          {/* Step Content */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h4 className="font-semibold text-gray-900 truncate">{step.title}</h4>
-                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                step.type === 'interview'
-                                  ? 'bg-blue-100 text-blue-800'
-                                  : 'bg-green-100 text-green-800'
-                              }`}>
-                                {step.type}
-                              </span>
-                              {step.isIntegrated && (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-violet-100 text-violet-800">
-                                  {(step.interview_id || step.todo_id) ? '🔗 Linked' : '✨ Integration Enabled'}
+                            {/* Step Content */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h4 className="font-semibold text-gray-900 truncate">
+                                  {step.title}
+                                </h4>
+                                <span
+                                  className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                    step.type === 'interview'
+                                      ? 'bg-blue-100 text-blue-800'
+                                      : 'bg-green-100 text-green-800'
+                                  }`}
+                                >
+                                  {step.type}
                                 </span>
-                              )}
+                                {step.isIntegrated && (
+                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-violet-100 text-violet-800">
+                                    {step.interview_id || step.todo_id
+                                      ? '🔗 Linked'
+                                      : '✨ Integration Enabled'}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-sm text-gray-600 truncate">{step.description}</p>
+                              <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                                {step.type === 'interview' && (
+                                  <>
+                                    <span>📅 {step.config?.duration || 60} minutes</span>
+                                    <span>🎥 {step.config?.interview_type || 'video'}</span>
+                                    <span>📍 {step.config?.location || 'Video Call'}</span>
+                                  </>
+                                )}
+                                {step.type === 'todo' && (
+                                  <>
+                                    <span>
+                                      📋 {step.config?.assignment_type || 'general'} assignment
+                                    </span>
+                                    <span>⭐ {step.config?.priority || 'medium'} priority</span>
+                                  </>
+                                )}
+                              </div>
                             </div>
-                            <p className="text-sm text-gray-600 truncate">{step.description}</p>
-                            <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-                              {step.type === 'interview' && (
-                                <>
-                                  <span>📅 {step.config?.duration || 60} minutes</span>
-                                  <span>🎥 {step.config?.interview_type || 'video'}</span>
-                                  <span>📍 {step.config?.location || 'Video Call'}</span>
-                                </>
-                              )}
-                              {step.type === 'todo' && (
-                                <>
-                                  <span>📋 {step.config?.assignment_type || 'general'} assignment</span>
-                                  <span>⭐ {step.config?.priority || 'medium'} priority</span>
-                                </>
-                              )}
-                            </div>
-                          </div>
 
-                          {/* Step Controls */}
-                          <div className="flex-shrink-0 flex flex-col gap-2">
-                            {/* Edit button - opens actual interview/todo for editing */}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEditStepRecord(step);
-                              }}
-                              className="w-24 px-3 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors flex items-center justify-center gap-1"
-                              title={`Edit ${step.type === 'interview' ? 'interview' : 'todo'} record`}
-                            >
-                              <Edit className="h-4 w-4" />
-                              Edit
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                deleteStep(step.id);
-                              }}
-                              className="w-24 px-3 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-sm transition-colors flex items-center justify-center gap-1"
-                              title="Delete step"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              Delete
-                            </button>
+                            {/* Step Controls */}
+                            <div className="flex-shrink-0 flex flex-col gap-2">
+                              {/* Edit button - opens actual interview/todo for editing */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditStepRecord(step);
+                                }}
+                                className="w-24 px-3 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors flex items-center justify-center gap-1"
+                                title={`Edit ${step.type === 'interview' ? 'interview' : 'todo'} record`}
+                              >
+                                <Edit className="h-4 w-4" />
+                                Edit
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteStep(step.id);
+                                }}
+                                className="w-24 px-3 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-sm transition-colors flex items-center justify-center gap-1"
+                                title="Delete step"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                Delete
+                              </button>
+                            </div>
                           </div>
                         </div>
+
+                        {/* Connection Arrow */}
+                        {index < steps.length - 1 && (
+                          <div className="flex justify-center py-2">
+                            <div
+                              className={`text-2xl font-bold ${
+                                draggedStep &&
+                                (dragOverIndex === index || dragOverIndex === index + 1)
+                                  ? 'text-blue-500 animate-pulse'
+                                  : 'text-gray-400'
+                              }`}
+                            >
+                              ↓
+                            </div>
+                          </div>
+                        )}
                       </div>
-
-                      {/* Connection Arrow */}
-                      {index < steps.length - 1 && (
-                        <div className="flex justify-center py-2">
-                          <div className={`text-2xl font-bold ${
-                            draggedStep && (dragOverIndex === index || dragOverIndex === index + 1)
-                              ? 'text-blue-500 animate-pulse'
-                              : 'text-gray-400'
-                          }`}>
-                            ↓
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
+                    );
                   })}
                 </div>
               )}
@@ -1510,7 +1594,9 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
               <h3 className="text-lg font-semibold text-gray-900">Candidate Assignment</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Assign Candidates</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Assign Candidates
+                  </label>
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -1536,8 +1622,11 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
                   {/* Assigned Candidates List */}
                   {assignedCandidates.length > 0 && (
                     <div className="mt-3 space-y-2">
-                      {assignedCandidates.map(candidate => (
-                        <div key={candidate.id} className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+                      {assignedCandidates.map((candidate) => (
+                        <div
+                          key={candidate.id}
+                          className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm"
+                        >
                           <div>
                             <span className="font-medium text-blue-900">{candidate.name}</span>
                             <span className="text-blue-600 ml-2">({candidate.email})</span>
@@ -1555,7 +1644,8 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
                   )}
 
                   <p className="text-xs text-gray-500 mt-2">
-                    Candidates will be automatically assigned to all interviews and todos in this workflow
+                    Candidates will be automatically assigned to all interviews and todos in this
+                    workflow
                   </p>
                 </div>
               </div>
@@ -1566,7 +1656,9 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
               <h3 className="text-lg font-semibold text-gray-900">Workflow Viewers</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Add Viewers</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Add Viewers
+                  </label>
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -1592,8 +1684,11 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
                   {/* Workflow Viewers List */}
                   {workflowViewers.length > 0 && (
                     <div className="mt-3 space-y-2">
-                      {workflowViewers.map(viewer => (
-                        <div key={viewer.id} className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg text-sm">
+                      {workflowViewers.map((viewer) => (
+                        <div
+                          key={viewer.id}
+                          className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg text-sm"
+                        >
                           <div>
                             <span className="font-medium text-green-900">{viewer.name}</span>
                             <span className="text-green-600 ml-2">({viewer.email})</span>
@@ -1624,8 +1719,9 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
                 <div className="text-sm text-violet-800">
                   <div className="font-semibold mb-1">Smart Integration</div>
                   <p>
-                    When enabled, interview steps create actual interview records and todo steps create real todo assignments.
-                    Assigned candidates and viewers are automatically propagated to all created records.
+                    When enabled, interview steps create actual interview records and todo steps
+                    create real todo assignments. Assigned candidates and viewers are automatically
+                    propagated to all created records.
                   </p>
                 </div>
               </div>
@@ -1637,15 +1733,21 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
         <div className="flex-shrink-0 border-t border-slate-200 bg-white px-6 py-4">
           <div className="flex justify-between items-center">
             <div className="text-sm text-gray-600">
-              {(steps.length > 0 || assignedCandidates.length > 0 || workflowViewers.length > 0) && (
+              {(steps.length > 0 ||
+                assignedCandidates.length > 0 ||
+                workflowViewers.length > 0) && (
                 <div className="flex items-center gap-4 text-xs text-gray-500">
                   {steps.length > 0 && (
-                    <div>{steps.filter(s => s.type === 'interview').length} interviews • {steps.filter(s => s.type === 'todo').length} todos</div>
+                    <div>
+                      {steps.filter((s) => s.type === 'interview').length} interviews •{' '}
+                      {steps.filter((s) => s.type === 'todo').length} todos
+                    </div>
                   )}
                   {assignedCandidates.length > 0 && (
                     <div className="flex items-center gap-1">
                       <Users className="h-3 w-3" />
-                      {assignedCandidates.length} candidate{assignedCandidates.length !== 1 ? 's' : ''}
+                      {assignedCandidates.length} candidate
+                      {assignedCandidates.length !== 1 ? 's' : ''}
                     </div>
                   )}
                   {workflowViewers.length > 0 && (
@@ -1689,23 +1791,25 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
           onSuccess={(todoData) => {
             // Store todo data in the workflow step
             if (editingStepId && todoData) {
-              setSteps(prev => prev.map(step => {
-                if (step.id === editingStepId) {
-                  return {
-                    ...step,
-                    title: todoData.title || step.title,
-                    description: todoData.description || step.description,
-                    config: {
-                      ...step.config,
-                      priority: todoData.priority,
-                      assignment_type: todoData.todo_type,
-                      is_assignment: todoData.todo_type === 'assignment',
-                    },
-                    formData: todoData, // Store the full form data
-                  };
-                }
-                return step;
-              }));
+              setSteps((prev) =>
+                prev.map((step) => {
+                  if (step.id === editingStepId) {
+                    return {
+                      ...step,
+                      title: todoData.title || step.title,
+                      description: todoData.description || step.description,
+                      config: {
+                        ...step.config,
+                        priority: todoData.priority,
+                        assignment_type: todoData.todo_type,
+                        is_assignment: todoData.todo_type === 'assignment',
+                      },
+                      formData: todoData, // Store the full form data
+                    };
+                  }
+                  return step;
+                })
+              );
             }
             setIsTodoModalOpen(false);
             setEditingTodo(null);
@@ -1719,9 +1823,11 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
       {isInterviewModalOpen && (
         <InterviewModal
           isOpen={isInterviewModalOpen}
-          mode={editingInterview?.id ? "edit" : "create"}
+          mode={editingInterview?.id ? 'edit' : 'create'}
           interviewId={editingInterview?.id}
-          defaultData={!editingInterview?.id && editingInterview ? editingInterview as any : undefined}
+          defaultData={
+            !editingInterview?.id && editingInterview ? (editingInterview as any) : undefined
+          }
           onClose={() => {
             setIsInterviewModalOpen(false);
             setEditingInterview(null);
@@ -1730,23 +1836,25 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
           onSuccess={(interviewData) => {
             // Store interview data in the workflow step
             if (editingStepId && interviewData) {
-              setSteps(prev => prev.map(step => {
-                if (step.id === editingStepId) {
-                  return {
-                    ...step,
-                    title: interviewData.title || step.title,
-                    description: interviewData.description || step.description,
-                    config: {
-                      ...step.config,
-                      duration: 60, // Can calculate from scheduled_start and scheduled_end
-                      interview_type: interviewData.interview_type,
-                      location: interviewData.location || interviewData.meeting_url,
-                    },
-                    formData: interviewData, // Store the full form data
-                  };
-                }
-                return step;
-              }));
+              setSteps((prev) =>
+                prev.map((step) => {
+                  if (step.id === editingStepId) {
+                    return {
+                      ...step,
+                      title: interviewData.title || step.title,
+                      description: interviewData.description || step.description,
+                      config: {
+                        ...step.config,
+                        duration: 60, // Can calculate from scheduled_start and scheduled_end
+                        interview_type: interviewData.interview_type,
+                        location: interviewData.location || interviewData.meeting_url,
+                      },
+                      formData: interviewData, // Store the full form data
+                    };
+                  }
+                  return step;
+                })
+              );
             }
             setIsInterviewModalOpen(false);
             setEditingInterview(null);

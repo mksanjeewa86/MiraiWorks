@@ -263,7 +263,9 @@ class PositionInfo(PositionBase, PositionSalaryInfo):
     def _default_int_fields(cls, value):
         return 0 if value is None else value
 
-    @field_validator("preferred_skills", "required_skills", "benefits", "perks", mode="before")
+    @field_validator(
+        "preferred_skills", "required_skills", "benefits", "perks", mode="before"
+    )
     @classmethod
     def _parse_json_list_fields(cls, value):
         """Parse JSON string fields into lists if needed."""
@@ -272,6 +274,7 @@ class PositionInfo(PositionBase, PositionSalaryInfo):
         if isinstance(value, str):
             try:
                 import json
+
                 return json.loads(value)
             except (json.JSONDecodeError, ValueError):
                 # If it's not valid JSON, return empty list
@@ -295,7 +298,7 @@ class PositionInfo(PositionBase, PositionSalaryInfo):
                 "lead": "senior_level",
                 "executive": "executive",
                 "intern": "internship",
-                "internship": "internship"
+                "internship": "internship",
             }
             normalized = value.replace("-", "_").lower()
             if normalized in mapping:
@@ -508,10 +511,3 @@ class PositionSearchResponse(BaseModel):
     @property
     def jobs(self) -> list[PositionInfo]:
         return self.positions
-
-
-
-
-
-
-

@@ -1,6 +1,7 @@
 """Connection invitation API endpoints."""
 
 
+from app.config.endpoints import API_ROUTES
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,15 +17,17 @@ router = APIRouter()
 
 class InvitationCreate(BaseModel):
     """Schema for creating invitations."""
+
     message: str | None = None
 
 
 class InvitationResponse(BaseModel):
     """Schema for invitation response."""
+
     accept: bool
 
 
-@router.post("/send/{user_id}")
+@router.post(API_ROUTES.CONNECTION_INVITATIONS.SEND)
 async def send_invitation(
     user_id: int,
     invitation_data: InvitationCreate,
@@ -36,7 +39,7 @@ async def send_invitation(
     if user_id == current_user.id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot send invitation to yourself"
+            detail="Cannot send invitation to yourself",
         )
 
     try:
@@ -44,23 +47,20 @@ async def send_invitation(
             db=db,
             sender_id=current_user.id,
             receiver_id=user_id,
-            message=invitation_data.message
+            message=invitation_data.message,
         )
 
         return {
             "message": "Invitation sent successfully",
             "invitation_id": invitation.id,
-            "sent_to_user_id": user_id
+            "sent_to_user_id": user_id,
         }
 
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@router.post("/respond/{invitation_id}")
+@router.post(API_ROUTES.CONNECTION_INVITATIONS.RESPOND)
 async def respond_to_invitation(
     invitation_id: int,
     response_data: InvitationResponse,
@@ -74,19 +74,16 @@ async def respond_to_invitation(
             db=db,
             invitation_id=invitation_id,
             receiver_id=current_user.id,
-            accept=response_data.accept
+            accept=response_data.accept,
         )
 
         return result
 
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@router.delete("/cancel/{invitation_id}")
+@router.delete(API_ROUTES.CONNECTION_INVITATIONS.CANCEL)
 async def cancel_invitation(
     invitation_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -96,22 +93,17 @@ async def cancel_invitation(
 
     try:
         success = await connection_invitation_service.cancel_invitation(
-            db=db,
-            invitation_id=invitation_id,
-            sender_id=current_user.id
+            db=db, invitation_id=invitation_id, sender_id=current_user.id
         )
 
         if success:
             return {"message": "Invitation cancelled successfully"}
 
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@router.get("/sent")
+@router.get(API_ROUTES.CONNECTION_INVITATIONS.SENT)
 async def get_sent_invitations(
     status_filter: str | None = None,
     current_user: User = Depends(get_current_active_user),
@@ -126,22 +118,17 @@ async def get_sent_invitations(
         except ValueError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid status: {status_filter}"
+                detail=f"Invalid status: {status_filter}",
             )
 
     invitations = await connection_invitation_service.get_sent_invitations(
-        db=db,
-        sender_id=current_user.id,
-        status=invitation_status
+        db=db, sender_id=current_user.id, status=invitation_status
     )
 
-    return {
-        "invitations": invitations,
-        "total": len(invitations)
-    }
+    return {"invitations": invitations, "total": len(invitations)}
 
 
-@router.get("/received")
+@router.get(API_ROUTES.CONNECTION_INVITATIONS.RECEIVED)
 async def get_received_invitations(
     status_filter: str | None = None,
     current_user: User = Depends(get_current_active_user),
@@ -156,22 +143,17 @@ async def get_received_invitations(
         except ValueError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid status: {status_filter}"
+                detail=f"Invalid status: {status_filter}",
             )
 
     invitations = await connection_invitation_service.get_received_invitations(
-        db=db,
-        receiver_id=current_user.id,
-        status=invitation_status
+        db=db, receiver_id=current_user.id, status=invitation_status
     )
 
-    return {
-        "invitations": invitations,
-        "total": len(invitations)
-    }
+    return {"invitations": invitations, "total": len(invitations)}
 
 
-@router.get("/pending")
+@router.get(API_ROUTES.CONNECTION_INVITATIONS.PENDING)
 async def get_pending_invitations(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
@@ -179,8 +161,7 @@ async def get_pending_invitations(
     """Get all pending invitations for current user (sent and received)."""
 
     pending_invitations = await connection_invitation_service.get_pending_invitations(
-        db=db,
-        user_id=current_user.id
+        db=db, user_id=current_user.id
     )
 
     return pending_invitations

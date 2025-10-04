@@ -70,7 +70,8 @@ function TodoItem({
   const isDeleted = todo.is_deleted;
 
   // Check if user can request extension (assignee with due date, not completed/deleted)
-  const canRequestExtension = !isDeleted && !isCompleted && todo.due_date && todo.assigned_user_id && onRequestExtension;
+  const canRequestExtension =
+    !isDeleted && !isCompleted && todo.due_date && todo.assigned_user_id && onRequestExtension;
 
   const statusAccentClass = isDeleted
     ? 'bg-red-500/20 text-red-700 dark:bg-red-500/25 dark:text-red-300'
@@ -623,7 +624,7 @@ function TodosPageContent() {
     } else {
       showToast({
         type: 'error',
-        title: 'Only the assigned user can request an extension'
+        title: 'Only the assigned user can request an extension',
       });
     }
   };

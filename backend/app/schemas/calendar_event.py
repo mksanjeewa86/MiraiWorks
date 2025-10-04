@@ -38,28 +38,30 @@ class CalendarEventBase(BaseModel):
     recurrence_rule: Optional[str] = Field(None, max_length=255)
     timezone: str = Field(default="UTC", max_length=50)
 
-    @field_validator('end_datetime')
+    @field_validator("end_datetime")
     @classmethod
     def validate_end_datetime(cls, v, info):
-        if v and info.data.get('start_datetime') and v <= info.data['start_datetime']:
-            raise ValueError('end_datetime must be after start_datetime')
+        if v and info.data.get("start_datetime") and v <= info.data["start_datetime"]:
+            raise ValueError("end_datetime must be after start_datetime")
         return v
 
-    @field_validator('start_datetime')
+    @field_validator("start_datetime")
     @classmethod
     def validate_start_datetime(cls, v):
         if v < datetime(1900, 1, 1) or v > datetime(2100, 12, 31):
-            raise ValueError('start_datetime must be between 1900 and 2100')
+            raise ValueError("start_datetime must be between 1900 and 2100")
         return v
 
 
 class CalendarEventCreate(CalendarEventBase):
     """Schema for creating a new calendar event."""
+
     pass
 
 
 class CalendarEventUpdate(BaseModel):
     """Schema for updating an existing calendar event."""
+
     title: Optional[str] = Field(None, min_length=1, max_length=255)
     description: Optional[str] = None
     start_datetime: Optional[datetime] = None
@@ -71,23 +73,24 @@ class CalendarEventUpdate(BaseModel):
     recurrence_rule: Optional[str] = Field(None, max_length=255)
     timezone: Optional[str] = Field(None, max_length=50)
 
-    @field_validator('end_datetime')
+    @field_validator("end_datetime")
     @classmethod
     def validate_end_datetime(cls, v, info):
-        if v and info.data.get('start_datetime') and v <= info.data['start_datetime']:
-            raise ValueError('end_datetime must be after start_datetime')
+        if v and info.data.get("start_datetime") and v <= info.data["start_datetime"]:
+            raise ValueError("end_datetime must be after start_datetime")
         return v
 
-    @field_validator('start_datetime')
+    @field_validator("start_datetime")
     @classmethod
     def validate_start_datetime(cls, v):
         if v and (v < datetime(1900, 1, 1) or v > datetime(2100, 12, 31)):
-            raise ValueError('start_datetime must be between 1900 and 2100')
+            raise ValueError("start_datetime must be between 1900 and 2100")
         return v
 
 
 class CalendarEventInfo(CalendarEventBase):
     """Schema for calendar event responses."""
+
     id: int
     creator_id: Optional[int] = None
     created_at: datetime
@@ -99,6 +102,7 @@ class CalendarEventInfo(CalendarEventBase):
 
 class CalendarEventListResponse(BaseModel):
     """Schema for calendar event list responses."""
+
     events: list[CalendarEventInfo]
     total: int
     start_date: Optional[datetime] = None
@@ -107,6 +111,7 @@ class CalendarEventListResponse(BaseModel):
 
 class CalendarEventQueryParams(BaseModel):
     """Schema for calendar event query parameters."""
+
     start_date: Optional[datetime] = Field(None)
     end_date: Optional[datetime] = Field(None)
     event_type: Optional[EventType] = Field(None)
@@ -116,21 +121,23 @@ class CalendarEventQueryParams(BaseModel):
     include_recurring: bool = Field(default=True)
     timezone: Optional[str] = Field(None, max_length=50)
 
-    @field_validator('end_date')
+    @field_validator("end_date")
     @classmethod
     def validate_date_range(cls, v, info):
-        if v and info.data.get('start_date') and v < info.data['start_date']:
-            raise ValueError('end_date must be after start_date')
+        if v and info.data.get("start_date") and v < info.data["start_date"]:
+            raise ValueError("end_date must be after start_date")
         return v
 
 
 class CalendarEventBulkCreate(BaseModel):
     """Schema for creating multiple calendar events at once."""
+
     events: list[CalendarEventCreate] = Field(..., min_length=1, max_length=100)
 
 
 class CalendarEventBulkResponse(BaseModel):
     """Schema for bulk create response."""
+
     created_events: list[CalendarEventInfo]
     failed_events: list[dict] = Field(default_factory=list)
     total_created: int
@@ -139,6 +146,7 @@ class CalendarEventBulkResponse(BaseModel):
 
 class RecurrencePattern(BaseModel):
     """Schema for recurring event patterns."""
+
     frequency: str = Field(..., description="DAILY, WEEKLY, MONTHLY, YEARLY")
     interval: int = Field(default=1, ge=1, le=999)
     count: Optional[int] = Field(None, ge=1, le=999)
@@ -147,10 +155,10 @@ class RecurrencePattern(BaseModel):
     by_monthday: list[int] | None = Field(None, description="1-31")
     by_month: list[int] | None = Field(None, description="1-12")
 
-    @field_validator('frequency')
+    @field_validator("frequency")
     @classmethod
     def validate_frequency(cls, v):
-        allowed = ['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY']
+        allowed = ["DAILY", "WEEKLY", "MONTHLY", "YEARLY"]
         if v.upper() not in allowed:
             raise ValueError(f'frequency must be one of: {", ".join(allowed)}')
         return v.upper()

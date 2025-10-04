@@ -1,4 +1,3 @@
-
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -7,7 +6,9 @@ from app.models.interview_note import InterviewNote
 from app.schemas.interview_note import InterviewNoteCreate, InterviewNoteUpdate
 
 
-class CRUDInterviewNote(CRUDBase[InterviewNote, InterviewNoteCreate, InterviewNoteUpdate]):
+class CRUDInterviewNote(
+    CRUDBase[InterviewNote, InterviewNoteCreate, InterviewNoteUpdate]
+):
     """CRUD operations for interview notes."""
 
     async def get_by_interview_and_participant(
@@ -18,7 +19,7 @@ class CRUDInterviewNote(CRUDBase[InterviewNote, InterviewNoteCreate, InterviewNo
             select(InterviewNote).where(
                 and_(
                     InterviewNote.interview_id == interview_id,
-                    InterviewNote.participant_id == participant_id
+                    InterviewNote.participant_id == participant_id,
                 )
             )
         )
@@ -30,7 +31,7 @@ class CRUDInterviewNote(CRUDBase[InterviewNote, InterviewNoteCreate, InterviewNo
         *,
         interview_id: int,
         participant_id: int,
-        content: str | None
+        content: str | None,
     ) -> InterviewNote:
         """Create a new note or update existing note for a participant."""
         # Check if note already exists
@@ -50,7 +51,7 @@ class CRUDInterviewNote(CRUDBase[InterviewNote, InterviewNoteCreate, InterviewNo
             db_note = InterviewNote(
                 interview_id=interview_id,
                 participant_id=participant_id,
-                **note_data.model_dump()
+                **note_data.model_dump(),
             )
             db.add(db_note)
             await db.commit()

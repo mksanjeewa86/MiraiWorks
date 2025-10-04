@@ -22,10 +22,24 @@ class VideoCall(Base):
     id = Column(Integer, primary_key=True, index=True)
 
     # Related entities
-    job_id = Column(Integer, ForeignKey("positions.id", ondelete="CASCADE"), nullable=True, index=True)
-    interview_id = Column(Integer, ForeignKey("interviews.id", ondelete="CASCADE"), nullable=True, index=True)
-    interviewer_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    candidate_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    job_id = Column(
+        Integer,
+        ForeignKey("positions.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
+    interview_id = Column(
+        Integer,
+        ForeignKey("interviews.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
+    interviewer_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    candidate_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
 
     # Call details
     scheduled_at = Column(DateTime(timezone=True), nullable=False)
@@ -40,18 +54,35 @@ class VideoCall(Base):
     transcription_language = Column(String(10), default="ja")
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
 
     # Relationships
     job = relationship("Position", foreign_keys=[job_id], lazy="noload")
     interview = relationship("Interview", foreign_keys=[interview_id], lazy="noload")
     interviewer = relationship("User", foreign_keys=[interviewer_id], lazy="noload")
     candidate = relationship("User", foreign_keys=[candidate_id], lazy="noload")
-    participants = relationship("CallParticipant", back_populates="video_call", cascade="all, delete-orphan")
-    recording_consents = relationship("RecordingConsent", back_populates="video_call", cascade="all, delete-orphan")
-    transcriptions = relationship("CallTranscription", back_populates="video_call", cascade="all, delete-orphan")
-    transcription_segments = relationship("TranscriptionSegment", back_populates="video_call", cascade="all, delete-orphan")
+    participants = relationship(
+        "CallParticipant", back_populates="video_call", cascade="all, delete-orphan"
+    )
+    recording_consents = relationship(
+        "RecordingConsent", back_populates="video_call", cascade="all, delete-orphan"
+    )
+    transcriptions = relationship(
+        "CallTranscription", back_populates="video_call", cascade="all, delete-orphan"
+    )
+    transcription_segments = relationship(
+        "TranscriptionSegment",
+        back_populates="video_call",
+        cascade="all, delete-orphan",
+    )
 
     # Indexes
     __table_args__ = (
@@ -64,8 +95,15 @@ class CallParticipant(Base):
     __tablename__ = "call_participants"
 
     id = Column(Integer, primary_key=True, index=True)
-    video_call_id = Column(Integer, ForeignKey("video_calls.id", ondelete="CASCADE"), nullable=False, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    video_call_id = Column(
+        Integer,
+        ForeignKey("video_calls.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
 
     # Participation details
     joined_at = Column(DateTime(timezone=True), nullable=True)
@@ -74,8 +112,15 @@ class CallParticipant(Base):
     device_info = Column(JSON, nullable=True)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
 
     # Relationships
     video_call = relationship("VideoCall", back_populates="participants")
@@ -83,7 +128,12 @@ class CallParticipant(Base):
 
     # Indexes
     __table_args__ = (
-        Index("idx_call_participants_video_call_user", "video_call_id", "user_id", unique=True),
+        Index(
+            "idx_call_participants_video_call_user",
+            "video_call_id",
+            "user_id",
+            unique=True,
+        ),
     )
 
 
@@ -91,15 +141,24 @@ class RecordingConsent(Base):
     __tablename__ = "recording_consents"
 
     id = Column(Integer, primary_key=True, index=True)
-    video_call_id = Column(Integer, ForeignKey("video_calls.id", ondelete="CASCADE"), nullable=False, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    video_call_id = Column(
+        Integer,
+        ForeignKey("video_calls.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
 
     # Consent details
     consented = Column(Boolean, default=False)
     consented_at = Column(DateTime(timezone=True), nullable=True)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
 
     # Relationships
     video_call = relationship("VideoCall", back_populates="recording_consents")
@@ -107,7 +166,12 @@ class RecordingConsent(Base):
 
     # Indexes
     __table_args__ = (
-        Index("idx_recording_consents_video_call_user", "video_call_id", "user_id", unique=True),
+        Index(
+            "idx_recording_consents_video_call_user",
+            "video_call_id",
+            "user_id",
+            unique=True,
+        ),
     )
 
 
@@ -115,7 +179,13 @@ class CallTranscription(Base):
     __tablename__ = "call_transcriptions"
 
     id = Column(Integer, primary_key=True, index=True)
-    video_call_id = Column(Integer, ForeignKey("video_calls.id", ondelete="CASCADE"), nullable=False, unique=True, index=True)
+    video_call_id = Column(
+        Integer,
+        ForeignKey("video_calls.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
 
     # Transcription data
     transcript_url = Column(String(255), nullable=True)
@@ -125,7 +195,9 @@ class CallTranscription(Base):
     word_count = Column(Integer, nullable=True)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
     processed_at = Column(DateTime(timezone=True), nullable=True)
 
     # Relationships
@@ -136,8 +208,15 @@ class TranscriptionSegment(Base):
     __tablename__ = "transcription_segments"
 
     id = Column(Integer, primary_key=True, index=True)
-    video_call_id = Column(Integer, ForeignKey("video_calls.id", ondelete="CASCADE"), nullable=False, index=True)
-    speaker_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    video_call_id = Column(
+        Integer,
+        ForeignKey("video_calls.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    speaker_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
 
     # Segment data
     segment_text = Column(Text, nullable=False)
@@ -146,7 +225,9 @@ class TranscriptionSegment(Base):
     confidence = Column(Float, nullable=True)
 
     # Timestamp
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
 
     # Relationships
     video_call = relationship("VideoCall", back_populates="transcription_segments")
@@ -154,5 +235,7 @@ class TranscriptionSegment(Base):
 
     # Indexes
     __table_args__ = (
-        Index("idx_transcription_segments_video_call_time", "video_call_id", "start_time"),
+        Index(
+            "idx_transcription_segments_video_call_time", "video_call_id", "start_time"
+        ),
     )

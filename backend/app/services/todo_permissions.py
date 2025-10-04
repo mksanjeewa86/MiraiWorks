@@ -66,7 +66,10 @@ class TodoPermissionService:
 
         # Assigned user can view if visibility allows (PUBLIC or VIEWER)
         if todo.assigned_user_id == user_id:
-            return todo.visibility in [TodoVisibility.PUBLIC.value, TodoVisibility.VIEWER.value]
+            return todo.visibility in [
+                TodoVisibility.PUBLIC.value,
+                TodoVisibility.VIEWER.value,
+            ]
 
         # Check if user is in viewers list
         if await todo_viewer.is_viewer(db, todo_id=todo.id, user_id=user_id):
@@ -82,7 +85,10 @@ class TodoPermissionService:
             return True
 
         # Assignee can edit if visibility is PUBLIC (not VIEWER)
-        if todo.assigned_user_id == user_id and todo.visibility == TodoVisibility.PUBLIC.value:
+        if (
+            todo.assigned_user_id == user_id
+            and todo.visibility == TodoVisibility.PUBLIC.value
+        ):
             return True
 
         return False
@@ -101,7 +107,10 @@ class TodoPermissionService:
             return True
 
         # Assignee can change status if visibility is PUBLIC (not VIEWER)
-        if todo.assigned_user_id == user_id and todo.visibility == TodoVisibility.PUBLIC.value:
+        if (
+            todo.assigned_user_id == user_id
+            and todo.visibility == TodoVisibility.PUBLIC.value
+        ):
             return True
 
         return False
@@ -114,19 +123,22 @@ class TodoPermissionService:
             return True
 
         # Assignee can add attachments if visibility is PUBLIC (not VIEWER)
-        if todo.assigned_user_id == user_id and todo.visibility == TodoVisibility.PUBLIC.value:
+        if (
+            todo.assigned_user_id == user_id
+            and todo.visibility == TodoVisibility.PUBLIC.value
+        ):
             return True
 
         return False
 
     @staticmethod
-    async def can_assign_to_user(db: AsyncSession, assigner_id: int, assignee_id: int) -> bool:
+    async def can_assign_to_user(
+        db: AsyncSession, assigner_id: int, assignee_id: int
+    ) -> bool:
         """Check if assigner can assign todos to assignee."""
         # Any creator can assign to any active user
         query = select(User).where(
-            User.id == assignee_id,
-            User.is_active is True,
-            User.is_deleted is False
+            User.id == assignee_id, User.is_active is True, User.is_deleted is False
         )
         result = await db.execute(query)
         user = result.scalars().first()
@@ -140,7 +152,9 @@ class TodoPermissionService:
 
         # Use simple connection service to get connected users
         try:
-            connected_users = await user_connection_service.get_connected_users(db, assigner_id)
+            connected_users = await user_connection_service.get_connected_users(
+                db, assigner_id
+            )
 
             # If no connections exist, fall back to including the user themselves
             # This provides a smooth transition and allows self-assignment for testing
@@ -148,7 +162,7 @@ class TodoPermissionService:
                 query = select(User).where(
                     User.id == assigner_id,
                     User.is_active is True,
-                    User.is_deleted is False
+                    User.is_deleted is False,
                 )
                 result = await db.execute(query)
                 self_user = result.scalars().first()
@@ -159,13 +173,10 @@ class TodoPermissionService:
         except Exception as e:
             # Fallback to original behavior if connection service fails
             print(f"Connection service error, falling back: {e}")
-            query = (
-                select(User)
-                .where(
-                    User.is_active is True,
-                    User.is_deleted is False,
-                    User.id != assigner_id  # Don't include the assigner themselves
-                )
+            query = select(User).where(
+                User.is_active is True,
+                User.is_deleted is False,
+                User.id != assigner_id,  # Don't include the assigner themselves
             )
 
             result = await db.execute(query)
@@ -173,9 +184,7 @@ class TodoPermissionService:
 
     @staticmethod
     async def filter_todos_by_permission(
-        db: AsyncSession,
-        user_id: int,
-        todos: list[Todo]
+        db: AsyncSession, user_id: int, todos: list[Todo]
     ) -> list[Todo]:
         """Filter todos based on user permissions."""
         filtered_todos = []
@@ -209,13 +218,17 @@ class TodoPermissionService:
         return True
 
     @staticmethod
-    async def can_respond_to_extension(db: AsyncSession, user_id: int, extension_request: TodoExtensionRequest) -> bool:
+    async def can_respond_to_extension(
+        db: AsyncSession, user_id: int, extension_request: TodoExtensionRequest
+    ) -> bool:
         """Check if user can respond to an extension request."""
         # Only the creator (owner) can respond to extension requests
         return extension_request.creator_id == user_id
 
     @staticmethod
-    async def can_view_extension_request(db: AsyncSession, user_id: int, extension_request: TodoExtensionRequest) -> bool:
+    async def can_view_extension_request(
+        db: AsyncSession, user_id: int, extension_request: TodoExtensionRequest
+    ) -> bool:
         """Check if user can view an extension request."""
         # Creator can always view
         if extension_request.creator_id == user_id:
@@ -226,7 +239,9 @@ class TodoPermissionService:
             return True
 
         # Check if user is a viewer of the todo
-        if await todo_viewer.is_viewer(db, todo_id=extension_request.todo_id, user_id=user_id):
+        if await todo_viewer.is_viewer(
+            db, todo_id=extension_request.todo_id, user_id=user_id
+        ):
             return True
 
         return False

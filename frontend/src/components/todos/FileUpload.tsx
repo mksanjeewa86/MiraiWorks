@@ -188,9 +188,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         <p className="mt-2 text-sm text-gray-600">
           <span className="font-medium text-blue-600">Click to upload files</span> or drag and drop
         </p>
-        <p className="text-xs text-gray-500">
-          Any file type • No size limit • No file limit
-        </p>
+        <p className="text-xs text-gray-500">Any file type • No size limit • No file limit</p>
       </div>
 
       {/* Upload Progress */}

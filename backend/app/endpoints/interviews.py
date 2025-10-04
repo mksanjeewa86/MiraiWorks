@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime, timedelta
 
+from app.config.endpoints import API_ROUTES
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -37,12 +38,10 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-@router.post("", response_model=InterviewInfo, status_code=status.HTTP_201_CREATED)
 @router.post(
-    "/",
+    API_ROUTES.INTERVIEWS.BASE_SLASH,
     response_model=InterviewInfo,
     status_code=status.HTTP_201_CREATED,
-    include_in_schema=False,
 )
 @requires_permission("interviews.create")
 async def create_interview(
@@ -89,8 +88,7 @@ async def create_interview(
     return await _format_interview_response(db, interview_with_relationships)
 
 
-@router.get("", response_model=InterviewsListResponse)
-@router.get("/", response_model=InterviewsListResponse, include_in_schema=False)
+@router.get(API_ROUTES.INTERVIEWS.BASE_SLASH, response_model=InterviewsListResponse)
 @requires_permission("interviews.read")
 async def get_interviews(
     request: InterviewsListRequest = Depends(),
@@ -129,7 +127,7 @@ async def get_interviews(
     )
 
 
-@router.get("/{interview_id}", response_model=InterviewInfo)
+@router.get(API_ROUTES.INTERVIEWS.BY_ID, response_model=InterviewInfo)
 @requires_permission("interviews.read")
 async def get_interview(
     interview_id: int,
@@ -152,7 +150,7 @@ async def get_interview(
     return await _format_interview_response(db, interview)
 
 
-@router.patch("/{interview_id}", response_model=InterviewInfo)
+@router.patch(API_ROUTES.INTERVIEWS.BY_ID, response_model=InterviewInfo)
 @requires_permission("interviews.update")
 async def update_interview(
     interview_id: int,
@@ -194,7 +192,7 @@ async def update_interview(
     return await _format_interview_response(db, interview)
 
 
-@router.post("/{interview_id}/proposals", response_model=ProposalInfo)
+@router.post(API_ROUTES.INTERVIEWS.PROPOSALS, response_model=ProposalInfo)
 @requires_permission("interviews.propose")
 async def create_proposal(
     interview_id: int,
@@ -217,9 +215,7 @@ async def create_proposal(
     return await _format_proposal_response(db, proposal)
 
 
-@router.post(
-    "/{interview_id}/proposals/{proposal_id}/respond", response_model=ProposalInfo
-)
+@router.post(API_ROUTES.INTERVIEWS.PROPOSAL_RESPOND, response_model=ProposalInfo)
 @requires_permission("interviews.accept")
 async def respond_to_proposal(
     interview_id: int,
@@ -240,7 +236,7 @@ async def respond_to_proposal(
     return await _format_proposal_response(db, proposal)
 
 
-@router.post("/{interview_id}/cancel", response_model=InterviewInfo)
+@router.post(API_ROUTES.INTERVIEWS.CANCEL, response_model=InterviewInfo)
 @requires_permission("interviews.cancel")
 async def cancel_interview(
     interview_id: int,
@@ -259,7 +255,7 @@ async def cancel_interview(
     return await _format_interview_response(db, interview)
 
 
-@router.post("/{interview_id}/reschedule", response_model=InterviewInfo)
+@router.post(API_ROUTES.INTERVIEWS.RESCHEDULE, response_model=InterviewInfo)
 @requires_permission("interviews.update")
 async def reschedule_interview(
     interview_id: int,
@@ -280,7 +276,7 @@ async def reschedule_interview(
     return await _format_interview_response(db, interview)
 
 
-@router.get("/stats/summary", response_model=InterviewStats)
+@router.get(API_ROUTES.INTERVIEWS.STATS_SUMMARY, response_model=InterviewStats)
 @requires_permission("interviews.read")
 async def get_interview_stats(
     current_user: User = Depends(get_current_active_user),
@@ -291,7 +287,9 @@ async def get_interview_stats(
     return InterviewStats(**stats)
 
 
-@router.get("/calendar/events", response_model=list[InterviewCalendarEvent])
+@router.get(
+    API_ROUTES.INTERVIEWS.CALENDAR_EVENTS, response_model=list[InterviewCalendarEvent]
+)
 @requires_permission("interviews.read")
 async def get_interview_calendar_events(
     start_date: datetime | None = Query(None),
@@ -329,7 +327,10 @@ async def get_interview_calendar_events(
     return calendar_events
 
 
-@router.get("/calendar/integration-status", response_model=CalendarIntegrationStatus)
+@router.get(
+    API_ROUTES.INTERVIEWS.CALENDAR_INTEGRATION_STATUS,
+    response_model=CalendarIntegrationStatus,
+)
 async def get_calendar_integration_status(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
@@ -388,13 +389,19 @@ async def _format_interview_response(
         interview_type=interview.interview_type,
         candidate=ParticipantInfo(
             id=interview.candidate.id if interview.candidate else 0,
-            email=interview.candidate.email if interview.candidate else "unknown@example.com",
-            full_name=interview.candidate.full_name if interview.candidate else "Unknown Candidate",
+            email=interview.candidate.email
+            if interview.candidate
+            else "unknown@example.com",
+            full_name=interview.candidate.full_name
+            if interview.candidate
+            else "Unknown Candidate",
             role="candidate",
             company_name=interview.candidate.company.name
             if interview.candidate and interview.candidate.company
             else None,
-        ) if interview.candidate else ParticipantInfo(
+        )
+        if interview.candidate
+        else ParticipantInfo(
             id=0,
             email="unknown@example.com",
             full_name="Unknown Candidate",
@@ -403,20 +410,28 @@ async def _format_interview_response(
         ),
         recruiter=ParticipantInfo(
             id=interview.recruiter.id if interview.recruiter else 0,
-            email=interview.recruiter.email if interview.recruiter else "unknown@example.com",
-            full_name=interview.recruiter.full_name if interview.recruiter else "Unknown Recruiter",
+            email=interview.recruiter.email
+            if interview.recruiter
+            else "unknown@example.com",
+            full_name=interview.recruiter.full_name
+            if interview.recruiter
+            else "Unknown Recruiter",
             role="recruiter",
             company_name=interview.recruiter.company.name
             if interview.recruiter and interview.recruiter.company
             else None,
-        ) if interview.recruiter else ParticipantInfo(
+        )
+        if interview.recruiter
+        else ParticipantInfo(
             id=0,
             email="unknown@example.com",
             full_name="Unknown Recruiter",
             role="recruiter",
             company_name=None,
         ),
-        employer_company_name=interview.employer_company.name if interview.employer_company else "Unknown Company",
+        employer_company_name=interview.employer_company.name
+        if interview.employer_company
+        else "Unknown Company",
         scheduled_start=interview.scheduled_start,
         scheduled_end=interview.scheduled_end,
         timezone=interview.timezone,
@@ -493,7 +508,8 @@ async def _check_interview_access(user: User, interview: Interview) -> bool:
 
 # Video Call Integration Endpoints
 
-@router.post("/{interview_id}/video-call", response_model=VideoCallInfo)
+
+@router.post(API_ROUTES.INTERVIEWS.VIDEO_CALL, response_model=VideoCallInfo)
 async def create_interview_video_call(
     interview_id: int,
     video_call_data: VideoCallCreate,
@@ -505,23 +521,24 @@ async def create_interview_video_call(
     interview = await interview_crud.get_with_relationships(db, interview_id)
     if not interview:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Interview not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Interview not found"
         )
 
     # Check access
     if not await _check_interview_access(current_user, interview):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied to this interview"
+            detail="Access denied to this interview",
         )
 
     # Check if video call already exists
-    existing_call = await video_call_crud.get_by_interview_id(db, interview_id=interview_id)
+    existing_call = await video_call_crud.get_by_interview_id(
+        db, interview_id=interview_id
+    )
     if existing_call:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Video call already exists for this interview"
+            detail="Video call already exists for this interview",
         )
 
     # Create video call with interview link
@@ -540,13 +557,13 @@ async def create_interview_video_call(
     await interview_crud.update(
         db,
         db_obj=interview,
-        obj_in={"meeting_url": f"/video-calls/{video_call.id}/join"}
+        obj_in={"meeting_url": f"/video-calls/{video_call.id}/join"},
     )
 
     return video_call
 
 
-@router.get("/{interview_id}/video-call", response_model=VideoCallInfo)
+@router.get(API_ROUTES.INTERVIEWS.VIDEO_CALL, response_model=VideoCallInfo)
 @requires_permission("interviews.read")
 async def get_interview_video_call(
     interview_id: int,
@@ -558,29 +575,30 @@ async def get_interview_video_call(
     interview = await interview_crud.get_with_relationships(db, interview_id)
     if not interview:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Interview not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Interview not found"
         )
 
     # Check access
     if not await _check_interview_access(current_user, interview):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied to this interview"
+            detail="Access denied to this interview",
         )
 
     # Get video call
-    video_call = await video_call_crud.get_by_interview_id(db, interview_id=interview_id)
+    video_call = await video_call_crud.get_by_interview_id(
+        db, interview_id=interview_id
+    )
     if not video_call:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="No video call found for this interview"
+            detail="No video call found for this interview",
         )
 
     return video_call
 
 
-@router.delete("/{interview_id}/video-call")
+@router.delete(API_ROUTES.INTERVIEWS.VIDEO_CALL)
 @requires_permission("interviews.update")
 async def delete_interview_video_call(
     interview_id: int,
@@ -592,46 +610,43 @@ async def delete_interview_video_call(
     interview = await interview_crud.get_with_relationships(db, interview_id)
     if not interview:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Interview not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Interview not found"
         )
 
     # Check access
     if not await _check_interview_access(current_user, interview):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied to this interview"
+            detail="Access denied to this interview",
         )
 
     # Get video call
-    video_call = await video_call_crud.get_by_interview_id(db, interview_id=interview_id)
+    video_call = await video_call_crud.get_by_interview_id(
+        db, interview_id=interview_id
+    )
     if not video_call:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="No video call found for this interview"
+            detail="No video call found for this interview",
         )
 
     # Check if call is in progress
     if video_call.status == "in_progress":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot delete an active video call"
+            detail="Cannot delete an active video call",
         )
 
     # Delete video call
     await video_call_crud.remove(db, id=video_call.id)
 
     # Clear meeting URL from interview
-    await interview_crud.update(
-        db,
-        db_obj=interview,
-        obj_in={"meeting_url": None}
-    )
+    await interview_crud.update(db, db_obj=interview, obj_in={"meeting_url": None})
 
     return {"message": "Video call removed successfully"}
 
 
-@router.delete("/{interview_id}")
+@router.delete(API_ROUTES.INTERVIEWS.BY_ID)
 @requires_permission("interviews.delete")
 async def delete_interview(
     interview_id: int,
@@ -643,22 +658,21 @@ async def delete_interview(
     interview = await interview_crud.get_with_relationships(db, interview_id)
     if not interview:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Interview not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Interview not found"
         )
 
     # Check access permissions
     if not await _check_interview_access(current_user, interview):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied to this interview"
+            detail="Access denied to this interview",
         )
 
     # Prevent deletion of in-progress or completed interviews
     if interview.status in [InterviewStatus.IN_PROGRESS, InterviewStatus.COMPLETED]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Cannot delete interview with status '{interview.status}'. Only scheduled or cancelled interviews can be deleted."
+            detail=f"Cannot delete interview with status '{interview.status}'. Only scheduled or cancelled interviews can be deleted.",
         )
 
     # Delete the interview
@@ -669,7 +683,8 @@ async def delete_interview(
 
 # Interview Notes Endpoints
 
-@router.get("/{interview_id}/notes", response_model=InterviewNoteInfo)
+
+@router.get(API_ROUTES.INTERVIEWS.NOTES, response_model=InterviewNoteInfo)
 async def get_interview_note(
     interview_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -680,15 +695,14 @@ async def get_interview_note(
     interview = await interview_crud.get_with_relationships(db, interview_id)
     if not interview:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Interview not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Interview not found"
         )
 
     # Check if user has access to the interview
     if not await _check_interview_access(current_user, interview):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied to this interview"
+            detail="Access denied to this interview",
         )
 
     # Get the user's note for this interview
@@ -704,13 +718,13 @@ async def get_interview_note(
             participant_id=current_user.id,
             content=None,
             created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
+            updated_at=datetime.utcnow(),
         )
 
     return note
 
 
-@router.put("/{interview_id}/notes", response_model=InterviewNoteInfo)
+@router.put(API_ROUTES.INTERVIEWS.NOTES, response_model=InterviewNoteInfo)
 async def update_interview_note(
     interview_id: int,
     note_data: InterviewNoteUpdate,
@@ -722,15 +736,14 @@ async def update_interview_note(
     interview = await interview_crud.get_with_relationships(db, interview_id)
     if not interview:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Interview not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Interview not found"
         )
 
     # Check if user has access to the interview
     if not await _check_interview_access(current_user, interview):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied to this interview"
+            detail="Access denied to this interview",
         )
 
     # Create or update the user's note
@@ -738,13 +751,13 @@ async def update_interview_note(
         db,
         interview_id=interview_id,
         participant_id=current_user.id,
-        content=note_data.content
+        content=note_data.content,
     )
 
     return note
 
 
-@router.delete("/{interview_id}/notes")
+@router.delete(API_ROUTES.INTERVIEWS.NOTES)
 async def delete_interview_note(
     interview_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -755,15 +768,14 @@ async def delete_interview_note(
     interview = await interview_crud.get_with_relationships(db, interview_id)
     if not interview:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Interview not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Interview not found"
         )
 
     # Check if user has access to the interview
     if not await _check_interview_access(current_user, interview):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied to this interview"
+            detail="Access denied to this interview",
         )
 
     # Delete the user's note
@@ -773,8 +785,7 @@ async def delete_interview_note(
 
     if not deleted:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Note not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Note not found"
         )
 
     return {"message": "Interview note deleted successfully"}

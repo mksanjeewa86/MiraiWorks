@@ -1,4 +1,5 @@
 import structlog
+from app.config.endpoints import API_ROUTES
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,7 +23,7 @@ router = APIRouter()
 calendar_service = CalendarService()
 
 
-@router.get("/calendar-connections", response_model=CalendarListResponse)
+@router.get(API_ROUTES.CALENDAR_CONNECTIONS.BASE, response_model=CalendarListResponse)
 async def get_calendar_connections(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -47,7 +48,7 @@ async def get_calendar_connections(
 
 
 @router.get(
-    "/calendar-connections/{connection_id}", response_model=CalendarConnectionPublic
+    API_ROUTES.CALENDAR_CONNECTIONS.BY_ID, response_model=CalendarConnectionPublic
 )
 async def get_calendar_connection(
     connection_id: int,
@@ -69,7 +70,7 @@ async def get_calendar_connection(
 
 
 @router.put(
-    "/calendar-connections/{connection_id}", response_model=CalendarConnectionResponse
+    API_ROUTES.CALENDAR_CONNECTIONS.BY_ID, response_model=CalendarConnectionResponse
 )
 async def update_calendar_connection(
     connection_id: int,
@@ -116,7 +117,7 @@ async def update_calendar_connection(
         )
 
 
-@router.delete("/calendar-connections/{connection_id}")
+@router.delete(API_ROUTES.CALENDAR_CONNECTIONS.BY_ID)
 async def delete_calendar_connection(
     connection_id: int,
     current_user: User = Depends(get_current_user),
@@ -166,7 +167,7 @@ async def delete_calendar_connection(
         )
 
 
-@router.get("/calendar-connections/auth/google/url")
+@router.get(API_ROUTES.CALENDAR_CONNECTIONS.AUTH_GOOGLE_URL)
 async def get_google_auth_url(
     current_user: User = Depends(get_current_user),
 ):
@@ -185,7 +186,7 @@ async def get_google_auth_url(
 
 
 @router.post(
-    "/calendar-connections/auth/google/callback",
+    API_ROUTES.CALENDAR_CONNECTIONS.AUTH_GOOGLE_CALLBACK,
     response_model=CalendarConnectionResponse,
 )
 async def google_auth_callback(
@@ -221,7 +222,7 @@ async def google_auth_callback(
         )
 
 
-@router.get("/calendar-connections/auth/outlook/url")
+@router.get(API_ROUTES.CALENDAR_CONNECTIONS.AUTH_OUTLOOK_URL)
 async def get_outlook_auth_url(
     current_user: User = Depends(get_current_user),
 ):
@@ -240,7 +241,7 @@ async def get_outlook_auth_url(
 
 
 @router.post(
-    "/calendar-connections/auth/outlook/callback",
+    API_ROUTES.CALENDAR_CONNECTIONS.AUTH_OUTLOOK_CALLBACK,
     response_model=CalendarConnectionResponse,
 )
 async def outlook_auth_callback(
@@ -276,7 +277,7 @@ async def outlook_auth_callback(
         )
 
 
-@router.post("/calendar-connections/{connection_id}/sync")
+@router.post(API_ROUTES.CALENDAR_CONNECTIONS.SYNC)
 async def sync_calendar_connection(
     connection_id: int,
     current_user: User = Depends(get_current_user),

@@ -20,7 +20,11 @@ class FileStorageService:
     UPLOAD_DIR = "uploads/todo_attachments"
 
     def __init__(self):
-        self.base_upload_dir = Path(settings.upload_directory if hasattr(settings, 'upload_directory') else self.UPLOAD_DIR)
+        self.base_upload_dir = Path(
+            settings.upload_directory
+            if hasattr(settings, "upload_directory")
+            else self.UPLOAD_DIR
+        )
         self.ensure_upload_directory()
 
     def ensure_upload_directory(self) -> None:
@@ -30,15 +34,13 @@ class FileStorageService:
             logger.info(f"Upload directory ensured: {self.base_upload_dir}")
         except Exception as e:
             logger.error(f"Failed to create upload directory: {e}")
-            raise HTTPException(status_code=500, detail="Failed to initialize file storage")
+            raise HTTPException(
+                status_code=500, detail="Failed to initialize file storage"
+            )
 
     def validate_file(self, file: UploadFile) -> dict:
         """Validate uploaded file against size and type constraints."""
-        validation_result = {
-            "valid": True,
-            "errors": [],
-            "file_info": {}
-        }
+        validation_result = {"valid": True, "errors": [], "file_info": {}}
 
         # Check if file is provided
         if not file or not file.filename:
@@ -76,7 +78,7 @@ class FileStorageService:
             "file_size": file_size,
             "mime_type": mime_type,
             "file_extension": file_extension,
-            "content_type": file.content_type
+            "content_type": file.content_type,
         }
 
         return validation_result
@@ -105,11 +107,13 @@ class FileStorageService:
         if not validation["valid"]:
             raise HTTPException(
                 status_code=400,
-                detail=f"File validation failed: {', '.join(validation['errors'])}"
+                detail=f"File validation failed: {', '.join(validation['errors'])}",
             )
 
         file_info = validation["file_info"]
-        stored_filename, full_path = self.generate_unique_filename(file_info["original_filename"])
+        stored_filename, full_path = self.generate_unique_filename(
+            file_info["original_filename"]
+        )
 
         try:
             # Ensure directory exists
@@ -128,7 +132,9 @@ class FileStorageService:
             actual_size = os.path.getsize(full_path)
             if actual_size != file_info["file_size"]:
                 os.remove(full_path)  # Clean up
-                raise Exception(f"File size mismatch: expected {file_info['file_size']}, got {actual_size}")
+                raise Exception(
+                    f"File size mismatch: expected {file_info['file_size']}, got {actual_size}"
+                )
 
             logger.info(f"File saved successfully: {stored_filename}")
 
@@ -136,7 +142,7 @@ class FileStorageService:
                 "stored_filename": stored_filename,
                 "file_path": full_path,
                 "file_size": actual_size,
-                **file_info
+                **file_info,
             }
 
         except Exception as e:
@@ -145,7 +151,9 @@ class FileStorageService:
             if os.path.exists(full_path):
                 with contextlib.suppress(Exception):
                     os.remove(full_path)
-            raise HTTPException(status_code=500, detail=f"Failed to save file: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Failed to save file: {str(e)}"
+            )
 
     def delete_file(self, file_path: str) -> bool:
         """Delete a file from storage."""
@@ -186,7 +194,7 @@ class FileStorageService:
                 "modified_at": datetime.fromtimestamp(stat.st_mtime),
                 "filename": file_path_obj.name,
                 "extension": file_path_obj.suffix.lower(),
-                "exists": True
+                "exists": True,
             }
         except Exception as e:
             logger.error(f"Failed to get file info for {file_path}: {e}")
@@ -224,7 +232,7 @@ class FileStorageService:
                 "total_files": total_files,
                 "total_size_bytes": total_size,
                 "total_size_mb": total_size / (1024 * 1024),
-                "upload_directory": str(self.base_upload_dir)
+                "upload_directory": str(self.base_upload_dir),
             }
         except Exception as e:
             logger.error(f"Failed to get storage stats: {e}")
@@ -233,7 +241,7 @@ class FileStorageService:
                 "total_size_bytes": 0,
                 "total_size_mb": 0,
                 "upload_directory": str(self.base_upload_dir),
-                "error": str(e)
+                "error": str(e),
             }
 
     def cleanup_orphaned_files(self, valid_file_paths: list[str]) -> dict:
@@ -254,12 +262,14 @@ class FileStorageService:
                             deleted_size += size
                             logger.info(f"Deleted orphaned file: {file_path}")
                         except Exception as e:
-                            logger.error(f"Failed to delete orphaned file {file_path}: {e}")
+                            logger.error(
+                                f"Failed to delete orphaned file {file_path}: {e}"
+                            )
 
             return {
                 "deleted_files_count": len(deleted_files),
                 "deleted_files": deleted_files,
-                "freed_space_mb": deleted_size / (1024 * 1024)
+                "freed_space_mb": deleted_size / (1024 * 1024),
             }
         except Exception as e:
             logger.error(f"Failed to cleanup orphaned files: {e}")

@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -28,11 +27,15 @@ def get_user_roles(user: User) -> list[str]:
     return [user_role.role.name for user_role in user.user_roles]
 
 
-@router.post("/", response_model=RecruitmentProcessInfo, status_code=status.HTTP_201_CREATED)
+@router.post(
+    API_ROUTES.WORKFLOWS.BASE,
+    response_model=RecruitmentProcessInfo,
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_recruitment_process(
     process_data: RecruitmentProcessCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """
     Create a new recruitment process.
@@ -41,10 +44,13 @@ async def create_recruitment_process(
     """
     # Verify user is employer/company_admin and has company access
     user_roles = get_user_roles(current_user)
-    if not any(role in user_roles for role in ["employer", "company_admin"]) or not current_user.company_id:
+    if (
+        not any(role in user_roles for role in ["employer", "company_admin"])
+        or not current_user.company_id
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only employers can create recruitment processes"
+            detail="Only employers can create recruitment processes",
         )
 
     # Add employer company ID
@@ -58,7 +64,7 @@ async def create_recruitment_process(
     return process
 
 
-@router.get("/", response_model=list[RecruitmentProcessInfo])
+@router.get(API_ROUTES.WORKFLOWS.BASE, response_model=list[RecruitmentProcessInfo])
 async def list_recruitment_processes(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
@@ -66,7 +72,7 @@ async def list_recruitment_processes(
     company_id: int | None = Query(None, description="Filter by company (admin only)"),
     search: str | None = Query(None, description="Search by name or description"),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """
     List recruitment processes.
@@ -76,21 +82,36 @@ async def list_recruitment_processes(
     # Get current user's roles
     current_user_roles = [user_role.role.name for user_role in current_user.user_roles]
 
-    if ("super_admin" in current_user_roles or "company_admin" in current_user_roles) and company_id:
+    if (
+        "super_admin" in current_user_roles or "company_admin" in current_user_roles
+    ) and company_id:
         # Admin can view processes for any company
         if search:
             processes = await recruitment_process.search(
-                db, company_id=company_id, query=search, status=status, skip=skip, limit=limit
+                db,
+                company_id=company_id,
+                query=search,
+                status=status,
+                skip=skip,
+                limit=limit,
             )
         else:
             processes = await recruitment_process.get_by_company_id(
                 db, company_id=company_id, skip=skip, limit=limit
             )
-    elif any(role in current_user_roles for role in ["employer", "company_admin"]) and current_user.company_id:
+    elif (
+        any(role in current_user_roles for role in ["employer", "company_admin"])
+        and current_user.company_id
+    ):
         # Employer sees their company's processes
         if search:
             processes = await recruitment_process.search(
-                db, company_id=current_user.company_id, query=search, status=status, skip=skip, limit=limit
+                db,
+                company_id=current_user.company_id,
+                query=search,
+                status=status,
+                skip=skip,
+                limit=limit,
             )
         else:
             processes = await recruitment_process.get_by_company_id(
@@ -99,17 +120,21 @@ async def list_recruitment_processes(
     else:
         # Recruiter/viewer sees processes they have access to
         processes = await recruitment_process.get_for_user(
-            db, user_id=current_user.id, role=current_user_roles[0] if current_user_roles else "user", skip=skip, limit=limit
+            db,
+            user_id=current_user.id,
+            role=current_user_roles[0] if current_user_roles else "user",
+            skip=skip,
+            limit=limit,
         )
 
     return processes
 
 
-@router.get("/{process_id}", response_model=RecruitmentProcessDetails)
+@router.get(API_ROUTES.WORKFLOWS.BY_ID, response_model=RecruitmentProcessDetails)
 async def get_recruitment_process(
     process_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """
     Get detailed information about a recruitment process.
@@ -118,7 +143,7 @@ async def get_recruitment_process(
     if not process:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Recruitment process not found"
+            detail="Recruitment process not found",
         )
 
     # Check access permissions
@@ -126,29 +151,30 @@ async def get_recruitment_process(
     if any(role in user_roles for role in ["employer", "company_admin"]):
         if process.employer_company_id != current_user.company_id:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied"
+                status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
     elif any(role in user_roles for role in ["recruiter", "candidate"]):
         # Check if user has viewer access
         has_access = await process_viewer.check_user_access(
-            db, process_id=process_id, user_id=current_user.id, required_permission="view_process"
+            db,
+            process_id=process_id,
+            user_id=current_user.id,
+            required_permission="view_process",
         )
         if not has_access:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied"
+                status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
 
     return process
 
 
-@router.put("/{process_id}", response_model=RecruitmentProcessInfo)
+@router.put(API_ROUTES.WORKFLOWS.BY_ID, response_model=RecruitmentProcessInfo)
 async def update_recruitment_process(
     process_id: int,
     process_update: RecruitmentProcessUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """
     Update a recruitment process.
@@ -159,7 +185,7 @@ async def update_recruitment_process(
     if not process:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Recruitment process not found"
+            detail="Recruitment process not found",
         )
 
     # Check permissions
@@ -167,35 +193,38 @@ async def update_recruitment_process(
     if any(role in user_roles for role in ["employer", "company_admin"]):
         if process.employer_company_id != current_user.company_id:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied"
+                status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
     elif not any(role in user_roles for role in ["super_admin", "company_admin"]):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Insufficient permissions"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
         )
 
     # Cannot update active processes without special handling
-    if process.status == "active" and not process_update.dict(exclude_unset=True).get("force_update"):
+    if process.status == "active" and not process_update.dict(exclude_unset=True).get(
+        "force_update"
+    ):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Cannot update active processes without force_update=true"
+            detail="Cannot update active processes without force_update=true",
         )
 
     updated_process = await recruitment_process.update(
-        db, db_obj=process, obj_in=process_update.dict(exclude_unset=True), updated_by=current_user.id
+        db,
+        db_obj=process,
+        obj_in=process_update.dict(exclude_unset=True),
+        updated_by=current_user.id,
     )
 
     return updated_process
 
 
-@router.post("/{process_id}/activate", response_model=RecruitmentProcessInfo)
+@router.post(API_ROUTES.WORKFLOWS.ACTIVATE, response_model=RecruitmentProcessInfo)
 async def activate_recruitment_process(
     process_id: int,
     activation: ProcessActivation,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """
     Activate a recruitment process.
@@ -206,7 +235,7 @@ async def activate_recruitment_process(
     if not process:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Recruitment process not found"
+            detail="Recruitment process not found",
         )
 
     # Check permissions
@@ -214,13 +243,11 @@ async def activate_recruitment_process(
     if any(role in user_roles for role in ["employer", "company_admin"]):
         if process.employer_company_id != current_user.company_id:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied"
+                status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
     elif not any(role in user_roles for role in ["super_admin", "company_admin"]):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Insufficient permissions"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
         )
 
     try:
@@ -237,17 +264,16 @@ async def activate_recruitment_process(
             return activated_process
         else:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=str(e)
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)
             )
 
 
-@router.post("/{process_id}/archive", response_model=RecruitmentProcessInfo)
+@router.post(API_ROUTES.WORKFLOWS.ARCHIVE, response_model=RecruitmentProcessInfo)
 async def archive_recruitment_process(
     process_id: int,
     archive_data: ProcessArchive,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """
     Archive a recruitment process.
@@ -258,7 +284,7 @@ async def archive_recruitment_process(
     if not process:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Recruitment process not found"
+            detail="Recruitment process not found",
         )
 
     # Check permissions
@@ -266,13 +292,11 @@ async def archive_recruitment_process(
     if any(role in user_roles for role in ["employer", "company_admin"]):
         if process.employer_company_id != current_user.company_id:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied"
+                status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
     elif not any(role in user_roles for role in ["super_admin", "company_admin"]):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Insufficient permissions"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
         )
 
     archived_process = await recruitment_process.archive(
@@ -282,12 +306,12 @@ async def archive_recruitment_process(
     return archived_process
 
 
-@router.post("/{process_id}/clone", response_model=RecruitmentProcessInfo)
+@router.post(API_ROUTES.WORKFLOWS.CLONE, response_model=RecruitmentProcessInfo)
 async def clone_recruitment_process(
     process_id: int,
     clone_data: ProcessClone,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """
     Clone a recruitment process.
@@ -298,8 +322,7 @@ async def clone_recruitment_process(
     source_process = await recruitment_process.get(db, id=process_id)
     if not source_process:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Source process not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Source process not found"
         )
 
     # Check access permissions
@@ -307,17 +330,18 @@ async def clone_recruitment_process(
     if any(role in user_roles for role in ["employer", "company_admin"]):
         if source_process.employer_company_id != current_user.company_id:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied"
+                status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
     elif any(role in user_roles for role in ["recruiter", "candidate"]):
         has_access = await process_viewer.check_user_access(
-            db, process_id=process_id, user_id=current_user.id, required_permission="view_process"
+            db,
+            process_id=process_id,
+            user_id=current_user.id,
+            required_permission="view_process",
         )
         if not has_access:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied"
+                status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
 
     # Only employers can create new processes
@@ -325,7 +349,7 @@ async def clone_recruitment_process(
     if not any(role in user_roles for role in ["employer", "company_admin"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only employers can create new processes"
+            detail="Only employers can create new processes",
         )
 
     cloned_process = await workflow_engine.clone_process(
@@ -334,17 +358,17 @@ async def clone_recruitment_process(
         new_name=clone_data.new_name,
         created_by=current_user.id,
         clone_candidates=clone_data.clone_candidates,
-        clone_viewers=clone_data.clone_viewers
+        clone_viewers=clone_data.clone_viewers,
     )
 
     return cloned_process
 
 
-@router.delete("/{process_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(API_ROUTES.WORKFLOWS.BY_ID, status_code=status.HTTP_204_NO_CONTENT)
 async def delete_recruitment_process(
     process_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """
     Soft delete a recruitment process (論理削除).
@@ -356,7 +380,7 @@ async def delete_recruitment_process(
     if not process:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Recruitment process not found"
+            detail="Recruitment process not found",
         )
 
     # Check permissions
@@ -364,31 +388,29 @@ async def delete_recruitment_process(
     if any(role in user_roles for role in ["employer", "company_admin"]):
         if process.employer_company_id != current_user.company_id:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied"
+                status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
     elif not any(role in user_roles for role in ["super_admin", "company_admin"]):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Insufficient permissions"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
         )
 
     # Only allow deletion of draft processes
     if process.status != "draft":
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Only draft processes can be deleted"
+            detail="Only draft processes can be deleted",
         )
 
     # Use soft delete instead of hard delete
     await recruitment_process.soft_delete(db, id=process_id)
 
 
-@router.get("/{process_id}/validate")
+@router.get(API_ROUTES.WORKFLOWS.VALIDATE)
 async def validate_recruitment_process(
     process_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """
     Validate a recruitment process before activation.
@@ -397,7 +419,7 @@ async def validate_recruitment_process(
     if not process:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Recruitment process not found"
+            detail="Recruitment process not found",
         )
 
     # Check access permissions
@@ -405,28 +427,29 @@ async def validate_recruitment_process(
     if any(role in user_roles for role in ["employer", "company_admin"]):
         if process.employer_company_id != current_user.company_id:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied"
+                status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
     elif "recruiter" in user_roles:
         has_access = await process_viewer.check_user_access(
-            db, process_id=process_id, user_id=current_user.id, required_permission="view_process"
+            db,
+            process_id=process_id,
+            user_id=current_user.id,
+            required_permission="view_process",
         )
         if not has_access:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied"
+                status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
 
     validation_result = await workflow_engine.validate_process(db, process_id)
     return validation_result
 
 
-@router.get("/{process_id}/analytics", response_model=ProcessAnalytics)
+@router.get(API_ROUTES.WORKFLOWS.ANALYTICS, response_model=ProcessAnalytics)
 async def get_process_analytics(
     process_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """
     Get comprehensive analytics for a recruitment process.
@@ -435,7 +458,7 @@ async def get_process_analytics(
     if not process:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Recruitment process not found"
+            detail="Recruitment process not found",
         )
 
     # Check permissions
@@ -443,17 +466,18 @@ async def get_process_analytics(
     if any(role in user_roles for role in ["employer", "company_admin"]):
         if process.employer_company_id != current_user.company_id:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied"
+                status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
     elif "recruiter" in user_roles:
         has_access = await process_viewer.check_user_access(
-            db, process_id=process_id, user_id=current_user.id, required_permission="view_analytics"
+            db,
+            process_id=process_id,
+            user_id=current_user.id,
+            required_permission="view_analytics",
         )
         if not has_access:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied"
+                status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
 
     analytics = await workflow_engine.get_process_analytics(db, process_id)
@@ -469,15 +493,15 @@ async def get_process_analytics(
         average_duration_days=analytics["average_duration_days"],
         node_statistics=analytics["node_statistics"],
         bottleneck_nodes=analytics["bottleneck_nodes"],
-        recruiter_workload=analytics["recruiter_workload"]
+        recruiter_workload=analytics["recruiter_workload"],
     )
 
 
-@router.get("/company/{company_id}/statistics", response_model=ProcessStatistics)
+@router.get(API_ROUTES.WORKFLOWS.COMPANY_STATS, response_model=ProcessStatistics)
 async def get_company_process_statistics(
     company_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """
     Get recruitment process statistics for a company.
@@ -489,13 +513,11 @@ async def get_company_process_statistics(
     if any(role in user_roles for role in ["employer", "company_admin"]):
         if current_user.company_id != company_id:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied"
+                status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
     elif not any(role in user_roles for role in ["super_admin", "company_admin"]):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Insufficient permissions"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
         )
 
     stats = await recruitment_process.get_statistics(db, company_id=company_id)
@@ -503,7 +525,7 @@ async def get_company_process_statistics(
     return ProcessStatistics(**stats)
 
 
-@router.get("/templates/", response_model=list[RecruitmentProcessInfo])
+@router.get(API_ROUTES.WORKFLOWS.TEMPLATES, response_model=list[RecruitmentProcessInfo])
 async def list_process_templates(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
@@ -511,19 +533,22 @@ async def list_process_templates(
     industry: str | None = Query(None, description="Filter by industry"),
     public_only: bool = Query(False, description="Show only public templates"),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """
     List available process templates.
     """
-    company_id = current_user.company_id if any(role in get_user_roles(current_user) for role in ["employer", "company_admin"]) else None
+    company_id = (
+        current_user.company_id
+        if any(
+            role in get_user_roles(current_user)
+            for role in ["employer", "company_admin"]
+        )
+        else None
+    )
 
     templates = await recruitment_process.get_templates(
-        db,
-        company_id=company_id,
-        is_public=public_only,
-        skip=skip,
-        limit=limit
+        db, company_id=company_id, is_public=public_only, skip=skip, limit=limit
     )
 
     # Filter by category/industry if specified
@@ -541,12 +566,12 @@ async def list_process_templates(
     return templates
 
 
-@router.post("/templates/{template_id}/apply", response_model=RecruitmentProcessInfo)
+@router.post(API_ROUTES.WORKFLOWS.APPLY_TEMPLATE, response_model=RecruitmentProcessInfo)
 async def apply_process_template(
     template_id: int,
     process_data: RecruitmentProcessCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """
     Create a new process from a template.
@@ -555,10 +580,13 @@ async def apply_process_template(
     """
     # Verify user is employer
     user_roles = get_user_roles(current_user)
-    if not any(role in user_roles for role in ["employer", "company_admin"]) or not current_user.company_id:
+    if (
+        not any(role in user_roles for role in ["employer", "company_admin"])
+        or not current_user.company_id
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only employers can create processes from templates"
+            detail="Only employers can create processes from templates",
         )
 
     try:
@@ -566,11 +594,8 @@ async def apply_process_template(
             db,
             template_id=template_id,
             employer_id=current_user.id,
-            process_data=process_data.dict()
+            process_data=process_data.dict(),
         )
         return process
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

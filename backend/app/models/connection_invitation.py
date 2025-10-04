@@ -16,10 +16,11 @@ if TYPE_CHECKING:
 
 class InvitationStatus(str, Enum):
     """Status of connection invitations."""
-    PENDING = "pending"     # Invitation sent, awaiting response
-    ACCEPTED = "accepted"   # Invitation accepted (should create connection)
-    REJECTED = "rejected"   # Invitation declined
-    CANCELLED = "cancelled" # Sender cancelled the invitation
+
+    PENDING = "pending"  # Invitation sent, awaiting response
+    ACCEPTED = "accepted"  # Invitation accepted (should create connection)
+    REJECTED = "rejected"  # Invitation declined
+    CANCELLED = "cancelled"  # Sender cancelled the invitation
 
 
 class ConnectionInvitation(Base):
@@ -31,23 +32,15 @@ class ConnectionInvitation(Base):
 
     # Invitation participants
     sender_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("users.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     receiver_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("users.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
 
     # Invitation details
     status: Mapped[str] = mapped_column(
-        SQLEnum(InvitationStatus),
-        nullable=False,
-        default=InvitationStatus.PENDING
+        SQLEnum(InvitationStatus), nullable=False, default=InvitationStatus.PENDING
     )
 
     # Optional message
@@ -55,27 +48,23 @@ class ConnectionInvitation(Base):
 
     # Timestamps
     sent_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        nullable=False,
-        default=datetime.utcnow
+        DateTime, nullable=False, default=datetime.utcnow
     )
     responded_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
     # Relationships
     sender: Mapped["User"] = relationship(
-        "User",
-        foreign_keys=[sender_id],
-        back_populates="sent_invitations"
+        "User", foreign_keys=[sender_id], back_populates="sent_invitations"
     )
     receiver: Mapped["User"] = relationship(
-        "User",
-        foreign_keys=[receiver_id],
-        back_populates="received_invitations"
+        "User", foreign_keys=[receiver_id], back_populates="received_invitations"
     )
 
     # Ensure no duplicate invitations
     __table_args__ = (
-        UniqueConstraint('sender_id', 'receiver_id', name='unique_connection_invitation'),
+        UniqueConstraint(
+            "sender_id", "receiver_id", name="unique_connection_invitation"
+        ),
     )
 
     def __repr__(self) -> str:

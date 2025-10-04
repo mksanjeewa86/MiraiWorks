@@ -7,6 +7,7 @@ from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.config.endpoints import API_ROUTES
 from app.crud import user as user_crud
 from app.database import get_db
 from app.dependencies import get_current_active_user
@@ -49,7 +50,7 @@ async def get_super_admin_user(db: AsyncSession) -> User | None:
     return result.scalar_one_or_none()
 
 
-@router.get("/users", response_model=UserListResponse)
+@router.get(API_ROUTES.USERS.ADMIN_USERS, response_model=UserListResponse)
 async def get_users(
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=500),
@@ -130,7 +131,11 @@ async def get_users(
     )
 
 
-@router.post("/users", response_model=UserInfo, status_code=status.HTTP_201_CREATED)
+@router.post(
+    API_ROUTES.USERS.ADMIN_USERS,
+    response_model=UserInfo,
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_user(
     user_data: UserCreate,
     current_user: User = Depends(get_current_active_user),
@@ -280,12 +285,16 @@ async def create_user(
                     user_id=new_user.id,
                     connected_user_id=super_admin.id,
                     creation_type="automatic",
-                    created_by=None
+                    created_by=None,
                 )
-                logger.info(f"Automatically connected admin user {new_user.email} to super admin {super_admin.email}")
+                logger.info(
+                    f"Automatically connected admin user {new_user.email} to super admin {super_admin.email}"
+                )
         except Exception as e:
             # Log error but don't fail the user creation
-            logger.error(f"Error creating automatic connection to super admin for {new_user.email}: {e}")
+            logger.error(
+                f"Error creating automatic connection to super admin for {new_user.email}: {e}"
+            )
 
     # Send activation email
     try:
@@ -323,7 +332,7 @@ async def create_user(
     )
 
 
-@router.post("/users/bulk/delete")
+@router.post(API_ROUTES.ADMIN.USERS_BULK_DELETE)
 async def bulk_delete_users(
     operation: BulkUserOperation,
     current_user: User = Depends(get_current_active_user),
@@ -375,7 +384,7 @@ async def bulk_delete_users(
     }
 
 
-@router.post("/users/bulk/reset-password")
+@router.post(API_ROUTES.ADMIN.USERS_BULK_RESET_PASSWORD)
 async def bulk_reset_passwords(
     operation: BulkUserOperation,
     current_user: User = Depends(get_current_active_user),
@@ -450,7 +459,7 @@ async def bulk_reset_passwords(
     }
 
 
-@router.post("/users/bulk/resend-activation")
+@router.post(API_ROUTES.ADMIN.USERS_BULK_RESEND_ACTIVATION)
 async def bulk_resend_activation(
     operation: BulkUserOperation,
     current_user: User = Depends(get_current_active_user),
@@ -519,7 +528,7 @@ async def bulk_resend_activation(
     }
 
 
-@router.post("/users/bulk/suspend")
+@router.post(API_ROUTES.ADMIN.USERS_BULK_SUSPEND)
 async def bulk_suspend_users(
     operation: BulkUserOperation,
     current_user: User = Depends(get_current_active_user),
@@ -571,7 +580,7 @@ async def bulk_suspend_users(
     }
 
 
-@router.post("/users/bulk/unsuspend")
+@router.post(API_ROUTES.ADMIN.USERS_BULK_UNSUSPEND)
 async def bulk_unsuspend_users(
     operation: BulkUserOperation,
     current_user: User = Depends(get_current_active_user),
@@ -619,7 +628,7 @@ async def bulk_unsuspend_users(
     }
 
 
-@router.get("/users/{user_id}", response_model=UserInfo)
+@router.get(API_ROUTES.USERS.ADMIN_USER_BY_ID, response_model=UserInfo)
 async def get_user(
     user_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -673,7 +682,7 @@ async def get_user(
     )
 
 
-@router.put("/users/{user_id}", response_model=UserInfo)
+@router.put(API_ROUTES.USERS.ADMIN_USER_BY_ID, response_model=UserInfo)
 async def update_user(
     user_id: int,
     user_data: UserUpdate,
@@ -791,7 +800,7 @@ async def update_user(
     )
 
 
-@router.delete("/users/{user_id}")
+@router.delete(API_ROUTES.USERS.ADMIN_USER_BY_ID)
 async def delete_user(
     user_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -828,7 +837,7 @@ async def delete_user(
     return {"message": "User deleted successfully"}
 
 
-@router.post("/users/{user_id}/reset-password")
+@router.post(API_ROUTES.USERS.ADMIN_USER_RESET_PASSWORD)
 async def reset_user_password(
     user_id: int,
     reset_data: PasswordResetRequest,
@@ -887,7 +896,7 @@ async def reset_user_password(
     }
 
 
-@router.post("/users/{user_id}/resend-activation")
+@router.post(API_ROUTES.USERS.ADMIN_USER_RESEND_ACTIVATION)
 async def resend_activation_email(
     user_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -947,7 +956,7 @@ async def resend_activation_email(
     return {"message": "Activation email sent successfully"}
 
 
-@router.post("/users/{user_id}/suspend")
+@router.post(API_ROUTES.USERS.ADMIN_USER_SUSPEND)
 async def suspend_user(
     user_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -989,7 +998,7 @@ async def suspend_user(
     return {"message": "User suspended successfully", "is_suspended": True}
 
 
-@router.post("/users/{user_id}/unsuspend")
+@router.post(API_ROUTES.USERS.ADMIN_USER_UNSUSPEND)
 async def unsuspend_user(
     user_id: int,
     current_user: User = Depends(get_current_active_user),

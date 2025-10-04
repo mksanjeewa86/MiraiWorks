@@ -3,7 +3,6 @@ import { UseInterviewNoteResult } from '@/types/hooks';
 import { interviewNotesApi } from '../api/interviewNotes';
 import type { InterviewNote, InterviewNoteUpdate } from '../types/interviewNote';
 
-
 export const useInterviewNote = (interviewId: number): UseInterviewNoteResult => {
   const [note, setNote] = useState<InterviewNote | null>(null);
   const [loading, setLoading] = useState(true);

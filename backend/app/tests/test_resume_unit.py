@@ -47,7 +47,7 @@ class TestResumeServiceUnit:
             status=ResumeStatus.DRAFT,
             visibility=ResumeVisibility.PRIVATE,
             share_token="test_share_token_12345",
-            public_url_slug="software-engineer-resume-abc123"
+            public_url_slug="software-engineer-resume-abc123",
         )
         return resume
 
@@ -60,14 +60,16 @@ class TestResumeServiceUnit:
             email="john.doe@example.com",
             phone="+1-555-0123",
             location="San Francisco, CA",
-            professional_summary="Experienced software engineer"
+            professional_summary="Experienced software engineer",
         )
 
     # === SERVICE METHOD TESTS ===
 
-    async def test_create_resume_service(self, resume_service, mock_db, sample_resume_create_data):
+    async def test_create_resume_service(
+        self, resume_service, mock_db, sample_resume_create_data
+    ):
         """Test resume creation service method."""
-        with patch('app.services.resume_service.Resume') as MockResume:
+        with patch("app.services.resume_service.Resume") as MockResume:
             mock_resume_instance = MagicMock()
             mock_resume_instance.id = 1
             mock_resume_instance.title = sample_resume_create_data.title
@@ -80,8 +82,10 @@ class TestResumeServiceUnit:
             mock_db.commit.assert_called_once()
             mock_db.refresh.assert_called_once()
 
-    @patch('app.services.resume_service.resume_crud')
-    async def test_get_resume_service(self, mock_crud, resume_service, mock_db, sample_resume):
+    @patch("app.services.resume_service.resume_crud")
+    async def test_get_resume_service(
+        self, mock_crud, resume_service, mock_db, sample_resume
+    ):
         """Test resume retrieval service method."""
         mock_crud.get_with_details.return_value = sample_resume
 
@@ -90,7 +94,7 @@ class TestResumeServiceUnit:
         mock_crud.get_with_details.assert_called_once_with(mock_db, id=1, user_id=1)
         assert result == sample_resume
 
-    @patch('app.services.resume_service.resume_crud')
+    @patch("app.services.resume_service.resume_crud")
     async def test_get_user_resumes_service(self, mock_crud, resume_service, mock_db):
         """Test user resumes retrieval service method."""
         mock_resumes = [MagicMock(), MagicMock()]
@@ -105,11 +109,12 @@ class TestResumeServiceUnit:
 
     async def test_update_resume_service(self, resume_service, mock_db, sample_resume):
         """Test resume update service method."""
-        with patch.object(resume_service, 'get_resume', return_value=sample_resume):
-            with patch.object(resume_service, '_generate_unique_slug', return_value='new-slug'):
+        with patch.object(resume_service, "get_resume", return_value=sample_resume):
+            with patch.object(
+                resume_service, "_generate_unique_slug", return_value="new-slug"
+            ):
                 update_data = ResumeUpdate(
-                    title="Updated Resume Title",
-                    professional_summary="Updated summary"
+                    title="Updated Resume Title", professional_summary="Updated summary"
                 )
 
                 await resume_service.update_resume(mock_db, 1, 1, update_data)
@@ -119,7 +124,7 @@ class TestResumeServiceUnit:
 
     async def test_delete_resume_service(self, resume_service, mock_db, sample_resume):
         """Test resume deletion service method."""
-        with patch.object(resume_service, 'get_resume', return_value=sample_resume):
+        with patch.object(resume_service, "get_resume", return_value=sample_resume):
             result = await resume_service.delete_resume(mock_db, 1, 1)
 
             mock_db.delete.assert_called_once_with(sample_resume)
@@ -128,7 +133,7 @@ class TestResumeServiceUnit:
 
     async def test_delete_resume_not_found(self, resume_service, mock_db):
         """Test resume deletion when resume not found."""
-        with patch.object(resume_service, 'get_resume', return_value=None):
+        with patch.object(resume_service, "get_resume", return_value=None):
             result = await resume_service.delete_resume(mock_db, 999, 1)
 
             assert result is False
@@ -151,7 +156,7 @@ class TestResumeServiceUnit:
             ("Full-Stack Developer @ TechCorp!", "full-stack-developer-techcorp"),
             ("Resume with Special Characters #$%", "resume-with-special-characters"),
             ("", ""),
-            ("A" * 100, "a" * 50)  # Should truncate to 50 chars
+            ("A" * 100, "a" * 50),  # Should truncate to 50 chars
         ]
 
         for input_text, expected in test_cases:
@@ -163,12 +168,12 @@ class TestResumeServiceUnit:
         valid_data = {
             "title": "Software Engineer",
             "full_name": "John Doe",
-            "email": "john@example.com"
+            "email": "john@example.com",
         }
 
         invalid_data = {
             "title": "Software Engineer",
-            "email": "john@example.com"
+            "email": "john@example.com",
             # Missing full_name
         }
 
@@ -177,8 +182,10 @@ class TestResumeServiceUnit:
 
     # === PUBLIC SETTINGS TESTS ===
 
-    @patch('app.services.resume_service.resume_crud')
-    async def test_update_public_settings(self, mock_crud, resume_service, mock_db, sample_resume):
+    @patch("app.services.resume_service.resume_crud")
+    async def test_update_public_settings(
+        self, mock_crud, resume_service, mock_db, sample_resume
+    ):
         """Test updating public settings."""
         mock_crud.update_public_settings.return_value = sample_resume
 
@@ -192,12 +199,14 @@ class TestResumeServiceUnit:
             user_id=1,
             is_public=True,
             custom_slug="custom-slug",
-            can_download_pdf=True
+            can_download_pdf=True,
         )
         assert result == sample_resume
 
-    @patch('app.services.resume_service.resume_crud')
-    async def test_get_public_resume(self, mock_crud, resume_service, mock_db, sample_resume):
+    @patch("app.services.resume_service.resume_crud")
+    async def test_get_public_resume(
+        self, mock_crud, resume_service, mock_db, sample_resume
+    ):
         """Test getting public resume."""
         mock_crud.get_public_by_slug.return_value = sample_resume
 
@@ -206,7 +215,7 @@ class TestResumeServiceUnit:
         mock_crud.get_public_by_slug.assert_called_once_with(mock_db, slug="test-slug")
         assert result == sample_resume
 
-    @patch('app.services.resume_service.resume_crud')
+    @patch("app.services.resume_service.resume_crud")
     async def test_increment_download_count(self, mock_crud, resume_service, mock_db):
         """Test incrementing download count."""
         mock_crud.increment_download.return_value = True
@@ -218,10 +227,12 @@ class TestResumeServiceUnit:
 
     # === WORK EXPERIENCE TESTS ===
 
-    async def test_add_work_experience_success(self, resume_service, mock_db, sample_resume):
+    async def test_add_work_experience_success(
+        self, resume_service, mock_db, sample_resume
+    ):
         """Test adding work experience successfully."""
-        with patch.object(resume_service, 'get_resume', return_value=sample_resume):
-            with patch('app.services.resume_service.WorkExperience') as MockWorkExp:
+        with patch.object(resume_service, "get_resume", return_value=sample_resume):
+            with patch("app.services.resume_service.WorkExperience") as MockWorkExp:
                 mock_exp_instance = MagicMock()
                 mock_exp_instance.id = 1
                 mock_exp_instance.company_name = "TechCorp"
@@ -232,7 +243,7 @@ class TestResumeServiceUnit:
                     position_title="Software Engineer",
                     start_date=datetime(2020, 1, 1),
                     is_current=True,
-                    description="Development work"
+                    description="Development work",
                 )
 
                 await resume_service.add_work_experience(mock_db, 1, 1, exp_data)
@@ -242,13 +253,13 @@ class TestResumeServiceUnit:
 
     async def test_add_work_experience_invalid_resume(self, resume_service, mock_db):
         """Test adding work experience to non-existent resume."""
-        with patch.object(resume_service, 'get_resume', return_value=None):
+        with patch.object(resume_service, "get_resume", return_value=None):
             exp_data = WorkExperienceCreate(
                 company_name="TechCorp",
                 position_title="Software Engineer",
                 start_date=datetime(2020, 1, 1),
                 is_current=True,
-                description="Development work"
+                description="Development work",
             )
 
             result = await resume_service.add_work_experience(mock_db, 999, 1, exp_data)
@@ -258,32 +269,40 @@ class TestResumeServiceUnit:
 
     # === SHARING TESTS ===
 
-    async def test_create_share_link_success(self, resume_service, mock_db, sample_resume):
+    async def test_create_share_link_success(
+        self, resume_service, mock_db, sample_resume
+    ):
         """Test creating share link successfully."""
-        with patch.object(resume_service, 'get_resume', return_value=sample_resume):
-            with patch('app.services.resume_service.ResumeShare') as MockShare:
+        with patch.object(resume_service, "get_resume", return_value=sample_resume):
+            with patch("app.services.resume_service.ResumeShare") as MockShare:
                 mock_share_instance = MagicMock()
                 MockShare.return_value = mock_share_instance
 
                 result = await resume_service.create_share_link(
-                    mock_db, 1, 1, recipient_email="test@example.com", expires_in_days=30
+                    mock_db,
+                    1,
+                    1,
+                    recipient_email="test@example.com",
+                    expires_in_days=30,
                 )
 
                 mock_db.add.assert_called_once()
                 mock_db.commit.assert_called_once()
                 assert len(result) == 32  # Share token length
 
-    async def test_get_shared_resume_success(self, resume_service, mock_db, sample_resume):
+    async def test_get_shared_resume_success(
+        self, resume_service, mock_db, sample_resume
+    ):
         """Test accessing shared resume successfully."""
         mock_share = MagicMock()
         mock_share.is_expired.return_value = False
         mock_share.password_protected = False
         mock_share.resume_id = 1
 
-        with patch('app.services.resume_service.ResumeShare') as MockShare:
+        with patch("app.services.resume_service.ResumeShare") as MockShare:
             MockShare.get_by_token = AsyncMock(return_value=mock_share)
 
-            with patch.object(mock_db, 'execute') as mock_execute:
+            with patch.object(mock_db, "execute") as mock_execute:
                 mock_result = MagicMock()
                 mock_result.scalars.return_value.first.return_value = sample_resume
                 mock_execute.return_value = mock_result
@@ -298,7 +317,7 @@ class TestResumeServiceUnit:
         mock_share = MagicMock()
         mock_share.is_expired.return_value = True
 
-        with patch('app.services.resume_service.ResumeShare') as MockShare:
+        with patch("app.services.resume_service.ResumeShare") as MockShare:
             MockShare.get_by_token = AsyncMock(return_value=mock_share)
 
             result = await resume_service.get_shared_resume(mock_db, "expired_token")
@@ -307,7 +326,9 @@ class TestResumeServiceUnit:
 
     # === ERROR HANDLING TESTS ===
 
-    async def test_create_resume_database_error(self, resume_service, mock_db, sample_resume_create_data):
+    async def test_create_resume_database_error(
+        self, resume_service, mock_db, sample_resume_create_data
+    ):
         """Test resume creation with database error."""
         mock_db.commit.side_effect = Exception("Database error")
 
@@ -316,9 +337,11 @@ class TestResumeServiceUnit:
 
         mock_db.rollback.assert_called_once()
 
-    async def test_update_resume_database_error(self, resume_service, mock_db, sample_resume):
+    async def test_update_resume_database_error(
+        self, resume_service, mock_db, sample_resume
+    ):
         """Test resume update with database error."""
-        with patch.object(resume_service, 'get_resume', return_value=sample_resume):
+        with patch.object(resume_service, "get_resume", return_value=sample_resume):
             mock_db.commit.side_effect = Exception("Database error")
 
             update_data = ResumeUpdate(title="Updated Title")
@@ -336,20 +359,33 @@ class TestResumeServiceUnit:
         sample_resume = MagicMock()
         sample_resume.id = 1
 
-        with patch.object(resume_service, 'create_resume', return_value=sample_resume):
-            with patch.object(resume_service, 'add_work_experience', return_value=MagicMock()):
-                with patch.object(resume_service, 'add_education', return_value=MagicMock()):
-                    with patch.object(resume_service, 'add_skill', return_value=MagicMock()):
-                        with patch.object(resume_service, 'update_resume', return_value=sample_resume):
-                            with patch.object(resume_service, 'create_share_link', return_value="share_token"):
-
+        with patch.object(resume_service, "create_resume", return_value=sample_resume):
+            with patch.object(
+                resume_service, "add_work_experience", return_value=MagicMock()
+            ):
+                with patch.object(
+                    resume_service, "add_education", return_value=MagicMock()
+                ):
+                    with patch.object(
+                        resume_service, "add_skill", return_value=MagicMock()
+                    ):
+                        with patch.object(
+                            resume_service, "update_resume", return_value=sample_resume
+                        ):
+                            with patch.object(
+                                resume_service,
+                                "create_share_link",
+                                return_value="share_token",
+                            ):
                                 # 1. Create resume
                                 resume_data = ResumeCreate(
                                     title="Test Resume",
                                     full_name="Test User",
-                                    email="test@example.com"
+                                    email="test@example.com",
                                 )
-                                resume = await resume_service.create_resume(mock_db, resume_data, 1)
+                                resume = await resume_service.create_resume(
+                                    mock_db, resume_data, 1
+                                )
 
                                 # 2. Add work experience
                                 exp_data = WorkExperienceCreate(
@@ -357,14 +393,16 @@ class TestResumeServiceUnit:
                                     position_title="Developer",
                                     start_date=datetime(2020, 1, 1),
                                     is_current=True,
-                                    description="Development work"
+                                    description="Development work",
                                 )
                                 experience = await resume_service.add_work_experience(
                                     mock_db, resume.id, 1, exp_data
                                 )
 
                                 # 3. Update resume status
-                                update_data = ResumeUpdate(status=ResumeStatus.PUBLISHED)
+                                update_data = ResumeUpdate(
+                                    status=ResumeStatus.PUBLISHED
+                                )
                                 updated_resume = await resume_service.update_resume(
                                     mock_db, resume.id, 1, update_data
                                 )
@@ -392,8 +430,8 @@ class TestResumeServiceUnit:
         original_resume.educations = []
         original_resume.skills = []
 
-        with patch.object(resume_service, 'get_resume', return_value=original_resume):
-            with patch('app.services.resume_service.Resume') as MockResume:
+        with patch.object(resume_service, "get_resume", return_value=original_resume):
+            with patch("app.services.resume_service.Resume") as MockResume:
                 mock_duplicate = MagicMock()
                 mock_duplicate.id = 2
                 MockResume.return_value = mock_duplicate
@@ -407,11 +445,7 @@ class TestResumeServiceUnit:
     async def test_send_resume_email_mock(self, resume_service, mock_db, sample_resume):
         """Test sending resume email (mock implementation)."""
         result = await resume_service.send_resume_email(
-            mock_db,
-            sample_resume,
-            ["recipient@example.com"],
-            "Subject",
-            "Message"
+            mock_db, sample_resume, ["recipient@example.com"], "Subject", "Message"
         )
 
         assert result is True
@@ -421,7 +455,9 @@ class TestResumeServiceUnit:
         mock_attachment = MagicMock()
         mock_attachment.id = 1
 
-        with patch('app.services.resume_service.resume_message_attachment') as mock_attachment_crud:
+        with patch(
+            "app.services.resume_service.resume_message_attachment"
+        ) as mock_attachment_crud:
             mock_attachment_crud.create_attachment.return_value = mock_attachment
 
             result = await resume_service.attach_to_message(
@@ -438,6 +474,7 @@ class TestResumeUtilities:
     def test_slug_generation_edge_cases(self):
         """Test slug generation with various edge cases."""
         from app.services.resume_service import ResumeService
+
         service = ResumeService()
 
         test_cases = [
@@ -445,7 +482,10 @@ class TestResumeUtilities:
             ("   ", ""),  # Only spaces
             ("A", "a"),  # Single character
             ("UPPERCASE TITLE", "uppercase-title"),  # Uppercase conversion
-            ("Title with    multiple    spaces", "title-with-multiple-spaces"),  # Multiple spaces
+            (
+                "Title with    multiple    spaces",
+                "title-with-multiple-spaces",
+            ),  # Multiple spaces
             ("Title-with-hyphens", "title-with-hyphens"),  # Existing hyphens
             ("Special@#$%Characters!", "specialcharacters"),  # Special characters
             ("Unicode résumé café", "unicode-résumé-café"),  # Unicode characters
@@ -459,6 +499,7 @@ class TestResumeUtilities:
     def test_password_hashing(self):
         """Test password hashing functionality."""
         from app.services.resume_service import ResumeService
+
         service = ResumeService()
 
         password = "test_password_123"
@@ -472,6 +513,7 @@ class TestResumeUtilities:
     def test_share_token_uniqueness(self):
         """Test that share tokens are unique."""
         from app.services.resume_service import ResumeService
+
         service = ResumeService()
 
         tokens = [service._generate_share_token() for _ in range(100)]

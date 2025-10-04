@@ -29,7 +29,9 @@ class PublicService:
             self.db.query(Company).filter(Company.is_active == "1").count()
         )
         total_positions = (
-            self.db.query(Position).filter(Position.status == PositionStatus.PUBLISHED).count()
+            self.db.query(Position)
+            .filter(Position.status == PositionStatus.PUBLISHED)
+            .count()
         )
         total_applications = self.db.query(PositionApplication).count()
 
@@ -62,7 +64,10 @@ class PublicService:
         # Location stats
         location_stats = dict(
             self.db.query(Position.country, func.count(Position.id))
-            .filter(Position.status == PositionStatus.PUBLISHED, Position.country.isnot(None))
+            .filter(
+                Position.status == PositionStatus.PUBLISHED,
+                Position.country.isnot(None),
+            )
             .group_by(Position.country)
             .order_by(desc(func.count(Position.id)))
             .limit(10)
@@ -82,7 +87,9 @@ class PublicService:
     def search_positions(self, params: PositionSearchParams) -> dict[str, Any]:
         """Search positions with filtering and pagination"""
 
-        query = self.db.query(Position).filter(Position.status == PositionStatus.PUBLISHED)
+        query = self.db.query(Position).filter(
+            Position.status == PositionStatus.PUBLISHED
+        )
 
         # Text search
         if params.q:
@@ -293,14 +300,20 @@ class PublicService:
         """Get active positions for a company"""
         return (
             self.db.query(Position)
-            .filter(Position.company_id == company_id, Position.status == PositionStatus.PUBLISHED)
+            .filter(
+                Position.company_id == company_id,
+                Position.status == PositionStatus.PUBLISHED,
+            )
             .order_by(desc(Position.published_at))
             .limit(limit)
             .all()
         )
 
     def apply_to_position(
-        self, position_id: int, application_data: PositionApplicationCreate, candidate: User
+        self,
+        position_id: int,
+        application_data: PositionApplicationCreate,
+        candidate: User,
     ) -> PositionApplication:
         """Submit position application"""
 
@@ -368,7 +381,10 @@ class PublicService:
         countries = [
             row[0]
             for row in self.db.query(Position.country)
-            .filter(Position.status == PositionStatus.PUBLISHED, Position.country.isnot(None))
+            .filter(
+                Position.status == PositionStatus.PUBLISHED,
+                Position.country.isnot(None),
+            )
             .distinct()
             .all()
         ]
@@ -376,7 +392,9 @@ class PublicService:
         cities = [
             row[0]
             for row in self.db.query(Position.city)
-            .filter(Position.status == PositionStatus.PUBLISHED, Position.city.isnot(None))
+            .filter(
+                Position.status == PositionStatus.PUBLISHED, Position.city.isnot(None)
+            )
             .distinct()
             .all()
         ]
@@ -394,7 +412,9 @@ class PublicService:
             "cities": sorted(cities),
             "companies": [{"id": c.id, "name": c.name} for c in companies],
             "position_types": [t.value for t in Position.position_type.type.enums],
-            "experience_levels": [e.value for e in Position.experience_level.type.enums],
+            "experience_levels": [
+                e.value for e in Position.experience_level.type.enums
+            ],
             "remote_types": [r.value for r in Position.remote_type.type.enums],
         }
 

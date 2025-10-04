@@ -56,7 +56,7 @@ class CRUDMBTITest(CRUDBase[MBTITest, dict, dict]):
             status=MBTITestStatus.IN_PROGRESS.value,
             answers={},
             started_at=datetime.utcnow(),
-            test_version="1.0"
+            test_version="1.0",
         )
 
         db.add(test)
@@ -65,12 +65,7 @@ class CRUDMBTITest(CRUDBase[MBTITest, dict, dict]):
         return test
 
     async def submit_answer(
-        self,
-        db: AsyncSession,
-        *,
-        test: MBTITest,
-        question_id: int,
-        answer: str
+        self, db: AsyncSession, *, test: MBTITest, question_id: int, answer: str
     ) -> MBTITest:
         """Submit an answer for a question."""
         if not test.answers:
@@ -123,7 +118,7 @@ class CRUDMBTITest(CRUDBase[MBTITest, dict, dict]):
             "E_I": {"E": 0, "I": 0},
             "S_N": {"S": 0, "N": 0},
             "T_F": {"T": 0, "F": 0},
-            "J_P": {"J": 0, "P": 0}
+            "J_P": {"J": 0, "P": 0},
         }
 
         # Count answers for each dimension
@@ -166,15 +161,18 @@ class CRUDMBTITest(CRUDBase[MBTITest, dict, dict]):
 
         # Use the mbti_question instance to get question count - Fixed
         from app.crud.mbti import mbti_question
+
         total_questions = await mbti_question.get_question_count(db)
         answered = len(test.answers) if test.answers else 0
 
         return {
             "status": test.status,
             "completion_percentage": test.completion_percentage,
-            "current_question": answered + 1 if answered < total_questions else total_questions,
+            "current_question": answered + 1
+            if answered < total_questions
+            else total_questions,
             "total_questions": total_questions,
-            "started_at": test.started_at
+            "started_at": test.started_at,
         }
 
 
@@ -185,12 +183,13 @@ class CRUDMBTIQuestion(CRUDBase[MBTIQuestion, dict, dict]):
         self, db: AsyncSession, *, version: str = "1.0"
     ) -> list[MBTIQuestion]:
         """Get all active questions for a version."""
-        query = select(MBTIQuestion).where(
-            and_(
-                MBTIQuestion.is_active is True,
-                MBTIQuestion.version == version
+        query = (
+            select(MBTIQuestion)
+            .where(
+                and_(MBTIQuestion.is_active is True, MBTIQuestion.version == version)
             )
-        ).order_by(MBTIQuestion.question_number)
+            .order_by(MBTIQuestion.question_number)
+        )
 
         result = await db.execute(query)
         return list(result.scalars().all())
@@ -203,14 +202,18 @@ class CRUDMBTIQuestion(CRUDBase[MBTIQuestion, dict, dict]):
 
         formatted_questions = []
         for q in questions:
-            formatted_questions.append({
-                "id": q.id,
-                "question_number": q.question_number,
-                "dimension": q.dimension,
-                "question_text": q.question_text_ja if language == "ja" else q.question_text_en,
-                "option_a": q.option_a_ja if language == "ja" else q.option_a_en,
-                "option_b": q.option_b_ja if language == "ja" else q.option_b_en
-            })
+            formatted_questions.append(
+                {
+                    "id": q.id,
+                    "question_number": q.question_number,
+                    "dimension": q.dimension,
+                    "question_text": q.question_text_ja
+                    if language == "ja"
+                    else q.question_text_en,
+                    "option_a": q.option_a_ja if language == "ja" else q.option_a_en,
+                    "option_b": q.option_b_ja if language == "ja" else q.option_b_en,
+                }
+            )
 
         return formatted_questions
 
@@ -230,7 +233,9 @@ class CRUDMBTIQuestion(CRUDBase[MBTIQuestion, dict, dict]):
 
         return questions
 
-    async def get_question_count(self, db: AsyncSession, *, version: str = "1.0") -> int:
+    async def get_question_count(
+        self, db: AsyncSession, *, version: str = "1.0"
+    ) -> int:
         """Get total number of active questions."""
         questions = await self.get_all_active(db, version=version)
         return len(questions)

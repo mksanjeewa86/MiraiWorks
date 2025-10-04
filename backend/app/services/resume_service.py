@@ -41,7 +41,7 @@ class ResumeService:
             slug = await self._generate_unique_slug(db, resume_data.title, user_id)
 
             # Set status-based visibility and public settings
-            status = getattr(resume_data, 'status', ResumeStatus.DRAFT)
+            status = getattr(resume_data, "status", ResumeStatus.DRAFT)
             is_published = status == ResumeStatus.PUBLISHED
 
             # Create resume
@@ -65,7 +65,9 @@ class ResumeService:
                 share_token=self._generate_share_token(),
                 # Status-based settings
                 status=status,
-                visibility=ResumeVisibility.PUBLIC if is_published else ResumeVisibility.PRIVATE,
+                visibility=ResumeVisibility.PUBLIC
+                if is_published
+                else ResumeVisibility.PRIVATE,
                 is_public=is_published,
                 can_download_pdf=is_published,
                 public_url_slug=slug if is_published else None,
@@ -139,9 +141,13 @@ class ResumeService:
                     setattr(resume, field, value)
 
             # Auto-update visibility settings if status changed
-            if 'status' in update_dict:
-                is_published = update_dict['status'] == ResumeStatus.PUBLISHED
-                resume.visibility = ResumeVisibility.PUBLIC if is_published else ResumeVisibility.PRIVATE
+            if "status" in update_dict:
+                is_published = update_dict["status"] == ResumeStatus.PUBLISHED
+                resume.visibility = (
+                    ResumeVisibility.PUBLIC
+                    if is_published
+                    else ResumeVisibility.PRIVATE
+                )
                 resume.is_public = is_published
                 resume.can_download_pdf = is_published
                 # Set public URL slug when publishing
@@ -647,7 +653,7 @@ class ResumeService:
         user_id: int,
         is_public: bool,
         custom_slug: str | None = None,
-        can_download_pdf: bool = True
+        can_download_pdf: bool = True,
     ) -> Resume | None:
         """Update public sharing settings for a resume."""
         try:
@@ -657,7 +663,7 @@ class ResumeService:
                 user_id=user_id,
                 is_public=is_public,
                 custom_slug=custom_slug,
-                can_download_pdf=can_download_pdf
+                can_download_pdf=can_download_pdf,
             )
         except Exception as e:
             logger.error(f"Error updating public settings: {str(e)}")
@@ -671,11 +677,7 @@ class ResumeService:
             logger.error(f"Error getting public resume: {str(e)}")
             raise
 
-    async def track_public_view(
-        self,
-        db: AsyncSession,
-        slug: str
-    ) -> bool:
+    async def track_public_view(self, db: AsyncSession, slug: str) -> bool:
         """Increment view count for a public resume."""
         try:
             return await resume_crud.increment_public_view(db, slug=slug)
@@ -699,14 +701,16 @@ class ResumeService:
         subject: str,
         message: str,
         include_pdf: bool = True,
-        sender_name: str | None = None
+        sender_name: str | None = None,
     ) -> bool:
         """Send resume via email (background task)."""
         try:
             # Import email service (would need to be implemented)
             # from app.services.email_service import email_service
 
-            logger.info(f"Sending resume {resume.id} to {len(recipient_emails)} recipients")
+            logger.info(
+                f"Sending resume {resume.id} to {len(recipient_emails)} recipients"
+            )
 
             # For now, just log the action
             # In a real implementation, this would:
@@ -725,7 +729,7 @@ class ResumeService:
         resume_id: int,
         message_id: int,
         include_pdf: bool = True,
-        auto_attach: bool = False
+        auto_attach: bool = False,
     ) -> ResumeMessageAttachment:
         """Attach resume to a message."""
         try:
@@ -735,7 +739,7 @@ class ResumeService:
                 resume_id=resume_id,
                 message_id=message_id,
                 auto_attached=auto_attach,
-                attachment_format=attachment_format
+                attachment_format=attachment_format,
             )
 
             db.add(attachment)
@@ -749,4 +753,3 @@ class ResumeService:
             logger.error(f"Error attaching resume to message: {str(e)}")
             await db.rollback()
             raise
-

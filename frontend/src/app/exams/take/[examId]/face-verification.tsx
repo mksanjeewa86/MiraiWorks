@@ -6,6 +6,7 @@ import { Button } from '@/components/ui';
 import { Camera, AlertTriangle } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui';
 import { toast } from 'sonner';
+import { API_ENDPOINTS } from '@/api/config';
 import type { FaceVerificationProps } from '@/types/components';
 
 export function FaceVerification({ sessionId, onComplete }: FaceVerificationProps) {
@@ -82,7 +83,7 @@ export function FaceVerification({ sessionId, onComplete }: FaceVerificationProp
       const imageData = canvas.toDataURL('image/jpeg', 0.8);
 
       // Submit for verification
-      const response = await fetch(`/api/exam/sessions/${sessionId}/face-verification`, {
+      const response = await fetch(API_ENDPOINTS.EXAM_SESSIONS.FACE_VERIFICATION(sessionId), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

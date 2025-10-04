@@ -40,15 +40,19 @@ class MBTITestStart(BaseModel):
 class MBTITestSubmit(BaseModel):
     """Schema for submitting MBTI test answers."""
 
-    answers: dict[int, str] = Field(..., description="Question ID to answer (A/B) mapping")
+    answers: dict[int, str] = Field(
+        ..., description="Question ID to answer (A/B) mapping"
+    )
 
-    @field_validator('answers')
+    @field_validator("answers")
     @classmethod
     def validate_answers(cls, v):
         # Validate all answers are A or B
         for question_id, answer in v.items():
-            if answer not in ['A', 'B']:
-                raise ValueError(f"Invalid answer '{answer}' for question {question_id}. Must be 'A' or 'B'.")
+            if answer not in ["A", "B"]:
+                raise ValueError(
+                    f"Invalid answer '{answer}' for question {question_id}. Must be 'A' or 'B'."
+                )
         return v
 
 
@@ -139,12 +143,35 @@ MBTI_TYPE_INFO = {
         description_en="Imaginative and strategic thinkers, with a plan for everything.",
         description_ja="想像力豊かで戦略的な思考の持ち主で、あらゆることに対して計画を持っています。",
         temperament="NT",
-        strengths_en=["Strategic thinking", "Independent", "Decisive", "Hard-working", "Determined"],
+        strengths_en=[
+            "Strategic thinking",
+            "Independent",
+            "Decisive",
+            "Hard-working",
+            "Determined",
+        ],
         strengths_ja=["戦略的思考", "独立性", "決断力", "勤勉", "決意"],
-        weaknesses_en=["Arrogant", "Judgmental", "Overly analytical", "Loathe highly structured environments"],
-        weaknesses_ja=["傲慢", "批判的", "過度に分析的", "高度に構造化された環境を嫌う"],
-        careers_en=["Scientist", "Engineer", "Doctor", "Lawyer", "Teacher", "Computer Programmer"],
-        careers_ja=["科学者", "エンジニア", "医師", "弁護士", "教師", "プログラマー"]
+        weaknesses_en=[
+            "Arrogant",
+            "Judgmental",
+            "Overly analytical",
+            "Loathe highly structured environments",
+        ],
+        weaknesses_ja=[
+            "傲慢",
+            "批判的",
+            "過度に分析的",
+            "高度に構造化された環境を嫌う",
+        ],
+        careers_en=[
+            "Scientist",
+            "Engineer",
+            "Doctor",
+            "Lawyer",
+            "Teacher",
+            "Computer Programmer",
+        ],
+        careers_ja=["科学者", "エンジニア", "医師", "弁護士", "教師", "プログラマー"],
     ),
     MBTIType.INTP: MBTITypeInfo(
         type_code=MBTIType.INTP,
@@ -157,8 +184,14 @@ MBTI_TYPE_INFO = {
         strengths_ja=["分析的", "独創的", "オープンマインド", "好奇心旺盛", "客観的"],
         weaknesses_en=["Disconnected", "Insensitive", "Dissatisfied", "Impatient"],
         weaknesses_ja=["つながりの欠如", "鈍感", "不満足", "短気"],
-        careers_en=["Scientist", "Mathematician", "Engineer", "Economist", "Philosopher"],
-        careers_ja=["科学者", "数学者", "エンジニア", "経済学者", "哲学者"]
+        careers_en=[
+            "Scientist",
+            "Mathematician",
+            "Engineer",
+            "Economist",
+            "Philosopher",
+        ],
+        careers_ja=["科学者", "数学者", "エンジニア", "経済学者", "哲学者"],
     ),
     MBTIType.ENTJ: MBTITypeInfo(
         type_code=MBTIType.ENTJ,
@@ -167,12 +200,23 @@ MBTI_TYPE_INFO = {
         description_en="Bold, imaginative and strong-willed leaders, always finding a way – or making one.",
         description_ja="大胆で想像力豊かで意志の強いリーダーで、常に道を見つけるか、作り出します。",
         temperament="NT",
-        strengths_en=["Efficient", "Energetic", "Self-confident", "Strong-willed", "Strategic thinker"],
+        strengths_en=[
+            "Efficient",
+            "Energetic",
+            "Self-confident",
+            "Strong-willed",
+            "Strategic thinker",
+        ],
         strengths_ja=["効率的", "エネルギッシュ", "自信", "意志の強さ", "戦略的思考"],
-        weaknesses_en=["Stubborn", "Impatient", "Arrogant", "Poor handling of emotions"],
+        weaknesses_en=[
+            "Stubborn",
+            "Impatient",
+            "Arrogant",
+            "Poor handling of emotions",
+        ],
         weaknesses_ja=["頑固", "短気", "傲慢", "感情の扱いが苦手"],
         careers_en=["CEO", "Manager", "Lawyer", "Judge", "Business Analyst"],
-        careers_ja=["CEO", "マネージャー", "弁護士", "裁判官", "ビジネスアナリスト"]
+        careers_ja=["CEO", "マネージャー", "弁護士", "裁判官", "ビジネスアナリスト"],
     ),
     MBTIType.ENTP: MBTITypeInfo(
         type_code=MBTIType.ENTP,
@@ -181,12 +225,22 @@ MBTI_TYPE_INFO = {
         description_en="Smart and curious thinkers who cannot resist an intellectual challenge.",
         description_ja="知的な挑戦に抗うことができない、スマートで好奇心旺盛な思考者です。",
         temperament="NT",
-        strengths_en=["Knowledgeable", "Quick thinker", "Original", "Excellent brainstormer"],
+        strengths_en=[
+            "Knowledgeable",
+            "Quick thinker",
+            "Original",
+            "Excellent brainstormer",
+        ],
         strengths_ja=["博識", "素早い思考", "独創的", "優れたブレインストーマー"],
-        weaknesses_en=["Argumentative", "Insensitive", "Intolerant", "Can be unreliable"],
+        weaknesses_en=[
+            "Argumentative",
+            "Insensitive",
+            "Intolerant",
+            "Can be unreliable",
+        ],
         weaknesses_ja=["議論好き", "鈍感", "不寛容", "信頼性に欠ける場合がある"],
         careers_en=["Journalist", "Engineer", "Scientist", "Actor", "Lawyer"],
-        careers_ja=["ジャーナリスト", "エンジニア", "科学者", "俳優", "弁護士"]
+        careers_ja=["ジャーナリスト", "エンジニア", "科学者", "俳優", "弁護士"],
     ),
     # Add more types as needed...
 }

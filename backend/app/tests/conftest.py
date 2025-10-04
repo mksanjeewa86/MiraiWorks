@@ -15,9 +15,12 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 # Set environment to test before importing settings
 try:
     import bcrypt
+
     if not hasattr(bcrypt, "__about__"):
+
         class _About:
             __version__ = getattr(bcrypt, "__version__", "unknown")
+
         bcrypt.__about__ = _About()
 except ImportError:
     pass
@@ -45,24 +48,28 @@ if os.getenv("DATABASE_URL"):
     TEST_DATABASE_URL = os.getenv("DATABASE_URL")
 elif os.getenv("GITHUB_ACTIONS"):
     # GitHub Actions default
-    TEST_DATABASE_URL = "mysql+asyncmy://changeme:changeme@127.0.0.1:3307/miraiworks_test"
+    TEST_DATABASE_URL = (
+        "mysql+asyncmy://changeme:changeme@127.0.0.1:3307/miraiworks_test"
+    )
 else:
     # Local Docker development
-    TEST_DATABASE_URL = "mysql+asyncmy://changeme:changeme@localhost:3307/miraiworks_test"
+    TEST_DATABASE_URL = (
+        "mysql+asyncmy://changeme:changeme@localhost:3307/miraiworks_test"
+    )
 
 # Create test engine with optimized settings for fast tests
 test_engine = create_async_engine(
     TEST_DATABASE_URL,
-    pool_size=10,          # Increased for better concurrency
-    max_overflow=20,       # Higher overflow for busy tests
-    pool_recycle=3600,     # Longer recycle time
-    pool_pre_ping=True,    # Health checks
-    pool_timeout=10,       # Faster timeout
-    echo=False,            # No SQL logging for speed
+    pool_size=10,  # Increased for better concurrency
+    max_overflow=20,  # Higher overflow for busy tests
+    pool_recycle=3600,  # Longer recycle time
+    pool_pre_ping=True,  # Health checks
+    pool_timeout=10,  # Faster timeout
+    echo=False,  # No SQL logging for speed
     connect_args={
         "autocommit": False,
         "connect_timeout": 10,
-    }
+    },
 )
 
 TestingSessionLocal = async_sessionmaker(
@@ -70,6 +77,7 @@ TestingSessionLocal = async_sessionmaker(
     class_=AsyncSession,
     expire_on_commit=False,
 )
+
 
 async def override_get_db():
     """Override database dependency for tests."""
@@ -79,7 +87,9 @@ async def override_get_db():
         finally:
             await session.close()
 
+
 app.dependency_overrides[get_db] = override_get_db
+
 
 def start_test_database():
     """Start Docker MySQL test database with optimized startup."""
@@ -88,11 +98,20 @@ def start_test_database():
     # Check if container is already running and healthy
     try:
         result = subprocess.run(
-            ["docker", "ps", "--filter", "name=miraiworks-mysql-test", "--filter", "health=healthy", "--format", "{{.Names}}"],
+            [
+                "docker",
+                "ps",
+                "--filter",
+                "name=miraiworks-mysql-test",
+                "--filter",
+                "health=healthy",
+                "--format",
+                "{{.Names}}",
+            ],
             capture_output=True,
             text=True,
             check=True,
-            timeout=5
+            timeout=5,
         )
         if "miraiworks-mysql-test" in result.stdout:
             print("MySQL test database is already running and healthy")
@@ -106,7 +125,7 @@ def start_test_database():
             ["docker-compose", "-f", "docker-compose.test.yml", "down"],
             cwd=str(BACKEND_DIR.parent),
             capture_output=True,
-            timeout=10
+            timeout=10,
         )
 
     # Start the test database
@@ -115,7 +134,7 @@ def start_test_database():
             ["docker-compose", "-f", "docker-compose.test.yml", "up", "-d"],
             check=True,
             cwd=str(BACKEND_DIR.parent),
-            timeout=30
+            timeout=30,
         )
         print("Started MySQL test database")
 
@@ -126,10 +145,15 @@ def start_test_database():
             try:
                 # Quick health check
                 result = subprocess.run(
-                    ["docker", "inspect", "--format={{.State.Health.Status}}", "miraiworks-mysql-test"],
+                    [
+                        "docker",
+                        "inspect",
+                        "--format={{.State.Health.Status}}",
+                        "miraiworks-mysql-test",
+                    ],
                     capture_output=True,
                     text=True,
-                    timeout=3
+                    timeout=3,
                 )
                 if result.returncode == 0 and "healthy" in result.stdout:
                     print(f"MySQL is ready! (attempt {attempt + 1})")
@@ -147,11 +171,13 @@ def start_test_database():
         print(f"Failed to start MySQL test database: {e}")
         return False
 
+
 def stop_test_database():
     """Stop Docker MySQL test database - but keep it running for speed."""
     # Don't actually stop the database to keep it running between test sessions
     # Only stop when explicitly needed
     print("Keeping MySQL test database running for next test session...")
+
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_environment():
@@ -170,12 +196,14 @@ def setup_test_environment():
         # Don't stop database for faster subsequent runs
         print("Test session complete - database kept running")
 
+
 @pytest.fixture(scope="session")
 def event_loop():
     """Create an instance of the default event loop for the test session."""
     loop = asyncio.new_event_loop()
     yield loop
     loop.close()
+
 
 async def fast_clear_data():
     """Fast data clearing without dropping tables."""
@@ -203,6 +231,7 @@ async def fast_clear_data():
         print(f"Fast clear failed: {e}")
         return False
 
+
 @pytest_asyncio.fixture(scope="session", autouse=True)
 async def setup_database_schema():
     """Set up test database schema once per session."""
@@ -214,12 +243,15 @@ async def setup_database_schema():
         async with test_engine.begin() as conn:
             # Check if tables exist
             from sqlalchemy import text
+
             result = await conn.execute(text("SHOW TABLES"))
             existing_tables = [row[0] for row in result.fetchall()]
 
             if not existing_tables:
                 # Create all tables
-                await conn.run_sync(lambda sync_conn: Base.metadata.create_all(sync_conn))
+                await conn.run_sync(
+                    lambda sync_conn: Base.metadata.create_all(sync_conn)
+                )
                 print("Database schema created")
             else:
                 print(f"Database schema already exists ({len(existing_tables)} tables)")
@@ -234,12 +266,14 @@ async def setup_database_schema():
         print(f"Database schema setup failed: {e}")
         raise
 
+
 @pytest_asyncio.fixture(scope="function")
 async def clean_database():
     """Clean database before test setup."""
     # Clear data before test fixtures run
     await fast_clear_data()
     yield
+
 
 @pytest_asyncio.fixture
 async def db_session(clean_database):
@@ -253,9 +287,11 @@ async def db_session(clean_database):
             with contextlib.suppress(Exception):
                 await session.close()
 
+
 @pytest_asyncio.fixture
 async def client():
     """Get HTTP client for tests with GET json support."""
+
     class PatchedAsyncClient(AsyncClient):
         async def get(self, url: str, *args, **kwargs):
             json_payload = kwargs.pop("json", None)
@@ -270,6 +306,7 @@ async def client():
 
     async with PatchedAsyncClient(app=app, base_url="http://testserver") as test_client:
         yield test_client
+
 
 # Optimized test fixtures with caching
 @pytest_asyncio.fixture
@@ -289,6 +326,7 @@ async def test_roles(db_session):
 
     return roles
 
+
 @pytest_asyncio.fixture
 async def test_company(db_session):
     """Create test company."""
@@ -303,6 +341,7 @@ async def test_company(db_session):
     await db_session.commit()
     await db_session.refresh(company)
     return company
+
 
 @pytest_asyncio.fixture
 async def test_user(db_session, test_company, test_roles):
@@ -327,6 +366,7 @@ async def test_user(db_session, test_company, test_roles):
     await db_session.commit()
 
     return user
+
 
 @pytest_asyncio.fixture
 async def test_admin_user(db_session, test_company, test_roles):
@@ -353,6 +393,7 @@ async def test_admin_user(db_session, test_company, test_roles):
 
     return user
 
+
 @pytest_asyncio.fixture
 async def test_employer_user(db_session, test_company, test_roles):
     """Create member user with company association (employer context via company type)."""
@@ -377,6 +418,7 @@ async def test_employer_user(db_session, test_company, test_roles):
 
     return user
 
+
 @pytest_asyncio.fixture
 async def test_candidate_only_user(db_session, test_roles):
     """Create candidate without company affiliation."""
@@ -399,6 +441,7 @@ async def test_candidate_only_user(db_session, test_roles):
     await db_session.commit()
 
     return user
+
 
 @pytest_asyncio.fixture
 async def test_system_admin(db_session, test_roles):
@@ -425,8 +468,10 @@ async def test_system_admin(db_session, test_roles):
 
     return user
 
+
 # Alias for backward compatibility
 test_super_admin = test_system_admin
+
 
 @pytest_asyncio.fixture
 async def auth_headers(client, test_employer_user):
@@ -438,6 +483,7 @@ async def auth_headers(client, test_employer_user):
     assert response.status_code == 200
     token_data = response.json()
     return {"Authorization": f"Bearer {token_data['access_token']}"}
+
 
 @pytest_asyncio.fixture
 async def candidate_headers(client, test_candidate_only_user):
@@ -452,6 +498,7 @@ async def candidate_headers(client, test_candidate_only_user):
     assert response.status_code == 200
     token_data = response.json()
     return {"Authorization": f"Bearer {token_data['access_token']}"}
+
 
 @pytest_asyncio.fixture
 async def admin_auth_headers(client, test_admin_user):
@@ -477,6 +524,7 @@ async def admin_auth_headers(client, test_admin_user):
         token_data = verify_response.json()
 
     return {"Authorization": f"Bearer {token_data['access_token']}"}
+
 
 @pytest_asyncio.fixture
 async def super_admin_auth_headers(client, test_super_admin):
@@ -520,6 +568,7 @@ async def super_admin_auth_headers(client, test_super_admin):
         # Return a dummy header to prevent further crashes
         return {"Authorization": "Bearer dummy_token_for_testing"}
 
+
 # Helper function to create auth headers for any user
 async def get_auth_headers_for_user(client, user):
     """Get authentication headers for any user."""
@@ -540,20 +589,24 @@ async def get_auth_headers_for_user(client, user):
         json={"email": user.email, "password": password},
     )
 
-    assert response.status_code == 200, f"Login failed for user {user.email}: {response.text}"
+    assert (
+        response.status_code == 200
+    ), f"Login failed for user {user.email}: {response.text}"
     token_data = response.json()
     return {"Authorization": f"Bearer {token_data['access_token']}"}
 
 
 @pytest.fixture
-def test_users(test_user, test_admin_user, test_employer_user, test_candidate_only_user):
+def test_users(
+    test_user, test_admin_user, test_employer_user, test_candidate_only_user
+):
     """Fixture providing dictionary of various test users for attachment tests."""
     return {
-        'user': test_user,
-        'admin': test_admin_user,
-        'recruiter': test_employer_user,  # Using employer as recruiter for consistency
-        'candidate': test_candidate_only_user,
-        'employer': test_employer_user,
+        "user": test_user,
+        "admin": test_admin_user,
+        "recruiter": test_employer_user,  # Using employer as recruiter for consistency
+        "candidate": test_candidate_only_user,
+        "employer": test_employer_user,
     }
 
 
@@ -570,16 +623,19 @@ async def test_todo_with_attachments(db_session, test_user):
 
     # Create a test todo
     todo_data = TodoCreate(
-        title="Test Todo with Attachments",
-        description="Todo for attachment testing"
+        title="Test Todo with Attachments", description="Todo for attachment testing"
     )
-    todo = await todo_crud.create_with_owner(db_session, obj_in=todo_data, owner_id=test_user.id)
+    todo = await todo_crud.create_with_owner(
+        db_session, obj_in=todo_data, owner_id=test_user.id
+    )
 
     # Create test attachments
     attachments = []
 
     # Create a temporary file for testing
-    with tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.txt') as temp_file:
+    with tempfile.NamedTemporaryFile(
+        mode="w+b", delete=False, suffix=".txt"
+    ) as temp_file:
         test_content = b"This is test attachment content for testing purposes."
         temp_file.write(test_content)
         temp_file_path = temp_file.name
@@ -594,16 +650,16 @@ async def test_todo_with_attachments(db_session, test_user):
             file_size=len(test_content),
             mime_type="text/plain",
             file_extension=".txt",
-            uploaded_by=test_user.id
+            uploaded_by=test_user.id,
         )
         attachment = await attachment_crud.create(db_session, obj_in=attachment_data)
         attachments.append(attachment)
 
         return {
-            'todo': todo,
-            'user': test_user,
-            'attachments': attachments,
-            'temp_files': [temp_file_path]  # For cleanup
+            "todo": todo,
+            "user": test_user,
+            "attachments": attachments,
+            "temp_files": [temp_file_path],  # For cleanup
         }
     except Exception:
         # Clean up temp file if fixture creation fails

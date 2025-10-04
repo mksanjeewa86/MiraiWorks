@@ -96,8 +96,8 @@ export default function EventModal({
       const baseStart = selectedRange
         ? new Date(selectedRange.start)
         : selectedDate
-        ? new Date(selectedDate)
-        : now;
+          ? new Date(selectedDate)
+          : now;
       const safeStart = Number.isNaN(baseStart.getTime()) ? now : baseStart;
 
       const computedEnd = (() => {
@@ -142,14 +142,7 @@ export default function EventModal({
 
     setErrors({});
     setAttendeeInput('');
-  }, [
-    isOpen,
-    isCreateMode,
-    event,
-    selectedDate,
-    selectedRange,
-    safeDateToLocalString,
-  ]);
+  }, [isOpen, isCreateMode, event, selectedDate, selectedRange, safeDateToLocalString]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -423,7 +416,8 @@ export default function EventModal({
                     </select>
                   </div>
                   <div className="rounded-lg border border-dashed border-blue-200 bg-blue-50 px-4 py-3 text-xs font-medium text-blue-700">
-                    Invites default to <span className="font-semibold">{formData.timezone}</span> timezone.
+                    Invites default to <span className="font-semibold">{formData.timezone}</span>{' '}
+                    timezone.
                   </div>
                 </div>
               </div>

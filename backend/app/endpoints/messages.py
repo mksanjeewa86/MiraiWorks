@@ -1,4 +1,4 @@
-
+from app.config.endpoints import API_ROUTES
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -65,23 +65,21 @@ async def validate_messaging_permission(
         )
 
 
-@router.get("/conversations", response_model=ConversationListResponse)
+@router.get(API_ROUTES.MESSAGES.CONVERSATIONS, response_model=ConversationListResponse)
 async def get_conversations(
     search: str | None = None,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Get list of users the current user has exchanged messages with."""
-    conversations = await message_service.get_conversations(
-        db, current_user.id, search
-    )
+    conversations = await message_service.get_conversations(db, current_user.id, search)
 
     return ConversationListResponse(
         conversations=conversations, total=len(conversations)
     )
 
 
-@router.get("/with/{other_user_id}", response_model=MessageListResponse)
+@router.get(API_ROUTES.MESSAGES.WITH_USER, response_model=MessageListResponse)
 async def get_messages_with_user(
     other_user_id: int,
     limit: int = 50,
@@ -125,7 +123,7 @@ async def get_messages_with_user(
     )
 
 
-@router.post("/send", response_model=MessageInfo)
+@router.post(API_ROUTES.MESSAGES.SEND, response_model=MessageInfo)
 async def send_message(
     message_data: MessageCreate,
     current_user: User = Depends(get_current_active_user),
@@ -135,12 +133,12 @@ async def send_message(
     # Validate messaging permissions based on roles
     await validate_messaging_permission(db, current_user.id, message_data.recipient_id)
 
-    new_message = await message_service.send_message(
-        db, current_user.id, message_data
-    )
+    new_message = await message_service.send_message(db, current_user.id, message_data)
 
     # Load with relationships for response
-    message_with_relations = await message.get_message_with_relationships(db, new_message.id)
+    message_with_relations = await message.get_message_with_relationships(
+        db, new_message.id
+    )
 
     # Handle notifications (email and in-app)
     await notification_service.handle_new_message_notifications(
@@ -168,7 +166,7 @@ async def send_message(
     )
 
 
-@router.post("/search", response_model=MessageListResponse)
+@router.post(API_ROUTES.MESSAGES.SEARCH, response_model=MessageListResponse)
 async def search_messages(
     search_request: MessageSearchRequest,
     current_user: User = Depends(get_current_active_user),
@@ -210,7 +208,7 @@ async def search_messages(
     )
 
 
-@router.put("/mark-read")
+@router.put(API_ROUTES.MESSAGES.MARK_READ_SINGLE)
 async def mark_messages_as_read(
     read_request: MessageReadRequest,
     current_user: User = Depends(get_current_active_user),
@@ -224,7 +222,7 @@ async def mark_messages_as_read(
     return {"message": f"Marked {count} messages as read"}
 
 
-@router.put("/mark-conversation-read/{other_user_id}")
+@router.put(API_ROUTES.MESSAGES.MARK_READ_CONVERSATION)
 async def mark_conversation_as_read(
     other_user_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -238,7 +236,7 @@ async def mark_conversation_as_read(
     return {"message": f"Marked {count} messages as read"}
 
 
-@router.get("/participants")
+@router.get(API_ROUTES.MESSAGES.PARTICIPANTS)
 async def get_message_participants(
     query: str | None = None,
     limit: int = 50,
@@ -270,7 +268,7 @@ async def get_message_participants(
     return {"participants": participants}
 
 
-@router.get("/restricted-users")
+@router.get(API_ROUTES.MESSAGES.RESTRICTED_USERS)
 async def get_restricted_user_ids(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
@@ -297,7 +295,7 @@ async def get_restricted_user_ids(
             .where(User.is_deleted is False)
         )
         result = await db.execute(query)
-        restricted_user_ids = [user_id for user_id, in result.fetchall()]
+        restricted_user_ids = [user_id for (user_id,) in result.fetchall()]
 
     elif "company_admin" in current_user_roles:
         # Company admin can only message super admins, so restrict non-super-admin users
@@ -310,7 +308,7 @@ async def get_restricted_user_ids(
             .where(User.is_deleted is False)
         )
         result = await db.execute(query)
-        restricted_user_ids = [user_id for user_id, in result.fetchall()]
+        restricted_user_ids = [user_id for (user_id,) in result.fetchall()]
 
     else:
         # Other users can message anyone except company admins
@@ -323,6 +321,6 @@ async def get_restricted_user_ids(
             .where(User.is_deleted is False)
         )
         result = await db.execute(query)
-        restricted_user_ids = [user_id for user_id, in result.fetchall()]
+        restricted_user_ids = [user_id for (user_id,) in result.fetchall()]
 
     return {"restricted_user_ids": restricted_user_ids}

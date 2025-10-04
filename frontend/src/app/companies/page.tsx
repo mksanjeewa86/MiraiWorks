@@ -29,6 +29,15 @@ function CompaniesPageContent() {
   const [error, setError] = useState<string | null>(null);
   const [selectedCompanies, setSelectedCompanies] = useState<Set<number>>(new Set());
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [viewingCompany, setViewingCompany] = useState<Company | null>(null);
+
+  // Prevent body scroll on this page
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<CompanyFilters>({
@@ -114,6 +123,10 @@ function CompaniesPageContent() {
   };
 
   const handleSelectCompany = (companyId: number) => {
+    const company = companies.find((c) => c.id === companyId);
+    // Don't allow selection of deleted companies
+    if (company?.is_deleted) return;
+
     const newSelected = new Set(selectedCompanies);
     if (newSelected.has(companyId)) {
       newSelected.delete(companyId);
@@ -124,10 +137,12 @@ function CompaniesPageContent() {
   };
 
   const handleSelectAll = () => {
-    if (selectedCompanies.size === companies.length) {
+    // Only select non-deleted companies
+    const selectableCompanies = companies.filter((c) => !c.is_deleted);
+    if (selectedCompanies.size === selectableCompanies.length) {
       setSelectedCompanies(new Set());
     } else {
-      setSelectedCompanies(new Set(companies.map((company) => company.id)));
+      setSelectedCompanies(new Set(selectableCompanies.map((company) => company.id)));
     }
   };
 
@@ -239,19 +254,20 @@ function CompaniesPageContent() {
           </div>
         )}
 
-        <div className="flex items-center justify-between mb-6">
-          <div></div>
-          <Link
-            href="/companies/add"
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Add Company</span>
-          </Link>
-        </div>
+        {selectedCompanies.size === 0 && (
+          <div className="flex items-center justify-end mb-6 mt-6 min-h-[56px]">
+            <Link
+              href="/companies/add"
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Add Company</span>
+            </Link>
+          </div>
+        )}
 
         {selectedCompanies.size > 0 && (
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6 mt-6 min-h-[56px]">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <span className="text-blue-700 dark:text-blue-300 font-medium">
@@ -269,40 +285,47 @@ function CompaniesPageContent() {
                   const selectedCompanyObjects = companies.filter((company) =>
                     selectedCompanies.has(company.id)
                   );
+                  const hasDeletedCompanies = selectedCompanyObjects.some(
+                    (company) => company.is_deleted
+                  );
                   const hasInactiveCompanies = selectedCompanyObjects.some(
-                    (company) => !company.is_active
+                    (company) => !company.is_active && !company.is_deleted
                   );
                   const hasActiveCompanies = selectedCompanyObjects.some(
-                    (company) => company.is_active
+                    (company) => company.is_active && !company.is_deleted
                   );
 
                   return (
                     <>
-                      {hasInactiveCompanies && (
-                        <button
-                          onClick={handleBulkActivate}
-                          className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 flex items-center space-x-1"
-                        >
-                          <Power className="h-3 w-3" />
-                          <span>Activate</span>
-                        </button>
+                      {!hasDeletedCompanies && (
+                        <>
+                          {hasInactiveCompanies && (
+                            <button
+                              onClick={handleBulkActivate}
+                              className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 flex items-center space-x-1"
+                            >
+                              <Power className="h-3 w-3" />
+                              <span>Activate</span>
+                            </button>
+                          )}
+                          {hasActiveCompanies && (
+                            <button
+                              onClick={handleBulkDeactivate}
+                              className="bg-orange-600 text-white px-3 py-1 rounded text-sm hover:bg-orange-700 flex items-center space-x-1"
+                            >
+                              <PowerOff className="h-3 w-3" />
+                              <span>Deactivate</span>
+                            </button>
+                          )}
+                          <button
+                            onClick={handleBulkDelete}
+                            className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 flex items-center space-x-1"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                            <span>Delete</span>
+                          </button>
+                        </>
                       )}
-                      {hasActiveCompanies && (
-                        <button
-                          onClick={handleBulkDeactivate}
-                          className="bg-orange-600 text-white px-3 py-1 rounded text-sm hover:bg-orange-700 flex items-center space-x-1"
-                        >
-                          <PowerOff className="h-3 w-3" />
-                          <span>Deactivate</span>
-                        </button>
-                      )}
-                      <button
-                        onClick={handleBulkDelete}
-                        className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 flex items-center space-x-1"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                        <span>Delete</span>
-                      </button>
                     </>
                   );
                 })()}
@@ -449,36 +472,40 @@ function CompaniesPageContent() {
               </Link>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div
+              className="overflow-x-auto"
+              style={{ maxHeight: 'calc(100vh - 350px)', overflowY: 'auto' }}
+            >
               <table className="w-full">
-                <thead className="bg-gray-50 dark:bg-gray-900">
+                <thead className="bg-gray-50 dark:bg-gray-900 sticky top-0 z-10">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-12">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-12 bg-gray-50 dark:bg-gray-900">
                       <input
                         type="checkbox"
                         checked={
-                          companies.length > 0 && selectedCompanies.size === companies.length
+                          companies.filter((c) => !c.is_deleted).length > 0 &&
+                          selectedCompanies.size === companies.filter((c) => !c.is_deleted).length
                         }
                         onChange={handleSelectAll}
                         className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                       />
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-900">
                       Company
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-900">
                       Type
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-900">
                       Contact
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-900">
                       Stats
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-900">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"></th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-900"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -486,20 +513,26 @@ function CompaniesPageContent() {
                     <tr
                       key={company.id}
                       className={`cursor-pointer transition-colors ${
-                        selectedCompanies.has(company.id)
-                          ? 'bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30'
-                          : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+                        company.is_deleted
+                          ? selectedCompanies.has(company.id)
+                            ? 'bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/40'
+                            : 'bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30'
+                          : selectedCompanies.has(company.id)
+                            ? 'bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30'
+                            : 'hover:bg-gray-50 dark:hover:bg-gray-700'
                       }`}
                       onClick={() => handleSelectCompany(company.id)}
                     >
                       <td className="px-6 py-4">
-                        <input
-                          type="checkbox"
-                          checked={selectedCompanies.has(company.id)}
-                          onChange={() => handleSelectCompany(company.id)}
-                          onClick={(e) => e.stopPropagation()}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                        />
+                        {!company.is_deleted && (
+                          <input
+                            type="checkbox"
+                            checked={selectedCompanies.has(company.id)}
+                            onChange={() => handleSelectCompany(company.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          />
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center">
@@ -584,16 +617,57 @@ function CompaniesPageContent() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div
-                          className="flex items-center justify-end"
+                          className="flex items-center justify-end space-x-2"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <Link
-                            href={`/companies/${company.id}/edit`}
-                            className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 flex items-center space-x-1"
-                          >
-                            <Edit className="h-3 w-3" />
-                            <span>Edit</span>
-                          </Link>
+                          {company.is_deleted ? (
+                            <button
+                              onClick={() => setViewingCompany(company)}
+                              className="bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-700 flex items-center space-x-1"
+                            >
+                              <Building2 className="h-3 w-3" />
+                              <span>Details</span>
+                            </button>
+                          ) : (
+                            <>
+                              <Link
+                                href={`/companies/${company.id}/edit`}
+                                className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 flex items-center space-x-1"
+                              >
+                                <Edit className="h-3 w-3" />
+                                <span>Edit</span>
+                              </Link>
+                              {company.is_demo && (
+                                <Link
+                                  href={`/companies/${company.id}/demo-settings`}
+                                  className="bg-orange-600 text-white px-3 py-1 rounded text-sm hover:bg-orange-700 flex items-center space-x-1"
+                                >
+                                  <span>Demo Settings</span>
+                                </Link>
+                              )}
+                              <button
+                                onClick={async () => {
+                                  if (confirm(`Are you sure you want to delete ${company.name}?`)) {
+                                    try {
+                                      await companiesApi.deleteCompany(company.id);
+                                      setSuccessMessage(`Successfully deleted ${company.name}`);
+                                      await loadCompanies();
+                                    } catch (err) {
+                                      setError(
+                                        err instanceof Error
+                                          ? err.message
+                                          : 'Failed to delete company'
+                                      );
+                                    }
+                                  }
+                                }}
+                                className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 flex items-center space-x-1"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                                <span>Delete</span>
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -634,6 +708,204 @@ function CompaniesPageContent() {
             </div>
           )}
         </div>
+
+        {/* Company Details Modal */}
+        {viewingCompany && (
+          <div className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-3xl border border-slate-200 dark:border-gray-700 shadow-[0_30px_80px_-20px_rgba(15,23,42,0.2)] max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+              {/* Header */}
+              <div className="flex-shrink-0 px-6 pt-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                        <Building2 className="h-5 w-5" />
+                      </span>
+                      <div>
+                        <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                          Company Details
+                        </h2>
+                        <p className="text-sm text-slate-500 dark:text-gray-400">
+                          View information about this company
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setViewingCompany(null)}
+                    className="rounded-lg border border-slate-200 dark:border-gray-600 p-2 text-slate-500 dark:text-gray-400 transition hover:bg-slate-100 dark:hover:bg-gray-700 hover:text-slate-700 dark:hover:text-gray-200"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto px-6 py-6 min-h-0">
+                <div className="space-y-6">
+                  {/* Basic Information Section */}
+                  <div className="rounded-2xl border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-gray-900/20 p-6">
+                    <h3 className="text-sm font-semibold text-slate-700 dark:text-gray-300 mb-4">
+                      Basic Information
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-500 dark:text-gray-400">
+                          Company Name
+                        </label>
+                        <p className="mt-1 text-slate-900 dark:text-white">{viewingCompany.name}</p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-slate-500 dark:text-gray-400">
+                          Type
+                        </label>
+                        <p className="mt-1">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              viewingCompany.type === 'employer'
+                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300'
+                                : 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300'
+                            }`}
+                          >
+                            {viewingCompany.type === 'employer' ? 'Employer' : 'Recruiter'}
+                          </span>
+                        </p>
+                      </div>
+
+                      {viewingCompany.description && (
+                        <div>
+                          <label className="block text-sm font-medium text-slate-500 dark:text-gray-400">
+                            Description
+                          </label>
+                          <p className="mt-1 text-slate-900 dark:text-white whitespace-pre-wrap">
+                            {viewingCompany.description}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Contact Information Section */}
+                  <div className="rounded-2xl border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-gray-900/20 p-6">
+                    <h3 className="text-sm font-semibold text-slate-700 dark:text-gray-300 mb-4">
+                      Contact Information
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-500 dark:text-gray-400">
+                          Email
+                        </label>
+                        <p className="mt-1 text-slate-900 dark:text-white">
+                          {viewingCompany.email}
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-slate-500 dark:text-gray-400">
+                          Phone
+                        </label>
+                        <p className="mt-1 text-slate-900 dark:text-white">
+                          {viewingCompany.phone}
+                        </p>
+                      </div>
+
+                      {viewingCompany.website && (
+                        <div>
+                          <label className="block text-sm font-medium text-slate-500 dark:text-gray-400">
+                            Website
+                          </label>
+                          <p className="mt-1 text-slate-900 dark:text-white">
+                            {viewingCompany.website}
+                          </p>
+                        </div>
+                      )}
+
+                      {(viewingCompany.postal_code ||
+                        viewingCompany.prefecture ||
+                        viewingCompany.city) && (
+                        <div>
+                          <label className="block text-sm font-medium text-slate-500 dark:text-gray-400">
+                            Address
+                          </label>
+                          <p className="mt-1 text-slate-900 dark:text-white">
+                            {viewingCompany.postal_code && `〒${viewingCompany.postal_code} `}
+                            {viewingCompany.prefecture}
+                            {viewingCompany.city}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Status & Statistics Section */}
+                  <div className="rounded-2xl border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-gray-900/20 p-6">
+                    <h3 className="text-sm font-semibold text-slate-700 dark:text-gray-300 mb-4">
+                      Status & Statistics
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-500 dark:text-gray-400">
+                          Status
+                        </label>
+                        <div className="mt-1 flex flex-wrap gap-2">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-900/40 dark:text-gray-300">
+                            Deleted
+                          </span>
+                          {viewingCompany.is_demo && (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-300">
+                              Demo
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-slate-500 dark:text-gray-400">
+                            Total Users
+                          </label>
+                          <p className="mt-1 text-slate-900 dark:text-white">
+                            {viewingCompany.user_count || 0}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-500 dark:text-gray-400">
+                            Total Jobs
+                          </label>
+                          <p className="mt-1 text-slate-900 dark:text-white">
+                            {viewingCompany.job_count || 0}
+                          </p>
+                        </div>
+                      </div>
+
+                      {viewingCompany.deleted_at && (
+                        <div>
+                          <label className="block text-sm font-medium text-slate-500 dark:text-gray-400">
+                            Deleted At
+                          </label>
+                          <p className="mt-1 text-slate-900 dark:text-white">
+                            {new Date(viewingCompany.deleted_at).toLocaleString()}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex-shrink-0 gap-3 border-t border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-6 py-4 flex justify-end">
+                <button
+                  onClick={() => setViewingCompany(null)}
+                  className="min-w-[120px] border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-gray-600 px-4 py-2 rounded-lg transition"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </AppLayout>
   );

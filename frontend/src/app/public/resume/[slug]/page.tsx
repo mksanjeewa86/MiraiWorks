@@ -7,7 +7,6 @@ import { Download, Eye, Calendar, User, Globe, Share2, ExternalLink } from 'luci
 import { ResumeFormat } from '@/types/resume';
 import { resumesApi } from '@/api/resumes';
 
-
 function PublicResumePageContent() {
   const params = useParams();
   const router = useRouter();
@@ -384,4 +383,3 @@ function PublicResumePageContent() {
 export default function PublicResumePage() {
   return <PublicResumePageContent />;
 }
-

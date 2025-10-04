@@ -38,7 +38,11 @@ class TestResumeAccessControl:
     ):
         """Test that only Candidates can create resumes."""
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         headers = await self._get_auth_headers(client, candidate)
 
@@ -52,14 +56,12 @@ class TestResumeAccessControl:
                     "position": "Developer",
                     "start_date": "2020-01-01",
                     "end_date": "2023-01-01",
-                    "description": "Developed web applications"
+                    "description": "Developed web applications",
                 }
-            ]
+            ],
         }
 
-        response = await client.post(
-            "/api/resumes/", json=resume_data, headers=headers
-        )
+        response = await client.post("/api/resumes/", json=resume_data, headers=headers)
 
         assert response.status_code == 201
         data = response.json()
@@ -76,7 +78,11 @@ class TestResumeAccessControl:
     ):
         """Test that Candidate can update their own resume."""
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         resume = await self._create_resume_for_candidate(db_session, candidate)
         headers = await self._get_auth_headers(client, candidate)
@@ -105,14 +111,16 @@ class TestResumeAccessControl:
     ):
         """Test that Candidate can delete their own resume."""
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         resume = await self._create_resume_for_candidate(db_session, candidate)
         headers = await self._get_auth_headers(client, candidate)
 
-        response = await client.delete(
-            f"/api/resumes/{resume.id}", headers=headers
-        )
+        response = await client.delete(f"/api/resumes/{resume.id}", headers=headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -128,7 +136,11 @@ class TestResumeAccessControl:
     ):
         """Test that Candidate can view their own resumes."""
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         resume = await self._create_resume_for_candidate(db_session, candidate)
         headers = await self._get_auth_headers(client, candidate)
@@ -155,10 +167,18 @@ class TestResumeAccessControl:
     ):
         """Test that Candidate cannot view other candidates' resumes."""
         candidate1 = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate1@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate1@test.com",
         )
         candidate2 = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate2@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate2@test.com",
         )
         other_resume = await self._create_resume_for_candidate(db_session, candidate2)
         headers = await self._get_auth_headers(client, candidate1)
@@ -177,10 +197,18 @@ class TestResumeAccessControl:
     ):
         """Test that Candidate cannot update other candidates' resumes."""
         candidate1 = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate1@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate1@test.com",
         )
         candidate2 = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate2@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate2@test.com",
         )
         other_resume = await self._create_resume_for_candidate(db_session, candidate2)
         headers = await self._get_auth_headers(client, candidate1)
@@ -203,15 +231,25 @@ class TestResumeAccessControl:
     ):
         """Test that Candidate cannot delete other candidates' resumes."""
         candidate1 = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate1@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate1@test.com",
         )
         candidate2 = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate2@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate2@test.com",
         )
         other_resume = await self._create_resume_for_candidate(db_session, candidate2)
         headers = await self._get_auth_headers(client, candidate1)
 
-        response = await client.delete(f"/api/resumes/{other_resume.id}", headers=headers)
+        response = await client.delete(
+            f"/api/resumes/{other_resume.id}", headers=headers
+        )
         assert response.status_code == 403
         assert "not authorized" in response.json()["detail"].lower()
 
@@ -245,7 +283,11 @@ class TestResumeAccessControl:
     ):
         """Test that Company Admin cannot create resumes."""
         company_admin = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.ADMIN, "companyadmin@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.ADMIN,
+            "companyadmin@test.com",
         )
         headers = await self._get_auth_headers(client, company_admin)
 
@@ -254,9 +296,7 @@ class TestResumeAccessControl:
             "professional_summary": "This should not be allowed",
         }
 
-        response = await client.post(
-            "/api/resumes/", json=resume_data, headers=headers
-        )
+        response = await client.post("/api/resumes/", json=resume_data, headers=headers)
         assert response.status_code == 403
         assert "candidates only" in response.json()["detail"].lower()
 
@@ -270,7 +310,11 @@ class TestResumeAccessControl:
     ):
         """Test that Recruiter cannot create resumes."""
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
         headers = await self._get_auth_headers(client, recruiter)
 
@@ -279,9 +323,7 @@ class TestResumeAccessControl:
             "professional_summary": "This should not be allowed",
         }
 
-        response = await client.post(
-            "/api/resumes/", json=resume_data, headers=headers
-        )
+        response = await client.post("/api/resumes/", json=resume_data, headers=headers)
         assert response.status_code == 403
         assert "candidates only" in response.json()["detail"].lower()
 
@@ -295,7 +337,11 @@ class TestResumeAccessControl:
     ):
         """Test that Employer cannot create resumes."""
         employer = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "employer@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "employer@test.com",
         )
         headers = await self._get_auth_headers(client, employer)
 
@@ -304,9 +350,7 @@ class TestResumeAccessControl:
             "professional_summary": "This should not be allowed",
         }
 
-        response = await client.post(
-            "/api/resumes/", json=resume_data, headers=headers
-        )
+        response = await client.post("/api/resumes/", json=resume_data, headers=headers)
         assert response.status_code == 403
         assert "candidates only" in response.json()["detail"].lower()
 
@@ -323,7 +367,11 @@ class TestResumeAccessControl:
     ):
         """Test that Super Admin can view any resume."""
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         resume = await self._create_resume_for_candidate(db_session, candidate)
 
@@ -346,14 +394,20 @@ class TestResumeAccessControl:
     ):
         """Test that Super Admin cannot update candidate resumes."""
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         resume = await self._create_resume_for_candidate(db_session, candidate)
 
         update_data = {"title": "Updated by Super Admin"}
 
         response = await client.put(
-            f"/api/resumes/{resume.id}", json=update_data, headers=super_admin_auth_headers
+            f"/api/resumes/{resume.id}",
+            json=update_data,
+            headers=super_admin_auth_headers,
         )
         assert response.status_code == 403
         assert "owner only" in response.json()["detail"].lower()
@@ -369,7 +423,11 @@ class TestResumeAccessControl:
     ):
         """Test that Super Admin cannot delete candidate resumes."""
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         resume = await self._create_resume_for_candidate(db_session, candidate)
 
@@ -391,15 +449,25 @@ class TestResumeAccessControl:
     ):
         """Test that Company Admin can view applied candidate resumes from their company."""
         company_admin = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.ADMIN, "companyadmin@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.ADMIN,
+            "companyadmin@test.com",
         )
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         resume = await self._create_resume_for_candidate(db_session, candidate)
 
         # Simulate application to company job (this would be done through job application system)
-        await self._simulate_job_application(db_session, candidate, test_company, resume)
+        await self._simulate_job_application(
+            db_session, candidate, test_company, resume
+        )
 
         headers = await self._get_auth_headers(client, company_admin)
 
@@ -418,10 +486,18 @@ class TestResumeAccessControl:
     ):
         """Test that Company Admin cannot view resumes of candidates who haven't applied."""
         company_admin = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.ADMIN, "companyadmin@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.ADMIN,
+            "companyadmin@test.com",
         )
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         resume = await self._create_resume_for_candidate(db_session, candidate)
 
@@ -442,14 +518,24 @@ class TestResumeAccessControl:
     ):
         """Test that Company Admin cannot view resumes from other company candidates."""
         company_admin = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.ADMIN, "companyadmin@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.ADMIN,
+            "companyadmin@test.com",
         )
 
         other_company = await self._create_other_company(db_session)
         other_candidate = await self._create_user_with_role(
-            db_session, other_company, test_roles, UserRoleEnum.CANDIDATE, "othercandidate@test.com"
+            db_session,
+            other_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "othercandidate@test.com",
         )
-        other_resume = await self._create_resume_for_candidate(db_session, other_candidate)
+        other_resume = await self._create_resume_for_candidate(
+            db_session, other_candidate
+        )
 
         headers = await self._get_auth_headers(client, company_admin)
 
@@ -467,15 +553,25 @@ class TestResumeAccessControl:
     ):
         """Test that Recruiter can view applied candidate resumes from their company."""
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         resume = await self._create_resume_for_candidate(db_session, candidate)
 
         # Simulate application to company job
-        await self._simulate_job_application(db_session, candidate, test_company, resume)
+        await self._simulate_job_application(
+            db_session, candidate, test_company, resume
+        )
 
         headers = await self._get_auth_headers(client, recruiter)
 
@@ -494,10 +590,18 @@ class TestResumeAccessControl:
     ):
         """Test that Recruiter cannot view resumes of candidates who haven't applied."""
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         resume = await self._create_resume_for_candidate(db_session, candidate)
 
@@ -517,15 +621,25 @@ class TestResumeAccessControl:
     ):
         """Test that Employer can view applied candidate resumes from their company."""
         employer = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "employer@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "employer@test.com",
         )
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         resume = await self._create_resume_for_candidate(db_session, candidate)
 
         # Simulate application to company job
-        await self._simulate_job_application(db_session, candidate, test_company, resume)
+        await self._simulate_job_application(
+            db_session, candidate, test_company, resume
+        )
 
         headers = await self._get_auth_headers(client, employer)
 
@@ -548,12 +662,22 @@ class TestResumeAccessControl:
         other_company = await self._create_other_company(db_session)
 
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
         other_candidate = await self._create_user_with_role(
-            db_session, other_company, test_roles, UserRoleEnum.CANDIDATE, "othercandidate@test.com"
+            db_session,
+            other_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "othercandidate@test.com",
         )
-        other_resume = await self._create_resume_for_candidate(db_session, other_candidate)
+        other_resume = await self._create_resume_for_candidate(
+            db_session, other_candidate
+        )
 
         headers = await self._get_auth_headers(client, recruiter)
 
@@ -573,7 +697,11 @@ class TestResumeAccessControl:
     ):
         """Test that Candidate can create share links for their resumes."""
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         resume = await self._create_resume_for_candidate(db_session, candidate)
         headers = await self._get_auth_headers(client, candidate)
@@ -599,10 +727,18 @@ class TestResumeAccessControl:
     ):
         """Test that non-owners cannot create share links for resumes."""
         candidate1 = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate1@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate1@test.com",
         )
         candidate2 = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate2@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate2@test.com",
         )
         resume = await self._create_resume_for_candidate(db_session, candidate2)
 
@@ -625,7 +761,11 @@ class TestResumeAccessControl:
     ):
         """Test that Candidate can generate PDF of their resume."""
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         resume = await self._create_resume_for_candidate(db_session, candidate)
         headers = await self._get_auth_headers(client, candidate)
@@ -647,7 +787,11 @@ class TestResumeAccessControl:
     ):
         """Test that unauthenticated users cannot access resumes."""
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         resume = await self._create_resume_for_candidate(db_session, candidate)
 

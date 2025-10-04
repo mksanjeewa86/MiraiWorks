@@ -84,7 +84,9 @@ async def test_job_search_returns_matching_titles(
     )
     assert search_response.status_code == 200
     positions = search_response.json()["positions"]
-    assert any("Data Scientist" in position_info["title"] for position_info in positions)
+    assert any(
+        "Data Scientist" in position_info["title"] for position_info in positions
+    )
 
 
 @pytest.mark.asyncio
@@ -109,9 +111,8 @@ async def test_employer_updates_job_details(
     )
 
     assert response.status_code == 200
-    result = await db_session.execute(select(Position).where(Position.id == position["id"]))
+    result = await db_session.execute(
+        select(Position).where(Position.id == position["id"])
+    )
     stored = result.scalar_one()
     assert stored.summary == "Quality assurance specialist"
-
-
-

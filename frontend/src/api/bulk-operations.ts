@@ -19,9 +19,13 @@ export const bulkOperationsApi = {
     formData.append('entity_type', request.entity_type);
     formData.append('options', JSON.stringify(request.options));
 
-    const response = await apiClient.post<BulkOperation>(API_ENDPOINTS.ADMIN_EXTENDED.BULK.IMPORT, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await apiClient.post<BulkOperation>(
+      API_ENDPOINTS.ADMIN_EXTENDED.BULK.IMPORT,
+      formData,
+      {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      }
+    );
     return { data: response.data, success: true };
   },
 
@@ -40,10 +44,12 @@ export const bulkOperationsApi = {
     return { data: response.data, success: true };
   },
 
-  async getImportTemplate(entityType: string): Promise<ApiResponse<{
-    download_url: string;
-    expires_at: string;
-  }>> {
+  async getImportTemplate(entityType: string): Promise<
+    ApiResponse<{
+      download_url: string;
+      expires_at: string;
+    }>
+  > {
     const response = await apiClient.get<{
       download_url: string;
       expires_at: string;
@@ -53,17 +59,22 @@ export const bulkOperationsApi = {
 
   // Bulk Export Operations
   async exportData(request: BulkExportRequest): Promise<ApiResponse<BulkOperation>> {
-    const response = await apiClient.post<BulkOperation>(API_ENDPOINTS.ADMIN_EXTENDED.BULK.EXPORT, request);
+    const response = await apiClient.post<BulkOperation>(
+      API_ENDPOINTS.ADMIN_EXTENDED.BULK.EXPORT,
+      request
+    );
     return { data: response.data, success: true };
   },
 
-  async getExportFormats(entityType: string): Promise<ApiResponse<{
-    formats: Array<{
-      format: string;
-      description: string;
-      supported_features: string[];
-    }>;
-  }>> {
+  async getExportFormats(entityType: string): Promise<
+    ApiResponse<{
+      formats: Array<{
+        format: string;
+        description: string;
+        supported_features: string[];
+      }>;
+    }>
+  > {
     const response = await apiClient.get<{
       formats: Array<{
         format: string;
@@ -76,19 +87,24 @@ export const bulkOperationsApi = {
 
   // Bulk Update Operations
   async bulkUpdate(request: BulkUpdateRequest): Promise<ApiResponse<BulkOperation>> {
-    const response = await apiClient.post<BulkOperation>(API_ENDPOINTS.ADMIN_EXTENDED.BULK.UPDATE, request);
+    const response = await apiClient.post<BulkOperation>(
+      API_ENDPOINTS.ADMIN_EXTENDED.BULK.UPDATE,
+      request
+    );
     return { data: response.data, success: true };
   },
 
-  async previewBulkUpdate(request: BulkUpdateRequest): Promise<ApiResponse<{
-    affected_items: Array<{
-      id: number;
-      current_values: Record<string, any>;
-      new_values: Record<string, any>;
-      warnings?: string[];
-    }>;
-    total_affected: number;
-  }>> {
+  async previewBulkUpdate(request: BulkUpdateRequest): Promise<
+    ApiResponse<{
+      affected_items: Array<{
+        id: number;
+        current_values: Record<string, any>;
+        new_values: Record<string, any>;
+        warnings?: string[];
+      }>;
+      total_affected: number;
+    }>
+  > {
     const response = await apiClient.post<{
       affected_items: Array<{
         id: number;
@@ -103,23 +119,28 @@ export const bulkOperationsApi = {
 
   // Bulk Delete Operations
   async bulkDelete(request: BulkDeleteRequest): Promise<ApiResponse<BulkOperation>> {
-    const response = await apiClient.post<BulkOperation>(API_ENDPOINTS.ADMIN_EXTENDED.BULK.DELETE, request);
+    const response = await apiClient.post<BulkOperation>(
+      API_ENDPOINTS.ADMIN_EXTENDED.BULK.DELETE,
+      request
+    );
     return { data: response.data, success: true };
   },
 
-  async previewBulkDelete(request: BulkDeleteRequest): Promise<ApiResponse<{
-    items_to_delete: Array<{
-      id: number;
-      display_name: string;
-      dependencies: Array<{
-        entity_type: string;
-        count: number;
+  async previewBulkDelete(request: BulkDeleteRequest): Promise<
+    ApiResponse<{
+      items_to_delete: Array<{
+        id: number;
+        display_name: string;
+        dependencies: Array<{
+          entity_type: string;
+          count: number;
+        }>;
+        warnings?: string[];
       }>;
-      warnings?: string[];
-    }>;
-    total_to_delete: number;
-    cascade_effects: Record<string, number>;
-  }>> {
+      total_to_delete: number;
+      cascade_effects: Record<string, number>;
+    }>
+  > {
     const response = await apiClient.post<{
       items_to_delete: Array<{
         id: number;
@@ -142,12 +163,14 @@ export const bulkOperationsApi = {
     size = 20,
     type?: string,
     status?: string
-  ): Promise<ApiResponse<{
-    operations: BulkOperation[];
-    total: number;
-    page: number;
-    size: number;
-  }>> {
+  ): Promise<
+    ApiResponse<{
+      operations: BulkOperation[];
+      total: number;
+      page: number;
+      size: number;
+    }>
+  > {
     const params = new URLSearchParams();
     params.set('page', page.toString());
     params.set('size', size.toString());
@@ -164,7 +187,9 @@ export const bulkOperationsApi = {
   },
 
   async getBulkOperation(operationId: string): Promise<ApiResponse<BulkOperation>> {
-    const response = await apiClient.get<BulkOperation>(`${API_ENDPOINTS.ADMIN_EXTENDED.BULK.IMPORT}/operations/${operationId}`);
+    const response = await apiClient.get<BulkOperation>(
+      `${API_ENDPOINTS.ADMIN_EXTENDED.BULK.IMPORT}/operations/${operationId}`
+    );
     return { data: response.data, success: true };
   },
 
@@ -206,37 +231,51 @@ export const bulkOperationsApi = {
 
   // Data Migration Jobs
   async getDataMigrationJobs(): Promise<ApiResponse<DataMigrationJob[]>> {
-    const response = await apiClient.get<DataMigrationJob[]>(API_ENDPOINTS.ADMIN_EXTENDED.DATA_MIGRATION.JOBS);
+    const response = await apiClient.get<DataMigrationJob[]>(
+      API_ENDPOINTS.ADMIN_EXTENDED.DATA_MIGRATION.JOBS
+    );
     return { data: response.data, success: true };
   },
 
-  async startDataMigration(jobName: string, parameters?: Record<string, any>): Promise<ApiResponse<DataMigrationJob>> {
-    const response = await apiClient.post<DataMigrationJob>(API_ENDPOINTS.ADMIN_EXTENDED.DATA_MIGRATION.START, {
-      job_name: jobName,
-      parameters: parameters || {},
-    });
+  async startDataMigration(
+    jobName: string,
+    parameters?: Record<string, any>
+  ): Promise<ApiResponse<DataMigrationJob>> {
+    const response = await apiClient.post<DataMigrationJob>(
+      API_ENDPOINTS.ADMIN_EXTENDED.DATA_MIGRATION.START,
+      {
+        job_name: jobName,
+        parameters: parameters || {},
+      }
+    );
     return { data: response.data, success: true };
   },
 
   async getDataMigrationStatus(jobId: string): Promise<ApiResponse<DataMigrationJob>> {
-    const response = await apiClient.get<DataMigrationJob>(`${API_ENDPOINTS.ADMIN_EXTENDED.DATA_MIGRATION.JOBS}/${jobId}`);
+    const response = await apiClient.get<DataMigrationJob>(
+      `${API_ENDPOINTS.ADMIN_EXTENDED.DATA_MIGRATION.JOBS}/${jobId}`
+    );
     return { data: response.data, success: true };
   },
 
   // Batch Processing Utilities
   async getEntityCounts(): Promise<ApiResponse<Record<string, number>>> {
-    const response = await apiClient.get<Record<string, number>>(API_ENDPOINTS.ADMIN_EXTENDED.BULK.ENTITY_COUNTS);
+    const response = await apiClient.get<Record<string, number>>(
+      API_ENDPOINTS.ADMIN_EXTENDED.BULK.ENTITY_COUNTS
+    );
     return { data: response.data, success: true };
   },
 
   async validateEntityIds(
     entityType: string,
     entityIds: number[]
-  ): Promise<ApiResponse<{
-    valid_ids: number[];
-    invalid_ids: number[];
-    warnings: string[];
-  }>> {
+  ): Promise<
+    ApiResponse<{
+      valid_ids: number[];
+      invalid_ids: number[];
+      warnings: string[];
+    }>
+  > {
     const response = await apiClient.post<{
       valid_ids: number[];
       invalid_ids: number[];
@@ -248,13 +287,15 @@ export const bulkOperationsApi = {
     return { data: response.data, success: true };
   },
 
-  async getBulkOperationQuota(): Promise<ApiResponse<{
-    monthly_operations: number;
-    monthly_limit: number;
-    concurrent_operations: number;
-    concurrent_limit: number;
-    next_reset: string;
-  }>> {
+  async getBulkOperationQuota(): Promise<
+    ApiResponse<{
+      monthly_operations: number;
+      monthly_limit: number;
+      concurrent_operations: number;
+      concurrent_limit: number;
+      next_reset: string;
+    }>
+  > {
     const response = await apiClient.get<{
       monthly_operations: number;
       monthly_limit: number;

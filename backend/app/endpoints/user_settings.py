@@ -1,3 +1,4 @@
+from app.config.endpoints import API_ROUTES
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,7 +16,7 @@ from app.schemas.user_settings import (
 router = APIRouter()
 
 
-@router.get("/settings", response_model=UserSettingsResponse)
+@router.get(API_ROUTES.USERS.SETTINGS, response_model=UserSettingsResponse)
 async def get_user_settings(
     current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
 ):
@@ -49,7 +50,7 @@ async def get_user_settings(
     )
 
 
-@router.put("/settings", response_model=UserSettingsResponse)
+@router.put(API_ROUTES.USERS.SETTINGS, response_model=UserSettingsResponse)
 async def update_user_settings(
     settings_update: UserSettingsUpdate,
     current_user: User = Depends(get_current_user),
@@ -111,7 +112,7 @@ async def update_user_settings(
     )
 
 
-@router.get("/profile", response_model=UserProfileResponse)
+@router.get(API_ROUTES.USERS.PROFILE, response_model=UserProfileResponse)
 async def get_user_profile(
     current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
 ):
@@ -133,7 +134,7 @@ async def get_user_profile(
     )
 
 
-@router.put("/profile", response_model=UserProfileResponse)
+@router.put(API_ROUTES.USERS.PROFILE, response_model=UserProfileResponse)
 async def update_user_profile(
     profile_update: UserProfileUpdate,
     current_user: User = Depends(get_current_user),

@@ -95,14 +95,13 @@ class InterviewService:
         # Generate system meeting URL if needed
         if interview_type == "video" and video_call_type == "system_generated":
             # Get the base URL from settings or use localhost for development
-            base_url = getattr(settings, 'BASE_URL', 'http://localhost:3000')
+            base_url = getattr(settings, "BASE_URL", "http://localhost:3000")
             system_meeting_url = f"{base_url}/video-call/{interview.id}"
 
             # Update the interview with the generated URL
             interview.meeting_url = system_meeting_url
             await db.commit()
             await db.refresh(interview)
-
 
         return interview
 

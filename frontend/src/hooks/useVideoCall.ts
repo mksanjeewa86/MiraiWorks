@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { VideoCall } from '../types/video';
 import { apiClient } from '../api/apiClient';
+import { API_ENDPOINTS } from '../api/config';
 import type { UseVideoCallResult, UseVideoCallOptions } from '../types/hooks';
 
 export const useVideoCall = (
@@ -16,13 +17,10 @@ export const useVideoCall = (
 
     try {
       setLoading(true);
-      let endpoint: string;
-
-      if (options.type === 'roomCode') {
-        endpoint = `/api/video-calls/room/${identifier}`;
-      } else {
-        endpoint = `/api/video-calls/${identifier}`;
-      }
+      const endpoint =
+        options.type === 'roomCode'
+          ? API_ENDPOINTS.VIDEO_CALLS.BY_ROOM(identifier)
+          : API_ENDPOINTS.VIDEO_CALLS.BY_ID(identifier);
 
       const response = await apiClient.get<VideoCall>(endpoint);
       setVideoCall(response.data);
@@ -38,13 +36,10 @@ export const useVideoCall = (
     if (!identifier || !videoCall) return;
 
     try {
-      let endpoint: string;
-
-      if (options.type === 'roomCode') {
-        endpoint = `/api/video-calls/room/${identifier}/join`;
-      } else {
-        endpoint = `/api/video-calls/${identifier}/join`;
-      }
+      const endpoint =
+        options.type === 'roomCode'
+          ? API_ENDPOINTS.VIDEO_CALLS.JOIN_ROOM(identifier)
+          : API_ENDPOINTS.VIDEO_CALLS.JOIN(identifier);
 
       await apiClient.post(endpoint);
       await fetchVideoCall(); // Refresh call data
@@ -58,13 +53,10 @@ export const useVideoCall = (
     if (!identifier || !videoCall) return;
 
     try {
-      let endpoint: string;
-
-      if (options.type === 'roomCode') {
-        endpoint = `/api/video-calls/room/${identifier}/leave`;
-      } else {
-        endpoint = `/api/video-calls/${identifier}/leave`;
-      }
+      const endpoint =
+        options.type === 'roomCode'
+          ? API_ENDPOINTS.VIDEO_CALLS.LEAVE_ROOM(identifier)
+          : API_ENDPOINTS.VIDEO_CALLS.LEAVE(identifier);
 
       // Use /leave endpoint instead of /end to allow any participant to leave
       const response = await apiClient.post<{ message: string; call_ended: boolean }>(endpoint);
@@ -80,13 +72,10 @@ export const useVideoCall = (
     if (!identifier || !videoCall) return;
 
     try {
-      let endpoint: string;
-
-      if (options.type === 'roomCode') {
-        endpoint = `/api/video-calls/room/${identifier}/consent`;
-      } else {
-        endpoint = `/api/video-calls/${identifier}/consent`;
-      }
+      const endpoint =
+        options.type === 'roomCode'
+          ? API_ENDPOINTS.VIDEO_CALLS.CONSENT_ROOM(identifier)
+          : API_ENDPOINTS.VIDEO_CALLS.CONSENT(identifier);
 
       await apiClient.post(endpoint, { consented });
     } catch (err) {

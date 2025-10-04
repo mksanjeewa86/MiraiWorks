@@ -10,6 +10,7 @@ import { VideoCallRoom } from '@/components/video/VideoCallRoom';
 import { useToast } from '@/contexts/ToastContext';
 import { interviewsApi } from '@/api/interviews';
 import { apiClient } from '@/api/apiClient';
+import { API_ENDPOINTS } from '@/api/config';
 import type { Interview } from '@/types/interview';
 import type { VideoCall } from '@/types/video';
 
@@ -54,7 +55,7 @@ function VideoCallContent() {
           try {
             // Try to get existing video call
             const videoCallResponse = await apiClient.get<VideoCall>(
-              `/api/interviews/${interviewId}/video-call`
+              API_ENDPOINTS.INTERVIEWS.VIDEO_CALL(interviewId)
             );
             setVideoCallId(videoCallResponse.data.id.toString());
           } catch (error: unknown) {
@@ -78,7 +79,7 @@ function VideoCallContent() {
               console.log('Interview data:', interview);
 
               const newVideoCall = await apiClient.post<VideoCall>(
-                `/api/interviews/${interviewId}/video-call`,
+                API_ENDPOINTS.INTERVIEWS.VIDEO_CALL(interviewId),
                 videoCallData
               );
 

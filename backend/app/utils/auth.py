@@ -1,4 +1,3 @@
-
 from fastapi import HTTPException, status
 
 from app.models.user import User
@@ -9,8 +8,7 @@ def require_roles(user: User, required_roles: list[UserRole]) -> None:
     """Check if user has any of the required roles."""
     if not user or not user.user_roles:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
         )
 
     user_roles = [user_role.role.name for user_role in user.user_roles]
@@ -20,8 +18,7 @@ def require_roles(user: User, required_roles: list[UserRole]) -> None:
 
     if not has_required_role:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Insufficient permissions"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
         )
 
 

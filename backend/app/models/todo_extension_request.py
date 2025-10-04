@@ -39,7 +39,10 @@ class TodoExtensionRequest(Base):
 
     # Request status and workflow
     status: Mapped[str] = mapped_column(
-        String(20), nullable=False, default=ExtensionRequestStatus.PENDING.value, index=True
+        String(20),
+        nullable=False,
+        default=ExtensionRequestStatus.PENDING.value,
+        index=True,
     )
 
     # Response details

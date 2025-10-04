@@ -16,15 +16,17 @@ class TodoExtensionRequestCreate(BaseModel):
         ..., description="Requested new due date (max 3 days from current due date)"
     )
     reason: str = Field(
-        ..., min_length=10, max_length=1000,
-        description="Reason for requesting extension"
+        ...,
+        min_length=10,
+        max_length=1000,
+        description="Reason for requesting extension",
     )
 
-    @field_validator('reason')
+    @field_validator("reason")
     @classmethod
     def validate_reason(cls, v):
         if not v or not v.strip():
-            raise ValueError('Reason cannot be empty')
+            raise ValueError("Reason cannot be empty")
         return v.strip()
 
 
@@ -35,18 +37,17 @@ class TodoExtensionRequestResponse(BaseModel):
         ..., description="Response status (approved or rejected)"
     )
     response_reason: Optional[str] = Field(
-        None, max_length=1000,
-        description="Optional reason for the response"
+        None, max_length=1000, description="Optional reason for the response"
     )
 
-    @field_validator('status')
+    @field_validator("status")
     @classmethod
     def validate_status(cls, v):
         if v == ExtensionRequestStatus.PENDING:
-            raise ValueError('Cannot set status to pending in response')
+            raise ValueError("Cannot set status to pending in response")
         return v
 
-    @field_validator('response_reason')
+    @field_validator("response_reason")
     @classmethod
     def validate_response_reason(cls, v):
         if v is not None:

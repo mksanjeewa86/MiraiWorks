@@ -59,7 +59,7 @@ def get_aptitude_exam_data():
 • 問題解決能力
 
 頑張ってください！
-        """.strip()
+        """.strip(),
     }
 
 
@@ -72,7 +72,7 @@ def get_aptitude_questions_data():
             "points": 2.0,
             "options": {"A": "108", "B": "162", "C": "216", "D": "270"},
             "correct_answers": ["B"],
-            "explanation": "各項に3を掛けることで次の項が得られます。54 × 3 = 162"
+            "explanation": "各項に3を掛けることで次の項が得られます。54 × 3 = 162",
         },
         {
             "question_text": "「すべての鳥は飛ぶことができる」という文が偽であることを示すためには、どのような例を示せばよいですか？",
@@ -82,10 +82,10 @@ def get_aptitude_questions_data():
                 "A": "空を飛んでいる鳥の例",
                 "B": "飛ばない鳥の例",
                 "C": "飛ぶ動物で鳥でないものの例",
-                "D": "鳥でない動物の例"
+                "D": "鳥でない動物の例",
             },
             "correct_answers": ["B"],
-            "explanation": "全称命題を偽にするには、反例を一つ示せば十分です。飛ばない鳥（ペンギンなど）の例を示せば、この命題は偽になります。"
+            "explanation": "全称命題を偽にするには、反例を一つ示せば十分です。飛ばない鳥（ペンギンなど）の例を示せば、この命題は偽になります。",
         },
         {
             "question_text": "ある会社の売上が昨年比120%となりました。これは昨年と比べて何%の増加を意味しますか？",
@@ -93,7 +93,7 @@ def get_aptitude_questions_data():
             "points": 2.0,
             "options": {"A": "20%", "B": "120%", "C": "220%", "D": "1.2%"},
             "correct_answers": ["A"],
-            "explanation": "120% = 100% + 20%なので、20%の増加を意味します。"
+            "explanation": "120% = 100% + 20%なので、20%の増加を意味します。",
         },
         {
             "question_text": "次の文章の要旨として最も適切なものを選んでください。\n\n「AI技術の発展により、多くの業務が自動化される一方で、新たな職種や業務も生まれている。重要なのは技術の進歩に適応し、継続的に学習する姿勢を持つことである。」",
@@ -103,17 +103,17 @@ def get_aptitude_questions_data():
                 "A": "AI技術により全ての仕事がなくなる",
                 "B": "AI技術の発展に適応するための継続学習が重要",
                 "C": "新しい職種は技術者のみに限られる",
-                "D": "自動化により労働者は不要になる"
+                "D": "自動化により労働者は不要になる",
             },
             "correct_answers": ["B"],
-            "explanation": "文章の主旨は、AI技術の発展による変化に適応するため、継続的な学習が重要であることです。"
+            "explanation": "文章の主旨は、AI技術の発展による変化に適応するため、継続的な学習が重要であることです。",
         },
         {
             "question_text": "図形の面積に関する問題です。\n\n正方形の一辺が6cmの時、その正方形に内接する円の面積は何cm²ですか？（円周率πは3.14として計算）",
             "question_type": QuestionType.TEXT_INPUT,
             "points": 3.0,
             "max_length": 50,
-            "explanation": "正方形の一辺が6cmなので、内接する円の直径は6cm、半径は3cmです。面積 = π × 3² = 3.14 × 9 = 28.26cm²"
+            "explanation": "正方形の一辺が6cmなので、内接する円の直径は6cm、半径は3cmです。面積 = π × 3² = 3.14 × 9 = 28.26cm²",
         },
         {
             "question_text": "以下の状況について、あなたならどのように対応しますか？論理的に説明してください。\n\n「チームプロジェクトで意見が対立し、期限が迫っている状況で、リーダーとして決断を下す必要があります。」",
@@ -121,7 +121,7 @@ def get_aptitude_questions_data():
             "points": 5.0,
             "min_length": 100,
             "max_length": 500,
-            "explanation": "この問題では、問題解決能力、リーダーシップ、コミュニケーション能力を評価します。"
+            "explanation": "この問題では、問題解決能力、リーダーシップ、コミュニケーション能力を評価します。",
         },
         {
             "question_text": "次の推理において、論理的に正しいものはどれですか？",
@@ -131,18 +131,18 @@ def get_aptitude_questions_data():
                 "A": "すべてのAはBである。CはBである。よってCはAである。",
                 "B": "すべてのAはBである。CはAである。よってCはBである。",
                 "C": "AはBである。BはCである。よってAはCである。",
-                "D": "いくつかのAはBである。CはAである。よってCはBである。"
+                "D": "いくつかのAはBである。CはAである。よってCはBである。",
             },
             "correct_answers": ["B", "C"],
-            "explanation": "B: 三段論法の正しい形。C: 推移律の正しい適用。A、Dは論理的に誤りです。"
+            "explanation": "B: 三段論法の正しい形。C: 推移律の正しい適用。A、Dは論理的に誤りです。",
         },
         {
             "question_text": "効率的な学習方法として、最も重要だと思う要素はどれですか？",
             "question_type": QuestionType.RATING,
             "points": 1.0,
             "rating_scale": 5,
-            "explanation": "学習に対する価値観や優先順位を評価します。"
-        }
+            "explanation": "学習に対する価値観や優先順位を評価します。",
+        },
     ]
 
 
@@ -188,7 +188,7 @@ def get_programming_exam_data():
 • 効率性の考慮
 
 頑張ってください！
-        """.strip()
+        """.strip(),
     }
 
 
@@ -203,30 +203,25 @@ def get_programming_questions_data():
                 "A": "null, undefined, array, object",
                 "B": "object, undefined, object, object",
                 "C": "null, undefined, object, object",
-                "D": "object, undefined, array, object"
+                "D": "object, undefined, array, object",
             },
             "correct_answers": ["B"],
-            "explanation": "JavaScriptでは、typeof null は 'object'、typeof [] も 'object' を返します。これは言語仕様の特徴です。"
+            "explanation": "JavaScriptでは、typeof null は 'object'、typeof [] も 'object' を返します。これは言語仕様の特徴です。",
         },
         {
             "question_text": "Pythonで以下のリスト内包表記と同じ結果を得るfor文を書いてください。\n\n```python\nresult = [x**2 for x in range(10) if x % 2 == 0]\n```",
             "question_type": QuestionType.TEXT_INPUT,
             "points": 4.0,
             "max_length": 200,
-            "explanation": "正解例:\nresult = []\nfor x in range(10):\n    if x % 2 == 0:\n        result.append(x**2)"
+            "explanation": "正解例:\nresult = []\nfor x in range(10):\n    if x % 2 == 0:\n        result.append(x**2)",
         },
         {
             "question_text": "バブルソートアルゴリズムの時間計算量として正しいものはどれですか？",
             "question_type": QuestionType.SINGLE_CHOICE,
             "points": 2.0,
-            "options": {
-                "A": "O(n)",
-                "B": "O(n log n)",
-                "C": "O(n²)",
-                "D": "O(2^n)"
-            },
+            "options": {"A": "O(n)", "B": "O(n log n)", "C": "O(n²)", "D": "O(2^n)"},
             "correct_answers": ["C"],
-            "explanation": "バブルソートは最悪の場合、すべての要素のペアを比較するため、時間計算量はO(n²)です。"
+            "explanation": "バブルソートは最悪の場合、すべての要素のペアを比較するため、時間計算量はO(n²)です。",
         },
         {
             "question_text": "RESTful APIの設計原則として適切なものを選んでください。",
@@ -236,10 +231,10 @@ def get_programming_questions_data():
                 "A": "ステートレスであること",
                 "B": "HTTPメソッドを適切に使用すること",
                 "C": "URLにリソースを表現すること",
-                "D": "JSONのみを使用すること"
+                "D": "JSONのみを使用すること",
             },
             "correct_answers": ["A", "B", "C"],
-            "explanation": "RESTの原則には、ステートレス性、適切なHTTPメソッドの使用、リソース指向のURL設計が含まれます。JSONは一般的ですが必須ではありません。"
+            "explanation": "RESTの原則には、ステートレス性、適切なHTTPメソッドの使用、リソース指向のURL設計が含まれます。JSONは一般的ですが必須ではありません。",
         },
         {
             "question_text": "以下のシナリオに対して、適切なデータベース設計とAPIエンドポイントを提案してください。\n\n「ブログシステムで、ユーザーが記事を投稿し、他のユーザーがコメントできる機能」",
@@ -247,7 +242,7 @@ def get_programming_questions_data():
             "points": 8.0,
             "min_length": 200,
             "max_length": 1000,
-            "explanation": "データベース設計、REST API設計、リレーション設定などの技術的な理解度を評価します。"
+            "explanation": "データベース設計、REST API設計、リレーション設定などの技術的な理解度を評価します。",
         },
         {
             "question_text": "GitHubでのコード管理において、以下のうち適切なプラクティスはどれですか？",
@@ -257,11 +252,11 @@ def get_programming_questions_data():
                 "A": "直接mainブランチにpushする",
                 "B": "機能ごとにブランチを作成する",
                 "C": "コミットメッセージは簡潔に書く",
-                "D": "プルリクエストでコードレビューを行う"
+                "D": "プルリクエストでコードレビューを行う",
             },
             "correct_answers": ["B", "C", "D"],
-            "explanation": "適切なGitワークフローには、機能ブランチの使用、明確なコミットメッセージ、コードレビューが含まれます。"
-        }
+            "explanation": "適切なGitワークフローには、機能ブランチの使用、明確なコミットメッセージ、コードレビューが含まれます。",
+        },
     ]
 
 
@@ -301,7 +296,7 @@ def get_personality_exam_data():
 • 全ての質問に回答してください
 
 この評価結果は、あなたにとって最適な職場環境や役割を検討するために活用されます。
-        """.strip()
+        """.strip(),
     }
 
 
@@ -316,17 +311,17 @@ def get_personality_questions_data():
                 "A": "リーダーとして全体をまとめる",
                 "B": "専門知識を活かしてサポートする",
                 "C": "アイデアを出して創造性を発揮する",
-                "D": "確実に作業を遂行する"
+                "D": "確実に作業を遂行する",
             },
             "correct_answers": ["A"],  # No actual correct answer for personality
-            "tags": ["leadership", "teamwork"]
+            "tags": ["leadership", "teamwork"],
         },
         {
             "question_text": "新しい技術や知識を学ぶことについて、どの程度重要だと思いますか？",
             "question_type": QuestionType.RATING,
             "points": 1.0,
             "rating_scale": 5,
-            "tags": ["learning", "growth_mindset"]
+            "tags": ["learning", "growth_mindset"],
         },
         {
             "question_text": "ストレスを感じる状況での対処法として、あなたに当てはまるものを選んでください。",
@@ -336,10 +331,10 @@ def get_personality_questions_data():
                 "A": "同僚に相談する",
                 "B": "一人で解決策を考える",
                 "C": "休憩を取ってリフレッシュする",
-                "D": "タスクを整理して優先順位をつける"
+                "D": "タスクを整理して優先順位をつける",
             },
             "correct_answers": ["A"],
-            "tags": ["stress_management", "coping_strategies"]
+            "tags": ["stress_management", "coping_strategies"],
         },
         {
             "question_text": "重要な意思決定をする際、あなたが最も重視するのは何ですか？",
@@ -349,10 +344,10 @@ def get_personality_questions_data():
                 "A": "データと論理的分析",
                 "B": "過去の経験と直感",
                 "C": "チームメンバーの意見",
-                "D": "リスクと利益のバランス"
+                "D": "リスクと利益のバランス",
             },
             "correct_answers": ["A"],
-            "tags": ["decision_making", "analytical_thinking"]
+            "tags": ["decision_making", "analytical_thinking"],
         },
         {
             "question_text": "困難な課題に直面した時の、あなたの一般的な反応を教えてください。",
@@ -360,7 +355,7 @@ def get_personality_questions_data():
             "points": 2.0,
             "min_length": 50,
             "max_length": 300,
-            "tags": ["problem_solving", "resilience"]
+            "tags": ["problem_solving", "resilience"],
         },
         {
             "question_text": "コミュニケーションにおいて、以下のうちあなたが得意とするものはどれですか？",
@@ -370,17 +365,17 @@ def get_personality_questions_data():
                 "A": "プレゼンテーション",
                 "B": "1対1での対話",
                 "C": "書面でのコミュニケーション",
-                "D": "グループディスカッション"
+                "D": "グループディスカッション",
             },
             "correct_answers": ["A"],
-            "tags": ["communication", "presentation"]
+            "tags": ["communication", "presentation"],
         },
         {
             "question_text": "職場での人間関係について、どの程度重要だと思いますか？",
             "question_type": QuestionType.RATING,
             "points": 1.0,
             "rating_scale": 5,
-            "tags": ["relationships", "workplace_culture"]
+            "tags": ["relationships", "workplace_culture"],
         },
         {
             "question_text": "変化に対するあなたの態度として最も近いものはどれですか？",
@@ -390,10 +385,10 @@ def get_personality_questions_data():
                 "A": "変化を歓迎し、積極的に適応する",
                 "B": "慎重に検討してから適応する",
                 "C": "必要に応じて適応する",
-                "D": "安定した環境を好む"
+                "D": "安定した環境を好む",
             },
             "correct_answers": ["A"],
-            "tags": ["adaptability", "change_management"]
+            "tags": ["adaptability", "change_management"],
         },
         {
             "question_text": "フィードバックを受ける際のあなたの反応について教えてください。",
@@ -401,7 +396,7 @@ def get_personality_questions_data():
             "points": 2.0,
             "min_length": 50,
             "max_length": 200,
-            "tags": ["feedback", "growth_mindset"]
+            "tags": ["feedback", "growth_mindset"],
         },
         {
             "question_text": "仕事でのモチベーションの源泉として、最も重要なものはどれですか？",
@@ -411,11 +406,11 @@ def get_personality_questions_data():
                 "A": "達成感と成長実感",
                 "B": "認められることと評価",
                 "C": "安定した環境と待遇",
-                "D": "自由度と創造性"
+                "D": "自由度と創造性",
             },
             "correct_answers": ["A"],
-            "tags": ["motivation", "values"]
-        }
+            "tags": ["motivation", "values"],
+        },
     ]
 
 
@@ -454,7 +449,7 @@ def get_demo_exam_data():
 • 操作に慣れるまで自由に試してください
 
 システムの使い方を理解して、本番の試験に備えましょう！
-        """.strip()
+        """.strip(),
     }
 
 
@@ -469,37 +464,32 @@ def get_demo_questions_data():
                 "A": "はい、よく理解できました",
                 "B": "だいたい理解できました",
                 "C": "少し分からない部分があります",
-                "D": "よく分かりません"
+                "D": "よく分かりません",
             },
             "correct_answers": ["A"],
-            "explanation": "このようにシステムが動作します。実際の試験でも同じインターフェースを使用します。"
+            "explanation": "このようにシステムが動作します。実際の試験でも同じインターフェースを使用します。",
         },
         {
             "question_text": "簡単な計算問題です。12 + 8 × 3 = ?",
             "question_type": QuestionType.TEXT_INPUT,
             "points": 2.0,
             "max_length": 10,
-            "explanation": "正解は36です。8 × 3 = 24、24 + 12 = 36（掛け算を先に計算）"
+            "explanation": "正解は36です。8 × 3 = 24、24 + 12 = 36（掛け算を先に計算）",
         },
         {
             "question_text": "このデモ試験の満足度を5段階で評価してください。",
             "question_type": QuestionType.RATING,
             "points": 1.0,
             "rating_scale": 5,
-            "explanation": "5段階評価の問題では、スライダーを使用して回答します。"
+            "explanation": "5段階評価の問題では、スライダーを使用して回答します。",
         },
         {
             "question_text": "以下のうち、日本の都道府県として正しいものを選んでください。",
             "question_type": QuestionType.MULTIPLE_CHOICE,
             "points": 2.0,
-            "options": {
-                "A": "東京都",
-                "B": "大阪府",
-                "C": "愛知市",
-                "D": "北海道"
-            },
+            "options": {"A": "東京都", "B": "大阪府", "C": "愛知市", "D": "北海道"},
             "correct_answers": ["A", "B", "D"],
-            "explanation": "東京都、大阪府、北海道は都道府県ですが、愛知市は存在しません（正しくは愛知県）。"
+            "explanation": "東京都、大阪府、北海道は都道府県ですが、愛知市は存在しません（正しくは愛知県）。",
         },
         {
             "question_text": "このシステムについてのご意見やコメントがあれば自由に記入してください。",
@@ -507,8 +497,8 @@ def get_demo_questions_data():
             "points": 1.0,
             "min_length": 10,
             "max_length": 500,
-            "explanation": "自由記述問題では、長文での回答が可能です。"
-        }
+            "explanation": "自由記述問題では、長文での回答が可能です。",
+        },
     ]
 
 
@@ -528,84 +518,56 @@ async def seed_exam_data(db, auth_result):
     # 1. Create Aptitude Exam
     print("   Creating aptitude exam...")
     aptitude_data = get_aptitude_exam_data()
-    aptitude_data.update({
-        "company_id": company.id,
-        "created_by": admin_user.id
-    })
+    aptitude_data.update({"company_id": company.id, "created_by": admin_user.id})
     aptitude_exam = Exam(**aptitude_data)
     db.add(aptitude_exam)
     await db.flush()
 
     # Add aptitude questions
     for i, q_data in enumerate(get_aptitude_questions_data()):
-        question = ExamQuestion(
-            exam_id=aptitude_exam.id,
-            order_index=i,
-            **q_data
-        )
+        question = ExamQuestion(exam_id=aptitude_exam.id, order_index=i, **q_data)
         db.add(question)
     exams_created.append((aptitude_exam, len(get_aptitude_questions_data())))
 
     # 2. Create Programming Skill Exam
     print("   Creating programming skill exam...")
     programming_data = get_programming_exam_data()
-    programming_data.update({
-        "company_id": company.id,
-        "created_by": admin_user.id
-    })
+    programming_data.update({"company_id": company.id, "created_by": admin_user.id})
     programming_exam = Exam(**programming_data)
     db.add(programming_exam)
     await db.flush()
 
     # Add programming questions
     for i, q_data in enumerate(get_programming_questions_data()):
-        question = ExamQuestion(
-            exam_id=programming_exam.id,
-            order_index=i,
-            **q_data
-        )
+        question = ExamQuestion(exam_id=programming_exam.id, order_index=i, **q_data)
         db.add(question)
     exams_created.append((programming_exam, len(get_programming_questions_data())))
 
     # 3. Create Personality Assessment
     print("   Creating personality assessment...")
     personality_data = get_personality_exam_data()
-    personality_data.update({
-        "company_id": company.id,
-        "created_by": admin_user.id
-    })
+    personality_data.update({"company_id": company.id, "created_by": admin_user.id})
     personality_exam = Exam(**personality_data)
     db.add(personality_exam)
     await db.flush()
 
     # Add personality questions
     for i, q_data in enumerate(get_personality_questions_data()):
-        question = ExamQuestion(
-            exam_id=personality_exam.id,
-            order_index=i,
-            **q_data
-        )
+        question = ExamQuestion(exam_id=personality_exam.id, order_index=i, **q_data)
         db.add(question)
     exams_created.append((personality_exam, len(get_personality_questions_data())))
 
     # 4. Create Demo Exam
     print("   Creating demo exam...")
     demo_data = get_demo_exam_data()
-    demo_data.update({
-        "company_id": company.id,
-        "created_by": admin_user.id
-    })
+    demo_data.update({"company_id": company.id, "created_by": admin_user.id})
     demo_exam = Exam(**demo_data)
     db.add(demo_exam)
     await db.flush()
 
     # Add demo questions
     for i, q_data in enumerate(get_demo_questions_data()):
-        question = ExamQuestion(
-            exam_id=demo_exam.id,
-            order_index=i,
-            **q_data
-        )
+        question = ExamQuestion(exam_id=demo_exam.id, order_index=i, **q_data)
         db.add(question)
     exams_created.append((demo_exam, len(get_demo_questions_data())))
 
@@ -623,7 +585,7 @@ async def seed_exam_data(db, auth_result):
                 candidate_id=candidate.id,
                 assigned_by=admin_user.id,
                 due_date=base_time + timedelta(days=7),
-                is_active=True
+                is_active=True,
             )
             db.add(assignment1)
             assignments_created += 1
@@ -634,7 +596,7 @@ async def seed_exam_data(db, auth_result):
                 candidate_id=candidate.id,
                 assigned_by=admin_user.id,
                 due_date=base_time + timedelta(days=30),
-                is_active=True
+                is_active=True,
             )
             db.add(assignment2)
             assignments_created += 1
@@ -642,11 +604,13 @@ async def seed_exam_data(db, auth_result):
     await db.commit()
 
     total_questions = sum(count for _, count in exams_created)
-    print(f"   - Created {len(exams_created)} exams with {total_questions} total questions")
+    print(
+        f"   - Created {len(exams_created)} exams with {total_questions} total questions"
+    )
     print(f"   - Created {assignments_created} exam assignments")
 
     return {
         "exams": len(exams_created),
         "questions": total_questions,
-        "assignments": assignments_created
+        "assignments": assignments_created,
     }

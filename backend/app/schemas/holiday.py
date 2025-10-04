@@ -26,11 +26,11 @@ class HolidayBase(BaseModel):
     description: Optional[str] = Field(None, max_length=500)
     description_en: Optional[str] = Field(None, max_length=500)
 
-    @field_validator('date')
+    @field_validator("date")
     @classmethod
     def validate_date(cls, v):
         if v < date(1900, 1, 1) or v > date(2100, 12, 31):
-            raise ValueError('Date must be between 1900 and 2100')
+            raise ValueError("Date must be between 1900 and 2100")
         return v
 
 
@@ -48,11 +48,11 @@ class HolidayUpdate(BaseModel):
     description: Optional[str] = Field(None, max_length=500)
     description_en: Optional[str] = Field(None, max_length=500)
 
-    @field_validator('date')
+    @field_validator("date")
     @classmethod
     def validate_date(cls, v):
         if v and (v < date(1900, 1, 1) or v > date(2100, 12, 31)):
-            raise ValueError('Date must be between 1900 and 2100')
+            raise ValueError("Date must be between 1900 and 2100")
         return v
 
 
@@ -78,9 +78,9 @@ class HolidayQueryParams(BaseModel):
     date_from: Optional[date] = Field(None)
     date_to: Optional[date] = Field(None)
 
-    @field_validator('date_to')
+    @field_validator("date_to")
     @classmethod
     def validate_date_range(cls, v, info):
-        if v and info.data.get('date_from') and v < info.data['date_from']:
-            raise ValueError('date_to must be after date_from')
+        if v and info.data.get("date_from") and v < info.data["date_from"]:
+            raise ValueError("date_to must be after date_from")
         return v

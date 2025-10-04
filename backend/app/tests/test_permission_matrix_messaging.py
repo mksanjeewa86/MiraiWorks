@@ -36,10 +36,18 @@ class TestMessagingPermissionMatrix:
     ):
         """Test that Super Admin can message Company Admins."""
         super_admin = await self._create_user_with_role(
-            db_session, None, test_roles, UserRoleEnum.SYSTEM_ADMIN, "superadmin@test.com"
+            db_session,
+            None,
+            test_roles,
+            UserRoleEnum.SYSTEM_ADMIN,
+            "superadmin@test.com",
         )
         company_admin = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.ADMIN, "companyadmin@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.ADMIN,
+            "companyadmin@test.com",
         )
 
         headers = await self._get_auth_headers(client, super_admin)
@@ -68,10 +76,18 @@ class TestMessagingPermissionMatrix:
     ):
         """Test that Super Admin cannot message Recruiters."""
         super_admin = await self._create_user_with_role(
-            db_session, None, test_roles, UserRoleEnum.SYSTEM_ADMIN, "superadmin@test.com"
+            db_session,
+            None,
+            test_roles,
+            UserRoleEnum.SYSTEM_ADMIN,
+            "superadmin@test.com",
         )
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
 
         headers = await self._get_auth_headers(client, super_admin)
@@ -98,10 +114,18 @@ class TestMessagingPermissionMatrix:
     ):
         """Test that Super Admin cannot message Employers."""
         super_admin = await self._create_user_with_role(
-            db_session, None, test_roles, UserRoleEnum.SYSTEM_ADMIN, "superadmin@test.com"
+            db_session,
+            None,
+            test_roles,
+            UserRoleEnum.SYSTEM_ADMIN,
+            "superadmin@test.com",
         )
         employer = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "employer@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "employer@test.com",
         )
 
         headers = await self._get_auth_headers(client, super_admin)
@@ -128,10 +152,18 @@ class TestMessagingPermissionMatrix:
     ):
         """Test that Super Admin cannot message Candidates."""
         super_admin = await self._create_user_with_role(
-            db_session, None, test_roles, UserRoleEnum.SYSTEM_ADMIN, "superadmin@test.com"
+            db_session,
+            None,
+            test_roles,
+            UserRoleEnum.SYSTEM_ADMIN,
+            "superadmin@test.com",
         )
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
 
         headers = await self._get_auth_headers(client, super_admin)
@@ -160,10 +192,18 @@ class TestMessagingPermissionMatrix:
     ):
         """Test that Company Admin can message Super Admins."""
         company_admin = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.ADMIN, "companyadmin@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.ADMIN,
+            "companyadmin@test.com",
         )
         super_admin = await self._create_user_with_role(
-            db_session, None, test_roles, UserRoleEnum.SYSTEM_ADMIN, "superadmin@test.com"
+            db_session,
+            None,
+            test_roles,
+            UserRoleEnum.SYSTEM_ADMIN,
+            "superadmin@test.com",
         )
 
         headers = await self._get_auth_headers(client, company_admin)
@@ -192,10 +232,18 @@ class TestMessagingPermissionMatrix:
     ):
         """Test that Company Admin cannot message Recruiters."""
         company_admin = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.ADMIN, "companyadmin@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.ADMIN,
+            "companyadmin@test.com",
         )
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
 
         headers = await self._get_auth_headers(client, company_admin)
@@ -222,10 +270,18 @@ class TestMessagingPermissionMatrix:
     ):
         """Test that Company Admin cannot message Employers."""
         company_admin = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.ADMIN, "companyadmin@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.ADMIN,
+            "companyadmin@test.com",
         )
         employer = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "employer@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "employer@test.com",
         )
 
         headers = await self._get_auth_headers(client, company_admin)
@@ -252,10 +308,18 @@ class TestMessagingPermissionMatrix:
     ):
         """Test that Company Admin cannot message Candidates."""
         company_admin = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.ADMIN, "companyadmin@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.ADMIN,
+            "companyadmin@test.com",
         )
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
 
         headers = await self._get_auth_headers(client, company_admin)
@@ -282,12 +346,20 @@ class TestMessagingPermissionMatrix:
     ):
         """Test that Company Admin cannot message other Company Admins."""
         company_admin1 = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.ADMIN, "companyadmin1@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.ADMIN,
+            "companyadmin1@test.com",
         )
 
         other_company = await self._create_other_company(db_session)
         company_admin2 = await self._create_user_with_role(
-            db_session, other_company, test_roles, UserRoleEnum.ADMIN, "companyadmin2@test.com"
+            db_session,
+            other_company,
+            test_roles,
+            UserRoleEnum.ADMIN,
+            "companyadmin2@test.com",
         )
 
         headers = await self._get_auth_headers(client, company_admin1)
@@ -316,10 +388,18 @@ class TestMessagingPermissionMatrix:
     ):
         """Test that Recruiter can message Employers in same company."""
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
         employer = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "employer@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "employer@test.com",
         )
 
         headers = await self._get_auth_headers(client, recruiter)
@@ -347,10 +427,18 @@ class TestMessagingPermissionMatrix:
     ):
         """Test that Recruiter can message Candidates."""
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
 
         headers = await self._get_auth_headers(client, recruiter)
@@ -378,10 +466,18 @@ class TestMessagingPermissionMatrix:
     ):
         """Test that Recruiter can message other Recruiters in same company."""
         recruiter1 = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter1@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter1@test.com",
         )
         recruiter2 = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter2@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter2@test.com",
         )
 
         headers = await self._get_auth_headers(client, recruiter1)
@@ -409,10 +505,18 @@ class TestMessagingPermissionMatrix:
     ):
         """Test that Recruiter cannot message Company Admins (except Super Admins)."""
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
         company_admin = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.ADMIN, "companyadmin@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.ADMIN,
+            "companyadmin@test.com",
         )
 
         headers = await self._get_auth_headers(client, recruiter)
@@ -439,10 +543,18 @@ class TestMessagingPermissionMatrix:
     ):
         """Test that Employer can message Recruiters in same company."""
         employer = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "employer@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "employer@test.com",
         )
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
 
         headers = await self._get_auth_headers(client, employer)
@@ -470,10 +582,18 @@ class TestMessagingPermissionMatrix:
     ):
         """Test that Employer can message Candidates."""
         employer = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "employer@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "employer@test.com",
         )
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
 
         headers = await self._get_auth_headers(client, employer)
@@ -501,10 +621,18 @@ class TestMessagingPermissionMatrix:
     ):
         """Test that Employer cannot message Company Admins."""
         employer = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "employer@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "employer@test.com",
         )
         company_admin = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.ADMIN, "companyadmin@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.ADMIN,
+            "companyadmin@test.com",
         )
 
         headers = await self._get_auth_headers(client, employer)
@@ -533,10 +661,18 @@ class TestMessagingPermissionMatrix:
     ):
         """Test that Candidate can message Recruiters."""
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
 
         headers = await self._get_auth_headers(client, candidate)
@@ -564,10 +700,18 @@ class TestMessagingPermissionMatrix:
     ):
         """Test that Candidate can message Employers."""
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         employer = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "employer@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "employer@test.com",
         )
 
         headers = await self._get_auth_headers(client, candidate)
@@ -595,10 +739,18 @@ class TestMessagingPermissionMatrix:
     ):
         """Test that Candidate can message other Candidates."""
         candidate1 = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate1@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate1@test.com",
         )
         candidate2 = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate2@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate2@test.com",
         )
 
         headers = await self._get_auth_headers(client, candidate1)
@@ -626,10 +778,18 @@ class TestMessagingPermissionMatrix:
     ):
         """Test that Candidate cannot message Company Admins."""
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         company_admin = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.ADMIN, "companyadmin@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.ADMIN,
+            "companyadmin@test.com",
         )
 
         headers = await self._get_auth_headers(client, candidate)
@@ -656,10 +816,18 @@ class TestMessagingPermissionMatrix:
     ):
         """Test that Candidate cannot message Super Admins."""
         candidate = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.CANDIDATE, "candidate@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.CANDIDATE,
+            "candidate@test.com",
         )
         super_admin = await self._create_user_with_role(
-            db_session, None, test_roles, UserRoleEnum.SYSTEM_ADMIN, "superadmin@test.com"
+            db_session,
+            None,
+            test_roles,
+            UserRoleEnum.SYSTEM_ADMIN,
+            "superadmin@test.com",
         )
 
         headers = await self._get_auth_headers(client, candidate)
@@ -690,10 +858,18 @@ class TestMessagingPermissionMatrix:
         other_company = await self._create_other_company(db_session)
 
         recruiter1 = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter1@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter1@test.com",
         )
         recruiter2 = await self._create_user_with_role(
-            db_session, other_company, test_roles, UserRoleEnum.MEMBER, "recruiter2@test.com"
+            db_session,
+            other_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter2@test.com",
         )
 
         headers = await self._get_auth_headers(client, recruiter1)
@@ -722,7 +898,11 @@ class TestMessagingPermissionMatrix:
     ):
         """Test that restricted users list excludes users that cannot be messaged."""
         super_admin = await self._create_user_with_role(
-            db_session, None, test_roles, UserRoleEnum.SYSTEM_ADMIN, "superadmin@test.com"
+            db_session,
+            None,
+            test_roles,
+            UserRoleEnum.SYSTEM_ADMIN,
+            "superadmin@test.com",
         )
         headers = await self._get_auth_headers(client, super_admin)
 
@@ -743,7 +923,11 @@ class TestMessagingPermissionMatrix:
     ):
         """Test that message participants endpoint respects messaging restrictions."""
         recruiter = await self._create_user_with_role(
-            db_session, test_company, test_roles, UserRoleEnum.MEMBER, "recruiter@test.com"
+            db_session,
+            test_company,
+            test_roles,
+            UserRoleEnum.MEMBER,
+            "recruiter@test.com",
         )
         headers = await self._get_auth_headers(client, recruiter)
 

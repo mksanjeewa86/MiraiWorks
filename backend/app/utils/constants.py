@@ -94,8 +94,8 @@ class TodoStatus(str, Enum):
 
 class TodoVisibility(str, Enum):
     PRIVATE = "private"  # Only owner can see
-    PUBLIC = "public"    # Assigned user can see and interact
-    VIEWER = "viewer"    # Assigned user can see but not interact
+    PUBLIC = "public"  # Assigned user can see and interact
+    VIEWER = "viewer"  # Assigned user can see but not interact
 
 
 class TodoType(str, Enum):
@@ -104,7 +104,7 @@ class TodoType(str, Enum):
 
 
 class TodoPublishStatus(str, Enum):
-    DRAFT = "draft"      # Not visible to assignee/viewers
+    DRAFT = "draft"  # Not visible to assignee/viewers
     PUBLISHED = "published"  # Visible to assignee/viewers
 
 
@@ -168,13 +168,12 @@ class MBTIType(str, Enum):
 
 class MBTIDimension(str, Enum):
     EXTRAVERSION_INTROVERSION = "E_I"  # E vs I
-    SENSING_INTUITION = "S_N"          # S vs N
-    THINKING_FEELING = "T_F"           # T vs F
-    JUDGING_PERCEIVING = "J_P"         # J vs P
+    SENSING_INTUITION = "S_N"  # S vs N
+    THINKING_FEELING = "T_F"  # T vs F
+    JUDGING_PERCEIVING = "J_P"  # J vs P
 
 
 class MBTITestStatus(str, Enum):
     NOT_TAKEN = "not_taken"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
-

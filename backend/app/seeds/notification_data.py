@@ -12,7 +12,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.notification import Notification
 
 
-async def seed_notification_data(db: AsyncSession, auth_result: dict[str, Any]) -> dict[str, int]:
+async def seed_notification_data(
+    db: AsyncSession, auth_result: dict[str, Any]
+) -> dict[str, int]:
     """
     Seed notification data for testing the notification system.
 
@@ -91,7 +93,11 @@ async def seed_notification_data(db: AsyncSession, auth_result: dict[str, Any]) 
             "type": "reminder",
             "title": "Follow-up Reminder",
             "message": "Don't forget to follow up with candidates from last week's interviews.",
-            "payload": {"reminder_type": "follow_up", "candidate_count": 3, "interview_date": "2024-01-08"},
+            "payload": {
+                "reminder_type": "follow_up",
+                "candidate_count": 3,
+                "interview_date": "2024-01-08",
+            },
             "is_read": True,
             "created_at": datetime.utcnow() - timedelta(days=2),
             "read_at": datetime.utcnow() - timedelta(days=1),
@@ -115,7 +121,11 @@ async def seed_notification_data(db: AsyncSession, auth_result: dict[str, Any]) 
             "type": "policy",
             "title": "Policy Update Required",
             "message": "Employee handbook needs to be updated for compliance with new regulations.",
-            "payload": {"policy_type": "compliance", "deadline": "2024-02-01", "priority": "medium"},
+            "payload": {
+                "policy_type": "compliance",
+                "deadline": "2024-02-01",
+                "priority": "medium",
+            },
             "is_read": False,
             "created_at": datetime.utcnow() - timedelta(days=1),
         },
@@ -187,7 +197,11 @@ async def seed_notification_data(db: AsyncSession, auth_result: dict[str, Any]) 
             "payload": {
                 "report_type": "weekly_metrics",
                 "report_period": "2024-01-08 to 2024-01-14",
-                "key_metrics": {"applications_reviewed": 15, "interviews_conducted": 6, "candidates_advanced": 4},
+                "key_metrics": {
+                    "applications_reviewed": 15,
+                    "interviews_conducted": 6,
+                    "candidates_advanced": 4,
+                },
             },
             "is_read": False,
             "created_at": datetime.utcnow() - timedelta(hours=1),

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui';
 import { Input } from '@/components/ui';
 import { Badge } from '@/components/ui';
 import DatePicker from 'react-datepicker';
-import "react-datepicker/dist/react-datepicker.css";
+import 'react-datepicker/dist/react-datepicker.css';
 import '@/styles/datepicker.css';
 import { useToast } from '@/contexts/ToastContext';
 import { todosApi } from '@/api/todos';
@@ -414,4 +414,3 @@ export default function TaskModalWithAttachments({
     </div>
   );
 }
-

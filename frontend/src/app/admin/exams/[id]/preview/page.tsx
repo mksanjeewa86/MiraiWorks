@@ -3,7 +3,17 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button, Badge, Alert, AlertDescription } from '@/components/ui';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Button,
+  Badge,
+  Alert,
+  AlertDescription,
+} from '@/components/ui';
 import {
   ArrowLeft,
   Play,
@@ -18,8 +28,8 @@ import {
 import { LoadingSpinner } from '@/components/ui';
 import { ExamInfo, Question } from '@/types/exam';
 import { toast } from 'sonner';
-
-
+import { apiClient } from '@/api/apiClient';
+import { API_ENDPOINTS } from '@/api/config';
 
 const ExamType = {
   APTITUDE: 'aptitude',
@@ -55,18 +65,8 @@ export default function ExamPreviewPage() {
 
   const fetchExamData = async () => {
     try {
-      const response = await fetch(`/api/exam/exams/${examId}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch exam details');
-      }
-
-      const data = await response.json();
-      setExamInfo(data);
+      const response = await apiClient.get<ExamInfo>(API_ENDPOINTS.EXAMS.BY_ID(examId));
+      setExamInfo(response.data);
     } catch (error) {
       console.error('Error fetching exam:', error);
       toast.error('Failed to load exam details');
@@ -75,18 +75,8 @@ export default function ExamPreviewPage() {
 
   const fetchQuestions = async () => {
     try {
-      const response = await fetch(`/api/exam/exams/${examId}/questions`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch questions');
-      }
-
-      const data = await response.json();
-      setQuestions(data);
+      const response = await apiClient.get<Question[]>(API_ENDPOINTS.EXAMS.QUESTIONS(examId));
+      setQuestions(response.data);
     } catch (error) {
       console.error('Error fetching questions:', error);
       toast.error('Failed to load questions');

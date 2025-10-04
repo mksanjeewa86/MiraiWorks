@@ -22,7 +22,11 @@ class MBTITest(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True, index=True
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+        index=True,
     )
 
     # Test status and results
@@ -38,14 +42,18 @@ class MBTITest(Base):
     # S/N: 0 = strong S, 100 = strong N
     # T/F: 0 = strong T, 100 = strong F
     # J/P: 0 = strong J, 100 = strong P
-    extraversion_introversion_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    extraversion_introversion_score: Mapped[int | None] = mapped_column(
+        Integer, nullable=True
+    )
     sensing_intuition_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
     thinking_feeling_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
     judging_perceiving_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     # Test answers and metadata
     answers: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
-    test_version: Mapped[str | None] = mapped_column(String(10), nullable=True, default="1.0")
+    test_version: Mapped[str | None] = mapped_column(
+        String(10), nullable=True, default="1.0"
+    )
 
     # Timing information
     started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
@@ -65,7 +73,9 @@ class MBTITest(Base):
     @property
     def is_completed(self) -> bool:
         """Check if the test is completed."""
-        return self.status == MBTITestStatus.COMPLETED.value and self.mbti_type is not None
+        return (
+            self.status == MBTITestStatus.COMPLETED.value and self.mbti_type is not None
+        )
 
     @property
     def completion_percentage(self) -> int:
@@ -92,7 +102,7 @@ class MBTITest(Base):
             "E_I": "I" if self.extraversion_introversion_score > 50 else "E",
             "S_N": "N" if self.sensing_intuition_score > 50 else "S",
             "T_F": "F" if self.thinking_feeling_score > 50 else "T",
-            "J_P": "P" if self.judging_perceiving_score > 50 else "J"
+            "J_P": "P" if self.judging_perceiving_score > 50 else "J",
         }
 
     @property
@@ -105,17 +115,19 @@ class MBTITest(Base):
             "E_I": abs(self.extraversion_introversion_score - 50),
             "S_N": abs(self.sensing_intuition_score - 50),
             "T_F": abs(self.thinking_feeling_score - 50),
-            "J_P": abs(self.judging_perceiving_score - 50)
+            "J_P": abs(self.judging_perceiving_score - 50),
         }
 
     def calculate_mbti_type(self) -> str:
         """Calculate MBTI type from dimension scores."""
-        if not all([
-            self.extraversion_introversion_score is not None,
-            self.sensing_intuition_score is not None,
-            self.thinking_feeling_score is not None,
-            self.judging_perceiving_score is not None
-        ]):
+        if not all(
+            [
+                self.extraversion_introversion_score is not None,
+                self.sensing_intuition_score is not None,
+                self.thinking_feeling_score is not None,
+                self.judging_perceiving_score is not None,
+            ]
+        ):
             raise ValueError("All dimension scores must be set to calculate MBTI type")
 
         prefs = self.dimension_preferences
@@ -134,7 +146,9 @@ class MBTIQuestion(Base):
 
     # Question details
     question_number: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
-    dimension: Mapped[str] = mapped_column(String(4), nullable=False, index=True)  # E_I, S_N, T_F, J_P
+    dimension: Mapped[str] = mapped_column(
+        String(4), nullable=False, index=True
+    )  # E_I, S_N, T_F, J_P
     direction: Mapped[str] = mapped_column(String(1), nullable=False)  # "+" or "-"
 
     # Question text in multiple languages
@@ -148,7 +162,9 @@ class MBTIQuestion(Base):
     option_b_ja: Mapped[str] = mapped_column(Text, nullable=False)
 
     # Scoring (which option corresponds to which trait)
-    option_a_trait: Mapped[str] = mapped_column(String(1), nullable=False)  # E, I, S, N, T, F, J, P
+    option_a_trait: Mapped[str] = mapped_column(
+        String(1), nullable=False
+    )  # E, I, S, N, T, F, J, P
     option_b_trait: Mapped[str] = mapped_column(String(1), nullable=False)
 
     # Question metadata

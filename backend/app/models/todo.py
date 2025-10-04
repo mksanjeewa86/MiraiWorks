@@ -41,7 +41,10 @@ class Todo(Base):
 
     # Workflow relationship
     workflow_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("recruitment_processes.id", ondelete="SET NULL"), nullable=True, index=True
+        Integer,
+        ForeignKey("recruitment_processes.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
     )
 
     title: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -60,19 +63,18 @@ class Todo(Base):
         String(20), nullable=False, default=TodoType.REGULAR.value, index=True
     )
     publish_status: Mapped[str] = mapped_column(
-        String(20), nullable=False, default=TodoPublishStatus.PUBLISHED.value, index=True
+        String(20),
+        nullable=False,
+        default=TodoPublishStatus.PUBLISHED.value,
+        index=True,
     )
 
     # Assignment specific fields
     assignment_status: Mapped[str | None] = mapped_column(
         String(20), nullable=True, index=True
     )
-    assignment_assessment: Mapped[str | None] = mapped_column(
-        Text, nullable=True
-    )
-    assignment_score: Mapped[int | None] = mapped_column(
-        Integer, nullable=True
-    )
+    assignment_assessment: Mapped[str | None] = mapped_column(Text, nullable=True)
+    assignment_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
     submitted_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
@@ -193,10 +195,15 @@ class Todo(Base):
 
     def start_review(self) -> None:
         """Start review process for assignment"""
-        if self.is_assignment and self.assignment_status == AssignmentStatus.SUBMITTED.value:
+        if (
+            self.is_assignment
+            and self.assignment_status == AssignmentStatus.SUBMITTED.value
+        ):
             self.assignment_status = AssignmentStatus.UNDER_REVIEW.value
 
-    def approve_assignment(self, reviewer_id: int, assessment: str = None, score: int = None) -> None:
+    def approve_assignment(
+        self, reviewer_id: int, assessment: str = None, score: int = None
+    ) -> None:
         """Mark assignment as approved"""
         if self.is_assignment:
             self.assignment_status = AssignmentStatus.APPROVED.value
@@ -207,7 +214,9 @@ class Todo(Base):
             if score is not None:
                 self.assignment_score = score
 
-    def reject_assignment(self, reviewer_id: int, assessment: str = None, score: int = None) -> None:
+    def reject_assignment(
+        self, reviewer_id: int, assessment: str = None, score: int = None
+    ) -> None:
         """Mark assignment as rejected"""
         if self.is_assignment:
             self.assignment_status = AssignmentStatus.REJECTED.value
@@ -227,5 +236,5 @@ class Todo(Base):
             AssignmentStatus.SUBMITTED.value,
             AssignmentStatus.UNDER_REVIEW.value,
             AssignmentStatus.APPROVED.value,
-            AssignmentStatus.REJECTED.value
+            AssignmentStatus.REJECTED.value,
         ]

@@ -12,7 +12,7 @@ import type {
   DialogFooterProps,
   DialogTitleProps,
   DialogDescriptionProps,
-  DialogCloseProps
+  DialogCloseProps,
 } from '@/types/components';
 
 const DialogContext = createContext<DialogContextValue | undefined>(undefined);
