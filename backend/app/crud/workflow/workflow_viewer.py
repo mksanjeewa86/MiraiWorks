@@ -74,7 +74,10 @@ class CRUDWorkflowViewer(CRUDBase[WorkflowViewer, dict, dict]):
             select(WorkflowViewer)
             .options(selectinload(WorkflowViewer.user))
             .where(
-                and_(WorkflowViewer.workflow_id == workflow_id, WorkflowViewer.role == role)
+                and_(
+                    WorkflowViewer.workflow_id == workflow_id,
+                    WorkflowViewer.role == role,
+                )
             )
             .order_by(desc(WorkflowViewer.added_at))
         )
@@ -237,7 +240,9 @@ class CRUDWorkflowViewer(CRUDBase[WorkflowViewer, dict, dict]):
                 WorkflowViewer.role,
                 func.count(CandidateWorkflow.id).label("assigned_processes"),
                 func.count(
-                    func.case((CandidateWorkflow.status == "in_progress", 1), else_=None)
+                    func.case(
+                        (CandidateWorkflow.status == "in_progress", 1), else_=None
+                    )
                 ).label("active_processes"),
             )
             .outerjoin(

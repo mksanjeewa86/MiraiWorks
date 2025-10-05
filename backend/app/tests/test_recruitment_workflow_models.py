@@ -3,11 +3,11 @@ from datetime import datetime, timedelta
 import pytest
 
 from app.models.candidate_workflow import CandidateWorkflow
-from app.models.workflow_workflow_node_connection import WorkflowNodeConnection
-from app.models.workflow_workflow_node_execution import WorkflowNodeExecution
+from app.models.workflow import Workflow
 from app.models.workflow_node import WorkflowNode
 from app.models.workflow_viewer import WorkflowViewer
-from app.models.workflow import Workflow
+from app.models.workflow_workflow_node_connection import WorkflowNodeConnection
+from app.models.workflow_workflow_node_execution import WorkflowNodeExecution
 
 
 class TestWorkflow:
@@ -32,9 +32,7 @@ class TestWorkflow:
 
     def test_activate_process(self):
         """Test activating a process"""
-        process = Workflow(
-            name="Test Process", employer_company_id=1, created_by=1
-        )
+        process = Workflow(name="Test Process", employer_company_id=1, created_by=1)
 
         process.activate(activated_by=1)
 
@@ -46,9 +44,7 @@ class TestWorkflow:
 
     def test_archive_process(self):
         """Test archiving a process"""
-        process = Workflow(
-            name="Test Process", employer_company_id=1, created_by=1
-        )
+        process = Workflow(name="Test Process", employer_company_id=1, created_by=1)
 
         process.archive(archived_by=1)
 
@@ -188,7 +184,9 @@ class TestCandidateWorkflow:
             candidate_id=100, process_id=1, status="in_progress", current_node_id=5
         )
 
-        candidate_workflow.fail(reason="Failed technical interview", failed_at_node_id=5)
+        candidate_workflow.fail(
+            reason="Failed technical interview", failed_at_node_id=5
+        )
 
         assert candidate_workflow.status == "failed"
         assert candidate_workflow.is_failed
@@ -302,7 +300,9 @@ class TestWorkflowNodeExecution:
 
     def test_start_execution(self):
         """Test starting an execution"""
-        execution = WorkflowNodeExecution(candidate_workflow_id=1, node_id=10, status="pending")
+        execution = WorkflowNodeExecution(
+            candidate_workflow_id=1, node_id=10, status="pending"
+        )
 
         execution.start(assigned_to=50)
 
@@ -352,7 +352,9 @@ class TestWorkflowNodeExecution:
 
     def test_skip_execution(self):
         """Test skipping an execution"""
-        execution = WorkflowNodeExecution(candidate_workflow_id=1, node_id=10, status="pending")
+        execution = WorkflowNodeExecution(
+            candidate_workflow_id=1, node_id=10, status="pending"
+        )
 
         execution.skip(completed_by=25, reason="Node no longer required")
 
@@ -364,7 +366,9 @@ class TestWorkflowNodeExecution:
 
     def test_schedule_execution(self):
         """Test scheduling an execution"""
-        execution = WorkflowNodeExecution(candidate_workflow_id=1, node_id=10, status="pending")
+        execution = WorkflowNodeExecution(
+            candidate_workflow_id=1, node_id=10, status="pending"
+        )
 
         due_date = datetime.utcnow() + timedelta(days=2)
         execution.schedule(due_date=due_date)
@@ -445,13 +449,17 @@ class TestWorkflowNodeExecution:
             execution.start()
 
         # Cannot complete pending execution
-        execution2 = WorkflowNodeExecution(candidate_workflow_id=1, node_id=10, status="pending")
+        execution2 = WorkflowNodeExecution(
+            candidate_workflow_id=1, node_id=10, status="pending"
+        )
 
         with pytest.raises(ValueError):
             execution2.complete(result="pass", completed_by=1)
 
         # Cannot await input from non-progress state
-        execution3 = WorkflowNodeExecution(candidate_workflow_id=1, node_id=10, status="pending")
+        execution3 = WorkflowNodeExecution(
+            candidate_workflow_id=1, node_id=10, status="pending"
+        )
 
         with pytest.raises(ValueError):
             execution3.await_input()
@@ -491,7 +499,9 @@ class TestWorkflowViewer:
         assert recruiter.can_record_results
 
         # Observer
-        observer = WorkflowViewer(process_id=1, user_id=51, role="observer", added_by=10)
+        observer = WorkflowViewer(
+            process_id=1, user_id=51, role="observer", added_by=10
+        )
 
         assert not observer.can_execute
         assert observer.can_view_all_candidates

@@ -9,8 +9,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base
 
 if TYPE_CHECKING:
-    from app.models.workflow import Workflow
     from app.models.user import User
+    from app.models.workflow import Workflow
 
 
 class WorkflowViewer(Base):
@@ -47,9 +47,7 @@ class WorkflowViewer(Base):
     )
 
     # Relationships
-    workflow: Mapped[Workflow] = relationship(
-        "Workflow", back_populates="viewers"
-    )
+    workflow: Mapped[Workflow] = relationship("Workflow", back_populates="viewers")
     user: Mapped[User] = relationship(
         "User", foreign_keys=[user_id], back_populates="workflow_viewers"
     )

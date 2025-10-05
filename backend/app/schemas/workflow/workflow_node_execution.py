@@ -3,7 +3,7 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
-from app.schemas.recruitment_workflow.enums import ExecutionResult, ExecutionStatus
+from app.schemas.workflow.enums import ExecutionResult, ExecutionStatus
 
 
 class WorkflowNodeExecutionBase(BaseModel):

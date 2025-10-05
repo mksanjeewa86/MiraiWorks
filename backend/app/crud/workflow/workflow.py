@@ -18,9 +18,7 @@ class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
     async def get(self, db: AsyncSession, id: int) -> Workflow | None:
         """Get workflow by id, excluding soft-deleted records."""
         result = await db.execute(
-            select(Workflow).where(
-                Workflow.id == id, Workflow.is_deleted == False
-            )
+            select(Workflow).where(Workflow.id == id, Workflow.is_deleted == False)
         )
         return result.scalar_one_or_none()
 
@@ -117,9 +115,7 @@ class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
         )
         return result.scalars().all()
 
-    async def get_with_nodes(
-        self, db: AsyncSession, *, id: int
-    ) -> Workflow | None:
+    async def get_with_nodes(self, db: AsyncSession, *, id: int) -> Workflow | None:
         """Get process with its nodes, excluding soft-deleted."""
         result = await db.execute(
             select(Workflow)
@@ -132,9 +128,7 @@ class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
         )
         return result.scalars().first()
 
-    async def get_by_job_id(
-        self, db: AsyncSession, *, job_id: int
-    ) -> list[Workflow]:
+    async def get_by_job_id(self, db: AsyncSession, *, job_id: int) -> list[Workflow]:
         """Get processes associated with a job, excluding soft-deleted."""
         result = await db.execute(
             select(Workflow)
@@ -165,9 +159,7 @@ class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
             conditions.append(
                 or_(
                     Workflow.employer_company_id == company_id,
-                    Workflow.employer_company_id.is_(None)
-                    if is_public
-                    else False,
+                    Workflow.employer_company_id.is_(None) if is_public else False,
                 )
             )
 
@@ -320,7 +312,8 @@ class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
         # Count candidates by status
         candidate_counts = await db.execute(
             select(
-                CandidateWorkflow.status, func.count(CandidateWorkflow.id).label("count")
+                CandidateWorkflow.status,
+                func.count(CandidateWorkflow.id).label("count"),
             )
             .join(Workflow)
             .where(

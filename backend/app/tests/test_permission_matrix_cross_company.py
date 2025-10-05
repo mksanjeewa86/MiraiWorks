@@ -10,9 +10,9 @@ from app.models.company import Company
 from app.models.interview import Interview
 from app.models.position import Position
 from app.models.process_node import ProcessNode
-from app.models.recruitment_process import RecruitmentProcess
 from app.models.resume import Resume
 from app.models.user import User
+from app.models.workflow import RecruitmentProcess
 from app.schemas.user import UserRole
 from app.services.auth_service import AuthService
 

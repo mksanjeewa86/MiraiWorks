@@ -1,4 +1,3 @@
-
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -115,9 +114,7 @@ class Interview(Base):
     canceller = relationship("User", foreign_keys=[cancelled_by], lazy="noload")
 
     # Workflow relationship
-    workflow = relationship(
-        "Workflow", foreign_keys=[workflow_id], lazy="noload"
-    )
+    workflow = relationship("Workflow", foreign_keys=[workflow_id], lazy="noload")
 
     proposals = relationship(
         "InterviewProposal",

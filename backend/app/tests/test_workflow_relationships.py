@@ -7,7 +7,7 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.crud.recruitment_workflow.recruitment_process import recruitment_process
+from app.crud.workflow.recruitment_process import recruitment_process
 from app.models.interview import Interview
 from app.models.todo import Todo
 from app.models.user import User

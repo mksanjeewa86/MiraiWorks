@@ -40,9 +40,7 @@ class TestWorkflowEndpoints:
             process_data = {"name": "Test Process", "description": "Test description"}
 
             # No authorization header
-            response = await client.post(
-                "/api/workflows/", json=process_data
-            )
+            response = await client.post("/api/workflows/", json=process_data)
             assert response.status_code == 401
 
             # Recruiter trying to create (should fail)

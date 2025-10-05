@@ -3,7 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator
 
-from app.schemas.recruitment_workflow.enums import ViewerRole
+from app.schemas.workflow.enums import ViewerRole
 
 
 class WorkflowViewerBase(BaseModel):

@@ -3,10 +3,10 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
-from app.schemas.recruitment_workflow.candidate_workflow import CandidateWorkflowInfo
-from app.schemas.recruitment_workflow.enums import ProcessStatus
-from app.schemas.recruitment_workflow.workflow_node import WorkflowNodeInfo
-from app.schemas.recruitment_workflow.workflow_viewer import WorkflowViewerInfo
+from app.schemas.workflow.candidate_workflow import CandidateWorkflowInfo
+from app.schemas.workflow.enums import ProcessStatus
+from app.schemas.workflow.workflow_node import WorkflowNodeInfo
+from app.schemas.workflow.workflow_viewer import WorkflowViewerInfo
 
 
 class WorkflowBase(BaseModel):

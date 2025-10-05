@@ -182,7 +182,8 @@ async def list_workflow_candidates(
 
 
 @router.get(
-    API_ROUTES.WORKFLOWS.CANDIDATE_PROCESS_BY_ID, response_model=CandidateWorkflowDetails
+    API_ROUTES.WORKFLOWS.CANDIDATE_PROCESS_BY_ID,
+    response_model=CandidateWorkflowDetails,
 )
 async def get_candidate_workflow(
     candidate_workflow_id: int,

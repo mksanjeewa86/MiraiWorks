@@ -3,9 +3,9 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.candidate_workflow import CandidateWorkflow
-from app.models.workflow_node_execution import WorkflowNodeExecution
-from app.models.workflow_node import WorkflowNode
 from app.models.workflow import Workflow
+from app.models.workflow_node import WorkflowNode
+from app.models.workflow_node_execution import WorkflowNodeExecution
 
 
 class RecruitmentWorkflowNotificationService:

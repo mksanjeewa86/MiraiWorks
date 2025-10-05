@@ -58,9 +58,7 @@ async def create_workflow(
     workflow_dict = workflow_data.dict()
     workflow_dict["employer_company_id"] = current_user.company_id
 
-    wf = await workflow.create(
-        db, obj_in=workflow_dict, created_by=current_user.id
-    )
+    wf = await workflow.create(db, obj_in=workflow_dict, created_by=current_user.id)
 
     return wf
 
@@ -300,9 +298,7 @@ async def archive_workflow(
             status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
         )
 
-    archived_wf = await workflow.archive(
-        db, db_obj=wf, archived_by=current_user.id
-    )
+    archived_wf = await workflow.archive(db, db_obj=wf, archived_by=current_user.id)
 
     return archived_wf
 

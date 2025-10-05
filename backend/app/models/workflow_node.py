@@ -19,10 +19,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base
 
 if TYPE_CHECKING:
+    from app.models.user import User
     from app.models.workflow import Workflow
     from app.models.workflow_node_connection import WorkflowNodeConnection
     from app.models.workflow_node_execution import WorkflowNodeExecution
-    from app.models.user import User
 
 
 class WorkflowNode(Base):
@@ -91,9 +91,7 @@ class WorkflowNode(Base):
     )
 
     # Relationships
-    workflow: Mapped[Workflow] = relationship(
-        "Workflow", back_populates="nodes"
-    )
+    workflow: Mapped[Workflow] = relationship("Workflow", back_populates="nodes")
     creator: Mapped[User] = relationship(
         "User", foreign_keys=[created_by], back_populates="created_workflow_nodes"
     )

@@ -28,7 +28,8 @@ class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, dict, dict]):
         result = await db.execute(
             select(WorkflowNodeExecution).where(
                 and_(
-                    WorkflowNodeExecution.candidate_workflow_id == candidate_workflow_id,
+                    WorkflowNodeExecution.candidate_workflow_id
+                    == candidate_workflow_id,
                     WorkflowNodeExecution.node_id == node_id,
                 )
             )
@@ -39,7 +40,9 @@ class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, dict, dict]):
         self, db: AsyncSession, *, candidate_workflow_id: int, status: str | None = None
     ) -> list[WorkflowNodeExecution]:
         """Get all executions for a candidate process"""
-        conditions = [WorkflowNodeExecution.candidate_workflow_id == candidate_workflow_id]
+        conditions = [
+            WorkflowNodeExecution.candidate_workflow_id == candidate_workflow_id
+        ]
 
         if status:
             conditions.append(WorkflowNodeExecution.status == status)
@@ -258,7 +261,9 @@ class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, dict, dict]):
     ) -> list[WorkflowNodeExecution]:
         """Bulk update execution status"""
         executions = await db.execute(
-            select(WorkflowNodeExecution).where(WorkflowNodeExecution.id.in_(execution_ids))
+            select(WorkflowNodeExecution).where(
+                WorkflowNodeExecution.id.in_(execution_ids)
+            )
         )
 
         updated_executions = []
@@ -281,7 +286,9 @@ class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, dict, dict]):
         """Bulk complete executions"""
         execution_ids = [c["execution_id"] for c in completions]
         executions = await db.execute(
-            select(WorkflowNodeExecution).where(WorkflowNodeExecution.id.in_(execution_ids))
+            select(WorkflowNodeExecution).where(
+                WorkflowNodeExecution.id.in_(execution_ids)
+            )
         )
 
         execution_dict = {e.id: e for e in executions.scalars().all()}
@@ -334,7 +341,10 @@ class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, dict, dict]):
 
         # Count by status
         status_counts = await db.execute(
-            select(WorkflowNodeExecution.status, func.count(WorkflowNodeExecution.id).label("count"))
+            select(
+                WorkflowNodeExecution.status,
+                func.count(WorkflowNodeExecution.id).label("count"),
+            )
             .where(and_(*conditions) if conditions else True)
             .group_by(WorkflowNodeExecution.status)
         )
@@ -343,7 +353,10 @@ class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, dict, dict]):
 
         # Count by result
         result_counts = await db.execute(
-            select(WorkflowNodeExecution.result, func.count(WorkflowNodeExecution.id).label("count"))
+            select(
+                WorkflowNodeExecution.result,
+                func.count(WorkflowNodeExecution.id).label("count"),
+            )
             .where(
                 and_(*conditions, WorkflowNodeExecution.result.isnot(None))
                 if conditions
@@ -359,7 +372,9 @@ class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, dict, dict]):
             select(
                 func.avg(
                     func.extract(
-                        "epoch", WorkflowNodeExecution.completed_at - WorkflowNodeExecution.started_at
+                        "epoch",
+                        WorkflowNodeExecution.completed_at
+                        - WorkflowNodeExecution.started_at,
                     )
                     / 60
                 )
@@ -421,7 +436,9 @@ class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, dict, dict]):
                     func.case((WorkflowNodeExecution.status == "pending", 1), else_=0)
                 ).label("pending"),
                 func.sum(
-                    func.case((WorkflowNodeExecution.status == "in_progress", 1), else_=0)
+                    func.case(
+                        (WorkflowNodeExecution.status == "in_progress", 1), else_=0
+                    )
                 ).label("in_progress"),
                 func.sum(
                     func.case(
@@ -442,7 +459,9 @@ class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, dict, dict]):
                 ).label("completed"),
                 func.avg(
                     func.extract(
-                        "epoch", WorkflowNodeExecution.completed_at - WorkflowNodeExecution.started_at
+                        "epoch",
+                        WorkflowNodeExecution.completed_at
+                        - WorkflowNodeExecution.started_at,
                     )
                     / 3600
                 ).label("avg_completion_hours"),

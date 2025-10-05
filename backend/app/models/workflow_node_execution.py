@@ -19,10 +19,10 @@ from app.models.base import Base
 
 if TYPE_CHECKING:
     from app.models.candidate_workflow import CandidateWorkflow
-    from app.models.workflow_node import WorkflowNode
     from app.models.interview import Interview
     from app.models.todo import Todo
     from app.models.user import User
+    from app.models.workflow_node import WorkflowNode
 
 
 class WorkflowNodeExecution(Base):
@@ -111,15 +111,23 @@ class WorkflowNodeExecution(Base):
     candidate_workflow: Mapped[CandidateWorkflow] = relationship(
         "CandidateWorkflow", back_populates="executions"
     )
-    node: Mapped[WorkflowNode] = relationship("WorkflowNode", back_populates="executions")
+    node: Mapped[WorkflowNode] = relationship(
+        "WorkflowNode", back_populates="executions"
+    )
     assignee: Mapped[User | None] = relationship(
-        "User", foreign_keys=[assigned_to], back_populates="assigned_workflow_node_executions"
+        "User",
+        foreign_keys=[assigned_to],
+        back_populates="assigned_workflow_node_executions",
     )
     completer: Mapped[User | None] = relationship(
-        "User", foreign_keys=[completed_by], back_populates="completed_workflow_node_executions"
+        "User",
+        foreign_keys=[completed_by],
+        back_populates="completed_workflow_node_executions",
     )
     reviewer: Mapped[User | None] = relationship(
-        "User", foreign_keys=[reviewed_by], back_populates="reviewed_workflow_node_executions"
+        "User",
+        foreign_keys=[reviewed_by],
+        back_populates="reviewed_workflow_node_executions",
     )
 
     # Linked resources

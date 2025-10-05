@@ -357,7 +357,8 @@ class CRUDCandidateWorkflow(CRUDBase[CandidateWorkflow, dict, dict]):
         # Count candidates by status
         status_counts = await db.execute(
             select(
-                CandidateWorkflow.status, func.count(CandidateWorkflow.id).label("count")
+                CandidateWorkflow.status,
+                func.count(CandidateWorkflow.id).label("count"),
             )
             .where(CandidateWorkflow.workflow_id == process_id)
             .group_by(CandidateWorkflow.status)
@@ -424,7 +425,9 @@ class CRUDCandidateWorkflow(CRUDBase[CandidateWorkflow, dict, dict]):
             .where(
                 and_(
                     CandidateWorkflow.assigned_recruiter_id == recruiter_id,
-                    WorkflowNodeExecution.status.in_(["pending", "scheduled", "in_progress"]),
+                    WorkflowNodeExecution.status.in_(
+                        ["pending", "scheduled", "in_progress"]
+                    ),
                 )
             )
         )
@@ -436,7 +439,9 @@ class CRUDCandidateWorkflow(CRUDBase[CandidateWorkflow, dict, dict]):
             .where(
                 and_(
                     CandidateWorkflow.assigned_recruiter_id == recruiter_id,
-                    WorkflowNodeExecution.status.in_(["pending", "scheduled", "in_progress"]),
+                    WorkflowNodeExecution.status.in_(
+                        ["pending", "scheduled", "in_progress"]
+                    ),
                     WorkflowNodeExecution.due_date < datetime.utcnow(),
                 )
             )

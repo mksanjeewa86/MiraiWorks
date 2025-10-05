@@ -218,7 +218,10 @@ class CRUDWorkflowNode(CRUDBase[WorkflowNode, dict, dict]):
         """Get statistics for a specific node"""
         # Count executions by status
         status_counts = await db.execute(
-            select(WorkflowNodeExecution.status, func.count(WorkflowNodeExecution.id).label("count"))
+            select(
+                WorkflowNodeExecution.status,
+                func.count(WorkflowNodeExecution.id).label("count"),
+            )
             .where(WorkflowNodeExecution.node_id == node_id)
             .group_by(WorkflowNodeExecution.status)
         )
@@ -227,9 +230,15 @@ class CRUDWorkflowNode(CRUDBase[WorkflowNode, dict, dict]):
 
         # Count executions by result
         result_counts = await db.execute(
-            select(WorkflowNodeExecution.result, func.count(WorkflowNodeExecution.id).label("count"))
+            select(
+                WorkflowNodeExecution.result,
+                func.count(WorkflowNodeExecution.id).label("count"),
+            )
             .where(
-                and_(WorkflowNodeExecution.node_id == node_id, WorkflowNodeExecution.result.isnot(None))
+                and_(
+                    WorkflowNodeExecution.node_id == node_id,
+                    WorkflowNodeExecution.result.isnot(None),
+                )
             )
             .group_by(WorkflowNodeExecution.result)
         )
@@ -241,7 +250,9 @@ class CRUDWorkflowNode(CRUDBase[WorkflowNode, dict, dict]):
             select(
                 func.avg(
                     func.extract(
-                        "epoch", WorkflowNodeExecution.completed_at - WorkflowNodeExecution.started_at
+                        "epoch",
+                        WorkflowNodeExecution.completed_at
+                        - WorkflowNodeExecution.started_at,
                     )
                     / 60
                 )
@@ -259,7 +270,10 @@ class CRUDWorkflowNode(CRUDBase[WorkflowNode, dict, dict]):
         # Calculate average score
         avg_score_result = await db.execute(
             select(func.avg(WorkflowNodeExecution.score)).where(
-                and_(WorkflowNodeExecution.node_id == node_id, WorkflowNodeExecution.score.isnot(None))
+                and_(
+                    WorkflowNodeExecution.node_id == node_id,
+                    WorkflowNodeExecution.score.isnot(None),
+                )
             )
         )
 
@@ -298,12 +312,18 @@ class CRUDWorkflowNode(CRUDBase[WorkflowNode, dict, dict]):
                 ).label("completed_executions"),
                 func.avg(
                     func.extract(
-                        "epoch", WorkflowNodeExecution.completed_at - WorkflowNodeExecution.started_at
+                        "epoch",
+                        WorkflowNodeExecution.completed_at
+                        - WorkflowNodeExecution.started_at,
                     )
                     / 60
                 ).label("avg_duration_minutes"),
             )
-            .join(WorkflowNodeExecution, WorkflowNode.id == WorkflowNodeExecution.node_id, isouter=True)
+            .join(
+                WorkflowNodeExecution,
+                WorkflowNode.id == WorkflowNodeExecution.node_id,
+                isouter=True,
+            )
             .where(WorkflowNode.workflow_id == process_id)
             .group_by(WorkflowNode.id, WorkflowNode.title, WorkflowNode.node_type)
             .having(func.count(WorkflowNodeExecution.id) > 0)
@@ -338,7 +358,9 @@ class CRUDWorkflowNode(CRUDBase[WorkflowNode, dict, dict]):
         """Check if a node can be safely deleted"""
         # Check if there are any executions
         result = await db.execute(
-            select(func.count(WorkflowNodeExecution.id)).where(WorkflowNodeExecution.node_id == node_id)
+            select(func.count(WorkflowNodeExecution.id)).where(
+                WorkflowNodeExecution.node_id == node_id
+            )
         )
 
         execution_count = result.scalar() or 0

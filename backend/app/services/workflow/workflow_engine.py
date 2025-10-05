@@ -4,16 +4,16 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.interview import interview as interview_crud
+from app.crud.todo import todo as todo_crud
 from app.crud.workflow.candidate_workflow import candidate_workflow
+from app.crud.workflow.workflow import workflow
+from app.crud.workflow.workflow_node import workflow_node
 from app.crud.workflow.workflow_node_connection import workflow_node_connection
 from app.crud.workflow.workflow_node_execution import workflow_node_execution
-from app.crud.workflow.workflow_node import workflow_node
-from app.crud.workflow.workflow import workflow
-from app.crud.todo import todo as todo_crud
 from app.models.candidate_workflow import CandidateWorkflow
-from app.models.workflow_node_execution import WorkflowNodeExecution
-from app.models.workflow_node import WorkflowNode
 from app.models.workflow import Workflow
+from app.models.workflow_node import WorkflowNode
+from app.models.workflow_node_execution import WorkflowNodeExecution
 from app.schemas.workflow.enums import (
     InterviewNodeType,
     NodeType,
@@ -375,7 +375,9 @@ class WorkflowEngineService:
         todo = await todo_crud.create(db, obj_in=todo_data)
 
         # Link to execution
-        await workflow_node_execution.link_todo(db, execution=execution, todo_id=todo.id)
+        await workflow_node_execution.link_todo(
+            db, execution=execution, todo_id=todo.id
+        )
 
     async def validate_process(
         self, db: AsyncSession, workflow_id: int
@@ -488,7 +490,9 @@ class WorkflowEngineService:
             node_stats.append(node_stat)
 
         # Bottleneck analysis
-        bottlenecks = await workflow_node.get_bottleneck_nodes(db, process_id=process_id)
+        bottlenecks = await workflow_node.get_bottleneck_nodes(
+            db, process_id=process_id
+        )
 
         # Execution workload
         workload = await workflow_node_execution.get_workload_by_assignee(
@@ -534,9 +538,7 @@ class WorkflowEngineService:
         clone_viewers: bool = True,
     ) -> Workflow:
         """Clone an existing process"""
-        source_process = await workflow.get_with_nodes(
-            db, id=source_process_id
-        )
+        source_process = await workflow.get_with_nodes(db, id=source_process_id)
         if not source_process:
             raise ValueError("Source process not found")
 
