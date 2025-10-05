@@ -19,17 +19,17 @@ class CRUDWorkflowNodeConnection(CRUDBase[WorkflowNodeConnection, dict, dict]):
         await db.refresh(db_obj)
         return db_obj
 
-    async def get_by_process_id(
+    async def get_by_workflow_id(
         self, db: AsyncSession, *, workflow_id: int
     ) -> list[WorkflowNodeConnection]:
-        """Get all connections for a process"""
+        """Get all connections for a workflow"""
         result = await db.execute(
             select(WorkflowNodeConnection)
             .options(
                 selectinload(WorkflowNodeConnection.source_node),
                 selectinload(WorkflowNodeConnection.target_node),
             )
-            .where(WorkflowNodeConnection.workflow_id == process_id)
+            .where(WorkflowNodeConnection.workflow_id == workflow_id)
             .order_by(desc(WorkflowNodeConnection.created_at))
         )
         return result.scalars().all()
@@ -94,7 +94,7 @@ class CRUDWorkflowNodeConnection(CRUDBase[WorkflowNodeConnection, dict, dict]):
             raise ValueError("Connection already exists between these nodes")
 
         connection_data = {
-            "process_id": workflow_id,
+            "workflow_id": workflow_id,
             "source_node_id": source_node_id,
             "target_node_id": target_node_id,
             "condition_type": condition_type,
@@ -177,7 +177,7 @@ class CRUDWorkflowNodeConnection(CRUDBase[WorkflowNodeConnection, dict, dict]):
 
             if not existing:
                 connection = WorkflowNodeConnection(
-                    process_id=workflow_id,
+                    workflow_id=workflow_id,
                     source_node_id=conn_data["source_node_id"],
                     target_node_id=conn_data["target_node_id"],
                     condition_type=conn_data.get("condition_type", "success"),
@@ -195,17 +195,17 @@ class CRUDWorkflowNodeConnection(CRUDBase[WorkflowNodeConnection, dict, dict]):
 
         return new_connections
 
-    async def validate_process_flow(
+    async def validate_workflow_flow(
         self, db: AsyncSession, *, workflow_id: int
     ) -> dict[str, Any]:
-        """Validate the flow of a process"""
-        # Get all connections and nodes for the process
-        connections = await self.get_by_process_id(db, process_id=process_id)
+        """Validate the flow of a workflow"""
+        # Get all connections and nodes for the workflow
+        connections = await self.get_by_workflow_id(db, workflow_id=workflow_id)
 
         # Import here to avoid circular imports
         from app.crud.workflow.workflow_node import workflow_node
 
-        nodes = await workflow_node.get_by_process_id(db, process_id=process_id)
+        nodes = await workflow_node.get_by_workflow_id(db, workflow_id=workflow_id)
 
         issues = []
         warnings = []
@@ -300,11 +300,11 @@ class CRUDWorkflowNodeConnection(CRUDBase[WorkflowNodeConnection, dict, dict]):
             "end_nodes": len(end_nodes),
         }
 
-    async def get_process_paths(
+    async def get_workflow_paths(
         self, db: AsyncSession, *, workflow_id: int, start_node_id: int | None = None
     ) -> list[list[int]]:
-        """Get all possible paths through the process"""
-        connections = await self.get_by_process_id(db, process_id=process_id)
+        """Get all possible paths through the workflow"""
+        connections = await self.get_by_workflow_id(db, workflow_id=workflow_id)
 
         # Build adjacency list
         adj_list = {}

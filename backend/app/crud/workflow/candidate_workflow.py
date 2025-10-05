@@ -21,10 +21,10 @@ class CRUDCandidateWorkflow(CRUDBase[CandidateWorkflow, dict, dict]):
         await db.refresh(db_obj)
         return db_obj
 
-    async def get_by_candidate_and_process(
+    async def get_by_candidate_and_workflow(
         self, db: AsyncSession, *, candidate_id: int, workflow_id: int
     ) -> CandidateWorkflow | None:
-        """Get candidate process by candidate and process IDs"""
+        """Get candidate process by candidate and workflow IDs"""
         result = await db.execute(
             select(CandidateWorkflow).where(
                 and_(
@@ -35,7 +35,7 @@ class CRUDCandidateWorkflow(CRUDBase[CandidateWorkflow, dict, dict]):
         )
         return result.scalars().first()
 
-    async def get_by_process_id(
+    async def get_by_workflow_id(
         self,
         db: AsyncSession,
         *,
@@ -45,7 +45,7 @@ class CRUDCandidateWorkflow(CRUDBase[CandidateWorkflow, dict, dict]):
         limit: int = 100,
     ) -> list[CandidateWorkflow]:
         """Get all candidate workflows for a workflow"""
-        conditions = [CandidateWorkflow.workflow_id == process_id]
+        conditions = [CandidateWorkflow.workflow_id == workflow_id]
 
         if status:
             conditions.append(CandidateWorkflow.status == status)
@@ -154,14 +154,14 @@ class CRUDCandidateWorkflow(CRUDBase[CandidateWorkflow, dict, dict]):
         await db.refresh(candidate_workflow)
         return candidate_workflow
 
-    async def start_process(
+    async def start_workflow(
         self,
         db: AsyncSession,
         *,
         candidate_workflow: CandidateWorkflow,
         first_node_id: int,
     ) -> CandidateWorkflow:
-        """Start a candidate process"""
+        """Start a candidate workflow"""
         candidate_workflow.start(first_node_id)
         await db.commit()
         await db.refresh(candidate_workflow)
@@ -180,7 +180,7 @@ class CRUDCandidateWorkflow(CRUDBase[CandidateWorkflow, dict, dict]):
         await db.refresh(candidate_workflow)
         return candidate_workflow
 
-    async def complete_process(
+    async def complete_workflow(
         self,
         db: AsyncSession,
         *,
@@ -189,13 +189,13 @@ class CRUDCandidateWorkflow(CRUDBase[CandidateWorkflow, dict, dict]):
         overall_score: float | None = None,
         notes: str | None = None,
     ) -> CandidateWorkflow:
-        """Complete a candidate process"""
+        """Complete a candidate workflow"""
         candidate_workflow.complete(final_result, overall_score, notes)
         await db.commit()
         await db.refresh(candidate_workflow)
         return candidate_workflow
 
-    async def fail_process(
+    async def fail_workflow(
         self,
         db: AsyncSession,
         *,
@@ -203,20 +203,20 @@ class CRUDCandidateWorkflow(CRUDBase[CandidateWorkflow, dict, dict]):
         reason: str | None = None,
         failed_at_node_id: int | None = None,
     ) -> CandidateWorkflow:
-        """Fail a candidate process"""
+        """Fail a candidate workflow"""
         candidate_workflow.fail(reason, failed_at_node_id)
         await db.commit()
         await db.refresh(candidate_workflow)
         return candidate_workflow
 
-    async def withdraw_process(
+    async def withdraw_workflow(
         self,
         db: AsyncSession,
         *,
         candidate_workflow: CandidateWorkflow,
         reason: str | None = None,
     ) -> CandidateWorkflow:
-        """Withdraw a candidate from the process"""
+        """Withdraw a candidate from the workflow"""
         candidate_workflow.withdraw(reason)
         await db.commit()
         await db.refresh(candidate_workflow)
@@ -231,10 +231,10 @@ class CRUDCandidateWorkflow(CRUDBase[CandidateWorkflow, dict, dict]):
         await db.refresh(candidate_workflow)
         return candidate_workflow
 
-    async def resume_process(
+    async def resume_workflow(
         self, db: AsyncSession, *, candidate_workflow: CandidateWorkflow
     ) -> CandidateWorkflow:
-        """Resume a candidate process from hold"""
+        """Resume a candidate workflow from hold"""
         candidate_workflow.resume()
         await db.commit()
         await db.refresh(candidate_workflow)
@@ -253,14 +253,14 @@ class CRUDCandidateWorkflow(CRUDBase[CandidateWorkflow, dict, dict]):
 
         for candidate_id in candidate_ids:
             # Check if already exists
-            existing = await self.get_by_candidate_and_process(
-                db, candidate_id=candidate_id, process_id=process_id
+            existing = await self.get_by_candidate_and_workflow(
+                db, candidate_id=candidate_id, workflow_id=workflow_id
             )
 
             if not existing:
                 candidate_workflow_data = {
                     "candidate_id": candidate_id,
-                    "process_id": workflow_id,
+                    "workflow_id": workflow_id,
                     "assigned_recruiter_id": assigned_recruiter_id,
                     "assigned_at": datetime.utcnow() if assigned_recruiter_id else None,
                 }
@@ -350,7 +350,7 @@ class CRUDCandidateWorkflow(CRUDBase[CandidateWorkflow, dict, dict]):
         # Sort by timestamp
         return sorted(timeline, key=lambda x: x["timestamp"])
 
-    async def get_statistics_by_process(
+    async def get_statistics_by_workflow(
         self, db: AsyncSession, *, workflow_id: int
     ) -> dict[str, Any]:
         """Get statistics for candidate workflows in a specific workflow"""
@@ -360,7 +360,7 @@ class CRUDCandidateWorkflow(CRUDBase[CandidateWorkflow, dict, dict]):
                 CandidateWorkflow.status,
                 func.count(CandidateWorkflow.id).label("count"),
             )
-            .where(CandidateWorkflow.workflow_id == process_id)
+            .where(CandidateWorkflow.workflow_id == workflow_id)
             .group_by(CandidateWorkflow.status)
         )
 

@@ -331,7 +331,7 @@ class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, dict, dict]):
 
         if workflow_id:
             conditions.append(
-                WorkflowNodeExecution.candidate_workflow.has(process_id=process_id)
+                WorkflowNodeExecution.candidate_workflow.has(workflow_id=workflow_id)
             )
 
         if candidate_workflow_id:
@@ -425,7 +425,7 @@ class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, dict, dict]):
 
         if workflow_id:
             conditions.append(
-                WorkflowNodeExecution.candidate_workflow.has(process_id=process_id)
+                WorkflowNodeExecution.candidate_workflow.has(workflow_id=workflow_id)
             )
 
         result = await db.execute(

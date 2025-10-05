@@ -22,17 +22,17 @@ class CRUDWorkflowViewer(CRUDBase[WorkflowViewer, dict, dict]):
         await db.refresh(db_obj)
         return db_obj
 
-    async def get_by_process_id(
+    async def get_by_workflow_id(
         self, db: AsyncSession, *, workflow_id: int
     ) -> list[WorkflowViewer]:
-        """Get all viewers for a process"""
+        """Get all viewers for a workflow"""
         result = await db.execute(
             select(WorkflowViewer)
             .options(
                 selectinload(WorkflowViewer.user),
                 selectinload(WorkflowViewer.added_by_user),
             )
-            .where(WorkflowViewer.workflow_id == process_id)
+            .where(WorkflowViewer.workflow_id == workflow_id)
             .order_by(desc(WorkflowViewer.added_at))
         )
         return result.scalars().all()
@@ -52,10 +52,10 @@ class CRUDWorkflowViewer(CRUDBase[WorkflowViewer, dict, dict]):
         )
         return result.scalars().all()
 
-    async def get_by_process_and_user(
+    async def get_by_workflow_and_user(
         self, db: AsyncSession, *, workflow_id: int, user_id: int
     ) -> WorkflowViewer | None:
-        """Get specific process viewer"""
+        """Get specific workflow viewer"""
         result = await db.execute(
             select(WorkflowViewer).where(
                 and_(
@@ -86,8 +86,8 @@ class CRUDWorkflowViewer(CRUDBase[WorkflowViewer, dict, dict]):
     async def get_recruiters(
         self, db: AsyncSession, *, workflow_id: int
     ) -> list[WorkflowViewer]:
-        """Get all recruiters for a process"""
-        return await self.get_by_role(db, process_id=workflow_id, role="recruiter")
+        """Get all recruiters for a workflow"""
+        return await self.get_by_role(db, workflow_id=workflow_id, role="recruiter")
 
     async def bulk_add_viewers(
         self,
@@ -102,13 +102,13 @@ class CRUDWorkflowViewer(CRUDBase[WorkflowViewer, dict, dict]):
 
         for viewer_data in viewers:
             # Check if viewer already exists
-            existing = await self.get_by_process_and_user(
-                db, process_id=workflow_id, user_id=viewer_data["user_id"]
+            existing = await self.get_by_workflow_and_user(
+                db, workflow_id=workflow_id, user_id=viewer_data["user_id"]
             )
 
             if not existing:
                 viewer_obj = WorkflowViewer(
-                    process_id=workflow_id,
+                    workflow_id=workflow_id,
                     user_id=viewer_data["user_id"],
                     role=viewer_data["role"],
                     permissions=viewer_data.get("permissions"),
@@ -190,7 +190,7 @@ class CRUDWorkflowViewer(CRUDBase[WorkflowViewer, dict, dict]):
         conditions = []
 
         if workflow_id:
-            conditions.append(WorkflowViewer.workflow_id == process_id)
+            conditions.append(WorkflowViewer.workflow_id == workflow_id)
 
         if user_id:
             conditions.append(WorkflowViewer.user_id == user_id)
@@ -230,7 +230,7 @@ class CRUDWorkflowViewer(CRUDBase[WorkflowViewer, dict, dict]):
 
         conditions = []
         if workflow_id:
-            conditions.append(WorkflowViewer.workflow_id == process_id)
+            conditions.append(WorkflowViewer.workflow_id == workflow_id)
 
         # Get viewers with their workload
         result = await db.execute(
@@ -313,11 +313,11 @@ class CRUDWorkflowViewer(CRUDBase[WorkflowViewer, dict, dict]):
     async def get_statistics(
         self, db: AsyncSession, *, workflow_id: int
     ) -> dict[str, Any]:
-        """Get overall viewer statistics for a process"""
+        """Get overall viewer statistics for a workflow"""
         # Count viewers by role
         role_counts = await db.execute(
             select(WorkflowViewer.role, func.count(WorkflowViewer.id).label("count"))
-            .where(WorkflowViewer.workflow_id == process_id)
+            .where(WorkflowViewer.workflow_id == workflow_id)
             .group_by(WorkflowViewer.role)
         )
 
@@ -330,10 +330,10 @@ class CRUDWorkflowViewer(CRUDBase[WorkflowViewer, dict, dict]):
             "by_role": role_dict,
             "active_viewers": total_viewers,  # Would be calculated from activity
             "viewer_activity": await self.get_viewer_activity(
-                db, process_id=process_id
+                db, workflow_id=workflow_id
             ),
             "workload_distribution": await self.get_workload_distribution(
-                db, process_id=process_id
+                db, workflow_id=workflow_id
             ),
         }
 
@@ -345,9 +345,9 @@ class CRUDWorkflowViewer(CRUDBase[WorkflowViewer, dict, dict]):
         user_id: int,
         required_permission: str,
     ) -> bool:
-        """Check if a user has a specific permission for a process"""
-        viewer = await self.get_by_process_and_user(
-            db, process_id=workflow_id, user_id=user_id
+        """Check if a user has a specific permission for a workflow"""
+        viewer = await self.get_by_workflow_and_user(
+            db, workflow_id=workflow_id, user_id=user_id
         )
 
         if not viewer:
@@ -355,32 +355,32 @@ class CRUDWorkflowViewer(CRUDBase[WorkflowViewer, dict, dict]):
 
         return viewer.has_permission(required_permission)
 
-    async def get_accessible_processes(
+    async def get_accessible_workflows(
         self, db: AsyncSession, *, user_id: int, permission: str | None = None
     ) -> list[int]:
-        """Get list of process IDs accessible to a user"""
+        """Get list of workflow IDs accessible to a user"""
         conditions = [WorkflowViewer.user_id == user_id]
 
         result = await db.execute(
-            select(WorkflowViewer.process_id).where(and_(*conditions))
+            select(WorkflowViewer.workflow_id).where(and_(*conditions))
         )
 
-        process_ids = [row.process_id for row in result]
+        workflow_ids = [row.workflow_id for row in result]
 
         if permission:
             # Filter by permission
             accessible_ids = []
-            for process_id in process_ids:
+            for workflow_id in workflow_ids:
                 if await self.check_user_access(
                     db,
-                    process_id=workflow_id,
+                    workflow_id=workflow_id,
                     user_id=user_id,
                     required_permission=permission,
                 ):
-                    accessible_ids.append(process_id)
+                    accessible_ids.append(workflow_id)
             return accessible_ids
 
-        return process_ids
+        return workflow_ids
 
 
 workflow_viewer = CRUDWorkflowViewer(WorkflowViewer)

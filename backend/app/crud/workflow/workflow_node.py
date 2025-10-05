@@ -31,11 +31,11 @@ class CRUDWorkflowNode(CRUDBase[WorkflowNode, dict, dict]):
         await db.refresh(db_obj)
         return db_obj
 
-    async def get_by_process_id(
+    async def get_by_workflow_id(
         self, db: AsyncSession, *, workflow_id: int, include_inactive: bool = False
     ) -> list[WorkflowNode]:
-        """Get all nodes for a process"""
-        conditions = [WorkflowNode.workflow_id == process_id]
+        """Get all nodes for a workflow"""
+        conditions = [WorkflowNode.workflow_id == workflow_id]
 
         if not include_inactive:
             conditions.append(WorkflowNode.status != "inactive")
@@ -65,7 +65,7 @@ class CRUDWorkflowNode(CRUDBase[WorkflowNode, dict, dict]):
     async def get_start_nodes(
         self, db: AsyncSession, *, workflow_id: int
     ) -> list[WorkflowNode]:
-        """Get start nodes for a process (nodes with no incoming connections or sequence_order = 1)"""
+        """Get start nodes for a workflow (nodes with no incoming connections or sequence_order = 1)"""
         # First try to get node with sequence_order = 1
         result = await db.execute(
             select(WorkflowNode).where(
@@ -84,7 +84,7 @@ class CRUDWorkflowNode(CRUDBase[WorkflowNode, dict, dict]):
         # If no node with sequence_order = 1, find nodes with no incoming connections
         subquery = (
             select(WorkflowNodeConnection.target_node_id).where(
-                WorkflowNodeConnection.workflow_id == process_id
+                WorkflowNodeConnection.workflow_id == workflow_id
             )
         ).subquery()
 
@@ -159,7 +159,7 @@ class CRUDWorkflowNode(CRUDBase[WorkflowNode, dict, dict]):
         node_sequence_updates: list[dict[str, int]],
         updated_by: int,
     ) -> list[WorkflowNode]:
-        """Reorder nodes in a process
+        """Reorder nodes in a workflow
 
         Uses a two-step update to avoid unique constraint violations:
         1. Set temporary negative values to avoid conflicts
@@ -299,7 +299,7 @@ class CRUDWorkflowNode(CRUDBase[WorkflowNode, dict, dict]):
     async def get_bottleneck_nodes(
         self, db: AsyncSession, *, workflow_id: int, limit: int = 5
     ) -> list[dict[str, Any]]:
-        """Get nodes that are bottlenecks in the process"""
+        """Get nodes that are bottlenecks in the workflow"""
         # Nodes with longest average execution time or lowest completion rate
         result = await db.execute(
             select(
@@ -324,7 +324,7 @@ class CRUDWorkflowNode(CRUDBase[WorkflowNode, dict, dict]):
                 WorkflowNode.id == WorkflowNodeExecution.node_id,
                 isouter=True,
             )
-            .where(WorkflowNode.workflow_id == process_id)
+            .where(WorkflowNode.workflow_id == workflow_id)
             .group_by(WorkflowNode.id, WorkflowNode.title, WorkflowNode.node_type)
             .having(func.count(WorkflowNodeExecution.id) > 0)
             .order_by(desc("avg_duration_minutes"))
@@ -397,13 +397,13 @@ class CRUDWorkflowNode(CRUDBase[WorkflowNode, dict, dict]):
         new_sequence_order: int,
         created_by: int,
     ) -> WorkflowNode:
-        """Duplicate a node within the same process"""
+        """Duplicate a node within the same workflow"""
         source_node = await self.get(db, id=source_node_id)
         if not source_node:
             raise ValueError("Source node not found")
 
         duplicate_data = {
-            "process_id": source_node.workflow_id,
+            "workflow_id": source_node.workflow_id,
             "node_type": source_node.node_type,
             "title": f"{source_node.title} (Copy)",
             "description": source_node.description,
