@@ -6,9 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.crud.base import CRUDBase
-from app.models.workflow_workflow_node_connection import WorkflowNodeConnection
-from app.models.workflow_workflow_node_execution import WorkflowNodeExecution
 from app.models.workflow_node import WorkflowNode
+from app.models.workflow_node_connection import WorkflowNodeConnection
+from app.models.workflow_node_execution import WorkflowNodeExecution
 
 
 class CRUDWorkflowNode(CRUDBase[WorkflowNode, dict, dict]):

@@ -2,23 +2,23 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config.endpoints import API_ROUTES
-from app.crud.recruitment_workflow.candidate_workflow import candidate_workflow
-from app.crud.recruitment_workflow.workflow_viewer import workflow_viewer
-from app.crud.recruitment_workflow.workflow import workflow
+from app.crud.workflow.candidate_workflow import candidate_workflow
+from app.crud.workflow.workflow import workflow
+from app.crud.workflow.workflow_viewer import workflow_viewer
 from app.database import get_db
 from app.dependencies import get_current_active_user
 from app.models.user import User
-from app.schemas.recruitment_workflow.candidate_workflow import (
+from app.schemas.workflow.candidate_workflow import (
     BulkCandidateAssignment,
+    CandidateTimeline,
     CandidateWorkflowCreate,
     CandidateWorkflowDetails,
     CandidateWorkflowInfo,
     CandidateWorkflowStart,
     CandidateWorkflowStatusChange,
-    CandidateTimeline,
     RecruiterWorkload,
 )
-from app.services.recruitment_workflow.workflow_engine import workflow_engine
+from app.services.workflow.workflow_engine import workflow_engine
 
 router = APIRouter()
 
