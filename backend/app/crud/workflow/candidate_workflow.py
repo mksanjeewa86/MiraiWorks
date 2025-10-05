@@ -7,7 +7,7 @@ from sqlalchemy.orm import selectinload
 
 from app.crud.base import CRUDBase
 from app.models.candidate_workflow import CandidateWorkflow
-from app.models.workflow_workflow_node_execution import WorkflowNodeExecution
+from app.models.workflow_node_execution import WorkflowNodeExecution
 
 
 class CRUDCandidateWorkflow(CRUDBase[CandidateWorkflow, dict, dict]):

@@ -226,7 +226,7 @@ class CRUDWorkflowViewer(CRUDBase[WorkflowViewer, dict, dict]):
         """Get workload distribution among viewers"""
         # Import here to avoid circular imports
         from app.models.candidate_workflow import CandidateWorkflow
-        from app.models.workflow_workflow_node_execution import WorkflowNodeExecution
+        from app.models.workflow_node_execution import WorkflowNodeExecution
 
         conditions = []
         if workflow_id:

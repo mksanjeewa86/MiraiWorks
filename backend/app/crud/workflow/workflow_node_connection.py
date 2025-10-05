@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.crud.base import CRUDBase
-from app.models.workflow_workflow_node_connection import WorkflowNodeConnection
+from app.models.workflow_node_connection import WorkflowNodeConnection
 
 
 class CRUDWorkflowNodeConnection(CRUDBase[WorkflowNodeConnection, dict, dict]):
