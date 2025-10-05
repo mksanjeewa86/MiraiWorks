@@ -19,6 +19,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base
 
 if TYPE_CHECKING:
+    from app.models.workflow import Workflow
+    from app.models.workflow_node_connection import WorkflowNodeConnection
+    from app.models.workflow_node_execution import WorkflowNodeExecution
     from app.models.user import User
 
 
@@ -88,33 +91,33 @@ class WorkflowNode(Base):
     )
 
     # Relationships
-    workflow: Mapped[RecruitmentProcess] = relationship(
-        "RecruitmentProcess", back_populates="nodes"
+    workflow: Mapped[Workflow] = relationship(
+        "Workflow", back_populates="nodes"
     )
     creator: Mapped[User] = relationship(
-        "User", foreign_keys=[created_by], back_populates="created_process_nodes"
+        "User", foreign_keys=[created_by], back_populates="created_workflow_nodes"
     )
     updater: Mapped[User | None] = relationship(
-        "User", foreign_keys=[updated_by], back_populates="updated_process_nodes"
+        "User", foreign_keys=[updated_by], back_populates="updated_workflow_nodes"
     )
 
     # Connections
-    outgoing_connections: Mapped[list[NodeConnection]] = relationship(
-        "NodeConnection",
-        foreign_keys="NodeConnection.source_node_id",
+    outgoing_connections: Mapped[list[WorkflowNodeConnection]] = relationship(
+        "WorkflowNodeConnection",
+        foreign_keys="WorkflowNodeConnection.source_node_id",
         back_populates="source_node",
         cascade="all, delete-orphan",
     )
-    incoming_connections: Mapped[list[NodeConnection]] = relationship(
-        "NodeConnection",
-        foreign_keys="NodeConnection.target_node_id",
+    incoming_connections: Mapped[list[WorkflowNodeConnection]] = relationship(
+        "WorkflowNodeConnection",
+        foreign_keys="WorkflowNodeConnection.target_node_id",
         back_populates="target_node",
         cascade="all, delete-orphan",
     )
 
     # Executions
-    executions: Mapped[list[NodeExecution]] = relationship(
-        "NodeExecution", back_populates="node", cascade="all, delete-orphan"
+    executions: Mapped[list[WorkflowNodeExecution]] = relationship(
+        "WorkflowNodeExecution", back_populates="node", cascade="all, delete-orphan"
     )
 
     @property
@@ -130,12 +133,12 @@ class WorkflowNode(Base):
         return len(self.outgoing_connections) == 0
 
     @property
-    def next_nodes(self) -> list[ProcessNode]:
+    def next_nodes(self) -> list[WorkflowNode]:
         """Get all nodes that can follow this node"""
         return [conn.target_node for conn in self.outgoing_connections]
 
     @property
-    def previous_nodes(self) -> list[ProcessNode]:
+    def previous_nodes(self) -> list[WorkflowNode]:
         """Get all nodes that precede this node"""
         return [conn.source_node for conn in self.incoming_connections]
 
@@ -155,4 +158,4 @@ class WorkflowNode(Base):
         return len(self.executions) == 0
 
     def __repr__(self) -> str:
-        return f"<ProcessNode(id={self.id}, title='{self.title}', type='{self.node_type}', sequence={self.sequence_order})>"
+        return f"<WorkflowNode(id={self.id}, title='{self.title}', type='{self.node_type}', sequence={self.sequence_order})>"

@@ -18,6 +18,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base
 
 if TYPE_CHECKING:
+    from app.models.candidate_workflow import CandidateWorkflow
+    from app.models.workflow_node import WorkflowNode
     from app.models.interview import Interview
     from app.models.todo import Todo
     from app.models.user import User
@@ -27,7 +29,7 @@ class WorkflowNodeExecution(Base):
     __tablename__ = "workflow_node_executions"
     __table_args__ = (
         UniqueConstraint(
-            "candidate_process_id", "node_id", name="uq_candidate_node_execution"
+            "candidate_workflow_id", "node_id", name="uq_candidate_node_execution"
         ),
     )
 
@@ -106,18 +108,18 @@ class WorkflowNodeExecution(Base):
     )
 
     # Relationships
-    candidate_workflow: Mapped[CandidateProcess] = relationship(
-        "CandidateProcess", back_populates="executions"
+    candidate_workflow: Mapped[CandidateWorkflow] = relationship(
+        "CandidateWorkflow", back_populates="executions"
     )
-    node: Mapped[ProcessNode] = relationship("ProcessNode", back_populates="executions")
+    node: Mapped[WorkflowNode] = relationship("WorkflowNode", back_populates="executions")
     assignee: Mapped[User | None] = relationship(
-        "User", foreign_keys=[assigned_to], back_populates="assigned_node_executions"
+        "User", foreign_keys=[assigned_to], back_populates="assigned_workflow_node_executions"
     )
     completer: Mapped[User | None] = relationship(
-        "User", foreign_keys=[completed_by], back_populates="completed_node_executions"
+        "User", foreign_keys=[completed_by], back_populates="completed_workflow_node_executions"
     )
     reviewer: Mapped[User | None] = relationship(
-        "User", foreign_keys=[reviewed_by], back_populates="reviewed_node_executions"
+        "User", foreign_keys=[reviewed_by], back_populates="reviewed_workflow_node_executions"
     )
 
     # Linked resources
@@ -240,4 +242,4 @@ class WorkflowNodeExecution(Base):
             self.assessor_notes = notes
 
     def __repr__(self) -> str:
-        return f"<NodeExecution(id={self.id}, node_id={self.node_id}, status='{self.status}', result='{self.result}')>"
+        return f"<WorkflowNodeExecution(id={self.id}, node_id={self.node_id}, status='{self.status}', result='{self.result}')>"

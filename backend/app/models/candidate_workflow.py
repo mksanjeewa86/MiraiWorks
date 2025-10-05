@@ -17,7 +17,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base
 
 if TYPE_CHECKING:
-    from app.models.node_execution import NodeExecution
+    from app.models.workflow_node_execution import WorkflowNodeExecution
     from app.models.user import User
     from app.models.workflow import Workflow
     from app.models.workflow_node import WorkflowNode
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 class CandidateWorkflow(Base):
     __tablename__ = "candidate_workflows"
     __table_args__ = (
-        UniqueConstraint("candidate_id", "process_id", name="uq_candidate_process"),
+        UniqueConstraint("candidate_id", "workflow_id", name="uq_candidate_workflow"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -97,11 +97,11 @@ class CandidateWorkflow(Base):
     candidate: Mapped[User] = relationship(
         "User", foreign_keys=[candidate_id], back_populates="candidate_workflows"
     )
-    workflow: Mapped[RecruitmentProcess] = relationship(
-        "RecruitmentProcess", back_populates="candidate_workflows"
+    workflow: Mapped[Workflow] = relationship(
+        "Workflow", back_populates="candidate_workflows"
     )
-    current_node: Mapped[ProcessNode | None] = relationship(
-        "ProcessNode", foreign_keys=[current_node_id]
+    current_node: Mapped[WorkflowNode | None] = relationship(
+        "WorkflowNode", foreign_keys=[current_node_id]
     )
     assigned_recruiter: Mapped[User | None] = relationship(
         "User",
@@ -109,9 +109,9 @@ class CandidateWorkflow(Base):
         back_populates="assigned_candidate_workflows",
     )
 
-    executions: Mapped[list[NodeExecution]] = relationship(
-        "NodeExecution",
-        back_populates="candidate_process",
+    executions: Mapped[list[WorkflowNodeExecution]] = relationship(
+        "WorkflowNodeExecution",
+        back_populates="candidate_workflow",
         cascade="all, delete-orphan",
     )
 
@@ -137,7 +137,7 @@ class CandidateWorkflow(Base):
         if not self.executions:
             return 0.0
 
-        total_nodes = len(self.process.nodes)
+        total_nodes = len(self.workflow.nodes)
         if total_nodes == 0:
             return 0.0
 
@@ -227,4 +227,4 @@ class CandidateWorkflow(Base):
         self.assigned_at = datetime.utcnow()
 
     def __repr__(self) -> str:
-        return f"<CandidateProcess(id={self.id}, candidate_id={self.candidate_id}, status='{self.status}')>"
+        return f"<CandidateWorkflow(id={self.id}, candidate_id={self.candidate_id}, status='{self.status}')>"

@@ -9,7 +9,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base
 
 if TYPE_CHECKING:
-    pass
+    from app.models.workflow import Workflow
+    from app.models.workflow_node import WorkflowNode
 
 
 class WorkflowNodeConnection(Base):
@@ -55,14 +56,14 @@ class WorkflowNodeConnection(Base):
     )
 
     # Relationships
-    workflow: Mapped[RecruitmentProcess] = relationship("RecruitmentProcess")
-    source_node: Mapped[ProcessNode] = relationship(
-        "ProcessNode",
+    workflow: Mapped[Workflow] = relationship("Workflow")
+    source_node: Mapped[WorkflowNode] = relationship(
+        "WorkflowNode",
         foreign_keys=[source_node_id],
         back_populates="outgoing_connections",
     )
-    target_node: Mapped[ProcessNode] = relationship(
-        "ProcessNode",
+    target_node: Mapped[WorkflowNode] = relationship(
+        "WorkflowNode",
         foreign_keys=[target_node_id],
         back_populates="incoming_connections",
     )
@@ -120,4 +121,4 @@ class WorkflowNodeConnection(Base):
         return False
 
     def __repr__(self) -> str:
-        return f"<NodeConnection(id={self.id}, {self.source_node_id}->{self.target_node_id}, condition='{self.condition_type}')>"
+        return f"<WorkflowNodeConnection(id={self.id}, {self.source_node_id}->{self.target_node_id}, condition='{self.condition_type}')>"

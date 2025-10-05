@@ -9,13 +9,14 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base
 
 if TYPE_CHECKING:
+    from app.models.workflow import Workflow
     from app.models.user import User
 
 
 class WorkflowViewer(Base):
     __tablename__ = "workflow_viewers"
     __table_args__ = (
-        UniqueConstraint("process_id", "user_id", name="uq_process_viewer"),
+        UniqueConstraint("workflow_id", "user_id", name="uq_workflow_viewer"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -46,14 +47,14 @@ class WorkflowViewer(Base):
     )
 
     # Relationships
-    workflow: Mapped[RecruitmentProcess] = relationship(
-        "RecruitmentProcess", back_populates="viewers"
+    workflow: Mapped[Workflow] = relationship(
+        "Workflow", back_populates="viewers"
     )
     user: Mapped[User] = relationship(
-        "User", foreign_keys=[user_id], back_populates="process_viewers"
+        "User", foreign_keys=[user_id], back_populates="workflow_viewers"
     )
     added_by_user: Mapped[User] = relationship(
-        "User", foreign_keys=[added_by], back_populates="added_process_viewers"
+        "User", foreign_keys=[added_by], back_populates="added_workflow_viewers"
     )
 
     @property
@@ -143,4 +144,4 @@ class WorkflowViewer(Base):
         self.permissions[permission] = False
 
     def __repr__(self) -> str:
-        return f"<ProcessViewer(id={self.id}, process_id={self.process_id}, user_id={self.user_id}, role='{self.role}')>"
+        return f"<WorkflowViewer(id={self.id}, workflow_id={self.workflow_id}, user_id={self.user_id}, role='{self.role}')>"
