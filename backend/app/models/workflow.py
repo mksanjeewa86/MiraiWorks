@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
@@ -15,6 +15,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
+from app.utils.datetime_utils import get_utc_now
 
 if TYPE_CHECKING:
     from app.models.candidate_workflow import CandidateWorkflow
@@ -69,12 +70,12 @@ class Workflow(Base):
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.utcnow, nullable=False, index=True
+        DateTime(timezone=True), default=get_utc_now, nullable=False, index=True
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
+        default=get_utc_now,
+        onupdate=get_utc_now,
         nullable=False,
     )
     activated_at: Mapped[datetime | None] = mapped_column(
@@ -146,13 +147,13 @@ class Workflow(Base):
             raise ValueError("Only draft processes can be activated")
 
         self.status = "active"
-        self.activated_at = datetime.now(timezone.utc)
+        self.activated_at = get_utc_now()
         self.updated_by = activated_by
 
     def archive(self, archived_by: int) -> None:
         """Archive the process"""
         self.status = "archived"
-        self.archived_at = datetime.now(timezone.utc)
+        self.archived_at = get_utc_now()
         self.updated_by = archived_by
 
     def deactivate(self, deactivated_by: int) -> None:

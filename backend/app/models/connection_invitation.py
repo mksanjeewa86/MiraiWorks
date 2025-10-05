@@ -9,6 +9,7 @@ from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
+from app.utils.datetime_utils import get_utc_now
 
 if TYPE_CHECKING:
     from app.models.user import User
@@ -48,7 +49,7 @@ class ConnectionInvitation(Base):
 
     # Timestamps
     sent_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.utcnow
+        DateTime, nullable=False, default=get_utc_now
     )
     responded_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 

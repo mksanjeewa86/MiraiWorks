@@ -1,4 +1,3 @@
-from datetime import datetime, timezone
 from typing import Any, Generic, TypeVar
 
 from fastapi.encoders import jsonable_encoder
@@ -7,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import Base
+from app.utils.datetime_utils import get_utc_now
 
 ModelType = TypeVar("ModelType", bound=Base)
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
@@ -91,7 +91,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         obj = await self.get(db, id)
         if obj and hasattr(obj, "is_deleted") and hasattr(obj, "deleted_at"):
             obj.is_deleted = True
-            obj.deleted_at = datetime.now(timezone.utc)
+            obj.deleted_at = get_utc_now()
             db.add(obj)
             await db.commit()
             await db.refresh(obj)

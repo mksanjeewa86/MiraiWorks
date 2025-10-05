@@ -1,5 +1,3 @@
-from datetime import datetime, timezone
-
 from fastapi import HTTPException, status
 from sqlalchemy import and_, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,6 +11,7 @@ from app.schemas.message import (
     MessageInfo,
     MessageSearchRequest,
 )
+from app.utils.datetime_utils import get_utc_now
 from app.utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -326,7 +325,7 @@ class MessageService:
         count = 0
         for message in messages:
             message.is_read = True
-            message.read_at = datetime.now(timezone.utc)
+            message.read_at = get_utc_now()
             count += 1
 
         if count > 0:
@@ -356,7 +355,7 @@ class MessageService:
         count = 0
         for message in messages:
             message.is_read = True
-            message.read_at = datetime.now(timezone.utc)
+            message.read_at = get_utc_now()
             count += 1
 
         if count > 0:

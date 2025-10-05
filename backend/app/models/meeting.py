@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 from sqlalchemy import (
     Boolean,
@@ -16,6 +16,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
 from app.models.db_types import CompatLONGTEXT as LONGTEXT
+from app.utils.datetime_utils import get_utc_now
 
 # Association table for meeting participants
 meeting_participants = Table(
@@ -39,13 +40,13 @@ meeting_participants = Table(
     Column(
         "recording_consent", Boolean, nullable=True
     ),  # True/False/None for not decided
-    Column("created_at", DateTime, nullable=False, default=datetime.utcnow),
+    Column("created_at", DateTime, nullable=False, default=get_utc_now),
     Column(
         "updated_at",
         DateTime,
         nullable=False,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
+        default=get_utc_now,
+        onupdate=get_utc_now,
     ),
     UniqueConstraint("meeting_id", "user_id", name="unique_meeting_user"),
     Index("idx_meeting_participants_meeting", "meeting_id"),
@@ -106,10 +107,10 @@ class Meeting(Base):
         Integer, ForeignKey("users.id"), nullable=False
     )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.utcnow
+        DateTime, nullable=False, default=get_utc_now
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime, nullable=False, default=get_utc_now, onupdate=get_utc_now
     )
 
     # Relationships
@@ -153,7 +154,7 @@ class Meeting(Base):
     @property
     def can_join(self) -> bool:
         """Check if meeting can be joined now"""
-        now = datetime.now(timezone.utc)
+        now = get_utc_now()
         # Allow joining 15 minutes before scheduled start and up to 2 hours after
         start_window = self.scheduled_start - timedelta(minutes=15)
         end_window = self.scheduled_start + timedelta(hours=2)
@@ -203,10 +204,10 @@ class MeetingRecording(Base):
         Integer, ForeignKey("users.id"), nullable=False
     )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.utcnow
+        DateTime, nullable=False, default=get_utc_now
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime, nullable=False, default=get_utc_now, onupdate=get_utc_now
     )
 
     # Relationships
@@ -263,10 +264,10 @@ class MeetingTranscript(Base):
 
     # Metadata
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.utcnow
+        DateTime, nullable=False, default=get_utc_now
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime, nullable=False, default=get_utc_now, onupdate=get_utc_now
     )
 
     # Relationships
@@ -341,10 +342,10 @@ class MeetingSummary(Base):
 
     # Metadata
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.utcnow
+        DateTime, nullable=False, default=get_utc_now
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime, nullable=False, default=get_utc_now, onupdate=get_utc_now
     )
 
     # Relationships

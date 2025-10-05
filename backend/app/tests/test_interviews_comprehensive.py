@@ -1,6 +1,6 @@
 """Targeted integration tests covering advanced interview endpoints."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from uuid import uuid4
 
 import pytest
@@ -15,6 +15,7 @@ from app.services.auth_service import auth_service
 from app.services.interview_service import interview_service
 from app.utils.constants import InterviewStatus
 from app.utils.constants import UserRole as UserRoleEnum
+from app.utils.datetime_utils import get_utc_now
 
 
 async def create_user_with_role(
@@ -65,7 +66,7 @@ async def create_interview_record(
         last_name="User",
     )
 
-    start = datetime.now(timezone.utc) + timedelta(days=2)
+    start = get_utc_now() + timedelta(days=2)
     interview = await interview_service.create_interview(
         db=db_session,
         candidate_id=candidate_user.id,
@@ -92,7 +93,7 @@ async def confirm_interview(
     candidate_user: User,
 ) -> Interview:
     """Confirm an interview by creating and accepting a proposal."""
-    start = datetime.now(timezone.utc) + timedelta(days=3)
+    start = get_utc_now() + timedelta(days=3)
     proposal = await interview_service.create_proposal(
         db=db_session,
         interview_id=interview.id,
@@ -198,7 +199,7 @@ async def test_calendar_events_respects_date_filters(
         db_session, interview, test_employer_user, test_candidate_only_user
     )
 
-    future_window = datetime.now(timezone.utc) + timedelta(days=30)
+    future_window = get_utc_now() + timedelta(days=30)
     response = await client.get(
         "/api/interviews/calendar/events",
         headers=auth_headers,

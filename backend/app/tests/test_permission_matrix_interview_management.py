@@ -10,7 +10,7 @@ Tests the permission boundaries:
 - Cross-company restrictions apply to all company-scoped roles
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 
 import pytest
 from httpx import AsyncClient
@@ -24,6 +24,7 @@ from app.models.user import User
 from app.services.auth_service import auth_service
 from app.utils.constants import CompanyType
 from app.utils.constants import UserRole as UserRoleEnum
+from app.utils.datetime_utils import get_utc_now
 
 
 class TestInterviewManagementPermissionMatrix:
@@ -62,7 +63,7 @@ class TestInterviewManagementPermissionMatrix:
             "position_id": position.id,
             "candidate_id": candidate.id,
             "interviewer_id": recruiter.id,
-            "scheduled_at": (datetime.now(timezone.utc) + timedelta(days=1)).isoformat(),
+            "scheduled_at": (get_utc_now() + timedelta(days=1)).isoformat(),
             "duration_minutes": 60,
             "interview_type": "technical",
             "location": "Conference Room A",
@@ -217,7 +218,7 @@ class TestInterviewManagementPermissionMatrix:
             "position_id": position.id,
             "candidate_id": candidate.id,
             "interviewer_id": recruiter.id,
-            "scheduled_at": (datetime.now(timezone.utc) + timedelta(days=1)).isoformat(),
+            "scheduled_at": (get_utc_now() + timedelta(days=1)).isoformat(),
             "duration_minutes": 60,
             "interview_type": "behavioral",
         }
@@ -264,7 +265,7 @@ class TestInterviewManagementPermissionMatrix:
             "position_id": other_position.id,
             "candidate_id": other_candidate.id,
             "interviewer_id": company_admin.id,
-            "scheduled_at": (datetime.now(timezone.utc) + timedelta(days=1)).isoformat(),
+            "scheduled_at": (get_utc_now() + timedelta(days=1)).isoformat(),
         }
 
         response = await client.post(
@@ -391,7 +392,7 @@ class TestInterviewManagementPermissionMatrix:
             "position_id": position.id,
             "candidate_id": candidate.id,
             "interviewer_id": recruiter.id,
-            "scheduled_at": (datetime.now(timezone.utc) + timedelta(days=1)).isoformat(),
+            "scheduled_at": (get_utc_now() + timedelta(days=1)).isoformat(),
             "duration_minutes": 45,
         }
 
@@ -437,7 +438,7 @@ class TestInterviewManagementPermissionMatrix:
             "position_id": other_position.id,
             "candidate_id": other_candidate.id,
             "interviewer_id": recruiter.id,
-            "scheduled_at": (datetime.now(timezone.utc) + timedelta(days=1)).isoformat(),
+            "scheduled_at": (get_utc_now() + timedelta(days=1)).isoformat(),
         }
 
         response = await client.post(
@@ -520,7 +521,7 @@ class TestInterviewManagementPermissionMatrix:
             "position_id": position.id,
             "candidate_id": candidate.id,
             "interviewer_id": employer.id,
-            "scheduled_at": (datetime.now(timezone.utc) + timedelta(days=1)).isoformat(),
+            "scheduled_at": (get_utc_now() + timedelta(days=1)).isoformat(),
             "duration_minutes": 30,
         }
 
@@ -598,7 +599,7 @@ class TestInterviewManagementPermissionMatrix:
             "position_id": position.id,
             "candidate_id": candidate.id,
             "interviewer_id": recruiter.id,
-            "scheduled_at": (datetime.now(timezone.utc) + timedelta(days=1)).isoformat(),
+            "scheduled_at": (get_utc_now() + timedelta(days=1)).isoformat(),
         }
 
         response = await client.post(
@@ -807,7 +808,7 @@ class TestInterviewManagementPermissionMatrix:
 
         # Can create proposal for company interview
         proposal_data = {
-            "proposed_time": (datetime.now(timezone.utc) + timedelta(days=2)).isoformat(),
+            "proposed_time": (get_utc_now() + timedelta(days=2)).isoformat(),
             "message": "Alternative time proposal",
         }
 
@@ -1036,7 +1037,7 @@ class TestInterviewManagementPermissionMatrix:
             position_id=position.id,
             candidate_id=candidate.id,
             interviewer_id=recruiter.id,
-            scheduled_at=datetime.now(timezone.utc) + timedelta(days=1),
+            scheduled_at=get_utc_now() + timedelta(days=1),
             duration_minutes=60,
             interview_type="technical",
             status="scheduled",
@@ -1068,7 +1069,7 @@ class TestInterviewManagementPermissionMatrix:
             position_id=position.id,
             candidate_id=candidate.id,
             interviewer_id=recruiter.id,
-            scheduled_at=datetime.now(timezone.utc) + timedelta(days=1),
+            scheduled_at=get_utc_now() + timedelta(days=1),
             duration_minutes=60,
             interview_type="behavioral",
             status="scheduled",

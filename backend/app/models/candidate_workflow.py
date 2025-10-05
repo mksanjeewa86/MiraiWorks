@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
@@ -15,6 +15,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
+from app.utils.datetime_utils import get_utc_now
 
 if TYPE_CHECKING:
     from app.models.user import User
@@ -84,12 +85,12 @@ class CandidateWorkflow(Base):
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.utcnow, nullable=False, index=True
+        DateTime(timezone=True), default=get_utc_now, nullable=False, index=True
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
+        default=get_utc_now,
+        onupdate=get_utc_now,
         nullable=False,
     )
 
@@ -163,7 +164,7 @@ class CandidateWorkflow(Base):
 
         self.status = "in_progress"
         self.current_node_id = first_node_id
-        self.started_at = datetime.now(timezone.utc)
+        self.started_at = get_utc_now()
 
     def complete(
         self,
@@ -173,7 +174,7 @@ class CandidateWorkflow(Base):
     ) -> None:
         """Mark the process as completed"""
         self.status = "completed"
-        self.completed_at = datetime.now(timezone.utc)
+        self.completed_at = get_utc_now()
         self.final_result = final_result
         self.current_node_id = None
 
@@ -187,7 +188,7 @@ class CandidateWorkflow(Base):
     ) -> None:
         """Mark the process as failed"""
         self.status = "failed"
-        self.failed_at = datetime.now(timezone.utc)
+        self.failed_at = get_utc_now()
         self.final_result = "failed"
 
         if reason:
@@ -198,7 +199,7 @@ class CandidateWorkflow(Base):
     def withdraw(self, reason: str | None = None) -> None:
         """Mark the process as withdrawn"""
         self.status = "withdrawn"
-        self.withdrawn_at = datetime.now(timezone.utc)
+        self.withdrawn_at = get_utc_now()
         self.final_result = "withdrawn"
         self.current_node_id = None
 
@@ -224,7 +225,7 @@ class CandidateWorkflow(Base):
     def assign_recruiter(self, recruiter_id: int) -> None:
         """Assign a recruiter to this process"""
         self.assigned_recruiter_id = recruiter_id
-        self.assigned_at = datetime.now(timezone.utc)
+        self.assigned_at = get_utc_now()
 
     def __repr__(self) -> str:
         return f"<CandidateWorkflow(id={self.id}, candidate_id={self.candidate_id}, status='{self.status}')>"

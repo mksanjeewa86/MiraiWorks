@@ -10,6 +10,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 from app.utils.constants import ExtensionRequestStatus
+from app.utils.datetime_utils import get_utc_now
 
 if TYPE_CHECKING:
     from app.models.todo import Todo
@@ -54,10 +55,10 @@ class TodoExtensionRequest(Base):
 
     # Audit fields
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.utcnow
+        DateTime, nullable=False, default=get_utc_now
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime, nullable=False, default=get_utc_now, onupdate=get_utc_now
     )
 
     # Relationships

@@ -14,6 +14,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
+from app.utils.datetime_utils import get_utc_now
 
 if TYPE_CHECKING:
     from app.models.company import Company
@@ -81,10 +82,10 @@ class ExamTemplate(Base):
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False
+        DateTime, default=get_utc_now, nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+        DateTime, default=get_utc_now, onupdate=get_utc_now, nullable=False
     )
 
     # Relationships

@@ -1,6 +1,5 @@
 import secrets
 import string
-from datetime import datetime, timezone
 
 from sqlalchemy import and_, desc, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,6 +24,7 @@ from app.schemas.resume import (
     WorkExperienceUpdate,
 )
 from app.utils.constants import ResumeStatus, ResumeVisibility
+from app.utils.datetime_utils import get_utc_now
 
 
 def generate_slug(title: str, max_length: int = 50) -> str:
@@ -159,7 +159,7 @@ class CRUDResume(CRUDBase[Resume, ResumeCreate, ResumeUpdate]):
                     Resume.status == ResumeStatus.PUBLISHED,
                 )
             )
-            .values(view_count=Resume.view_count + 1, last_viewed_at=datetime.now(timezone.utc))
+            .values(view_count=Resume.view_count + 1, last_viewed_at=get_utc_now())
             .returning(Resume.id)
         )
 

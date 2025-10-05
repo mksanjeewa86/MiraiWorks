@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -11,6 +11,7 @@ from app.schemas.position import (
     RemoteType,
     SalaryType,
 )
+from app.utils.datetime_utils import get_utc_now
 
 
 # Company Profile Schemas
@@ -136,7 +137,7 @@ class PositionBase(BaseModel):
     @field_validator("application_deadline")
     @classmethod
     def deadline_in_future(cls, v):
-        if v is not None and v <= datetime.now(timezone.utc):
+        if v is not None and v <= get_utc_now():
             raise ValueError("application_deadline must be in the future")
         return v
 

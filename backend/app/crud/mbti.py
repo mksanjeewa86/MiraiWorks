@@ -1,6 +1,5 @@
 """CRUD operations for MBTI personality test."""
 
-from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy import and_, select
@@ -10,6 +9,7 @@ from app.crud.base import CRUDBase
 from app.models.mbti_model import MBTIQuestion, MBTITest
 from app.schemas.mbti import MBTITestStart
 from app.utils.constants import MBTITestStatus
+from app.utils.datetime_utils import get_utc_now
 
 
 class CRUDMBTITest(CRUDBase[MBTITest, dict, dict]):
@@ -39,9 +39,9 @@ class CRUDMBTITest(CRUDBase[MBTITest, dict, dict]):
                 existing_test.sensing_intuition_score = None
                 existing_test.thinking_feeling_score = None
                 existing_test.judging_perceiving_score = None
-                existing_test.started_at = datetime.now(timezone.utc)
+                existing_test.started_at = get_utc_now()
                 existing_test.completed_at = None
-                existing_test.updated_at = datetime.now(timezone.utc)
+                existing_test.updated_at = get_utc_now()
 
                 await db.commit()
                 await db.refresh(existing_test)
@@ -55,7 +55,7 @@ class CRUDMBTITest(CRUDBase[MBTITest, dict, dict]):
             user_id=user_id,
             status=MBTITestStatus.IN_PROGRESS.value,
             answers={},
-            started_at=datetime.now(timezone.utc),
+            started_at=get_utc_now(),
             test_version="1.0",
         )
 
@@ -72,7 +72,7 @@ class CRUDMBTITest(CRUDBase[MBTITest, dict, dict]):
             test.answers = {}
 
         test.answers[str(question_id)] = answer
-        test.updated_at = datetime.now(timezone.utc)
+        test.updated_at = get_utc_now()
 
         await db.commit()
         await db.refresh(test)
@@ -98,8 +98,8 @@ class CRUDMBTITest(CRUDBase[MBTITest, dict, dict]):
 
         # Update status and timing
         test.status = MBTITestStatus.COMPLETED.value
-        test.completed_at = datetime.now(timezone.utc)
-        test.updated_at = datetime.now(timezone.utc)
+        test.completed_at = get_utc_now()
+        test.updated_at = get_utc_now()
 
         await db.commit()
         await db.refresh(test)

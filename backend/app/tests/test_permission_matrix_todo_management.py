@@ -11,7 +11,7 @@ Tests the permission boundaries:
 - Todo visibility restrictions
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 
 import pytest
 from httpx import AsyncClient
@@ -24,6 +24,7 @@ from app.models.user import User
 from app.services.auth_service import auth_service
 from app.utils.constants import CompanyType
 from app.utils.constants import UserRole as UserRoleEnum
+from app.utils.datetime_utils import get_utc_now
 
 
 class TestTodoManagementPermissionMatrix:
@@ -56,7 +57,7 @@ class TestTodoManagementPermissionMatrix:
             todo_data = {
                 "title": f"Todo by {role.value}",
                 "description": f"Todo created by {role.value}",
-                "due_date": (datetime.now(timezone.utc) + timedelta(days=7)).isoformat(),
+                "due_date": (get_utc_now() + timedelta(days=7)).isoformat(),
                 "priority": "medium",
             }
 
@@ -75,7 +76,7 @@ class TestTodoManagementPermissionMatrix:
         todo_data = {
             "title": "Super Admin Todo",
             "description": "Todo created by super admin",
-            "due_date": (datetime.now(timezone.utc) + timedelta(days=7)).isoformat(),
+            "due_date": (get_utc_now() + timedelta(days=7)).isoformat(),
             "priority": "high",
         }
 
@@ -735,7 +736,7 @@ class TestTodoManagementPermissionMatrix:
         assignee_headers = await self._get_auth_headers(client, assignee)
 
         extension_data = {
-            "new_due_date": (datetime.now(timezone.utc) + timedelta(days=14)).isoformat(),
+            "new_due_date": (get_utc_now() + timedelta(days=14)).isoformat(),
             "reason": "Need more time to complete",
         }
 
@@ -769,7 +770,7 @@ class TestTodoManagementPermissionMatrix:
         other_user_headers = await self._get_auth_headers(client, other_user)
 
         extension_data = {
-            "new_due_date": (datetime.now(timezone.utc) + timedelta(days=14)).isoformat(),
+            "new_due_date": (get_utc_now() + timedelta(days=14)).isoformat(),
             "reason": "Unauthorized extension request",
         }
 
@@ -877,7 +878,7 @@ class TestTodoManagementPermissionMatrix:
             owner_id=creator_id,  # Use owner_id instead of creator_id
             created_by=creator_id,  # Set created_by
             assigned_user_id=assignee_id,  # Use assigned_user_id instead of assignee_id
-            due_date=datetime.now(timezone.utc) + timedelta(days=7),
+            due_date=get_utc_now() + timedelta(days=7),
             priority="medium",
             status="pending",
         )

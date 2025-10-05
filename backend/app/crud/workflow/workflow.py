@@ -1,4 +1,3 @@
-from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy import and_, desc, func, or_, select, update
@@ -12,6 +11,7 @@ from app.models.todo import Todo
 from app.models.workflow import Workflow
 from app.models.workflow_node import WorkflowNode
 from app.models.workflow_viewer import WorkflowViewer
+from app.utils.datetime_utils import get_utc_now
 
 
 class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
@@ -48,21 +48,21 @@ class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
 
         # Soft delete the workflow
         workflow.is_deleted = True
-        workflow.deleted_at = datetime.now(timezone.utc)
+        workflow.deleted_at = get_utc_now()
         db.add(workflow)
 
         # Cascade soft delete to related interviews
         await db.execute(
             update(Interview)
             .where(Interview.workflow_id == id, Interview.is_deleted == False)
-            .values(is_deleted=True, deleted_at=datetime.now(timezone.utc))
+            .values(is_deleted=True, deleted_at=get_utc_now())
         )
 
         # Cascade soft delete to related todos
         await db.execute(
             update(Todo)
             .where(Todo.workflow_id == id, Todo.is_deleted == False)
-            .values(is_deleted=True, deleted_at=datetime.now(timezone.utc))
+            .values(is_deleted=True, deleted_at=get_utc_now())
         )
 
         await db.commit()
@@ -187,7 +187,7 @@ class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
             update_data = obj_in.dict(exclude_unset=True)
 
         update_data["updated_by"] = updated_by
-        update_data["updated_at"] = datetime.now(timezone.utc)
+        update_data["updated_at"] = get_utc_now()
 
         return await super().update(db, db_obj=db_obj, obj_in=update_data)
 

@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,6 +13,7 @@ from app.models.video_call import (
     VideoCall,
 )
 from app.schemas.video_call import VideoCallCreate, VideoCallUpdate
+from app.utils.datetime_utils import get_utc_now
 
 
 class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
@@ -111,7 +112,7 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
 
         if existing_participant:
             # Update joined_at time and device_info for existing participant
-            existing_participant.joined_at = datetime.now(timezone.utc)
+            existing_participant.joined_at = get_utc_now()
             if device_info:
                 existing_participant.device_info = device_info
             # Clear left_at if they're rejoining
@@ -124,7 +125,7 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
         participant = CallParticipant(
             video_call_id=video_call_id,
             user_id=user_id,
-            joined_at=datetime.now(timezone.utc),
+            joined_at=get_utc_now(),
             device_info=device_info,
         )
         db.add(participant)
@@ -146,7 +147,7 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
         )
         participant = result.scalar_one_or_none()
         if participant:
-            participant.left_at = datetime.now(timezone.utc)
+            participant.left_at = get_utc_now()
             await db.commit()
             await db.refresh(participant)
         return participant
@@ -168,13 +169,13 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
 
         if consent:
             consent.consented = consented
-            consent.consented_at = datetime.now(timezone.utc) if consented else None
+            consent.consented_at = get_utc_now() if consented else None
         else:
             consent = RecordingConsent(
                 video_call_id=video_call_id,
                 user_id=user_id,
                 consented=consented,
-                consented_at=datetime.now(timezone.utc) if consented else None,
+                consented_at=get_utc_now() if consented else None,
             )
             db.add(consent)
 
@@ -261,7 +262,7 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
             db, video_call_id=video_call_id
         )
 
-        current_time = datetime.now(timezone.utc)
+        current_time = get_utc_now()
         for participant in active_participants:
             participant.left_at = current_time
 

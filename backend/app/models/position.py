@@ -1,10 +1,11 @@
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
 from app.models.db_types import CompatLONGTEXT as LONGTEXT
+from app.utils.datetime_utils import get_utc_now
 
 
 class Position(Base):
@@ -111,10 +112,10 @@ class Position(Base):
         Integer, ForeignKey("users.id"), nullable=False
     )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.utcnow, index=True
+        DateTime, nullable=False, default=get_utc_now, index=True
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime, nullable=False, default=get_utc_now, onupdate=get_utc_now
     )
 
     # Relationships
@@ -139,7 +140,7 @@ class Position(Base):
     @property
     def is_active(self) -> bool:
         """Check if job is currently active and accepting applications"""
-        now = datetime.now(timezone.utc)
+        now = get_utc_now()
         return (
             self.status == "published"
             and (self.application_deadline is None or self.application_deadline > now)
@@ -151,7 +152,7 @@ class Position(Base):
         """Get number of days since job was published"""
         if not self.published_at:
             return None
-        return (datetime.now(timezone.utc) - self.published_at).days
+        return (get_utc_now() - self.published_at).days
 
     @property
     def salary_range_display(self) -> str | None:
@@ -216,7 +217,7 @@ class PositionApplication(Base):
         String(50), nullable=False, default="applied", index=True
     )
     status_updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.utcnow
+        DateTime, nullable=False, default=get_utc_now
     )
     status_updated_by: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id"), nullable=True
@@ -238,10 +239,10 @@ class PositionApplication(Base):
 
     # Metadata
     applied_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.utcnow, index=True
+        DateTime, nullable=False, default=get_utc_now, index=True
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime, nullable=False, default=get_utc_now, onupdate=get_utc_now
     )
 
     # Relationships
@@ -270,7 +271,7 @@ class PositionApplication(Base):
     @property
     def days_since_applied(self) -> int:
         """Get number of days since application was submitted"""
-        return (datetime.now(timezone.utc) - self.applied_at).days
+        return (get_utc_now() - self.applied_at).days
 
 
 class CompanyProfile(Base):
@@ -346,10 +347,10 @@ class CompanyProfile(Base):
 
     # Metadata
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.utcnow
+        DateTime, nullable=False, default=get_utc_now
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime, nullable=False, default=get_utc_now, onupdate=get_utc_now
     )
 
     # Relationships

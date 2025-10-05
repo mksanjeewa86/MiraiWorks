@@ -1,6 +1,6 @@
 """Integration tests covering recruitment scenarios around jobs and interviews."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from uuid import uuid4
 
 import pytest
@@ -12,6 +12,7 @@ from app.models.role import Role, UserRole
 from app.models.user import User
 from app.services.interview_service import interview_service
 from app.utils.constants import UserRole as UserRoleEnum
+from app.utils.datetime_utils import get_utc_now
 
 
 async def create_position(
@@ -97,7 +98,7 @@ async def test_interview_created_for_job_candidate(
     test_candidate_only_user: User,
     test_roles: dict[str, Role],
 ):
-    start = datetime.now(timezone.utc) + timedelta(days=2)
+    start = get_utc_now() + timedelta(days=2)
 
     # Ensure employer can act as recruiter in service validation
     result = await db_session.execute(

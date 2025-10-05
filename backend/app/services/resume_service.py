@@ -2,7 +2,7 @@ import logging
 import re
 import secrets
 import string
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -27,6 +27,7 @@ from app.schemas.resume import (
     WorkExperienceCreate,
 )
 from app.utils.constants import ResumeStatus, ResumeVisibility
+from app.utils.datetime_utils import get_utc_now
 
 logger = logging.getLogger(__name__)
 
@@ -441,7 +442,7 @@ class ResumeService:
                 recipient_email=recipient_email,
                 password_protected=password is not None,
                 password_hash=self._hash_password(password) if password else None,
-                expires_at=datetime.now(timezone.utc) + timedelta(days=expires_in_days)
+                expires_at=get_utc_now() + timedelta(days=expires_in_days)
                 if expires_in_days
                 else None,
                 max_views=max_views,
@@ -475,7 +476,7 @@ class ResumeService:
 
             # Increment view count
             share.view_count += 1
-            share.last_viewed_at = datetime.now(timezone.utc)
+            share.last_viewed_at = get_utc_now()
 
             # Get the resume
             result = await db.execute(

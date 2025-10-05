@@ -1,6 +1,6 @@
 """Integration tests for workflow relationships and cascading soft delete."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 
 import pytest
 from httpx import AsyncClient
@@ -11,6 +11,7 @@ from app.crud.workflow.workflow import workflow
 from app.models.interview import Interview
 from app.models.todo import Todo
 from app.models.user import User
+from app.utils.datetime_utils import get_utc_now
 
 
 @pytest.mark.asyncio
@@ -47,8 +48,8 @@ async def test_create_workflow_with_linked_interviews_and_todos(
         created_by=test_employer_user.id,
         interview_type="video",
         status="pending_schedule",
-        scheduled_start=datetime.now(timezone.utc) + timedelta(days=1),
-        scheduled_end=datetime.now(timezone.utc) + timedelta(days=1, hours=1),
+        scheduled_start=get_utc_now() + timedelta(days=1),
+        scheduled_end=get_utc_now() + timedelta(days=1, hours=1),
         timezone="UTC",
     )
     db_session.add(interview)
@@ -108,8 +109,8 @@ async def test_workflow_soft_delete_cascades_to_interviews(
             created_by=test_employer_user.id,
             interview_type="video",
             status="pending_schedule",
-            scheduled_start=datetime.now(timezone.utc) + timedelta(days=1),
-            scheduled_end=datetime.now(timezone.utc) + timedelta(days=1, hours=1),
+            scheduled_start=get_utc_now() + timedelta(days=1),
+            scheduled_end=get_utc_now() + timedelta(days=1, hours=1),
             timezone="UTC",
         )
         db_session.add(interview)
@@ -124,9 +125,7 @@ async def test_workflow_soft_delete_cascades_to_interviews(
     interview_ids = [interview.id for interview in interviews]
 
     # Soft delete the workflow
-    deleted_workflow = await workflow.soft_delete(
-        db=db_session, id=workflow.id
-    )
+    deleted_workflow = await workflow.soft_delete(db=db_session, id=workflow.id)
 
     assert deleted_workflow is not None
     assert deleted_workflow.is_deleted is True
@@ -186,9 +185,7 @@ async def test_workflow_soft_delete_cascades_to_todos(
     todo_ids = [todo.id for todo in todos]
 
     # Soft delete the workflow
-    deleted_workflow = await workflow.soft_delete(
-        db=db_session, id=workflow.id
-    )
+    deleted_workflow = await workflow.soft_delete(db=db_session, id=workflow.id)
 
     assert deleted_workflow is not None
     assert deleted_workflow.is_deleted is True
@@ -233,8 +230,8 @@ async def test_workflow_soft_delete_cascades_to_both_interviews_and_todos(
             created_by=test_employer_user.id,
             interview_type="video",
             status="pending_schedule",
-            scheduled_start=datetime.now(timezone.utc) + timedelta(days=1),
-            scheduled_end=datetime.now(timezone.utc) + timedelta(days=1, hours=1),
+            scheduled_start=get_utc_now() + timedelta(days=1),
+            scheduled_end=get_utc_now() + timedelta(days=1, hours=1),
             timezone="UTC",
         )
         db_session.add(interview)
@@ -337,8 +334,8 @@ async def test_only_non_deleted_interviews_affected_by_cascade(
         created_by=test_employer_user.id,
         interview_type="video",
         status="pending_schedule",
-        scheduled_start=datetime.now(timezone.utc) + timedelta(days=1),
-        scheduled_end=datetime.now(timezone.utc) + timedelta(days=1, hours=1),
+        scheduled_start=get_utc_now() + timedelta(days=1),
+        scheduled_end=get_utc_now() + timedelta(days=1, hours=1),
         timezone="UTC",
         is_deleted=False,
     )
@@ -352,11 +349,11 @@ async def test_only_non_deleted_interviews_affected_by_cascade(
         created_by=test_employer_user.id,
         interview_type="video",
         status="pending_schedule",
-        scheduled_start=datetime.now(timezone.utc) + timedelta(days=1),
-        scheduled_end=datetime.now(timezone.utc) + timedelta(days=1, hours=1),
+        scheduled_start=get_utc_now() + timedelta(days=1),
+        scheduled_end=get_utc_now() + timedelta(days=1, hours=1),
         timezone="UTC",
         is_deleted=True,
-        deleted_at=datetime.now(timezone.utc) - timedelta(days=1),
+        deleted_at=get_utc_now() - timedelta(days=1),
     )
     db_session.add(interview2)
 
@@ -407,8 +404,8 @@ async def test_workflow_foreign_key_set_null_on_hard_delete(
         created_by=test_employer_user.id,
         interview_type="video",
         status="pending_schedule",
-        scheduled_start=datetime.now(timezone.utc) + timedelta(days=1),
-        scheduled_end=datetime.now(timezone.utc) + timedelta(days=1, hours=1),
+        scheduled_start=get_utc_now() + timedelta(days=1),
+        scheduled_end=get_utc_now() + timedelta(days=1, hours=1),
         timezone="UTC",
     )
     db_session.add(interview)
@@ -461,8 +458,8 @@ async def test_interviews_and_todos_without_workflow_unaffected(
         created_by=test_employer_user.id,
         interview_type="video",
         status="pending_schedule",
-        scheduled_start=datetime.now(timezone.utc) + timedelta(days=1),
-        scheduled_end=datetime.now(timezone.utc) + timedelta(days=1, hours=1),
+        scheduled_start=get_utc_now() + timedelta(days=1),
+        scheduled_end=get_utc_now() + timedelta(days=1, hours=1),
         timezone="UTC",
     )
     db_session.add(standalone_interview)
@@ -522,8 +519,8 @@ async def test_query_workflows_with_interview_count(
             created_by=test_employer_user.id,
             interview_type="video",
             status="pending_schedule",
-            scheduled_start=datetime.now(timezone.utc) + timedelta(days=1),
-            scheduled_end=datetime.now(timezone.utc) + timedelta(days=1, hours=1),
+            scheduled_start=get_utc_now() + timedelta(days=1),
+            scheduled_end=get_utc_now() + timedelta(days=1, hours=1),
             timezone="UTC",
         )
         db_session.add(interview)

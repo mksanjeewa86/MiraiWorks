@@ -1,10 +1,11 @@
 """Basic unit tests for AuthService only."""
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from unittest.mock import patch
 
 import pytest
 
 from app.services.auth_service import AuthService
+from app.utils.datetime_utils import get_utc_now
 
 
 class TestAuthService:
@@ -63,7 +64,7 @@ class TestAuthService:
         auth_service = AuthService()
         mock_decode.return_value = {
             "sub": "test@example.com",
-            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+            "exp": get_utc_now() + timedelta(hours=1),
             "type": "access",
         }
 
@@ -122,7 +123,7 @@ class TestAuthService:
                 "sub": "test@example.com",
                 "user_id": 123,
                 "role": "user",
-                "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+                "exp": get_utc_now() + timedelta(hours=1),
                 "type": "access",
             }
 

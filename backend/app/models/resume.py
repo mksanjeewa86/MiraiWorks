@@ -1,5 +1,3 @@
-from datetime import datetime, timezone
-
 from sqlalchemy import (
     JSON,
     Boolean,
@@ -21,6 +19,7 @@ from app.utils.constants import (
     ResumeVisibility,
     SectionType,
 )
+from app.utils.datetime_utils import get_utc_now
 
 
 class Resume(BaseModel):
@@ -97,9 +96,9 @@ class Resume(BaseModel):
     can_edit = Column(Boolean, default=True)  # Owner can disable editing
     can_delete = Column(Boolean, default=True)  # Owner can disable deletion
 
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=get_utc_now, nullable=False)
     updated_at = Column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+        DateTime, default=get_utc_now, onupdate=get_utc_now, nullable=False
     )
 
     # Relationships
@@ -164,7 +163,7 @@ class Resume(BaseModel):
     def increment_view_count(self):
         """Increment view count."""
         self.view_count = (self.view_count or 0) + 1
-        self.last_viewed_at = datetime.now(timezone.utc)
+        self.last_viewed_at = get_utc_now()
 
     def increment_download_count(self):
         """Increment download count."""
@@ -196,8 +195,8 @@ class ResumeSection(BaseModel):
     # Custom styling
     custom_css = Column(Text)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=get_utc_now)
+    updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
 
     # Relationships
     resume = relationship("Resume", back_populates="sections")
@@ -228,8 +227,8 @@ class WorkExperience(BaseModel):
     is_visible = Column(Boolean, default=True)
     display_order = Column(Integer, default=0)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=get_utc_now)
+    updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
 
     # Relationships
     resume = relationship("Resume", back_populates="experiences")
@@ -263,8 +262,8 @@ class Education(BaseModel):
     is_visible = Column(Boolean, default=True)
     display_order = Column(Integer, default=0)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=get_utc_now)
+    updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
 
     # Relationships
     resume = relationship("Resume", back_populates="educations")
@@ -285,7 +284,7 @@ class Skill(BaseModel):
     is_visible = Column(Boolean, default=True)
     display_order = Column(Integer, default=0)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=get_utc_now)
 
     # Relationships
     resume = relationship("Resume", back_populates="skills")
@@ -318,8 +317,8 @@ class Project(BaseModel):
     is_visible = Column(Boolean, default=True)
     display_order = Column(Integer, default=0)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=get_utc_now)
+    updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
 
     # Relationships
     resume = relationship("Resume", back_populates="projects")
@@ -348,7 +347,7 @@ class Certification(BaseModel):
     is_visible = Column(Boolean, default=True)
     display_order = Column(Integer, default=0)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=get_utc_now)
 
     # Relationships
     resume = relationship("Resume", back_populates="certifications")
@@ -369,7 +368,7 @@ class Language(BaseModel):
     is_visible = Column(Boolean, default=True)
     display_order = Column(Integer, default=0)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=get_utc_now)
 
     # Relationships
     resume = relationship("Resume", back_populates="languages")
@@ -392,8 +391,8 @@ class Reference(BaseModel):
     is_visible = Column(Boolean, default=True)
     display_order = Column(Integer, default=0)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=get_utc_now)
+    updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
 
     # Relationships
     resume = relationship("Resume", back_populates="references")
@@ -425,8 +424,8 @@ class ResumeTemplate(BaseModel):
     # Preview
     preview_image_url = Column(String(500))
 
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=get_utc_now)
+    updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
 
     @classmethod
     async def get_active_templates(cls, db, include_premium: bool = False):
@@ -465,7 +464,7 @@ class ResumeShare(BaseModel):
     # Tracking
     last_viewed_at = Column(DateTime)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=get_utc_now)
 
     # Relationships
     resume = relationship("Resume")
@@ -480,7 +479,7 @@ class ResumeShare(BaseModel):
 
     def is_expired(self) -> bool:
         """Check if share is expired."""
-        if self.expires_at and self.expires_at < datetime.now(timezone.utc):
+        if self.expires_at and self.expires_at < get_utc_now():
             return True
         if self.max_views and self.view_count >= self.max_views:
             return True
@@ -500,7 +499,7 @@ class ResumeMessageAttachment(BaseModel):
     )  # Automatically attached when contacting
     attachment_format = Column(String(20), default="pdf")  # pdf, json, etc.
 
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=get_utc_now)
 
     # Relationships
     resume = relationship("Resume")

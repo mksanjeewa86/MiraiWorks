@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime, timezone
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -39,6 +38,7 @@ from app.schemas.resume import (
 )
 from app.services.pdf_service import PDFService
 from app.services.resume_service import ResumeService
+from app.utils.datetime_utils import get_utc_now
 
 router = APIRouter(tags=["resumes"])
 logger = logging.getLogger(__name__)
@@ -465,7 +465,7 @@ async def create_share_link(
         allow_download=share_data.allow_download,
         show_contact_info=share_data.show_contact_info,
         last_viewed_at=None,
-        created_at=datetime.now(timezone.utc),
+        created_at=get_utc_now(),
     )
 
 

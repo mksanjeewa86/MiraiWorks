@@ -3,6 +3,7 @@ import logging
 
 from app.database import AsyncSessionLocal
 from app.services.antivirus_service import antivirus_service
+from app.utils.datetime_utils import get_utc_now
 from app.workers.queue import celery_app
 
 logger = logging.getLogger(__name__)
@@ -46,7 +47,6 @@ async def _scan_file_async(attachment_id: int) -> bool:
 
 async def _mark_scan_failed(attachment_id: int):
     """Mark file scan as failed."""
-    from datetime import datetime, timezone
 
     from sqlalchemy import update
 
@@ -60,7 +60,7 @@ async def _mark_scan_failed(attachment_id: int):
             .values(
                 virus_status=VirusStatus.ERROR.value,
                 virus_scan_result="Scan failed after retries",
-                scanned_at=datetime.now(timezone.utc),
+                scanned_at=get_utc_now(),
                 is_available=False,
             )
         )
@@ -105,7 +105,7 @@ def cleanup_old_attachments():
 
 async def _cleanup_attachments_async() -> int:
     """Clean up old deleted attachments."""
-    from datetime import datetime, timedelta
+    from datetime import timedelta
 
     from sqlalchemy import delete, select
 
@@ -118,7 +118,7 @@ async def _cleanup_attachments_async() -> int:
 
     async with AsyncSessionLocal() as db:
         # Find attachments marked as deleted over 30 days ago
-        cutoff_date = datetime.now(timezone.utc) - timedelta(days=30)
+        cutoff_date = get_utc_now() - timedelta(days=30)
 
         result = await db.execute(
             select(Attachment)

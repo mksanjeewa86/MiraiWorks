@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,6 +9,7 @@ from app.models.interview import Interview, InterviewProposal
 from app.models.user import User
 from app.schemas.interview import InterviewCreate, InterviewUpdate
 from app.utils.constants import InterviewStatus
+from app.utils.datetime_utils import get_utc_now
 
 
 class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
@@ -165,7 +166,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
         self, db: AsyncSession, user_id: int, limit: int = 10
     ) -> list[Interview]:
         """Get upcoming interviews for a user, excluding soft-deleted."""
-        now = datetime.now(timezone.utc)
+        now = get_utc_now()
         result = await db.execute(
             select(Interview)
             .options(
@@ -296,7 +297,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
             select(func.count(Interview.id)).where(
                 base_condition,
                 not_deleted_condition,
-                Interview.scheduled_start > datetime.now(timezone.utc),
+                Interview.scheduled_start > get_utc_now(),
                 Interview.status.in_(
                     [InterviewStatus.CONFIRMED.value, InterviewStatus.IN_PROGRESS.value]
                 ),
@@ -372,7 +373,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
             select(func.count(InterviewProposal.id)).where(
                 InterviewProposal.interview_id == interview_id,
                 InterviewProposal.status == "pending",
-                InterviewProposal.expires_at > datetime.now(timezone.utc),
+                InterviewProposal.expires_at > get_utc_now(),
             )
         )
         return active_proposals_result.scalar() or 0

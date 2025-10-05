@@ -1,6 +1,8 @@
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 
 import pytest
+
+from app.utils.datetime_utils import get_utc_now
 
 
 @pytest.mark.asyncio
@@ -9,7 +11,7 @@ async def test_todo_crud_flow(client, auth_headers):
     payload = {
         "title": "Prepare onboarding",
         "description": "Collect documents for new hire",
-        "due_date": (datetime.now(timezone.utc) + timedelta(days=3)).isoformat(),
+        "due_date": (get_utc_now() + timedelta(days=3)).isoformat(),
     }
     create_resp = await client.post("/api/todos", json=payload, headers=auth_headers)
     assert create_resp.status_code == 201
@@ -65,7 +67,7 @@ async def test_todo_crud_flow(client, auth_headers):
 async def test_overdue_todos_mark_expired(client, auth_headers):
     past_due_payload = {
         "title": "Submit expense report",
-        "due_date": (datetime.now(timezone.utc) - timedelta(days=1)).isoformat(),
+        "due_date": (get_utc_now() - timedelta(days=1)).isoformat(),
     }
     create_resp = await client.post(
         "/api/todos", json=past_due_payload, headers=auth_headers

@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 
 import pytest
 
@@ -8,6 +8,7 @@ from app.models.workflow_node import WorkflowNode
 from app.models.workflow_node_connection import WorkflowNodeConnection
 from app.models.workflow_node_execution import WorkflowNodeExecution
 from app.models.workflow_viewer import WorkflowViewer
+from app.utils.datetime_utils import get_utc_now
 
 
 class TestWorkflow:
@@ -316,7 +317,7 @@ class TestWorkflowNodeExecution:
         execution = WorkflowNodeExecution(
             candidate_workflow_id=1, node_id=10, status="in_progress"
         )
-        execution.started_at = datetime.now(timezone.utc)
+        execution.started_at = get_utc_now()
 
         execution.complete(
             result="pass",
@@ -370,7 +371,7 @@ class TestWorkflowNodeExecution:
             candidate_workflow_id=1, node_id=10, status="pending"
         )
 
-        due_date = datetime.now(timezone.utc) + timedelta(days=2)
+        due_date = get_utc_now() + timedelta(days=2)
         execution.schedule(due_date=due_date)
 
         assert execution.status == "scheduled"
@@ -415,7 +416,7 @@ class TestWorkflowNodeExecution:
         """Test execution duration calculation"""
         execution = WorkflowNodeExecution(candidate_workflow_id=1, node_id=10)
 
-        start_time = datetime.now(timezone.utc)
+        start_time = get_utc_now()
         end_time = start_time + timedelta(minutes=45)
 
         execution.started_at = start_time
@@ -429,7 +430,7 @@ class TestWorkflowNodeExecution:
             candidate_workflow_id=1,
             node_id=10,
             status="in_progress",
-            due_date=datetime.now(timezone.utc) - timedelta(hours=1),
+            due_date=get_utc_now() - timedelta(hours=1),
         )
 
         assert execution.is_overdue

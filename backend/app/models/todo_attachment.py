@@ -8,6 +8,7 @@ from sqlalchemy import BigInteger, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
+from app.utils.datetime_utils import get_utc_now
 
 if TYPE_CHECKING:
     from app.models.todo import Todo
@@ -42,12 +43,12 @@ class TodoAttachment(Base):
 
     # Timestamps
     uploaded_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.utcnow, nullable=False, index=True
+        DateTime(timezone=True), default=get_utc_now, nullable=False, index=True
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
+        default=get_utc_now,
+        onupdate=get_utc_now,
         nullable=False,
     )
 

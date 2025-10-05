@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 from fastapi import HTTPException, status
 from sqlalchemy import and_, or_, select, update
@@ -16,6 +16,7 @@ from app.models.user import User
 from app.services.calendar_service import google_calendar_service
 from app.services.microsoft_calendar_service import microsoft_calendar_service
 from app.utils.constants import InterviewStatus, UserRole
+from app.utils.datetime_utils import get_utc_now
 from app.utils.permissions import is_company_admin, is_super_admin
 
 logger = logging.getLogger(__name__)
@@ -157,7 +158,7 @@ class InterviewService:
             timezone=timezone,
             location=location,
             notes=notes,
-            expires_at=datetime.now(timezone.utc) + timedelta(days=7),  # 7-day expiration
+            expires_at=get_utc_now() + timedelta(days=7),  # 7-day expiration
         )
 
         db.add(proposal)
@@ -211,7 +212,7 @@ class InterviewService:
         # Update proposal
         proposal.status = response
         proposal.responded_by = responded_by
-        proposal.responded_at = datetime.now(timezone.utc)
+        proposal.responded_at = get_utc_now()
         proposal.response_notes = response_notes
 
         # If accepted, update interview and create calendar events
@@ -257,7 +258,7 @@ class InterviewService:
         # Update interview status
         interview.status = InterviewStatus.CANCELLED.value
         interview.cancelled_by = cancelled_by
-        interview.cancelled_at = datetime.now(timezone.utc)
+        interview.cancelled_at = get_utc_now()
         interview.cancellation_reason = reason
 
         # Cancel calendar events
@@ -536,7 +537,7 @@ class InterviewService:
         interview.location = proposal.location
         interview.status = InterviewStatus.CONFIRMED.value
         interview.confirmed_by = proposal.responded_by
-        interview.confirmed_at = datetime.now(timezone.utc)
+        interview.confirmed_at = get_utc_now()
 
         # Create calendar events for participants
         await self._create_calendar_events(db, interview)

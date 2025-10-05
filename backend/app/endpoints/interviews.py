@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -32,6 +32,7 @@ from app.schemas.interview_note import InterviewNoteInfo, InterviewNoteUpdate
 from app.schemas.video_call import VideoCallCreate, VideoCallInfo
 from app.services.interview_service import interview_service
 from app.utils.constants import InterviewStatus
+from app.utils.datetime_utils import get_utc_now
 from app.utils.permissions import is_company_admin, is_super_admin, requires_permission
 
 router = APIRouter()
@@ -717,8 +718,8 @@ async def get_interview_note(
             interview_id=interview_id,
             participant_id=current_user.id,
             content=None,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=get_utc_now(),
+            updated_at=get_utc_now(),
         )
 
     return note

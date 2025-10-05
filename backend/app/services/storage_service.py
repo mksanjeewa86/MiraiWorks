@@ -1,7 +1,7 @@
 import hashlib
 import logging
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from typing import Any
 
 from fastapi import HTTPException, UploadFile, status
@@ -9,6 +9,7 @@ from minio import Minio
 from minio.error import S3Error
 
 from app.config import settings
+from app.utils.datetime_utils import get_utc_now
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +41,7 @@ class StorageService:
     ) -> str:
         """Generate a unique S3 key for file storage."""
         # Create folder structure: folder/user_id/year/month/uuid_filename
-        now = datetime.now(timezone.utc)
+        now = get_utc_now()
         unique_id = str(uuid.uuid4())
 
         # Sanitize filename
@@ -162,7 +163,7 @@ class StorageService:
             return {
                 "upload_url": url,
                 "s3_key": s3_key,
-                "expires_at": (datetime.now(timezone.utc) + expires).isoformat(),
+                "expires_at": (get_utc_now() + expires).isoformat(),
             }
 
         except S3Error as e:

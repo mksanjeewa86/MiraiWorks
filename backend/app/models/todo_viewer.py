@@ -9,6 +9,7 @@ from sqlalchemy import DateTime, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
+from app.utils.datetime_utils import get_utc_now
 
 if TYPE_CHECKING:
     from app.models.todo import Todo
@@ -29,7 +30,7 @@ class TodoViewer(Base):
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
     added_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+        DateTime(timezone=True), default=get_utc_now, nullable=False
     )
 
     # Relationships

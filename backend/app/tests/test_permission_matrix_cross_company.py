@@ -1,5 +1,3 @@
-from datetime import datetime, timezone
-
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,12 +7,13 @@ from app.models.candidate_workflow import CandidateWorkflow
 from app.models.company import Company
 from app.models.interview import Interview
 from app.models.position import Position
-from app.models.workflow_node import WorkflowNode
 from app.models.resume import Resume
 from app.models.user import User
 from app.models.workflow import Workflow as RecruitmentProcess
+from app.models.workflow_node import WorkflowNode
 from app.schemas.user import UserRole
 from app.services.auth_service import AuthService
+from app.utils.datetime_utils import get_utc_now
 
 
 class TestCrossCompanyAccessPrevention:
@@ -298,7 +297,7 @@ class TestCrossCompanyAccessPrevention:
             position_id=position_b.id,
             candidate_id=scenario["candidate_a"].id,
             interviewer_id=scenario["employer_b"].id,
-            scheduled_at=datetime.now(timezone.utc),
+            scheduled_at=get_utc_now(),
             duration_minutes=60,
             interview_type="technical",
             status="scheduled",

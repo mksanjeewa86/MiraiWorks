@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,6 +12,7 @@ from app.schemas.calendar_event import (
     EventStatus,
     EventType,
 )
+from app.utils.datetime_utils import get_utc_now
 
 
 class CRUDCalendarEvent(
@@ -108,7 +109,7 @@ class CRUDCalendarEvent(
     ) -> list[CalendarEvent]:
         """Get upcoming calendar events"""
         if from_datetime is None:
-            from_datetime = datetime.now(timezone.utc)
+            from_datetime = get_utc_now()
 
         conditions = [
             CalendarEvent.start_datetime >= from_datetime,

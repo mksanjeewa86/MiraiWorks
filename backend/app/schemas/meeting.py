@@ -1,8 +1,10 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from app.utils.datetime_utils import get_utc_now
 
 
 class MeetingType(str, Enum):
@@ -97,7 +99,7 @@ class MeetingBase(BaseModel):
     @field_validator("scheduled_start")
     @classmethod
     def not_in_past(cls, v):
-        if v <= datetime.now(timezone.utc):
+        if v <= get_utc_now():
             raise ValueError("scheduled_start must be in the future")
         return v
 

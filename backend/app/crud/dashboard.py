@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,6 +9,7 @@ from app.models.interview import Interview
 from app.models.message import Message
 from app.models.resume import Resume
 from app.models.user import User
+from app.utils.datetime_utils import get_utc_now
 
 
 class CRUDDashboard:
@@ -34,7 +35,7 @@ class CRUDDashboard:
         total_resumes = total_resumes_result.scalar() or 0
 
         # Active conversations (conversations with messages in last 30 days)
-        thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
+        thirty_days_ago = get_utc_now() - timedelta(days=30)
         active_conversations_result = await db.execute(
             select(func.count(Message.id.distinct())).where(
                 Message.created_at >= thirty_days_ago
@@ -85,7 +86,7 @@ class CRUDDashboard:
 
     async def get_recent_users(self, db: AsyncSession, limit: int = 10) -> list[User]:
         """Get recent users (last 7 days)."""
-        seven_days_ago = datetime.now(timezone.utc) - timedelta(days=7)
+        seven_days_ago = get_utc_now() - timedelta(days=7)
         result = await db.execute(
             select(User)
             .where(User.created_at >= seven_days_ago, User.is_active is True)
@@ -98,7 +99,7 @@ class CRUDDashboard:
         self, db: AsyncSession, limit: int = 10
     ) -> list[Interview]:
         """Get recent interviews (last 7 days)."""
-        seven_days_ago = datetime.now(timezone.utc) - timedelta(days=7)
+        seven_days_ago = get_utc_now() - timedelta(days=7)
         result = await db.execute(
             select(Interview)
             .where(Interview.created_at >= seven_days_ago)
@@ -111,7 +112,7 @@ class CRUDDashboard:
         self, db: AsyncSession, limit: int = 10
     ) -> list[Company]:
         """Get recent companies (last 7 days)."""
-        seven_days_ago = datetime.now(timezone.utc) - timedelta(days=7)
+        seven_days_ago = get_utc_now() - timedelta(days=7)
         result = await db.execute(
             select(Company)
             .where(Company.created_at >= seven_days_ago, Company.is_active is True)
@@ -124,7 +125,7 @@ class CRUDDashboard:
         self, db: AsyncSession, limit: int = 10
     ) -> list[Resume]:
         """Get recent resumes (last 7 days)."""
-        seven_days_ago = datetime.now(timezone.utc) - timedelta(days=7)
+        seven_days_ago = get_utc_now() - timedelta(days=7)
         result = await db.execute(
             select(Resume)
             .where(Resume.created_at >= seven_days_ago)
@@ -137,7 +138,7 @@ class CRUDDashboard:
         self, db: AsyncSession, limit: int = 10
     ) -> list[ExamSession]:
         """Get recent exam sessions (last 7 days)."""
-        seven_days_ago = datetime.now(timezone.utc) - timedelta(days=7)
+        seven_days_ago = get_utc_now() - timedelta(days=7)
         result = await db.execute(
             select(ExamSession)
             .where(ExamSession.created_at >= seven_days_ago)

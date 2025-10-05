@@ -1,9 +1,8 @@
-from datetime import datetime
-
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 
 from app.database import Base
+from app.utils.datetime_utils import get_utc_now
 
 
 class CalendarEvent(Base):
@@ -21,9 +20,9 @@ class CalendarEvent(Base):
     creator_id = Column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
     )
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=get_utc_now, nullable=False)
     updated_at = Column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+        DateTime, default=get_utc_now, onupdate=get_utc_now, nullable=False
     )
     recurrence_rule = Column(String(255), nullable=True)
     parent_event_id = Column(

@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,6 +13,7 @@ from app.models.user import User
 # from app.endpoints.messaging_ws import connection_manager, is_user_online
 # WebSocket functionality removed - using HTTP polling instead
 from app.services.email_service import email_service
+from app.utils.datetime_utils import get_utc_now
 
 logger = logging.getLogger(__name__)
 
@@ -104,7 +105,7 @@ class NotificationService:
         conversation_key = (
             f"{min(sender_id, recipient_id)}_{max(sender_id, recipient_id)}"
         )
-        now = datetime.now(timezone.utc)
+        now = get_utc_now()
 
         if conversation_key in self._email_debounce:
             last_email_time = self._email_debounce[conversation_key]
@@ -161,7 +162,7 @@ class NotificationService:
                     Notification.id.in_(notification_ids),
                 )
             )
-            .values(is_read=True, read_at=datetime.now(timezone.utc))
+            .values(is_read=True, read_at=get_utc_now())
         )
 
         result = await db.execute(stmt)

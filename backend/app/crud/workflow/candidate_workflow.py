@@ -1,4 +1,3 @@
-from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy import and_, desc, func, select
@@ -8,6 +7,7 @@ from sqlalchemy.orm import selectinload
 from app.crud.base import CRUDBase
 from app.models.candidate_workflow import CandidateWorkflow
 from app.models.workflow_node_execution import WorkflowNodeExecution
+from app.utils.datetime_utils import get_utc_now
 
 
 class CRUDCandidateWorkflow(CRUDBase[CandidateWorkflow, dict, dict]):
@@ -262,7 +262,7 @@ class CRUDCandidateWorkflow(CRUDBase[CandidateWorkflow, dict, dict]):
                     "candidate_id": candidate_id,
                     "workflow_id": workflow_id,
                     "assigned_recruiter_id": assigned_recruiter_id,
-                    "assigned_at": datetime.now(timezone.utc) if assigned_recruiter_id else None,
+                    "assigned_at": get_utc_now() if assigned_recruiter_id else None,
                 }
 
                 candidate_workflow = CandidateWorkflow(**candidate_workflow_data)
@@ -442,7 +442,7 @@ class CRUDCandidateWorkflow(CRUDBase[CandidateWorkflow, dict, dict]):
                     WorkflowNodeExecution.status.in_(
                         ["pending", "scheduled", "in_progress"]
                     ),
-                    WorkflowNodeExecution.due_date < datetime.now(timezone.utc),
+                    WorkflowNodeExecution.due_date < get_utc_now(),
                 )
             )
         )

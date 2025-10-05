@@ -7,6 +7,7 @@ from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, UniqueConstr
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
+from app.utils.datetime_utils import get_utc_now
 
 if TYPE_CHECKING:
     from app.models.user import User
@@ -43,7 +44,7 @@ class WorkflowViewer(Base):
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     added_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.utcnow, nullable=False, index=True
+        DateTime(timezone=True), default=get_utc_now, nullable=False, index=True
     )
 
     # Relationships

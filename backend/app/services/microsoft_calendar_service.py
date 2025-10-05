@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from typing import Any
 
 import httpx
@@ -8,6 +8,7 @@ from sqlalchemy import update
 
 from app.config import settings
 from app.models.calendar_integration import ExternalCalendarAccount
+from app.utils.datetime_utils import get_utc_now
 
 logger = logging.getLogger(__name__)
 
@@ -137,7 +138,7 @@ class MicrosoftCalendarService:
         if (
             calendar_account.token_expires_at
             and calendar_account.token_expires_at
-            <= datetime.now(timezone.utc) + timedelta(minutes=5)
+            <= get_utc_now() + timedelta(minutes=5)
         ):
             # Refresh the token
             token_data = await self.refresh_access_token(calendar_account.refresh_token)
@@ -156,7 +157,7 @@ class MicrosoftCalendarService:
                     .where(ExternalCalendarAccount.id == calendar_account.id)
                     .values(
                         access_token=token_data["access_token"],
-                        token_expires_at=datetime.now(timezone.utc)
+                        token_expires_at=get_utc_now()
                         + timedelta(seconds=token_data.get("expires_in", 3600)),
                     )
                 )
@@ -384,8 +385,7 @@ class MicrosoftCalendarService:
             "changeType": "created,updated,deleted",
             "notificationUrl": webhook_url,
             "resource": resource,
-            "expirationDateTime": (datetime.now(timezone.utc) + timedelta(days=3)).isoformat()
-            + "Z",
+            "expirationDateTime": (get_utc_now() + timedelta(days=3)).isoformat() + "Z",
             "clientState": f"user_{calendar_account.user_id}",  # For verification
         }
 

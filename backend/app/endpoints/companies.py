@@ -1,7 +1,7 @@
 import logging
 import secrets
 import string
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
@@ -23,6 +23,7 @@ from app.services.auth_service import auth_service
 from app.services.email_service import email_service
 from app.utils.constants import CompanyType
 from app.utils.constants import UserRole as UserRoleEnum
+from app.utils.datetime_utils import get_utc_now
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -208,7 +209,7 @@ async def create_company(
 
     demo_end_date = None
     if company_data.is_demo and company_data.demo_days:
-        demo_end_date = datetime.now(timezone.utc) + timedelta(days=company_data.demo_days)
+        demo_end_date = get_utc_now() + timedelta(days=company_data.demo_days)
 
     company = Company(
         name=company_data.name,

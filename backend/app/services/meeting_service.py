@@ -1,5 +1,4 @@
 import secrets
-from datetime import datetime, timezone
 from typing import Any
 
 from fastapi import HTTPException, status
@@ -13,7 +12,6 @@ from app.models.meeting import (
 )
 from app.models.user import User
 from app.rbac import has_permission
-from app.utils.constants import UserRole
 from app.schemas.meeting import (
     MeetingCreate,
     MeetingListParams,
@@ -25,6 +23,8 @@ from app.schemas.meeting import (
     ParticipantStatus,
 )
 from app.services.audit_service import log_action
+from app.utils.constants import UserRole
+from app.utils.datetime_utils import get_utc_now
 from app.utils.permissions import check_company_access
 
 
@@ -219,7 +219,7 @@ class MeetingService:
         for field, value in update_data.dict(exclude_unset=True).items():
             setattr(meeting, field, value)
 
-        meeting.updated_at = datetime.now(timezone.utc)
+        meeting.updated_at = get_utc_now()
         self.db.commit()
 
         # Log action
@@ -281,13 +281,13 @@ class MeetingService:
                     meeting_participants.c.user_id == current_user.id,
                 )
             )
-            .values(status=ParticipantStatus.JOINED, joined_at=datetime.now(timezone.utc))
+            .values(status=ParticipantStatus.JOINED, joined_at=get_utc_now())
         )
 
         # Update meeting status if first participant
         if meeting.status == MeetingStatus.SCHEDULED:
             meeting.status = MeetingStatus.STARTING
-            meeting.actual_start = datetime.now(timezone.utc)
+            meeting.actual_start = get_utc_now()
 
         self.db.commit()
 
@@ -316,7 +316,7 @@ class MeetingService:
                     meeting_participants.c.user_id == current_user.id,
                 )
             )
-            .values(status=ParticipantStatus.LEFT, left_at=datetime.now(timezone.utc))
+            .values(status=ParticipantStatus.LEFT, left_at=get_utc_now())
         )
 
         # Check if all participants have left
@@ -332,7 +332,7 @@ class MeetingService:
         # End meeting if no active participants
         if not active_participants and meeting.status == MeetingStatus.IN_PROGRESS:
             meeting.status = MeetingStatus.COMPLETED
-            meeting.actual_end = datetime.now(timezone.utc)
+            meeting.actual_end = get_utc_now()
 
         self.db.commit()
 
@@ -521,7 +521,9 @@ class MeetingService:
         # This should be enhanced to properly determine user's primary role
         # For now, simple logic based on user properties
         if user.is_admin:
-            return UserRole.ADMIN.value if user.company_id else UserRole.SYSTEM_ADMIN.value
+            return (
+                UserRole.ADMIN.value if user.company_id else UserRole.SYSTEM_ADMIN.value
+            )
 
         # Check user roles (simplified)
         for user_role in user.user_roles:

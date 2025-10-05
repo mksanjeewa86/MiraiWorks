@@ -1,5 +1,3 @@
-from datetime import datetime, timezone
-
 from sqlalchemy import and_, case, desc, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -10,6 +8,7 @@ from app.models.role import Role, UserRole
 from app.models.user import User
 from app.schemas.message import MessageSearchRequest
 from app.utils.constants import UserRole as UserRoleEnum
+from app.utils.datetime_utils import get_utc_now
 
 
 async def get_messages_between_users(
@@ -89,7 +88,7 @@ async def mark_messages_as_read(
                 Message.read_at.is_(None),
             )
         )
-        .values(read_at=datetime.now(timezone.utc))
+        .values(read_at=get_utc_now())
     )
 
     result = await db.execute(query)

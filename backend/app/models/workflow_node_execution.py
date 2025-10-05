@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
@@ -16,6 +16,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
+from app.utils.datetime_utils import get_utc_now
 
 if TYPE_CHECKING:
     from app.models.candidate_workflow import CandidateWorkflow
@@ -98,12 +99,12 @@ class WorkflowNodeExecution(Base):
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.utcnow, nullable=False, index=True
+        DateTime(timezone=True), default=get_utc_now, nullable=False, index=True
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
+        default=get_utc_now,
+        onupdate=get_utc_now,
         nullable=False,
     )
 
@@ -156,7 +157,7 @@ class WorkflowNodeExecution(Base):
     def is_overdue(self) -> bool:
         if not self.due_date or self.is_completed:
             return False
-        return datetime.now(timezone.utc) > self.due_date
+        return get_utc_now() > self.due_date
 
     @property
     def duration_minutes(self) -> int | None:
@@ -173,7 +174,7 @@ class WorkflowNodeExecution(Base):
             raise ValueError(f"Cannot start execution with status '{self.status}'")
 
         self.status = "in_progress"
-        self.started_at = datetime.now(timezone.utc)
+        self.started_at = get_utc_now()
         if assigned_to:
             self.assigned_to = assigned_to
 
@@ -191,7 +192,7 @@ class WorkflowNodeExecution(Base):
 
         self.status = "completed"
         self.result = result
-        self.completed_at = datetime.now(timezone.utc)
+        self.completed_at = get_utc_now()
         self.completed_by = completed_by
 
         if score is not None:
@@ -205,7 +206,7 @@ class WorkflowNodeExecution(Base):
         """Mark execution as failed"""
         self.status = "failed"
         self.result = "fail"
-        self.completed_at = datetime.now(timezone.utc)
+        self.completed_at = get_utc_now()
         self.completed_by = completed_by
         if reason:
             self.feedback = reason
@@ -214,7 +215,7 @@ class WorkflowNodeExecution(Base):
         """Skip this execution"""
         self.status = "skipped"
         self.result = "skipped"
-        self.completed_at = datetime.now(timezone.utc)
+        self.completed_at = get_utc_now()
         self.completed_by = completed_by
         if reason:
             self.feedback = reason

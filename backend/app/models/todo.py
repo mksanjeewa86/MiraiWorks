@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
@@ -14,6 +14,7 @@ from app.utils.constants import (
     TodoType,
     TodoVisibility,
 )
+from app.utils.datetime_utils import get_utc_now
 
 if TYPE_CHECKING:
     from app.models.todo_extension_request import TodoExtensionRequest
@@ -100,12 +101,12 @@ class Todo(Base):
         DateTime(timezone=True), nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.utcnow, nullable=False, index=True
+        DateTime(timezone=True), default=get_utc_now, nullable=False, index=True
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
+        default=get_utc_now,
+        onupdate=get_utc_now,
         nullable=False,
     )
 
@@ -122,7 +123,7 @@ class Todo(Base):
     reviewer: Mapped[User | None] = relationship(
         "User", foreign_keys=[reviewed_by], backref="reviewed_todos"
     )
-    workflow: Mapped[Optional["Workflow"]] = relationship(
+    workflow: Mapped[Optional[Workflow]] = relationship(
         "Workflow", foreign_keys=[workflow_id]
     )
     viewers: Mapped[list[TodoViewer]] = relationship(
@@ -143,12 +144,12 @@ class Todo(Base):
         if self.expired_at:
             return True
         if self.due_date:
-            return self.due_date < datetime.now(timezone.utc)
+            return self.due_date < get_utc_now()
         return False
 
     def mark_completed(self) -> None:
         self.status = TodoStatus.COMPLETED.value
-        self.completed_at = datetime.now(timezone.utc)
+        self.completed_at = get_utc_now()
         self.expired_at = None
 
     def mark_pending(self) -> None:
@@ -158,7 +159,7 @@ class Todo(Base):
 
     def soft_delete(self) -> None:
         self.is_deleted = True
-        self.deleted_at = datetime.now(timezone.utc)
+        self.deleted_at = get_utc_now()
 
     def restore(self) -> None:
         self.is_deleted = False
@@ -188,9 +189,9 @@ class Todo(Base):
         """Mark assignment as submitted"""
         if self.is_assignment:
             self.assignment_status = AssignmentStatus.SUBMITTED.value
-            self.submitted_at = datetime.now(timezone.utc)
+            self.submitted_at = get_utc_now()
             self.status = TodoStatus.COMPLETED.value
-            self.completed_at = datetime.now(timezone.utc)
+            self.completed_at = get_utc_now()
 
     def start_review(self) -> None:
         """Start review process for assignment"""
@@ -206,7 +207,7 @@ class Todo(Base):
         """Mark assignment as approved"""
         if self.is_assignment:
             self.assignment_status = AssignmentStatus.APPROVED.value
-            self.reviewed_at = datetime.now(timezone.utc)
+            self.reviewed_at = get_utc_now()
             self.reviewed_by = reviewer_id
             if assessment:
                 self.assignment_assessment = assessment
@@ -219,7 +220,7 @@ class Todo(Base):
         """Mark assignment as rejected"""
         if self.is_assignment:
             self.assignment_status = AssignmentStatus.REJECTED.value
-            self.reviewed_at = datetime.now(timezone.utc)
+            self.reviewed_at = get_utc_now()
             self.reviewed_by = reviewer_id
             if assessment:
                 self.assignment_assessment = assessment

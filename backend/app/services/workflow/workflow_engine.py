@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,6 +19,7 @@ from app.schemas.workflow.enums import (
     NodeType,
     TodoNodeType,
 )
+from app.utils.datetime_utils import get_utc_now
 
 
 class WorkflowEngineService:
@@ -104,7 +105,7 @@ class WorkflowEngineService:
             "candidate_id": candidate_id,
             "process_id": workflow_id,
             "assigned_recruiter_id": recruiter_id,
-            "assigned_at": datetime.now(timezone.utc) if recruiter_id else None,
+            "assigned_at": get_utc_now() if recruiter_id else None,
         }
 
         candidate_proc = await candidate_workflow.create(
@@ -165,7 +166,7 @@ class WorkflowEngineService:
         # Calculate due date based on node configuration
         due_date = None
         if node.estimated_duration_minutes:
-            due_date = datetime.now(timezone.utc) + timedelta(
+            due_date = get_utc_now() + timedelta(
                 minutes=node.estimated_duration_minutes
             )
 
@@ -355,7 +356,7 @@ class WorkflowEngineService:
 
         # Calculate due date
         due_days = config.get("due_in_days", 3)
-        due_date = datetime.now(timezone.utc) + timedelta(days=due_days)
+        due_date = get_utc_now() + timedelta(days=due_days)
 
         todo_data = {
             "owner_id": candidate_proc.assigned_recruiter_id or execution.assigned_to,

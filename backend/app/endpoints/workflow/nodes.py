@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from fastapi.encoders import jsonable_encoder
@@ -16,7 +16,6 @@ from app.dependencies import get_current_active_user
 from app.models.user import User
 from app.schemas.todo import TodoCreate
 from app.schemas.workflow.enums import NodeType
-from app.utils.constants import UserRole
 from app.schemas.workflow.workflow_node import (
     NodeIntegrationInterview,
     NodeIntegrationTodo,
@@ -26,7 +25,8 @@ from app.schemas.workflow.workflow_node import (
     WorkflowNodeUpdate,
 )
 from app.services.interview_service import interview_service
-from app.utils.constants import TodoType, TodoVisibility
+from app.utils.constants import TodoType, TodoVisibility, UserRole
+from app.utils.datetime_utils import get_utc_now
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -216,7 +216,7 @@ async def _create_todo_integration(
         due_in_days = (node.config or {}).get("due_in_days")
     due_date: datetime | None = None
     if due_in_days:
-        due_date = datetime.now(timezone.utc) + timedelta(days=due_in_days)
+        due_date = get_utc_now() + timedelta(days=due_in_days)
 
     todo_type = TodoType.ASSIGNMENT.value
     if integration.is_assignment is False:

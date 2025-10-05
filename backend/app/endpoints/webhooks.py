@@ -1,6 +1,6 @@
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
@@ -12,6 +12,7 @@ from app.models.calendar_integration import ExternalCalendarAccount, SyncedEvent
 from app.services.google_calendar_service import GoogleCalendarService
 from app.services.interview_service import InterviewService
 from app.services.microsoft_calendar_service import MicrosoftCalendarService
+from app.utils.datetime_utils import get_utc_now
 
 router = APIRouter(tags=["webhooks"])
 logger = logging.getLogger(__name__)
@@ -144,7 +145,7 @@ async def sync_google_calendar_events(
         next_sync_token = events.get("nextSyncToken")
         if next_sync_token:
             calendar_integration.sync_token = next_sync_token
-            calendar_integration.last_sync_at = datetime.now(timezone.utc)
+            calendar_integration.last_sync_at = get_utc_now()
             await calendar_integration.save(db)
 
         logger.info(
@@ -188,7 +189,7 @@ async def sync_microsoft_calendar_events(
             await SyncedEvent.delete_by_external_id(db, event_id)
 
         # Update last sync time
-        calendar_integration.last_sync_at = datetime.now(timezone.utc)
+        calendar_integration.last_sync_at = get_utc_now()
         await calendar_integration.save(db)
 
         logger.info(f"Processed Microsoft Calendar event {change_type}: {event_id}")
@@ -299,7 +300,7 @@ async def process_calendar_event_update(
             "end_datetime": end_datetime,
             "is_all_day": is_all_day,
             "timezone": calendar_integration.calendar_timezone or "UTC",
-            "last_modified": datetime.now(timezone.utc),
+            "last_modified": get_utc_now(),
         }
 
         if existing_event:
@@ -320,6 +321,6 @@ async def webhook_health():
     """Health check endpoint for webhook services."""
     return {
         "status": "healthy",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": get_utc_now().isoformat(),
         "webhooks": ["google_calendar", "microsoft_calendar"],
     }

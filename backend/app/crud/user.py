@@ -1,5 +1,3 @@
-from datetime import datetime, timezone
-
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -10,6 +8,7 @@ from app.models.company import Company
 from app.models.role import Role
 from app.schemas.user import UserCreate, UserUpdate
 from app.utils.constants import UserRole as UserRoleEnum
+from app.utils.datetime_utils import get_utc_now
 
 
 class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
@@ -158,7 +157,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
                     continue
 
                 user.is_deleted = True
-                user.deleted_at = datetime.now(timezone.utc)
+                user.deleted_at = get_utc_now()
                 user.deleted_by = deleted_by
                 user.is_active = False
                 deleted_count += 1
@@ -185,7 +184,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
                 if not user.is_suspended:
                     user.is_suspended = True
-                    user.suspended_at = datetime.now(timezone.utc)
+                    user.suspended_at = get_utc_now()
                     user.suspended_by = suspended_by
                     suspended_count += 1
 
@@ -247,7 +246,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         user = await self.get(db, user_id)
         if user:
             user.is_deleted = True
-            user.deleted_at = datetime.now(timezone.utc)
+            user.deleted_at = get_utc_now()
             user.deleted_by = deleted_by
             user.is_active = False
             await db.commit()
@@ -258,7 +257,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         user = await self.get(db, user_id)
         if user and not user.is_suspended:
             user.is_suspended = True
-            user.suspended_at = datetime.now(timezone.utc)
+            user.suspended_at = get_utc_now()
             user.suspended_by = suspended_by
             await db.commit()
         return user

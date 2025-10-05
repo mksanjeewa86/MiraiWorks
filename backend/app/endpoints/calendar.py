@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,6 +30,7 @@ from app.schemas.calendar_event import (
 from app.services.calendar_service import calendar_service
 from app.services.google_calendar_service import google_calendar_service
 from app.services.microsoft_calendar_service import microsoft_calendar_service
+from app.utils.datetime_utils import get_utc_now
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -85,9 +86,7 @@ async def google_oauth_callback(
         db, user_id, "google", user_info["id"]
     )
 
-    token_expires_at = datetime.now(timezone.utc) + timedelta(
-        seconds=tokens.get("expires_in", 3600)
-    )
+    token_expires_at = get_utc_now() + timedelta(seconds=tokens.get("expires_in", 3600))
 
     if account:
         # Update existing account
@@ -178,9 +177,7 @@ async def microsoft_oauth_callback(
         db, user_id, "microsoft", user_info["id"]
     )
 
-    token_expires_at = datetime.now(timezone.utc) + timedelta(
-        seconds=tokens.get("expires_in", 3600)
-    )
+    token_expires_at = get_utc_now() + timedelta(seconds=tokens.get("expires_in", 3600))
     user_email = user_info.get("mail", user_info.get("userPrincipalName"))
     display_name = user_info.get("displayName")
 
@@ -301,14 +298,14 @@ async def sync_calendar_account(
         if account.provider == "google":
             events = await google_calendar_service.get_events(
                 account,
-                time_min=datetime.now(timezone.utc) - timedelta(days=30),
-                time_max=datetime.now(timezone.utc) + timedelta(days=90),
+                time_min=get_utc_now() - timedelta(days=30),
+                time_max=get_utc_now() + timedelta(days=90),
             )
         elif account.provider == "microsoft":
             events = await microsoft_calendar_service.get_events(
                 account,
-                time_min=datetime.now(timezone.utc) - timedelta(days=30),
-                time_max=datetime.now(timezone.utc) + timedelta(days=90),
+                time_min=get_utc_now() - timedelta(days=30),
+                time_max=get_utc_now() + timedelta(days=90),
             )
         else:
             raise HTTPException(
@@ -317,7 +314,7 @@ async def sync_calendar_account(
             )
 
         # Update last sync time
-        await calendar_integration.update_last_sync(db, account, datetime.now(timezone.utc))
+        await calendar_integration.update_last_sync(db, account, get_utc_now())
 
         return CalendarSyncResponse(success=True, synced_events=len(events), errors=[])
 
@@ -389,7 +386,7 @@ async def get_events(
 
     # Set default date range if not provided
     if not startDate:
-        start_date = datetime.now(timezone.utc)
+        start_date = get_utc_now()
     else:
         start_date = datetime.fromisoformat(startDate.replace("Z", "+00:00"))
 
@@ -423,8 +420,8 @@ async def get_events(
                 organizer_email=current_user.email,
                 attendees=[],
                 status=event["status"],
-                created_at=datetime.now(timezone.utc),  # This should come from the event data
-                updated_at=datetime.now(timezone.utc),  # This should come from the event data
+                created_at=get_utc_now(),  # This should come from the event data
+                updated_at=get_utc_now(),  # This should come from the event data
             )
             all_events.append(event_info)
 
@@ -443,8 +440,8 @@ async def get_events(
                 organizer_email=None,
                 attendees=[],
                 status="confirmed",
-                created_at=datetime.now(timezone.utc),
-                updated_at=datetime.now(timezone.utc),
+                created_at=get_utc_now(),
+                updated_at=get_utc_now(),
             )
             all_events.append(holiday_event)
 

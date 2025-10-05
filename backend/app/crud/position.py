@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from typing import Any
 
 from sqlalchemy import and_, desc, func, or_, select
@@ -8,6 +8,7 @@ from sqlalchemy.orm import selectinload
 from app.crud.base import CRUDBase
 from app.models.position import Position
 from app.schemas.position import PositionCreate, PositionUpdate
+from app.utils.datetime_utils import get_utc_now
 
 
 class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
@@ -115,9 +116,9 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
             base_query = base_query.where(search_filter)
 
         if days_since_posted:
-            from datetime import datetime, timedelta
+            from datetime import timedelta
 
-            cutoff_date = datetime.now(timezone.utc) - timedelta(days=days_since_posted)
+            cutoff_date = get_utc_now() - timedelta(days=days_since_posted)
             base_query = base_query.where(Position.published_at >= cutoff_date)
 
         # Get total count by rebuilding the filter conditions without pagination
@@ -144,9 +145,9 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
             )
             count_query = count_query.where(search_filter)
         if days_since_posted:
-            from datetime import datetime, timedelta
+            from datetime import timedelta
 
-            cutoff_date = datetime.now(timezone.utc) - timedelta(days=days_since_posted)
+            cutoff_date = get_utc_now() - timedelta(days=days_since_posted)
             count_query = count_query.where(Position.published_at >= cutoff_date)
 
         count_result = await db.execute(count_query)
@@ -248,7 +249,7 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
         self, db: AsyncSession, *, days: int = 7, skip: int = 0, limit: int = 100
     ) -> list[Position]:
         """Get positions posted in the last N days."""
-        cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
+        cutoff_date = get_utc_now() - timedelta(days=days)
 
         result = await db.execute(
             select(Position)
@@ -266,7 +267,7 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
         self, db: AsyncSession, *, days: int = 7, skip: int = 0, limit: int = 100
     ) -> list[Position]:
         """Get positions expiring in the next N days."""
-        cutoff_date = datetime.now(timezone.utc) + timedelta(days=days)
+        cutoff_date = get_utc_now() + timedelta(days=days)
 
         result = await db.execute(
             select(Position)
@@ -363,9 +364,9 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
         for position in positions:
             position.status = status
             if status == "published" and not position.published_at:
-                position.published_at = datetime.now(timezone.utc)
+                position.published_at = get_utc_now()
             elif status == "closed":
-                position.closed_at = datetime.now(timezone.utc)
+                position.closed_at = get_utc_now()
 
         await db.commit()
         return positions
