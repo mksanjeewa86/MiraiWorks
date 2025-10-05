@@ -116,7 +116,7 @@ class Interview(Base):
 
     # Workflow relationship
     workflow = relationship(
-        "RecruitmentProcess", foreign_keys=[workflow_id], lazy="noload"
+        "Workflow", foreign_keys=[workflow_id], lazy="noload"
     )
 
     proposals = relationship(

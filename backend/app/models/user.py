@@ -141,70 +141,70 @@ class User(Base):
     # Creator relationship (who created this user)
     creator = relationship("User", remote_side="User.id", post_update=True)
 
-    # Recruitment process relationships
+    # Workflow relationships
     created_workflows = relationship(
-        "RecruitmentProcess",
-        foreign_keys="RecruitmentProcess.created_by",
+        "Workflow",
+        foreign_keys="Workflow.created_by",
         back_populates="creator",
         cascade="all, delete-orphan",
     )
     updated_workflows = relationship(
-        "RecruitmentProcess",
-        foreign_keys="RecruitmentProcess.updated_by",
+        "Workflow",
+        foreign_keys="Workflow.updated_by",
         back_populates="updater",
         cascade="all, delete-orphan",
     )
     candidate_workflows = relationship(
-        "CandidateProcess",
-        foreign_keys="CandidateProcess.candidate_id",
+        "CandidateWorkflow",
+        foreign_keys="CandidateWorkflow.candidate_id",
         back_populates="candidate",
         cascade="all, delete-orphan",
     )
     assigned_candidate_workflows = relationship(
-        "CandidateProcess",
-        foreign_keys="CandidateProcess.assigned_recruiter_id",
+        "CandidateWorkflow",
+        foreign_keys="CandidateWorkflow.assigned_recruiter_id",
         back_populates="assigned_recruiter",
         cascade="all, delete-orphan",
     )
     assigned_node_executions = relationship(
-        "NodeExecution",
-        foreign_keys="NodeExecution.assigned_to",
+        "WorkflowNodeExecution",
+        foreign_keys="WorkflowNodeExecution.assigned_to",
         back_populates="assignee",
         cascade="all, delete-orphan",
     )
     completed_node_executions = relationship(
-        "NodeExecution",
-        foreign_keys="NodeExecution.completed_by",
+        "WorkflowNodeExecution",
+        foreign_keys="WorkflowNodeExecution.completed_by",
         back_populates="completer",
         cascade="all, delete-orphan",
     )
     reviewed_node_executions = relationship(
-        "NodeExecution",
-        foreign_keys="NodeExecution.reviewed_by",
+        "WorkflowNodeExecution",
+        foreign_keys="WorkflowNodeExecution.reviewed_by",
         back_populates="reviewer",
         cascade="all, delete-orphan",
     )
-    process_viewers = relationship(
-        "ProcessViewer",
-        foreign_keys="ProcessViewer.user_id",
+    workflow_viewers = relationship(
+        "WorkflowViewer",
+        foreign_keys="WorkflowViewer.user_id",
         back_populates="user",
         cascade="all, delete-orphan",
     )
-    added_process_viewers = relationship(
-        "ProcessViewer",
-        foreign_keys="ProcessViewer.added_by",
+    added_workflow_viewers = relationship(
+        "WorkflowViewer",
+        foreign_keys="WorkflowViewer.added_by",
         back_populates="added_by_user",
         cascade="all, delete-orphan",
     )
-    created_process_nodes = relationship(
-        "ProcessNode",
-        foreign_keys="ProcessNode.created_by",
+    created_workflow_nodes = relationship(
+        "WorkflowNode",
+        foreign_keys="WorkflowNode.created_by",
         back_populates="creator",
         cascade="all, delete-orphan",
     )
-    updated_process_nodes = relationship(
-        "ProcessNode",
-        foreign_keys="ProcessNode.updated_by",
+    updated_workflow_nodes = relationship(
+        "WorkflowNode",
+        foreign_keys="WorkflowNode.updated_by",
         back_populates="updater",
         cascade="all, delete-orphan",
     )

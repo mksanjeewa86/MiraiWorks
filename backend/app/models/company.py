@@ -51,7 +51,7 @@ class Company(Base):
     )
     exams = relationship("Exam", back_populates="company", cascade="all, delete-orphan")
     workflows = relationship(
-        "RecruitmentProcess",
+        "Workflow",
         back_populates="employer_company",
         cascade="all, delete-orphan",
     )

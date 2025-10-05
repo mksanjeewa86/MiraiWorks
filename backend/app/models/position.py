@@ -124,7 +124,7 @@ class Position(Base):
         "PositionApplication", back_populates="position", cascade="all, delete-orphan"
     )
     workflows = relationship(
-        "RecruitmentProcess", back_populates="position", cascade="all, delete-orphan"
+        "Workflow", back_populates="position", cascade="all, delete-orphan"
     )
 
     # Indexes for performance

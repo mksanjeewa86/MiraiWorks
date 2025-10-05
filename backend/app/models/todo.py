@@ -122,8 +122,8 @@ class Todo(Base):
     reviewer: Mapped[User | None] = relationship(
         "User", foreign_keys=[reviewed_by], backref="reviewed_todos"
     )
-    workflow: Mapped[Optional["RecruitmentProcess"]] = relationship(
-        "RecruitmentProcess", foreign_keys=[workflow_id]
+    workflow: Mapped[Optional["Workflow"]] = relationship(
+        "Workflow", foreign_keys=[workflow_id]
     )
     viewers: Mapped[list[TodoViewer]] = relationship(
         "TodoViewer", back_populates="todo", cascade="all, delete-orphan"
