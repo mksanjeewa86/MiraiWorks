@@ -5,14 +5,14 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.attachment import Attachment
-from app.models.candidate_process import CandidateProcess
+from app.models.candidate_workflow import CandidateWorkflow
 from app.models.company import Company
 from app.models.interview import Interview
 from app.models.position import Position
-from app.models.process_node import ProcessNode
+from app.models.workflow_node import WorkflowNode
 from app.models.resume import Resume
 from app.models.user import User
-from app.models.workflow import RecruitmentProcess
+from app.models.workflow import Workflow as RecruitmentProcess
 from app.schemas.user import UserRole
 from app.services.auth_service import AuthService
 
@@ -475,8 +475,8 @@ class TestCrossCompanyAccessPrevention:
         await db.flush()
 
         # Create process node for Company B
-        process_node_b = ProcessNode(
-            recruitment_process_id=recruitment_process_b.id,
+        process_node_b = WorkflowNode(
+            workflow_id=recruitment_process_b.id,
             name="Company B Interview",
             node_type="interview",
             order_index=1,
@@ -538,10 +538,10 @@ class TestCrossCompanyAccessPrevention:
         await db.flush()
 
         # Create candidate process for Company B
-        candidate_process_b = CandidateProcess(
+        candidate_process_b = CandidateWorkflow(
             candidate_id=scenario["candidate_a"].id,
             position_id=position_b.id,
-            recruitment_process_id=recruitment_process_b.id,
+            workflow_id=recruitment_process_b.id,
             current_stage="application_review",
             status="in_progress",
         )

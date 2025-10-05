@@ -7,7 +7,7 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.crud.workflow.recruitment_process import recruitment_process
+from app.crud.workflow.workflow import workflow
 from app.models.interview import Interview
 from app.models.todo import Todo
 from app.models.user import User
@@ -29,7 +29,7 @@ async def test_create_workflow_with_linked_interviews_and_todos(
         "status": "draft",
     }
 
-    workflow = await recruitment_process.create(
+    workflow = await workflow.create(
         db=db_session,
         obj_in=workflow_data,
         created_by=test_employer_user.id,
@@ -73,7 +73,7 @@ async def test_create_workflow_with_linked_interviews_and_todos(
     assert todo.workflow_id == workflow.id
 
     # Verify we can query by workflow
-    workflow_with_relations = await recruitment_process.get_with_nodes(
+    workflow_with_relations = await workflow.get_with_nodes(
         db=db_session, id=workflow.id
     )
     assert workflow_with_relations is not None
@@ -88,7 +88,7 @@ async def test_workflow_soft_delete_cascades_to_interviews(
 ):
     """Test that soft deleting a workflow cascades to related interviews."""
     # Create workflow
-    workflow = await recruitment_process.create(
+    workflow = await workflow.create(
         db=db_session,
         obj_in={
             "name": "Cascade Test Workflow",
@@ -124,7 +124,7 @@ async def test_workflow_soft_delete_cascades_to_interviews(
     interview_ids = [interview.id for interview in interviews]
 
     # Soft delete the workflow
-    deleted_workflow = await recruitment_process.soft_delete(
+    deleted_workflow = await workflow.soft_delete(
         db=db_session, id=workflow.id
     )
 
@@ -154,7 +154,7 @@ async def test_workflow_soft_delete_cascades_to_todos(
 ):
     """Test that soft deleting a workflow cascades to related todos."""
     # Create workflow
-    workflow = await recruitment_process.create(
+    workflow = await workflow.create(
         db=db_session,
         obj_in={
             "name": "Todo Cascade Workflow",
@@ -186,7 +186,7 @@ async def test_workflow_soft_delete_cascades_to_todos(
     todo_ids = [todo.id for todo in todos]
 
     # Soft delete the workflow
-    deleted_workflow = await recruitment_process.soft_delete(
+    deleted_workflow = await workflow.soft_delete(
         db=db_session, id=workflow.id
     )
 
@@ -213,7 +213,7 @@ async def test_workflow_soft_delete_cascades_to_both_interviews_and_todos(
 ):
     """Test that soft deleting a workflow cascades to both interviews and todos."""
     # Create workflow
-    workflow = await recruitment_process.create(
+    workflow = await workflow.create(
         db=db_session,
         obj_in={
             "name": "Full Cascade Workflow",
@@ -262,7 +262,7 @@ async def test_workflow_soft_delete_cascades_to_both_interviews_and_todos(
         await db_session.refresh(todo)
 
     # Soft delete the workflow
-    await recruitment_process.soft_delete(db=db_session, id=workflow.id)
+    await workflow.soft_delete(db=db_session, id=workflow.id)
 
     # Verify all interviews are soft deleted
     for interview in interviews:
@@ -286,7 +286,7 @@ async def test_soft_deleted_workflow_not_in_get_query(
 ):
     """Test that soft deleted workflows are excluded from get queries."""
     # Create workflow
-    workflow = await recruitment_process.create(
+    workflow = await workflow.create(
         db=db_session,
         obj_in={
             "name": "Test Exclusion Workflow",
@@ -299,14 +299,14 @@ async def test_soft_deleted_workflow_not_in_get_query(
     workflow_id = workflow.id
 
     # Verify workflow is retrievable before deletion
-    retrieved = await recruitment_process.get(db=db_session, id=workflow_id)
+    retrieved = await workflow.get(db=db_session, id=workflow_id)
     assert retrieved is not None
 
     # Soft delete the workflow
-    await recruitment_process.soft_delete(db=db_session, id=workflow_id)
+    await workflow.soft_delete(db=db_session, id=workflow_id)
 
     # Verify workflow is not retrievable after soft deletion
-    not_found = await recruitment_process.get(db=db_session, id=workflow_id)
+    not_found = await workflow.get(db=db_session, id=workflow_id)
     assert not_found is None
 
 
@@ -319,7 +319,7 @@ async def test_only_non_deleted_interviews_affected_by_cascade(
 ):
     """Test that only non-deleted interviews are affected by cascade."""
     # Create workflow
-    workflow = await recruitment_process.create(
+    workflow = await workflow.create(
         db=db_session,
         obj_in={
             "name": "Selective Cascade Workflow",
@@ -367,7 +367,7 @@ async def test_only_non_deleted_interviews_affected_by_cascade(
     initial_deleted_at = interview2.deleted_at
 
     # Soft delete the workflow
-    await recruitment_process.soft_delete(db=db_session, id=workflow.id)
+    await workflow.soft_delete(db=db_session, id=workflow.id)
 
     # Verify interview1 is now soft deleted
     await db_session.refresh(interview1)
@@ -389,7 +389,7 @@ async def test_workflow_foreign_key_set_null_on_hard_delete(
 ):
     """Test that workflow_id is set to NULL when workflow is hard deleted from DB."""
     # Create workflow
-    workflow = await recruitment_process.create(
+    workflow = await workflow.create(
         db=db_session,
         obj_in={
             "name": "Hard Delete Test Workflow",
@@ -443,7 +443,7 @@ async def test_interviews_and_todos_without_workflow_unaffected(
 ):
     """Test that interviews and todos without workflow_id are unaffected."""
     # Create workflow
-    workflow = await recruitment_process.create(
+    workflow = await workflow.create(
         db=db_session,
         obj_in={
             "name": "Isolated Workflow",
@@ -482,7 +482,7 @@ async def test_interviews_and_todos_without_workflow_unaffected(
     await db_session.refresh(standalone_todo)
 
     # Soft delete the workflow
-    await recruitment_process.soft_delete(db=db_session, id=workflow.id)
+    await workflow.soft_delete(db=db_session, id=workflow.id)
 
     # Verify standalone records are unaffected
     await db_session.refresh(standalone_interview)
@@ -503,7 +503,7 @@ async def test_query_workflows_with_interview_count(
 ):
     """Test querying workflows with counts of related interviews."""
     # Create workflow
-    workflow = await recruitment_process.create(
+    workflow = await workflow.create(
         db=db_session,
         obj_in={
             "name": "Count Test Workflow",
@@ -550,7 +550,7 @@ async def test_query_workflows_with_todo_count(
 ):
     """Test querying workflows with counts of related todos."""
     # Create workflow
-    workflow = await recruitment_process.create(
+    workflow = await workflow.create(
         db=db_session,
         obj_in={
             "name": "Todo Count Workflow",
