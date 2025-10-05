@@ -1,6 +1,6 @@
 """Email service for exam notifications."""
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from app.models.exam import Exam
@@ -172,8 +172,8 @@ MiraiWorks Recruitment System
     ) -> bool:
         """Send exam reminder notification."""
         try:
-            days_remaining = (due_date - datetime.utcnow()).days
-            hours_remaining = (due_date - datetime.utcnow()).seconds // 3600
+            days_remaining = (due_date - datetime.now(timezone.utc)).days
+            hours_remaining = (due_date - datetime.now(timezone.utc)).seconds // 3600
 
             subject = f"Reminder: Exam Due Soon - {exam.title}"
 
@@ -285,7 +285,7 @@ MiraiWorks Recruitment System
 
                         <div style="background-color: white; padding: 15px; border-radius: 5px; margin: 15px 0;">
                             <p><strong>Exam:</strong> {exam.title}</p>
-                            <p><strong>Completion Date:</strong> {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}</p>
+                            <p><strong>Completion Date:</strong> {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')}</p>
                         </div>
 
                         {result_section}
@@ -311,7 +311,7 @@ Dear {candidate.full_name},
 Congratulations! You have successfully completed the exam.
 
 Exam: {exam.title}
-Completion Date: {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}
+Completion Date: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')}
 {f"Your Score: {score:.1f}%" if exam.show_score and score is not None else ""}
 {f"Result: {'PASSED' if passed else 'NOT PASSED'}" if passed is not None else ""}
 

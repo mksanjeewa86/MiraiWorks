@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -465,7 +465,7 @@ async def create_share_link(
         allow_download=share_data.allow_download,
         show_contact_info=share_data.show_contact_info,
         last_viewed_at=None,
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(timezone.utc),
     )
 
 

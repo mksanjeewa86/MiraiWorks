@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy import and_, asc, desc, func, or_, select
@@ -147,7 +147,7 @@ class CRUDWorkflowNode(CRUDBase[WorkflowNode, dict, dict]):
             update_data["position_y"] = position["y"]
 
         update_data["updated_by"] = updated_by
-        update_data["updated_at"] = datetime.utcnow()
+        update_data["updated_at"] = datetime.now(timezone.utc)
 
         return await super().update(db, db_obj=db_obj, obj_in=update_data)
 
@@ -166,7 +166,7 @@ class CRUDWorkflowNode(CRUDBase[WorkflowNode, dict, dict]):
         2. Update to final positive sequence_order values
         """
         updated_nodes = []
-        timestamp = datetime.utcnow()
+        timestamp = datetime.now(timezone.utc)
 
         # Step 1: Set all nodes to negative temporary values to avoid constraint conflicts
         for i, update in enumerate(node_sequence_updates):

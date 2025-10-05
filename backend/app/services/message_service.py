@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import HTTPException, status
 from sqlalchemy import and_, desc, func, or_, select
@@ -326,7 +326,7 @@ class MessageService:
         count = 0
         for message in messages:
             message.is_read = True
-            message.read_at = datetime.utcnow()
+            message.read_at = datetime.now(timezone.utc)
             count += 1
 
         if count > 0:
@@ -356,7 +356,7 @@ class MessageService:
         count = 0
         for message in messages:
             message.is_read = True
-            message.read_at = datetime.utcnow()
+            message.read_at = datetime.now(timezone.utc)
             count += 1
 
         if count > 0:

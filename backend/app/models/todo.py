@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
@@ -143,12 +143,12 @@ class Todo(Base):
         if self.expired_at:
             return True
         if self.due_date:
-            return self.due_date < datetime.utcnow()
+            return self.due_date < datetime.now(timezone.utc)
         return False
 
     def mark_completed(self) -> None:
         self.status = TodoStatus.COMPLETED.value
-        self.completed_at = datetime.utcnow()
+        self.completed_at = datetime.now(timezone.utc)
         self.expired_at = None
 
     def mark_pending(self) -> None:
@@ -158,7 +158,7 @@ class Todo(Base):
 
     def soft_delete(self) -> None:
         self.is_deleted = True
-        self.deleted_at = datetime.utcnow()
+        self.deleted_at = datetime.now(timezone.utc)
 
     def restore(self) -> None:
         self.is_deleted = False
@@ -188,9 +188,9 @@ class Todo(Base):
         """Mark assignment as submitted"""
         if self.is_assignment:
             self.assignment_status = AssignmentStatus.SUBMITTED.value
-            self.submitted_at = datetime.utcnow()
+            self.submitted_at = datetime.now(timezone.utc)
             self.status = TodoStatus.COMPLETED.value
-            self.completed_at = datetime.utcnow()
+            self.completed_at = datetime.now(timezone.utc)
 
     def start_review(self) -> None:
         """Start review process for assignment"""
@@ -206,7 +206,7 @@ class Todo(Base):
         """Mark assignment as approved"""
         if self.is_assignment:
             self.assignment_status = AssignmentStatus.APPROVED.value
-            self.reviewed_at = datetime.utcnow()
+            self.reviewed_at = datetime.now(timezone.utc)
             self.reviewed_by = reviewer_id
             if assessment:
                 self.assignment_assessment = assessment
@@ -219,7 +219,7 @@ class Todo(Base):
         """Mark assignment as rejected"""
         if self.is_assignment:
             self.assignment_status = AssignmentStatus.REJECTED.value
-            self.reviewed_at = datetime.utcnow()
+            self.reviewed_at = datetime.now(timezone.utc)
             self.reviewed_by = reviewer_id
             if assessment:
                 self.assignment_assessment = assessment

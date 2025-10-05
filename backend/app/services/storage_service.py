@@ -1,7 +1,7 @@
 import hashlib
 import logging
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from fastapi import HTTPException, UploadFile, status
@@ -40,7 +40,7 @@ class StorageService:
     ) -> str:
         """Generate a unique S3 key for file storage."""
         # Create folder structure: folder/user_id/year/month/uuid_filename
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         unique_id = str(uuid.uuid4())
 
         # Sanitize filename
@@ -162,7 +162,7 @@ class StorageService:
             return {
                 "upload_url": url,
                 "s3_key": s3_key,
-                "expires_at": (datetime.utcnow() + expires).isoformat(),
+                "expires_at": (datetime.now(timezone.utc) + expires).isoformat(),
             }
 
         except S3Error as e:

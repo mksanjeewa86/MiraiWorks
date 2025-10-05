@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import pytest
 from httpx import AsyncClient
@@ -60,7 +60,7 @@ class TestDashboard:
             employer_company_id=test_company.id,
             recruiter_company_id=test_company.id,
             title="Test Interview 1",
-            scheduled_start=datetime.utcnow() + timedelta(days=1),
+            scheduled_start=datetime.now(timezone.utc) + timedelta(days=1),
             status=InterviewStatus.SCHEDULED.value,
             meeting_url="https://test.com/meeting1",
         )
@@ -70,7 +70,7 @@ class TestDashboard:
             employer_company_id=test_company.id,
             recruiter_company_id=test_company.id,
             title="Test Interview 2",
-            scheduled_start=datetime.utcnow() + timedelta(days=2),
+            scheduled_start=datetime.now(timezone.utc) + timedelta(days=2),
             status=InterviewStatus.COMPLETED.value,
             meeting_url="https://test.com/meeting2",
         )
@@ -97,14 +97,14 @@ class TestDashboard:
             recipient_id=user2.id,
             content="Test message 1",
             type="text",
-            created_at=datetime.utcnow() - timedelta(days=5),
+            created_at=datetime.now(timezone.utc) - timedelta(days=5),
         )
         message2 = Message(
             sender_id=user2.id,
             recipient_id=test_user.id,
             content="Test message 2",
             type="text",
-            created_at=datetime.utcnow() - timedelta(days=10),
+            created_at=datetime.now(timezone.utc) - timedelta(days=10),
         )
         db_session.add(message1)
         db_session.add(message2)
@@ -204,7 +204,7 @@ class TestDashboard:
             recipient_id=test_user.id,  # Self message for simplicity
             content="Old message",
             type="text",
-            created_at=datetime.utcnow() - timedelta(days=35),
+            created_at=datetime.now(timezone.utc) - timedelta(days=35),
         )
         db_session.add(old_message)
 
@@ -214,7 +214,7 @@ class TestDashboard:
             recipient_id=test_user.id,  # Self message for simplicity
             content="Recent message",
             type="text",
-            created_at=datetime.utcnow() - timedelta(days=5),
+            created_at=datetime.now(timezone.utc) - timedelta(days=5),
         )
         db_session.add(recent_message)
 
@@ -246,7 +246,7 @@ class TestDashboard:
             company_id=test_company.id,
             hashed_password="hashedpass",
             is_active=True,
-            created_at=datetime.utcnow() - timedelta(days=3),
+            created_at=datetime.now(timezone.utc) - timedelta(days=3),
         )
         db_session.add(recent_user)
 
@@ -260,10 +260,10 @@ class TestDashboard:
             employer_company_id=test_company.id,
             recruiter_company_id=test_company.id,
             title="Recent Interview",
-            scheduled_start=datetime.utcnow() + timedelta(days=1),
+            scheduled_start=datetime.now(timezone.utc) + timedelta(days=1),
             status=InterviewStatus.SCHEDULED.value,
             meeting_url="https://test.com/meeting",
-            created_at=datetime.utcnow() - timedelta(days=2),
+            created_at=datetime.now(timezone.utc) - timedelta(days=2),
         )
         db_session.add(recent_interview)
 
@@ -319,7 +319,7 @@ class TestDashboard:
                 company_id=test_company.id,
                 hashed_password="hashedpass",
                 is_active=True,
-                created_at=datetime.utcnow() - timedelta(days=1, hours=i),
+                created_at=datetime.now(timezone.utc) - timedelta(days=1, hours=i),
             )
             db_session.add(user)
 
@@ -395,7 +395,7 @@ class TestDashboard:
             company_id=test_company.id,
             hashed_password="hashedpass",
             is_active=True,
-            created_at=datetime.utcnow() - timedelta(days=1),
+            created_at=datetime.now(timezone.utc) - timedelta(days=1),
         )
         db_session.add(recent_user)
         await db_session.commit()
@@ -434,10 +434,10 @@ class TestDashboard:
             employer_company_id=1,  # Default company ID
             recruiter_company_id=1,  # Default company ID
             title="Interview Metadata Test",
-            scheduled_start=datetime.utcnow() + timedelta(days=1),
+            scheduled_start=datetime.now(timezone.utc) + timedelta(days=1),
             status=InterviewStatus.SCHEDULED.value,
             meeting_url="https://test.com/meeting",
-            created_at=datetime.utcnow() - timedelta(days=1),
+            created_at=datetime.now(timezone.utc) - timedelta(days=1),
         )
         db_session.add(recent_interview)
         await db_session.commit()

@@ -1,6 +1,6 @@
 """Connection invitation service for managing connection requests."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -42,7 +42,7 @@ class ConnectionInvitationService:
             receiver_id=receiver_id,
             status=InvitationStatus.PENDING,
             message=message,
-            sent_at=datetime.utcnow(),
+            sent_at=datetime.now(timezone.utc),
         )
 
         db.add(invitation)
@@ -82,7 +82,7 @@ class ConnectionInvitationService:
             invitation.status = InvitationStatus.REJECTED
             result_message = "Invitation rejected"
 
-        invitation.responded_at = datetime.utcnow()
+        invitation.responded_at = datetime.now(timezone.utc)
         await db.commit()
 
         # TODO: Send notification to sender
@@ -108,7 +108,7 @@ class ConnectionInvitationService:
             raise ValueError("Can only cancel pending invitations")
 
         invitation.status = InvitationStatus.CANCELLED
-        invitation.responded_at = datetime.utcnow()
+        invitation.responded_at = datetime.now(timezone.utc)
         await db.commit()
 
         return True

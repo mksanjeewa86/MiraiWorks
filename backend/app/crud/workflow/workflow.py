@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy import and_, desc, func, or_, select, update
@@ -48,21 +48,21 @@ class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
 
         # Soft delete the workflow
         workflow.is_deleted = True
-        workflow.deleted_at = datetime.utcnow()
+        workflow.deleted_at = datetime.now(timezone.utc)
         db.add(workflow)
 
         # Cascade soft delete to related interviews
         await db.execute(
             update(Interview)
             .where(Interview.workflow_id == id, Interview.is_deleted == False)
-            .values(is_deleted=True, deleted_at=datetime.utcnow())
+            .values(is_deleted=True, deleted_at=datetime.now(timezone.utc))
         )
 
         # Cascade soft delete to related todos
         await db.execute(
             update(Todo)
             .where(Todo.workflow_id == id, Todo.is_deleted == False)
-            .values(is_deleted=True, deleted_at=datetime.utcnow())
+            .values(is_deleted=True, deleted_at=datetime.now(timezone.utc))
         )
 
         await db.commit()
@@ -187,7 +187,7 @@ class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
             update_data = obj_in.dict(exclude_unset=True)
 
         update_data["updated_by"] = updated_by
-        update_data["updated_at"] = datetime.utcnow()
+        update_data["updated_at"] = datetime.now(timezone.utc)
 
         return await super().update(db, db_obj=db_obj, obj_in=update_data)
 

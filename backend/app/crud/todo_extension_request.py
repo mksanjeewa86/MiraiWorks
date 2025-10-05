@@ -1,6 +1,6 @@
 """CRUD operations for todo extension requests."""
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -59,7 +59,7 @@ class CRUDTodoExtensionRequest(CRUDBase[TodoExtensionRequest, dict, dict]):
         """Respond to an extension request."""
         request_obj.status = response_data.status.value
         request_obj.response_reason = response_data.response_reason
-        request_obj.responded_at = datetime.utcnow()
+        request_obj.responded_at = datetime.now(timezone.utc)
         request_obj.responded_by_id = responded_by_id
 
         # If approved, update the todo's due date
@@ -67,7 +67,7 @@ class CRUDTodoExtensionRequest(CRUDBase[TodoExtensionRequest, dict, dict]):
             todo = await db.get(Todo, request_obj.todo_id)
             if todo:
                 todo.due_date = request_obj.requested_due_date
-                todo.updated_at = datetime.utcnow()
+                todo.updated_at = datetime.now(timezone.utc)
 
         await db.commit()
         await db.refresh(request_obj)
@@ -265,7 +265,7 @@ class CRUDTodoExtensionRequest(CRUDBase[TodoExtensionRequest, dict, dict]):
             )
 
         # Check if requested date is not in the past
-        if requested_due_date <= datetime.utcnow():
+        if requested_due_date <= datetime.now(timezone.utc):
             return TodoExtensionValidation(
                 can_request_extension=False,
                 reason="Extension date cannot be in the past",

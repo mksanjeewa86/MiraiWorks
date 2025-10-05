@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from fastapi.encoders import jsonable_encoder
@@ -16,6 +16,7 @@ from app.dependencies import get_current_active_user
 from app.models.user import User
 from app.schemas.todo import TodoCreate
 from app.schemas.workflow.enums import NodeType
+from app.utils.constants import UserRole
 from app.schemas.workflow.workflow_node import (
     NodeIntegrationInterview,
     NodeIntegrationTodo,
@@ -39,13 +40,13 @@ def _get_user_roles(user: User) -> set[str]:
 
 def _ensure_workflow_can_be_edited(workflow_obj, user: User) -> Response:
     roles = _get_user_roles(user)
-    if "super_admin" in roles:
+    if UserRole.SYSTEM_ADMIN.value in roles:
         return
 
-    if not roles.intersection({"employer", "company_admin"}):
+    if not roles.intersection({UserRole.MEMBER.value, UserRole.ADMIN.value}):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only employers or company admins can modify recruitment workflows",
+            detail="Only members or admins can modify recruitment workflows",
         )
 
     if workflow_obj.employer_company_id != user.company_id:
@@ -215,7 +216,7 @@ async def _create_todo_integration(
         due_in_days = (node.config or {}).get("due_in_days")
     due_date: datetime | None = None
     if due_in_days:
-        due_date = datetime.utcnow() + timedelta(days=due_in_days)
+        due_date = datetime.now(timezone.utc) + timedelta(days=due_in_days)
 
     todo_type = TodoType.ASSIGNMENT.value
     if integration.is_assignment is False:

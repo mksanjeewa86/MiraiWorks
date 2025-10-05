@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Optional
 
@@ -97,7 +97,7 @@ class MeetingBase(BaseModel):
     @field_validator("scheduled_start")
     @classmethod
     def not_in_past(cls, v):
-        if v <= datetime.utcnow():
+        if v <= datetime.now(timezone.utc):
             raise ValueError("scheduled_start must be in the future")
         return v
 

@@ -1,6 +1,6 @@
 import os
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 from urllib.parse import urlencode
 
@@ -182,9 +182,9 @@ class CalendarService:
         try:
             events = await calendar_event.get_by_date_range(
                 db,
-                start_date=query_params.start_date or datetime.utcnow(),
+                start_date=query_params.start_date or datetime.now(timezone.utc),
                 end_date=query_params.end_date
-                or (datetime.utcnow() + timedelta(days=30)),
+                or (datetime.now(timezone.utc) + timedelta(days=30)),
                 creator_id=user_id,
                 event_type=query_params.event_type,
                 status=query_params.status,
@@ -405,7 +405,7 @@ class CalendarService:
                 existing.refresh_token = token_data.get(
                     "refresh_token", existing.refresh_token
                 )
-                existing.token_expires_at = datetime.utcnow() + timedelta(
+                existing.token_expires_at = datetime.now(timezone.utc) + timedelta(
                     seconds=token_data.get("expires_in", 3600)
                 )
                 existing.sync_error = None
@@ -422,7 +422,7 @@ class CalendarService:
                     display_name=profile_data.get("name", profile_data["email"]),
                     access_token=token_data["access_token"],
                     refresh_token=token_data.get("refresh_token"),
-                    token_expires_at=datetime.utcnow()
+                    token_expires_at=datetime.now(timezone.utc)
                     + timedelta(seconds=token_data.get("expires_in", 3600)),
                 )
 
@@ -467,7 +467,7 @@ class CalendarService:
                 existing.refresh_token = token_data.get(
                     "refresh_token", existing.refresh_token
                 )
-                existing.token_expires_at = datetime.utcnow() + timedelta(
+                existing.token_expires_at = datetime.now(timezone.utc) + timedelta(
                     seconds=token_data.get("expires_in", 3600)
                 )
                 existing.sync_error = None
@@ -487,7 +487,7 @@ class CalendarService:
                     ),
                     access_token=token_data["access_token"],
                     refresh_token=token_data.get("refresh_token"),
-                    token_expires_at=datetime.utcnow()
+                    token_expires_at=datetime.now(timezone.utc)
                     + timedelta(seconds=token_data.get("expires_in", 3600)),
                 )
 
@@ -608,7 +608,7 @@ class CalendarService:
             # 2. Store/update them in your database
             # 3. Handle any conflicts or updates
 
-            connection.last_sync_at = datetime.utcnow()
+            connection.last_sync_at = datetime.now(timezone.utc)
             connection.sync_error = None
             db.commit()
 

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -136,7 +136,7 @@ class PositionBase(BaseModel):
     @field_validator("application_deadline")
     @classmethod
     def deadline_in_future(cls, v):
-        if v is not None and v <= datetime.utcnow():
+        if v is not None and v <= datetime.now(timezone.utc):
             raise ValueError("application_deadline must be in the future")
         return v
 

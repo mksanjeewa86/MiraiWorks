@@ -5,7 +5,7 @@ Creates sample todos with different statuses, priorities, and visibility levels
 to demonstrate the todo management system functionality.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -47,7 +47,7 @@ async def seed_todo_data(
             "status": TodoStatus.PENDING.value,
             "priority": "high",
             "visibility": TodoVisibility.COMPANY.value,
-            "due_date": datetime.utcnow() + timedelta(days=7),
+            "due_date": datetime.now(timezone.utc) + timedelta(days=7),
         },
         {
             "owner_id": admin_user_id,
@@ -57,7 +57,7 @@ async def seed_todo_data(
             "status": TodoStatus.IN_PROGRESS.value,
             "priority": "medium",
             "visibility": TodoVisibility.PRIVATE.value,
-            "due_date": datetime.utcnow() + timedelta(days=14),
+            "due_date": datetime.now(timezone.utc) + timedelta(days=14),
         },
         {
             "owner_id": admin_user_id,
@@ -67,8 +67,8 @@ async def seed_todo_data(
             "status": TodoStatus.COMPLETED.value,
             "priority": "high",
             "visibility": TodoVisibility.PRIVATE.value,
-            "completed_at": datetime.utcnow() - timedelta(days=2),
-            "due_date": datetime.utcnow() - timedelta(days=1),
+            "completed_at": datetime.now(timezone.utc) - timedelta(days=2),
+            "due_date": datetime.now(timezone.utc) - timedelta(days=1),
         },
         # Recruiter todos
         {
@@ -80,7 +80,7 @@ async def seed_todo_data(
             "status": TodoStatus.PENDING.value,
             "priority": "high",
             "visibility": TodoVisibility.TEAM.value,
-            "due_date": datetime.utcnow() + timedelta(days=3),
+            "due_date": datetime.now(timezone.utc) + timedelta(days=3),
         },
         {
             "owner_id": recruiter_user_id,
@@ -91,7 +91,7 @@ async def seed_todo_data(
             "status": TodoStatus.IN_PROGRESS.value,
             "priority": "medium",
             "visibility": TodoVisibility.COMPANY.value,
-            "due_date": datetime.utcnow() + timedelta(days=2),
+            "due_date": datetime.now(timezone.utc) + timedelta(days=2),
         },
         {
             "owner_id": recruiter_user_id,
@@ -101,8 +101,8 @@ async def seed_todo_data(
             "status": TodoStatus.COMPLETED.value,
             "priority": "low",
             "visibility": TodoVisibility.PRIVATE.value,
-            "completed_at": datetime.utcnow() - timedelta(days=1),
-            "due_date": datetime.utcnow() - timedelta(days=1),
+            "completed_at": datetime.now(timezone.utc) - timedelta(days=1),
+            "due_date": datetime.now(timezone.utc) - timedelta(days=1),
         },
         # HR Manager todos
         {
@@ -114,7 +114,7 @@ async def seed_todo_data(
             "status": TodoStatus.PENDING.value,
             "priority": "high",
             "visibility": TodoVisibility.TEAM.value,
-            "due_date": datetime.utcnow() + timedelta(days=5),
+            "due_date": datetime.now(timezone.utc) + timedelta(days=5),
         },
         {
             "owner_id": hr_manager_user_id,
@@ -125,7 +125,7 @@ async def seed_todo_data(
             "status": TodoStatus.IN_PROGRESS.value,
             "priority": "medium",
             "visibility": TodoVisibility.COMPANY.value,
-            "due_date": datetime.utcnow() + timedelta(days=21),
+            "due_date": datetime.now(timezone.utc) + timedelta(days=21),
         },
         # Candidate todos (self-assigned)
         {
@@ -137,7 +137,7 @@ async def seed_todo_data(
             "status": TodoStatus.IN_PROGRESS.value,
             "priority": "high",
             "visibility": TodoVisibility.PRIVATE.value,
-            "due_date": datetime.utcnow() + timedelta(days=2),
+            "due_date": datetime.now(timezone.utc) + timedelta(days=2),
         },
         {
             "owner_id": candidate_user_id,
@@ -147,7 +147,7 @@ async def seed_todo_data(
             "status": TodoStatus.PENDING.value,
             "priority": "high",
             "visibility": TodoVisibility.PRIVATE.value,
-            "due_date": datetime.utcnow() + timedelta(days=4),
+            "due_date": datetime.now(timezone.utc) + timedelta(days=4),
         },
         # Overdue todos for testing
         {
@@ -158,8 +158,8 @@ async def seed_todo_data(
             "status": TodoStatus.PENDING.value,
             "priority": "high",
             "visibility": TodoVisibility.PRIVATE.value,
-            "due_date": datetime.utcnow() - timedelta(days=3),
-            "expired_at": datetime.utcnow() - timedelta(days=1),
+            "due_date": datetime.now(timezone.utc) - timedelta(days=3),
+            "expired_at": datetime.now(timezone.utc) - timedelta(days=1),
         },
         # Team collaboration todos
         {
@@ -172,7 +172,7 @@ async def seed_todo_data(
             "status": TodoStatus.PENDING.value,
             "priority": "medium",
             "visibility": TodoVisibility.TEAM.value,
-            "due_date": datetime.utcnow() + timedelta(days=10),
+            "due_date": datetime.now(timezone.utc) + timedelta(days=10),
         },
     ]
 

@@ -12,6 +12,7 @@ from app.dependencies import get_current_active_user
 from app.models.message import Message
 from app.models.role import UserRole
 from app.models.user import User
+from app.utils.constants import UserRole as UserRoleEnum
 from app.utils.logging import get_logger
 from app.utils.permissions import is_super_admin
 
@@ -115,9 +116,9 @@ async def check_file_access_permission(
         if not user:
             return False
 
-        # Check if user has super admin role
+        # Check if user has system admin role
         for user_role in user.user_roles:
-            if user_role.role.name == "super_admin":
+            if user_role.role.name == UserRoleEnum.SYSTEM_ADMIN.value:
                 return True
 
         # Normalize the file path to match against the stored file_url

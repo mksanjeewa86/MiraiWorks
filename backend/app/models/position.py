@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -139,7 +139,7 @@ class Position(Base):
     @property
     def is_active(self) -> bool:
         """Check if job is currently active and accepting applications"""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         return (
             self.status == "published"
             and (self.application_deadline is None or self.application_deadline > now)
@@ -151,7 +151,7 @@ class Position(Base):
         """Get number of days since job was published"""
         if not self.published_at:
             return None
-        return (datetime.utcnow() - self.published_at).days
+        return (datetime.now(timezone.utc) - self.published_at).days
 
     @property
     def salary_range_display(self) -> str | None:
@@ -270,7 +270,7 @@ class PositionApplication(Base):
     @property
     def days_since_applied(self) -> int:
         """Get number of days since application was submitted"""
-        return (datetime.utcnow() - self.applied_at).days
+        return (datetime.now(timezone.utc) - self.applied_at).days
 
 
 class CompanyProfile(Base):

@@ -16,6 +16,7 @@ from app.schemas.message import (
 )
 from app.services.message_service import message_service
 from app.services.notification_service import notification_service
+from app.utils.constants import UserRole
 from app.utils.logging import get_logger
 
 router = APIRouter()
@@ -43,25 +44,25 @@ async def validate_messaging_permission(
     recipient_roles = [ur.role.name for ur in recipient.user_roles]
 
     # Check messaging permissions
-    if "super_admin" in sender_roles:
-        # Super admin can only message company admins
-        if "company_admin" not in recipient_roles:
+    if UserRole.SYSTEM_ADMIN.value in sender_roles:
+        # System admin can only message company admins
+        if UserRole.ADMIN.value not in recipient_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Super admin can only message company admins",
+                detail="System admin can only message admins",
             )
-    elif "company_admin" in sender_roles:
-        # Company admin can only message super admins
-        if "super_admin" not in recipient_roles:
+    elif UserRole.ADMIN.value in sender_roles:
+        # Admin can only message system admins
+        if UserRole.SYSTEM_ADMIN.value not in recipient_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Company admins can only message super admins",
+                detail="Admins can only message system admins",
             )
-    # Other roles can message anyone except company admins
-    elif "company_admin" in recipient_roles:
+    # Other roles can message anyone except admins
+    elif UserRole.ADMIN.value in recipient_roles:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only super admins can message company admins",
+            detail="Only system admins can message admins",
         )
 
 
@@ -284,26 +285,26 @@ async def get_restricted_user_ids(
     # Determine which users are restricted based on messaging rules
     restricted_user_ids = []
 
-    if "super_admin" in current_user_roles:
-        # Super admin can only message company admins, so restrict non-company-admin users
+    if UserRole.SYSTEM_ADMIN.value in current_user_roles:
+        # System admin can only message admins, so restrict non-admin users
         query = (
             select(User.id)
             .join(UserRole, User.id == UserRole.user_id)
             .join(Role, UserRole.role_id == Role.id)
-            .where(Role.name != "company_admin")
+            .where(Role.name != UserRole.ADMIN.value)
             .where(User.is_active is True)
             .where(User.is_deleted is False)
         )
         result = await db.execute(query)
         restricted_user_ids = [user_id for (user_id,) in result.fetchall()]
 
-    elif "company_admin" in current_user_roles:
-        # Company admin can only message super admins, so restrict non-super-admin users
+    elif UserRole.ADMIN.value in current_user_roles:
+        # Admin can only message system admins, so restrict non-system-admin users
         query = (
             select(User.id)
             .join(UserRole, User.id == UserRole.user_id)
             .join(Role, UserRole.role_id == Role.id)
-            .where(Role.name != "super_admin")
+            .where(Role.name != UserRole.SYSTEM_ADMIN.value)
             .where(User.is_active is True)
             .where(User.is_deleted is False)
         )
@@ -311,12 +312,12 @@ async def get_restricted_user_ids(
         restricted_user_ids = [user_id for (user_id,) in result.fetchall()]
 
     else:
-        # Other users can message anyone except company admins
+        # Other users can message anyone except admins
         query = (
             select(User.id)
             .join(UserRole, User.id == UserRole.user_id)
             .join(Role, UserRole.role_id == Role.id)
-            .where(Role.name == "company_admin")
+            .where(Role.name == UserRole.ADMIN.value)
             .where(User.is_active is True)
             .where(User.is_deleted is False)
         )

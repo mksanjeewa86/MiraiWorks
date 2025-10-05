@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 import pytest
 from httpx import AsyncClient
@@ -298,7 +298,7 @@ class TestCrossCompanyAccessPrevention:
             position_id=position_b.id,
             candidate_id=scenario["candidate_a"].id,
             interviewer_id=scenario["employer_b"].id,
-            scheduled_at=datetime.utcnow(),
+            scheduled_at=datetime.now(timezone.utc),
             duration_minutes=60,
             interview_type="technical",
             status="scheduled",

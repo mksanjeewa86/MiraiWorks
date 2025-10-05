@@ -1,6 +1,6 @@
 """CRUD operations for MBTI personality test."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy import and_, select
@@ -39,9 +39,9 @@ class CRUDMBTITest(CRUDBase[MBTITest, dict, dict]):
                 existing_test.sensing_intuition_score = None
                 existing_test.thinking_feeling_score = None
                 existing_test.judging_perceiving_score = None
-                existing_test.started_at = datetime.utcnow()
+                existing_test.started_at = datetime.now(timezone.utc)
                 existing_test.completed_at = None
-                existing_test.updated_at = datetime.utcnow()
+                existing_test.updated_at = datetime.now(timezone.utc)
 
                 await db.commit()
                 await db.refresh(existing_test)
@@ -55,7 +55,7 @@ class CRUDMBTITest(CRUDBase[MBTITest, dict, dict]):
             user_id=user_id,
             status=MBTITestStatus.IN_PROGRESS.value,
             answers={},
-            started_at=datetime.utcnow(),
+            started_at=datetime.now(timezone.utc),
             test_version="1.0",
         )
 
@@ -72,7 +72,7 @@ class CRUDMBTITest(CRUDBase[MBTITest, dict, dict]):
             test.answers = {}
 
         test.answers[str(question_id)] = answer
-        test.updated_at = datetime.utcnow()
+        test.updated_at = datetime.now(timezone.utc)
 
         await db.commit()
         await db.refresh(test)
@@ -98,8 +98,8 @@ class CRUDMBTITest(CRUDBase[MBTITest, dict, dict]):
 
         # Update status and timing
         test.status = MBTITestStatus.COMPLETED.value
-        test.completed_at = datetime.utcnow()
-        test.updated_at = datetime.utcnow()
+        test.completed_at = datetime.now(timezone.utc)
+        test.updated_at = datetime.now(timezone.utc)
 
         await db.commit()
         await db.refresh(test)

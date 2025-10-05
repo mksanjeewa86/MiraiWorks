@@ -1,5 +1,5 @@
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from sqlalchemy import and_, desc, func, select
@@ -285,7 +285,7 @@ class CRUDExamSession(CRUDBase[ExamSession, ExamSessionCreate, ExamSessionUpdate
         # Calculate expiration time
         expires_at = None
         if exam.time_limit_minutes:
-            expires_at = datetime.utcnow() + timedelta(minutes=exam.time_limit_minutes)
+            expires_at = datetime.now(timezone.utc) + timedelta(minutes=exam.time_limit_minutes)
 
         session = ExamSession(
             exam_id=exam_id,
@@ -321,7 +321,7 @@ class CRUDExamSession(CRUDBase[ExamSession, ExamSessionCreate, ExamSessionUpdate
         # Calculate expiration time (shorter for test sessions)
         expires_at = None
         if exam.time_limit_minutes:
-            expires_at = datetime.utcnow() + timedelta(minutes=exam.time_limit_minutes)
+            expires_at = datetime.now(timezone.utc) + timedelta(minutes=exam.time_limit_minutes)
 
         session = ExamSession(
             exam_id=exam_id,
@@ -350,7 +350,7 @@ class CRUDExamSession(CRUDBase[ExamSession, ExamSessionCreate, ExamSessionUpdate
             raise ValueError("Session not found")
 
         session.status = SessionStatus.IN_PROGRESS
-        session.started_at = datetime.utcnow()
+        session.started_at = datetime.now(timezone.utc)
 
         await db.commit()
         await db.refresh(session)
@@ -365,7 +365,7 @@ class CRUDExamSession(CRUDBase[ExamSession, ExamSessionCreate, ExamSessionUpdate
             raise ValueError("Session not found")
 
         session.status = SessionStatus.COMPLETED
-        session.completed_at = datetime.utcnow()
+        session.completed_at = datetime.now(timezone.utc)
 
         if calculate_score:
             # Calculate score from answers
@@ -466,7 +466,7 @@ class CRUDExamAnswer(CRUDBase[ExamAnswer, ExamAnswerSubmit, ExamAnswerSubmit]):
         answer.answer_text = answer_data.answer_text
         answer.selected_options = answer_data.selected_options
         answer.time_spent_seconds = answer_data.time_spent_seconds
-        answer.answered_at = datetime.utcnow()
+        answer.answered_at = datetime.now(timezone.utc)
 
         # Auto-grade if possible
         if question.question_type in [

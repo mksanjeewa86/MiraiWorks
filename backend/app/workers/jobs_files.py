@@ -46,7 +46,7 @@ async def _scan_file_async(attachment_id: int) -> bool:
 
 async def _mark_scan_failed(attachment_id: int):
     """Mark file scan as failed."""
-    from datetime import datetime
+    from datetime import datetime, timezone
 
     from sqlalchemy import update
 
@@ -60,7 +60,7 @@ async def _mark_scan_failed(attachment_id: int):
             .values(
                 virus_status=VirusStatus.ERROR.value,
                 virus_scan_result="Scan failed after retries",
-                scanned_at=datetime.utcnow(),
+                scanned_at=datetime.now(timezone.utc),
                 is_available=False,
             )
         )
@@ -118,7 +118,7 @@ async def _cleanup_attachments_async() -> int:
 
     async with AsyncSessionLocal() as db:
         # Find attachments marked as deleted over 30 days ago
-        cutoff_date = datetime.utcnow() - timedelta(days=30)
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=30)
 
         result = await db.execute(
             select(Attachment)

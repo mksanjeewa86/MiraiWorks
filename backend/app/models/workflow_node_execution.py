@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
@@ -156,7 +156,7 @@ class WorkflowNodeExecution(Base):
     def is_overdue(self) -> bool:
         if not self.due_date or self.is_completed:
             return False
-        return datetime.utcnow() > self.due_date
+        return datetime.now(timezone.utc) > self.due_date
 
     @property
     def duration_minutes(self) -> int | None:
@@ -173,7 +173,7 @@ class WorkflowNodeExecution(Base):
             raise ValueError(f"Cannot start execution with status '{self.status}'")
 
         self.status = "in_progress"
-        self.started_at = datetime.utcnow()
+        self.started_at = datetime.now(timezone.utc)
         if assigned_to:
             self.assigned_to = assigned_to
 
@@ -191,7 +191,7 @@ class WorkflowNodeExecution(Base):
 
         self.status = "completed"
         self.result = result
-        self.completed_at = datetime.utcnow()
+        self.completed_at = datetime.now(timezone.utc)
         self.completed_by = completed_by
 
         if score is not None:
@@ -205,7 +205,7 @@ class WorkflowNodeExecution(Base):
         """Mark execution as failed"""
         self.status = "failed"
         self.result = "fail"
-        self.completed_at = datetime.utcnow()
+        self.completed_at = datetime.now(timezone.utc)
         self.completed_by = completed_by
         if reason:
             self.feedback = reason
@@ -214,7 +214,7 @@ class WorkflowNodeExecution(Base):
         """Skip this execution"""
         self.status = "skipped"
         self.result = "skipped"
-        self.completed_at = datetime.utcnow()
+        self.completed_at = datetime.now(timezone.utc)
         self.completed_by = completed_by
         if reason:
             self.feedback = reason

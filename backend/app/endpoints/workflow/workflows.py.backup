@@ -19,7 +19,6 @@ from app.schemas.workflow.workflow import (
     WorkflowUpdate,
 )
 from app.services.workflow.workflow_engine import workflow_engine
-from app.utils.constants import UserRole
 
 router = APIRouter()
 
@@ -47,7 +46,7 @@ async def create_workflow(
     # Verify user is employer/company_admin and has company access
     user_roles = get_user_roles(current_user)
     if (
-        not any(role in user_roles for role in [UserRole.MEMBER.value, UserRole.ADMIN.value])
+        not any(role in user_roles for role in ["employer", "company_admin"])
         or not current_user.company_id
     ):
         raise HTTPException(
@@ -83,7 +82,7 @@ async def list_workflows(
     current_user_roles = [user_role.role.name for user_role in current_user.user_roles]
 
     if (
-        UserRole.SYSTEM_ADMIN.value in current_user_roles or UserRole.ADMIN.value in current_user_roles
+        "super_admin" in current_user_roles or "company_admin" in current_user_roles
     ) and company_id:
         # Admin can view workflows for any company
         if search:
@@ -100,7 +99,7 @@ async def list_workflows(
                 db, company_id=company_id, skip=skip, limit=limit
             )
     elif (
-        any(role in current_user_roles for role in [UserRole.MEMBER.value, UserRole.ADMIN.value])
+        any(role in current_user_roles for role in ["employer", "company_admin"])
         and current_user.company_id
     ):
         # Employer sees their company's workflows
@@ -148,12 +147,12 @@ async def get_workflow(
 
     # Check access permissions
     user_roles = get_user_roles(current_user)
-    if any(role in user_roles for role in [UserRole.MEMBER.value, UserRole.ADMIN.value]):
+    if any(role in user_roles for role in ["employer", "company_admin"]):
         if wf.employer_company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
-    elif any(role in user_roles for role in [UserRole.MEMBER.value, "candidate"]):
+    elif any(role in user_roles for role in ["recruiter", "candidate"]):
         # Check if user has viewer access
         has_access = await workflow_viewer.check_user_access(
             db,
@@ -190,12 +189,12 @@ async def update_workflow(
 
     # Check permissions
     user_roles = get_user_roles(current_user)
-    if any(role in user_roles for role in [UserRole.MEMBER.value, UserRole.ADMIN.value]):
+    if any(role in user_roles for role in ["employer", "company_admin"]):
         if wf.employer_company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
-    elif not any(role in user_roles for role in [UserRole.SYSTEM_ADMIN.value, UserRole.ADMIN.value]):
+    elif not any(role in user_roles for role in ["super_admin", "company_admin"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
         )
@@ -240,12 +239,12 @@ async def activate_workflow(
 
     # Check permissions
     user_roles = get_user_roles(current_user)
-    if any(role in user_roles for role in [UserRole.MEMBER.value, UserRole.ADMIN.value]):
+    if any(role in user_roles for role in ["employer", "company_admin"]):
         if wf.employer_company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
-    elif not any(role in user_roles for role in [UserRole.SYSTEM_ADMIN.value, UserRole.ADMIN.value]):
+    elif not any(role in user_roles for role in ["super_admin", "company_admin"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
         )
@@ -289,12 +288,12 @@ async def archive_workflow(
 
     # Check permissions
     user_roles = get_user_roles(current_user)
-    if any(role in user_roles for role in [UserRole.MEMBER.value, UserRole.ADMIN.value]):
+    if any(role in user_roles for role in ["employer", "company_admin"]):
         if wf.employer_company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
-    elif not any(role in user_roles for role in [UserRole.SYSTEM_ADMIN.value, UserRole.ADMIN.value]):
+    elif not any(role in user_roles for role in ["super_admin", "company_admin"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
         )
@@ -325,12 +324,12 @@ async def clone_workflow(
 
     # Check access permissions
     user_roles = get_user_roles(current_user)
-    if any(role in user_roles for role in [UserRole.MEMBER.value, UserRole.ADMIN.value]):
+    if any(role in user_roles for role in ["employer", "company_admin"]):
         if source_wf.employer_company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
-    elif any(role in user_roles for role in [UserRole.MEMBER.value, "candidate"]):
+    elif any(role in user_roles for role in ["recruiter", "candidate"]):
         has_access = await workflow_viewer.check_user_access(
             db,
             process_id=workflow_id,
@@ -344,7 +343,7 @@ async def clone_workflow(
 
     # Only employers can create new workflows
     user_roles = get_user_roles(current_user)
-    if not any(role in user_roles for role in [UserRole.MEMBER.value, UserRole.ADMIN.value]):
+    if not any(role in user_roles for role in ["employer", "company_admin"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only employers can create new workflows",
@@ -383,12 +382,12 @@ async def delete_workflow(
 
     # Check permissions
     user_roles = get_user_roles(current_user)
-    if any(role in user_roles for role in [UserRole.MEMBER.value, UserRole.ADMIN.value]):
+    if any(role in user_roles for role in ["employer", "company_admin"]):
         if wf.employer_company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
-    elif not any(role in user_roles for role in [UserRole.SYSTEM_ADMIN.value, UserRole.ADMIN.value]):
+    elif not any(role in user_roles for role in ["super_admin", "company_admin"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
         )
@@ -422,12 +421,12 @@ async def validate_workflow(
 
     # Check access permissions
     user_roles = get_user_roles(current_user)
-    if any(role in user_roles for role in [UserRole.MEMBER.value, UserRole.ADMIN.value]):
+    if any(role in user_roles for role in ["employer", "company_admin"]):
         if wf.employer_company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
-    elif UserRole.MEMBER.value in user_roles:
+    elif "recruiter" in user_roles:
         has_access = await workflow_viewer.check_user_access(
             db,
             process_id=workflow_id,
@@ -461,12 +460,12 @@ async def get_workflow_analytics(
 
     # Check permissions
     user_roles = get_user_roles(current_user)
-    if any(role in user_roles for role in [UserRole.MEMBER.value, UserRole.ADMIN.value]):
+    if any(role in user_roles for role in ["employer", "company_admin"]):
         if wf.employer_company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
-    elif UserRole.MEMBER.value in user_roles:
+    elif "recruiter" in user_roles:
         has_access = await workflow_viewer.check_user_access(
             db,
             process_id=workflow_id,
@@ -508,12 +507,12 @@ async def get_company_workflow_statistics(
     """
     # Check permissions
     user_roles = get_user_roles(current_user)
-    if any(role in user_roles for role in [UserRole.MEMBER.value, UserRole.ADMIN.value]):
+    if any(role in user_roles for role in ["employer", "company_admin"]):
         if current_user.company_id != company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
-    elif not any(role in user_roles for role in [UserRole.SYSTEM_ADMIN.value, UserRole.ADMIN.value]):
+    elif not any(role in user_roles for role in ["super_admin", "company_admin"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
         )
@@ -540,7 +539,7 @@ async def list_workflow_templates(
         current_user.company_id
         if any(
             role in get_user_roles(current_user)
-            for role in [UserRole.MEMBER.value, UserRole.ADMIN.value]
+            for role in ["employer", "company_admin"]
         )
         else None
     )
@@ -579,7 +578,7 @@ async def apply_workflow_template(
     # Verify user is employer
     user_roles = get_user_roles(current_user)
     if (
-        not any(role in user_roles for role in [UserRole.MEMBER.value, UserRole.ADMIN.value])
+        not any(role in user_roles for role in ["employer", "company_admin"])
         or not current_user.company_id
     ):
         raise HTTPException(

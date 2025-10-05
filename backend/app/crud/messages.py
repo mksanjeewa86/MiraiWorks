@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import and_, case, desc, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,6 +9,7 @@ from app.models.message import Message
 from app.models.role import Role, UserRole
 from app.models.user import User
 from app.schemas.message import MessageSearchRequest
+from app.utils.constants import UserRole as UserRoleEnum
 
 
 async def get_messages_between_users(
@@ -88,7 +89,7 @@ async def mark_messages_as_read(
                 Message.read_at.is_(None),
             )
         )
-        .values(read_at=datetime.utcnow())
+        .values(read_at=datetime.now(timezone.utc))
     )
 
     result = await db.execute(query)
@@ -310,12 +311,12 @@ class CRUDMessage(CRUDBase[Message, dict, dict]):
         )
 
         # Apply role-based filtering
-        if "super_admin" in current_user_roles:
-            # Super admin can message all company admins
-            query_stmt = query_stmt.where(Role.name == "company_admin")
-        elif "company_admin" in current_user_roles:
-            # Company admin can ONLY message super admin (not other company admins)
-            query_stmt = query_stmt.where(Role.name == "super_admin")
+        if UserRoleEnum.SYSTEM_ADMIN.value in current_user_roles:
+            # System admin can message all company admins
+            query_stmt = query_stmt.where(Role.name == UserRoleEnum.ADMIN.value)
+        elif UserRoleEnum.ADMIN.value in current_user_roles:
+            # Admin can ONLY message system admin (not other admins)
+            query_stmt = query_stmt.where(Role.name == UserRoleEnum.SYSTEM_ADMIN.value)
         # For other roles, no role-based filtering (can message anyone)
 
         # Apply search filter if provided

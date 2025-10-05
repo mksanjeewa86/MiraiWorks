@@ -1,5 +1,5 @@
 """Basic unit tests for service classes."""
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from unittest.mock import Mock, patch
 
 import pytest
@@ -65,7 +65,7 @@ class TestAuthService:
         auth_service = AuthService()
         mock_decode.return_value = {
             "sub": "test@example.com",
-            "exp": datetime.utcnow() + timedelta(hours=1),
+            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
             "type": "access",
         }
 
@@ -204,14 +204,14 @@ class TestMeetingService:
 
     def test_validate_meeting_time_valid(self):
         """Test meeting time validation with valid time."""
-        future_time = datetime.utcnow() + timedelta(hours=2)
+        future_time = datetime.now(timezone.utc) + timedelta(hours=2)
 
         # Should not raise an exception
         self.meeting_service.validate_meeting_time(future_time)
 
     def test_validate_meeting_time_past(self):
         """Test meeting time validation with past time."""
-        past_time = datetime.utcnow() - timedelta(hours=1)
+        past_time = datetime.now(timezone.utc) - timedelta(hours=1)
 
         with pytest.raises(ValueError, match="past"):
             self.meeting_service.validate_meeting_time(past_time)

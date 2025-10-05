@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from fastapi import HTTPException, status
 from sqlalchemy import and_, or_, select, update
@@ -157,7 +157,7 @@ class InterviewService:
             timezone=timezone,
             location=location,
             notes=notes,
-            expires_at=datetime.utcnow() + timedelta(days=7),  # 7-day expiration
+            expires_at=datetime.now(timezone.utc) + timedelta(days=7),  # 7-day expiration
         )
 
         db.add(proposal)
@@ -211,7 +211,7 @@ class InterviewService:
         # Update proposal
         proposal.status = response
         proposal.responded_by = responded_by
-        proposal.responded_at = datetime.utcnow()
+        proposal.responded_at = datetime.now(timezone.utc)
         proposal.response_notes = response_notes
 
         # If accepted, update interview and create calendar events
@@ -257,7 +257,7 @@ class InterviewService:
         # Update interview status
         interview.status = InterviewStatus.CANCELLED.value
         interview.cancelled_by = cancelled_by
-        interview.cancelled_at = datetime.utcnow()
+        interview.cancelled_at = datetime.now(timezone.utc)
         interview.cancellation_reason = reason
 
         # Cancel calendar events
@@ -536,7 +536,7 @@ class InterviewService:
         interview.location = proposal.location
         interview.status = InterviewStatus.CONFIRMED.value
         interview.confirmed_by = proposal.responded_by
-        interview.confirmed_at = datetime.utcnow()
+        interview.confirmed_at = datetime.now(timezone.utc)
 
         # Create calendar events for participants
         await self._create_calendar_events(db, interview)

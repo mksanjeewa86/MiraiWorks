@@ -1,6 +1,6 @@
 """Targeted integration tests covering advanced interview endpoints."""
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
 import pytest
@@ -65,7 +65,7 @@ async def create_interview_record(
         last_name="User",
     )
 
-    start = datetime.utcnow() + timedelta(days=2)
+    start = datetime.now(timezone.utc) + timedelta(days=2)
     interview = await interview_service.create_interview(
         db=db_session,
         candidate_id=candidate_user.id,
@@ -92,7 +92,7 @@ async def confirm_interview(
     candidate_user: User,
 ) -> Interview:
     """Confirm an interview by creating and accepting a proposal."""
-    start = datetime.utcnow() + timedelta(days=3)
+    start = datetime.now(timezone.utc) + timedelta(days=3)
     proposal = await interview_service.create_proposal(
         db=db_session,
         interview_id=interview.id,
@@ -198,7 +198,7 @@ async def test_calendar_events_respects_date_filters(
         db_session, interview, test_employer_user, test_candidate_only_user
     )
 
-    future_window = datetime.utcnow() + timedelta(days=30)
+    future_window = datetime.now(timezone.utc) + timedelta(days=30)
     response = await client.get(
         "/api/interviews/calendar/events",
         headers=auth_headers,

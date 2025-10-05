@@ -9,7 +9,7 @@ Designed to work reliably in Docker environments without migration dependencies.
 import asyncio
 import os
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 # Add the backend directory to Python path
@@ -259,12 +259,12 @@ async def create_tables_and_seed_data(db):
         """,
         f"""
         INSERT IGNORE INTO todos (owner_id, created_by, title, description, notes, status, priority, visibility, due_date) VALUES
-        (1, 1, 'Review Q4 Recruitment Metrics', 'Analyze hiring performance and identify areas for improvement', 'Focus on time-to-hire and candidate satisfaction scores', 'pending', 'high', 'company', '{(datetime.utcnow() + timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")}'),
-        (1, 1, 'Update Company Policies', 'Review and update remote work and diversity policies', NULL, 'in_progress', 'medium', 'private', '{(datetime.utcnow() + timedelta(days=14)).strftime("%Y-%m-%d %H:%M:%S")}'),
-        (2, 2, 'Screen Frontend Developer Candidates', 'Initial screening for React developer position', 'Focus on React, TypeScript, and testing experience', 'pending', 'high', 'team', '{(datetime.utcnow() + timedelta(days=3)).strftime("%Y-%m-%d %H:%M:%S")}'),
-        (2, 1, 'Follow up with Backend Developer Candidates', 'Send follow-up emails to candidates from last week interviews', NULL, 'in_progress', 'medium', 'company', '{(datetime.utcnow() + timedelta(days=2)).strftime("%Y-%m-%d %H:%M:%S")}'),
-        (4, 4, 'Complete Technical Assessment', 'Finish the React coding challenge for MiraiWorks position', 'Focus on clean code and proper testing', 'in_progress', 'high', 'private', '{(datetime.utcnow() + timedelta(days=2)).strftime("%Y-%m-%d %H:%M:%S")}'),
-        (3, 3, 'Conduct New Employee Orientation', 'Prepare orientation materials for new hires starting next week', 'Include company culture presentation and IT setup checklist', 'pending', 'high', 'team', '{(datetime.utcnow() + timedelta(days=5)).strftime("%Y-%m-%d %H:%M:%S")}')
+        (1, 1, 'Review Q4 Recruitment Metrics', 'Analyze hiring performance and identify areas for improvement', 'Focus on time-to-hire and candidate satisfaction scores', 'pending', 'high', 'company', '{(datetime.now(timezone.utc) + timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")}'),
+        (1, 1, 'Update Company Policies', 'Review and update remote work and diversity policies', NULL, 'in_progress', 'medium', 'private', '{(datetime.now(timezone.utc) + timedelta(days=14)).strftime("%Y-%m-%d %H:%M:%S")}'),
+        (2, 2, 'Screen Frontend Developer Candidates', 'Initial screening for React developer position', 'Focus on React, TypeScript, and testing experience', 'pending', 'high', 'team', '{(datetime.now(timezone.utc) + timedelta(days=3)).strftime("%Y-%m-%d %H:%M:%S")}'),
+        (2, 1, 'Follow up with Backend Developer Candidates', 'Send follow-up emails to candidates from last week interviews', NULL, 'in_progress', 'medium', 'company', '{(datetime.now(timezone.utc) + timedelta(days=2)).strftime("%Y-%m-%d %H:%M:%S")}'),
+        (4, 4, 'Complete Technical Assessment', 'Finish the React coding challenge for MiraiWorks position', 'Focus on clean code and proper testing', 'in_progress', 'high', 'private', '{(datetime.now(timezone.utc) + timedelta(days=2)).strftime("%Y-%m-%d %H:%M:%S")}'),
+        (3, 3, 'Conduct New Employee Orientation', 'Prepare orientation materials for new hires starting next week', 'Include company culture presentation and IT setup checklist', 'pending', 'high', 'team', '{(datetime.now(timezone.utc) + timedelta(days=5)).strftime("%Y-%m-%d %H:%M:%S")}')
         """,
         # Create notifications table and seed data
         """
@@ -287,12 +287,12 @@ async def create_tables_and_seed_data(db):
         """,
         f"""
         INSERT IGNORE INTO notifications (user_id, type, title, message, payload, is_read, created_at) VALUES
-        (1, 'system', 'System Maintenance Scheduled', 'Scheduled maintenance will occur tonight from 2:00 AM to 4:00 AM EST.', '{{"maintenance_window": "2024-01-15T02:00:00Z to 2024-01-15T04:00:00Z", "affected_services": ["API", "Database"], "severity": "low"}}', FALSE, '{(datetime.utcnow() - timedelta(hours=2)).strftime("%Y-%m-%d %H:%M:%S")}'),
-        (2, 'interview', 'Interview Scheduled', 'New interview scheduled with John Doe for Frontend Developer position.', '{{"interview_id": 1, "candidate_name": "John Doe", "position": "Frontend Developer", "scheduled_time": "2024-01-16T14:00:00Z"}}', FALSE, '{(datetime.utcnow() - timedelta(hours=6)).strftime("%Y-%m-%d %H:%M:%S")}'),
-        (2, 'application', 'New Job Application', 'Sarah Johnson has applied for the Backend Developer position.', '{{"application_id": 2, "candidate_name": "Sarah Johnson", "position": "Backend Developer", "resume_score": 85}}', FALSE, '{(datetime.utcnow() - timedelta(hours=4)).strftime("%Y-%m-%d %H:%M:%S")}'),
-        (4, 'interview', 'Interview Confirmation', 'Your interview for Frontend Developer position is confirmed for tomorrow at 2:00 PM.', '{{"interview_id": 1, "position": "Frontend Developer", "interview_time": "2024-01-16T14:00:00Z", "interviewer": "Jane Smith", "location": "Virtual - Zoom"}}', FALSE, '{(datetime.utcnow() - timedelta(hours=12)).strftime("%Y-%m-%d %H:%M:%S")}'),
-        (4, 'assessment', 'Technical Assessment Assigned', 'You have been assigned a technical assessment. Please complete it within 48 hours.', '{{"assessment_id": 1, "assessment_type": "coding_challenge", "deadline": "2024-01-17T23:59:59Z", "estimated_duration": "2-3 hours"}}', TRUE, '{(datetime.utcnow() - timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")}'),
-        (3, 'onboarding', 'New Employee Onboarding', '3 new employees are starting next week. Prepare onboarding materials.', '{{"new_employee_count": 3, "start_date": "2024-01-22", "departments": ["Engineering", "Marketing"]}}', FALSE, '{(datetime.utcnow() - timedelta(hours=8)).strftime("%Y-%m-%d %H:%M:%S")}')
+        (1, 'system', 'System Maintenance Scheduled', 'Scheduled maintenance will occur tonight from 2:00 AM to 4:00 AM EST.', '{{"maintenance_window": "2024-01-15T02:00:00Z to 2024-01-15T04:00:00Z", "affected_services": ["API", "Database"], "severity": "low"}}', FALSE, '{(datetime.now(timezone.utc) - timedelta(hours=2)).strftime("%Y-%m-%d %H:%M:%S")}'),
+        (2, 'interview', 'Interview Scheduled', 'New interview scheduled with John Doe for Frontend Developer position.', '{{"interview_id": 1, "candidate_name": "John Doe", "position": "Frontend Developer", "scheduled_time": "2024-01-16T14:00:00Z"}}', FALSE, '{(datetime.now(timezone.utc) - timedelta(hours=6)).strftime("%Y-%m-%d %H:%M:%S")}'),
+        (2, 'application', 'New Job Application', 'Sarah Johnson has applied for the Backend Developer position.', '{{"application_id": 2, "candidate_name": "Sarah Johnson", "position": "Backend Developer", "resume_score": 85}}', FALSE, '{(datetime.now(timezone.utc) - timedelta(hours=4)).strftime("%Y-%m-%d %H:%M:%S")}'),
+        (4, 'interview', 'Interview Confirmation', 'Your interview for Frontend Developer position is confirmed for tomorrow at 2:00 PM.', '{{"interview_id": 1, "position": "Frontend Developer", "interview_time": "2024-01-16T14:00:00Z", "interviewer": "Jane Smith", "location": "Virtual - Zoom"}}', FALSE, '{(datetime.now(timezone.utc) - timedelta(hours=12)).strftime("%Y-%m-%d %H:%M:%S")}'),
+        (4, 'assessment', 'Technical Assessment Assigned', 'You have been assigned a technical assessment. Please complete it within 48 hours.', '{{"assessment_id": 1, "assessment_type": "coding_challenge", "deadline": "2024-01-17T23:59:59Z", "estimated_duration": "2-3 hours"}}', TRUE, '{(datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")}'),
+        (3, 'onboarding', 'New Employee Onboarding', '3 new employees are starting next week. Prepare onboarding materials.', '{{"new_employee_count": 3, "start_date": "2024-01-22", "departments": ["Engineering", "Marketing"]}}', FALSE, '{(datetime.now(timezone.utc) - timedelta(hours=8)).strftime("%Y-%m-%d %H:%M:%S")}')
         """,
         # Create MBTI questions table and seed data
         """

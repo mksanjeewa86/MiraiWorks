@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Generic, TypeVar
 
 from fastapi.encoders import jsonable_encoder
@@ -91,7 +91,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         obj = await self.get(db, id)
         if obj and hasattr(obj, "is_deleted") and hasattr(obj, "deleted_at"):
             obj.is_deleted = True
-            obj.deleted_at = datetime.utcnow()
+            obj.deleted_at = datetime.now(timezone.utc)
             db.add(obj)
             await db.commit()
             await db.refresh(obj)

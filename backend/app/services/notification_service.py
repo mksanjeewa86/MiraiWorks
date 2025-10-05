@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -104,7 +104,7 @@ class NotificationService:
         conversation_key = (
             f"{min(sender_id, recipient_id)}_{max(sender_id, recipient_id)}"
         )
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         if conversation_key in self._email_debounce:
             last_email_time = self._email_debounce[conversation_key]
@@ -161,7 +161,7 @@ class NotificationService:
                     Notification.id.in_(notification_ids),
                 )
             )
-            .values(is_read=True, read_at=datetime.utcnow())
+            .values(is_read=True, read_at=datetime.now(timezone.utc))
         )
 
         result = await db.execute(stmt)

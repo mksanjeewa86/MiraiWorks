@@ -1,6 +1,6 @@
 import logging
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from app.models.resume import Resume
@@ -54,14 +54,14 @@ class PDFService:
 
             # Update resume record
             resume.pdf_file_path = file_path
-            resume.pdf_generated_at = datetime.utcnow()
+            resume.pdf_generated_at = datetime.now(timezone.utc)
             resume.download_count = (resume.download_count or 0) + 1
 
             result = {
                 "pdf_url": download_url,
                 "file_path": file_path,
                 "file_size": len(pdf_data),
-                "expires_at": datetime.utcnow() + timedelta(hours=1),
+                "expires_at": datetime.now(timezone.utc) + timedelta(hours=1),
             }
 
             logger.info(

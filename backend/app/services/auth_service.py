@@ -1,6 +1,6 @@
 import hashlib
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from jose import JWTError, jwt
@@ -41,9 +41,9 @@ class AuthService:
         """Create a JWT access token."""
         to_encode = data.copy()
         if expires_delta:
-            expire = datetime.utcnow() + expires_delta
+            expire = datetime.now(timezone.utc) + expires_delta
         else:
-            expire = datetime.utcnow() + timedelta(
+            expire = datetime.now(timezone.utc) + timedelta(
                 minutes=self.access_token_expire_minutes
             )
 
@@ -56,7 +56,7 @@ class AuthService:
         if data is not None:
             # Create JWT refresh token with data
             to_encode = data.copy()
-            expire = datetime.utcnow() + timedelta(days=self.refresh_token_expire_days)
+            expire = datetime.now(timezone.utc) + timedelta(days=self.refresh_token_expire_days)
             to_encode.update({"exp": expire, "type": "refresh"})
             encoded_jwt = jwt.encode(
                 to_encode, self.secret_key, algorithm=self.algorithm
@@ -93,7 +93,7 @@ class AuthService:
     ) -> RefreshToken:
         """Store a refresh token in the database."""
         token_hash = self.hash_token(token)
-        expires_at = datetime.utcnow() + timedelta(days=self.refresh_token_expire_days)
+        expires_at = datetime.now(timezone.utc) + timedelta(days=self.refresh_token_expire_days)
 
         refresh_token = RefreshToken(
             user_id=user_id, token_hash=token_hash, expires_at=expires_at
@@ -111,7 +111,7 @@ class AuthService:
         result = await db.execute(
             update(RefreshToken)
             .where(RefreshToken.token_hash == token_hash)
-            .values(is_revoked=True, revoked_at=datetime.utcnow())
+            .values(is_revoked=True, revoked_at=datetime.now(timezone.utc))
         )
 
         await db.commit()
@@ -122,7 +122,7 @@ class AuthService:
         result = await db.execute(
             update(RefreshToken)
             .where(RefreshToken.user_id == user_id, RefreshToken.is_revoked is False)
-            .values(is_revoked=True, revoked_at=datetime.utcnow())
+            .values(is_revoked=True, revoked_at=datetime.now(timezone.utc))
         )
 
         await db.commit()
@@ -142,7 +142,7 @@ class AuthService:
             .where(
                 RefreshToken.token_hash == token_hash,
                 RefreshToken.is_revoked is False,
-                RefreshToken.expires_at > datetime.utcnow(),
+                RefreshToken.expires_at > datetime.now(timezone.utc),
             )
         )
 
@@ -188,7 +188,7 @@ class AuthService:
         # Activation tokens expire in 24 hours
         expire_delta = timedelta(hours=24)
         to_encode = data.copy()
-        expire = datetime.utcnow() + expire_delta
+        expire = datetime.now(timezone.utc) + expire_delta
         to_encode.update({"exp": expire})
 
         encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
@@ -229,7 +229,7 @@ class AuthService:
     async def create_login_tokens(self, db: AsyncSession, user: User) -> dict[str, Any]:
         """Create access and refresh tokens for a user."""
         # Update last login
-        user.last_login = datetime.utcnow()
+        user.last_login = datetime.now(timezone.utc)
         await db.commit()
 
         # Load user roles explicitly to avoid greenlet issues

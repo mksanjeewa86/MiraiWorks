@@ -1,6 +1,6 @@
 """Integration tests for workflow relationships and cascading soft delete."""
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import pytest
 from httpx import AsyncClient
@@ -47,8 +47,8 @@ async def test_create_workflow_with_linked_interviews_and_todos(
         created_by=test_employer_user.id,
         interview_type="video",
         status="pending_schedule",
-        scheduled_start=datetime.utcnow() + timedelta(days=1),
-        scheduled_end=datetime.utcnow() + timedelta(days=1, hours=1),
+        scheduled_start=datetime.now(timezone.utc) + timedelta(days=1),
+        scheduled_end=datetime.now(timezone.utc) + timedelta(days=1, hours=1),
         timezone="UTC",
     )
     db_session.add(interview)
@@ -108,8 +108,8 @@ async def test_workflow_soft_delete_cascades_to_interviews(
             created_by=test_employer_user.id,
             interview_type="video",
             status="pending_schedule",
-            scheduled_start=datetime.utcnow() + timedelta(days=1),
-            scheduled_end=datetime.utcnow() + timedelta(days=1, hours=1),
+            scheduled_start=datetime.now(timezone.utc) + timedelta(days=1),
+            scheduled_end=datetime.now(timezone.utc) + timedelta(days=1, hours=1),
             timezone="UTC",
         )
         db_session.add(interview)
@@ -233,8 +233,8 @@ async def test_workflow_soft_delete_cascades_to_both_interviews_and_todos(
             created_by=test_employer_user.id,
             interview_type="video",
             status="pending_schedule",
-            scheduled_start=datetime.utcnow() + timedelta(days=1),
-            scheduled_end=datetime.utcnow() + timedelta(days=1, hours=1),
+            scheduled_start=datetime.now(timezone.utc) + timedelta(days=1),
+            scheduled_end=datetime.now(timezone.utc) + timedelta(days=1, hours=1),
             timezone="UTC",
         )
         db_session.add(interview)
@@ -337,8 +337,8 @@ async def test_only_non_deleted_interviews_affected_by_cascade(
         created_by=test_employer_user.id,
         interview_type="video",
         status="pending_schedule",
-        scheduled_start=datetime.utcnow() + timedelta(days=1),
-        scheduled_end=datetime.utcnow() + timedelta(days=1, hours=1),
+        scheduled_start=datetime.now(timezone.utc) + timedelta(days=1),
+        scheduled_end=datetime.now(timezone.utc) + timedelta(days=1, hours=1),
         timezone="UTC",
         is_deleted=False,
     )
@@ -352,11 +352,11 @@ async def test_only_non_deleted_interviews_affected_by_cascade(
         created_by=test_employer_user.id,
         interview_type="video",
         status="pending_schedule",
-        scheduled_start=datetime.utcnow() + timedelta(days=1),
-        scheduled_end=datetime.utcnow() + timedelta(days=1, hours=1),
+        scheduled_start=datetime.now(timezone.utc) + timedelta(days=1),
+        scheduled_end=datetime.now(timezone.utc) + timedelta(days=1, hours=1),
         timezone="UTC",
         is_deleted=True,
-        deleted_at=datetime.utcnow() - timedelta(days=1),
+        deleted_at=datetime.now(timezone.utc) - timedelta(days=1),
     )
     db_session.add(interview2)
 
@@ -407,8 +407,8 @@ async def test_workflow_foreign_key_set_null_on_hard_delete(
         created_by=test_employer_user.id,
         interview_type="video",
         status="pending_schedule",
-        scheduled_start=datetime.utcnow() + timedelta(days=1),
-        scheduled_end=datetime.utcnow() + timedelta(days=1, hours=1),
+        scheduled_start=datetime.now(timezone.utc) + timedelta(days=1),
+        scheduled_end=datetime.now(timezone.utc) + timedelta(days=1, hours=1),
         timezone="UTC",
     )
     db_session.add(interview)
@@ -461,8 +461,8 @@ async def test_interviews_and_todos_without_workflow_unaffected(
         created_by=test_employer_user.id,
         interview_type="video",
         status="pending_schedule",
-        scheduled_start=datetime.utcnow() + timedelta(days=1),
-        scheduled_end=datetime.utcnow() + timedelta(days=1, hours=1),
+        scheduled_start=datetime.now(timezone.utc) + timedelta(days=1),
+        scheduled_end=datetime.now(timezone.utc) + timedelta(days=1, hours=1),
         timezone="UTC",
     )
     db_session.add(standalone_interview)
@@ -522,8 +522,8 @@ async def test_query_workflows_with_interview_count(
             created_by=test_employer_user.id,
             interview_type="video",
             status="pending_schedule",
-            scheduled_start=datetime.utcnow() + timedelta(days=1),
-            scheduled_end=datetime.utcnow() + timedelta(days=1, hours=1),
+            scheduled_start=datetime.now(timezone.utc) + timedelta(days=1),
+            scheduled_end=datetime.now(timezone.utc) + timedelta(days=1, hours=1),
             timezone="UTC",
         )
         db_session.add(interview)

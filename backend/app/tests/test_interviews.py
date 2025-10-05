@@ -1,6 +1,6 @@
 """Realistic integration tests for interview endpoints."""
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
 import pytest
@@ -66,7 +66,7 @@ async def create_sample_interview(
         last_name="User",
     )
 
-    start = datetime.utcnow() + timedelta(days=2)
+    start = datetime.now(timezone.utc) + timedelta(days=2)
     payload = {
         "candidate_id": candidate_user.id,
         "recruiter_id": recruiter.id,
@@ -105,7 +105,7 @@ async def create_interview_model(
     # Ensure the candidate user's session state is fresh
     await db_session.refresh(candidate_user)
 
-    start = datetime.utcnow() + timedelta(days=3)
+    start = datetime.now(timezone.utc) + timedelta(days=3)
     interview = await interview_service.create_interview(
         db=db_session,
         candidate_id=candidate_user.id,
@@ -173,7 +173,7 @@ async def test_create_interview_rejects_non_candidate(
         company_id=test_employer_user.company_id,
     )
 
-    start = datetime.utcnow() + timedelta(days=1)
+    start = datetime.now(timezone.utc) + timedelta(days=1)
     payload = {
         "candidate_id": non_candidate.id,
         "recruiter_id": recruiter.id,
@@ -256,7 +256,7 @@ async def test_proposal_lifecycle(
         test_candidate_only_user,
     )
 
-    start = datetime.utcnow() + timedelta(days=5)
+    start = datetime.now(timezone.utc) + timedelta(days=5)
     proposal = await interview_service.create_proposal(
         db=db_session,
         interview_id=interview.id,
@@ -293,7 +293,7 @@ async def test_interview_stats_reflect_confirmed_interview(
         test_candidate_only_user,
     )
 
-    start = datetime.utcnow() + timedelta(days=6)
+    start = datetime.now(timezone.utc) + timedelta(days=6)
     proposal = await interview_service.create_proposal(
         db=db_session,
         interview_id=interview.id,

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
@@ -163,7 +163,7 @@ class CandidateWorkflow(Base):
 
         self.status = "in_progress"
         self.current_node_id = first_node_id
-        self.started_at = datetime.utcnow()
+        self.started_at = datetime.now(timezone.utc)
 
     def complete(
         self,
@@ -173,7 +173,7 @@ class CandidateWorkflow(Base):
     ) -> None:
         """Mark the process as completed"""
         self.status = "completed"
-        self.completed_at = datetime.utcnow()
+        self.completed_at = datetime.now(timezone.utc)
         self.final_result = final_result
         self.current_node_id = None
 
@@ -187,7 +187,7 @@ class CandidateWorkflow(Base):
     ) -> None:
         """Mark the process as failed"""
         self.status = "failed"
-        self.failed_at = datetime.utcnow()
+        self.failed_at = datetime.now(timezone.utc)
         self.final_result = "failed"
 
         if reason:
@@ -198,7 +198,7 @@ class CandidateWorkflow(Base):
     def withdraw(self, reason: str | None = None) -> None:
         """Mark the process as withdrawn"""
         self.status = "withdrawn"
-        self.withdrawn_at = datetime.utcnow()
+        self.withdrawn_at = datetime.now(timezone.utc)
         self.final_result = "withdrawn"
         self.current_node_id = None
 
@@ -224,7 +224,7 @@ class CandidateWorkflow(Base):
     def assign_recruiter(self, recruiter_id: int) -> None:
         """Assign a recruiter to this process"""
         self.assigned_recruiter_id = recruiter_id
-        self.assigned_at = datetime.utcnow()
+        self.assigned_at = datetime.now(timezone.utc)
 
     def __repr__(self) -> str:
         return f"<CandidateWorkflow(id={self.id}, candidate_id={self.candidate_id}, status='{self.status}')>"

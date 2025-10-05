@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import (
     JSON,
@@ -164,7 +164,7 @@ class Resume(BaseModel):
     def increment_view_count(self):
         """Increment view count."""
         self.view_count = (self.view_count or 0) + 1
-        self.last_viewed_at = datetime.utcnow()
+        self.last_viewed_at = datetime.now(timezone.utc)
 
     def increment_download_count(self):
         """Increment download count."""
@@ -480,7 +480,7 @@ class ResumeShare(BaseModel):
 
     def is_expired(self) -> bool:
         """Check if share is expired."""
-        if self.expires_at and self.expires_at < datetime.utcnow():
+        if self.expires_at and self.expires_at < datetime.now(timezone.utc):
             return True
         if self.max_views and self.view_count >= self.max_views:
             return True

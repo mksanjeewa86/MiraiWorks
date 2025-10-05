@@ -1,5 +1,5 @@
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select, update
@@ -204,7 +204,7 @@ async def register(register_data: RegisterRequest, db: AsyncSession = Depends(ge
         is_admin=False,  # Candidates are not admins
         company_id=None,  # Candidates don't belong to companies
         created_by=None,  # Self-registered user
-        last_login=datetime.utcnow(),
+        last_login=datetime.now(timezone.utc),
     )
 
     db.add(new_user)
@@ -422,7 +422,7 @@ async def request_password_reset(
     # Create password reset request
     reset_token = secrets.token_urlsafe(32)
     token_hash = auth_service.hash_token(reset_token)
-    expires_at = datetime.utcnow() + timedelta(hours=24)
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
 
     password_reset = PasswordResetRequest(
         user_id=user.id, token_hash=token_hash, expires_at=expires_at
@@ -498,7 +498,7 @@ async def approve_password_reset(
         .where(
             PasswordResetRequest.id == approve_data.request_id,
             PasswordResetRequest.is_used is False,
-            PasswordResetRequest.expires_at > datetime.utcnow(),
+            PasswordResetRequest.expires_at > datetime.now(timezone.utc),
         )
     )
 
@@ -531,7 +531,7 @@ async def approve_password_reset(
     # Mark reset request as used
     reset_request.is_used = True
     reset_request.approved_by = current_user.id
-    reset_request.approved_at = datetime.utcnow()
+    reset_request.approved_at = datetime.now(timezone.utc)
 
     await db.commit()
 
@@ -618,7 +618,7 @@ async def get_password_reset_requests(
         .options(selectinload(PasswordResetRequest.user))
         .where(
             PasswordResetRequest.is_used is False,
-            PasswordResetRequest.expires_at > datetime.utcnow(),
+            PasswordResetRequest.expires_at > datetime.now(timezone.utc),
         )
     )
 
@@ -716,7 +716,7 @@ async def activate_account(
     update_values = {
         "hashed_password": hashed_password,
         "is_active": True,
-        "last_login": datetime.utcnow(),
+        "last_login": datetime.now(timezone.utc),
     }
 
     # Add default phone number if user doesn't have one

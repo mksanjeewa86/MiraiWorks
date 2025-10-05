@@ -1,6 +1,6 @@
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
@@ -144,7 +144,7 @@ async def sync_google_calendar_events(
         next_sync_token = events.get("nextSyncToken")
         if next_sync_token:
             calendar_integration.sync_token = next_sync_token
-            calendar_integration.last_sync_at = datetime.utcnow()
+            calendar_integration.last_sync_at = datetime.now(timezone.utc)
             await calendar_integration.save(db)
 
         logger.info(
@@ -188,7 +188,7 @@ async def sync_microsoft_calendar_events(
             await SyncedEvent.delete_by_external_id(db, event_id)
 
         # Update last sync time
-        calendar_integration.last_sync_at = datetime.utcnow()
+        calendar_integration.last_sync_at = datetime.now(timezone.utc)
         await calendar_integration.save(db)
 
         logger.info(f"Processed Microsoft Calendar event {change_type}: {event_id}")
@@ -299,7 +299,7 @@ async def process_calendar_event_update(
             "end_datetime": end_datetime,
             "is_all_day": is_all_day,
             "timezone": calendar_integration.calendar_timezone or "UTC",
-            "last_modified": datetime.utcnow(),
+            "last_modified": datetime.now(timezone.utc),
         }
 
         if existing_event:
@@ -320,6 +320,6 @@ async def webhook_health():
     """Health check endpoint for webhook services."""
     return {
         "status": "healthy",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "webhooks": ["google_calendar", "microsoft_calendar"],
     }

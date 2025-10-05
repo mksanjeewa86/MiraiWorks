@@ -1,6 +1,6 @@
 import hashlib
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from app.utils.logging import get_logger
@@ -22,7 +22,7 @@ class LocalStorageService:
         self, user_id: int, filename: str, folder: str = "attachments"
     ) -> str:
         """Generate a unique file path for storage."""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         unique_id = str(uuid.uuid4())
 
         # Sanitize filename

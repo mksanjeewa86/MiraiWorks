@@ -1,6 +1,6 @@
 import secrets
 import string
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import and_, desc, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -159,7 +159,7 @@ class CRUDResume(CRUDBase[Resume, ResumeCreate, ResumeUpdate]):
                     Resume.status == ResumeStatus.PUBLISHED,
                 )
             )
-            .values(view_count=Resume.view_count + 1, last_viewed_at=datetime.utcnow())
+            .values(view_count=Resume.view_count + 1, last_viewed_at=datetime.now(timezone.utc))
             .returning(Resume.id)
         )
 

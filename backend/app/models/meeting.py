@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import (
     Boolean,
@@ -153,7 +153,7 @@ class Meeting(Base):
     @property
     def can_join(self) -> bool:
         """Check if meeting can be joined now"""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         # Allow joining 15 minutes before scheduled start and up to 2 hours after
         start_window = self.scheduled_start - timedelta(minutes=15)
         end_window = self.scheduled_start + timedelta(hours=2)

@@ -4,7 +4,7 @@ Simple calendar API server for testing without dependencies.
 """
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 import uvicorn
 from fastapi import FastAPI
@@ -90,7 +90,7 @@ async def create_event(event_data: EventCreate):
     print(f"Received event data: {event_data}")
 
     event_id = str(uuid.uuid4())
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
     # Convert field names to match frontend expectations
     event_info = EventInfo(
@@ -123,7 +123,7 @@ async def update_event(event_id: str, event_data: EventCreate):
     # Find and update event
     for i, event in enumerate(events_storage):
         if event.id == event_id:
-            now = datetime.utcnow()
+            now = datetime.now(timezone.utc)
             updated_event = EventInfo(
                 id=event_id,
                 title=event_data.title,

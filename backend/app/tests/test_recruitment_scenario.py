@@ -1,6 +1,6 @@
 """Integration tests covering recruitment scenarios around jobs and interviews."""
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
 import pytest
@@ -97,7 +97,7 @@ async def test_interview_created_for_job_candidate(
     test_candidate_only_user: User,
     test_roles: dict[str, Role],
 ):
-    start = datetime.utcnow() + timedelta(days=2)
+    start = datetime.now(timezone.utc) + timedelta(days=2)
 
     # Ensure employer can act as recruiter in service validation
     result = await db_session.execute(

@@ -1,5 +1,5 @@
 import secrets
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from fastapi import HTTPException, status
@@ -13,6 +13,7 @@ from app.models.meeting import (
 )
 from app.models.user import User
 from app.rbac import has_permission
+from app.utils.constants import UserRole
 from app.schemas.meeting import (
     MeetingCreate,
     MeetingListParams,
@@ -218,7 +219,7 @@ class MeetingService:
         for field, value in update_data.dict(exclude_unset=True).items():
             setattr(meeting, field, value)
 
-        meeting.updated_at = datetime.utcnow()
+        meeting.updated_at = datetime.now(timezone.utc)
         self.db.commit()
 
         # Log action
@@ -280,13 +281,13 @@ class MeetingService:
                     meeting_participants.c.user_id == current_user.id,
                 )
             )
-            .values(status=ParticipantStatus.JOINED, joined_at=datetime.utcnow())
+            .values(status=ParticipantStatus.JOINED, joined_at=datetime.now(timezone.utc))
         )
 
         # Update meeting status if first participant
         if meeting.status == MeetingStatus.SCHEDULED:
             meeting.status = MeetingStatus.STARTING
-            meeting.actual_start = datetime.utcnow()
+            meeting.actual_start = datetime.now(timezone.utc)
 
         self.db.commit()
 
@@ -315,7 +316,7 @@ class MeetingService:
                     meeting_participants.c.user_id == current_user.id,
                 )
             )
-            .values(status=ParticipantStatus.LEFT, left_at=datetime.utcnow())
+            .values(status=ParticipantStatus.LEFT, left_at=datetime.now(timezone.utc))
         )
 
         # Check if all participants have left
@@ -331,7 +332,7 @@ class MeetingService:
         # End meeting if no active participants
         if not active_participants and meeting.status == MeetingStatus.IN_PROGRESS:
             meeting.status = MeetingStatus.COMPLETED
-            meeting.actual_end = datetime.utcnow()
+            meeting.actual_end = datetime.now(timezone.utc)
 
         self.db.commit()
 
@@ -455,15 +456,15 @@ class MeetingService:
         """Check if user can access the interview"""
         user_role = self._get_user_primary_role(user)
 
-        if user_role == "super_admin":
+        if user_role == UserRole.SYSTEM_ADMIN.value:
             return True
-        elif user_role == "company_admin":
+        elif user_role == UserRole.ADMIN.value:
             return interview.recruiter_company_id == user.company_id
-        elif user_role == "recruiter":
+        elif user_role == UserRole.MEMBER.value:
             return interview.recruiter_id == user.id
-        elif user_role == "employer":
+        elif user_role == UserRole.MEMBER.value:
             return interview.employer_company_id == user.company_id
-        elif user_role == "candidate":
+        elif user_role == UserRole.CANDIDATE.value:
             return interview.candidate_id == user.id
 
         return False
@@ -472,10 +473,10 @@ class MeetingService:
         """Check if user can access the meeting"""
         user_role = self._get_user_primary_role(user)
 
-        # Super admin and company admin can access all meetings in their scope
-        if user_role == "super_admin":
+        # System admin and admin can access all meetings in their scope
+        if user_role == UserRole.SYSTEM_ADMIN.value:
             return True
-        elif user_role == "company_admin":
+        elif user_role == UserRole.ADMIN.value:
             return meeting.company_id == user.company_id
 
         # Check if user is a participant
@@ -494,8 +495,8 @@ class MeetingService:
         """Check if user can modify the meeting"""
         user_role = self._get_user_primary_role(user)
 
-        # Super admin and company admin can modify meetings
-        if user_role in ["super_admin", "company_admin"]:
+        # System admin and admin can modify meetings
+        if user_role in [UserRole.SYSTEM_ADMIN.value, UserRole.ADMIN.value]:
             return meeting.company_id == user.company_id
 
         # Meeting creator can modify
@@ -520,12 +521,12 @@ class MeetingService:
         # This should be enhanced to properly determine user's primary role
         # For now, simple logic based on user properties
         if user.is_admin:
-            return "company_admin" if user.company_id else "super_admin"
+            return UserRole.ADMIN.value if user.company_id else UserRole.SYSTEM_ADMIN.value
 
         # Check user roles (simplified)
         for user_role in user.user_roles:
             role_name = user_role.role.name.lower()
-            if role_name in ["candidate", "recruiter", "employer"]:
+            if role_name in [UserRole.CANDIDATE.value, UserRole.MEMBER.value]:
                 return role_name
 
         return "user"

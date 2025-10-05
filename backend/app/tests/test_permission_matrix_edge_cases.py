@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import pytest
 from httpx import AsyncClient
@@ -142,7 +142,7 @@ class TestPermissionMatrixEdgeCases:
         from app.config import settings
 
         # Create token that expired 1 hour ago
-        expire = datetime.utcnow() - timedelta(hours=1)
+        expire = datetime.now(timezone.utc) - timedelta(hours=1)
         to_encode = {"sub": user.email, "exp": expire}
 
         return jwt.encode(to_encode, settings.SECRET_KEY, algorithm="HS256")

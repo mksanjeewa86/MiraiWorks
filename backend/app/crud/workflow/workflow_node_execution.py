@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy import and_, asc, desc, func, select
@@ -120,7 +120,7 @@ class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, dict, dict]):
     ) -> list[WorkflowNodeExecution]:
         """Get overdue executions"""
         conditions = [
-            WorkflowNodeExecution.due_date < datetime.utcnow(),
+            WorkflowNodeExecution.due_date < datetime.now(timezone.utc),
             WorkflowNodeExecution.status.in_(["pending", "scheduled", "in_progress"]),
         ]
 
@@ -444,7 +444,7 @@ class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, dict, dict]):
                     func.case(
                         (
                             and_(
-                                WorkflowNodeExecution.due_date < datetime.utcnow(),
+                                WorkflowNodeExecution.due_date < datetime.now(timezone.utc),
                                 WorkflowNodeExecution.status.in_(
                                     ["pending", "scheduled", "in_progress"]
                                 ),

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
@@ -146,13 +146,13 @@ class Workflow(Base):
             raise ValueError("Only draft processes can be activated")
 
         self.status = "active"
-        self.activated_at = datetime.utcnow()
+        self.activated_at = datetime.now(timezone.utc)
         self.updated_by = activated_by
 
     def archive(self, archived_by: int) -> None:
         """Archive the process"""
         self.status = "archived"
-        self.archived_at = datetime.utcnow()
+        self.archived_at = datetime.now(timezone.utc)
         self.updated_by = archived_by
 
     def deactivate(self, deactivated_by: int) -> None:

@@ -4,7 +4,7 @@ Notification System Seed Data
 Creates sample notifications to demonstrate the notification system functionality.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -47,7 +47,7 @@ async def seed_notification_data(
                 "severity": "low",
             },
             "is_read": False,
-            "created_at": datetime.utcnow() - timedelta(hours=2),
+            "created_at": datetime.now(timezone.utc) - timedelta(hours=2),
         },
         {
             "user_id": admin_user_id,
@@ -56,8 +56,8 @@ async def seed_notification_data(
             "message": "The todo 'Review Q4 Recruitment Metrics' is now overdue.",
             "payload": {"todo_id": 1, "priority": "high", "days_overdue": 1},
             "is_read": True,
-            "created_at": datetime.utcnow() - timedelta(days=1),
-            "read_at": datetime.utcnow() - timedelta(hours=12),
+            "created_at": datetime.now(timezone.utc) - timedelta(days=1),
+            "read_at": datetime.now(timezone.utc) - timedelta(hours=12),
         },
         # Recruiter notifications
         {
@@ -72,7 +72,7 @@ async def seed_notification_data(
                 "scheduled_time": "2024-01-16T14:00:00Z",
             },
             "is_read": False,
-            "created_at": datetime.utcnow() - timedelta(hours=6),
+            "created_at": datetime.now(timezone.utc) - timedelta(hours=6),
         },
         {
             "user_id": recruiter_user_id,
@@ -86,7 +86,7 @@ async def seed_notification_data(
                 "resume_score": 85,
             },
             "is_read": False,
-            "created_at": datetime.utcnow() - timedelta(hours=4),
+            "created_at": datetime.now(timezone.utc) - timedelta(hours=4),
         },
         {
             "user_id": recruiter_user_id,
@@ -99,8 +99,8 @@ async def seed_notification_data(
                 "interview_date": "2024-01-08",
             },
             "is_read": True,
-            "created_at": datetime.utcnow() - timedelta(days=2),
-            "read_at": datetime.utcnow() - timedelta(days=1),
+            "created_at": datetime.now(timezone.utc) - timedelta(days=2),
+            "read_at": datetime.now(timezone.utc) - timedelta(days=1),
         },
         # HR Manager notifications
         {
@@ -114,7 +114,7 @@ async def seed_notification_data(
                 "departments": ["Engineering", "Marketing"],
             },
             "is_read": False,
-            "created_at": datetime.utcnow() - timedelta(hours=8),
+            "created_at": datetime.now(timezone.utc) - timedelta(hours=8),
         },
         {
             "user_id": hr_manager_user_id,
@@ -127,7 +127,7 @@ async def seed_notification_data(
                 "priority": "medium",
             },
             "is_read": False,
-            "created_at": datetime.utcnow() - timedelta(days=1),
+            "created_at": datetime.now(timezone.utc) - timedelta(days=1),
         },
         # Candidate notifications
         {
@@ -143,7 +143,7 @@ async def seed_notification_data(
                 "location": "Virtual - Zoom",
             },
             "is_read": False,
-            "created_at": datetime.utcnow() - timedelta(hours=12),
+            "created_at": datetime.now(timezone.utc) - timedelta(hours=12),
         },
         {
             "user_id": candidate_user_id,
@@ -157,8 +157,8 @@ async def seed_notification_data(
                 "estimated_duration": "2-3 hours",
             },
             "is_read": True,
-            "created_at": datetime.utcnow() - timedelta(days=1),
-            "read_at": datetime.utcnow() - timedelta(hours=18),
+            "created_at": datetime.now(timezone.utc) - timedelta(days=1),
+            "read_at": datetime.now(timezone.utc) - timedelta(hours=18),
         },
         {
             "user_id": candidate_user_id,
@@ -173,7 +173,7 @@ async def seed_notification_data(
                 "next_steps": "Complete technical assessment",
             },
             "is_read": False,
-            "created_at": datetime.utcnow() - timedelta(hours=3),
+            "created_at": datetime.now(timezone.utc) - timedelta(hours=3),
         },
         # System-wide notifications
         {
@@ -187,7 +187,7 @@ async def seed_notification_data(
                 "key_metrics": {"applications": 25, "interviews": 8, "hires": 2},
             },
             "is_read": False,
-            "created_at": datetime.utcnow() - timedelta(hours=1),
+            "created_at": datetime.now(timezone.utc) - timedelta(hours=1),
         },
         {
             "user_id": recruiter_user_id,
@@ -204,7 +204,7 @@ async def seed_notification_data(
                 },
             },
             "is_read": False,
-            "created_at": datetime.utcnow() - timedelta(hours=1),
+            "created_at": datetime.now(timezone.utc) - timedelta(hours=1),
         },
         # Urgent notifications
         {
@@ -216,11 +216,11 @@ async def seed_notification_data(
                 "alert_type": "security",
                 "failed_attempts": 5,
                 "source_ip": "192.168.1.100",
-                "timestamp": datetime.utcnow() - timedelta(minutes=30),
+                "timestamp": datetime.now(timezone.utc) - timedelta(minutes=30),
                 "action_required": "Review and secure account",
             },
             "is_read": False,
-            "created_at": datetime.utcnow() - timedelta(minutes=30),
+            "created_at": datetime.now(timezone.utc) - timedelta(minutes=30),
         },
     ]
 

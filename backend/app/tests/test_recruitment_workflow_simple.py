@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
@@ -107,7 +107,7 @@ class TestRecruitmentWorkflowLogic:
 
     def test_overdue_check(self):
         """Test overdue execution check"""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         # Overdue case
         due_date_past = now - timedelta(hours=1)

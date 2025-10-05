@@ -6,7 +6,7 @@ delegating actual functionality to the CalendarService class.
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from app.services.calendar_service import CalendarService
@@ -68,7 +68,7 @@ class GoogleCalendarService:
             return {
                 "items": [],
                 "nextSyncToken": sync_token
-                or f"sync_token_{datetime.utcnow().isoformat()}",
+                or f"sync_token_{datetime.now(timezone.utc).isoformat()}",
             }
 
         except Exception as e:

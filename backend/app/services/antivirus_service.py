@@ -1,7 +1,7 @@
 import logging
 import socket
 import struct
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -162,7 +162,7 @@ class AntivirusService:
                 .values(
                     virus_status=status.value,
                     virus_scan_result=result_message,
-                    scanned_at=datetime.utcnow(),
+                    scanned_at=datetime.now(timezone.utc),
                     is_available=(status == VirusStatus.CLEAN),
                 )
             )
@@ -194,7 +194,7 @@ class AntivirusService:
                     .values(
                         virus_status=VirusStatus.ERROR.value,
                         virus_scan_result=f"Scan error: {str(e)}",
-                        scanned_at=datetime.utcnow(),
+                        scanned_at=datetime.now(timezone.utc),
                         is_available=False,
                     )
                 )

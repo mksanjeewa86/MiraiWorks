@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -158,7 +158,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
                     continue
 
                 user.is_deleted = True
-                user.deleted_at = datetime.utcnow()
+                user.deleted_at = datetime.now(timezone.utc)
                 user.deleted_by = deleted_by
                 user.is_active = False
                 deleted_count += 1
@@ -185,7 +185,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
                 if not user.is_suspended:
                     user.is_suspended = True
-                    user.suspended_at = datetime.utcnow()
+                    user.suspended_at = datetime.now(timezone.utc)
                     user.suspended_by = suspended_by
                     suspended_count += 1
 
@@ -247,7 +247,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         user = await self.get(db, user_id)
         if user:
             user.is_deleted = True
-            user.deleted_at = datetime.utcnow()
+            user.deleted_at = datetime.now(timezone.utc)
             user.deleted_by = deleted_by
             user.is_active = False
             await db.commit()
@@ -258,7 +258,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         user = await self.get(db, user_id)
         if user and not user.is_suspended:
             user.is_suspended = True
-            user.suspended_at = datetime.utcnow()
+            user.suspended_at = datetime.now(timezone.utc)
             user.suspended_by = suspended_by
             await db.commit()
         return user
