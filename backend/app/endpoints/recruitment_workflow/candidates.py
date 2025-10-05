@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config.endpoints import API_ROUTES
 from app.crud.recruitment_workflow.candidate_process import candidate_process
 from app.crud.recruitment_workflow.process_viewer import process_viewer
 from app.crud.recruitment_workflow.recruitment_process import recruitment_process
