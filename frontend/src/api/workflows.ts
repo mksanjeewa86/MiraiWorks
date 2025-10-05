@@ -6,7 +6,7 @@ import { todosApi } from './todos';
 import type {
   RecruitmentProcess,
   ProcessNode,
-  CandidateProcess,
+  CandidateWorkflow,
   CreateProcessData,
   CreateNodeData,
 } from '@/types/workflow';
@@ -134,19 +134,19 @@ export const recruitmentWorkflowsApi = {
   async assignCandidates(
     workflowId: number,
     candidateIds: number[]
-  ): Promise<ApiResponse<CandidateProcess[]>> {
-    const response = await apiClient.post<CandidateProcess[]>(
+  ): Promise<ApiResponse<CandidateWorkflow[]>> {
+    const response = await apiClient.post<CandidateWorkflow[]>(
       `${API_ENDPOINTS.WORKFLOWS.BASE}${workflowId}/candidates/assign`,
       { candidate_ids: candidateIds }
     );
     return { data: response.data, success: true };
   },
 
-  async getCandidateProcess(
+  async getCandidateWorkflow(
     workflowId: number,
     candidateId: number
-  ): Promise<ApiResponse<CandidateProcess>> {
-    const response = await apiClient.get<CandidateProcess>(
+  ): Promise<ApiResponse<CandidateWorkflow>> {
+    const response = await apiClient.get<CandidateWorkflow>(
       `${API_ENDPOINTS.WORKFLOWS.BASE}${workflowId}/candidates/${candidateId}`
     );
     return { data: response.data, success: true };
@@ -159,13 +159,13 @@ export const recruitmentWorkflowsApi = {
     nodeId: number
   ): Promise<
     ApiResponse<{
-      candidate_process: CandidateProcess;
+      candidate_workflow: CandidateWorkflow;
       created_interview?: any;
       created_todo?: any;
     }>
   > {
     const response = await apiClient.post<{
-      candidate_process: CandidateProcess;
+      candidate_workflow: CandidateWorkflow;
       created_interview?: any;
       created_todo?: any;
     }>(`${API_ENDPOINTS.WORKFLOWS.BASE}${workflowId}/candidates/${candidateId}/progress`, {

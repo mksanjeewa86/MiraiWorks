@@ -9,7 +9,7 @@ export interface RecruitmentProcess {
   position_id?: number;
   created_by: number;
   nodes: ProcessNode[];
-  candidate_processes: CandidateProcess[];
+  candidate_workflows: CandidateWorkflow[];
   created_at: string;
   updated_at: string;
   is_template: boolean;
@@ -17,7 +17,7 @@ export interface RecruitmentProcess {
 
 export interface ProcessNode {
   id: number;
-  process_id: number;
+  workflow_id: number;
   node_type: 'interview' | 'todo' | 'assessment' | 'decision';
   title: string;
   description?: string;
@@ -30,16 +30,20 @@ export interface ProcessNode {
   todo_id?: number;
 }
 
-export interface CandidateProcess {
+export interface CandidateWorkflow {
   id: number;
   candidate_id: number;
-  process_id: number;
+  workflow_id: number;
   current_node_id?: number;
   status: 'not_started' | 'in_progress' | 'completed' | 'failed' | 'withdrawn';
   assigned_recruiter_id?: number;
   overall_score?: number;
   final_result?: string;
 }
+
+// Legacy type aliases for backward compatibility
+/** @deprecated Use CandidateWorkflow instead */
+export type CandidateProcess = CandidateWorkflow;
 
 export interface CreateProcessData {
   name: string;
