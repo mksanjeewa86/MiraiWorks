@@ -28,8 +28,8 @@ class RecruitmentWorkflowNotificationService:
                         "title": "Recruitment Process Activated",
                         "message": f"Process '{process.name}' has been activated and is ready for candidates.",
                         "data": {
-                            "process_id": process.id,
-                            "process_name": process.name,
+                            "workflow_id": process.id,
+                            "workflow_name": process.name,
                             "activated_at": process.activated_at.isoformat()
                             if process.activated_at
                             else None,
@@ -52,12 +52,12 @@ class RecruitmentWorkflowNotificationService:
                     "user_id": candidate_process.assigned_recruiter_id,
                     "type": "candidate_assigned",
                     "title": "New Candidate Assigned",
-                    "message": f"You have been assigned a new candidate in '{candidate_process.process.name}'.",
+                    "message": f"You have been assigned a new candidate in '{candidate_process.workflow.name}'.",
                     "data": {
-                        "candidate_process_id": candidate_process.id,
+                        "candidate_workflow_id": candidate_process.id,
                         "candidate_id": candidate_process.candidate_id,
-                        "process_id": candidate_process.workflow_id,
-                        "process_name": candidate_process.process.name,
+                        "workflow_id": candidate_process.workflow_id,
+                        "workflow_name": candidate_process.workflow.name,
                     },
                 }
             )
@@ -68,11 +68,11 @@ class RecruitmentWorkflowNotificationService:
                 "user_id": candidate_process.candidate_id,
                 "type": "process_assigned",
                 "title": "Application Process Started",
-                "message": f"You have been entered into the recruitment process for '{candidate_process.process.name}'.",
+                "message": f"You have been entered into the recruitment process for '{candidate_process.workflow.name}'.",
                 "data": {
-                    "candidate_process_id": candidate_process.id,
-                    "process_id": candidate_process.workflow_id,
-                    "process_name": candidate_process.process.name,
+                    "candidate_workflow_id": candidate_process.id,
+                    "workflow_id": candidate_process.workflow_id,
+                    "workflow_name": candidate_process.workflow.name,
                 },
             }
         )
@@ -94,11 +94,11 @@ class RecruitmentWorkflowNotificationService:
                 "user_id": candidate_process.candidate_id,
                 "type": "process_started",
                 "title": "Your Application Process Has Started",
-                "message": f"Your application process for '{candidate_process.process.name}' has begun with: {first_node.title}",
+                "message": f"Your application process for '{candidate_process.workflow.name}' has begun with: {first_node.title}",
                 "data": {
-                    "candidate_process_id": candidate_process.id,
-                    "process_id": candidate_process.workflow_id,
-                    "process_name": candidate_process.process.name,
+                    "candidate_workflow_id": candidate_process.id,
+                    "workflow_id": candidate_process.workflow_id,
+                    "workflow_name": candidate_process.workflow.name,
                     "first_node_id": first_node.id,
                     "first_node_title": first_node.title,
                 },
@@ -112,12 +112,12 @@ class RecruitmentWorkflowNotificationService:
                     "user_id": candidate_process.assigned_recruiter_id,
                     "type": "candidate_process_started",
                     "title": "Candidate Process Started",
-                    "message": f"Process started for candidate in '{candidate_process.process.name}'",
+                    "message": f"Process started for candidate in '{candidate_process.workflow.name}'",
                     "data": {
-                        "candidate_process_id": candidate_process.id,
+                        "candidate_workflow_id": candidate_process.id,
                         "candidate_id": candidate_process.candidate_id,
-                        "process_id": candidate_process.workflow_id,
-                        "process_name": candidate_process.process.name,
+                        "workflow_id": candidate_process.workflow_id,
+                        "workflow_name": candidate_process.workflow.name,
                     },
                 }
             )
@@ -141,14 +141,14 @@ class RecruitmentWorkflowNotificationService:
                     "user_id": execution.assigned_to,
                     "type": "node_assigned",
                     "title": f"New Task: {node.title}",
-                    "message": f"You have been assigned '{node.title}' for a candidate in '{candidate_process.process.name}'",
+                    "message": f"You have been assigned '{node.title}' for a candidate in '{candidate_process.workflow.name}'",
                     "data": {
                         "execution_id": execution.id,
                         "node_id": node.id,
                         "node_title": node.title,
                         "node_type": node.node_type,
-                        "candidate_process_id": candidate_process.id,
-                        "process_name": candidate_process.process.name,
+                        "candidate_workflow_id": candidate_process.id,
+                        "workflow_name": candidate_process.workflow.name,
                         "due_date": execution.due_date.isoformat()
                         if execution.due_date
                         else None,
@@ -169,8 +169,8 @@ class RecruitmentWorkflowNotificationService:
                         "node_id": node.id,
                         "node_title": node.title,
                         "node_type": node.node_type,
-                        "candidate_process_id": candidate_process.id,
-                        "process_name": candidate_process.process.name,
+                        "candidate_workflow_id": candidate_process.id,
+                        "workflow_name": candidate_process.workflow.name,
                         "instructions": node.instructions,
                     },
                 }
@@ -198,7 +198,7 @@ class RecruitmentWorkflowNotificationService:
                     "user_id": candidate_process.assigned_recruiter_id,
                     "type": "node_completed",
                     "title": f"Task Completed: {node.title}",
-                    "message": f"'{node.title}' has been completed for candidate in '{candidate_process.process.name}'",
+                    "message": f"'{node.title}' has been completed for candidate in '{candidate_process.workflow.name}'",
                     "data": {
                         "execution_id": execution.id,
                         "node_id": node.id,
@@ -206,8 +206,8 @@ class RecruitmentWorkflowNotificationService:
                         "result": execution.result,
                         "score": execution.score,
                         "completed_by": execution.completed_by,
-                        "candidate_process_id": candidate_process.id,
-                        "process_name": candidate_process.process.name,
+                        "candidate_workflow_id": candidate_process.id,
+                        "workflow_name": candidate_process.workflow.name,
                     },
                 }
             )
@@ -229,8 +229,8 @@ class RecruitmentWorkflowNotificationService:
                         "node_title": node.title,
                         "feedback": execution.feedback,
                         "score": execution.score,
-                        "candidate_process_id": candidate_process.id,
-                        "process_name": candidate_process.process.name,
+                        "candidate_workflow_id": candidate_process.id,
+                        "workflow_name": candidate_process.workflow.name,
                     },
                 }
             )
@@ -257,12 +257,12 @@ class RecruitmentWorkflowNotificationService:
             {
                 "user_id": candidate_process.candidate_id,
                 "type": "process_completed",
-                "title": f"Application Process Complete - {candidate_process.process.name}",
+                "title": f"Application Process Complete - {candidate_process.workflow.name}",
                 "message": status_message,
                 "data": {
-                    "candidate_process_id": candidate_process.id,
-                    "process_id": candidate_process.workflow_id,
-                    "process_name": candidate_process.process.name,
+                    "candidate_workflow_id": candidate_process.id,
+                    "workflow_id": candidate_process.workflow_id,
+                    "workflow_name": candidate_process.workflow.name,
                     "final_result": candidate_process.final_result,
                     "overall_score": candidate_process.overall_score,
                 },
@@ -276,12 +276,12 @@ class RecruitmentWorkflowNotificationService:
                     "user_id": candidate_process.assigned_recruiter_id,
                     "type": "candidate_process_completed",
                     "title": "Candidate Process Completed",
-                    "message": f"Process completed for candidate in '{candidate_process.process.name}' with result: {candidate_process.final_result}",
+                    "message": f"Process completed for candidate in '{candidate_process.workflow.name}' with result: {candidate_process.final_result}",
                     "data": {
-                        "candidate_process_id": candidate_process.id,
+                        "candidate_workflow_id": candidate_process.id,
                         "candidate_id": candidate_process.candidate_id,
-                        "process_id": candidate_process.workflow_id,
-                        "process_name": candidate_process.process.name,
+                        "workflow_id": candidate_process.workflow_id,
+                        "workflow_name": candidate_process.workflow.name,
                         "final_result": candidate_process.final_result,
                         "overall_score": candidate_process.overall_score,
                     },
@@ -317,8 +317,8 @@ class RecruitmentWorkflowNotificationService:
                         if execution.due_date
                         else None,
                         "hours_remaining": hours_remaining,
-                        "candidate_process_id": candidate_process.id,
-                        "process_name": candidate_process.process.name,
+                        "candidate_workflow_id": candidate_process.id,
+                        "workflow_name": candidate_process.workflow.name,
                     },
                 }
             )
@@ -342,8 +342,8 @@ class RecruitmentWorkflowNotificationService:
                         if execution.due_date
                         else None,
                         "hours_remaining": hours_remaining,
-                        "candidate_process_id": candidate_process.id,
-                        "process_name": candidate_process.process.name,
+                        "candidate_workflow_id": candidate_process.id,
+                        "workflow_name": candidate_process.workflow.name,
                     },
                 }
             )
@@ -375,8 +375,8 @@ class RecruitmentWorkflowNotificationService:
                         "due_date": execution.due_date.isoformat()
                         if execution.due_date
                         else None,
-                        "candidate_process_id": candidate_process.id,
-                        "process_name": candidate_process.process.name,
+                        "candidate_workflow_id": candidate_process.id,
+                        "workflow_name": candidate_process.workflow.name,
                     },
                 }
             )
@@ -391,14 +391,14 @@ class RecruitmentWorkflowNotificationService:
                     "user_id": candidate_process.assigned_recruiter_id,
                     "type": "candidate_task_overdue",
                     "title": "Candidate Task Overdue",
-                    "message": f"Task '{node.title}' is overdue for candidate in '{candidate_process.process.name}'",
+                    "message": f"Task '{node.title}' is overdue for candidate in '{candidate_process.workflow.name}'",
                     "data": {
                         "execution_id": execution.id,
                         "node_id": node.id,
                         "node_title": node.title,
-                        "candidate_process_id": candidate_process.id,
+                        "candidate_workflow_id": candidate_process.id,
                         "candidate_id": candidate_process.candidate_id,
-                        "process_name": candidate_process.process.name,
+                        "workflow_name": candidate_process.workflow.name,
                     },
                 }
             )
@@ -429,8 +429,8 @@ class RecruitmentWorkflowNotificationService:
                     "scheduled_start": interview_data.get("scheduled_start"),
                     "meeting_url": interview_data.get("meeting_url"),
                     "location": interview_data.get("location"),
-                    "candidate_process_id": candidate_process.id,
-                    "process_name": candidate_process.process.name,
+                    "candidate_workflow_id": candidate_process.id,
+                    "workflow_name": candidate_process.workflow.name,
                 },
             }
         )
@@ -452,8 +452,8 @@ class RecruitmentWorkflowNotificationService:
                         "interview_title": interview_data["title"],
                         "candidate_id": candidate_process.candidate_id,
                         "scheduled_start": interview_data.get("scheduled_start"),
-                        "candidate_process_id": candidate_process.id,
-                        "process_name": candidate_process.process.name,
+                        "candidate_workflow_id": candidate_process.id,
+                        "workflow_name": candidate_process.workflow.name,
                     },
                 }
             )
