@@ -388,31 +388,31 @@ class FileRoutes:
 class WorkflowRoutes:
     """Recruitment workflow/process endpoints."""
 
-    # Process routes
+    # Workflow routes
     BASE = "/"
-    BY_ID = "/{process_id}"
-    ACTIVATE = "/{process_id}/activate"
-    ARCHIVE = "/{process_id}/archive"
-    CLONE = "/{process_id}/clone"
-    VALIDATE = "/{process_id}/validate"
-    ANALYTICS = "/{process_id}/analytics"
+    BY_ID = "/{workflow_id}"
+    ACTIVATE = "/{workflow_id}/activate"
+    ARCHIVE = "/{workflow_id}/archive"
+    CLONE = "/{workflow_id}/clone"
+    VALIDATE = "/{workflow_id}/validate"
+    ANALYTICS = "/{workflow_id}/analytics"
     COMPANY_STATS = "/company/{company_id}/statistics"
     TEMPLATES = "/templates/"
     APPLY_TEMPLATE = "/templates/{template_id}/apply"
 
     # Node routes
-    NODES = "/{process_id}/nodes"
-    NODE_WITH_INTEGRATION = "/{process_id}/nodes/create-with-integration"
-    NODE_BY_ID = "/{process_id}/nodes/{node_id}"
+    NODES = "/{workflow_id}/nodes"
+    NODE_WITH_INTEGRATION = "/{workflow_id}/nodes/create-with-integration"
+    NODE_BY_ID = "/{workflow_id}/nodes/{node_id}"
 
     # Candidate routes
-    CANDIDATES = "/{process_id}/candidates"
-    CANDIDATES_BULK = "/{process_id}/candidates/bulk"
-    CANDIDATE_PROCESS_BY_ID = "/candidate-processes/{candidate_process_id}"
-    CANDIDATE_START = "/candidate-processes/{candidate_process_id}/start"
-    CANDIDATE_STATUS = "/candidate-processes/{candidate_process_id}/status"
-    CANDIDATE_TIMELINE = "/candidate-processes/{candidate_process_id}/timeline"
-    MY_PROCESSES = "/my-processes"
+    CANDIDATES = "/{workflow_id}/candidates"
+    CANDIDATES_BULK = "/{workflow_id}/candidates/bulk"
+    CANDIDATE_PROCESS_BY_ID = "/candidate-workflows/{candidate_workflow_id}"
+    CANDIDATE_START = "/candidate-workflows/{candidate_workflow_id}/start"
+    CANDIDATE_STATUS = "/candidate-workflows/{candidate_workflow_id}/status"
+    CANDIDATE_TIMELINE = "/candidate-workflows/{candidate_workflow_id}/timeline"
+    MY_PROCESSES = "/my-workflows"
     RECRUITER_WORKLOAD = "/recruiters/{recruiter_id}/workload"
 
 

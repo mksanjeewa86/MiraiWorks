@@ -12,7 +12,7 @@ import type {
 } from '@/types/workflow';
 
 export const recruitmentWorkflowsApi = {
-  // Get all recruitment processes for current user's company
+  // Get all recruitment workflows for current user's company
   async getProcesses(params?: {
     status?: string;
     is_template?: boolean;
@@ -41,54 +41,54 @@ export const recruitmentWorkflowsApi = {
     };
   },
 
-  // Create new recruitment process
+  // Create new recruitment workflow
   async createProcess(data: CreateProcessData): Promise<ApiResponse<RecruitmentProcess>> {
     const response = await apiClient.post<RecruitmentProcess>(API_ENDPOINTS.WORKFLOWS.BASE, data);
     return { data: response.data, success: true };
   },
 
-  // Get specific process with details
-  async getProcess(id: number): Promise<ApiResponse<RecruitmentProcess>> {
+  // Get specific workflow with details
+  async getProcess(workflowId: number): Promise<ApiResponse<RecruitmentProcess>> {
     const response = await apiClient.get<RecruitmentProcess>(
-      `${API_ENDPOINTS.WORKFLOWS.BASE}${id}`
+      `${API_ENDPOINTS.WORKFLOWS.BASE}${workflowId}`
     );
     return { data: response.data, success: true };
   },
 
-  // Update process
+  // Update workflow
   async updateProcess(
-    id: number,
+    workflowId: number,
     data: Partial<CreateProcessData>
   ): Promise<ApiResponse<RecruitmentProcess>> {
     const response = await apiClient.put<RecruitmentProcess>(
-      `${API_ENDPOINTS.WORKFLOWS.BASE}${id}`,
+      `${API_ENDPOINTS.WORKFLOWS.BASE}${workflowId}`,
       data
     );
     return { data: response.data, success: true };
   },
 
-  // Change process status (draft -> active -> inactive -> archived)
-  async updateProcessStatus(id: number, status: string): Promise<ApiResponse<RecruitmentProcess>> {
+  // Change workflow status (draft -> active -> inactive -> archived)
+  async updateProcessStatus(workflowId: number, status: string): Promise<ApiResponse<RecruitmentProcess>> {
     const response = await apiClient.put<RecruitmentProcess>(
-      `${API_ENDPOINTS.WORKFLOWS.BASE}${id}/status`,
+      `${API_ENDPOINTS.WORKFLOWS.BASE}${workflowId}/status`,
       { status }
     );
     return { data: response.data, success: true };
   },
 
-  // Archive process
-  async archiveProcess(id: number): Promise<ApiResponse<RecruitmentProcess>> {
+  // Archive workflow
+  async archiveProcess(workflowId: number): Promise<ApiResponse<RecruitmentProcess>> {
     const response = await apiClient.post<RecruitmentProcess>(
-      `${API_ENDPOINTS.WORKFLOWS.BASE}${id}/archive`,
+      `${API_ENDPOINTS.WORKFLOWS.BASE}${workflowId}/archive`,
       {}
     );
     return { data: response.data, success: true };
   },
 
   // Node management
-  async createNode(processId: number, data: CreateNodeData): Promise<ApiResponse<ProcessNode>> {
+  async createNode(workflowId: number, data: CreateNodeData): Promise<ApiResponse<ProcessNode>> {
     const response = await apiClient.post<ProcessNode>(
-      `${API_ENDPOINTS.WORKFLOWS.BASE}${processId}/nodes`,
+      `${API_ENDPOINTS.WORKFLOWS.BASE}${workflowId}/nodes`,
       data
     );
     return { data: response.data, success: true };
@@ -96,7 +96,7 @@ export const recruitmentWorkflowsApi = {
 
   // Create node with integrated interview/todo creation
   async createNodeWithIntegration(
-    processId: number,
+    workflowId: number,
     data: CreateNodeData
   ): Promise<
     ApiResponse<{
@@ -109,52 +109,52 @@ export const recruitmentWorkflowsApi = {
       node: ProcessNode;
       interview?: any;
       todo?: any;
-    }>(`${API_ENDPOINTS.WORKFLOWS.BASE}${processId}/nodes/create-with-integration`, data);
+    }>(`${API_ENDPOINTS.WORKFLOWS.BASE}${workflowId}/nodes/create-with-integration`, data);
     return { data: response.data, success: true };
   },
 
   async updateNode(
-    processId: number,
+    workflowId: number,
     nodeId: number,
     data: Partial<CreateNodeData>
   ): Promise<ApiResponse<ProcessNode>> {
     const response = await apiClient.put<ProcessNode>(
-      `${API_ENDPOINTS.WORKFLOWS.BASE}${processId}/nodes/${nodeId}`,
+      `${API_ENDPOINTS.WORKFLOWS.BASE}${workflowId}/nodes/${nodeId}`,
       data
     );
     return { data: response.data, success: true };
   },
 
-  async deleteNode(processId: number, nodeId: number): Promise<ApiResponse<void>> {
-    await apiClient.delete(`${API_ENDPOINTS.WORKFLOWS.BASE}${processId}/nodes/${nodeId}`);
+  async deleteNode(workflowId: number, nodeId: number): Promise<ApiResponse<void>> {
+    await apiClient.delete(`${API_ENDPOINTS.WORKFLOWS.BASE}${workflowId}/nodes/${nodeId}`);
     return { data: undefined, success: true };
   },
 
   // Candidate management
   async assignCandidates(
-    processId: number,
+    workflowId: number,
     candidateIds: number[]
   ): Promise<ApiResponse<CandidateProcess[]>> {
     const response = await apiClient.post<CandidateProcess[]>(
-      `${API_ENDPOINTS.WORKFLOWS.BASE}${processId}/candidates/assign`,
+      `${API_ENDPOINTS.WORKFLOWS.BASE}${workflowId}/candidates/assign`,
       { candidate_ids: candidateIds }
     );
     return { data: response.data, success: true };
   },
 
   async getCandidateProcess(
-    processId: number,
+    workflowId: number,
     candidateId: number
   ): Promise<ApiResponse<CandidateProcess>> {
     const response = await apiClient.get<CandidateProcess>(
-      `${API_ENDPOINTS.WORKFLOWS.BASE}${processId}/candidates/${candidateId}`
+      `${API_ENDPOINTS.WORKFLOWS.BASE}${workflowId}/candidates/${candidateId}`
     );
     return { data: response.data, success: true };
   },
 
   // Progress candidate to next node and trigger interview/todo creation
   async progressCandidate(
-    processId: number,
+    workflowId: number,
     candidateId: number,
     nodeId: number
   ): Promise<
@@ -168,14 +168,14 @@ export const recruitmentWorkflowsApi = {
       candidate_process: CandidateProcess;
       created_interview?: any;
       created_todo?: any;
-    }>(`${API_ENDPOINTS.WORKFLOWS.BASE}${processId}/candidates/${candidateId}/progress`, {
+    }>(`${API_ENDPOINTS.WORKFLOWS.BASE}${workflowId}/candidates/${candidateId}/progress`, {
       next_node_id: nodeId,
     });
     return { data: response.data, success: true };
   },
 
   // Statistics and analytics
-  async getProcessStats(processId: number): Promise<
+  async getProcessStats(workflowId: number): Promise<
     ApiResponse<{
       total_candidates: number;
       completed_candidates: number;
@@ -192,12 +192,12 @@ export const recruitmentWorkflowsApi = {
       failed_candidates: number;
       average_completion_time: number;
       node_completion_rates: { node_id: number; completion_rate: number }[];
-    }>(`${API_ENDPOINTS.WORKFLOWS.BASE}${processId}/stats`);
+    }>(`${API_ENDPOINTS.WORKFLOWS.BASE}${workflowId}/stats`);
     return { data: response.data, success: true };
   },
 
-  // Get linked interviews and todos for a process
-  async getProcessIntegrations(processId: number): Promise<
+  // Get linked interviews and todos for a workflow
+  async getProcessIntegrations(workflowId: number): Promise<
     ApiResponse<{
       interviews: any[];
       todos: any[];
@@ -208,7 +208,7 @@ export const recruitmentWorkflowsApi = {
       interviews: any[];
       todos: any[];
       nodes_with_links: { node_id: number; interview_id?: number; todo_id?: number }[];
-    }>(`${API_ENDPOINTS.WORKFLOWS.BASE}${processId}/integrations`);
+    }>(`${API_ENDPOINTS.WORKFLOWS.BASE}${workflowId}/integrations`);
     return { data: response.data, success: true };
   },
 };
@@ -243,7 +243,7 @@ export const workflowIntegrationService = {
       created_todos: any[];
     }>
   > {
-    // Create the process first
+    // Create the workflow first
     const processResponse = await recruitmentWorkflowsApi.createProcess({
       name: data.name,
       description: data.description,
@@ -251,7 +251,7 @@ export const workflowIntegrationService = {
     });
 
     if (!processResponse.success || !processResponse.data) {
-      throw new Error('Failed to create recruitment process');
+      throw new Error('Failed to create recruitment workflow');
     }
 
     const process = processResponse.data;
