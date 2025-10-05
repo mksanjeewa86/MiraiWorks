@@ -44,7 +44,7 @@ class CRUDCandidateWorkflow(CRUDBase[CandidateWorkflow, dict, dict]):
         skip: int = 0,
         limit: int = 100,
     ) -> list[CandidateWorkflow]:
-        """Get all candidate processes for a recruitment process"""
+        """Get all candidate workflows for a workflow"""
         conditions = [CandidateWorkflow.workflow_id == process_id]
 
         if status:
@@ -102,7 +102,7 @@ class CRUDCandidateWorkflow(CRUDBase[CandidateWorkflow, dict, dict]):
         skip: int = 0,
         limit: int = 100,
     ) -> list[CandidateWorkflow]:
-        """Get all candidate processes assigned to a recruiter"""
+        """Get all candidate workflows assigned to a recruiter"""
         conditions = [CandidateWorkflow.assigned_recruiter_id == recruiter_id]
 
         if status:
@@ -293,7 +293,7 @@ class CRUDCandidateWorkflow(CRUDBase[CandidateWorkflow, dict, dict]):
                     "timestamp": candidate_workflow.started_at,
                     "event_type": "process_started",
                     "title": "Process Started",
-                    "description": f"Started recruitment process: {candidate_workflow.process.name}",
+                    "description": f"Started workflow: {candidate_workflow.process.name}",
                     "icon": "play",
                 }
             )
@@ -353,7 +353,7 @@ class CRUDCandidateWorkflow(CRUDBase[CandidateWorkflow, dict, dict]):
     async def get_statistics_by_process(
         self, db: AsyncSession, *, workflow_id: int
     ) -> dict[str, Any]:
-        """Get statistics for candidate processes in a specific recruitment process"""
+        """Get statistics for candidate workflows in a specific workflow"""
         # Count candidates by status
         status_counts = await db.execute(
             select(

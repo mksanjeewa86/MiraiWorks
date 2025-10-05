@@ -8,15 +8,15 @@ from sqlalchemy.orm import selectinload
 from app.crud.base import CRUDBase
 from app.models.candidate_workflow import CandidateWorkflow
 from app.models.interview import Interview
+from app.models.todo import Todo
+from app.models.workflow import Workflow
 from app.models.workflow_node import WorkflowNode
 from app.models.workflow_viewer import WorkflowViewer
-from app.models.workflow import Workflow
-from app.models.todo import Todo
 
 
 class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
     async def get(self, db: AsyncSession, id: int) -> Workflow | None:
-        """Get recruitment process by id, excluding soft-deleted records."""
+        """Get workflow by id, excluding soft-deleted records."""
         result = await db.execute(
             select(Workflow).where(
                 Workflow.id == id, Workflow.is_deleted == False
@@ -27,7 +27,7 @@ class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
     async def get_multi(
         self, db: AsyncSession, *, skip: int = 0, limit: int = 100
     ) -> list[Workflow]:
-        """Get multiple recruitment processes, excluding soft-deleted records."""
+        """Get multiple workflowes, excluding soft-deleted records."""
         result = await db.execute(
             select(Workflow)
             .where(Workflow.is_deleted == False)
@@ -74,7 +74,7 @@ class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
     async def create(
         self, db: AsyncSession, *, obj_in: dict[str, Any], created_by: int
     ) -> Workflow:
-        """Create a new recruitment process"""
+        """Create a new workflow"""
         obj_data = obj_in.copy()
         obj_data["created_by"] = created_by
 
@@ -188,7 +188,7 @@ class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
         obj_in: dict[str, Any],
         updated_by: int,
     ) -> Workflow:
-        """Update a recruitment process"""
+        """Update a workflow"""
         if isinstance(obj_in, dict):
             update_data = obj_in
         else:

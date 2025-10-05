@@ -203,7 +203,7 @@ class CRUDWorkflowNodeConnection(CRUDBase[WorkflowNodeConnection, dict, dict]):
         connections = await self.get_by_process_id(db, process_id=process_id)
 
         # Import here to avoid circular imports
-        from app.crud.recruitment_workflow.workflow_node import workflow_node
+        from app.crud.workflow.workflow_node import workflow_node
 
         nodes = await workflow_node.get_by_process_id(db, process_id=process_id)
 
