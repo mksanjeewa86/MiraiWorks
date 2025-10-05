@@ -9,19 +9,18 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base
 
 if TYPE_CHECKING:
-    from app.models.process_node import ProcessNode
-    from app.models.recruitment_process import RecruitmentProcess
+    pass
 
 
-class NodeConnection(Base):
-    __tablename__ = "node_connections"
+class WorkflowNodeConnection(Base):
+    __tablename__ = "workflow_node_connections"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
     # Process relationship
-    process_id: Mapped[int] = mapped_column(
+    workflow_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("recruitment_processes.id", ondelete="CASCADE"),
+        ForeignKey("workflows.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
@@ -29,13 +28,13 @@ class NodeConnection(Base):
     # Connection endpoints
     source_node_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("process_nodes.id", ondelete="CASCADE"),
+        ForeignKey("workflow_nodes.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
     target_node_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("process_nodes.id", ondelete="CASCADE"),
+        ForeignKey("workflow_nodes.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
@@ -56,7 +55,7 @@ class NodeConnection(Base):
     )
 
     # Relationships
-    process: Mapped[RecruitmentProcess] = relationship("RecruitmentProcess")
+    workflow: Mapped[RecruitmentProcess] = relationship("RecruitmentProcess")
     source_node: Mapped[ProcessNode] = relationship(
         "ProcessNode",
         foreign_keys=[source_node_id],

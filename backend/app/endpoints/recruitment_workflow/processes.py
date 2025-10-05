@@ -66,7 +66,7 @@ async def create_recruitment_process(
 
 
 @router.get(API_ROUTES.WORKFLOWS.BASE, response_model=list[RecruitmentProcessInfo])
-async def list_recruitment_processes(
+async def list_workflows(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     status: str | None = Query(None, description="Filter by status"),
@@ -133,7 +133,7 @@ async def list_recruitment_processes(
 
 @router.get(API_ROUTES.WORKFLOWS.BY_ID, response_model=RecruitmentProcessDetails)
 async def get_recruitment_process(
-    process_id: int,
+    workflow_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -158,7 +158,7 @@ async def get_recruitment_process(
         # Check if user has viewer access
         has_access = await process_viewer.check_user_access(
             db,
-            process_id=process_id,
+            process_id=workflow_id,
             user_id=current_user.id,
             required_permission="view_process",
         )
@@ -172,7 +172,7 @@ async def get_recruitment_process(
 
 @router.put(API_ROUTES.WORKFLOWS.BY_ID, response_model=RecruitmentProcessInfo)
 async def update_recruitment_process(
-    process_id: int,
+    workflow_id: int,
     process_update: RecruitmentProcessUpdate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
@@ -222,7 +222,7 @@ async def update_recruitment_process(
 
 @router.post(API_ROUTES.WORKFLOWS.ACTIVATE, response_model=RecruitmentProcessInfo)
 async def activate_recruitment_process(
-    process_id: int,
+    workflow_id: int,
     activation: ProcessActivation,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
@@ -253,7 +253,7 @@ async def activate_recruitment_process(
 
     try:
         activated_process = await workflow_engine.activate_process(
-            db, process_id=process_id, user_id=current_user.id
+            db, process_id=workflow_id, user_id=current_user.id
         )
         return activated_process
     except ValueError as e:
@@ -271,7 +271,7 @@ async def activate_recruitment_process(
 
 @router.post(API_ROUTES.WORKFLOWS.ARCHIVE, response_model=RecruitmentProcessInfo)
 async def archive_recruitment_process(
-    process_id: int,
+    workflow_id: int,
     archive_data: ProcessArchive,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
@@ -309,7 +309,7 @@ async def archive_recruitment_process(
 
 @router.post(API_ROUTES.WORKFLOWS.CLONE, response_model=RecruitmentProcessInfo)
 async def clone_recruitment_process(
-    process_id: int,
+    workflow_id: int,
     clone_data: ProcessClone,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
@@ -336,7 +336,7 @@ async def clone_recruitment_process(
     elif any(role in user_roles for role in ["recruiter", "candidate"]):
         has_access = await process_viewer.check_user_access(
             db,
-            process_id=process_id,
+            process_id=workflow_id,
             user_id=current_user.id,
             required_permission="view_process",
         )
@@ -355,7 +355,7 @@ async def clone_recruitment_process(
 
     cloned_process = await workflow_engine.clone_process(
         db,
-        source_process_id=process_id,
+        source_process_id=workflow_id,
         new_name=clone_data.new_name,
         created_by=current_user.id,
         clone_candidates=clone_data.clone_candidates,
@@ -367,7 +367,7 @@ async def clone_recruitment_process(
 
 @router.delete(API_ROUTES.WORKFLOWS.BY_ID, status_code=status.HTTP_204_NO_CONTENT)
 async def delete_recruitment_process(
-    process_id: int,
+    workflow_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -409,7 +409,7 @@ async def delete_recruitment_process(
 
 @router.get(API_ROUTES.WORKFLOWS.VALIDATE)
 async def validate_recruitment_process(
-    process_id: int,
+    workflow_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -433,7 +433,7 @@ async def validate_recruitment_process(
     elif "recruiter" in user_roles:
         has_access = await process_viewer.check_user_access(
             db,
-            process_id=process_id,
+            process_id=workflow_id,
             user_id=current_user.id,
             required_permission="view_process",
         )
@@ -448,7 +448,7 @@ async def validate_recruitment_process(
 
 @router.get(API_ROUTES.WORKFLOWS.ANALYTICS, response_model=ProcessAnalytics)
 async def get_process_analytics(
-    process_id: int,
+    workflow_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -472,7 +472,7 @@ async def get_process_analytics(
     elif "recruiter" in user_roles:
         has_access = await process_viewer.check_user_access(
             db,
-            process_id=process_id,
+            process_id=workflow_id,
             user_id=current_user.id,
             required_permission="view_analytics",
         )
@@ -484,7 +484,7 @@ async def get_process_analytics(
     analytics = await workflow_engine.get_process_analytics(db, process_id)
 
     return ProcessAnalytics(
-        process_id=process_id,
+        process_id=workflow_id,
         process_name=process.name,
         total_candidates=analytics["total_candidates"],
         completed_candidates=analytics["by_status"].get("completed", 0),

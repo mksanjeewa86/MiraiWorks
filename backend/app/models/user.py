@@ -142,25 +142,25 @@ class User(Base):
     creator = relationship("User", remote_side="User.id", post_update=True)
 
     # Recruitment process relationships
-    created_recruitment_processes = relationship(
+    created_workflows = relationship(
         "RecruitmentProcess",
         foreign_keys="RecruitmentProcess.created_by",
         back_populates="creator",
         cascade="all, delete-orphan",
     )
-    updated_recruitment_processes = relationship(
+    updated_workflows = relationship(
         "RecruitmentProcess",
         foreign_keys="RecruitmentProcess.updated_by",
         back_populates="updater",
         cascade="all, delete-orphan",
     )
-    candidate_processes = relationship(
+    candidate_workflows = relationship(
         "CandidateProcess",
         foreign_keys="CandidateProcess.candidate_id",
         back_populates="candidate",
         cascade="all, delete-orphan",
     )
-    assigned_candidate_processes = relationship(
+    assigned_candidate_workflows = relationship(
         "CandidateProcess",
         foreign_keys="CandidateProcess.assigned_recruiter_id",
         back_populates="assigned_recruiter",

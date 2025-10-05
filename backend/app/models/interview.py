@@ -1,4 +1,3 @@
-from datetime import datetime
 
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
@@ -36,7 +35,7 @@ class Interview(Base):
     # Workflow relationship
     workflow_id = Column(
         Integer,
-        ForeignKey("recruitment_processes.id", ondelete="SET NULL"),
+        ForeignKey("workflows.id", ondelete="SET NULL"),
         nullable=True,
         index=True,
     )

@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 from sqlalchemy import (
     JSON,
     Boolean,
-    Column,
     DateTime,
     ForeignKey,
     Integer,

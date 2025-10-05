@@ -18,15 +18,13 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base
 
 if TYPE_CHECKING:
-    from app.models.candidate_process import CandidateProcess
     from app.models.interview import Interview
-    from app.models.process_node import ProcessNode
     from app.models.todo import Todo
     from app.models.user import User
 
 
-class NodeExecution(Base):
-    __tablename__ = "node_executions"
+class WorkflowNodeExecution(Base):
+    __tablename__ = "workflow_node_executions"
     __table_args__ = (
         UniqueConstraint(
             "candidate_process_id", "node_id", name="uq_candidate_node_execution"
@@ -36,15 +34,15 @@ class NodeExecution(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
     # Core relationships
-    candidate_process_id: Mapped[int] = mapped_column(
+    candidate_workflow_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("candidate_processes.id", ondelete="CASCADE"),
+        ForeignKey("candidate_workflows.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
     node_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("process_nodes.id", ondelete="CASCADE"),
+        ForeignKey("workflow_nodes.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
@@ -108,7 +106,7 @@ class NodeExecution(Base):
     )
 
     # Relationships
-    candidate_process: Mapped[CandidateProcess] = relationship(
+    candidate_workflow: Mapped[CandidateProcess] = relationship(
         "CandidateProcess", back_populates="executions"
     )
     node: Mapped[ProcessNode] = relationship("ProcessNode", back_populates="executions")

@@ -81,7 +81,7 @@ def _serialise_node(node) -> ProcessNodeInfo:
     return ProcessNodeInfo.model_validate(node, from_attributes=True)
 
 
-async def _load_process(db: AsyncSession, process_id: int):
+async def _load_process(db: AsyncSession, workflow_id: int):
     process = await recruitment_process.get(db, id=process_id)
     if not process:
         raise HTTPException(
@@ -94,12 +94,12 @@ async def _load_process(db: AsyncSession, process_id: int):
 async def _shift_sequence_numbers(
     db: AsyncSession,
     *,
-    process_id: int,
+    workflow_id: int,
     starting_order: int,
     updated_by: int,
 ) -> Response:
     existing_nodes = await process_node.get_by_process_id(
-        db, process_id=process_id, include_inactive=True
+        db, process_id=workflow_id, include_inactive=True
     )
     updates: list[dict[str, int]] = []
     for node in existing_nodes:
@@ -111,7 +111,7 @@ async def _shift_sequence_numbers(
     if updates:
         await process_node.reorder_nodes(
             db,
-            process_id=process_id,
+            process_id=workflow_id,
             node_sequence_updates=updates,
             updated_by=updated_by,
         )
@@ -122,7 +122,7 @@ async def _shift_sequence_numbers(
 async def _create_node(
     db: AsyncSession,
     *,
-    process_id: int,
+    workflow_id: int,
     node_data: ProcessNodeCreate,
     actor: User,
 ):
@@ -134,13 +134,13 @@ async def _create_node(
     sequence_order = int(payload.get("sequence_order") or 0)
     if sequence_order <= 0:
         existing = await process_node.get_by_process_id(
-            db, process_id=process_id, include_inactive=True
+            db, process_id=workflow_id, include_inactive=True
         )
         payload["sequence_order"] = len(existing) + 1
     else:
         await _shift_sequence_numbers(
             db,
-            process_id=process_id,
+            process_id=workflow_id,
             starting_order=sequence_order,
             updated_by=actor.id,
         )
@@ -255,7 +255,7 @@ async def _create_todo_integration(
     status_code=status.HTTP_201_CREATED,
 )
 async def create_process_node_endpoint(
-    process_id: int,
+    workflow_id: int,
     node_data: ProcessNodeCreate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
@@ -266,7 +266,7 @@ async def create_process_node_endpoint(
 
     node = await _create_node(
         db,
-        process_id=process_id,
+        process_id=workflow_id,
         node_data=node_data,
         actor=current_user,
     )
@@ -278,7 +278,7 @@ async def create_process_node_endpoint(
     status_code=status.HTTP_201_CREATED,
 )
 async def create_process_node_with_integration(
-    process_id: int,
+    workflow_id: int,
     node_data: ProcessNodeCreateWithIntegration,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
@@ -289,7 +289,7 @@ async def create_process_node_with_integration(
 
     node = await _create_node(
         db,
-        process_id=process_id,
+        process_id=workflow_id,
         node_data=node_data,
         actor=current_user,
     )
@@ -325,7 +325,7 @@ async def create_process_node_with_integration(
     response_model=ProcessNodeInfo,
 )
 async def update_process_node_endpoint(
-    process_id: int,
+    workflow_id: int,
     node_id: int,
     node_update: ProcessNodeUpdate,
     db: AsyncSession = Depends(get_db),
@@ -333,7 +333,7 @@ async def update_process_node_endpoint(
 ) -> ProcessNodeInfo:
     process = await _load_process(db, process_id)
     node = await process_node.get(db, id=node_id)
-    if not node or node.process_id != process_id:
+    if not node or node.process_id != workflow_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Process node not found",
@@ -360,14 +360,14 @@ async def update_process_node_endpoint(
     response_class=Response,
 )
 async def delete_process_node_endpoint(
-    process_id: int,
+    workflow_id: int,
     node_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ) -> Response:
     process = await _load_process(db, process_id)
     node = await process_node.get(db, id=node_id)
-    if not node or node.process_id != process_id:
+    if not node or node.process_id != workflow_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Process node not found",
@@ -392,7 +392,7 @@ async def delete_process_node_endpoint(
     # Resequence remaining nodes to keep workflow linear
     remaining_nodes = await process_node.get_by_process_id(
         db,
-        process_id=process_id,
+        process_id=workflow_id,
         include_inactive=True,
     )
     updates: list[dict[str, int]] = []
@@ -405,7 +405,7 @@ async def delete_process_node_endpoint(
     if updates:
         await process_node.reorder_nodes(
             db,
-            process_id=process_id,
+            process_id=workflow_id,
             node_sequence_updates=updates,
             updated_by=current_user.id,
         )

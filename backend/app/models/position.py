@@ -123,7 +123,7 @@ class Position(Base):
     applications = relationship(
         "PositionApplication", back_populates="position", cascade="all, delete-orphan"
     )
-    recruitment_processes = relationship(
+    workflows = relationship(
         "RecruitmentProcess", back_populates="position", cascade="all, delete-orphan"
     )
 

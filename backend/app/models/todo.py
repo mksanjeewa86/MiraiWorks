@@ -16,7 +16,6 @@ from app.utils.constants import (
 )
 
 if TYPE_CHECKING:
-    from app.models.recruitment_process import RecruitmentProcess
     from app.models.todo_extension_request import TodoExtensionRequest
     from app.models.todo_viewer import TodoViewer
     from app.models.user import User
@@ -42,7 +41,7 @@ class Todo(Base):
     # Workflow relationship
     workflow_id: Mapped[int | None] = mapped_column(
         Integer,
-        ForeignKey("recruitment_processes.id", ondelete="SET NULL"),
+        ForeignKey("workflows.id", ondelete="SET NULL"),
         nullable=True,
         index=True,
     )

@@ -29,7 +29,7 @@ router = APIRouter()
     status_code=status.HTTP_201_CREATED,
 )
 async def assign_candidate_to_process(
-    process_id: int,
+    workflow_id: int,
     assignment: CandidateProcessCreate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
@@ -55,7 +55,7 @@ async def assign_candidate_to_process(
     elif current_user.role == "recruiter":
         has_access = await process_viewer.check_user_access(
             db,
-            process_id=process_id,
+            process_id=workflow_id,
             user_id=current_user.id,
             required_permission="manage_assignments",
         )
@@ -71,7 +71,7 @@ async def assign_candidate_to_process(
     try:
         candidate_proc = await workflow_engine.assign_candidate(
             db,
-            process_id=process_id,
+            process_id=workflow_id,
             candidate_id=assignment.candidate_id,
             recruiter_id=assignment.assigned_recruiter_id,
             start_immediately=assignment.start_immediately,
@@ -85,7 +85,7 @@ async def assign_candidate_to_process(
     API_ROUTES.WORKFLOWS.CANDIDATES_BULK, response_model=list[CandidateProcessInfo]
 )
 async def bulk_assign_candidates(
-    process_id: int,
+    workflow_id: int,
     bulk_assignment: BulkCandidateAssignment,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
@@ -109,7 +109,7 @@ async def bulk_assign_candidates(
     elif current_user.role == "recruiter":
         has_access = await process_viewer.check_user_access(
             db,
-            process_id=process_id,
+            process_id=workflow_id,
             user_id=current_user.id,
             required_permission="manage_assignments",
         )
@@ -122,20 +122,20 @@ async def bulk_assign_candidates(
             status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
         )
 
-    candidate_processes = await workflow_engine.bulk_assign_candidates(
+    candidate_workflows = await workflow_engine.bulk_assign_candidates(
         db,
-        process_id=process_id,
+        process_id=workflow_id,
         candidate_ids=bulk_assignment.candidate_ids,
         assigned_recruiter_id=bulk_assignment.assigned_recruiter_id,
         start_immediately=bulk_assignment.start_immediately,
     )
 
-    return candidate_processes
+    return candidate_workflows
 
 
 @router.get(API_ROUTES.WORKFLOWS.CANDIDATES, response_model=list[CandidateProcessInfo])
 async def list_process_candidates(
-    process_id: int,
+    workflow_id: int,
     status: str | None = Query(None, description="Filter by status"),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
@@ -161,7 +161,7 @@ async def list_process_candidates(
     elif current_user.role == "recruiter":
         has_access = await process_viewer.check_user_access(
             db,
-            process_id=process_id,
+            process_id=workflow_id,
             user_id=current_user.id,
             required_permission="view_candidates",
         )
@@ -175,7 +175,7 @@ async def list_process_candidates(
         )
 
     candidates = await candidate_process.get_by_process_id(
-        db, process_id=process_id, status=status, skip=skip, limit=limit
+        db, process_id=workflow_id, status=status, skip=skip, limit=limit
     )
 
     return candidates
@@ -185,7 +185,7 @@ async def list_process_candidates(
     API_ROUTES.WORKFLOWS.CANDIDATE_PROCESS_BY_ID, response_model=CandidateProcessDetails
 )
 async def get_candidate_process(
-    candidate_process_id: int,
+    candidate_workflow_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -216,7 +216,7 @@ async def get_candidate_process(
         if candidate_proc.assigned_recruiter_id != current_user.id:
             has_access = await process_viewer.check_user_access(
                 db,
-                process_id=candidate_proc.process_id,
+                process_id=candidate_proc.workflow_id,
                 user_id=current_user.id,
                 required_permission="view_candidates",
             )
@@ -234,7 +234,7 @@ async def get_candidate_process(
 
 @router.post(API_ROUTES.WORKFLOWS.CANDIDATE_START, response_model=CandidateProcessInfo)
 async def start_candidate_process(
-    candidate_process_id: int,
+    candidate_workflow_id: int,
     start_data: CandidateProcessStart,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
@@ -259,7 +259,7 @@ async def start_candidate_process(
         if candidate_proc.assigned_recruiter_id != current_user.id:
             has_access = await process_viewer.check_user_access(
                 db,
-                process_id=candidate_proc.process_id,
+                process_id=candidate_proc.workflow_id,
                 user_id=current_user.id,
                 required_permission="execute_nodes",
             )
@@ -284,7 +284,7 @@ async def start_candidate_process(
 
 @router.put(API_ROUTES.WORKFLOWS.CANDIDATE_STATUS, response_model=CandidateProcessInfo)
 async def update_candidate_process_status(
-    candidate_process_id: int,
+    candidate_workflow_id: int,
     status_change: CandidateProcessStatusChange,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
@@ -309,7 +309,7 @@ async def update_candidate_process_status(
         if candidate_proc.assigned_recruiter_id != current_user.id:
             has_access = await process_viewer.check_user_access(
                 db,
-                process_id=candidate_proc.process_id,
+                process_id=candidate_proc.workflow_id,
                 user_id=current_user.id,
                 required_permission="override_results",
             )
@@ -363,7 +363,7 @@ async def update_candidate_process_status(
 
 @router.get(API_ROUTES.WORKFLOWS.CANDIDATE_TIMELINE, response_model=CandidateTimeline)
 async def get_candidate_timeline(
-    candidate_process_id: int,
+    candidate_workflow_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -393,7 +393,7 @@ async def get_candidate_timeline(
         if candidate_proc.assigned_recruiter_id != current_user.id:
             has_access = await process_viewer.check_user_access(
                 db,
-                process_id=candidate_proc.process_id,
+                process_id=candidate_proc.workflow_id,
                 user_id=current_user.id,
                 required_permission="view_candidates",
             )
@@ -411,7 +411,7 @@ async def get_candidate_timeline(
     )
 
     return CandidateTimeline(
-        candidate_process_id=candidate_process_id,
+        candidate_process_id=candidate_workflow_id,
         candidate_name=candidate_proc.candidate.name
         if candidate_proc.candidate
         else "Unknown",
@@ -424,7 +424,7 @@ async def get_candidate_timeline(
 @router.get(
     API_ROUTES.WORKFLOWS.MY_PROCESSES, response_model=list[CandidateProcessInfo]
 )
-async def get_my_candidate_processes(
+async def get_my_candidate_workflows(
     status: str | None = Query(None, description="Filter by status"),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
