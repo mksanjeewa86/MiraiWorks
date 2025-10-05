@@ -362,8 +362,8 @@ function CompaniesPageContent() {
                 }}
               >
                 <option value="">All Types</option>
-                <option value="member">Employer</option>
-                <option value="member">Recruiter</option>
+                <option value="employer">Employer</option>
+                <option value="recruiter">Recruiter</option>
               </select>
             </div>
 

@@ -559,6 +559,10 @@ class CRUDExamAssignment(
         self, db: AsyncSession, candidate_id: int, is_active: bool = True
     ) -> list[ExamAssignment]:
         """Get assignments for a candidate."""
+        from sqlalchemy import case
+
+        # MySQL-compatible way to put NULL values last
+        # Using CASE to sort NULL values as a very high value
         query = (
             select(ExamAssignment)
             .options(
@@ -570,7 +574,13 @@ class CRUDExamAssignment(
                     ExamAssignment.is_active == is_active,
                 )
             )
-            .order_by(ExamAssignment.due_date.asc().nulls_last())
+            .order_by(
+                case(
+                    (ExamAssignment.due_date.is_(None), 1),
+                    else_=0
+                ),
+                ExamAssignment.due_date.asc()
+            )
         )
 
         result = await db.execute(query)

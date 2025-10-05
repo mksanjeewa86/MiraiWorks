@@ -118,17 +118,14 @@ class WorkflowNodeExecution(Base):
     assignee: Mapped[User | None] = relationship(
         "User",
         foreign_keys=[assigned_to],
-        back_populates="assigned_workflow_node_executions",
     )
     completer: Mapped[User | None] = relationship(
         "User",
         foreign_keys=[completed_by],
-        back_populates="completed_workflow_node_executions",
     )
     reviewer: Mapped[User | None] = relationship(
         "User",
         foreign_keys=[reviewed_by],
-        back_populates="reviewed_workflow_node_executions",
     )
 
     # Linked resources
