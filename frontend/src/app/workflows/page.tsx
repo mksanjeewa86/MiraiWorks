@@ -136,8 +136,8 @@ function RecruitmentWorkflowsPageContent() {
           bValue = new Date(b.created_at).getTime();
           break;
         case 'candidatesCount':
-          aValue = a.candidate_processes?.length || 0;
-          bValue = b.candidate_processes?.length || 0;
+          aValue = a.candidate_workflows?.length || 0;
+          bValue = b.candidate_workflows?.length || 0;
           break;
         case 'status':
           aValue = a.status;
@@ -167,7 +167,7 @@ function RecruitmentWorkflowsPageContent() {
   const stats = {
     total: processes.length,
     active: processes.filter((p) => p.status === 'active').length,
-    totalCandidates: processes.reduce((sum, p) => sum + (p.candidate_processes?.length || 0), 0),
+    totalCandidates: processes.reduce((sum, p) => sum + (p.candidate_workflows?.length || 0), 0),
     avgNodes:
       Math.round(processes.reduce((sum, p) => sum + p.nodes.length, 0) / processes.length) || 0,
   };
@@ -257,9 +257,9 @@ function RecruitmentWorkflowsPageContent() {
   };
 
   const handleArchiveWorkflow = async (process: RecruitmentProcess) => {
-    if ((process.candidate_processes?.length || 0) > 0) {
+    if ((process.candidate_workflows?.length || 0) > 0) {
       const confirmed = confirm(
-        `This workflow has ${process.candidate_processes?.length || 0} active candidates. Are you sure you want to archive it?`
+        `This workflow has ${process.candidate_workflows?.length || 0} active candidates. Are you sure you want to archive it?`
       );
       if (!confirmed) return;
     }
@@ -612,7 +612,7 @@ function RecruitmentWorkflowsPageContent() {
                         <div className="flex items-center gap-1">
                           <Users className="h-3 w-3 text-gray-400" />
                           <span className="text-sm font-medium text-gray-900">
-                            {process.candidate_processes?.length || 0}
+                            {process.candidate_workflows?.length || 0}
                           </span>
                           <span className="text-sm text-gray-600">candidates</span>
                         </div>
@@ -625,22 +625,22 @@ function RecruitmentWorkflowsPageContent() {
                                 className="bg-violet-600 h-1.5 rounded-full transition-all duration-300"
                                 style={{
                                   width:
-                                    (process.candidate_processes?.length || 0) > 0
-                                      ? `${((process.candidate_processes?.filter((cp: any) => cp.status === 'completed').length || 0) / (process.candidate_processes?.length || 0)) * 100}%`
+                                    (process.candidate_workflows?.length || 0) > 0
+                                      ? `${((process.candidate_workflows?.filter((cp: any) => cp.status === 'completed').length || 0) / (process.candidate_workflows?.length || 0)) * 100}%`
                                       : '0%',
                                 }}
                               />
                             </div>
                             <span className="text-xs text-gray-600">
-                              {process.candidate_processes?.filter(
+                              {process.candidate_workflows?.filter(
                                 (cp: any) => cp.status === 'completed'
                               ).length || 0}
-                              /{process.candidate_processes?.length || 0}
+                              /{process.candidate_workflows?.length || 0}
                             </span>
                           </div>
                           <span className="text-xs text-gray-500">
-                            {(process.candidate_processes?.length || 0) > 0
-                              ? `${Math.round(((process.candidate_processes?.filter((cp: any) => cp.status === 'completed').length || 0) / (process.candidate_processes?.length || 0)) * 100)}% complete`
+                            {(process.candidate_workflows?.length || 0) > 0
+                              ? `${Math.round(((process.candidate_workflows?.filter((cp: any) => cp.status === 'completed').length || 0) / (process.candidate_workflows?.length || 0)) * 100)}% complete`
                               : 'No candidates'}
                           </span>
                         </div>
@@ -800,13 +800,13 @@ function ViewWorkflowModal({ isOpen, onClose, process, onEdit }: ViewWorkflowMod
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-gray-900">
-                {process.candidate_processes?.length || 0}
+                {process.candidate_workflows?.length || 0}
               </div>
               <div className="text-sm text-gray-600">Candidates</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">
-                {process.candidate_processes?.filter((cp: any) => cp.status === 'completed')
+                {process.candidate_workflows?.filter((cp: any) => cp.status === 'completed')
                   .length || 0}
               </div>
               <div className="text-sm text-gray-600">Completed</div>

@@ -111,13 +111,13 @@ class TestWorkflowEndpoints:
         async with AsyncClient(app=app, base_url="http://test") as client:
             workflow_id = 1
             response = await client.get(
-                f"/api/workflows/{process_id}",
+                f"/api/workflows/{workflow_id}",
                 headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 200
             data = response.json()
-            assert data["id"] == process_id
+            assert data["id"] == workflow_id
             assert "name" in data
             assert "nodes" in data
             assert "candidate_workflows" in data
@@ -143,7 +143,7 @@ class TestWorkflowEndpoints:
 
             # Recruiter without access
             response = await client.get(
-                f"/api/workflows/{process_id}",
+                f"/api/workflows/{workflow_id}",
                 headers={"Authorization": "Bearer unauthorized_recruiter_token"},
             )
             assert response.status_code == 403
@@ -160,7 +160,7 @@ class TestWorkflowEndpoints:
             }
 
             response = await client.put(
-                f"/api/workflows/{process_id}",
+                f"/api/workflows/{workflow_id}",
                 json=update_data,
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -178,7 +178,7 @@ class TestWorkflowEndpoints:
             update_data = {"name": "Updated Name"}
 
             response = await client.put(
-                f"/api/workflows/{process_id}",
+                f"/api/workflows/{workflow_id}",
                 json=update_data,
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -193,7 +193,7 @@ class TestWorkflowEndpoints:
             activation_data = {"force_activate": False}
 
             response = await client.post(
-                f"/api/workflows/{process_id}/activate",
+                f"/api/workflows/{workflow_id}/activate",
                 json=activation_data,
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -211,7 +211,7 @@ class TestWorkflowEndpoints:
             activation_data = {"force_activate": False}
 
             response = await client.post(
-                f"/api/workflows/{process_id}/activate",
+                f"/api/workflows/{workflow_id}/activate",
                 json=activation_data,
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -227,7 +227,7 @@ class TestWorkflowEndpoints:
             activation_data = {"force_activate": True}
 
             response = await client.post(
-                f"/api/workflows/{process_id}/activate",
+                f"/api/workflows/{workflow_id}/activate",
                 json=activation_data,
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -244,7 +244,7 @@ class TestWorkflowEndpoints:
             archive_data = {"reason": "No longer needed"}
 
             response = await client.post(
-                f"/api/workflows/{process_id}/archive",
+                f"/api/workflows/{workflow_id}/archive",
                 json=archive_data,
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -266,7 +266,7 @@ class TestWorkflowEndpoints:
             }
 
             response = await client.post(
-                f"/api/workflows/{process_id}/clone",
+                f"/api/workflows/{workflow_id}/clone",
                 json=clone_data,
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -275,7 +275,7 @@ class TestWorkflowEndpoints:
             data = response.json()
             assert data["name"] == clone_data["new_name"]
             assert data["status"] == ProcessStatus.DRAFT
-            assert data["id"] != process_id  # New process
+            assert data["id"] != workflow_id  # New process
 
     @pytest.mark.asyncio
     async def test_delete_workflow_success(self):
@@ -284,7 +284,7 @@ class TestWorkflowEndpoints:
             workflow_id = 1  # Assume this is a draft process
 
             response = await client.delete(
-                f"/api/workflows/{process_id}",
+                f"/api/workflows/{workflow_id}",
                 headers={"Authorization": "Bearer employer_token"},
             )
 
@@ -297,7 +297,7 @@ class TestWorkflowEndpoints:
             workflow_id = 1  # Assume this is an active process
 
             response = await client.delete(
-                f"/api/workflows/{process_id}",
+                f"/api/workflows/{workflow_id}",
                 headers={"Authorization": "Bearer employer_token"},
             )
 
@@ -311,7 +311,7 @@ class TestWorkflowEndpoints:
             workflow_id = 1
 
             response = await client.get(
-                f"/api/workflows/{process_id}/validate",
+                f"/api/workflows/{workflow_id}/validate",
                 headers={"Authorization": "Bearer employer_token"},
             )
 
@@ -331,13 +331,13 @@ class TestWorkflowEndpoints:
             workflow_id = 1
 
             response = await client.get(
-                f"/api/workflows/{process_id}/analytics",
+                f"/api/workflows/{workflow_id}/analytics",
                 headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 200
             data = response.json()
-            assert "process_id" in data
+            assert "workflow_id" in data
             assert "process_name" in data
             assert "total_candidates" in data
             assert "completion_rate" in data
@@ -492,7 +492,7 @@ class TestCandidateWorkflowEndpoints:
             }
 
             response = await client.post(
-                f"/api/workflows/{process_id}/candidates",
+                f"/api/workflows/{workflow_id}/candidates",
                 json=assignment_data,
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -500,7 +500,7 @@ class TestCandidateWorkflowEndpoints:
             assert response.status_code == 201
             data = response.json()
             assert data["candidate_id"] == assignment_data["candidate_id"]
-            assert data["process_id"] == process_id
+            assert data["workflow_id"] == workflow_id
             assert (
                 data["assigned_recruiter_id"]
                 == assignment_data["assigned_recruiter_id"]
@@ -519,7 +519,7 @@ class TestCandidateWorkflowEndpoints:
             }
 
             response = await client.post(
-                f"/api/workflows/{process_id}/candidates",
+                f"/api/workflows/{workflow_id}/candidates",
                 json=assignment_data,
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -540,7 +540,7 @@ class TestCandidateWorkflowEndpoints:
             }
 
             response = await client.post(
-                f"/api/workflows/{process_id}/candidates",
+                f"/api/workflows/{workflow_id}/candidates",
                 json=assignment_data,
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -561,7 +561,7 @@ class TestCandidateWorkflowEndpoints:
             }
 
             response = await client.post(
-                f"/api/workflows/{process_id}/candidates/bulk",
+                f"/api/workflows/{workflow_id}/candidates/bulk",
                 json=bulk_data,
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -572,7 +572,7 @@ class TestCandidateWorkflowEndpoints:
             assert len(data) == len(bulk_data["candidate_ids"])
 
             for candidate_workflow in data:
-                assert candidate_workflow["process_id"] == process_id
+                assert candidate_workflow["workflow_id"] == workflow_id
                 assert candidate_workflow["candidate_id"] in bulk_data["candidate_ids"]
                 assert (
                     candidate_workflow["assigned_recruiter_id"]
@@ -587,7 +587,7 @@ class TestCandidateWorkflowEndpoints:
 
             # Empty candidate list
             response = await client.post(
-                f"/api/workflows/{process_id}/candidates/bulk",
+                f"/api/workflows/{workflow_id}/candidates/bulk",
                 json={"candidate_ids": []},
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -595,7 +595,7 @@ class TestCandidateWorkflowEndpoints:
 
             # Duplicate candidate IDs
             response = await client.post(
-                f"/api/workflows/{process_id}/candidates/bulk",
+                f"/api/workflows/{workflow_id}/candidates/bulk",
                 json={"candidate_ids": [100, 100, 101]},
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -608,7 +608,7 @@ class TestCandidateWorkflowEndpoints:
             workflow_id = 1
 
             response = await client.get(
-                f"/api/workflows/{process_id}/candidates",
+                f"/api/workflows/{workflow_id}/candidates",
                 headers={"Authorization": "Bearer employer_token"},
             )
 
@@ -618,14 +618,14 @@ class TestCandidateWorkflowEndpoints:
 
             # Test with status filter
             response = await client.get(
-                f"/api/workflows/{process_id}/candidates?status=in_progress",
+                f"/api/workflows/{workflow_id}/candidates?status=in_progress",
                 headers={"Authorization": "Bearer employer_token"},
             )
             assert response.status_code == 200
 
             # Test with pagination
             response = await client.get(
-                f"/api/workflows/{process_id}/candidates?skip=0&limit=10",
+                f"/api/workflows/{workflow_id}/candidates?skip=0&limit=10",
                 headers={"Authorization": "Bearer employer_token"},
             )
             assert response.status_code == 200
@@ -645,7 +645,7 @@ class TestCandidateWorkflowEndpoints:
             data = response.json()
             assert data["id"] == candidate_workflow_id
             assert "candidate_id" in data
-            assert "process_id" in data
+            assert "workflow_id" in data
             assert "status" in data
             assert "executions" in data
             assert "timeline" in data
@@ -814,7 +814,7 @@ class TestCandidateWorkflowEndpoints:
             # All processes should belong to the candidate
             for process in data:
                 assert "candidate_id" in process
-                assert "process_id" in process
+                assert "workflow_id" in process
                 assert "status" in process
 
     @pytest.mark.asyncio

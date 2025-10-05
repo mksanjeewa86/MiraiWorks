@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from app.models.todo_extension_request import TodoExtensionRequest
     from app.models.todo_viewer import TodoViewer
     from app.models.user import User
+    from app.models.workflow import Workflow
 
 
 class Todo(Base):

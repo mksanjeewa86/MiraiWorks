@@ -71,7 +71,7 @@ class TestRecruitmentWorkflowScenarios:
         created_nodes = []
         for node_data in nodes:
             response = await client.post(
-                f"/api/workflows/{process_id}/nodes",
+                f"/api/workflows/{workflow_id}/nodes",
                 json=node_data,
                 headers=auth_headers,
             )
@@ -81,7 +81,7 @@ class TestRecruitmentWorkflowScenarios:
         # Step 3: Activate the process
         activation_data = {"force_activate": False}
         response = await client.post(
-            f"/api/workflows/{process_id}/activate",
+            f"/api/workflows/{workflow_id}/activate",
             json=activation_data,
             headers=auth_headers,
         )
@@ -184,7 +184,7 @@ class TestRecruitmentWorkflowScenarios:
 
         # Step 7: Verify process analytics
         response = await client.get(
-            f"/api/workflows/{process_id}/analytics", headers=auth_headers
+            f"/api/workflows/{workflow_id}/analytics", headers=auth_headers
         )
         assert response.status_code == 200
         analytics = response.json()
