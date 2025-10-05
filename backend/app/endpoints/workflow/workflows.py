@@ -34,12 +34,12 @@ def get_user_roles(user: User) -> list[str]:
     status_code=status.HTTP_201_CREATED,
 )
 async def create_workflow(
-    process_data: WorkflowCreate,
+    workflow_data: WorkflowCreate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
     """
-    Create a new recruitment process.
+    Create a new recruitment workflow.
 
     Requires: employer or company_admin role
     """
@@ -51,18 +51,18 @@ async def create_workflow(
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only employers can create recruitment processes",
+            detail="Only employers can create recruitment workflows",
         )
 
     # Add employer company ID
-    process_dict = process_data.dict()
-    process_dict["employer_company_id"] = current_user.company_id
+    workflow_dict = workflow_data.dict()
+    workflow_dict["employer_company_id"] = current_user.company_id
 
-    process = await workflow.create(
-        db, obj_in=process_dict, created_by=current_user.id
+    wf = await workflow.create(
+        db, obj_in=workflow_dict, created_by=current_user.id
     )
 
-    return process
+    return wf
 
 
 @router.get(API_ROUTES.WORKFLOWS.BASE, response_model=list[WorkflowInfo])
@@ -76,9 +76,9 @@ async def list_workflows(
     current_user: User = Depends(get_current_active_user),
 ):
     """
-    List recruitment processes.
+    List recruitment workflows.
 
-    Returns processes based on user role and permissions.
+    Returns workflows based on user role and permissions.
     """
     # Get current user's roles
     current_user_roles = [user_role.role.name for user_role in current_user.user_roles]
@@ -86,9 +86,9 @@ async def list_workflows(
     if (
         "super_admin" in current_user_roles or "company_admin" in current_user_roles
     ) and company_id:
-        # Admin can view processes for any company
+        # Admin can view workflows for any company
         if search:
-            processes = await workflow.search(
+            workflows = await workflow.search(
                 db,
                 company_id=company_id,
                 query=search,
@@ -97,16 +97,16 @@ async def list_workflows(
                 limit=limit,
             )
         else:
-            processes = await workflow.get_by_company_id(
+            workflows = await workflow.get_by_company_id(
                 db, company_id=company_id, skip=skip, limit=limit
             )
     elif (
         any(role in current_user_roles for role in ["employer", "company_admin"])
         and current_user.company_id
     ):
-        # Employer sees their company's processes
+        # Employer sees their company's workflows
         if search:
-            processes = await workflow.search(
+            workflows = await workflow.search(
                 db,
                 company_id=current_user.company_id,
                 query=search,
@@ -115,12 +115,12 @@ async def list_workflows(
                 limit=limit,
             )
         else:
-            processes = await workflow.get_by_company_id(
+            workflows = await workflow.get_by_company_id(
                 db, company_id=current_user.company_id, skip=skip, limit=limit
             )
     else:
-        # Recruiter/viewer sees processes they have access to
-        processes = await workflow.get_for_user(
+        # Recruiter/viewer sees workflows they have access to
+        workflows = await workflow.get_for_user(
             db,
             user_id=current_user.id,
             role=current_user_roles[0] if current_user_roles else "user",
@@ -128,7 +128,7 @@ async def list_workflows(
             limit=limit,
         )
 
-    return processes
+    return workflows
 
 
 @router.get(API_ROUTES.WORKFLOWS.BY_ID, response_model=WorkflowDetails)
@@ -138,19 +138,19 @@ async def get_workflow(
     current_user: User = Depends(get_current_active_user),
 ):
     """
-    Get detailed information about a recruitment process.
+    Get detailed information about a recruitment workflow.
     """
-    process = await workflow.get_with_nodes(db, id=process_id)
-    if not process:
+    wf = await workflow.get_with_nodes(db, id=workflow_id)
+    if not wf:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Recruitment process not found",
+            detail="Workflow not found",
         )
 
     # Check access permissions
     user_roles = get_user_roles(current_user)
     if any(role in user_roles for role in ["employer", "company_admin"]):
-        if process.employer_company_id != current_user.company_id:
+        if wf.employer_company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
@@ -167,32 +167,32 @@ async def get_workflow(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
 
-    return process
+    return wf
 
 
 @router.put(API_ROUTES.WORKFLOWS.BY_ID, response_model=WorkflowInfo)
 async def update_workflow(
     workflow_id: int,
-    process_update: WorkflowUpdate,
+    workflow_update: WorkflowUpdate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
     """
-    Update a recruitment process.
+    Update a recruitment workflow.
 
-    Requires: process owner or admin
+    Requires: workflow owner or admin
     """
-    process = await workflow.get(db, id=process_id)
-    if not process:
+    wf = await workflow.get(db, id=workflow_id)
+    if not wf:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Recruitment process not found",
+            detail="Workflow not found",
         )
 
     # Check permissions
     user_roles = get_user_roles(current_user)
     if any(role in user_roles for role in ["employer", "company_admin"]):
-        if process.employer_company_id != current_user.company_id:
+        if wf.employer_company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
@@ -201,23 +201,23 @@ async def update_workflow(
             status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
         )
 
-    # Cannot update active processes without special handling
-    if process.status == "active" and not process_update.dict(exclude_unset=True).get(
+    # Cannot update active workflows without special handling
+    if wf.status == "active" and not workflow_update.dict(exclude_unset=True).get(
         "force_update"
     ):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Cannot update active processes without force_update=true",
+            detail="Cannot update active workflows without force_update=true",
         )
 
-    updated_process = await workflow.update(
+    updated_wf = await workflow.update(
         db,
-        db_obj=process,
-        obj_in=process_update.dict(exclude_unset=True),
+        db_obj=wf,
+        obj_in=workflow_update.dict(exclude_unset=True),
         updated_by=current_user.id,
     )
 
-    return updated_process
+    return updated_wf
 
 
 @router.post(API_ROUTES.WORKFLOWS.ACTIVATE, response_model=WorkflowInfo)
@@ -228,21 +228,21 @@ async def activate_workflow(
     current_user: User = Depends(get_current_active_user),
 ):
     """
-    Activate a recruitment process.
+    Activate a recruitment workflow.
 
-    Requires: process owner
+    Requires: workflow owner
     """
-    process = await workflow.get(db, id=process_id)
-    if not process:
+    wf = await workflow.get(db, id=workflow_id)
+    if not wf:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Recruitment process not found",
+            detail="Workflow not found",
         )
 
     # Check permissions
     user_roles = get_user_roles(current_user)
     if any(role in user_roles for role in ["employer", "company_admin"]):
-        if process.employer_company_id != current_user.company_id:
+        if wf.employer_company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
@@ -252,17 +252,17 @@ async def activate_workflow(
         )
 
     try:
-        activated_process = await workflow_engine.activate_process(
+        activated_wf = await workflow_engine.activate_process(
             db, process_id=workflow_id, user_id=current_user.id
         )
-        return activated_process
+        return activated_wf
     except ValueError as e:
         if activation.force_activate:
             # Force activation even with validation issues
-            activated_process = await workflow.activate(
-                db, db_obj=process, activated_by=current_user.id
+            activated_wf = await workflow.activate(
+                db, db_obj=wf, activated_by=current_user.id
             )
-            return activated_process
+            return activated_wf
         else:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)
@@ -277,21 +277,21 @@ async def archive_workflow(
     current_user: User = Depends(get_current_active_user),
 ):
     """
-    Archive a recruitment process.
+    Archive a recruitment workflow.
 
-    Requires: process owner
+    Requires: workflow owner
     """
-    process = await workflow.get(db, id=process_id)
-    if not process:
+    wf = await workflow.get(db, id=workflow_id)
+    if not wf:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Recruitment process not found",
+            detail="Workflow not found",
         )
 
     # Check permissions
     user_roles = get_user_roles(current_user)
     if any(role in user_roles for role in ["employer", "company_admin"]):
-        if process.employer_company_id != current_user.company_id:
+        if wf.employer_company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
@@ -300,11 +300,11 @@ async def archive_workflow(
             status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
         )
 
-    archived_process = await workflow.archive(
-        db, db_obj=process, archived_by=current_user.id
+    archived_wf = await workflow.archive(
+        db, db_obj=wf, archived_by=current_user.id
     )
 
-    return archived_process
+    return archived_wf
 
 
 @router.post(API_ROUTES.WORKFLOWS.CLONE, response_model=WorkflowInfo)
@@ -315,21 +315,21 @@ async def clone_workflow(
     current_user: User = Depends(get_current_active_user),
 ):
     """
-    Clone a recruitment process.
+    Clone a recruitment workflow.
 
-    Requires: process access
+    Requires: workflow access
     """
-    # Check if user can access the source process
-    source_process = await workflow.get(db, id=process_id)
-    if not source_process:
+    # Check if user can access the source workflow
+    source_wf = await workflow.get(db, id=workflow_id)
+    if not source_wf:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Source process not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Source workflow not found"
         )
 
     # Check access permissions
     user_roles = get_user_roles(current_user)
     if any(role in user_roles for role in ["employer", "company_admin"]):
-        if source_process.employer_company_id != current_user.company_id:
+        if source_wf.employer_company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
@@ -345,15 +345,15 @@ async def clone_workflow(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
 
-    # Only employers can create new processes
+    # Only employers can create new workflows
     user_roles = get_user_roles(current_user)
     if not any(role in user_roles for role in ["employer", "company_admin"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only employers can create new processes",
+            detail="Only employers can create new workflows",
         )
 
-    cloned_process = await workflow_engine.clone_process(
+    cloned_wf = await workflow_engine.clone_process(
         db,
         source_process_id=workflow_id,
         new_name=clone_data.new_name,
@@ -362,7 +362,7 @@ async def clone_workflow(
         clone_viewers=clone_data.clone_viewers,
     )
 
-    return cloned_process
+    return cloned_wf
 
 
 @router.delete(API_ROUTES.WORKFLOWS.BY_ID, status_code=status.HTTP_204_NO_CONTENT)
@@ -372,22 +372,22 @@ async def delete_workflow(
     current_user: User = Depends(get_current_active_user),
 ):
     """
-    Soft delete a recruitment process (論理削除).
+    Soft delete a recruitment workflow (論理削除).
 
-    Requires: process owner or admin
-    Only draft processes can be deleted.
+    Requires: workflow owner or admin
+    Only draft workflows can be deleted.
     """
-    process = await workflow.get(db, id=process_id)
-    if not process:
+    wf = await workflow.get(db, id=workflow_id)
+    if not wf:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Recruitment process not found",
+            detail="Workflow not found",
         )
 
     # Check permissions
     user_roles = get_user_roles(current_user)
     if any(role in user_roles for role in ["employer", "company_admin"]):
-        if process.employer_company_id != current_user.company_id:
+        if wf.employer_company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
@@ -396,15 +396,15 @@ async def delete_workflow(
             status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
         )
 
-    # Only allow deletion of draft processes
-    if process.status != "draft":
+    # Only allow deletion of draft workflows
+    if wf.status != "draft":
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Only draft processes can be deleted",
+            detail="Only draft workflows can be deleted",
         )
 
     # Use soft delete instead of hard delete
-    await workflow.soft_delete(db, id=process_id)
+    await workflow.soft_delete(db, id=workflow_id)
 
 
 @router.get(API_ROUTES.WORKFLOWS.VALIDATE)
@@ -414,19 +414,19 @@ async def validate_workflow(
     current_user: User = Depends(get_current_active_user),
 ):
     """
-    Validate a recruitment process before activation.
+    Validate a recruitment workflow before activation.
     """
-    process = await workflow.get(db, id=process_id)
-    if not process:
+    wf = await workflow.get(db, id=workflow_id)
+    if not wf:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Recruitment process not found",
+            detail="Workflow not found",
         )
 
     # Check access permissions
     user_roles = get_user_roles(current_user)
     if any(role in user_roles for role in ["employer", "company_admin"]):
-        if process.employer_company_id != current_user.company_id:
+        if wf.employer_company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
@@ -442,30 +442,30 @@ async def validate_workflow(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
 
-    validation_result = await workflow_engine.validate_process(db, process_id)
+    validation_result = await workflow_engine.validate_process(db, workflow_id)
     return validation_result
 
 
 @router.get(API_ROUTES.WORKFLOWS.ANALYTICS, response_model=ProcessAnalytics)
-async def get_process_analytics(
+async def get_workflow_analytics(
     workflow_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
     """
-    Get comprehensive analytics for a recruitment process.
+    Get comprehensive analytics for a recruitment workflow.
     """
-    process = await workflow.get(db, id=process_id)
-    if not process:
+    wf = await workflow.get(db, id=workflow_id)
+    if not wf:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Recruitment process not found",
+            detail="Workflow not found",
         )
 
     # Check permissions
     user_roles = get_user_roles(current_user)
     if any(role in user_roles for role in ["employer", "company_admin"]):
-        if process.employer_company_id != current_user.company_id:
+        if wf.employer_company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
@@ -481,11 +481,11 @@ async def get_process_analytics(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
 
-    analytics = await workflow_engine.get_process_analytics(db, process_id)
+    analytics = await workflow_engine.get_process_analytics(db, workflow_id)
 
     return ProcessAnalytics(
         process_id=workflow_id,
-        process_name=process.name,
+        process_name=wf.name,
         total_candidates=analytics["total_candidates"],
         completed_candidates=analytics["by_status"].get("completed", 0),
         failed_candidates=analytics["by_status"].get("failed", 0),
@@ -499,13 +499,13 @@ async def get_process_analytics(
 
 
 @router.get(API_ROUTES.WORKFLOWS.COMPANY_STATS, response_model=ProcessStatistics)
-async def get_company_process_statistics(
+async def get_company_workflow_statistics(
     company_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
     """
-    Get recruitment process statistics for a company.
+    Get recruitment workflow statistics for a company.
 
     Requires: company access or admin
     """
@@ -527,7 +527,7 @@ async def get_company_process_statistics(
 
 
 @router.get(API_ROUTES.WORKFLOWS.TEMPLATES, response_model=list[WorkflowInfo])
-async def list_process_templates(
+async def list_workflow_templates(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     category: str | None = Query(None, description="Filter by category"),
@@ -537,7 +537,7 @@ async def list_process_templates(
     current_user: User = Depends(get_current_active_user),
 ):
     """
-    List available process templates.
+    List available workflow templates.
     """
     company_id = (
         current_user.company_id
@@ -568,14 +568,14 @@ async def list_process_templates(
 
 
 @router.post(API_ROUTES.WORKFLOWS.APPLY_TEMPLATE, response_model=WorkflowInfo)
-async def apply_process_template(
+async def apply_workflow_template(
     template_id: int,
-    process_data: WorkflowCreate,
+    workflow_data: WorkflowCreate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
     """
-    Create a new process from a template.
+    Create a new workflow from a template.
 
     Requires: employer or company_admin role
     """
@@ -587,16 +587,16 @@ async def apply_process_template(
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only employers can create processes from templates",
+            detail="Only employers can create workflows from templates",
         )
 
     try:
-        process = await workflow_engine.create_process_from_template(
+        wf = await workflow_engine.create_process_from_template(
             db,
             template_id=template_id,
             employer_id=current_user.id,
-            process_data=process_data.dict(),
+            process_data=workflow_data.dict(),
         )
-        return process
+        return wf
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

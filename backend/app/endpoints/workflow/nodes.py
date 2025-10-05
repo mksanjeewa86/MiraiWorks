@@ -8,14 +8,14 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config.endpoints import API_ROUTES
-from app.crud.recruitment_workflow.workflow_node import workflow_node
-from app.crud.recruitment_workflow.workflow import workflow
+from app.crud.workflow.workflow_node import workflow_node
+from app.crud.workflow.workflow import workflow
 from app.crud.todo import todo as todo_crud
 from app.database import get_db
 from app.dependencies import get_current_active_user
 from app.models.user import User
-from app.schemas.recruitment_workflow.enums import NodeType
-from app.schemas.recruitment_workflow.workflow_node import (
+from app.schemas.workflow.enums import NodeType
+from app.schemas.workflow.workflow_node import (
     NodeIntegrationInterview,
     NodeIntegrationTodo,
     WorkflowNodeCreate,
@@ -37,7 +37,7 @@ def _get_user_roles(user: User) -> set[str]:
     return {user_role.role.name for user_role in user.user_roles}
 
 
-def _ensure_process_can_be_edited(process, user: User) -> Response:
+def _ensure_workflow_can_be_edited(workflow_obj, user: User) -> Response:
     roles = _get_user_roles(user)
     if "super_admin" in roles:
         return
@@ -48,16 +48,16 @@ def _ensure_process_can_be_edited(process, user: User) -> Response:
             detail="Only employers or company admins can modify recruitment workflows",
         )
 
-    if process.employer_company_id != user.company_id:
+    if workflow_obj.employer_company_id != user.company_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You do not have access to this recruitment process",
+            detail="You do not have access to this workflow",
         )
 
-    if not process.can_be_edited:
+    if not workflow_obj.can_be_edited:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Process can only be edited while in draft or inactive status",
+            detail="Workflow can only be edited while in draft or inactive status",
         )
 
 
@@ -81,14 +81,14 @@ def _serialise_node(node) -> WorkflowNodeInfo:
     return WorkflowNodeInfo.model_validate(node, from_attributes=True)
 
 
-async def _load_process(db: AsyncSession, workflow_id: int):
-    process = await workflow.get(db, id=process_id)
-    if not process:
+async def _load_workflow(db: AsyncSession, workflow_id: int):
+    wf = await workflow.get(db, id=workflow_id)
+    if not wf:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Recruitment process not found",
+            detail="Workflow not found",
         )
-    return process
+    return wf
 
 
 async def _shift_sequence_numbers(
@@ -128,7 +128,7 @@ async def _create_node(
 ):
     # Exclude integration fields (create_interview, create_todo) from node creation
     payload = node_data.model_dump(exclude={"create_interview", "create_todo"})
-    payload["process_id"] = process_id
+    payload["workflow_id"] = workflow_id
     payload.setdefault("config", {})
 
     sequence_order = int(payload.get("sequence_order") or 0)
@@ -159,7 +159,7 @@ async def _create_node(
 async def _create_interview_integration(
     db: AsyncSession,
     *,
-    process,
+    workflow_obj,
     node,
     integration: NodeIntegrationInterview,
     actor: User,
@@ -182,7 +182,7 @@ async def _create_interview_integration(
             db=db,
             candidate_id=integration.candidate_id,
             recruiter_id=integration.recruiter_id or actor.id,
-            employer_company_id=process.employer_company_id,
+            employer_company_id=workflow_obj.employer_company_id,
             title=node.title,
             description=node.description,
             interview_type=interview_type or "video",
@@ -260,13 +260,13 @@ async def create_workflow_node_endpoint(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ) -> WorkflowNodeInfo:
-    process = await _load_process(db, process_id)
-    _ensure_process_can_be_edited(process, current_user)
+    wf = await _load_workflow(db, workflow_id)
+    _ensure_workflow_can_be_edited(wf, current_user)
     _ensure_node_type_allowed(node_data.node_type)
 
     node = await _create_node(
         db,
-        process_id=workflow_id,
+        workflow_id=workflow_id,
         node_data=node_data,
         actor=current_user,
     )
@@ -283,13 +283,13 @@ async def create_workflow_node_with_integration(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ) -> dict[str, object]:
-    process = await _load_process(db, process_id)
-    _ensure_process_can_be_edited(process, current_user)
+    wf = await _load_workflow(db, workflow_id)
+    _ensure_workflow_can_be_edited(wf, current_user)
     _ensure_node_type_allowed(node_data.node_type)
 
     node = await _create_node(
         db,
-        process_id=workflow_id,
+        workflow_id=workflow_id,
         node_data=node_data,
         actor=current_user,
     )
@@ -300,7 +300,7 @@ async def create_workflow_node_with_integration(
     if node.node_type == NodeType.INTERVIEW.value:
         created_interview = await _create_interview_integration(
             db,
-            process=process,
+            workflow_obj=wf,
             node=node,
             integration=node_data.create_interview,
             actor=current_user,
@@ -331,15 +331,15 @@ async def update_workflow_node_endpoint(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ) -> WorkflowNodeInfo:
-    process = await _load_process(db, process_id)
+    wf = await _load_workflow(db, workflow_id)
     node = await workflow_node.get(db, id=node_id)
     if not node or node.process_id != workflow_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Process node not found",
+            detail="Workflow node not found",
         )
 
-    _ensure_process_can_be_edited(process, current_user)
+    _ensure_workflow_can_be_edited(wf, current_user)
 
     update_data = node_update.model_dump(exclude_unset=True)
     _normalise_position(update_data)
@@ -365,15 +365,15 @@ async def delete_workflow_node_endpoint(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ) -> Response:
-    process = await _load_process(db, process_id)
+    wf = await _load_workflow(db, workflow_id)
     node = await workflow_node.get(db, id=node_id)
     if not node or node.process_id != workflow_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Process node not found",
+            detail="Workflow node not found",
         )
 
-    _ensure_process_can_be_edited(process, current_user)
+    _ensure_workflow_can_be_edited(wf, current_user)
 
     can_delete = await workflow_node.can_delete_node(db, node_id=node_id)
     if not can_delete:
@@ -386,7 +386,7 @@ async def delete_workflow_node_endpoint(
     if not success:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to delete process node",
+            detail="Failed to delete workflow node",
         )
 
     # Resequence remaining nodes to keep workflow linear
@@ -396,11 +396,11 @@ async def delete_workflow_node_endpoint(
         include_inactive=True,
     )
     updates: list[dict[str, int]] = []
-    for order, workflow_node in enumerate(
+    for order, wf_node in enumerate(
         sorted(remaining_nodes, key=lambda n: n.sequence_order), start=1
     ):
-        if workflow_node.sequence_order != order:
-            updates.append({"node_id": workflow_node.id, "sequence_order": order})
+        if wf_node.sequence_order != order:
+            updates.append({"node_id": wf_node.id, "sequence_order": order})
 
     if updates:
         await workflow_node.reorder_nodes(

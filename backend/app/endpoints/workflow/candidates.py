@@ -28,27 +28,27 @@ router = APIRouter()
     response_model=CandidateWorkflowInfo,
     status_code=status.HTTP_201_CREATED,
 )
-async def assign_candidate_to_process(
+async def assign_candidate_to_workflow(
     workflow_id: int,
     assignment: CandidateWorkflowCreate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
     """
-    Assign a candidate to a recruitment process.
+    Assign a candidate to a recruitment workflow.
 
-    Requires: process owner or viewer with assignment permissions
+    Requires: workflow owner or viewer with assignment permissions
     """
-    process = await workflow.get(db, id=process_id)
-    if not process:
+    wf = await workflow.get(db, id=workflow_id)
+    if not wf:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Recruitment process not found",
+            detail="Workflow not found",
         )
 
     # Check permissions
     if current_user.role == "employer":
-        if process.employer_company_id != current_user.company_id:
+        if wf.employer_company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
@@ -69,14 +69,14 @@ async def assign_candidate_to_process(
         )
 
     try:
-        candidate_proc = await workflow_engine.assign_candidate(
+        candidate_wf = await workflow_engine.assign_candidate(
             db,
             process_id=workflow_id,
             candidate_id=assignment.candidate_id,
             recruiter_id=assignment.assigned_recruiter_id,
             start_immediately=assignment.start_immediately,
         )
-        return candidate_proc
+        return candidate_wf
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
@@ -91,18 +91,18 @@ async def bulk_assign_candidates(
     current_user: User = Depends(get_current_active_user),
 ):
     """
-    Bulk assign multiple candidates to a recruitment process.
+    Bulk assign multiple candidates to a recruitment workflow.
     """
-    process = await workflow.get(db, id=process_id)
-    if not process:
+    wf = await workflow.get(db, id=workflow_id)
+    if not wf:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Recruitment process not found",
+            detail="Workflow not found",
         )
 
     # Check permissions
     if current_user.role == "employer":
-        if process.employer_company_id != current_user.company_id:
+        if wf.employer_company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
@@ -134,7 +134,7 @@ async def bulk_assign_candidates(
 
 
 @router.get(API_ROUTES.WORKFLOWS.CANDIDATES, response_model=list[CandidateWorkflowInfo])
-async def list_process_candidates(
+async def list_workflow_candidates(
     workflow_id: int,
     status: str | None = Query(None, description="Filter by status"),
     skip: int = Query(0, ge=0),
@@ -143,18 +143,18 @@ async def list_process_candidates(
     current_user: User = Depends(get_current_active_user),
 ):
     """
-    List candidates in a recruitment process.
+    List candidates in a recruitment workflow.
     """
-    process = await workflow.get(db, id=process_id)
-    if not process:
+    wf = await workflow.get(db, id=workflow_id)
+    if not wf:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Recruitment process not found",
+            detail="Workflow not found",
         )
 
     # Check permissions
     if current_user.role == "employer":
-        if process.employer_company_id != current_user.company_id:
+        if wf.employer_company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
@@ -190,33 +190,33 @@ async def get_candidate_workflow(
     current_user: User = Depends(get_current_active_user),
 ):
     """
-    Get detailed information about a candidate process.
+    Get detailed information about a candidate workflow.
     """
-    candidate_proc = await candidate_workflow.get_with_details(
+    candidate_wf = await candidate_workflow.get_with_details(
         db, id=candidate_workflow_id
     )
-    if not candidate_proc:
+    if not candidate_wf:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Candidate process not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Candidate workflow not found"
         )
 
     # Check permissions
     if current_user.role == "candidate":
-        if candidate_proc.candidate_id != current_user.id:
+        if candidate_wf.candidate_id != current_user.id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
     elif current_user.role == "employer":
-        if candidate_proc.process.employer_company_id != current_user.company_id:
+        if candidate_wf.process.employer_company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
     elif current_user.role == "recruiter":
         # Check if assigned to this candidate or has viewer access
-        if candidate_proc.assigned_recruiter_id != current_user.id:
+        if candidate_wf.assigned_recruiter_id != current_user.id:
             has_access = await workflow_viewer.check_user_access(
                 db,
-                process_id=candidate_proc.workflow_id,
+                process_id=candidate_wf.workflow_id,
                 user_id=current_user.id,
                 required_permission="view_candidates",
             )
@@ -229,7 +229,7 @@ async def get_candidate_workflow(
             status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
         )
 
-    return candidate_proc
+    return candidate_wf
 
 
 @router.post(API_ROUTES.WORKFLOWS.CANDIDATE_START, response_model=CandidateWorkflowInfo)
@@ -240,26 +240,26 @@ async def start_candidate_workflow(
     current_user: User = Depends(get_current_active_user),
 ):
     """
-    Start a candidate process.
+    Start a candidate workflow.
     """
-    candidate_proc = await candidate_workflow.get(db, id=candidate_workflow_id)
-    if not candidate_proc:
+    candidate_wf = await candidate_workflow.get(db, id=candidate_workflow_id)
+    if not candidate_wf:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Candidate process not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Candidate workflow not found"
         )
 
-    # Check permissions - only recruiters or employers can start processes
+    # Check permissions - only recruiters or employers can start workflows
     if current_user.role == "employer":
-        process = await workflow.get(db, id=candidate_proc.process_id)
-        if not process or process.employer_company_id != current_user.company_id:
+        wf = await workflow.get(db, id=candidate_wf.process_id)
+        if not wf or wf.employer_company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
     elif current_user.role == "recruiter":
-        if candidate_proc.assigned_recruiter_id != current_user.id:
+        if candidate_wf.assigned_recruiter_id != current_user.id:
             has_access = await workflow_viewer.check_user_access(
                 db,
-                process_id=candidate_proc.workflow_id,
+                process_id=candidate_wf.workflow_id,
                 user_id=current_user.id,
                 required_permission="execute_nodes",
             )
@@ -270,14 +270,14 @@ async def start_candidate_workflow(
     else:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only recruiters and employers can start candidate processes",
+            detail="Only recruiters and employers can start candidate workflows",
         )
 
     try:
-        started_process = await workflow_engine.start_candidate_workflow(
+        started_wf = await workflow_engine.start_candidate_workflow(
             db, candidate_workflow_id
         )
-        return started_process
+        return started_wf
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
@@ -290,26 +290,26 @@ async def update_candidate_workflow_status(
     current_user: User = Depends(get_current_active_user),
 ):
     """
-    Update candidate process status.
+    Update candidate workflow status.
     """
-    candidate_proc = await candidate_workflow.get(db, id=candidate_workflow_id)
-    if not candidate_proc:
+    candidate_wf = await candidate_workflow.get(db, id=candidate_workflow_id)
+    if not candidate_wf:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Candidate process not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Candidate workflow not found"
         )
 
     # Check permissions
     if current_user.role == "employer":
-        process = await workflow.get(db, id=candidate_proc.process_id)
-        if not process or process.employer_company_id != current_user.company_id:
+        wf = await workflow.get(db, id=candidate_wf.process_id)
+        if not wf or wf.employer_company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
     elif current_user.role == "recruiter":
-        if candidate_proc.assigned_recruiter_id != current_user.id:
+        if candidate_wf.assigned_recruiter_id != current_user.id:
             has_access = await workflow_viewer.check_user_access(
                 db,
-                process_id=candidate_proc.workflow_id,
+                process_id=candidate_wf.workflow_id,
                 user_id=current_user.id,
                 required_permission="override_results",
             )
@@ -327,30 +327,30 @@ async def update_candidate_workflow_status(
         if not status_change.final_result:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="Final result is required when completing a process",
+                detail="Final result is required when completing a workflow",
             )
-        updated_process = await candidate_workflow.complete_process(
+        updated_wf = await candidate_workflow.complete_process(
             db,
-            candidate_workflow=candidate_proc,
+            candidate_workflow=candidate_wf,
             final_result=status_change.final_result,
             overall_score=status_change.overall_score,
             notes=status_change.reason,
         )
     elif status_change.status == "failed":
-        updated_process = await candidate_workflow.fail_process(
-            db, candidate_workflow=candidate_proc, reason=status_change.reason
+        updated_wf = await candidate_workflow.fail_process(
+            db, candidate_workflow=candidate_wf, reason=status_change.reason
         )
     elif status_change.status == "withdrawn":
-        updated_process = await candidate_workflow.withdraw_process(
-            db, candidate_workflow=candidate_proc, reason=status_change.reason
+        updated_wf = await candidate_workflow.withdraw_process(
+            db, candidate_workflow=candidate_wf, reason=status_change.reason
         )
     elif status_change.status == "on_hold":
-        updated_process = await candidate_workflow.put_on_hold(
-            db, candidate_workflow=candidate_proc
+        updated_wf = await candidate_workflow.put_on_hold(
+            db, candidate_workflow=candidate_wf
         )
     elif status_change.status == "in_progress":
-        updated_process = await candidate_workflow.resume_process(
-            db, candidate_workflow=candidate_proc
+        updated_wf = await candidate_workflow.resume_process(
+            db, candidate_workflow=candidate_wf
         )
     else:
         raise HTTPException(
@@ -358,7 +358,7 @@ async def update_candidate_workflow_status(
             detail="Invalid status transition",
         )
 
-    return updated_process
+    return updated_wf
 
 
 @router.get(API_ROUTES.WORKFLOWS.CANDIDATE_TIMELINE, response_model=CandidateTimeline)
@@ -368,32 +368,32 @@ async def get_candidate_timeline(
     current_user: User = Depends(get_current_active_user),
 ):
     """
-    Get timeline for a candidate process.
+    Get timeline for a candidate workflow.
     """
-    candidate_proc = await candidate_workflow.get_with_details(
+    candidate_wf = await candidate_workflow.get_with_details(
         db, id=candidate_workflow_id
     )
-    if not candidate_proc:
+    if not candidate_wf:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Candidate process not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Candidate workflow not found"
         )
 
     # Check permissions
     if current_user.role == "candidate":
-        if candidate_proc.candidate_id != current_user.id:
+        if candidate_wf.candidate_id != current_user.id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
     elif current_user.role == "employer":
-        if candidate_proc.process.employer_company_id != current_user.company_id:
+        if candidate_wf.process.employer_company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
     elif current_user.role == "recruiter":
-        if candidate_proc.assigned_recruiter_id != current_user.id:
+        if candidate_wf.assigned_recruiter_id != current_user.id:
             has_access = await workflow_viewer.check_user_access(
                 db,
-                process_id=candidate_proc.workflow_id,
+                process_id=candidate_wf.workflow_id,
                 user_id=current_user.id,
                 required_permission="view_candidates",
             )
@@ -412,11 +412,11 @@ async def get_candidate_timeline(
 
     return CandidateTimeline(
         candidate_workflow_id=candidate_workflow_id,
-        candidate_name=candidate_proc.candidate.name
-        if candidate_proc.candidate
+        candidate_name=candidate_wf.candidate.name
+        if candidate_wf.candidate
         else "Unknown",
-        process_name=candidate_proc.process.name,
-        current_status=candidate_proc.status,
+        process_name=candidate_wf.process.name,
+        current_status=candidate_wf.status,
         timeline_items=timeline_items,
     )
 
@@ -432,23 +432,23 @@ async def get_my_candidate_workflows(
     current_user: User = Depends(get_current_active_user),
 ):
     """
-    Get candidate processes for the current user.
+    Get candidate workflows for the current user.
 
-    For candidates: returns their own processes
-    For recruiters: returns processes assigned to them
+    For candidates: returns their own workflows
+    For recruiters: returns workflows assigned to them
     """
     if current_user.role == "candidate":
-        processes = await candidate_workflow.get_by_candidate_id(
+        workflows = await candidate_workflow.get_by_candidate_id(
             db, candidate_id=current_user.id, status=status, skip=skip, limit=limit
         )
     elif current_user.role == "recruiter":
-        processes = await candidate_workflow.get_by_recruiter_id(
+        workflows = await candidate_workflow.get_by_recruiter_id(
             db, recruiter_id=current_user.id, status=status, skip=skip, limit=limit
         )
     else:
-        processes = []
+        workflows = []
 
-    return processes
+    return workflows
 
 
 @router.get(API_ROUTES.WORKFLOWS.RECRUITER_WORKLOAD, response_model=RecruiterWorkload)
