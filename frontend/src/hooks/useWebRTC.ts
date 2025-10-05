@@ -18,11 +18,31 @@ export const useWebRTC = (roomId?: string, userId?: number): UseWebRTCResult => 
   const screenStreamRef = useRef<MediaStream | null>(null);
   const websocket = useRef<WebSocket | null>(null);
 
-  const iceServers = [
-    { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' },
-    // Add TURN servers in production
-  ];
+  // ICE servers with TURN servers for production
+  const getIceServers = (): RTCIceServer[] => {
+    const isProd = process.env.NODE_ENV === 'production';
+    const turnServer = process.env.NEXT_PUBLIC_TURN_SERVER;
+    const turnUser = process.env.NEXT_PUBLIC_TURN_USER;
+    const turnCred = process.env.NEXT_PUBLIC_TURN_CREDENTIAL;
+
+    const servers: RTCIceServer[] = [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+    ];
+
+    // Add TURN server in production if configured
+    if (isProd && turnServer && turnUser && turnCred) {
+      servers.push({
+        urls: turnServer,
+        username: turnUser,
+        credential: turnCred,
+      });
+    }
+
+    return servers;
+  };
+
+  const iceServers = getIceServers();
 
   const initializePeerConnection = useCallback(() => {
     if (peerConnection.current) return;
@@ -127,16 +147,28 @@ export const useWebRTC = (roomId?: string, userId?: number): UseWebRTCResult => 
 
   const connectSignaling = async (): Promise<void> => {
     return new Promise((resolve, reject) => {
-      // Connect to backend WebSocket server (port 8000)
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const host = window.location.hostname;
-      const port = process.env.NODE_ENV === 'production' ? window.location.port : '8000';
-      const wsUrl = `${protocol}//${host}:${port}/ws/video/${roomId}${userId ? `?user_id=${userId}` : ''}`;
+      // Connect to backend WebSocket server with secure protocol in production
+      const getWebSocketUrl = () => {
+        const isProd = process.env.NODE_ENV === 'production';
+
+        // Always use secure WebSocket in production
+        const protocol = isProd ? 'wss:' : (window.location.protocol === 'https:' ? 'wss:' : 'ws:');
+        const host = isProd
+          ? (process.env.NEXT_PUBLIC_WS_HOST || window.location.hostname)
+          : window.location.hostname;
+        const port = isProd
+          ? (process.env.NEXT_PUBLIC_WS_PORT || window.location.port || '')
+          : '8000';
+
+        const portPart = port ? `:${port}` : '';
+        return `${protocol}//${host}${portPart}/ws/video/${roomId}${userId ? `?user_id=${userId}` : ''}`;
+      };
+
+      const wsUrl = getWebSocketUrl();
 
       websocket.current = new WebSocket(wsUrl);
 
       websocket.current.onopen = () => {
-        console.log('Connected to signaling server');
         resolve();
       };
 
@@ -151,7 +183,6 @@ export const useWebRTC = (roomId?: string, userId?: number): UseWebRTCResult => 
       };
 
       websocket.current.onclose = () => {
-        console.log('Disconnected from signaling server');
         setState((prev) => ({ ...prev, isConnected: false }));
       };
     });

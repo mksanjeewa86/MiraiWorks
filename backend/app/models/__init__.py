@@ -7,6 +7,7 @@ from app.models.calendar_event import CalendarEvent
 from app.models.calendar_integration import ExternalCalendarAccount, SyncedEvent
 from app.models.candidate_workflow import CandidateWorkflow
 from app.models.company import Company
+from app.models.company_subscription import CompanySubscription
 from app.models.connection_invitation import ConnectionInvitation
 from app.models.exam import (
     Exam,
@@ -20,6 +21,7 @@ from app.models.exam import (
     QuestionType,
     SessionStatus,
 )
+from app.models.feature import Feature
 from app.models.holiday import Holiday
 from app.models.interview import Interview, InterviewProposal
 from app.models.interview_note import InterviewNote
@@ -33,7 +35,10 @@ from app.models.meeting import (
 )
 from app.models.message import Message
 from app.models.notification import Notification
+from app.models.plan_change_request import PlanChangeRequest
+from app.models.plan_feature import PlanFeature
 from app.models.position import CompanyProfile, Position, PositionApplication
+from app.models.question_bank import QuestionBank, QuestionBankItem
 from app.models.resume import (
     Certification,
     Education,
@@ -45,6 +50,7 @@ from app.models.resume import (
     WorkExperience,
 )
 from app.models.role import Role, UserRole
+from app.models.subscription_plan import SubscriptionPlan
 from app.models.todo import Todo
 from app.models.todo_attachment import TodoAttachment
 from app.models.todo_extension_request import TodoExtensionRequest
@@ -131,4 +137,11 @@ __all__ = [
     "WorkflowNodeExecution",
     "WorkflowViewer",
     "CandidateWorkflow",
+    "QuestionBank",
+    "QuestionBankItem",
+    "SubscriptionPlan",
+    "Feature",
+    "PlanFeature",
+    "CompanySubscription",
+    "PlanChangeRequest",
 ]

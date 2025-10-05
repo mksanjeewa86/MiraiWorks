@@ -1,0 +1,37 @@
+<h2>Plan Change Request Update</h2>
+<p>Hi {{ requester_name }},</p>
+<p>We wanted to update you on your plan change request.</p>
+
+<div style="background: #f8d7da; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc3545;">
+    <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td style="padding: 8px 0; color: #721c24;">Status:</td>
+            <td style="padding: 8px 0; color: #721c24;"><strong>Not Approved</strong></td>
+        </tr>
+        <tr>
+            <td style="padding: 8px 0; color: #721c24;">Requested Plan:</td>
+            <td style="padding: 8px 0; color: #721c24;">{{ requested_plan_name }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px 0; color: #721c24;">Current Plan:</td>
+            <td style="padding: 8px 0; color: #721c24;"><strong>{{ current_plan_name }}</strong> (unchanged)</td>
+        </tr>
+    </table>
+</div>
+
+{% if review_message %}
+<div style="background: #f8f9fa; padding: 15px; border-radius: 4px; margin: 20px 0;">
+    <p style="margin: 0; color: #495057;"><strong>Admin Message:</strong></p>
+    <p style="margin: 10px 0 0 0; color: #495057;">{{ review_message }}</p>
+</div>
+{% endif %}
+
+<p>Your current plan remains unchanged. If you have any questions or would like to discuss alternative options, please contact your system administrator or support team.</p>
+
+<div class="button-center">
+    <a href="{{ subscription_url }}" class="button">View Current Plan</a>
+</div>
+
+<p style="color: #6c757d; font-size: 14px;">
+    You can submit a new plan change request at any time through your subscription dashboard.
+</p>

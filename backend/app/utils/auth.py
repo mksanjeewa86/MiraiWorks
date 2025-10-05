@@ -52,9 +52,9 @@ def is_candidate(user: User) -> bool:
 
 def is_recruiter(user: User) -> bool:
     """Check if user is a recruiter."""
-    return has_any_role(user, [UserRole.COMPANY_ADMIN, UserRole.COMPANY_RECRUITER])
+    return has_any_role(user, [UserRole.ADMIN])
 
 
 def can_manage_exams(user: User) -> bool:
     """Check if user can manage exams."""
-    return has_any_role(user, [UserRole.COMPANY_ADMIN, UserRole.COMPANY_RECRUITER])
+    return has_any_role(user, [UserRole.ADMIN])

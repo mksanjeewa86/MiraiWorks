@@ -94,23 +94,12 @@ export default function TaskModal({
   const canAssign = !isEditing || (permissions?.canAssign ?? false);
 
   useEffect(() => {
-    console.log('TaskModal useEffect - loading users', {
-      isOpen,
-      canAssign,
-      user: user?.email || 'no user',
-      isEditing,
-      hasUser: !!user,
-      isAuthenticated: user !== null,
-    });
-
     // Only load users if modal is open, assignment is allowed, and user is authenticated
     if (isOpen && canAssign && user) {
       const loadUsers = async () => {
-        console.log('Starting to load assignable users...');
         setLoadingUsers(true);
         try {
           const users = await todosApi.getAssignableUsers();
-          console.log('Successfully loaded assignable users', users);
           setAssignableUsers(users);
         } catch (error: any) {
           console.error('Failed to load assignable users', {
@@ -133,7 +122,6 @@ export default function TaskModal({
     } else {
       // Clear users if conditions not met
       if (!user) {
-        console.log('No user authenticated, clearing assignable users');
         setAssignableUsers([]);
         setLoadingUsers(false);
       }

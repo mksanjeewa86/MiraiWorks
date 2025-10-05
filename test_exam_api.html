@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Exam API</title>
+</head>
+<body>
+    <h1>Test Exam API</h1>
+    <div>
+        <label>Access Token:</label><br>
+        <input type="text" id="token" style="width: 500px" placeholder="Paste your access token here">
+        <br><br>
+        <button onclick="testExamAPI()">Test Exam API</button>
+    </div>
+    <pre id="output"></pre>
+
+    <script>
+        async function testExamAPI() {
+            const token = document.getElementById('token').value;
+            const output = document.getElementById('output');
+
+            if (!token) {
+                output.textContent = 'ERROR: Please enter an access token';
+                return;
+            }
+
+            output.textContent = 'Making request to http://localhost:8000/api/exam/exams...\n\n';
+
+            try {
+                const response = await fetch('http://localhost:8000/api/exam/exams', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                output.textContent += `Status: ${response.status} ${response.statusText}\n\n`;
+
+                const data = await response.json();
+                output.textContent += 'Response:\n' + JSON.stringify(data, null, 2);
+
+                if (data.exams) {
+                    output.textContent += `\n\nFound ${data.exams.length} exams`;
+                }
+            } catch (error) {
+                output.textContent += 'ERROR: ' + error.message;
+            }
+        }
+
+        // Try to get token from localStorage if available
+        window.addEventListener('load', () => {
+            const token = localStorage.getItem('accessToken');
+            if (token) {
+                document.getElementById('token').value = token;
+            }
+        });
+    </script>
+</body>
+</html>

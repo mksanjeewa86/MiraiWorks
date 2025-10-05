@@ -116,6 +116,10 @@ export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({ ch
     let lastNotificationId = 0;
     let consecutiveErrors = 0;
 
+    // Delay first poll by 2 seconds to avoid racing with initial auth
+    const INITIAL_DELAY = 2000;
+    const POLL_INTERVAL = 30000; // 30 seconds
+
     const pollForNotifications = async () => {
       try {
         // Get latest notifications
@@ -155,10 +159,25 @@ export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({ ch
         }
       } catch (error: unknown) {
         consecutiveErrors++;
+
+        // Check if it's an authentication error
+        const isAuthError = error instanceof Error &&
+          (error.message.includes('Authentication failed') ||
+           error.message.includes('Unauthorized'));
+
+        if (isAuthError) {
+          // Authentication error - stop polling immediately
+          console.warn('Authentication error in notification polling, stopping');
+          if (pollingIntervalRef.current) {
+            clearInterval(pollingIntervalRef.current);
+            pollingIntervalRef.current = null;
+          }
+          return; // Exit early for auth errors
+        }
+
         console.error('Failed to poll for notifications:', error);
 
         // If we get too many consecutive errors, stop polling
-        // The apiClient should handle auth errors automatically
         if (consecutiveErrors >= 3) {
           console.warn('Too many consecutive polling errors, stopping notifications polling');
           if (pollingIntervalRef.current) {
@@ -169,13 +188,19 @@ export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({ ch
       }
     };
 
-    // Initial poll
-    pollForNotifications();
+    // Delay initial poll to avoid racing with auth initialization
+    const initialPollTimeout = setTimeout(() => {
+      pollForNotifications();
+    }, INITIAL_DELAY);
 
-    // Set up polling interval (every 30 seconds)
-    pollingIntervalRef.current = setInterval(pollForNotifications, 30000);
+    // Set up polling interval (every 30 seconds) after initial delay
+    const intervalStartTimeout = setTimeout(() => {
+      pollingIntervalRef.current = setInterval(pollForNotifications, POLL_INTERVAL);
+    }, INITIAL_DELAY);
 
     return () => {
+      clearTimeout(initialPollTimeout);
+      clearTimeout(intervalStartTimeout);
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;

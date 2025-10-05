@@ -3,6 +3,7 @@ import { PublicResumeInfo } from '@/types/resume';
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import DOMPurify from 'dompurify';
 import { Download, Eye, Calendar, User, Globe, Share2, ExternalLink } from 'lucide-react';
 import { ResumeFormat } from '@/types/resume';
 import { resumesApi } from '@/api/resumes';
@@ -275,7 +276,13 @@ function PublicResumePageContent() {
             {previewHtml ? (
               <div
                 className="resume-preview-public"
-                dangerouslySetInnerHTML={{ __html: previewHtml }}
+                dangerouslySetInnerHTML={{
+                  __html: DOMPurify.sanitize(previewHtml, {
+                    ALLOWED_TAGS: ['p', 'div', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'strong', 'em', 'br', 'section', 'article', 'header', 'footer', 'table', 'thead', 'tbody', 'tr', 'th', 'td'],
+                    ALLOWED_ATTR: ['class', 'style', 'id'],
+                    ALLOW_DATA_ATTR: false,
+                  }),
+                }}
                 style={{
                   fontFamily: (resume as any).font_family || 'Inter',
                   ['--theme-color' as any]: (resume as any).theme_color || '#2563eb',

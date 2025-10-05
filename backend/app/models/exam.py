@@ -87,9 +87,12 @@ class Exam(Base):
     company_id = Column(
         Integer,
         ForeignKey("companies.id", ondelete="CASCADE"),
-        nullable=False,
+        nullable=True,  # NULL = global exam created by system admin
         index=True,
     )
+    is_public = Column(
+        Boolean, default=False, nullable=False, index=True
+    )  # True = available to all companies
     created_by = Column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
@@ -115,6 +118,13 @@ class Exam(Base):
 
     # Metadata
     instructions = Column(Text, nullable=True)  # Instructions for candidates
+
+    # Hybrid exam configuration
+    question_selection_rules = Column(
+        JSON, nullable=True
+    )  # Stores how exam was created (for audit/recreation)
+    # Example: {"custom_count": 10, "template_selections": [{"bank_id": 5, "count": 20, "category": "verbal"}]}
+
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -181,6 +191,17 @@ class ExamQuestion(Base):
     explanation = Column(Text, nullable=True)  # Explanation of correct answer
     tags = Column(JSON, nullable=True)  # ["skill", "logic", ...] for categorization
 
+    # Source tracking (for hybrid exams)
+    source_type = Column(
+        String(20), nullable=False, default="custom", index=True
+    )  # "custom", "template", "question_bank"
+    source_bank_id = Column(
+        Integer, ForeignKey("question_banks.id", ondelete="SET NULL"), nullable=True
+    )  # If from question bank
+    source_question_id = Column(
+        Integer, ForeignKey("question_bank_items.id", ondelete="SET NULL"), nullable=True
+    )  # Original question
+
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -196,6 +217,8 @@ class ExamQuestion(Base):
     answers = relationship(
         "ExamAnswer", back_populates="question", cascade="all, delete-orphan"
     )
+    source_bank = relationship("QuestionBank", foreign_keys=[source_bank_id])
+    source_question = relationship("QuestionBankItem", foreign_keys=[source_question_id], back_populates="used_in_exams")
 
     def __repr__(self):
         return f"<ExamQuestion(id={self.id}, exam_id={self.exam_id}, type='{self.question_type}')>"
@@ -340,10 +363,11 @@ class ExamAssignment(Base):
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
 
-    # Assignment settings
+    # Assignment settings (override exam defaults)
     due_date = Column(DateTime(timezone=True), nullable=True)
     custom_time_limit_minutes = Column(Integer, nullable=True)  # Override exam default
     custom_max_attempts = Column(Integer, nullable=True)  # Override exam default
+    custom_is_randomized = Column(Boolean, nullable=True)  # Override exam default randomization
 
     # Status
     is_active = Column(Boolean, default=True)
@@ -352,6 +376,17 @@ class ExamAssignment(Base):
     # Notifications
     notification_sent = Column(Boolean, default=False)
     reminder_sent = Column(Boolean, default=False)
+
+    # Workflow integration (for exam TODOs)
+    todo_id = Column(
+        Integer, ForeignKey("todos.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    workflow_node_execution_id = Column(
+        Integer,
+        ForeignKey("workflow_node_executions.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
 
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
@@ -368,6 +403,10 @@ class ExamAssignment(Base):
     candidate = relationship("User", foreign_keys=[candidate_id])
     assigner = relationship("User", foreign_keys=[assigned_by])
     sessions = relationship("ExamSession", back_populates="assignment")
+    todo = relationship("Todo", foreign_keys=[todo_id], backref="exam_assignment", uselist=False)
+    workflow_node_execution = relationship(
+        "WorkflowNodeExecution", foreign_keys=[workflow_node_execution_id]
+    )
 
     def __repr__(self):
         return f"<ExamAssignment(id={self.id}, exam_id={self.exam_id}, candidate_id={self.candidate_id})>"

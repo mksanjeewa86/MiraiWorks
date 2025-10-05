@@ -133,6 +133,8 @@ class ExamRoutes:
     BY_ID = "/exams/{exam_id}"
     TAKE = "/exams/take"
     MY_ASSIGNMENTS = "/my-assignments"
+    HYBRID = "/exams/hybrid"  # NEW: Create hybrid exam
+    CLONE = "/exams/{exam_id}/clone"  # NEW: Clone exam to company
 
     # Exam operations
     STATISTICS = "/exams/{exam_id}/statistics"
@@ -163,6 +165,21 @@ class ExamRoutes:
     TEMPLATES = "/templates"
     TEMPLATE_BY_ID = "/templates/{template_id}"
     TEMPLATE_FROM_EXAM = "/templates/from-exam/{exam_id}"
+
+
+class QuestionBankRoutes:
+    """Question bank endpoints."""
+
+    # Question banks
+    BASE = "/question-banks"
+    BY_ID = "/question-banks/{bank_id}"
+
+    # Bank questions
+    QUESTIONS = "/question-banks/{bank_id}/questions"
+    QUESTION_BY_ID = "/questions/{question_id}"
+
+    # Statistics
+    STATS = "/question-banks/{bank_id}/stats"
 
 
 class VideoCallRoutes:
@@ -627,6 +644,44 @@ class TodoExtensionRoutes:
     BY_ID = "/extension-requests/{request_id}"
 
 
+class SubscriptionRoutes:
+    """Subscription and plan management endpoints."""
+
+    # Public plan endpoints
+    PLANS = "/plans"
+    PLAN_BY_ID = "/plans/{plan_id}"
+
+    # Company subscription endpoints
+    MY_SUBSCRIPTION = "/my-subscription"
+    SUBSCRIBE = "/subscribe"
+    UPDATE_SUBSCRIPTION = "/my-subscription"
+
+    # Feature access check
+    CHECK_FEATURE = "/check-feature/{feature_name}"
+
+    # Plan change requests
+    REQUEST_PLAN_CHANGE = "/plan-change-request"
+    MY_PLAN_CHANGE_REQUESTS = "/my-plan-change-requests"
+    ALL_PLAN_CHANGE_REQUESTS = "/plan-change-requests"
+    REVIEW_PLAN_CHANGE = "/plan-change-requests/{request_id}/review"
+
+
+class FeatureRoutes:
+    """Feature catalog and plan-feature management endpoints."""
+
+    # Feature catalog
+    BASE = "/"
+    HIERARCHICAL = "/"
+    FLAT = "/flat"
+    BY_ID = "/{feature_id}"
+    SEARCH = "/search/{search_term}"
+
+    # Plan-feature management
+    PLAN_FEATURES = "/plan/{plan_id}/features"
+    ADD_FEATURE_TO_PLAN = "/plan/{plan_id}/features"
+    REMOVE_FEATURE_FROM_PLAN = "/plan/{plan_id}/features/{feature_id}"
+
+
 class API_ROUTES:
     """
     Centralized API route definitions.
@@ -647,6 +702,7 @@ class API_ROUTES:
     POSITIONS = PositionRoutes
     INTERVIEWS = InterviewRoutes
     EXAMS = ExamRoutes
+    QUESTION_BANKS = QuestionBankRoutes
     VIDEO_CALLS = VideoCallRoutes
     CALENDAR = CalendarRoutes
     MESSAGES = MessageRoutes
@@ -671,6 +727,8 @@ class API_ROUTES:
     CALENDAR_CONNECTIONS = CalendarConnectionRoutes
     MEETINGS = MeetingRoutes
     TODO_EXTENSIONS = TodoExtensionRoutes
+    SUBSCRIPTIONS = SubscriptionRoutes
+    FEATURES = FeatureRoutes
 
 
 # Convenience exports

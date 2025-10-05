@@ -11,6 +11,7 @@ from app.endpoints import (
     dashboard,
     email_preview,
     exam,
+    features,
     files,
     holidays,
     infrastructure,
@@ -20,7 +21,9 @@ from app.endpoints import (
     notifications,
     positions,
     public,
+    question_bank,
     resumes,
+    subscription,
     todo_attachments,
     todo_extensions,
     todos,
@@ -84,6 +87,9 @@ def include_routers(app: FastAPI) -> None:
     app.include_router(mbti.router, prefix="/api/mbti", tags=["mbti"])
     app.include_router(positions.router, prefix="/api/positions", tags=["positions"])
     app.include_router(exam.router, prefix="/api/exam", tags=["exam"])
+    app.include_router(question_bank.router, prefix="/api", tags=["question-banks"])
+    app.include_router(subscription.router, prefix="/api", tags=["subscriptions"])
+    app.include_router(features.router, prefix="/api", tags=["features"])
     app.include_router(webhooks.router, prefix="/api/webhooks", tags=["webhooks"])
     app.include_router(resumes.router, prefix="/api/resumes", tags=["resumes"])
     app.include_router(user_settings.router, prefix="/api/user", tags=["user-settings"])

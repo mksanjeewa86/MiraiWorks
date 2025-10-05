@@ -46,12 +46,18 @@ import { useExams, useExamMutations } from '@/hooks/useExams';
 import { examApi } from '@/api/exam';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import { useAuth } from '@/contexts/AuthContext';
+import { ExamTypeBadge } from '@/components/exam/ExamTypeBadge';
+import { CloneExamDialog } from '@/components/exam/CloneExamDialog';
 import { toast } from 'sonner';
 
 function AdminExamsPageContent() {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [ownershipFilter, setOwnershipFilter] = useState<string>('all');
+  const [cloneExam, setCloneExam] = useState<Exam | null>(null);
 
   const { exams, loading, refetch } = useExams({
     status: statusFilter !== 'all' ? statusFilter : undefined,
@@ -138,7 +144,13 @@ function AdminExamsPageContent() {
 
     const matchesType = typeFilter === 'all' || exam.exam_type === typeFilter;
 
-    return matchesSearch && matchesType;
+    const matchesOwnership =
+      ownershipFilter === 'all' ||
+      (ownershipFilter === 'own' && exam.company_id === user?.company_id) ||
+      (ownershipFilter === 'global' && exam.company_id === null && exam.is_public) ||
+      (ownershipFilter === 'public' && exam.is_public && exam.company_id !== user?.company_id);
+
+    return matchesSearch && matchesType && matchesOwnership;
   });
 
   const getExamTypeLabel = (type: string) => {
@@ -210,6 +222,18 @@ function AdminExamsPageContent() {
                   />
                 </div>
               </div>
+
+              <Select value={ownershipFilter} onValueChange={setOwnershipFilter}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder="Filter by ownership" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Exams</SelectItem>
+                  <SelectItem value="own">My Company</SelectItem>
+                  <SelectItem value="global">🌍 Global</SelectItem>
+                  <SelectItem value="public">🔓 Public</SelectItem>
+                </SelectContent>
+              </Select>
 
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-full sm:w-48">
@@ -313,22 +337,33 @@ function AdminExamsPageContent() {
                           <FileSpreadsheet className="h-4 w-4 mr-2" />
                           Export Excel
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDuplicateExam(exam.id, exam.title)}>
-                          <Copy className="h-4 w-4 mr-2" />
-                          Duplicate
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleDeleteExam(exam.id)}
-                          className="text-red-600"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
+                        {exam.is_public && exam.company_id !== user?.company_id && (
+                          <DropdownMenuItem onClick={() => setCloneExam(exam)}>
+                            <Copy className="h-4 w-4 mr-2" />
+                            Clone to My Company
+                          </DropdownMenuItem>
+                        )}
+                        {exam.company_id === user?.company_id && (
+                          <DropdownMenuItem onClick={() => handleDuplicateExam(exam.id, exam.title)}>
+                            <Copy className="h-4 w-4 mr-2" />
+                            Duplicate
+                          </DropdownMenuItem>
+                        )}
+                        {exam.company_id === user?.company_id && (
+                          <DropdownMenuItem
+                            onClick={() => handleDeleteExam(exam.id)}
+                            className="text-red-600"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
 
-                  <div className="flex items-center gap-2 mt-2">
+                  <div className="flex items-center gap-2 mt-2 flex-wrap">
+                    <ExamTypeBadge exam={exam} currentCompanyId={user?.company_id} />
                     <Badge className={getStatusColor(exam.status)}>
                       {exam.status.charAt(0).toUpperCase() + exam.status.slice(1)}
                     </Badge>
@@ -438,6 +473,20 @@ function AdminExamsPageContent() {
           </div>
         )}
       </div>
+
+      {/* Clone Dialog */}
+      {cloneExam && (
+        <CloneExamDialog
+          exam={cloneExam}
+          isOpen={!!cloneExam}
+          onClose={() => setCloneExam(null)}
+          onSuccess={() => {
+            setCloneExam(null);
+            refetch();
+            toast.success('Exam cloned successfully');
+          }}
+        />
+      )}
     </AppLayout>
   );
 }

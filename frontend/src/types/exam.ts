@@ -65,12 +65,13 @@ export interface Exam {
   description: string | null;
   exam_type: string;
   status: string;
-  company_id: number;
+  company_id: number | null;  // Nullable for global exams
   created_by: number | null;
   time_limit_minutes: number | null;
   max_attempts: number;
   passing_score: number | null;
   is_randomized: boolean;
+  is_public: boolean;  // Public exam flag
   allow_web_usage: boolean;
   monitor_web_usage: boolean;
   require_face_verification: boolean;
@@ -94,10 +95,13 @@ export interface ExamInfo {
   description: string | null;
   exam_type: string;
   status: string;
+  company_id: number | null;
+  created_by: number | null;
   time_limit_minutes: number | null;
   max_attempts: number;
   passing_score: number | null;
   is_randomized: boolean;
+  is_public: boolean;
   allow_web_usage: boolean;
   monitor_web_usage: boolean;
   require_face_verification: boolean;
@@ -107,6 +111,7 @@ export interface ExamInfo {
   show_score: boolean;
   instructions: string | null;
   created_at: string;
+  updated_at: string;
   total_questions: number;
 }
 
@@ -238,6 +243,7 @@ export interface ExamAssignment {
   due_date: string | null;
   custom_time_limit_minutes: number | null;
   custom_max_attempts: number | null;
+  custom_is_randomized: boolean | null;
   is_active: boolean;
   completed: boolean;
   notification_sent: boolean;
@@ -279,6 +285,9 @@ export interface ExamFormData {
   title: string;
   description: string;
   exam_type: string;
+  company_id?: number | null;  // Optional for system admin (null = global exam)
+  is_public: boolean;  // Public exam flag
+  is_global?: boolean;  // Global exam flag (system admins only)
   time_limit_minutes: number | null;
   max_attempts: number;
   passing_score: number | null;
@@ -354,20 +363,6 @@ export type SessionStatusType = keyof typeof SessionStatus;
 // ============================================================================
 // EXAM ASSIGNMENTS & FORMS
 // ============================================================================
-
-// Exam Assignment (from app/exams/page.tsx)
-export interface ExamAssignment {
-  id: number;
-  exam_id: number;
-  due_date: string | null;
-  custom_time_limit_minutes: number | null;
-  custom_max_attempts: number | null;
-  is_active: boolean;
-  completed: boolean;
-  exam_title: string;
-  exam_type: string;
-  sessions_count: number;
-}
 
 // Exam List Response (from app/admin/exams/page.tsx)
 export interface ExamListResponse {

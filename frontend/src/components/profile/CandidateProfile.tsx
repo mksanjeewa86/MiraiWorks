@@ -36,7 +36,7 @@ const CandidateProfile: React.FC<CandidateProfileProps> = ({ userId, isPublic = 
           const summary = await mbtiApi.getSummary(language);
           setMbtiSummary(summary);
         } catch (err) {
-          console.log('No MBTI results available');
+          // No MBTI results available
         }
       }
     } catch (error) {

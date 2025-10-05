@@ -95,6 +95,7 @@ class TodoNodeType(str, Enum):
     DOCUMENT_UPLOAD = "document_upload"
     CODING_TEST = "coding_test"
     APTITUDE_TEST = "aptitude_test"
+    EXAM = "exam"  # For exam assignments via workflow
 
 
 class SubmissionType(str, Enum):

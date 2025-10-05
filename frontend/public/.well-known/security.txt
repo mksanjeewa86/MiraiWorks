@@ -1,0 +1,34 @@
+# Security Policy for MiraiWorks
+# https://securitytxt.org/
+
+Contact: mailto:security@miraiworks.com
+Contact: https://github.com/miraiworks/miraiworks/security/advisories/new
+Expires: 2026-12-31T23:59:59.000Z
+Preferred-Languages: en, ja
+Canonical: https://miraiworks.com/.well-known/security.txt
+Policy: https://miraiworks.com/security-policy
+Acknowledgments: https://miraiworks.com/security-hall-of-fame
+
+# Reporting Guidelines
+#
+# We take security seriously and appreciate responsible disclosure.
+# Please report security vulnerabilities through one of the contact methods above.
+#
+# What to include in your report:
+# - Description of the vulnerability
+# - Steps to reproduce
+# - Potential impact
+# - Suggested fix (if any)
+#
+# We commit to:
+# - Acknowledge receipt within 48 hours
+# - Provide regular updates on progress
+# - Credit researchers (with permission) in our acknowledgments
+# - Fix verified issues promptly
+#
+# Please do NOT:
+# - Perform testing that could harm users or services
+# - Access or modify user data without permission
+# - Publicly disclose vulnerabilities before we've had time to fix them
+#
+# Thank you for helping keep MiraiWorks secure!

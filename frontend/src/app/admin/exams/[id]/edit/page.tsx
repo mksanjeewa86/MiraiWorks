@@ -19,8 +19,9 @@ import {
   Textarea,
   Switch,
   LoadingSpinner,
+  Separator,
 } from '@/components/ui';
-import { ArrowLeft, Save, Trash2, Plus } from 'lucide-react';
+import { ArrowLeft, Save, Trash2, Plus, Globe, Building2 } from 'lucide-react';
 import Link from 'next/link';
 import {
   useExam,
@@ -33,11 +34,13 @@ import type { ExamFormData, QuestionFormData } from '@/types/exam';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 function EditExamContent() {
   const params = useParams();
   const router = useRouter();
   const examId = parseInt(params.id as string);
+  const { user } = useAuth();
 
   const { exam, loading: examLoading } = useExam(examId);
   const {
@@ -56,6 +59,8 @@ function EditExamContent() {
     max_attempts: 3,
     passing_score: null,
     is_randomized: false,
+    is_public: false,
+    is_global: false,
     allow_web_usage: false,
     monitor_web_usage: true,
     require_face_verification: false,
@@ -64,10 +69,14 @@ function EditExamContent() {
     show_correct_answers: false,
     show_score: true,
     instructions: '',
+    company_id: null,
   });
 
   const [editingQuestionId, setEditingQuestionId] = useState<number | null>(null);
   const [showAddQuestion, setShowAddQuestion] = useState(false);
+
+  // Check if current user is system admin
+  const isSystemAdmin = user?.roles?.some(r => r.role.name === 'system_admin');
 
   useEffect(() => {
     if (exam) {
@@ -79,6 +88,8 @@ function EditExamContent() {
         max_attempts: exam.max_attempts,
         passing_score: exam.passing_score,
         is_randomized: exam.is_randomized,
+        is_public: exam.is_public,
+        is_global: exam.company_id === null, // Global if no company_id
         allow_web_usage: exam.allow_web_usage,
         monitor_web_usage: exam.monitor_web_usage,
         require_face_verification: exam.require_face_verification,
@@ -87,6 +98,7 @@ function EditExamContent() {
         show_correct_answers: exam.show_correct_answers,
         show_score: exam.show_score,
         instructions: exam.instructions || '',
+        company_id: exam.company_id,
       });
     }
   }, [exam]);
@@ -202,6 +214,64 @@ function EditExamContent() {
                     rows={3}
                   />
                 </div>
+
+                <Separator />
+
+                {/* Visibility & Access Control */}
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-sm font-medium mb-1">Visibility & Access Control</h3>
+                    <p className="text-sm text-gray-500">
+                      Control who can see and use this exam
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-start gap-3">
+                      <Building2 className="h-5 w-5 text-gray-400 mt-0.5" />
+                      <div>
+                        <Label>Public Exam</Label>
+                        <p className="text-sm text-gray-500">
+                          Make this exam visible to all companies
+                        </p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={examData.is_public}
+                      onCheckedChange={(checked: boolean) =>
+                        setExamData({ ...examData, is_public: checked })
+                      }
+                    />
+                  </div>
+
+                  {isSystemAdmin && (
+                    <div className="flex items-center justify-between p-4 border border-blue-200 bg-blue-50 rounded-lg">
+                      <div className="flex items-start gap-3">
+                        <Globe className="h-5 w-5 text-blue-600 mt-0.5" />
+                        <div>
+                          <Label className="text-blue-900">Global Exam (System Admin Only)</Label>
+                          <p className="text-sm text-blue-700">
+                            System-wide exam template accessible to all companies.
+                            {examData.is_global && ' This exam is currently global.'}
+                          </p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={examData.is_global}
+                        onCheckedChange={(checked: boolean) => {
+                          setExamData({
+                            ...examData,
+                            is_global: checked,
+                            company_id: checked ? null : examData.company_id,
+                            is_public: checked ? true : examData.is_public
+                          });
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <Separator />
 
                 <div>
                   <Label htmlFor="instructions">Instructions</Label>

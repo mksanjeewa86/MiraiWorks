@@ -116,7 +116,6 @@ function InterviewDetailsContent() {
           } catch (videoCallError: unknown) {
             const errorMessage =
               videoCallError instanceof Error ? videoCallError.message : 'Unknown error';
-            console.log('Video call not found, creating new one:', errorMessage);
 
             // If video call doesn't exist (404), create one
             if (
@@ -130,8 +129,6 @@ function InterviewDetailsContent() {
                 transcription_enabled: true,
                 transcription_language: 'ja',
               };
-
-              console.log('Creating video call with data:', videoCallData);
 
               const newVideoCall = await apiClient.post<VideoCall>(
                 API_ENDPOINTS.INTERVIEWS.VIDEO_CALL(interviewId),

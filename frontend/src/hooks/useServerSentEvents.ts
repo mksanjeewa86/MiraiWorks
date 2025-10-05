@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
+import { EventSourcePolyfill } from 'event-source-polyfill';
 import { SSEMessage, UseSSEOptions } from '@/types';
 
 export const useServerSentEvents = ({
@@ -15,9 +16,12 @@ export const useServerSentEvents = ({
     if (!token || eventSourceRef.current) return;
 
     try {
-      // Create SSE connection with token
-      const sseUrl = `${url}?token=${encodeURIComponent(token)}`;
-      eventSourceRef.current = new EventSource(sseUrl);
+      // Create SSE connection with token in Authorization header (more secure than URL)
+      eventSourceRef.current = new EventSourcePolyfill(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }) as EventSource;
 
       eventSourceRef.current.onopen = () => {
         onConnect?.();

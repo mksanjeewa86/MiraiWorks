@@ -3,7 +3,13 @@
 import NotificationDropdown from '@/components/notifications/NotificationDropdown';
 import { useAuth } from '@/contexts/AuthContext';
 import type { TopbarProps } from '@/types/components';
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 import { LogOut, Settings, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -81,8 +87,8 @@ export default function Topbar({ pageTitle, pageDescription }: TopbarProps = {})
           <NotificationDropdown />
 
           {/* User menu */}
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger asChild>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
               <button
                 className="flex items-center space-x-2 p-2 rounded-2xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 aria-label="User menu"
@@ -98,12 +104,11 @@ export default function Topbar({ pageTitle, pageDescription }: TopbarProps = {})
                   {getUserDisplayName()}
                 </span>
               </button>
-            </DropdownMenu.Trigger>
+            </DropdownMenuTrigger>
 
-            <DropdownMenu.Portal>
-              <DropdownMenu.Content
-                className="min-w-[200px] bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xl z-50 p-2"
-                sideOffset={5}
+            <DropdownMenuContent
+                className="min-w-[200px] bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xl p-2"
+                align="end"
               >
                 <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700">
                   <p className="text-sm font-medium text-gray-900 dark:text-white">
@@ -112,35 +117,34 @@ export default function Topbar({ pageTitle, pageDescription }: TopbarProps = {})
                   <p className="text-xs text-muted-500">{user?.email}</p>
                 </div>
 
-                <DropdownMenu.Item
+                <DropdownMenuItem
                   className="flex items-center space-x-2 p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl cursor-pointer"
                   onClick={handleProfileClick}
                 >
                   <User className="h-4 w-4 text-gray-500" />
                   <span className="text-sm text-gray-700 dark:text-gray-200">Profile</span>
-                </DropdownMenu.Item>
+                </DropdownMenuItem>
 
-                <DropdownMenu.Item
+                <DropdownMenuItem
                   className="flex items-center space-x-2 p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl cursor-pointer"
                   onClick={handleSettingsClick}
                 >
                   <Settings className="h-4 w-4 text-gray-500" />
                   <span className="text-sm text-gray-700 dark:text-gray-200">Settings</span>
-                </DropdownMenu.Item>
+                </DropdownMenuItem>
 
-                <DropdownMenu.Separator className="h-px bg-gray-200 dark:bg-gray-700 my-1" />
+                <DropdownMenuSeparator className="h-px bg-gray-200 dark:bg-gray-700 my-1" />
 
-                <DropdownMenu.Item
+                <DropdownMenuItem
                   className="flex items-center space-x-2 p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl cursor-pointer"
                   onClick={logout}
                   data-testid="logout-button"
                 >
                   <LogOut className="h-4 w-4 text-red-500" />
                   <span className="text-sm text-red-700 dark:text-red-400">Logout</span>
-                </DropdownMenu.Item>
-              </DropdownMenu.Content>
-            </DropdownMenu.Portal>
-          </DropdownMenu.Root>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>

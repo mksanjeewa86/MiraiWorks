@@ -264,6 +264,14 @@ export const API_ENDPOINTS = {
     FROM_EXAM: (examId: number | string) => `/api/exam/templates/from-exam/${examId}`,
   },
 
+  // Question Bank endpoints
+  QUESTION_BANKS: {
+    BASE: '/api/question-banks',
+    BY_ID: (bankId: number | string) => `/api/question-banks/${bankId}`,
+    CLONE: (bankId: number | string) => `/api/question-banks/${bankId}/clone`,
+    STATS: (bankId: number | string) => `/api/question-banks/${bankId}/stats`,
+  },
+
   // Assignment endpoints
   ASSIGNMENTS: {
     PENDING_REVIEW: '/api/assignments/pending-review',
@@ -368,5 +376,41 @@ export const API_ENDPOINTS = {
     UPLOAD_CHUNK: '/api/messages/upload/chunk',
     UPLOAD_COMPLETE: '/api/messages/upload/complete',
     RESTRICTED_USERS: '/api/messages/restricted-users',
+  },
+
+  // Subscription endpoints
+  SUBSCRIPTIONS: {
+    MY_SUBSCRIPTION: '/api/subscriptions/my-subscription',
+    SUBSCRIBE: '/api/subscriptions/subscribe',
+    UPDATE_SUBSCRIPTION: '/api/subscriptions/update',
+    CANCEL_SUBSCRIPTION: '/api/subscriptions/cancel',
+    CHECK_FEATURE_ACCESS: (featureName: string) => `/api/subscriptions/check-feature/${featureName}`,
+    BULK_FEATURE_ACCESS: '/api/subscriptions/bulk-check-features',
+    MY_PLAN_CHANGE_REQUESTS: '/api/subscriptions/my-plan-change-requests',
+    ALL_PLAN_CHANGE_REQUESTS: '/api/subscriptions/plan-change-requests',
+    REQUEST_PLAN_CHANGE: '/api/subscriptions/request-plan-change',
+    REVIEW_PLAN_CHANGE: (requestId: number | string) =>
+      `/api/subscriptions/plan-change-requests/${requestId}/review`,
+  },
+
+  // Subscription Plans endpoints
+  SUBSCRIPTION_PLANS: {
+    BASE: '/api/subscription-plans',
+    BY_ID: (planId: number | string) => `/api/subscription-plans/${planId}`,
+    PUBLIC: '/api/subscription-plans/public',
+    WITH_FEATURES: (planId: number | string) => `/api/subscription-plans/${planId}/features`,
+  },
+
+  // Features endpoints
+  FEATURES: {
+    BASE: '/api/features',
+    BY_ID: (featureId: number | string) => `/api/features/${featureId}`,
+    HIERARCHICAL: '/api/features/hierarchical',
+    FLAT: '/api/features/flat',
+    SEARCH: (term: string) => `/api/features/search/${term}`,
+    PLAN_FEATURES: (planId: number | string) => `/api/plan-features/${planId}`,
+    ADD_TO_PLAN: (planId: number | string) => `/api/plan-features/${planId}`,
+    REMOVE_FROM_PLAN: (planId: number | string, featureId: number | string) =>
+      `/api/plan-features/${planId}/features/${featureId}`,
   },
 } as const;

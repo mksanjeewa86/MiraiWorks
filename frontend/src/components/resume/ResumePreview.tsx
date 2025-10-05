@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import DOMPurify from 'dompurify';
 import { ZoomIn, ZoomOut, Maximize2, Minimize2, RotateCcw, Printer, Eye } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { Card } from '@/components/ui';
@@ -250,7 +251,13 @@ export default function ResumePreview({
             <div className="p-4">
               <div
                 className="resume-preview transition-transform duration-200"
-                dangerouslySetInnerHTML={{ __html: previewHtml }}
+                dangerouslySetInnerHTML={{
+                  __html: DOMPurify.sanitize(previewHtml, {
+                    ALLOWED_TAGS: ['p', 'div', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'strong', 'em', 'br', 'section', 'article', 'header', 'footer', 'table', 'thead', 'tbody', 'tr', 'th', 'td'],
+                    ALLOWED_ATTR: ['class', 'style', 'id'],
+                    ALLOW_DATA_ATTR: false,
+                  }),
+                }}
                 style={{
                   fontFamily: resume.font_family || 'Inter',
                   ['--theme-color' as any]: resume.theme_color || '#2563eb',

@@ -19,6 +19,7 @@ from app.schemas.workflow.enums import (
     NodeType,
     TodoNodeType,
 )
+from app.services.exam_todo_service import exam_todo_service
 from app.utils.datetime_utils import get_utc_now
 
 
@@ -354,6 +355,47 @@ class WorkflowEngineService:
 
         config = node.config or {}
 
+        # Check if this is an exam TODO
+        if config.get("todo_type") == TodoNodeType.EXAM or config.get("exam_config"):
+            await self._create_exam_todo(db, execution, node, candidate_proc, config)
+        else:
+            # Regular TODO or assignment
+            await self._create_regular_todo(db, execution, node, candidate_proc, config)
+
+    async def _create_exam_todo(
+        self,
+        db: AsyncSession,
+        execution: WorkflowNodeExecution,
+        node: WorkflowNode,
+        candidate_proc: CandidateWorkflow,
+        config: dict[str, Any],
+    ) -> None:
+        """Create an exam TODO using ExamTodoService"""
+        exam_config = config.get("exam_config", {})
+
+        # Use ExamTodoService to create exam TODO and assignment
+        todo, exam_assignment = await exam_todo_service.create_exam_todo_from_workflow(
+            db=db,
+            workflow_node_execution=execution,
+            candidate_id=candidate_proc.candidate_id,
+            exam_config=exam_config,
+            created_by_id=execution.assigned_to
+            or candidate_proc.assigned_recruiter_id
+            or candidate_proc.workflow.created_by,
+        )
+
+        # Link todo to execution
+        await workflow_node_execution.link_todo(db, execution=execution, todo_id=todo.id)
+
+    async def _create_regular_todo(
+        self,
+        db: AsyncSession,
+        execution: WorkflowNodeExecution,
+        node: WorkflowNode,
+        candidate_proc: CandidateWorkflow,
+        config: dict[str, Any],
+    ) -> None:
+        """Create a regular TODO or assignment"""
         # Calculate due date
         due_days = config.get("due_in_days", 3)
         due_date = get_utc_now() + timedelta(days=due_days)
@@ -376,9 +418,7 @@ class WorkflowEngineService:
         todo = await todo_crud.create(db, obj_in=todo_data)
 
         # Link to execution
-        await workflow_node_execution.link_todo(
-            db, execution=execution, todo_id=todo.id
-        )
+        await workflow_node_execution.link_todo(db, execution=execution, todo_id=todo.id)
 
     async def validate_process(
         self, db: AsyncSession, workflow_id: int

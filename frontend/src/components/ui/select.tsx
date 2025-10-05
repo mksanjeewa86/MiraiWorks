@@ -1,4 +1,4 @@
-import { forwardRef } from 'react';
+import { forwardRef, Children, isValidElement, cloneElement } from 'react';
 import { clsx } from 'clsx';
 import type {
   SelectProps,
@@ -7,6 +7,11 @@ import type {
   SelectTriggerProps,
   SelectValueProps,
 } from '@/types/components';
+
+// Internal context to collect children
+interface SelectContextValue {
+  placeholder?: string;
+}
 
 const Select = forwardRef<HTMLSelectElement, SelectProps>(
   ({ className, children, onValueChange, onChange, ...props }, ref) => {
@@ -19,6 +24,40 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
       }
     };
 
+    // Extract placeholder from SelectValue component if present
+    let placeholder = '';
+
+    // Process children to extract SelectValue placeholder and filter out non-option children
+    const processedChildren: React.ReactNode[] = [];
+
+    Children.forEach(children, (child) => {
+      if (isValidElement(child)) {
+        // If it's SelectTrigger, process its children
+        if (child.type === SelectTrigger) {
+          const triggerProps = child.props as { children?: React.ReactNode };
+          Children.forEach(triggerProps.children, (triggerChild) => {
+            if (isValidElement(triggerChild) && triggerChild.type === SelectValue) {
+              const valueProps = triggerChild.props as SelectValueProps;
+              placeholder = valueProps.placeholder || '';
+            }
+          });
+        }
+        // If it's SelectContent, extract SelectItem children
+        else if (child.type === SelectContent) {
+          const contentProps = child.props as { children?: React.ReactNode };
+          Children.forEach(contentProps.children, (contentChild) => {
+            if (isValidElement(contentChild) && contentChild.type === SelectItem) {
+              processedChildren.push(contentChild);
+            }
+          });
+        }
+        // If it's a direct SelectItem, include it
+        else if (child.type === SelectItem) {
+          processedChildren.push(child);
+        }
+      }
+    });
+
     return (
       <select
         className={clsx(
@@ -29,7 +68,12 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
         onChange={handleChange}
         {...props}
       >
-        {children}
+        {placeholder && (
+          <option value="" disabled>
+            {placeholder}
+          </option>
+        )}
+        {processedChildren}
       </select>
     );
   }
@@ -38,7 +82,8 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
 Select.displayName = 'Select';
 
 const SelectContent = ({ children, className }: SelectContentProps) => {
-  return <div className={clsx('select-content', className)}>{children}</div>;
+  // SelectContent is just a logical wrapper, doesn't render anything
+  return <>{children}</>;
 };
 
 const SelectItem = ({ children, value, className }: SelectItemProps) => {
@@ -49,20 +94,18 @@ const SelectItem = ({ children, value, className }: SelectItemProps) => {
   );
 };
 
-const SelectTrigger = forwardRef<HTMLSelectElement, SelectTriggerProps & SelectProps>(
-  ({ children, className, ...props }, ref) => {
-    return (
-      <Select ref={ref} className={className} {...props}>
-        {children}
-      </Select>
-    );
+const SelectTrigger = forwardRef<HTMLDivElement, SelectTriggerProps>(
+  ({ children, className }, ref) => {
+    // SelectTrigger is just a logical wrapper, doesn't render anything
+    return <>{children}</>;
   }
 );
 
 SelectTrigger.displayName = 'SelectTrigger';
 
 const SelectValue = ({ placeholder, className }: SelectValueProps) => {
-  return <span className={clsx('select-value', className)}>{placeholder}</span>;
+  // SelectValue doesn't render anything, it's just used to pass placeholder
+  return null;
 };
 
 export { Select, SelectContent, SelectItem, SelectTrigger, SelectValue };

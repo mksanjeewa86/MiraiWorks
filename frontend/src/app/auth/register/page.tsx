@@ -9,17 +9,45 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuth } from '@/contexts/AuthContext';
 import Brand from '@/components/common/Brand';
+import zxcvbn from 'zxcvbn';
+
+// Common weak passwords to block
+const COMMON_PASSWORDS = [
+  'password123',
+  'password',
+  'welcome123',
+  'admin123',
+  'qwerty123',
+  '12345678',
+  'password1',
+  'welcome',
+];
 
 const registerSchema = z
   .object({
     email: z.string().email('Invalid email address'),
     password: z
       .string()
-      .min(8, 'Password must be at least 8 characters')
+      .min(12, 'Password must be at least 12 characters')
       .regex(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
-        'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
-      ),
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^#()])[A-Za-z\d@$!%*?&^#()]/,
+        'Password must contain uppercase, lowercase, number, and special character'
+      )
+      .refine((password) => {
+        // Check against common passwords (case-insensitive)
+        return !COMMON_PASSWORDS.some(
+          (weak) => password.toLowerCase() === weak.toLowerCase()
+        );
+      }, {
+        message: 'This password is too common. Please choose a different one.',
+      })
+      .refine((password) => {
+        // Use zxcvbn to check password strength (0-4 scale)
+        const result = zxcvbn(password);
+        return result.score >= 3;
+      }, {
+        message: 'Password is too weak. Please use a stronger password with more variety.',
+      }),
     confirmPassword: z.string(),
     first_name: z.string().min(1, 'First name is required'),
     last_name: z.string().min(1, 'Last name is required'),
@@ -37,10 +65,57 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [password, setPassword] = useState('');
+  const [passwordStrength, setPasswordStrength] = useState(0);
   const [confirmPassword, setConfirmPassword] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const { register: registerUser, isAuthenticated, error, clearError } = useAuth();
   const router = useRouter();
+
+  // Calculate password strength on change
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newPassword = e.target.value;
+    setPassword(newPassword);
+
+    if (newPassword.length > 0) {
+      const result = zxcvbn(newPassword);
+      setPasswordStrength(result.score);
+    } else {
+      setPasswordStrength(0);
+    }
+  };
+
+  const getPasswordStrengthColor = () => {
+    switch (passwordStrength) {
+      case 0:
+      case 1:
+        return 'bg-red-500';
+      case 2:
+        return 'bg-orange-500';
+      case 3:
+        return 'bg-yellow-500';
+      case 4:
+        return 'bg-green-500';
+      default:
+        return 'bg-gray-300';
+    }
+  };
+
+  const getPasswordStrengthText = () => {
+    switch (passwordStrength) {
+      case 0:
+        return '';
+      case 1:
+        return 'Very Weak';
+      case 2:
+        return 'Weak';
+      case 3:
+        return 'Good';
+      case 4:
+        return 'Strong';
+      default:
+        return '';
+    }
+  };
 
   const {
     register,
@@ -227,7 +302,7 @@ export default function RegisterPage() {
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   {...register('password', {
-                    onChange: (e) => setPassword(e.target.value),
+                    onChange: handlePasswordChange,
                   })}
                   className="input w-full"
                   style={{ paddingLeft: '3rem', paddingRight: '3rem' }}
@@ -246,6 +321,27 @@ export default function RegisterPage() {
                   )}
                 </button>
               </div>
+
+              {/* Password Strength Indicator */}
+              {password && (
+                <div className="mt-2">
+                  <div className="flex gap-1 mb-1">
+                    {[1, 2, 3, 4].map((level) => (
+                      <div
+                        key={level}
+                        className={`h-1 flex-1 rounded ${
+                          passwordStrength >= level ? getPasswordStrengthColor() : 'bg-gray-200'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  {getPasswordStrengthText() && (
+                    <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                      Password strength: <span className="font-medium">{getPasswordStrengthText()}</span>
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Password Strength Indicator */}
               {password && (

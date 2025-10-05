@@ -30,7 +30,7 @@ export const examApi = {
    * @param companyId - Company ID (optional for system admin, required for company admin)
    */
   async createExam(
-    examData: ExamFormData & { company_id?: number },
+    examData: ExamFormData & { company_id?: number | null },
     questions: QuestionFormData[]
   ): Promise<ApiResponse<ExamInfo>> {
     const response = await apiClient.post<ExamInfo>(API_ENDPOINTS.EXAMS.BASE, {
@@ -42,18 +42,23 @@ export const examApi = {
 
   /**
    * Get list of exams for company or all system (system admin)
-   * @param filters - Optional filters (status, skip, limit)
+   * @param filters - Optional filters (status, skip, limit, include_global)
    */
   async getExams(filters?: {
     status?: string;
     skip?: number;
     limit?: number;
+    include_global?: boolean;
   }): Promise<ApiResponse<ExamListResponse>> {
     // Build query string
     const params = new URLSearchParams();
     if (filters?.status) params.append('status', filters.status);
     if (filters?.skip !== undefined) params.append('skip', filters.skip.toString());
     if (filters?.limit !== undefined) params.append('limit', filters.limit.toString());
+
+    // Include global/public exams by default
+    const includeGlobal = filters?.include_global !== false;
+    params.append('include_global', includeGlobal.toString());
 
     const queryString = params.toString();
     const url = queryString
@@ -122,12 +127,13 @@ export const examApi = {
     }
 
     // Create new exam with same settings but new title
-    const { id, created_at, total_questions, status, ...examData } = examResponse.data;
+    const { id, created_at, total_questions, status, created_by, updated_at, company_id, ...examData } = examResponse.data;
     const newExamData: ExamFormData & { company_id?: number } = {
       ...examData,
       title: newTitle,
       description: examData.description || '',
       instructions: examData.instructions || '',
+      is_public: examData.is_public || false,
     };
 
     const questions = questionsResponse.data.map((q) => {
@@ -136,6 +142,25 @@ export const examApi = {
     });
 
     return examApi.createExam(newExamData, questions as QuestionFormData[]);
+  },
+
+  /**
+   * Clone a global or public exam to current company
+   * @param examId - ID of exam to clone
+   */
+  async cloneExam(examId: number): Promise<ApiResponse<ExamInfo>> {
+    try {
+      const response = await apiClient.post<ExamInfo>(
+        `/api/exams/${examId}/clone`
+      );
+      return { data: response.data, success: true };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.response?.data?.detail || 'Failed to clone exam',
+        errors: [error.response?.data?.detail || 'Failed to clone exam'],
+      };
+    }
   },
 
   /**
@@ -148,7 +173,7 @@ export const examApi = {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+        Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
       },
     });
 
@@ -169,7 +194,7 @@ export const examApi = {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+        Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
       },
     });
 

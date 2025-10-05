@@ -1,13 +1,13 @@
 ﻿'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useRef, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Check, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import Brand from '@/components/common/Brand';
 
-export default function LoginPage() {
+function LoginContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -16,6 +16,8 @@ export default function LoginPage() {
   const emailRef = useRef('');
   const { login, isAuthenticated, require2FA, error, clearError } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const sessionExpired = searchParams.get('expired') === 'true';
 
   const sellingPoints = [
     {
@@ -42,12 +44,10 @@ export default function LoginPage() {
     if (isAuthenticated && typeof window !== 'undefined') {
       const currentPath = window.location.pathname;
       if (currentPath !== '/dashboard') {
-        console.log(`LoginPage: User authenticated, redirecting from ${currentPath} to /dashboard`);
         setRedirected(true);
         router.push('/dashboard');
       }
     } else if (require2FA) {
-      console.log('LoginPage: 2FA required, redirecting to two-factor page');
       setRedirected(true);
       router.push(`/auth/two-factor?email=${encodeURIComponent(emailRef.current)}`);
     }
@@ -136,6 +136,16 @@ export default function LoginPage() {
             </p>
 
             <form onSubmit={handleSubmit} className="mt-10 space-y-6">
+              {sessionExpired && !error && (
+                <div
+                  className="rounded-2xl border border-amber-200/70 bg-amber-50/80 p-4 text-left dark:border-amber-500/40 dark:bg-amber-500/10"
+                  data-testid="session-expired-message"
+                >
+                  <p className="text-sm text-amber-700 dark:text-amber-300">
+                    Your session has expired. Please log in again to continue.
+                  </p>
+                </div>
+              )}
               {error && (
                 <div
                   className="rounded-2xl border border-red-200/70 bg-red-50/80 p-4 text-left dark:border-red-500/40 dark:bg-red-500/10"
@@ -263,5 +273,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+      <LoginContent />
+    </Suspense>
   );
 }

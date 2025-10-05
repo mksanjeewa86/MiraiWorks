@@ -6,6 +6,9 @@ from pydantic import BaseModel, ConfigDict, Field
 # Import enums from models
 from app.models.exam import ExamStatus, ExamType, QuestionType, SessionStatus
 
+# Import TemplateQuestionSelection from question_bank schemas
+from app.schemas.question_bank import TemplateQuestionSelection
+
 
 class ExamBase(BaseModel):
     title: str = Field(..., min_length=1, max_length=255)
@@ -15,6 +18,7 @@ class ExamBase(BaseModel):
     max_attempts: int = Field(1, ge=1, le=10)
     passing_score: Optional[float] = Field(None, ge=0, le=100)
     is_randomized: bool = False
+    is_public: bool = False  # Public exams available to all companies
     allow_web_usage: bool = True
     monitor_web_usage: bool = False
     require_face_verification: bool = False
@@ -26,7 +30,7 @@ class ExamBase(BaseModel):
 
 
 class ExamCreate(ExamBase):
-    company_id: int
+    company_id: Optional[int] = None  # NULL = global exam (system admin only)
 
 
 class ExamUpdate(BaseModel):
@@ -37,6 +41,7 @@ class ExamUpdate(BaseModel):
     max_attempts: Optional[int] = Field(None, ge=1, le=10)
     passing_score: Optional[float] = Field(None, ge=0, le=100)
     is_randomized: Optional[bool] = None
+    is_public: Optional[bool] = None
     allow_web_usage: Optional[bool] = None
     monitor_web_usage: Optional[bool] = None
     require_face_verification: Optional[bool] = None
@@ -49,7 +54,7 @@ class ExamUpdate(BaseModel):
 
 class ExamInfo(ExamBase):
     id: int
-    company_id: int
+    company_id: Optional[int]  # NULL for global exams
     created_by: Optional[int]
     status: ExamStatus
     created_at: datetime
@@ -205,12 +210,14 @@ class ExamAssignmentCreate(BaseModel):
     due_date: Optional[datetime] = None
     custom_time_limit_minutes: Optional[int] = Field(None, ge=1)
     custom_max_attempts: Optional[int] = Field(None, ge=1, le=10)
+    custom_is_randomized: Optional[bool] = None
 
 
 class ExamAssignmentUpdate(BaseModel):
     due_date: Optional[datetime] = None
     custom_time_limit_minutes: Optional[int] = Field(None, ge=1)
     custom_max_attempts: Optional[int] = Field(None, ge=1, le=10)
+    custom_is_randomized: Optional[bool] = None
     is_active: Optional[bool] = None
 
 
@@ -222,6 +229,7 @@ class ExamAssignmentInfo(BaseModel):
     due_date: Optional[datetime]
     custom_time_limit_minutes: Optional[int]
     custom_max_attempts: Optional[int]
+    custom_is_randomized: Optional[bool]
     is_active: bool
     completed: bool
     notification_sent: bool
@@ -336,3 +344,45 @@ class FaceVerificationResponse(BaseModel):
     confidence_score: float
     message: str
     requires_human_review: bool = False
+
+
+# Hybrid Exam Schemas
+
+
+class HybridExamQuestionCreate(ExamQuestionBase):
+    """Question for hybrid exam (without exam_id, will be set during creation)"""
+
+    pass
+
+
+class HybridExamCreate(BaseModel):
+    """Schema for creating a hybrid exam with custom questions + template selections"""
+
+    # Base exam data
+    exam_data: ExamCreate
+
+    # Custom questions created specifically for this exam
+    custom_questions: list[HybridExamQuestionCreate] = Field(
+        default_factory=list, description="Custom questions created for this exam"
+    )
+
+    # Template selections (randomly select from question banks)
+    template_selections: list[TemplateQuestionSelection] = Field(
+        default_factory=list,
+        description="Question bank selections for random question picking",
+    )
+
+    # Validation
+    def validate_has_questions(self) -> bool:
+        """Ensure at least one question source is provided"""
+        return len(self.custom_questions) > 0 or len(self.template_selections) > 0
+
+
+class HybridExamResponse(BaseModel):
+    """Response after creating a hybrid exam"""
+
+    exam: ExamInfo
+    total_questions: int
+    custom_count: int
+    template_count: int
+    selection_rules: dict[str, Any]  # The question_selection_rules stored in exam

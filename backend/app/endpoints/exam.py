@@ -38,9 +38,12 @@ from app.schemas.exam import (
     ExamUpdate,
     FaceVerificationResponse,
     FaceVerificationSubmit,
+    HybridExamCreate,
+    HybridExamResponse,
 )
 from app.services.exam_email_service import exam_email_service
 from app.services.exam_export_service import exam_export_service
+from app.services.exam_todo_service import exam_todo_service
 from app.utils.auth import require_roles
 from app.utils.constants import UserRole
 
@@ -64,16 +67,29 @@ async def create_exam(
     """
     require_roles(
         current_user,
-        [UserRole.ADMIN, UserRole.COMPANY_RECRUITER, UserRole.SYSTEM_ADMIN],
+        [UserRole.ADMIN, UserRole.SYSTEM_ADMIN],
     )
 
     # System admin can create exams for any company or create global exams
     is_system_admin = any(
-        role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.roles
+        role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.user_roles
     )
 
-    # Verify company access for non-system admins
-    if not is_system_admin:
+    # Handle exam creation based on user role
+    if is_system_admin:
+        # System admin can:
+        # 1. Create global exam (company_id = None, is_public must be True)
+        # 2. Create exam for any specific company
+        if exam_data.company_id is None:
+            # Creating global exam - must be public
+            if not exam_data.is_public:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Global exams must be public",
+                )
+        # else: creating for specific company - allowed
+    else:
+        # Company admin/recruiter restrictions
         if not current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -107,11 +123,93 @@ async def create_exam(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
+@router.post(API_ROUTES.EXAMS.HYBRID, response_model=HybridExamResponse)
+async def create_hybrid_exam(
+    hybrid_data: HybridExamCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Create a hybrid exam with custom questions + randomly selected questions from question banks.
+
+    Example use case:
+    - Company creates 10 custom questions
+    - Selects 20 random questions from SPI question bank (verbal section, medium difficulty)
+    - Final exam has 30 questions total
+
+    System admins can create hybrid exams for any company.
+    Company admins/recruiters can only create hybrid exams for their own company.
+    """
+    require_roles(
+        current_user,
+        [UserRole.ADMIN, UserRole.SYSTEM_ADMIN],
+    )
+
+    # System admin can create exams for any company
+    is_system_admin = any(
+        role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.user_roles
+    )
+
+    # Verify company access for non-system admins
+    if not is_system_admin:
+        if not current_user.company_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User must be associated with a company",
+            )
+
+        if (
+            hybrid_data.exam_data.company_id
+            and hybrid_data.exam_data.company_id != current_user.company_id
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Cannot create exam for different company",
+            )
+
+        # Force company_id for company admins
+        hybrid_data.exam_data.company_id = current_user.company_id
+
+    # Validate has questions
+    if not hybrid_data.validate_has_questions():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="At least one custom question or template selection is required",
+        )
+
+    try:
+        exam, metadata = await exam_crud.create_hybrid_exam(
+            db=db,
+            hybrid_data=hybrid_data,
+            created_by_id=current_user.id,
+        )
+
+        # Convert exam to ExamInfo
+        exam_info = ExamInfo.model_validate(exam)
+
+        return HybridExamResponse(
+            exam=exam_info,
+            total_questions=metadata["total_questions"],
+            custom_count=metadata["custom_count"],
+            template_count=metadata["template_count"],
+            selection_rules=metadata["selection_rules"],
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create hybrid exam: {str(e)}",
+        )
+
+
 @router.get(API_ROUTES.EXAMS.BASE, response_model=ExamListResponse)
 async def get_company_exams(
     status_filter: ExamStatus | None = Query(None, alias="status"),
     company_id: int | None = Query(
         None, description="Filter by company (system admin only)"
+    ),
+    include_global: bool = Query(
+        True, description="Include global and public exams"
     ),
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
@@ -121,16 +219,16 @@ async def get_company_exams(
     """Get exams for current user's company or all exams (system admin).
 
     System admins can view all exams or filter by company.
-    Company admins/recruiters can only view their company's exams.
+    Company admins/recruiters see their company's exams + global/public exams.
     """
     require_roles(
         current_user,
-        [UserRole.ADMIN, UserRole.COMPANY_RECRUITER, UserRole.SYSTEM_ADMIN],
+        [UserRole.ADMIN, UserRole.SYSTEM_ADMIN],
     )
 
     # Check if user is system admin
     is_system_admin = any(
-        role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.roles
+        role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.user_roles
     )
 
     # Determine which company_id to filter by
@@ -152,6 +250,7 @@ async def get_company_exams(
         status=status_filter,
         skip=skip,
         limit=limit,
+        include_public=include_global,  # Explicitly pass the parameter
     )
 
     total = len(exams)  # For simplicity, could be optimized with count query
@@ -174,11 +273,13 @@ async def get_exam_details(
     """Get detailed exam information.
 
     System admins can view any exam.
-    Company admins/recruiters can only view their company's exams.
+    Company admins can view:
+    - Their own company's exams
+    - Global/public exams (for cloning/assignment)
     """
     require_roles(
         current_user,
-        [UserRole.ADMIN, UserRole.COMPANY_RECRUITER, UserRole.SYSTEM_ADMIN],
+        [UserRole.ADMIN, UserRole.SYSTEM_ADMIN],
     )
 
     exam = await exam_crud.get_with_details(db=db, id=exam_id)
@@ -189,14 +290,25 @@ async def get_exam_details(
 
     # Check if user is system admin
     is_system_admin = any(
-        role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.roles
+        role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.user_roles
     )
 
     # Verify access permissions
     if not is_system_admin:
-        if not current_user.company_id or exam.company_id != current_user.company_id:
+        # Company admins can view:
+        # 1. Own company's exams
+        # 2. Global public exams
+        # 3. Public exams from other companies
+        can_view = (
+            exam.company_id == current_user.company_id  # Own company's exam
+            or (exam.company_id is None and exam.is_public)  # Global public exam
+            or exam.is_public  # Any public exam
+        )
+
+        if not can_view:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have permission to view this exam"
             )
 
     return exam
@@ -212,11 +324,12 @@ async def update_exam(
     """Update exam details.
 
     System admins can update any exam.
-    Company admins/recruiters can only update their company's exams.
+    Company admins can only update their own company's exams.
+    Global exams (company_id=NULL) can only be edited by system admins.
     """
     require_roles(
         current_user,
-        [UserRole.ADMIN, UserRole.COMPANY_RECRUITER, UserRole.SYSTEM_ADMIN],
+        [UserRole.ADMIN, UserRole.SYSTEM_ADMIN],
     )
 
     exam = await exam_crud.get(db=db, id=exam_id)
@@ -227,11 +340,18 @@ async def update_exam(
 
     # Check if user is system admin
     is_system_admin = any(
-        role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.roles
+        role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.user_roles
     )
 
     # Verify access permissions
     if not is_system_admin:
+        # Global exams cannot be edited by company admins
+        if exam.company_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Global exams can only be edited by system admins. Clone the exam to customize it."
+            )
+
         if not current_user.company_id or exam.company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
@@ -250,11 +370,12 @@ async def delete_exam(
     """Delete an exam.
 
     System admins can delete any exam.
-    Company admins/recruiters can only delete their company's exams.
+    Company admins can only delete their own company's exams.
+    Global exams (company_id=NULL) can only be deleted by system admins.
     """
     require_roles(
         current_user,
-        [UserRole.ADMIN, UserRole.COMPANY_RECRUITER, UserRole.SYSTEM_ADMIN],
+        [UserRole.ADMIN, UserRole.SYSTEM_ADMIN],
     )
 
     exam = await exam_crud.get(db=db, id=exam_id)
@@ -265,11 +386,18 @@ async def delete_exam(
 
     # Check if user is system admin
     is_system_admin = any(
-        role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.roles
+        role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.user_roles
     )
 
     # Verify access permissions
     if not is_system_admin:
+        # Global exams cannot be deleted by company admins
+        if exam.company_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Global exams can only be deleted by system admins"
+            )
+
         if not current_user.company_id or exam.company_id != current_user.company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
@@ -279,6 +407,105 @@ async def delete_exam(
     return {"message": "Exam deleted successfully"}
 
 
+@router.post(API_ROUTES.EXAMS.CLONE, response_model=ExamInfo)
+async def clone_exam(
+    exam_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user_with_company),
+):
+    """Clone an exam to company's exam library.
+
+    Allows company admins to copy global/public exams to their company.
+    The cloned exam will have company_id set to the current user's company.
+    All questions are copied to the new exam.
+    """
+    require_roles(current_user, [UserRole.ADMIN])
+
+    # Get the source exam
+    source_exam = await exam_crud.get(db=db, id=exam_id)
+    if not source_exam:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Exam not found"
+        )
+
+    # Verify the exam can be cloned
+    # Company admins can only clone:
+    # 1. Global/public exams (company_id = NULL, is_public = True)
+    # 2. Public exams from other companies (is_public = True)
+    if source_exam.company_id == current_user.company_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot clone your own company's exam. Use duplicate instead."
+        )
+
+    if not source_exam.is_public and source_exam.company_id is not None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This exam is not public and cannot be cloned"
+        )
+
+    # Get all questions from source exam
+    source_questions = await exam_question_crud.get_by_exam(db=db, exam_id=exam_id)
+
+    # Prepare cloned exam data
+    from app.schemas.exam import ExamCreate, ExamQuestionCreate
+
+    exam_create_data = ExamCreate(
+        title=f"{source_exam.title} (Copy)",
+        description=source_exam.description,
+        exam_type=source_exam.exam_type,
+        company_id=current_user.company_id,  # Set to current company
+        time_limit_minutes=source_exam.time_limit_minutes,
+        max_attempts=source_exam.max_attempts,
+        passing_score=source_exam.passing_score,
+        is_randomized=source_exam.is_randomized,
+        is_public=False,  # Cloned exams are private by default
+        allow_web_usage=source_exam.allow_web_usage,
+        monitor_web_usage=source_exam.monitor_web_usage,
+        require_face_verification=source_exam.require_face_verification,
+        face_check_interval_minutes=source_exam.face_check_interval_minutes,
+        show_results_immediately=source_exam.show_results_immediately,
+        show_correct_answers=source_exam.show_correct_answers,
+        show_score=source_exam.show_score,
+        instructions=source_exam.instructions,
+    )
+
+    # Prepare cloned questions data
+    questions_create_data = [
+        ExamQuestionCreate(
+            exam_id=0,  # Will be set during creation
+            question_text=q.question_text,
+            question_type=q.question_type,
+            order_index=q.order_index,
+            points=q.points,
+            time_limit_seconds=q.time_limit_seconds,
+            is_required=q.is_required,
+            options=q.options,
+            correct_answers=q.correct_answers,
+            max_length=q.max_length,
+            min_length=q.min_length,
+            rating_scale=q.rating_scale,
+            explanation=q.explanation,
+            tags=q.tags,
+        )
+        for q in source_questions
+    ]
+
+    # Create the cloned exam with questions
+    try:
+        cloned_exam = await exam_crud.create_with_questions(
+            db=db,
+            exam_data=exam_create_data,
+            questions_data=questions_create_data,
+            created_by_id=current_user.id,
+        )
+        return cloned_exam
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Failed to clone exam: {str(e)}"
+        )
+
+
 @router.get(API_ROUTES.EXAMS.STATISTICS, response_model=dict[str, Any])
 async def get_exam_statistics(
     exam_id: int,
@@ -286,7 +513,7 @@ async def get_exam_statistics(
     current_user: User = Depends(get_current_user_with_company),
 ):
     """Get comprehensive exam statistics."""
-    require_roles(current_user, [UserRole.ADMIN, UserRole.COMPANY_RECRUITER])
+    require_roles(current_user, [UserRole.ADMIN])
 
     exam = await exam_crud.get(db=db, id=exam_id)
     if not exam:
@@ -313,7 +540,7 @@ async def get_exam_questions(
     current_user: User = Depends(get_current_user_with_company),
 ):
     """Get all questions for an exam."""
-    require_roles(current_user, [UserRole.ADMIN, UserRole.COMPANY_RECRUITER])
+    require_roles(current_user, [UserRole.ADMIN])
 
     exam = await exam_crud.get(db=db, id=exam_id)
     if not exam:
@@ -337,13 +564,24 @@ async def add_exam_question(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user_with_company),
 ):
-    """Add a new question to an exam."""
-    require_roles(current_user, [UserRole.ADMIN, UserRole.COMPANY_RECRUITER])
+    """Add a new question to an exam.
+
+    Company admins can only add questions to their own company's exams.
+    Global exams (company_id=NULL) cannot have questions added by company admins.
+    """
+    require_roles(current_user, [UserRole.ADMIN])
 
     exam = await exam_crud.get(db=db, id=exam_id)
     if not exam:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Exam not found"
+        )
+
+    # Global exams cannot be modified by company admins
+    if exam.company_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot add questions to global exams. Clone the exam first."
         )
 
     if exam.company_id != current_user.company_id:
@@ -363,8 +601,12 @@ async def update_exam_question(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user_with_company),
 ):
-    """Update an exam question."""
-    require_roles(current_user, [UserRole.ADMIN, UserRole.COMPANY_RECRUITER])
+    """Update an exam question.
+
+    Company admins can only update questions in their own company's exams.
+    Global exam questions cannot be edited by company admins.
+    """
+    require_roles(current_user, [UserRole.ADMIN])
 
     question = await exam_question_crud.get(db=db, id=question_id)
     if not question:
@@ -374,7 +616,19 @@ async def update_exam_question(
 
     # Verify company access through exam
     exam = await exam_crud.get(db=db, id=question.exam_id)
-    if not exam or exam.company_id != current_user.company_id:
+    if not exam:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Exam not found"
+        )
+
+    # Global exams cannot be modified by company admins
+    if exam.company_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot update questions in global exams"
+        )
+
+    if exam.company_id != current_user.company_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
         )
@@ -391,8 +645,12 @@ async def delete_exam_question(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user_with_company),
 ):
-    """Delete an exam question."""
-    require_roles(current_user, [UserRole.ADMIN, UserRole.COMPANY_RECRUITER])
+    """Delete an exam question.
+
+    Company admins can only delete questions in their own company's exams.
+    Global exam questions cannot be deleted by company admins.
+    """
+    require_roles(current_user, [UserRole.ADMIN])
 
     question = await exam_question_crud.get(db=db, id=question_id)
     if not question:
@@ -402,7 +660,19 @@ async def delete_exam_question(
 
     # Verify company access through exam
     exam = await exam_crud.get(db=db, id=question.exam_id)
-    if not exam or exam.company_id != current_user.company_id:
+    if not exam:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Exam not found"
+        )
+
+    # Global exams cannot be modified by company admins
+    if exam.company_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot delete questions from global exams"
+        )
+
+    if exam.company_id != current_user.company_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
         )
@@ -424,8 +694,14 @@ async def create_exam_assignments(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user_with_company),
 ):
-    """Assign exam to candidates and optionally send email notifications."""
-    require_roles(current_user, [UserRole.ADMIN, UserRole.COMPANY_RECRUITER])
+    """Assign exam to candidates and optionally send email notifications.
+
+    Company admins can assign:
+    1. Their own company's exams
+    2. Global/public exams (company_id = NULL and is_public = True)
+    3. Public exams from other companies (is_public = True)
+    """
+    require_roles(current_user, [UserRole.ADMIN])
 
     exam = await exam_crud.get(db=db, id=exam_id)
     if not exam:
@@ -433,9 +709,21 @@ async def create_exam_assignments(
             status_code=status.HTTP_404_NOT_FOUND, detail="Exam not found"
         )
 
-    if exam.company_id != current_user.company_id:
+    # Verify exam can be assigned
+    # Allow if:
+    # 1. Own company's exam (exam.company_id == current_user.company_id)
+    # 2. Global exam (exam.company_id is NULL and exam.is_public is True)
+    # 3. Public exam from another company (exam.is_public is True)
+    can_assign = (
+        exam.company_id == current_user.company_id  # Own company's exam
+        or (exam.company_id is None and exam.is_public)  # Global public exam
+        or exam.is_public  # Any public exam
+    )
+
+    if not can_assign:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot assign this exam. It is not public and does not belong to your company."
         )
 
     assignment_data.exam_id = exam_id
@@ -480,7 +768,7 @@ async def get_exam_assignments(
     current_user: User = Depends(get_current_user_with_company),
 ):
     """Get all assignments for an exam."""
-    require_roles(current_user, [UserRole.ADMIN, UserRole.COMPANY_RECRUITER])
+    require_roles(current_user, [UserRole.ADMIN])
 
     exam = await exam_crud.get(db=db, id=exam_id)
     if not exam:
@@ -681,6 +969,17 @@ async def complete_exam(
         session = await exam_session_crud.complete_session(
             db=db, session_id=session_id, calculate_score=True
         )
+
+        # If this exam was assigned via workflow TODO, auto-complete the TODO
+        if session.assignment_id:
+            try:
+                await exam_todo_service.on_exam_completed(
+                    db=db, exam_assignment_id=session.assignment_id
+                )
+            except Exception as e:
+                # Log error but don't fail the exam completion
+                print(f"Failed to auto-complete exam TODO: {str(e)}")
+
         return session
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
@@ -844,7 +1143,7 @@ async def get_exam_sessions(
     current_user: User = Depends(get_current_user_with_company),
 ):
     """Get all sessions for an exam (employer view)."""
-    require_roles(current_user, [UserRole.ADMIN, UserRole.COMPANY_RECRUITER])
+    require_roles(current_user, [UserRole.ADMIN])
 
     exam = await exam_crud.get(db=db, id=exam_id)
     if not exam:
@@ -875,11 +1174,11 @@ async def export_exam_results_pdf(
     db: AsyncSession = Depends(get_db),
 ):
     """Export exam results as PDF."""
-    require_roles(current_user, [UserRole.ADMIN, UserRole.COMPANY_RECRUITER])
+    require_roles(current_user, [UserRole.ADMIN])
 
     # Check if system admin
     is_system_admin = any(
-        role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.roles
+        role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.user_roles
     )
 
     # Get exam
@@ -921,11 +1220,11 @@ async def export_exam_results_excel(
     db: AsyncSession = Depends(get_db),
 ):
     """Export exam results as Excel."""
-    require_roles(current_user, [UserRole.ADMIN, UserRole.COMPANY_RECRUITER])
+    require_roles(current_user, [UserRole.ADMIN])
 
     # Check if system admin
     is_system_admin = any(
-        role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.roles
+        role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.user_roles
     )
 
     # Get exam

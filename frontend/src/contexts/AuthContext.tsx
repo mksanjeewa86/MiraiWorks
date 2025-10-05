@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useReducer, useEffect, type ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
 import type {
   User,
   LoginCredentials,
@@ -11,6 +12,7 @@ import type {
 } from '@/types';
 import { authApi } from '@/api/auth';
 import { setAuthHandler } from '@/api/apiClient';
+import { toast } from 'sonner';
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -101,6 +103,7 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
+  const router = useRouter();
 
   // Force logout without API call (used by API interceptor)
   const forceLogout = () => {
@@ -108,9 +111,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('refreshToken');
     dispatch({ type: 'LOGOUT' });
 
-    // Redirect to login page
+    // Redirect to login page using Next.js router
     if (typeof window !== 'undefined') {
-      window.location.href = '/auth/login';
+      router.replace('/auth/login');
     }
   };
 
@@ -144,11 +147,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
       });
       return response.data!;
-    } catch (error) {
-      // Refresh failed, clear auth
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      dispatch({ type: 'LOGOUT' });
+    } catch (error: any) {
+      // Check if this is a 401 error
+      const is401 = error?.response?.status === 401;
+
+      // Only logout and show message if it's truly a session expiration (401)
+      if (is401) {
+        // Refresh failed, clear auth
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        dispatch({ type: 'LOGOUT' });
+
+        // Show user-friendly message
+        toast.error('Your session has expired. Please log in again.', {
+          duration: 5000,
+        });
+
+        // Redirect to login page
+        if (typeof window !== 'undefined') {
+          router.replace('/auth/login?expired=true');
+        }
+      } else {
+        // Network or other error - don't logout, just log the error
+        console.error('Token refresh failed (non-auth error):', error);
+      }
+
       throw error;
     }
   };
@@ -163,47 +186,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Initialize auth state on mount
   useEffect(() => {
-    let isInitialized = false;
+    let isMounted = true;
+    let isInitializing = false;
 
     const initAuth = async () => {
-      // Prevent multiple initializations
-      if (isInitialized) return;
-      isInitialized = true;
-
-      // Set loading to true when starting authentication check
-      dispatch({ type: 'SET_LOADING', payload: true });
+      // Prevent multiple simultaneous initializations
+      if (isInitializing || !isMounted) return;
+      isInitializing = true;
 
       try {
+        // Set loading to true when starting authentication check
+        if (isMounted) {
+          dispatch({ type: 'SET_LOADING', payload: true });
+        }
+
         const token = localStorage.getItem('accessToken');
         const refreshToken = localStorage.getItem('refreshToken');
 
         if (token && refreshToken) {
           // Try to verify current token first by calling /me endpoint
           try {
-            console.log('Verifying current token validity');
             const userResponse = await authApi.me(token);
 
             // Token is valid, set auth state without refreshing
-            console.log('Token is valid, setting authenticated state');
-            dispatch({
-              type: 'AUTH_SUCCESS',
-              payload: {
-                user: userResponse.data!,
-                access_token: token,
-                refresh_token: refreshToken,
-                expires_in: 3600, // Default 1 hour for existing tokens
-              },
-            });
+            if (isMounted) {
+              dispatch({
+                type: 'AUTH_SUCCESS',
+                payload: {
+                  user: userResponse.data!,
+                  access_token: token,
+                  refresh_token: refreshToken,
+                  expires_in: 3600, // Default 1 hour for existing tokens
+                },
+              });
+            }
           } catch (verifyError) {
-            console.log('Current token invalid, attempting refresh:', verifyError);
+            if (!isMounted) return;
 
             // Current token invalid, try refresh
             try {
               await refreshAuth();
-              console.log('Token refresh successful');
-              // refreshAuth already dispatches AUTH_SUCCESS which sets isLoading to false
+              if (isMounted) {
+                // refreshAuth already dispatches AUTH_SUCCESS which sets isLoading to false
+              }
             } catch (refreshError) {
-              console.log('Token refresh also failed, clearing auth:', refreshError);
+              if (!isMounted) return;
+
               // Both tokens invalid, clear auth completely
               localStorage.removeItem('accessToken');
               localStorage.removeItem('refreshToken');
@@ -212,20 +240,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         } else {
           // No tokens found, ensure clean state
-          console.log('No tokens found, setting logged out state');
-          dispatch({ type: 'LOGOUT' });
+          if (isMounted) {
+            dispatch({ type: 'LOGOUT' });
+          }
         }
       } catch (error) {
+        if (!isMounted) return;
+
         // Any unexpected error, clear auth
         console.error('Auth initialization error:', error);
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         dispatch({ type: 'LOGOUT' });
+      } finally {
+        isInitializing = false;
       }
     };
 
     // Initialize immediately
     initAuth();
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const login = async (credentials: LoginCredentials) => {
@@ -333,9 +371,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     dispatch({ type: 'LOGOUT' });
 
-    // Redirect to login page after logout
+    // Redirect to login page after logout using Next.js router
     if (typeof window !== 'undefined') {
-      window.location.href = '/auth/login';
+      router.replace('/auth/login');
     }
   };
 

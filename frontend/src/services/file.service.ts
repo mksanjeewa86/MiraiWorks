@@ -192,6 +192,27 @@ export class FileService {
   // FILE VALIDATION METHODS
   // =====================
 
+  /**
+   * Validate file extension matches MIME type
+   */
+  private validateFileExtension(file: File): boolean {
+    const extension = file.name.split('.').pop()?.toLowerCase();
+    if (!extension) return false;
+
+    const mimeToExtension: Record<string, string[]> = {
+      'image/jpeg': ['jpg', 'jpeg'],
+      'image/png': ['png'],
+      'image/gif': ['gif'],
+      'application/pdf': ['pdf'],
+      'application/msword': ['doc'],
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['docx'],
+      'text/plain': ['txt'],
+    };
+
+    const allowedExtensions = mimeToExtension[file.type] || [];
+    return allowedExtensions.includes(extension);
+  }
+
   public validateFiles(files: File[], options: FileValidationOptions = {}): ValidationResult {
     const maxSize = options.maxSize || this.DEFAULT_MAX_SIZE;
     const maxFiles = options.maxFiles || this.DEFAULT_MAX_FILES;
@@ -203,12 +224,29 @@ export class FileService {
     }
 
     files.forEach((file) => {
+      // Validate file size
       if (file.size > maxSize) {
         errors.push(`File ${file.name} exceeds maximum size of ${maxSize / 1024 / 1024}MB`);
       }
 
+      // Validate file size is not zero
+      if (file.size === 0) {
+        errors.push(`File ${file.name} is empty`);
+      }
+
+      // Validate MIME type
       if (!allowedTypes.includes(file.type)) {
         errors.push(`File type ${file.type} is not allowed for ${file.name}`);
+      }
+
+      // Validate file extension matches MIME type
+      if (!this.validateFileExtension(file)) {
+        errors.push(`File extension does not match content type for ${file.name}`);
+      }
+
+      // Check for potentially dangerous file names
+      if (this.hasDangerousFileName(file.name)) {
+        errors.push(`File name ${file.name} contains potentially dangerous characters`);
       }
     });
 
@@ -216,6 +254,28 @@ export class FileService {
       isValid: errors.length === 0,
       errors,
     };
+  }
+
+  /**
+   * Check for dangerous file names (path traversal, null bytes, etc.)
+   */
+  private hasDangerousFileName(fileName: string): boolean {
+    // Check for path traversal attempts
+    if (fileName.includes('..') || fileName.includes('/') || fileName.includes('\\')) {
+      return true;
+    }
+
+    // Check for null bytes
+    if (fileName.includes('\0')) {
+      return true;
+    }
+
+    // Check for control characters
+    if (/[\x00-\x1f\x7f]/.test(fileName)) {
+      return true;
+    }
+
+    return false;
   }
 
   public async validateFileContent(file: File): Promise<ValidationResult> {

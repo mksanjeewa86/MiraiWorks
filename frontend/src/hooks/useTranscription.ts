@@ -27,7 +27,6 @@ export const useTranscription = (
     websocket.current = new WebSocket(wsUrl);
 
     websocket.current.onopen = () => {
-      console.log('Connected to transcription service');
       setState((prev) => ({ ...prev, isTranscribing: true }));
     };
 
@@ -37,7 +36,6 @@ export const useTranscription = (
     };
 
     websocket.current.onclose = () => {
-      console.log('Disconnected from transcription service');
       setState((prev) => ({ ...prev, isTranscribing: false }));
     };
 
@@ -255,9 +253,7 @@ export const useTranscription = (
         errorMessage.includes('404') ||
         errorMessage.includes('not found')
       ) {
-        console.log(
-          'No existing transcript found for this video call - this is normal for new calls'
-        );
+        // No existing transcript found - this is normal for new calls
       } else {
         console.error('Error loading existing segments:', error);
       }

@@ -26,11 +26,11 @@ async def create_exam_template(
     db: AsyncSession = Depends(get_db),
 ):
     """Create a new exam template."""
-    require_roles(current_user, [UserRole.ADMIN, UserRole.COMPANY_RECRUITER])
+    require_roles(current_user, [UserRole.ADMIN])
 
     # Check if system admin
     is_system_admin = any(
-        role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.roles
+        role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.user_roles
     )
 
     # Company validation
@@ -66,7 +66,7 @@ async def get_exam_templates(
     """Get list of exam templates."""
     # Check if system admin
     is_system_admin = any(
-        role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.roles
+        role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.user_roles
     )
 
     templates, total = await exam_template_crud.get_templates(
@@ -103,7 +103,7 @@ async def get_exam_template(
 
     # Check access
     is_system_admin = any(
-        role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.roles
+        role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.user_roles
     )
 
     if not is_system_admin:
@@ -123,7 +123,7 @@ async def update_exam_template(
     db: AsyncSession = Depends(get_db),
 ):
     """Update exam template."""
-    require_roles(current_user, [UserRole.ADMIN, UserRole.COMPANY_RECRUITER])
+    require_roles(current_user, [UserRole.ADMIN])
 
     # Get template
     template = await exam_template_crud.get(db=db, id=template_id)
@@ -134,7 +134,7 @@ async def update_exam_template(
 
     # Check permissions
     is_system_admin = any(
-        role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.roles
+        role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.user_roles
     )
 
     if not is_system_admin:
@@ -158,7 +158,7 @@ async def delete_exam_template(
     db: AsyncSession = Depends(get_db),
 ):
     """Delete exam template."""
-    require_roles(current_user, [UserRole.ADMIN, UserRole.COMPANY_RECRUITER])
+    require_roles(current_user, [UserRole.ADMIN])
 
     # Get template
     template = await exam_template_crud.get(db=db, id=template_id)
@@ -169,7 +169,7 @@ async def delete_exam_template(
 
     # Check permissions
     is_system_admin = any(
-        role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.roles
+        role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.user_roles
     )
 
     if not is_system_admin:
@@ -194,11 +194,11 @@ async def create_template_from_exam(
     db: AsyncSession = Depends(get_db),
 ):
     """Create a template from an existing exam."""
-    require_roles(current_user, [UserRole.ADMIN, UserRole.COMPANY_RECRUITER])
+    require_roles(current_user, [UserRole.ADMIN])
 
     # Check if system admin
     is_system_admin = any(
-        role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.roles
+        role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.user_roles
     )
 
     try:

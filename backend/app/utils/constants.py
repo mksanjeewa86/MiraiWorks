@@ -101,6 +101,7 @@ class TodoVisibility(str, Enum):
 class TodoType(str, Enum):
     REGULAR = "regular"
     ASSIGNMENT = "assignment"  # For any kind of task assignment (coding test, document review, etc.)
+    EXAM = "exam"  # For exam assignments in workflow
 
 
 class TodoPublishStatus(str, Enum):
@@ -177,3 +178,14 @@ class MBTITestStatus(str, Enum):
     NOT_TAKEN = "not_taken"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
+
+
+class PlanChangeRequestType(str, Enum):
+    UPGRADE = "upgrade"
+    DOWNGRADE = "downgrade"
+
+
+class PlanChangeRequestStatus(str, Enum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"

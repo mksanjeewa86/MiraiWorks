@@ -2,7 +2,7 @@ import random
 from datetime import timedelta
 from typing import Any
 
-from sqlalchemy import and_, desc, func, select
+from sqlalchemy import and_, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
@@ -29,7 +29,9 @@ from app.schemas.exam import (
     ExamSessionCreate,
     ExamSessionUpdate,
     ExamUpdate,
+    HybridExamCreate,
 )
+from app.schemas.question_bank import TemplateQuestionSelection
 from app.utils.datetime_utils import get_utc_now
 
 
@@ -37,13 +39,40 @@ class CRUDExam(CRUDBase[Exam, ExamCreate, ExamUpdate]):
     async def get_by_company(
         self,
         db: AsyncSession,
-        company_id: int,
+        company_id: int | None = None,
         status: ExamStatus | None = None,
         skip: int = 0,
         limit: int = 100,
+        include_public: bool = True,
     ) -> list[Exam]:
-        """Get exams for a specific company."""
-        query = select(Exam).where(Exam.company_id == company_id)
+        """Get exams for a specific company or all exams if company_id is None.
+
+        Args:
+            company_id: Filter by company. None returns all exams.
+            status: Filter by exam status
+            skip: Offset for pagination
+            limit: Limit results
+            include_public: If True and company_id provided, also include global/public exams
+
+        Returns:
+            List of exams matching the criteria
+        """
+        query = select(Exam)
+
+        # Only filter by company if company_id is provided
+        if company_id is not None:
+            if include_public:
+                # Include company's own exams + global/public exams
+                query = query.where(
+                    or_(
+                        Exam.company_id == company_id,  # Own company's exams
+                        and_(Exam.company_id.is_(None), Exam.is_public == True),  # Global public exams
+                        Exam.is_public == True  # Any public exam
+                    )
+                )
+            else:
+                # Only company's own exams
+                query = query.where(Exam.company_id == company_id)
 
         if status:
             query = query.where(Exam.status == status)
@@ -96,6 +125,128 @@ class CRUDExam(CRUDBase[Exam, ExamCreate, ExamUpdate]):
         await db.commit()
         await db.refresh(exam)
         return exam
+
+    async def create_hybrid_exam(
+        self,
+        db: AsyncSession,
+        hybrid_data: HybridExamCreate,
+        created_by_id: int,
+    ) -> tuple[Exam, dict[str, Any]]:
+        """
+        Create a hybrid exam with custom questions + randomly selected questions from question banks.
+
+        Returns:
+            tuple[Exam, dict]: The created exam and selection rules metadata
+        """
+        from app.crud.question_bank import question_bank_item as question_bank_item_crud
+
+        # Validate that at least one question source is provided
+        if not hybrid_data.validate_has_questions():
+            raise ValueError(
+                "At least one custom question or template selection is required"
+            )
+
+        # Create the base exam
+        exam_dict = hybrid_data.exam_data.model_dump()
+        exam_dict["created_by"] = created_by_id
+        exam = Exam(**exam_dict)
+
+        db.add(exam)
+        await db.flush()  # Get the exam ID
+
+        # Track question creation
+        question_count = 0
+        custom_count = 0
+        template_count = 0
+        selection_metadata: dict[str, Any] = {
+            "custom_count": 0,
+            "template_selections": [],
+        }
+
+        # 1. Add custom questions
+        for i, custom_q in enumerate(hybrid_data.custom_questions):
+            question_dict = custom_q.model_dump()
+            question_dict["exam_id"] = exam.id
+            question_dict["order_index"] = question_count
+            question_dict["source_type"] = "custom"
+            question_dict["source_bank_id"] = None
+            question_dict["source_question_id"] = None
+
+            question = ExamQuestion(**question_dict)
+            db.add(question)
+
+            question_count += 1
+            custom_count += 1
+
+        selection_metadata["custom_count"] = custom_count
+
+        # 2. Add questions from template selections (question banks)
+        for template_selection in hybrid_data.template_selections:
+            # Randomly select questions from the question bank
+            selected_questions = await question_bank_item_crud.get_random_questions(
+                db=db,
+                bank_id=template_selection.bank_id,
+                count=template_selection.count,
+                category=template_selection.category,
+                difficulty=template_selection.difficulty,
+                tags=template_selection.tags,
+            )
+
+            # Track metadata for this selection
+            selection_info = {
+                "bank_id": template_selection.bank_id,
+                "requested_count": template_selection.count,
+                "actual_count": len(selected_questions),
+                "category": template_selection.category,
+                "difficulty": template_selection.difficulty,
+                "tags": template_selection.tags,
+                "question_ids": [],
+            }
+
+            # Create exam questions from selected question bank items
+            for bank_question in selected_questions:
+                question_dict = {
+                    "exam_id": exam.id,
+                    "order_index": question_count,
+                    "question_text": bank_question.question_text,
+                    "question_type": bank_question.question_type,
+                    "options": bank_question.options,
+                    "correct_answers": bank_question.correct_answers,
+                    "points": bank_question.points,
+                    "time_limit_seconds": bank_question.time_limit_seconds,
+                    "is_required": True,
+                    "max_length": bank_question.max_length,
+                    "min_length": bank_question.min_length,
+                    "rating_scale": bank_question.rating_scale,
+                    "explanation": bank_question.explanation,
+                    "tags": bank_question.tags,
+                    # Source tracking
+                    "source_type": "question_bank",
+                    "source_bank_id": bank_question.bank_id,
+                    "source_question_id": bank_question.id,
+                }
+
+                question = ExamQuestion(**question_dict)
+                db.add(question)
+
+                selection_info["question_ids"].append(bank_question.id)
+                question_count += 1
+                template_count += 1
+
+            selection_metadata["template_selections"].append(selection_info)
+
+        # Store selection rules in exam
+        exam.question_selection_rules = selection_metadata
+
+        await db.commit()
+        await db.refresh(exam)
+
+        return exam, {
+            "total_questions": question_count,
+            "custom_count": custom_count,
+            "template_count": template_count,
+            "selection_rules": selection_metadata,
+        }
 
     async def get_statistics(self, db: AsyncSession, exam_id: int) -> dict[str, Any]:
         """Get comprehensive statistics for an exam."""

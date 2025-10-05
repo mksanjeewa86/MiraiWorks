@@ -22,9 +22,6 @@ export default function ProtectedRoute({
         const currentPath = window.location.pathname;
         // Only redirect if not already on the redirect page and not authenticated
         if (currentPath !== redirectTo) {
-          console.log(
-            `ProtectedRoute: Redirecting from ${currentPath} to ${redirectTo} (auth loading: ${isLoading}, authenticated: ${isAuthenticated})`
-          );
           router.push(redirectTo);
         }
       }

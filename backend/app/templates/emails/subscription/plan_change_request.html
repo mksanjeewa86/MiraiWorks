@@ -1,0 +1,47 @@
+<h2>New Plan Change Request</h2>
+<p>Hi System Admin,</p>
+<p>A new plan change request has been submitted and requires your review.</p>
+
+<div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+    <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td style="padding: 8px 0; color: #6c757d;">Company:</td>
+            <td style="padding: 8px 0;"><strong>{{ company_name }}</strong></td>
+        </tr>
+        <tr>
+            <td style="padding: 8px 0; color: #6c757d;">Requested by:</td>
+            <td style="padding: 8px 0;">{{ requester_name }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px 0; color: #6c757d;">Current Plan:</td>
+            <td style="padding: 8px 0;">{{ current_plan_name }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px 0; color: #6c757d;">Requested Plan:</td>
+            <td style="padding: 8px 0;"><strong>{{ requested_plan_name }}</strong></td>
+        </tr>
+        <tr>
+            <td style="padding: 8px 0; color: #6c757d;">Type:</td>
+            <td style="padding: 8px 0;">
+                <span style="padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 500; background: {{ request_type_color }}; color: white;">
+                    {{ request_type }}
+                </span>
+            </td>
+        </tr>
+    </table>
+</div>
+
+{% if request_message %}
+<div style="background: #e7f3ff; padding: 15px; border-left: 4px solid #0066cc; margin: 20px 0; border-radius: 4px;">
+    <p style="margin: 0; color: #495057;"><strong>Request Message:</strong></p>
+    <p style="margin: 10px 0 0 0; color: #495057;">{{ request_message }}</p>
+</div>
+{% endif %}
+
+<div class="button-center">
+    <a href="{{ review_url }}" class="button">Review Request</a>
+</div>
+
+<p style="color: #6c757d; font-size: 14px;">
+    Please review this request in the admin dashboard.
+</p>

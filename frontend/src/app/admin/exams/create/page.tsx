@@ -22,12 +22,13 @@ import {
   Separator,
   LoadingSpinner,
 } from '@/components/ui';
-import { ArrowLeft, Plus, Trash2, Save } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Save, Globe, Building2 } from 'lucide-react';
 import { ExamFormData, QuestionFormData, ExamType } from '@/types/exam';
 import { toast } from 'sonner';
 import { ExamQuestionForm } from './exam-question-form';
 import { getExamTypesByCategory } from '@/utils/examTypes';
 import { useExamMutations } from '@/hooks/useExams';
+import { useAuth } from '@/contexts/AuthContext';
 
 const QuestionType = {
   MULTIPLE_CHOICE: 'multiple_choice',
@@ -40,6 +41,7 @@ const QuestionType = {
 
 export default function CreateExamPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const { createExam, loading } = useExamMutations();
   const [activeTab, setActiveTab] = useState<'basic' | 'questions' | 'settings'>('basic');
   const examTypesByCategory = getExamTypesByCategory();
@@ -60,10 +62,16 @@ export default function CreateExamPage() {
     show_correct_answers: false,
     show_score: true,
     instructions: '',
+    is_public: false,
+    is_global: false,
+    company_id: null,
   });
 
   const [questions, setQuestions] = useState<QuestionFormData[]>([]);
   const [editingQuestionIndex, setEditingQuestionIndex] = useState<number | null>(null);
+
+  // Check if current user is system admin
+  const isSystemAdmin = user?.roles?.some(r => r.role.name === 'system_admin');
 
   const handleExamDataChange = (field: keyof ExamFormData, value: any) => {
     setExamData((prev) => ({
@@ -281,6 +289,87 @@ export default function CreateExamPage() {
                 rows={3}
               />
             </div>
+
+            <Separator />
+
+            {/* Visibility & Access Control */}
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-medium mb-1">Visibility & Access Control</h3>
+                <p className="text-sm text-gray-500">
+                  Control who can see and use this exam
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-start gap-3">
+                  <Building2 className="h-5 w-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <Label>Public Exam</Label>
+                    <p className="text-sm text-gray-500">
+                      Make this exam visible to all companies
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  checked={examData.is_public}
+                  onCheckedChange={(checked: boolean) =>
+                    handleExamDataChange('is_public', checked)
+                  }
+                />
+              </div>
+
+              {isSystemAdmin && (
+                <div className="flex items-center justify-between p-4 border border-blue-200 bg-blue-50 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <Globe className="h-5 w-5 text-blue-600 mt-0.5" />
+                    <div>
+                      <Label className="text-blue-900">Global Exam (System Admin Only)</Label>
+                      <p className="text-sm text-blue-700">
+                        Create a system-wide exam template accessible to all companies.
+                        Global exams are not tied to any specific company.
+                      </p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={examData.is_global}
+                    onCheckedChange={(checked: boolean) => {
+                      handleExamDataChange('is_global', checked);
+                      if (checked) {
+                        // Set company_id to null for global exam (null is sent to backend)
+                        handleExamDataChange('company_id', null);
+                        handleExamDataChange('is_public', true); // Global exams are automatically public
+                      }
+                    }}
+                  />
+                </div>
+              )}
+
+              {!examData.is_global && (
+                <div className="space-y-2">
+                  <Label htmlFor="company">Company (Optional)</Label>
+                  <Select
+                    value={examData.company_id?.toString() || ''}
+                    onValueChange={(value) =>
+                      handleExamDataChange('company_id', value ? parseInt(value) : undefined)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a company or leave blank for your company" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">No specific company</SelectItem>
+                      {/* TODO: Add company list from API */}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-gray-500">
+                    Leave blank to associate with your company automatically
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <Separator />
 
             <div className="space-y-2">
               <Label htmlFor="instructions">Instructions for Candidates</Label>

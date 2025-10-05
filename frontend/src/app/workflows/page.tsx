@@ -1248,22 +1248,18 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
           // Create new node with integration
           try {
             if (step.isIntegrated && (nodeData.create_interview || nodeData.create_todo)) {
-              console.log('Creating node with integration:', { step: step.title, nodeData });
               const nodeResponse = await recruitmentWorkflowsApi.createNodeWithIntegration(
                 process.id,
                 nodeData
               );
-              console.log('Node integration response:', nodeResponse);
 
               if (nodeResponse.success && nodeResponse.data) {
                 // Update step with the actual linked IDs
                 if (nodeResponse.data.interview) {
-                  console.log('Interview created:', nodeResponse.data.interview);
                   createdInterviews.push(nodeResponse.data.interview);
                   step.interview_id = nodeResponse.data.interview.id;
                 }
                 if (nodeResponse.data.todo) {
-                  console.log('Todo created:', nodeResponse.data.todo);
                   createdTodos.push(nodeResponse.data.todo);
                   step.todo_id = nodeResponse.data.todo.id;
                 }
@@ -1303,12 +1299,6 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
       };
 
       onSave(updatedProcess);
-
-      console.log('Workflow saved!', {
-        createdInterviews,
-        createdTodos,
-        reloadedNodes: updatedProcess.nodes.length,
-      });
 
       let successMessage = '✅ Workflow saved successfully!';
 
@@ -1454,13 +1444,6 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
                 /* Linear Workflow Steps */
                 <div className="space-y-4">
                   {steps.map((step, index) => {
-                    console.log(`Step ${index}:`, {
-                      id: step.id,
-                      interview_id: step.interview_id,
-                      todo_id: step.todo_id,
-                      isIntegrated: step.isIntegrated,
-                      realId: step.realId,
-                    });
                     return (
                       <div key={step.id} className="relative">
                         <div

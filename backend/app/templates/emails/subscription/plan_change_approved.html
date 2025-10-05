@@ -1,0 +1,37 @@
+<h2>Plan Change Request Approved! 🎉</h2>
+<p>Hi {{ requester_name }},</p>
+<p>Great news! Your plan change request has been approved.</p>
+
+<div style="background: #d4edda; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #28a745;">
+    <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td style="padding: 8px 0; color: #155724;">Previous Plan:</td>
+            <td style="padding: 8px 0; color: #155724;">{{ current_plan_name }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px 0; color: #155724;">New Plan:</td>
+            <td style="padding: 8px 0; color: #155724;"><strong style="font-size: 18px;">{{ requested_plan_name }}</strong></td>
+        </tr>
+        <tr>
+            <td style="padding: 8px 0; color: #155724;">New Price:</td>
+            <td style="padding: 8px 0; color: #155724;"><strong>{{ new_price }}/month</strong></td>
+        </tr>
+    </table>
+</div>
+
+{% if review_message %}
+<div style="background: #f8f9fa; padding: 15px; border-radius: 4px; margin: 20px 0;">
+    <p style="margin: 0; color: #495057;"><strong>Admin Message:</strong></p>
+    <p style="margin: 10px 0 0 0; color: #495057;">{{ review_message }}</p>
+</div>
+{% endif %}
+
+<p>Your plan has been updated and is now active. You can access all the features included in your new plan.</p>
+
+<div class="button-center">
+    <a href="{{ subscription_url }}" class="button">View Subscription</a>
+</div>
+
+<p style="color: #6c757d; font-size: 14px;">
+    Thank you for upgrading! If you have any questions, please contact support.
+</p>

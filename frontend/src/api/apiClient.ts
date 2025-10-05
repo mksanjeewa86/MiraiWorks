@@ -1,5 +1,6 @@
 // Centralized API client with automatic authentication handling
 import { API_CONFIG } from './config';
+import { apiRateLimiter, checkRateLimit } from '@/utils/rateLimiter';
 
 // Global auth handler reference
 let authHandlerRef: {
@@ -25,21 +26,39 @@ export const makeAuthenticatedRequest = async <T>(
   url: string,
   options: RequestInit = {}
 ): Promise<{ data: T }> => {
+  // Check rate limit before making request
+  checkRateLimit(apiRateLimiter, url);
+
   const token = getAuthToken();
 
   const makeRequest = async (authToken: string | null) => {
     const isFormData = options.body instanceof FormData;
-    const response = await fetch(`${API_CONFIG.BASE_URL}${url}`, {
-      ...options,
-      headers: {
-        // Don't set Content-Type for FormData (browser will set it with boundary)
-        ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
-        ...(authToken && { Authorization: `Bearer ${authToken}` }),
-        ...options.headers,
-      },
-    });
 
-    return response;
+    // Create abort controller for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
+
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${url}`, {
+        ...options,
+        signal: controller.signal,
+        headers: {
+          // Don't set Content-Type for FormData (browser will set it with boundary)
+          ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+          ...(authToken && { Authorization: `Bearer ${authToken}` }),
+          ...options.headers,
+        },
+      });
+
+      clearTimeout(timeoutId);
+      return response;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if ((error as Error).name === 'AbortError') {
+        throw new Error('Request timeout. Please try again.');
+      }
+      throw error;
+    }
   };
 
   try {

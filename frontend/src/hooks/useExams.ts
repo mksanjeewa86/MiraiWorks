@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { examApi, questionApi, assignmentApi, sessionApi } from '@/api/exam';
 import type {
   Exam,
@@ -26,25 +26,29 @@ export function useExams(filters?: { status?: string; skip?: number; limit?: num
   const [total, setTotal] = useState(0);
   const [hasMore, setHasMore] = useState(false);
 
+  // Memoize filters to prevent infinite re-renders
+  const memoizedFilters = useMemo(() => filters, [JSON.stringify(filters)]);
+
   const fetchExams = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await examApi.getExams(filters);
+      const response = await examApi.getExams(memoizedFilters);
+
       if (response.data) {
         setExams(response.data.exams);
         setTotal(response.data.total);
         setHasMore(response.data.has_more);
       }
     } catch (err: any) {
-      const errorMessage = err.response?.data?.detail || 'Failed to load exams';
+      const errorMessage = err.response?.data?.detail || err.message || 'Failed to load exams';
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [memoizedFilters]);
 
   useEffect(() => {
     fetchExams();
@@ -95,7 +99,7 @@ export function useExamMutations() {
   const [loading, setLoading] = useState(false);
 
   const createExam = async (
-    examData: ExamFormData & { company_id?: number },
+    examData: ExamFormData & { company_id?: number | null },
     questions: QuestionFormData[]
   ) => {
     setLoading(true);
@@ -451,6 +455,9 @@ export function useExamSessions(
   const [error, setError] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
 
+  // Memoize filters to prevent infinite re-renders
+  const memoizedFilters = useMemo(() => filters, [JSON.stringify(filters)]);
+
   const fetchSessions = useCallback(async () => {
     if (!examId) return;
 
@@ -458,7 +465,7 @@ export function useExamSessions(
     setError(null);
 
     try {
-      const response = await sessionApi.getExamSessions(examId, filters);
+      const response = await sessionApi.getExamSessions(examId, memoizedFilters);
       if (response.data) {
         setSessions(response.data.sessions);
         setTotal(response.data.total);
@@ -470,7 +477,7 @@ export function useExamSessions(
     } finally {
       setLoading(false);
     }
-  }, [examId, filters]);
+  }, [examId, memoizedFilters]);
 
   useEffect(() => {
     fetchSessions();

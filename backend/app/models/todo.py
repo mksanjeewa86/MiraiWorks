@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
@@ -17,6 +17,7 @@ from app.utils.constants import (
 from app.utils.datetime_utils import get_utc_now
 
 if TYPE_CHECKING:
+    from app.models.exam import Exam, ExamAssignment
     from app.models.todo_extension_request import TodoExtensionRequest
     from app.models.todo_viewer import TodoViewer
     from app.models.user import User
@@ -86,6 +87,20 @@ class Todo(Base):
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
 
+    # Exam specific fields (for TodoType.EXAM)
+    exam_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("exams.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    exam_assignment_id: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey("exam_assignments.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    exam_config: Mapped[dict | None] = mapped_column(
+        JSON, nullable=True
+    )  # Stores exam-specific configuration
+
     is_deleted: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, index=True
     )
@@ -133,6 +148,10 @@ class Todo(Base):
     extension_requests: Mapped[list[TodoExtensionRequest]] = relationship(
         "TodoExtensionRequest", back_populates="todo", cascade="all, delete-orphan"
     )
+    exam: Mapped[Optional[Exam]] = relationship(
+        "Exam", foreign_keys=[exam_id], backref="todos"
+    )
+    # exam_assignment relationship is created by backref from ExamAssignment.todo
 
     @property
     def is_completed(self) -> bool:
@@ -169,6 +188,10 @@ class Todo(Base):
     @property
     def is_assignment(self) -> bool:
         return self.todo_type == TodoType.ASSIGNMENT.value
+
+    @property
+    def is_exam(self) -> bool:
+        return self.todo_type == TodoType.EXAM.value
 
     @property
     def is_published(self) -> bool:

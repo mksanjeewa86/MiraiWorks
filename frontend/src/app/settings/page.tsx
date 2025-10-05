@@ -365,8 +365,6 @@ function SettingsPageContent() {
           confirm_password: '',
         },
       }));
-
-      console.log('Password changed successfully');
     } catch (error) {
       console.error('Failed to change password:', error);
       setState((prev) => ({
