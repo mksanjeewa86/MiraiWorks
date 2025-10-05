@@ -21,21 +21,13 @@ def upgrade():
     op.add_column(
         "todos",
         sa.Column(
-            "is_deleted",
-            sa.Boolean(),
-            nullable=False,
-            server_default=sa.text("FALSE")
-        )
+            "is_deleted", sa.Boolean(), nullable=False, server_default=sa.text("FALSE")
+        ),
     )
 
     # Add deleted_at column
     op.add_column(
-        "todos",
-        sa.Column(
-            "deleted_at",
-            sa.DateTime(timezone=True),
-            nullable=True
-        )
+        "todos", sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True)
     )
 
     # Add index on is_deleted for efficient filtering

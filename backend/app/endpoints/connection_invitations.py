@@ -1,11 +1,11 @@
 """Connection invitation API endpoints."""
 
 
-from app.config.endpoints import API_ROUTES
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config.endpoints import API_ROUTES
 from app.database import get_db
 from app.dependencies import get_current_active_user
 from app.models.connection_invitation import InvitationStatus

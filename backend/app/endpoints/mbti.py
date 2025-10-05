@@ -1,10 +1,10 @@
 """API endpoints for MBTI personality test."""
 
 
-from app.config.endpoints import API_ROUTES
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config.endpoints import API_ROUTES
 from app.crud.mbti import mbti_question, mbti_test
 from app.database import get_db
 from app.dependencies import get_current_active_user

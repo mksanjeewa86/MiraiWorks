@@ -11,6 +11,7 @@ if str(BACKEND_DIR) not in sys.path:
 
 os.environ["ENVIRONMENT"] = "test"
 
+
 async def debug_auth_flow():
     from sqlalchemy import select
 
@@ -34,7 +35,7 @@ async def debug_auth_flow():
                 name="Test Company",
                 type=CompanyType.EMPLOYER.value,
                 email="test@company.com",
-                is_active=True
+                is_active=True,
             )
             session.add(company)
             await session.flush()  # Get the ID
@@ -85,11 +86,15 @@ async def debug_auth_flow():
                 print(f"6. User found: {user.email}, active: {user.is_active}")
 
                 # Test password verification
-                password_valid = auth_service.verify_password("testpassword123", user.hashed_password)
+                password_valid = auth_service.verify_password(
+                    "testpassword123", user.hashed_password
+                )
                 print(f"7. Password verification: {password_valid}")
 
                 # Test full authentication
-                auth_user = await auth_service.authenticate_user(session, "test@example.com", "testpassword123")
+                auth_user = await auth_service.authenticate_user(
+                    session, "test@example.com", "testpassword123"
+                )
                 print(f"8. Authentication result: {auth_user is not None}")
 
                 if auth_user:
@@ -102,6 +107,7 @@ async def debug_auth_flow():
 
         except Exception as e:
             print(f"Error during authentication test: {e}")
+
 
 if __name__ == "__main__":
     asyncio.run(debug_auth_flow())

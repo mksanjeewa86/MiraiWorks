@@ -16,9 +16,10 @@ async def check_tables():
         print(f"Total tables: {len(all_tables)}")
 
         # Check for position/jobs related tables
-        position_tables = [t for t in all_tables if 'position' in t.lower()]
+        position_tables = [t for t in all_tables if "position" in t.lower()]
         print("Position-related tables:", position_tables)
         break
+
 
 if __name__ == "__main__":
     asyncio.run(check_tables())

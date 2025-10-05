@@ -11,12 +11,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
+from app.config import settings
 from app.models.role import Role, UserRole
 from app.models.user import User
-from app.config import settings
 
 
 async def verify_roles():
@@ -27,9 +27,7 @@ async def verify_roles():
         echo=False,
     )
 
-    async_session = sessionmaker(
-        engine, class_=AsyncSession, expire_on_commit=False
-    )
+    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     async with async_session() as session:
         # Check roles table
@@ -65,14 +63,10 @@ async def verify_roles():
         print("\n[*] User Role Distribution:")
         print("=" * 60)
 
-        result = await session.execute(
-            select(Role.name, Role.id)
-        )
+        result = await session.execute(select(Role.name, Role.id))
         role_map = {row[1]: row[0] for row in result}
 
-        result = await session.execute(
-            select(UserRole.role_id, UserRole.user_id)
-        )
+        result = await session.execute(select(UserRole.role_id, UserRole.user_id))
         user_roles_data = result.all()
 
         role_counts = {}

@@ -32,45 +32,57 @@ def upgrade() -> None:
 
     try:
         # Index for conversation queries (sender + recipient + timestamp)
-        op.execute("""
+        op.execute(
+            """
             CREATE INDEX IF NOT EXISTS idx_direct_messages_conversation
             ON direct_messages (sender_id, recipient_id, created_at DESC)
-        """)
+        """
+        )
 
         # Index for unread messages queries
-        op.execute("""
+        op.execute(
+            """
             CREATE INDEX IF NOT EXISTS idx_direct_messages_unread
             ON direct_messages (recipient_id, is_read, created_at DESC)
             WHERE is_read = FALSE AND is_deleted_by_recipient = FALSE
-        """)
+        """
+        )
 
         # Index for message search
-        op.execute("""
+        op.execute(
+            """
             CREATE INDEX IF NOT EXISTS idx_direct_messages_content_search
             ON direct_messages (sender_id, recipient_id, created_at DESC)
             WHERE is_deleted_by_sender = FALSE AND is_deleted_by_recipient = FALSE
-        """)
+        """
+        )
 
         # Index for user message history
-        op.execute("""
+        op.execute(
+            """
             CREATE INDEX IF NOT EXISTS idx_direct_messages_user_history
             ON direct_messages (sender_id, created_at DESC)
             WHERE is_deleted_by_sender = FALSE
-        """)
+        """
+        )
 
         # Index for recipient message history
-        op.execute("""
+        op.execute(
+            """
             CREATE INDEX IF NOT EXISTS idx_direct_messages_recipient_history
             ON direct_messages (recipient_id, created_at DESC)
             WHERE is_deleted_by_recipient = FALSE
-        """)
+        """
+        )
 
         # Index for file attachments
-        op.execute("""
+        op.execute(
+            """
             CREATE INDEX IF NOT EXISTS idx_direct_messages_files
             ON direct_messages (type, created_at DESC)
             WHERE type != 'text' AND file_url IS NOT NULL
-        """)
+        """
+        )
 
         print("Performance indexes created successfully")
 
@@ -82,31 +94,37 @@ def upgrade() -> None:
 
     try:
         # Ensure message content is not empty for text messages
-        op.execute("""
+        op.execute(
+            """
             ALTER TABLE direct_messages
             ADD CONSTRAINT chk_content_not_empty
             CHECK (
                 (type = 'text' AND LENGTH(TRIM(content)) > 0) OR
                 (type != 'text')
             )
-        """)
+        """
+        )
 
         # Ensure file messages have file information
-        op.execute("""
+        op.execute(
+            """
             ALTER TABLE direct_messages
             ADD CONSTRAINT chk_file_message_complete
             CHECK (
                 (type = 'file' AND file_url IS NOT NULL AND file_name IS NOT NULL) OR
                 (type != 'file')
             )
-        """)
+        """
+        )
 
         # Ensure sender and recipient are different
-        op.execute("""
+        op.execute(
+            """
             ALTER TABLE direct_messages
             ADD CONSTRAINT chk_different_users
             CHECK (sender_id != recipient_id)
-        """)
+        """
+        )
 
         print("Data integrity constraints added successfully")
 
@@ -117,7 +135,8 @@ def upgrade() -> None:
     print("Creating conversation summary view...")
 
     try:
-        op.execute("""
+        op.execute(
+            """
             CREATE OR REPLACE VIEW conversation_summaries AS
             SELECT
                 CASE
@@ -182,7 +201,8 @@ def upgrade() -> None:
                 )
             )
             AND NOT (dm.is_deleted_by_sender = TRUE AND dm.is_deleted_by_recipient = TRUE)
-        """)
+        """
+        )
 
         print("Conversation summary view created successfully")
 
@@ -194,11 +214,14 @@ def upgrade() -> None:
 
     try:
         # Procedure to mark conversation as read
-        op.execute("""
+        op.execute(
+            """
             DROP PROCEDURE IF EXISTS mark_conversation_read
-        """)
+        """
+        )
 
-        op.execute("""
+        op.execute(
+            """
             CREATE PROCEDURE mark_conversation_read(
                 IN p_user_id INT,
                 IN p_other_user_id INT
@@ -213,14 +236,18 @@ def upgrade() -> None:
 
                 SELECT ROW_COUNT() as messages_marked;
             END
-        """)
+        """
+        )
 
         # Procedure to get conversation messages with pagination
-        op.execute("""
+        op.execute(
+            """
             DROP PROCEDURE IF EXISTS get_conversation_messages
-        """)
+        """
+        )
 
-        op.execute("""
+        op.execute(
+            """
             CREATE PROCEDURE get_conversation_messages(
                 IN p_user1_id INT,
                 IN p_user2_id INT,
@@ -246,7 +273,8 @@ def upgrade() -> None:
                 ORDER BY dm.created_at DESC
                 LIMIT p_limit;
             END
-        """)
+        """
+        )
 
         print("Stored procedures created successfully")
 
@@ -277,18 +305,28 @@ def downgrade() -> None:
     # Drop constraints
     try:
         op.execute("ALTER TABLE direct_messages DROP CONSTRAINT chk_content_not_empty")
-        op.execute("ALTER TABLE direct_messages DROP CONSTRAINT chk_file_message_complete")
+        op.execute(
+            "ALTER TABLE direct_messages DROP CONSTRAINT chk_file_message_complete"
+        )
         op.execute("ALTER TABLE direct_messages DROP CONSTRAINT chk_different_users")
     except:
         pass
 
     # Drop indexes
     try:
-        op.execute("DROP INDEX IF EXISTS idx_direct_messages_conversation ON direct_messages")
+        op.execute(
+            "DROP INDEX IF EXISTS idx_direct_messages_conversation ON direct_messages"
+        )
         op.execute("DROP INDEX IF EXISTS idx_direct_messages_unread ON direct_messages")
-        op.execute("DROP INDEX IF EXISTS idx_direct_messages_content_search ON direct_messages")
-        op.execute("DROP INDEX IF EXISTS idx_direct_messages_user_history ON direct_messages")
-        op.execute("DROP INDEX IF EXISTS idx_direct_messages_recipient_history ON direct_messages")
+        op.execute(
+            "DROP INDEX IF EXISTS idx_direct_messages_content_search ON direct_messages"
+        )
+        op.execute(
+            "DROP INDEX IF EXISTS idx_direct_messages_user_history ON direct_messages"
+        )
+        op.execute(
+            "DROP INDEX IF EXISTS idx_direct_messages_recipient_history ON direct_messages"
+        )
         op.execute("DROP INDEX IF EXISTS idx_direct_messages_files ON direct_messages")
     except:
         pass

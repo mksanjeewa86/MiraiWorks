@@ -1,9 +1,9 @@
 from datetime import date, datetime
 
-from app.config.endpoints import API_ROUTES
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config.endpoints import API_ROUTES
 from app.crud.holiday import holiday as holiday_crud
 from app.database import get_db
 from app.dependencies import get_current_active_user

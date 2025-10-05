@@ -1,9 +1,9 @@
 """API endpoints for todo extension requests."""
 
-from app.config.endpoints import API_ROUTES
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config.endpoints import API_ROUTES
 from app.crud.todo import todo as todo_crud
 from app.crud.todo_extension_request import todo_extension_request
 from app.database import get_db

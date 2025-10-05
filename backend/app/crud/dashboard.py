@@ -4,11 +4,11 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.company import Company
+from app.models.exam import Exam, ExamAssignment, ExamSession
 from app.models.interview import Interview
 from app.models.message import Message
 from app.models.resume import Resume
 from app.models.user import User
-from app.models.exam import Exam, ExamAssignment, ExamSession
 
 
 class CRUDDashboard:

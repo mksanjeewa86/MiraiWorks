@@ -8,7 +8,7 @@ Test resume functionality without database dependencies.
 import os
 import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'app'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "app"))
 
 from services.resume_service import ResumeService
 
@@ -58,7 +58,7 @@ def test_resume_service_basics():
     valid_data = {
         "title": "Software Engineer",
         "full_name": "John Doe",
-        "email": "john@example.com"
+        "email": "john@example.com",
     }
 
     if service.validate_resume_data(valid_data):
@@ -70,7 +70,7 @@ def test_resume_service_basics():
 
     invalid_data = {
         "title": "Software Engineer",
-        "email": "john@example.com"
+        "email": "john@example.com",
         # Missing full_name
     }
 
@@ -142,14 +142,11 @@ def test_schema_imports():
     print("-" * 40)
 
     try:
-
         from schemas.resume import ResumeCreate, ResumeUpdate
 
         # Test ResumeCreate
         resume_data = ResumeCreate(
-            title="Test Resume",
-            full_name="Test User",
-            email="test@example.com"
+            title="Test Resume", full_name="Test User", email="test@example.com"
         )
         print(f"PASS: ResumeCreate schema works: {resume_data.title}")
 

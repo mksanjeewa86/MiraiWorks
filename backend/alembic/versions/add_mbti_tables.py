@@ -104,7 +104,7 @@ def upgrade():
         "mbti_tests",
         ["user_id"],
         unique=True,
-        postgresql_where=sa.text("status IN ('not_taken', 'in_progress')")
+        postgresql_where=sa.text("status IN ('not_taken', 'in_progress')"),
     )
 
 

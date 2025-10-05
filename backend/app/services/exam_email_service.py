@@ -114,6 +114,7 @@ class ExamEmailService:
             """
 
             # Create text body
+            newline = "\n"
             text_body = f"""
 New Exam Assignment: {exam.title}
 
@@ -128,7 +129,7 @@ Type: {exam.exam_type}
 Max Attempts: {exam.max_attempts}
 {f"Passing Score: {exam.passing_score}%" if exam.passing_score else "No minimum score required"}
 
-{f"Instructions:\\n{exam.instructions}" if exam.instructions else ""}
+{f"Instructions:{newline}{exam.instructions}" if exam.instructions else ""}
 
 {f"Exam Link: {exam_url}" if exam_url else ""}
 

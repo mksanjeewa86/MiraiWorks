@@ -9,15 +9,16 @@ BACKEND_DIR = Path(__file__).resolve().parents[1]
 SCHEMAS_DIR = BACKEND_DIR / "app" / "schemas"
 
 # Pattern to match type | None syntax
-PATTERN = re.compile(r'\b(\w+)\s*\|\s*None\b')
+PATTERN = re.compile(r"\b(\w+)\s*\|\s*None\b")
+
 
 def fix_type_annotations(file_path: Path) -> tuple[bool, int]:
     """Fix type annotations in a file."""
-    content = file_path.read_text(encoding='utf-8')
+    content = file_path.read_text(encoding="utf-8")
     original_content = content
 
     # Check if Optional is already imported
-    has_optional_import = 'from typing import' in content and 'Optional' in content
+    has_optional_import = "from typing import" in content and "Optional" in content
 
     # Find all type | None occurrences
     matches = PATTERN.findall(content)
@@ -26,36 +27,36 @@ def fix_type_annotations(file_path: Path) -> tuple[bool, int]:
         return False, 0
 
     # Replace type | None with Optional[type]
-    content = PATTERN.sub(r'Optional[\1]', content)
+    content = PATTERN.sub(r"Optional[\1]", content)
 
     # Ensure Optional is imported if not already
     if not has_optional_import and matches:
         # Find the typing import line
-        typing_import_match = re.search(r'from typing import (.+)', content)
+        typing_import_match = re.search(r"from typing import (.+)", content)
         if typing_import_match:
             # Add Optional to existing import
             imports = typing_import_match.group(1)
-            if 'Optional' not in imports:
-                new_imports = imports.rstrip() + ', Optional'
+            if "Optional" not in imports:
+                new_imports = imports.rstrip() + ", Optional"
                 content = content.replace(
-                    f'from typing import {imports}',
-                    f'from typing import {new_imports}'
+                    f"from typing import {imports}", f"from typing import {new_imports}"
                 )
         else:
             # Add new typing import after other imports
-            lines = content.split('\n')
+            lines = content.split("\n")
             insert_pos = 0
             for i, line in enumerate(lines):
-                if line.startswith('from ') or line.startswith('import '):
+                if line.startswith("from ") or line.startswith("import "):
                     insert_pos = i + 1
-            lines.insert(insert_pos, 'from typing import Optional')
-            content = '\n'.join(lines)
+            lines.insert(insert_pos, "from typing import Optional")
+            content = "\n".join(lines)
 
     if content != original_content:
-        file_path.write_text(content, encoding='utf-8')
+        file_path.write_text(content, encoding="utf-8")
         return True, len(matches)
 
     return False, 0
+
 
 def main():
     """Fix all Python files in schemas directory."""
@@ -75,6 +76,7 @@ def main():
             print(f"  [OK] Fixed {count} annotations in {file_path.name}")
 
     print(f"\nCompleted: Fixed {total_fixes} type annotations in {total_files} files")
+
 
 if __name__ == "__main__":
     main()

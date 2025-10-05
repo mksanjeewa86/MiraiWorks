@@ -1,10 +1,10 @@
 import logging
 from datetime import datetime, timedelta
 
-from app.config.endpoints import API_ROUTES
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config.endpoints import API_ROUTES
 from app.crud.calendar_integration import calendar_integration
 from app.database import get_db
 from app.dependencies import get_current_active_user

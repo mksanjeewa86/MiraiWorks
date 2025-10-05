@@ -16,6 +16,7 @@ def check_api_health():
         print(f"API not accessible: {e}")
         return False
 
+
 def check_openapi_docs():
     """Check API documentation"""
     try:
@@ -43,6 +44,7 @@ def check_openapi_docs():
         print(f"Error checking OpenAPI docs: {e}")
         return False
 
+
 def show_video_call_features():
     """Show video call features available"""
     print("\n=== Video Call Features ===")
@@ -54,11 +56,12 @@ def show_video_call_features():
         "Generate WebRTC tokens",
         "Real-time transcription",
         "Download transcripts in multiple formats",
-        "Permission-based access control"
+        "Permission-based access control",
     ]
 
     for i, feature in enumerate(features, 1):
         print(f"  {i}. {feature}")
+
 
 def show_test_instructions():
     """Show testing instructions"""
@@ -87,6 +90,7 @@ def show_test_instructions():
     print("   - Look for WebRTC integration")
     print("   - Verify video call UI pages")
 
+
 def main():
     """Main test function"""
     print("MiraiWorks Video Call System Check")
@@ -112,6 +116,7 @@ def main():
     print("\n" + "=" * 40)
     print("Video Call System Check Complete!")
     print("The video call functionality appears to be properly configured.")
+
 
 if __name__ == "__main__":
     main()

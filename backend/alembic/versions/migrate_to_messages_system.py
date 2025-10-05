@@ -30,10 +30,12 @@ def upgrade() -> None:
 
     # Step 1: Backup existing direct_messages data (optional - create temp table)
     print("Creating backup of direct_messages data...")
-    op.execute("""
+    op.execute(
+        """
         CREATE TABLE IF NOT EXISTS direct_messages_backup AS
         SELECT * FROM direct_messages;
-    """)
+    """
+    )
 
     # Step 2: Drop all conversation-related tables if they exist
     print("Removing conversation-related tables...")
@@ -41,7 +43,8 @@ def upgrade() -> None:
     # Drop foreign key constraints first (if they exist)
     try:
         # Check if attachments table has foreign key to messages table
-        op.execute("""
+        op.execute(
+            """
             DO $$
             BEGIN
                 -- Drop foreign key constraint if it exists
@@ -56,7 +59,8 @@ def upgrade() -> None:
                 -- Ignore if constraint doesn't exist
                 NULL;
             END $$;
-        """)
+        """
+        )
     except:
         # Try alternative approach for MySQL
         with contextlib.suppress(Exception):
@@ -64,7 +68,9 @@ def upgrade() -> None:
 
     # Drop other foreign key constraints
     with contextlib.suppress(Exception):
-        op.drop_constraint("attachments_direct_message_fk", "attachments", type_="foreignkey")
+        op.drop_constraint(
+            "attachments_direct_message_fk", "attachments", type_="foreignkey"
+        )
 
     # Drop tables in correct order (child tables first)
     op.execute("DROP TABLE IF EXISTS message_reads CASCADE")
@@ -82,22 +88,25 @@ def upgrade() -> None:
         sa.Column("recipient_id", sa.Integer(), nullable=False),
         sa.Column("content", sa.Text(), nullable=False),
         sa.Column("type", sa.String(50), nullable=False, server_default="text"),
-
         # Message state
         sa.Column("is_read", sa.Boolean(), nullable=False, server_default="false"),
         sa.Column("is_deleted", sa.Boolean(), nullable=False, server_default="false"),
-        sa.Column("is_deleted_by_sender", sa.Boolean(), nullable=False, server_default="false"),
-        sa.Column("is_deleted_by_recipient", sa.Boolean(), nullable=False, server_default="false"),
-
+        sa.Column(
+            "is_deleted_by_sender", sa.Boolean(), nullable=False, server_default="false"
+        ),
+        sa.Column(
+            "is_deleted_by_recipient",
+            sa.Boolean(),
+            nullable=False,
+            server_default="false",
+        ),
         # Reply functionality
         sa.Column("reply_to_id", sa.Integer(), nullable=True),
-
         # File attachments (inline)
         sa.Column("file_url", sa.String(500), nullable=True),
         sa.Column("file_name", sa.String(255), nullable=True),
         sa.Column("file_size", sa.Integer(), nullable=True),
         sa.Column("file_type", sa.String(100), nullable=True),
-
         # Timestamps
         sa.Column(
             "created_at",
@@ -113,7 +122,6 @@ def upgrade() -> None:
         ),
         sa.Column("read_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
-
         # Foreign keys
         sa.ForeignKeyConstraint(["recipient_id"], ["users.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["reply_to_id"], ["messages.id"], ondelete="SET NULL"),
@@ -145,12 +153,13 @@ def upgrade() -> None:
     op.create_index(
         "idx_messages_conversation_pair",
         "messages",
-        ["sender_id", "recipient_id", "created_at"]
+        ["sender_id", "recipient_id", "created_at"],
     )
 
     # Step 5: Migrate data from direct_messages to messages
     print("Migrating data from direct_messages to messages...")
-    op.execute("""
+    op.execute(
+        """
         INSERT INTO messages (
             sender_id, recipient_id, content, type, is_read,
             is_deleted_by_sender, is_deleted_by_recipient, reply_to_id,
@@ -164,7 +173,8 @@ def upgrade() -> None:
             created_at, read_at
         FROM direct_messages
         ORDER BY created_at;
-    """)
+    """
+    )
 
     # Step 6: Drop direct_messages table
     print("Removing old direct_messages table...")
@@ -173,7 +183,8 @@ def upgrade() -> None:
     # Step 7: Update attachments table if it exists and references direct_messages
     try:
         # Check if attachments table has direct_message_id column
-        op.execute("""
+        op.execute(
+            """
             DO $$
             BEGIN
                 IF EXISTS (
@@ -192,7 +203,8 @@ def upgrade() -> None:
                     ALTER TABLE attachments DROP COLUMN direct_message_id;
                 END IF;
             END $$;
-        """)
+        """
+        )
     except:
         print("Attachments table update skipped (table may not exist)")
         pass
@@ -209,10 +221,12 @@ def downgrade() -> None:
     print("Reverting to direct_messages system...")
 
     # Create backup of current messages data
-    op.execute("""
+    op.execute(
+        """
         CREATE TABLE IF NOT EXISTS messages_backup AS
         SELECT * FROM messages;
-    """)
+    """
+    )
 
     # Drop messages table
     op.drop_table("messages")
@@ -256,7 +270,8 @@ def downgrade() -> None:
     )
 
     # Restore data from backup if it exists
-    op.execute("""
+    op.execute(
+        """
         DO $$
         BEGIN
             IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'direct_messages_backup') THEN
@@ -264,13 +279,18 @@ def downgrade() -> None:
                 DROP TABLE direct_messages_backup;
             END IF;
         END $$;
-    """)
+    """
+    )
 
     # Recreate indexes
     op.create_index("idx_direct_messages_sender_id", "direct_messages", ["sender_id"])
-    op.create_index("idx_direct_messages_recipient_id", "direct_messages", ["recipient_id"])
+    op.create_index(
+        "idx_direct_messages_recipient_id", "direct_messages", ["recipient_id"]
+    )
     op.create_index("idx_direct_messages_is_read", "direct_messages", ["is_read"])
-    op.create_index("idx_direct_messages_reply_to_id", "direct_messages", ["reply_to_id"])
+    op.create_index(
+        "idx_direct_messages_reply_to_id", "direct_messages", ["reply_to_id"]
+    )
     op.create_index("idx_direct_messages_created_at", "direct_messages", ["created_at"])
     op.create_index("idx_direct_messages_type", "direct_messages", ["type"])
     op.create_index(

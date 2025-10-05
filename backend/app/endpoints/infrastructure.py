@@ -4,7 +4,6 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
 from app.config.endpoints import API_ROUTES
-
 from app.dependencies import get_redis
 
 logger = logging.getLogger(__name__)

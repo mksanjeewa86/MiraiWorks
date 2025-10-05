@@ -6,6 +6,7 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.config.endpoints import API_ROUTES
 from app.database import get_db
 from app.dependencies import (
     check_rate_limit,
@@ -43,7 +44,6 @@ from app.services.email_service import email_service
 from app.utils.constants import NotificationType
 from app.utils.logging import get_logger
 from app.utils.permissions import is_company_admin, is_super_admin
-from app.config.endpoints import API_ROUTES
 
 router = APIRouter()
 logger = get_logger(__name__)

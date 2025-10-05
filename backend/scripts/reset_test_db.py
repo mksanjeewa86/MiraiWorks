@@ -22,6 +22,7 @@ from app.models import *
 # Test database URL
 TEST_DATABASE_URL = "mysql+asyncmy://changeme:changeme@localhost:3307/miraiworks_test"
 
+
 async def reset_database():
     """Drop all tables and recreate from current models."""
     print("Connecting to test database...")
@@ -68,6 +69,7 @@ async def reset_database():
 
     finally:
         await engine.dispose()
+
 
 if __name__ == "__main__":
     asyncio.run(reset_database())

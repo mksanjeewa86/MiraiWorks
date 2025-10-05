@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
+
 from app.config import settings
 
 
@@ -28,7 +29,9 @@ async def verify_roles():
         print("\n[*] Checking Roles Table...")
         print("=" * 60)
 
-        result = await conn.execute(text("SELECT id, name, description FROM roles ORDER BY id"))
+        result = await conn.execute(
+            text("SELECT id, name, description FROM roles ORDER BY id")
+        )
         roles = result.fetchall()
 
         expected_roles = {"system_admin", "admin", "member", "candidate"}
@@ -57,13 +60,17 @@ async def verify_roles():
         print("\n[*] User Role Distribution:")
         print("=" * 60)
 
-        result = await conn.execute(text("""
+        result = await conn.execute(
+            text(
+                """
             SELECT r.name, COUNT(ur.user_id) as user_count
             FROM roles r
             LEFT JOIN user_roles ur ON r.id = ur.role_id
             GROUP BY r.id, r.name
             ORDER BY r.name
-        """))
+        """
+            )
+        )
         role_counts = result.fetchall()
 
         for role_name, count in role_counts:
@@ -86,13 +93,17 @@ async def verify_roles():
         print("\n[*] Sample User Checks (first 5):")
         print("=" * 60)
 
-        result = await conn.execute(text("""
+        result = await conn.execute(
+            text(
+                """
             SELECT u.email, r.name as role_name
             FROM users u
             JOIN user_roles ur ON u.id = ur.user_id
             JOIN roles r ON ur.role_id = r.id
             LIMIT 5
-        """))
+        """
+            )
+        )
         user_roles = result.fetchall()
 
         for email, role_name in user_roles:

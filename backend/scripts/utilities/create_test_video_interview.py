@@ -7,14 +7,12 @@ import requests
 
 BASE_URL = "http://localhost:8000"
 
+
 def create_test_interview():
     """Create a test video interview"""
 
     # First login to get access token
-    login_data = {
-        "email": "admin@miraiworks.com",
-        "password": "admin123"
-    }
+    login_data = {"email": "admin@miraiworks.com", "password": "admin123"}
 
     try:
         # Login
@@ -54,11 +52,13 @@ def create_test_interview():
             "scheduled_end": "2024-12-20T15:00:00Z",
             "duration_minutes": 60,
             "location": "Video Call",
-            "notes": "This is a test video interview for testing video call functionality"
+            "notes": "This is a test video interview for testing video call functionality",
         }
 
         print("Creating test interview...")
-        response = requests.post(f"{BASE_URL}/api/interviews", json=interview_data, headers=headers)
+        response = requests.post(
+            f"{BASE_URL}/api/interviews", json=interview_data, headers=headers
+        )
 
         if response.status_code in [200, 201]:
             interview = response.json()
@@ -68,15 +68,18 @@ def create_test_interview():
             print(f"Type: {interview.get('interview_type')}")
             print(f"Status: {interview.get('status')}")
             print()
-            print(f"Access the interview at: http://localhost:3000/interviews/{interview.get('id')}")
+            print(
+                f"Access the interview at: http://localhost:3000/interviews/{interview.get('id')}"
+            )
             print("Click 'Start Video Call' button to test video functionality")
-            return interview.get('id')
+            return interview.get("id")
         else:
             print(f"Failed to create interview: {response.status_code}")
             print(f"Response: {response.text}")
 
     except Exception as e:
         print(f"Error: {e}")
+
 
 if __name__ == "__main__":
     print("=== Creating Test Video Interview ===")

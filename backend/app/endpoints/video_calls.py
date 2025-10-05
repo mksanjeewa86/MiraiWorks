@@ -1,10 +1,10 @@
 from datetime import UTC, datetime
 
-from app.config.endpoints import API_ROUTES
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud
+from app.config.endpoints import API_ROUTES
 from app.crud.user import user as user_crud
 from app.database import get_db
 from app.dependencies import get_current_active_user

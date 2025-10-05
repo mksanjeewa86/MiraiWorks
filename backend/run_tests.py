@@ -17,12 +17,7 @@ def run_command(cmd, description=""):
     start_time = time.time()
 
     try:
-        subprocess.run(
-            cmd,
-            shell=True,
-            check=True,
-            capture_output=False
-        )
+        subprocess.run(cmd, shell=True, check=True, capture_output=False)
         duration = time.time() - start_time
         print(f"[SUCCESS] Completed in {duration:.2f}s")
         return True
@@ -31,18 +26,25 @@ def run_command(cmd, description=""):
         print(f"[FAILED] Failed in {duration:.2f}s")
         return False
 
+
 def check_database():
     """Check if test database is running."""
     try:
         result = subprocess.run(
-            ["docker", "inspect", "--format={{.State.Health.Status}}", "miraiworks-mysql-test"],
+            [
+                "docker",
+                "inspect",
+                "--format={{.State.Health.Status}}",
+                "miraiworks-mysql-test",
+            ],
             capture_output=True,
             text=True,
-            timeout=5
+            timeout=5,
         )
         return result.returncode == 0 and "healthy" in result.stdout
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
         return False
+
 
 def start_database():
     """Start test database if not running."""
@@ -52,8 +54,7 @@ def start_database():
 
     print("[STARTING] Starting MySQL test database...")
     success = run_command(
-        "docker-compose -f docker-compose.test.yml up -d",
-        "Starting Docker MySQL"
+        "docker-compose -f docker-compose.test.yml up -d", "Starting Docker MySQL"
     )
 
     if not success:
@@ -71,6 +72,7 @@ def start_database():
 
     print("[ERROR] MySQL failed to start within timeout")
     return False
+
 
 def main():
     """Main test runner."""
@@ -99,7 +101,7 @@ def main():
 
         failed_tests = []
         for test_file, description in tests:
-            if os.name == 'nt':  # Windows
+            if os.name == "nt":  # Windows
                 cmd = f"set PYTHONPATH=. && python -m pytest {test_file} -v"
             else:  # Unix/Linux/Mac
                 cmd = f"PYTHONPATH=. python -m pytest {test_file} -v"
@@ -115,7 +117,7 @@ def main():
 
     elif test_args == "all":
         # Run all tests
-        if os.name == 'nt':  # Windows
+        if os.name == "nt":  # Windows
             cmd = "set PYTHONPATH=. && python -m pytest app/tests/ -v --maxfail=5"
         else:  # Unix/Linux/Mac
             cmd = "PYTHONPATH=. python -m pytest app/tests/ -v --maxfail=5"
@@ -125,7 +127,7 @@ def main():
 
     elif test_args == "fast":
         # Run only fast tests
-        if os.name == 'nt':  # Windows
+        if os.name == "nt":  # Windows
             cmd = "set PYTHONPATH=. && python -m pytest app/tests/test_simple.py app/tests/test_auth.py -v"
         else:  # Unix/Linux/Mac
             cmd = "PYTHONPATH=. python -m pytest app/tests/test_simple.py app/tests/test_auth.py -v"
@@ -136,7 +138,7 @@ def main():
     elif test_args.startswith("file:"):
         # Run specific test file
         test_file = test_args[5:]
-        if os.name == 'nt':  # Windows
+        if os.name == "nt":  # Windows
             cmd = f"set PYTHONPATH=. && python -m pytest {test_file} -v"
         else:  # Unix/Linux/Mac
             cmd = f"PYTHONPATH=. python -m pytest {test_file} -v"
@@ -146,7 +148,7 @@ def main():
 
     else:
         # Pass through custom arguments
-        if os.name == 'nt':  # Windows
+        if os.name == "nt":  # Windows
             cmd = f"set PYTHONPATH=. && python -m pytest {test_args}"
         else:  # Unix/Linux/Mac
             cmd = f"PYTHONPATH=. python -m pytest {test_args}"
@@ -155,6 +157,7 @@ def main():
             sys.exit(1)
 
     print("\n[SUCCESS] All tests completed successfully!")
+
 
 if __name__ == "__main__":
     try:

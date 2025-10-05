@@ -1,7 +1,7 @@
-from app.config.endpoints import API_ROUTES
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
+from app.config.endpoints import API_ROUTES
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.models.user import User

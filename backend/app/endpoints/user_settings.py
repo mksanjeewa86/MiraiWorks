@@ -1,7 +1,7 @@
-from app.config.endpoints import API_ROUTES
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config.endpoints import API_ROUTES
 from app.crud import user_settings as user_settings_crud
 from app.database import get_db
 from app.dependencies import get_current_user

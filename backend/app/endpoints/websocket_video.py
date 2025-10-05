@@ -1,11 +1,11 @@
 import json
 import logging
 
-from app.config.endpoints import API_ROUTES
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud
+from app.config.endpoints import API_ROUTES
 from app.database import get_db
 
 # Remove the complex auth dependency for now

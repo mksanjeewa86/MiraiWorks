@@ -1,11 +1,10 @@
 import logging
 
-from app.config.endpoints import API_ROUTES
 from fastapi import APIRouter, Depends, HTTPException, Query
-from app.config.endpoints import API_ROUTES
 from fastapi.responses import PlainTextResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config.endpoints import API_ROUTES
 from app.database import get_db
 from app.schemas.resume import PublicResumeInfo
 from app.services.pdf_service import PDFService
