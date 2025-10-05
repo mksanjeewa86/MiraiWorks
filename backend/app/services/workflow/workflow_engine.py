@@ -64,7 +64,7 @@ class WorkflowEngineService:
             )
 
         # Activate all nodes
-        nodes = await workflow_node.get_by_process_id(db, process_id=process_id)
+        nodes = await workflow_node.get_by_process_id(db, workflow_id=process_id)
         for node in nodes:
             if node.status == "draft":
                 await workflow_node.activate_node(db, db_obj=node, updated_by=user_id)
@@ -94,7 +94,7 @@ class WorkflowEngineService:
 
         # Check if candidate is already assigned
         existing = await candidate_workflow.get_by_candidate_and_process(
-            db, candidate_id=candidate_id, process_id=process_id
+            db, candidate_id=candidate_id, workflow_id=process_id
         )
         if existing:
             raise ValueError("Candidate is already assigned to this process")
@@ -130,7 +130,7 @@ class WorkflowEngineService:
 
         # Find the first node
         start_nodes = await workflow_node.get_start_nodes(
-            db, process_id=candidate_proc.process_id
+            db, workflow_id=candidate_proc.process_id
         )
         if not start_nodes:
             raise ValueError("No start node found for this process")
@@ -144,7 +144,7 @@ class WorkflowEngineService:
 
         # Create the first node execution
         await self.create_node_execution(
-            db, candidate_process_id=candidate_proc.id, node_id=first_node.id
+            db, candidate_workflow_id=candidate_proc.id, node_id=first_node.id
         )
 
         return candidate_proc
@@ -260,7 +260,7 @@ class WorkflowEngineService:
                 for next_node in next_nodes:
                     execution = await self.create_node_execution(
                         db,
-                        candidate_process_id=candidate_workflow_id,
+                        candidate_workflow_id=candidate_workflow_id,
                         node_id=next_node.id,
                     )
                     new_executions.append(execution)
@@ -322,8 +322,8 @@ class WorkflowEngineService:
             "candidate_id": candidate_proc.candidate_id,
             "recruiter_id": candidate_proc.assigned_recruiter_id
             or execution.assigned_to,
-            "employer_company_id": candidate_proc.process.employer_company_id,
-            "recruiter_company_id": candidate_proc.process.employer_company_id,  # Same as employer for now
+            "employer_company_id": candidate_proc.workflow.employer_company_id,
+            "recruiter_company_id": candidate_proc.workflow.employer_company_id,  # Same as employer for now
             "title": f"{node.title} - {candidate_proc.candidate.name if candidate_proc.candidate else 'Candidate'}",
             "description": node.description,
             "interview_type": config.get("interview_type", InterviewNodeType.VIDEO),
@@ -385,7 +385,7 @@ class WorkflowEngineService:
         """Validate a process before activation"""
         # Get process nodes
         nodes = await workflow_node.get_by_process_id(
-            db, process_id=workflow_id, include_inactive=False
+            db, workflow_id=workflow_id, include_inactive=False
         )
 
         issues = []
@@ -406,7 +406,7 @@ class WorkflowEngineService:
 
         # Validate node connections
         flow_validation = await workflow_node_connection.validate_process_flow(
-            db, process_id=process_id
+            db, workflow_id=process_id
         )
         issues.extend([issue["message"] for issue in flow_validation.get("issues", [])])
         warnings.extend(
@@ -467,7 +467,7 @@ class WorkflowEngineService:
     ) -> list[dict[str, Any]]:
         """Get detailed timeline for a candidate process"""
         return await candidate_workflow.get_timeline(
-            db, candidate_process_id=candidate_process_id
+            db, candidate_workflow_id=candidate_process_id
         )
 
     async def get_process_analytics(
@@ -476,11 +476,11 @@ class WorkflowEngineService:
         """Get comprehensive analytics for a process"""
         # Basic statistics
         stats = await candidate_workflow.get_statistics_by_process(
-            db, process_id=process_id
+            db, workflow_id=process_id
         )
 
         # Node statistics
-        nodes = await workflow_node.get_by_process_id(db, process_id=process_id)
+        nodes = await workflow_node.get_by_process_id(db, workflow_id=process_id)
         node_stats = []
 
         for node in nodes:
@@ -491,12 +491,12 @@ class WorkflowEngineService:
 
         # Bottleneck analysis
         bottlenecks = await workflow_node.get_bottleneck_nodes(
-            db, process_id=process_id
+            db, workflow_id=process_id
         )
 
         # Execution workload
         workload = await workflow_node_execution.get_workload_by_assignee(
-            db, process_id=process_id
+            db, workflow_id=process_id
         )
 
         return {
@@ -517,7 +517,7 @@ class WorkflowEngineService:
         """Bulk assign multiple candidates to a process"""
         assigned_processes = await candidate_workflow.bulk_assign_candidates(
             db,
-            process_id=workflow_id,
+            workflow_id=workflow_id,
             candidate_ids=candidate_ids,
             assigned_recruiter_id=assigned_recruiter_id,
         )
@@ -538,7 +538,7 @@ class WorkflowEngineService:
         clone_viewers: bool = True,
     ) -> Workflow:
         """Clone an existing process"""
-        source_process = await workflow.get_with_nodes(db, id=source_process_id)
+        source_process = await workflow.get_with_nodes(db, id=source_workflow_id)
         if not source_process:
             raise ValueError("Source process not found")
 
@@ -554,7 +554,7 @@ class WorkflowEngineService:
         # Clone candidate assignments if requested
         if clone_candidates:
             source_candidates = await candidate_workflow.get_by_process_id(
-                db, process_id=source_process_id
+                db, workflow_id=source_workflow_id
             )
 
             candidate_ids = [cp.candidate_id for cp in source_candidates]
