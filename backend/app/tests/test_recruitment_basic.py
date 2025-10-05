@@ -2,7 +2,7 @@ import pytest
 
 
 @pytest.mark.asyncio
-async def test_basic_recruitment_process(client, auth_headers):
+async def test_basic_workflow(client, auth_headers):
     """Basic test to ensure recruitment process creation works with auth"""
 
     # Create a recruitment process
@@ -12,7 +12,7 @@ async def test_basic_recruitment_process(client, auth_headers):
     }
 
     response = await client.post(
-        "/api/recruitment-processes/", json=process_data, headers=auth_headers
+        "/api/workflows/", json=process_data, headers=auth_headers
     )
 
     print(f"Response status: {response.status_code}")

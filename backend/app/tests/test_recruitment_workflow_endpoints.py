@@ -2,14 +2,14 @@ import pytest
 from httpx import AsyncClient
 
 from app.main import app
-from app.schemas.recruitment_workflow.enums import ProcessStatus
+from app.schemas.workflow.enums import ProcessStatus
 
 
-class TestRecruitmentProcessEndpoints:
+class TestWorkflowEndpoints:
     """Test recruitment process API endpoints"""
 
     @pytest.mark.asyncio
-    async def test_create_recruitment_process_success(self):
+    async def test_create_workflow_success(self):
         """Test successful recruitment process creation"""
         async with AsyncClient(app=app, base_url="http://test") as client:
             process_data = {
@@ -19,7 +19,7 @@ class TestRecruitmentProcessEndpoints:
             }
 
             response = await client.post(
-                "/api/recruitment-processes/",
+                "/api/workflows/",
                 json=process_data,
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -34,32 +34,32 @@ class TestRecruitmentProcessEndpoints:
             assert "created_at" in data
 
     @pytest.mark.asyncio
-    async def test_create_recruitment_process_unauthorized(self):
+    async def test_create_workflow_unauthorized(self):
         """Test recruitment process creation without proper authorization"""
         async with AsyncClient(app=app, base_url="http://test") as client:
             process_data = {"name": "Test Process", "description": "Test description"}
 
             # No authorization header
             response = await client.post(
-                "/api/recruitment-processes/", json=process_data
+                "/api/workflows/", json=process_data
             )
             assert response.status_code == 401
 
             # Recruiter trying to create (should fail)
             response = await client.post(
-                "/api/recruitment-processes/",
+                "/api/workflows/",
                 json=process_data,
                 headers={"Authorization": "Bearer recruiter_token"},
             )
             assert response.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_create_recruitment_process_invalid_data(self):
+    async def test_create_workflow_invalid_data(self):
         """Test recruitment process creation with invalid data"""
         async with AsyncClient(app=app, base_url="http://test") as client:
             # Missing required fields
             response = await client.post(
-                "/api/recruitment-processes/",
+                "/api/workflows/",
                 json={},
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -67,7 +67,7 @@ class TestRecruitmentProcessEndpoints:
 
             # Empty name
             response = await client.post(
-                "/api/recruitment-processes/",
+                "/api/workflows/",
                 json={"name": ""},
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -78,7 +78,7 @@ class TestRecruitmentProcessEndpoints:
         """Test listing recruitment processes"""
         async with AsyncClient(app=app, base_url="http://test") as client:
             response = await client.get(
-                "/api/recruitment-processes/",
+                "/api/workflows/",
                 headers={"Authorization": "Bearer employer_token"},
             )
 
@@ -88,32 +88,32 @@ class TestRecruitmentProcessEndpoints:
 
             # Test with pagination
             response = await client.get(
-                "/api/recruitment-processes/?skip=0&limit=10",
+                "/api/workflows/?skip=0&limit=10",
                 headers={"Authorization": "Bearer employer_token"},
             )
             assert response.status_code == 200
 
             # Test with status filter
             response = await client.get(
-                "/api/recruitment-processes/?status=draft",
+                "/api/workflows/?status=draft",
                 headers={"Authorization": "Bearer employer_token"},
             )
             assert response.status_code == 200
 
             # Test with search
             response = await client.get(
-                "/api/recruitment-processes/?search=engineer",
+                "/api/workflows/?search=engineer",
                 headers={"Authorization": "Bearer employer_token"},
             )
             assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_get_recruitment_process_success(self):
+    async def test_get_workflow_success(self):
         """Test getting a specific recruitment process"""
         async with AsyncClient(app=app, base_url="http://test") as client:
             workflow_id = 1
             response = await client.get(
-                f"/api/recruitment-processes/{process_id}",
+                f"/api/workflows/{process_id}",
                 headers={"Authorization": "Bearer employer_token"},
             )
 
@@ -126,11 +126,11 @@ class TestRecruitmentProcessEndpoints:
             assert "viewers" in data
 
     @pytest.mark.asyncio
-    async def test_get_recruitment_process_not_found(self):
+    async def test_get_workflow_not_found(self):
         """Test getting non-existent recruitment process"""
         async with AsyncClient(app=app, base_url="http://test") as client:
             response = await client.get(
-                "/api/recruitment-processes/999999",
+                "/api/workflows/999999",
                 headers={"Authorization": "Bearer employer_token"},
             )
 
@@ -138,20 +138,20 @@ class TestRecruitmentProcessEndpoints:
             assert "not found" in response.json()["detail"].lower()
 
     @pytest.mark.asyncio
-    async def test_get_recruitment_process_access_denied(self):
+    async def test_get_workflow_access_denied(self):
         """Test access control for recruitment process"""
         async with AsyncClient(app=app, base_url="http://test") as client:
             workflow_id = 1
 
             # Recruiter without access
             response = await client.get(
-                f"/api/recruitment-processes/{process_id}",
+                f"/api/workflows/{process_id}",
                 headers={"Authorization": "Bearer unauthorized_recruiter_token"},
             )
             assert response.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_update_recruitment_process_success(self):
+    async def test_update_workflow_success(self):
         """Test updating a recruitment process"""
         async with AsyncClient(app=app, base_url="http://test") as client:
             workflow_id = 1
@@ -162,7 +162,7 @@ class TestRecruitmentProcessEndpoints:
             }
 
             response = await client.put(
-                f"/api/recruitment-processes/{process_id}",
+                f"/api/workflows/{process_id}",
                 json=update_data,
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -180,7 +180,7 @@ class TestRecruitmentProcessEndpoints:
             update_data = {"name": "Updated Name"}
 
             response = await client.put(
-                f"/api/recruitment-processes/{process_id}",
+                f"/api/workflows/{process_id}",
                 json=update_data,
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -188,14 +188,14 @@ class TestRecruitmentProcessEndpoints:
             assert response.status_code == 409  # Conflict for active process
 
     @pytest.mark.asyncio
-    async def test_activate_recruitment_process_success(self):
+    async def test_activate_workflow_success(self):
         """Test activating a recruitment process"""
         async with AsyncClient(app=app, base_url="http://test") as client:
             workflow_id = 1  # Assume this is a valid draft process
             activation_data = {"force_activate": False}
 
             response = await client.post(
-                f"/api/recruitment-processes/{process_id}/activate",
+                f"/api/workflows/{process_id}/activate",
                 json=activation_data,
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -206,14 +206,14 @@ class TestRecruitmentProcessEndpoints:
             assert "activated_at" in data
 
     @pytest.mark.asyncio
-    async def test_activate_recruitment_process_validation_failed(self):
+    async def test_activate_workflow_validation_failed(self):
         """Test activating process with validation issues"""
         async with AsyncClient(app=app, base_url="http://test") as client:
             workflow_id = 1  # Process with validation issues
             activation_data = {"force_activate": False}
 
             response = await client.post(
-                f"/api/recruitment-processes/{process_id}/activate",
+                f"/api/workflows/{process_id}/activate",
                 json=activation_data,
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -222,14 +222,14 @@ class TestRecruitmentProcessEndpoints:
             assert "validation" in response.json()["detail"].lower()
 
     @pytest.mark.asyncio
-    async def test_force_activate_recruitment_process(self):
+    async def test_force_activate_workflow(self):
         """Test force activating process despite validation issues"""
         async with AsyncClient(app=app, base_url="http://test") as client:
             workflow_id = 1
             activation_data = {"force_activate": True}
 
             response = await client.post(
-                f"/api/recruitment-processes/{process_id}/activate",
+                f"/api/workflows/{process_id}/activate",
                 json=activation_data,
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -239,14 +239,14 @@ class TestRecruitmentProcessEndpoints:
             assert data["status"] == ProcessStatus.ACTIVE
 
     @pytest.mark.asyncio
-    async def test_archive_recruitment_process_success(self):
+    async def test_archive_workflow_success(self):
         """Test archiving a recruitment process"""
         async with AsyncClient(app=app, base_url="http://test") as client:
             workflow_id = 1
             archive_data = {"reason": "No longer needed"}
 
             response = await client.post(
-                f"/api/recruitment-processes/{process_id}/archive",
+                f"/api/workflows/{process_id}/archive",
                 json=archive_data,
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -257,7 +257,7 @@ class TestRecruitmentProcessEndpoints:
             assert "archived_at" in data
 
     @pytest.mark.asyncio
-    async def test_clone_recruitment_process_success(self):
+    async def test_clone_workflow_success(self):
         """Test cloning a recruitment process"""
         async with AsyncClient(app=app, base_url="http://test") as client:
             workflow_id = 1
@@ -268,7 +268,7 @@ class TestRecruitmentProcessEndpoints:
             }
 
             response = await client.post(
-                f"/api/recruitment-processes/{process_id}/clone",
+                f"/api/workflows/{process_id}/clone",
                 json=clone_data,
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -280,13 +280,13 @@ class TestRecruitmentProcessEndpoints:
             assert data["id"] != process_id  # New process
 
     @pytest.mark.asyncio
-    async def test_delete_recruitment_process_success(self):
+    async def test_delete_workflow_success(self):
         """Test deleting a draft recruitment process"""
         async with AsyncClient(app=app, base_url="http://test") as client:
             workflow_id = 1  # Assume this is a draft process
 
             response = await client.delete(
-                f"/api/recruitment-processes/{process_id}",
+                f"/api/workflows/{process_id}",
                 headers={"Authorization": "Bearer employer_token"},
             )
 
@@ -299,7 +299,7 @@ class TestRecruitmentProcessEndpoints:
             workflow_id = 1  # Assume this is an active process
 
             response = await client.delete(
-                f"/api/recruitment-processes/{process_id}",
+                f"/api/workflows/{process_id}",
                 headers={"Authorization": "Bearer employer_token"},
             )
 
@@ -307,13 +307,13 @@ class TestRecruitmentProcessEndpoints:
             assert "draft" in response.json()["detail"].lower()
 
     @pytest.mark.asyncio
-    async def test_validate_recruitment_process(self):
+    async def test_validate_workflow(self):
         """Test validating a recruitment process"""
         async with AsyncClient(app=app, base_url="http://test") as client:
             workflow_id = 1
 
             response = await client.get(
-                f"/api/recruitment-processes/{process_id}/validate",
+                f"/api/workflows/{process_id}/validate",
                 headers={"Authorization": "Bearer employer_token"},
             )
 
@@ -333,7 +333,7 @@ class TestRecruitmentProcessEndpoints:
             workflow_id = 1
 
             response = await client.get(
-                f"/api/recruitment-processes/{process_id}/analytics",
+                f"/api/workflows/{process_id}/analytics",
                 headers={"Authorization": "Bearer employer_token"},
             )
 
@@ -354,7 +354,7 @@ class TestRecruitmentProcessEndpoints:
             company_id = 1
 
             response = await client.get(
-                f"/api/recruitment-processes/company/{company_id}/statistics",
+                f"/api/workflows/company/{company_id}/statistics",
                 headers={"Authorization": "Bearer employer_token"},
             )
 
@@ -370,7 +370,7 @@ class TestRecruitmentProcessEndpoints:
         """Test listing process templates"""
         async with AsyncClient(app=app, base_url="http://test") as client:
             response = await client.get(
-                "/api/recruitment-processes/templates/",
+                "/api/workflows/templates/",
                 headers={"Authorization": "Bearer employer_token"},
             )
 
@@ -380,7 +380,7 @@ class TestRecruitmentProcessEndpoints:
 
             # Test with filters
             response = await client.get(
-                "/api/recruitment-processes/templates/?category=engineering&public_only=true",
+                "/api/workflows/templates/?category=engineering&public_only=true",
                 headers={"Authorization": "Bearer employer_token"},
             )
             assert response.status_code == 200
@@ -397,7 +397,7 @@ class TestRecruitmentProcessEndpoints:
             }
 
             response = await client.post(
-                f"/api/recruitment-processes/templates/{template_id}/apply",
+                f"/api/workflows/templates/{template_id}/apply",
                 json=process_data,
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -415,7 +415,7 @@ class TestRecruitmentProcessEndpoints:
             process_data = {"name": "New Process from Template"}
 
             response = await client.post(
-                f"/api/recruitment-processes/templates/{template_id}/apply",
+                f"/api/workflows/templates/{template_id}/apply",
                 json=process_data,
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -423,7 +423,7 @@ class TestRecruitmentProcessEndpoints:
             assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_create_process_node_interview(self):
+    async def test_create_workflow_node_interview(self):
         """Ensure we can create an interview node via the new endpoint."""
         async with AsyncClient(app=app, base_url="http://test") as client:
             node_payload = {
@@ -436,7 +436,7 @@ class TestRecruitmentProcessEndpoints:
             }
 
             response = await client.post(
-                "/api/recruitment-processes/1/nodes",
+                "/api/workflows/1/nodes",
                 json=node_payload,
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -449,7 +449,7 @@ class TestRecruitmentProcessEndpoints:
             assert data["position_y"] == 220
 
     @pytest.mark.asyncio
-    async def test_create_process_node_with_todo_integration(self):
+    async def test_create_workflow_node_with_todo_integration(self):
         """Ensure todo integration endpoint returns node metadata."""
         async with AsyncClient(app=app, base_url="http://test") as client:
             node_payload = {
@@ -467,7 +467,7 @@ class TestRecruitmentProcessEndpoints:
             }
 
             response = await client.post(
-                "/api/recruitment-processes/1/nodes/create-with-integration",
+                "/api/workflows/1/nodes/create-with-integration",
                 json=node_payload,
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -479,7 +479,7 @@ class TestRecruitmentProcessEndpoints:
             assert "todo" in data
 
 
-class TestCandidateProcessEndpoints:
+class TestCandidateWorkflowEndpoints:
     """Test candidate process API endpoints"""
 
     @pytest.mark.asyncio
@@ -494,7 +494,7 @@ class TestCandidateProcessEndpoints:
             }
 
             response = await client.post(
-                f"/api/recruitment-processes/{process_id}/candidates",
+                f"/api/workflows/{process_id}/candidates",
                 json=assignment_data,
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -521,7 +521,7 @@ class TestCandidateProcessEndpoints:
             }
 
             response = await client.post(
-                f"/api/recruitment-processes/{process_id}/candidates",
+                f"/api/workflows/{process_id}/candidates",
                 json=assignment_data,
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -542,7 +542,7 @@ class TestCandidateProcessEndpoints:
             }
 
             response = await client.post(
-                f"/api/recruitment-processes/{process_id}/candidates",
+                f"/api/workflows/{process_id}/candidates",
                 json=assignment_data,
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -563,7 +563,7 @@ class TestCandidateProcessEndpoints:
             }
 
             response = await client.post(
-                f"/api/recruitment-processes/{process_id}/candidates/bulk",
+                f"/api/workflows/{process_id}/candidates/bulk",
                 json=bulk_data,
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -573,11 +573,11 @@ class TestCandidateProcessEndpoints:
             assert isinstance(data, list)
             assert len(data) == len(bulk_data["candidate_ids"])
 
-            for candidate_process in data:
-                assert candidate_process["process_id"] == process_id
-                assert candidate_process["candidate_id"] in bulk_data["candidate_ids"]
+            for candidate_workflow in data:
+                assert candidate_workflow["process_id"] == process_id
+                assert candidate_workflow["candidate_id"] in bulk_data["candidate_ids"]
                 assert (
-                    candidate_process["assigned_recruiter_id"]
+                    candidate_workflow["assigned_recruiter_id"]
                     == bulk_data["assigned_recruiter_id"]
                 )
 
@@ -589,7 +589,7 @@ class TestCandidateProcessEndpoints:
 
             # Empty candidate list
             response = await client.post(
-                f"/api/recruitment-processes/{process_id}/candidates/bulk",
+                f"/api/workflows/{process_id}/candidates/bulk",
                 json={"candidate_ids": []},
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -597,7 +597,7 @@ class TestCandidateProcessEndpoints:
 
             # Duplicate candidate IDs
             response = await client.post(
-                f"/api/recruitment-processes/{process_id}/candidates/bulk",
+                f"/api/workflows/{process_id}/candidates/bulk",
                 json={"candidate_ids": [100, 100, 101]},
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -610,7 +610,7 @@ class TestCandidateProcessEndpoints:
             workflow_id = 1
 
             response = await client.get(
-                f"/api/recruitment-processes/{process_id}/candidates",
+                f"/api/workflows/{process_id}/candidates",
                 headers={"Authorization": "Bearer employer_token"},
             )
 
@@ -620,32 +620,32 @@ class TestCandidateProcessEndpoints:
 
             # Test with status filter
             response = await client.get(
-                f"/api/recruitment-processes/{process_id}/candidates?status=in_progress",
+                f"/api/workflows/{process_id}/candidates?status=in_progress",
                 headers={"Authorization": "Bearer employer_token"},
             )
             assert response.status_code == 200
 
             # Test with pagination
             response = await client.get(
-                f"/api/recruitment-processes/{process_id}/candidates?skip=0&limit=10",
+                f"/api/workflows/{process_id}/candidates?skip=0&limit=10",
                 headers={"Authorization": "Bearer employer_token"},
             )
             assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_get_candidate_process_success(self):
+    async def test_get_candidate_workflow_success(self):
         """Test getting candidate process details"""
         async with AsyncClient(app=app, base_url="http://test") as client:
             candidate_workflow_id = 1
 
             response = await client.get(
-                f"/api/recruitment-processes/candidate-processes/{candidate_process_id}",
+                f"/api/workflows/candidate-processes/{candidate_workflow_id}",
                 headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 200
             data = response.json()
-            assert data["id"] == candidate_process_id
+            assert data["id"] == candidate_workflow_id
             assert "candidate_id" in data
             assert "process_id" in data
             assert "status" in data
@@ -659,7 +659,7 @@ class TestCandidateProcessEndpoints:
             candidate_workflow_id = 1
 
             response = await client.get(
-                f"/api/recruitment-processes/candidate-processes/{candidate_process_id}",
+                f"/api/workflows/candidate-processes/{candidate_workflow_id}",
                 headers={"Authorization": "Bearer candidate_token"},
             )
 
@@ -672,14 +672,14 @@ class TestCandidateProcessEndpoints:
             candidate_workflow_id = 1  # Belongs to different candidate
 
             response = await client.get(
-                f"/api/recruitment-processes/candidate-processes/{candidate_process_id}",
+                f"/api/workflows/candidate-processes/{candidate_workflow_id}",
                 headers={"Authorization": "Bearer other_candidate_token"},
             )
 
             assert response.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_start_candidate_process_success(self):
+    async def test_start_candidate_workflow_success(self):
         """Test starting a candidate process"""
         async with AsyncClient(app=app, base_url="http://test") as client:
             candidate_workflow_id = 1
@@ -689,7 +689,7 @@ class TestCandidateProcessEndpoints:
             }
 
             response = await client.post(
-                f"/api/recruitment-processes/candidate-processes/{candidate_process_id}/start",
+                f"/api/workflows/candidate-processes/{candidate_workflow_id}/start",
                 json=start_data,
                 headers={"Authorization": "Bearer recruiter_token"},
             )
@@ -708,7 +708,7 @@ class TestCandidateProcessEndpoints:
             start_data = {"send_notification": True}
 
             response = await client.post(
-                f"/api/recruitment-processes/candidate-processes/{candidate_process_id}/start",
+                f"/api/workflows/candidate-processes/{candidate_workflow_id}/start",
                 json=start_data,
                 headers={"Authorization": "Bearer recruiter_token"},
             )
@@ -717,7 +717,7 @@ class TestCandidateProcessEndpoints:
             assert "already been started" in response.json()["detail"].lower()
 
     @pytest.mark.asyncio
-    async def test_update_candidate_process_status_complete(self):
+    async def test_update_candidate_workflow_status_complete(self):
         """Test completing a candidate process"""
         async with AsyncClient(app=app, base_url="http://test") as client:
             candidate_workflow_id = 1
@@ -729,7 +729,7 @@ class TestCandidateProcessEndpoints:
             }
 
             response = await client.put(
-                f"/api/recruitment-processes/candidate-processes/{candidate_process_id}/status",
+                f"/api/workflows/candidate-processes/{candidate_workflow_id}/status",
                 json=status_data,
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -741,7 +741,7 @@ class TestCandidateProcessEndpoints:
             assert data["overall_score"] == 88.5
 
     @pytest.mark.asyncio
-    async def test_update_candidate_process_status_fail(self):
+    async def test_update_candidate_workflow_status_fail(self):
         """Test failing a candidate process"""
         async with AsyncClient(app=app, base_url="http://test") as client:
             candidate_workflow_id = 2
@@ -751,7 +751,7 @@ class TestCandidateProcessEndpoints:
             }
 
             response = await client.put(
-                f"/api/recruitment-processes/candidate-processes/{candidate_process_id}/status",
+                f"/api/workflows/candidate-processes/{candidate_workflow_id}/status",
                 json=status_data,
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -772,7 +772,7 @@ class TestCandidateProcessEndpoints:
             }
 
             response = await client.put(
-                f"/api/recruitment-processes/candidate-processes/{candidate_process_id}/status",
+                f"/api/workflows/candidate-processes/{candidate_workflow_id}/status",
                 json=status_data,
                 headers={"Authorization": "Bearer employer_token"},
             )
@@ -787,13 +787,13 @@ class TestCandidateProcessEndpoints:
             candidate_workflow_id = 1
 
             response = await client.get(
-                f"/api/recruitment-processes/candidate-processes/{candidate_process_id}/timeline",
+                f"/api/workflows/candidate-processes/{candidate_workflow_id}/timeline",
                 headers={"Authorization": "Bearer employer_token"},
             )
 
             assert response.status_code == 200
             data = response.json()
-            assert "candidate_process_id" in data
+            assert "candidate_workflow_id" in data
             assert "candidate_name" in data
             assert "process_name" in data
             assert "current_status" in data
@@ -805,7 +805,7 @@ class TestCandidateProcessEndpoints:
         """Test getting own processes as candidate"""
         async with AsyncClient(app=app, base_url="http://test") as client:
             response = await client.get(
-                "/api/recruitment-processes/my-processes",
+                "/api/workflows/my-processes",
                 headers={"Authorization": "Bearer candidate_token"},
             )
 
@@ -824,7 +824,7 @@ class TestCandidateProcessEndpoints:
         """Test getting assigned processes as recruiter"""
         async with AsyncClient(app=app, base_url="http://test") as client:
             response = await client.get(
-                "/api/recruitment-processes/my-processes",
+                "/api/workflows/my-processes",
                 headers={"Authorization": "Bearer recruiter_token"},
             )
 
@@ -843,7 +843,7 @@ class TestCandidateProcessEndpoints:
             recruiter_id = 50
 
             response = await client.get(
-                f"/api/recruitment-processes/recruiters/{recruiter_id}/workload",
+                f"/api/workflows/recruiters/{recruiter_id}/workload",
                 headers={"Authorization": "Bearer employer_token"},
             )
 
@@ -863,7 +863,7 @@ class TestCandidateProcessEndpoints:
             recruiter_id = 50
 
             response = await client.get(
-                f"/api/recruitment-processes/recruiters/{recruiter_id}/workload",
+                f"/api/workflows/recruiters/{recruiter_id}/workload",
                 headers={"Authorization": f"Bearer recruiter_{recruiter_id}_token"},
             )
 
@@ -876,7 +876,7 @@ class TestCandidateProcessEndpoints:
             recruiter_id = 50
 
             response = await client.get(
-                f"/api/recruitment-processes/recruiters/{recruiter_id}/workload",
+                f"/api/workflows/recruiters/{recruiter_id}/workload",
                 headers={"Authorization": "Bearer other_recruiter_token"},
             )
 

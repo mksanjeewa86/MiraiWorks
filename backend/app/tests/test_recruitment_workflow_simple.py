@@ -41,7 +41,7 @@ class TestRecruitmentWorkflowLogic:
             next_status in valid_transitions.get(current, []) or current == next_status
         )
 
-    def test_node_connection_condition_evaluation(self):
+    def test_workflow_node_connection_condition_evaluation(self):
         """Test node connection condition evaluation logic"""
         # Success conditions
         assert self._evaluate_condition("success", "pass")
@@ -79,7 +79,7 @@ class TestRecruitmentWorkflowLogic:
         """Helper to evaluate conditional with score"""
         return score >= min_score
 
-    def test_candidate_process_progress_calculation(self):
+    def test_candidate_workflow_progress_calculation(self):
         """Test candidate process progress calculation"""
         # Mock execution data
         executions = [

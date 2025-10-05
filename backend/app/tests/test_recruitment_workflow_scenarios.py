@@ -17,7 +17,7 @@ class TestRecruitmentWorkflowScenarios:
         }
 
         response = await client.post(
-            "/api/recruitment-processes/", json=process_data, headers=auth_headers
+            "/api/workflows/", json=process_data, headers=auth_headers
         )
         assert response.status_code == 201
         process = response.json()
@@ -71,7 +71,7 @@ class TestRecruitmentWorkflowScenarios:
         created_nodes = []
         for node_data in nodes:
             response = await client.post(
-                f"/api/recruitment-processes/{process_id}/nodes",
+                f"/api/workflows/{process_id}/nodes",
                 json=node_data,
                 headers=auth_headers,
             )
@@ -81,7 +81,7 @@ class TestRecruitmentWorkflowScenarios:
         # Step 3: Activate the process
         activation_data = {"force_activate": False}
         response = await client.post(
-            f"/api/recruitment-processes/{process_id}/activate",
+            f"/api/workflows/{process_id}/activate",
             json=activation_data,
             headers=auth_headers,
         )
@@ -90,7 +90,7 @@ class TestRecruitmentWorkflowScenarios:
         # Step 4: Add a candidate to the process
         candidate_data = {
             "candidate_id": 100,
-            "recruitment_process_id": workflow_id,
+            "workflow_id": workflow_id,
             "position_id": 1,
             "initial_stage": "hr_screening",
         }
@@ -101,10 +101,10 @@ class TestRecruitmentWorkflowScenarios:
             headers=auth_headers,
         )
         assert response.status_code == 201
-        candidate_process = response.json()
+        candidate_workflow = response.json()
 
         # Step 5: Progress candidate through workflow
-        candidate_workflow_id = candidate_process["id"]
+        candidate_workflow_id = candidate_workflow["id"]
 
         # Complete HR screening
         completion_data = {
@@ -118,7 +118,7 @@ class TestRecruitmentWorkflowScenarios:
         }
 
         response = await client.put(
-            f"/api/recruitment-workflows/candidate-processes/{candidate_process_id}/advance",
+            f"/api/recruitment-workflows/candidate-processes/{candidate_workflow_id}/advance",
             json=completion_data,
             headers=auth_headers,
         )
@@ -126,7 +126,7 @@ class TestRecruitmentWorkflowScenarios:
 
         # Verify candidate advanced to next stage
         response = await client.get(
-            f"/api/recruitment-workflows/candidate-processes/{candidate_process_id}",
+            f"/api/recruitment-workflows/candidate-processes/{candidate_workflow_id}",
             headers=auth_headers,
         )
         assert response.status_code == 200
@@ -145,7 +145,7 @@ class TestRecruitmentWorkflowScenarios:
         }
 
         response = await client.put(
-            f"/api/recruitment-workflows/candidate-processes/{candidate_process_id}/advance",
+            f"/api/recruitment-workflows/candidate-processes/{candidate_workflow_id}/advance",
             json=assignment_completion,
             headers=auth_headers,
         )
@@ -164,7 +164,7 @@ class TestRecruitmentWorkflowScenarios:
         }
 
         response = await client.put(
-            f"/api/recruitment-workflows/candidate-processes/{candidate_process_id}/advance",
+            f"/api/recruitment-workflows/candidate-processes/{candidate_workflow_id}/advance",
             json=tech_interview_completion,
             headers=auth_headers,
         )
@@ -172,7 +172,7 @@ class TestRecruitmentWorkflowScenarios:
 
         # Step 6: Verify final process state
         response = await client.get(
-            f"/api/recruitment-workflows/candidate-processes/{candidate_process_id}",
+            f"/api/recruitment-workflows/candidate-processes/{candidate_workflow_id}",
             headers=auth_headers,
         )
         assert response.status_code == 200
@@ -184,7 +184,7 @@ class TestRecruitmentWorkflowScenarios:
 
         # Step 7: Verify process analytics
         response = await client.get(
-            f"/api/recruitment-processes/{process_id}/analytics", headers=auth_headers
+            f"/api/workflows/{process_id}/analytics", headers=auth_headers
         )
         assert response.status_code == 200
         analytics = response.json()
