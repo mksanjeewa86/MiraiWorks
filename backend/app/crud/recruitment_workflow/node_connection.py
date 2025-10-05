@@ -20,7 +20,7 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
         return db_obj
 
     async def get_by_process_id(
-        self, db: AsyncSession, *, process_id: int
+        self, db: AsyncSession, *, workflow_id: int
     ) -> list[NodeConnection]:
         """Get all connections for a process"""
         result = await db.execute(
@@ -29,7 +29,7 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
                 selectinload(NodeConnection.source_node),
                 selectinload(NodeConnection.target_node),
             )
-            .where(NodeConnection.process_id == process_id)
+            .where(NodeConnection.workflow_id == process_id)
             .order_by(desc(NodeConnection.created_at))
         )
         return result.scalars().all()
@@ -76,7 +76,7 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
         self,
         db: AsyncSession,
         *,
-        process_id: int,
+        workflow_id: int,
         source_node_id: int,
         target_node_id: int,
         condition_type: str = "success",
@@ -94,7 +94,7 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
             raise ValueError("Connection already exists between these nodes")
 
         connection_data = {
-            "process_id": process_id,
+            "process_id": workflow_id,
             "source_node_id": source_node_id,
             "target_node_id": target_node_id,
             "condition_type": condition_type,
@@ -162,7 +162,7 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
         return True
 
     async def bulk_create_connections(
-        self, db: AsyncSession, *, process_id: int, connections: list[dict[str, Any]]
+        self, db: AsyncSession, *, workflow_id: int, connections: list[dict[str, Any]]
     ) -> list[NodeConnection]:
         """Create multiple connections at once"""
         new_connections = []
@@ -177,7 +177,7 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
 
             if not existing:
                 connection = NodeConnection(
-                    process_id=process_id,
+                    process_id=workflow_id,
                     source_node_id=conn_data["source_node_id"],
                     target_node_id=conn_data["target_node_id"],
                     condition_type=conn_data.get("condition_type", "success"),
@@ -196,7 +196,7 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
         return new_connections
 
     async def validate_process_flow(
-        self, db: AsyncSession, *, process_id: int
+        self, db: AsyncSession, *, workflow_id: int
     ) -> dict[str, Any]:
         """Validate the flow of a process"""
         # Get all connections and nodes for the process
@@ -301,7 +301,7 @@ class CRUDNodeConnection(CRUDBase[NodeConnection, dict, dict]):
         }
 
     async def get_process_paths(
-        self, db: AsyncSession, *, process_id: int, start_node_id: int | None = None
+        self, db: AsyncSession, *, workflow_id: int, start_node_id: int | None = None
     ) -> list[list[int]]:
         """Get all possible paths through the process"""
         connections = await self.get_by_process_id(db, process_id=process_id)

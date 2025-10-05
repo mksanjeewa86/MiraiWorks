@@ -32,10 +32,10 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
         return db_obj
 
     async def get_by_process_id(
-        self, db: AsyncSession, *, process_id: int, include_inactive: bool = False
+        self, db: AsyncSession, *, workflow_id: int, include_inactive: bool = False
     ) -> list[ProcessNode]:
         """Get all nodes for a process"""
-        conditions = [ProcessNode.process_id == process_id]
+        conditions = [ProcessNode.workflow_id == process_id]
 
         if not include_inactive:
             conditions.append(ProcessNode.status != "inactive")
@@ -63,14 +63,14 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
         return result.scalars().first()
 
     async def get_start_nodes(
-        self, db: AsyncSession, *, process_id: int
+        self, db: AsyncSession, *, workflow_id: int
     ) -> list[ProcessNode]:
         """Get start nodes for a process (nodes with no incoming connections or sequence_order = 1)"""
         # First try to get node with sequence_order = 1
         result = await db.execute(
             select(ProcessNode).where(
                 and_(
-                    ProcessNode.process_id == process_id,
+                    ProcessNode.workflow_id == workflow_id,
                     ProcessNode.sequence_order == 1,
                     ProcessNode.status == "active",
                 )
@@ -84,7 +84,7 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
         # If no node with sequence_order = 1, find nodes with no incoming connections
         subquery = (
             select(NodeConnection.target_node_id).where(
-                NodeConnection.process_id == process_id
+                NodeConnection.workflow_id == process_id
             )
         ).subquery()
 
@@ -92,7 +92,7 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
             select(ProcessNode)
             .where(
                 and_(
-                    ProcessNode.process_id == process_id,
+                    ProcessNode.workflow_id == workflow_id,
                     ProcessNode.status == "active",
                     ProcessNode.id.notin_(subquery),
                 )
@@ -155,7 +155,7 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
         self,
         db: AsyncSession,
         *,
-        process_id: int,
+        workflow_id: int,
         node_sequence_updates: list[dict[str, int]],
         updated_by: int,
     ) -> list[ProcessNode]:
@@ -172,7 +172,7 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
         for i, update in enumerate(node_sequence_updates):
             node_id = update["node_id"]
             node = await self.get(db, id=node_id)
-            if node and node.process_id == process_id:
+            if node and node.workflow_id == workflow_id:
                 node.sequence_order = -(i + 1000)  # Use negative values as temporary
                 node.updated_by = updated_by
                 node.updated_at = timestamp
@@ -283,7 +283,7 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
         }
 
     async def get_bottleneck_nodes(
-        self, db: AsyncSession, *, process_id: int, limit: int = 5
+        self, db: AsyncSession, *, workflow_id: int, limit: int = 5
     ) -> list[dict[str, Any]]:
         """Get nodes that are bottlenecks in the process"""
         # Nodes with longest average execution time or lowest completion rate
@@ -304,7 +304,7 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
                 ).label("avg_duration_minutes"),
             )
             .join(NodeExecution, ProcessNode.id == NodeExecution.node_id, isouter=True)
-            .where(ProcessNode.process_id == process_id)
+            .where(ProcessNode.workflow_id == process_id)
             .group_by(ProcessNode.id, ProcessNode.title, ProcessNode.node_type)
             .having(func.count(NodeExecution.id) > 0)
             .order_by(desc("avg_duration_minutes"))
@@ -381,7 +381,7 @@ class CRUDProcessNode(CRUDBase[ProcessNode, dict, dict]):
             raise ValueError("Source node not found")
 
         duplicate_data = {
-            "process_id": source_node.process_id,
+            "process_id": source_node.workflow_id,
             "node_type": source_node.node_type,
             "title": f"{source_node.title} (Copy)",
             "description": source_node.description,

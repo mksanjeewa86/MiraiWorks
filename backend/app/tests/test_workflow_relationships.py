@@ -1,23 +1,16 @@
 """Integration tests for workflow relationships and cascading soft delete."""
 
 from datetime import datetime, timedelta
-from uuid import uuid4
 
 import pytest
 from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.crud.interview import interview as interview_crud
 from app.crud.recruitment_workflow.recruitment_process import recruitment_process
-from app.crud.todo import todo as todo_crud
 from app.models.interview import Interview
-from app.models.recruitment_process import RecruitmentProcess
-from app.models.role import Role
 from app.models.todo import Todo
 from app.models.user import User
-from app.services.interview_service import interview_service
-from app.utils.constants import UserRole as UserRoleEnum
 
 
 @pytest.mark.asyncio

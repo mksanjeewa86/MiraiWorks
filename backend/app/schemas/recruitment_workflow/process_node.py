@@ -256,7 +256,7 @@ class ProcessNodeInfo(ProcessNodeBase):
     """Schema for process node information"""
 
     id: int
-    process_id: int
+    workflow_id: int
     sequence_order: int
     position_x: float
     position_y: float
@@ -328,7 +328,7 @@ class NodeConnectionInfo(BaseModel):
     """Schema for node connection information"""
 
     id: int
-    process_id: int
+    workflow_id: int
     source_node_id: int
     target_node_id: int
     condition_type: str

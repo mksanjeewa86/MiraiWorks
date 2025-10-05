@@ -56,7 +56,7 @@ class RecruitmentWorkflowNotificationService:
                     "data": {
                         "candidate_process_id": candidate_process.id,
                         "candidate_id": candidate_process.candidate_id,
-                        "process_id": candidate_process.process_id,
+                        "process_id": candidate_process.workflow_id,
                         "process_name": candidate_process.process.name,
                     },
                 }
@@ -71,7 +71,7 @@ class RecruitmentWorkflowNotificationService:
                 "message": f"You have been entered into the recruitment process for '{candidate_process.process.name}'.",
                 "data": {
                     "candidate_process_id": candidate_process.id,
-                    "process_id": candidate_process.process_id,
+                    "process_id": candidate_process.workflow_id,
                     "process_name": candidate_process.process.name,
                 },
             }
@@ -97,7 +97,7 @@ class RecruitmentWorkflowNotificationService:
                 "message": f"Your application process for '{candidate_process.process.name}' has begun with: {first_node.title}",
                 "data": {
                     "candidate_process_id": candidate_process.id,
-                    "process_id": candidate_process.process_id,
+                    "process_id": candidate_process.workflow_id,
                     "process_name": candidate_process.process.name,
                     "first_node_id": first_node.id,
                     "first_node_title": first_node.title,
@@ -116,7 +116,7 @@ class RecruitmentWorkflowNotificationService:
                     "data": {
                         "candidate_process_id": candidate_process.id,
                         "candidate_id": candidate_process.candidate_id,
-                        "process_id": candidate_process.process_id,
+                        "process_id": candidate_process.workflow_id,
                         "process_name": candidate_process.process.name,
                     },
                 }
@@ -261,7 +261,7 @@ class RecruitmentWorkflowNotificationService:
                 "message": status_message,
                 "data": {
                     "candidate_process_id": candidate_process.id,
-                    "process_id": candidate_process.process_id,
+                    "process_id": candidate_process.workflow_id,
                     "process_name": candidate_process.process.name,
                     "final_result": candidate_process.final_result,
                     "overall_score": candidate_process.overall_score,
@@ -280,7 +280,7 @@ class RecruitmentWorkflowNotificationService:
                     "data": {
                         "candidate_process_id": candidate_process.id,
                         "candidate_id": candidate_process.candidate_id,
-                        "process_id": candidate_process.process_id,
+                        "process_id": candidate_process.workflow_id,
                         "process_name": candidate_process.process.name,
                         "final_result": candidate_process.final_result,
                         "overall_score": candidate_process.overall_score,

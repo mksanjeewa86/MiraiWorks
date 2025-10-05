@@ -25,7 +25,7 @@ def upgrade() -> None:
     op.create_foreign_key(
         "fk_interviews_workflow_id",
         "interviews",
-        "recruitment_processes",
+        "workflows",
         ["workflow_id"],
         ["id"],
         ondelete="SET NULL",
@@ -37,7 +37,7 @@ def upgrade() -> None:
     op.create_foreign_key(
         "fk_todos_workflow_id",
         "todos",
-        "recruitment_processes",
+        "workflows",
         ["workflow_id"],
         ["id"],
         ondelete="SET NULL",

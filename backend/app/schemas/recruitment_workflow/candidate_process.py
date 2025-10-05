@@ -62,7 +62,7 @@ class CandidateProcessInfo(CandidateProcessBase):
 
     id: int
     candidate_id: int
-    process_id: int
+    workflow_id: int
     current_node_id: Optional[int]
     status: CandidateProcessStatus
     assigned_recruiter_id: Optional[int]
@@ -117,7 +117,7 @@ class CandidateProcessDetails(CandidateProcessInfo):
 class CandidateTimeline(BaseModel):
     """Schema for candidate process timeline"""
 
-    candidate_process_id: int
+    candidate_workflow_id: int
     candidate_name: str
     process_name: str
     current_status: CandidateProcessStatus

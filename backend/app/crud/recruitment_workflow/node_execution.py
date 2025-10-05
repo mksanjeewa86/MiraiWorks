@@ -22,13 +22,13 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         return db_obj
 
     async def get_by_candidate_process_and_node(
-        self, db: AsyncSession, *, candidate_process_id: int, node_id: int
+        self, db: AsyncSession, *, candidate_workflow_id: int, node_id: int
     ) -> NodeExecution | None:
         """Get execution by candidate process and node"""
         result = await db.execute(
             select(NodeExecution).where(
                 and_(
-                    NodeExecution.candidate_process_id == candidate_process_id,
+                    NodeExecution.candidate_workflow_id == candidate_workflow_id,
                     NodeExecution.node_id == node_id,
                 )
             )
@@ -36,10 +36,10 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         return result.scalars().first()
 
     async def get_by_candidate_process_id(
-        self, db: AsyncSession, *, candidate_process_id: int, status: str | None = None
+        self, db: AsyncSession, *, candidate_workflow_id: int, status: str | None = None
     ) -> list[NodeExecution]:
         """Get all executions for a candidate process"""
-        conditions = [NodeExecution.candidate_process_id == candidate_process_id]
+        conditions = [NodeExecution.candidate_workflow_id == candidate_process_id]
 
         if status:
             conditions.append(NodeExecution.status == status)
@@ -313,8 +313,8 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         db: AsyncSession,
         *,
         node_id: int | None = None,
-        process_id: int | None = None,
-        candidate_process_id: int | None = None,
+        workflow_id: int | None = None,
+        candidate_workflow_id: int | None = None,
     ) -> dict[str, Any]:
         """Get execution statistics"""
         conditions = []
@@ -322,14 +322,14 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         if node_id:
             conditions.append(NodeExecution.node_id == node_id)
 
-        if process_id:
+        if workflow_id:
             conditions.append(
                 NodeExecution.candidate_process.has(process_id=process_id)
             )
 
-        if candidate_process_id:
+        if candidate_workflow_id:
             conditions.append(
-                NodeExecution.candidate_process_id == candidate_process_id
+                NodeExecution.candidate_workflow_id == candidate_process_id
             )
 
         # Count by status
@@ -403,12 +403,12 @@ class CRUDNodeExecution(CRUDBase[NodeExecution, dict, dict]):
         }
 
     async def get_workload_by_assignee(
-        self, db: AsyncSession, *, process_id: int | None = None
+        self, db: AsyncSession, *, workflow_id: int | None = None
     ) -> list[dict[str, Any]]:
         """Get workload distribution by assignee"""
         conditions = [NodeExecution.assigned_to.isnot(None)]
 
-        if process_id:
+        if workflow_id:
             conditions.append(
                 NodeExecution.candidate_process.has(process_id=process_id)
             )

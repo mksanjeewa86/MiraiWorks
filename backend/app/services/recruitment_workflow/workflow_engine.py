@@ -49,7 +49,7 @@ class WorkflowEngineService:
         return cloned_process
 
     async def activate_process(
-        self, db: AsyncSession, process_id: int, user_id: int
+        self, db: AsyncSession, workflow_id: int, user_id: int
     ) -> RecruitmentProcess:
         """Activate a draft process after validation"""
         process = await recruitment_process.get(db, id=process_id)
@@ -79,7 +79,7 @@ class WorkflowEngineService:
     async def assign_candidate(
         self,
         db: AsyncSession,
-        process_id: int,
+        workflow_id: int,
         candidate_id: int,
         recruiter_id: int | None = None,
         start_immediately: bool = False,
@@ -102,7 +102,7 @@ class WorkflowEngineService:
         # Create candidate process
         candidate_process_data = {
             "candidate_id": candidate_id,
-            "process_id": process_id,
+            "process_id": workflow_id,
             "assigned_recruiter_id": recruiter_id,
             "assigned_at": datetime.utcnow() if recruiter_id else None,
         }
@@ -118,7 +118,7 @@ class WorkflowEngineService:
         return candidate_proc
 
     async def start_candidate_process(
-        self, db: AsyncSession, candidate_process_id: int
+        self, db: AsyncSession, candidate_workflow_id: int
     ) -> CandidateProcess:
         """Start the first node for a candidate"""
         candidate_proc = await candidate_process.get(db, id=candidate_process_id)
@@ -152,7 +152,7 @@ class WorkflowEngineService:
     async def create_node_execution(
         self,
         db: AsyncSession,
-        candidate_process_id: int,
+        candidate_workflow_id: int,
         node_id: int,
         assigned_to: int | None = None,
     ) -> NodeExecution:
@@ -170,7 +170,7 @@ class WorkflowEngineService:
             )
 
         execution_data = {
-            "candidate_process_id": candidate_process_id,
+            "candidate_process_id": candidate_workflow_id,
             "node_id": node_id,
             "assigned_to": assigned_to,
             "due_date": due_date,
@@ -215,7 +215,7 @@ class WorkflowEngineService:
         # Advance to next node(s)
         await self.advance_to_next_node(
             db,
-            completed_execution.candidate_process_id,
+            completed_execution.candidate_workflow_id,
             completed_execution.node_id,
             result,
             execution_data,
@@ -226,7 +226,7 @@ class WorkflowEngineService:
     async def advance_to_next_node(
         self,
         db: AsyncSession,
-        candidate_process_id: int,
+        candidate_workflow_id: int,
         current_node_id: int,
         execution_result: str,
         execution_data: dict[str, Any] | None = None,
@@ -245,7 +245,7 @@ class WorkflowEngineService:
         if not next_nodes:
             # No next nodes - complete the process
             await self._complete_candidate_process(
-                db, candidate_process_id, execution_result
+                db, candidate_workflow_id, execution_result
             )
         else:
             # Update current node in candidate process
@@ -260,7 +260,7 @@ class WorkflowEngineService:
                 for next_node in next_nodes:
                     execution = await self.create_node_execution(
                         db,
-                        candidate_process_id=candidate_process_id,
+                        candidate_process_id=candidate_workflow_id,
                         node_id=next_node.id,
                     )
                     new_executions.append(execution)
@@ -268,7 +268,7 @@ class WorkflowEngineService:
         return new_executions
 
     async def _complete_candidate_process(
-        self, db: AsyncSession, candidate_process_id: int, final_result: str
+        self, db: AsyncSession, candidate_workflow_id: int, final_result: str
     ) -> CandidateProcess:
         """Complete a candidate process"""
         candidate_proc = await candidate_process.get_with_details(
@@ -378,12 +378,12 @@ class WorkflowEngineService:
         await node_execution.link_todo(db, execution=execution, todo_id=todo.id)
 
     async def validate_process(
-        self, db: AsyncSession, process_id: int
+        self, db: AsyncSession, workflow_id: int
     ) -> dict[str, Any]:
         """Validate a process before activation"""
         # Get process nodes
         nodes = await process_node.get_by_process_id(
-            db, process_id=process_id, include_inactive=False
+            db, process_id=workflow_id, include_inactive=False
         )
 
         issues = []
@@ -461,7 +461,7 @@ class WorkflowEngineService:
         return issues
 
     async def get_candidate_timeline(
-        self, db: AsyncSession, candidate_process_id: int
+        self, db: AsyncSession, candidate_workflow_id: int
     ) -> list[dict[str, Any]]:
         """Get detailed timeline for a candidate process"""
         return await candidate_process.get_timeline(
@@ -469,7 +469,7 @@ class WorkflowEngineService:
         )
 
     async def get_process_analytics(
-        self, db: AsyncSession, process_id: int
+        self, db: AsyncSession, workflow_id: int
     ) -> dict[str, Any]:
         """Get comprehensive analytics for a process"""
         # Basic statistics
@@ -505,7 +505,7 @@ class WorkflowEngineService:
     async def bulk_assign_candidates(
         self,
         db: AsyncSession,
-        process_id: int,
+        workflow_id: int,
         candidate_ids: list[int],
         assigned_recruiter_id: int | None = None,
         start_immediately: bool = False,
@@ -513,7 +513,7 @@ class WorkflowEngineService:
         """Bulk assign multiple candidates to a process"""
         assigned_processes = await candidate_process.bulk_assign_candidates(
             db,
-            process_id=process_id,
+            process_id=workflow_id,
             candidate_ids=candidate_ids,
             assigned_recruiter_id=assigned_recruiter_id,
         )
@@ -527,7 +527,7 @@ class WorkflowEngineService:
     async def clone_process(
         self,
         db: AsyncSession,
-        source_process_id: int,
+        source_workflow_id: int,
         new_name: str,
         created_by: int,
         clone_candidates: bool = False,

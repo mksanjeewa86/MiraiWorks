@@ -22,14 +22,14 @@ class CRUDCandidateProcess(CRUDBase[CandidateProcess, dict, dict]):
         return db_obj
 
     async def get_by_candidate_and_process(
-        self, db: AsyncSession, *, candidate_id: int, process_id: int
+        self, db: AsyncSession, *, candidate_id: int, workflow_id: int
     ) -> CandidateProcess | None:
         """Get candidate process by candidate and process IDs"""
         result = await db.execute(
             select(CandidateProcess).where(
                 and_(
                     CandidateProcess.candidate_id == candidate_id,
-                    CandidateProcess.process_id == process_id,
+                    CandidateProcess.workflow_id == workflow_id,
                 )
             )
         )
@@ -39,13 +39,13 @@ class CRUDCandidateProcess(CRUDBase[CandidateProcess, dict, dict]):
         self,
         db: AsyncSession,
         *,
-        process_id: int,
+        workflow_id: int,
         status: str | None = None,
         skip: int = 0,
         limit: int = 100,
     ) -> list[CandidateProcess]:
         """Get all candidate processes for a recruitment process"""
-        conditions = [CandidateProcess.process_id == process_id]
+        conditions = [CandidateProcess.workflow_id == process_id]
 
         if status:
             conditions.append(CandidateProcess.status == status)
@@ -244,12 +244,12 @@ class CRUDCandidateProcess(CRUDBase[CandidateProcess, dict, dict]):
         self,
         db: AsyncSession,
         *,
-        process_id: int,
+        workflow_id: int,
         candidate_ids: list[int],
         assigned_recruiter_id: int | None = None,
     ) -> list[CandidateProcess]:
         """Bulk assign candidates to a process"""
-        candidate_processes = []
+        candidate_workflows = []
 
         for candidate_id in candidate_ids:
             # Check if already exists
@@ -260,24 +260,24 @@ class CRUDCandidateProcess(CRUDBase[CandidateProcess, dict, dict]):
             if not existing:
                 candidate_process_data = {
                     "candidate_id": candidate_id,
-                    "process_id": process_id,
+                    "process_id": workflow_id,
                     "assigned_recruiter_id": assigned_recruiter_id,
                     "assigned_at": datetime.utcnow() if assigned_recruiter_id else None,
                 }
 
                 candidate_process = CandidateProcess(**candidate_process_data)
                 db.add(candidate_process)
-                candidate_processes.append(candidate_process)
+                candidate_workflows.append(candidate_process)
 
-        if candidate_processes:
+        if candidate_workflows:
             await db.commit()
-            for cp in candidate_processes:
+            for cp in candidate_workflows:
                 await db.refresh(cp)
 
-        return candidate_processes
+        return candidate_workflows
 
     async def get_timeline(
-        self, db: AsyncSession, *, candidate_process_id: int
+        self, db: AsyncSession, *, candidate_workflow_id: int
     ) -> list[dict[str, Any]]:
         """Get timeline for a candidate process"""
         candidate_process = await self.get_with_details(db, id=candidate_process_id)
@@ -351,7 +351,7 @@ class CRUDCandidateProcess(CRUDBase[CandidateProcess, dict, dict]):
         return sorted(timeline, key=lambda x: x["timestamp"])
 
     async def get_statistics_by_process(
-        self, db: AsyncSession, *, process_id: int
+        self, db: AsyncSession, *, workflow_id: int
     ) -> dict[str, Any]:
         """Get statistics for candidate processes in a specific recruitment process"""
         # Count candidates by status
@@ -359,7 +359,7 @@ class CRUDCandidateProcess(CRUDBase[CandidateProcess, dict, dict]):
             select(
                 CandidateProcess.status, func.count(CandidateProcess.id).label("count")
             )
-            .where(CandidateProcess.process_id == process_id)
+            .where(CandidateProcess.workflow_id == process_id)
             .group_by(CandidateProcess.status)
         )
 
@@ -386,7 +386,7 @@ class CRUDCandidateProcess(CRUDBase[CandidateProcess, dict, dict]):
                 )
             ).where(
                 and_(
-                    CandidateProcess.process_id == process_id,
+                    CandidateProcess.workflow_id == workflow_id,
                     CandidateProcess.status == "completed",
                     CandidateProcess.started_at.isnot(None),
                     CandidateProcess.completed_at.isnot(None),

@@ -62,7 +62,7 @@ class ProcessViewerInfo(ProcessViewerBase):
     """Schema for process viewer information"""
 
     id: int
-    process_id: int
+    workflow_id: int
     user_id: int
     added_by: int
     added_at: datetime

@@ -74,7 +74,7 @@ class TestRecruitmentProcessEndpoints:
             assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_list_recruitment_processes_success(self):
+    async def test_list_workflows_success(self):
         """Test listing recruitment processes"""
         async with AsyncClient(app=app, base_url="http://test") as client:
             response = await client.get(
@@ -111,7 +111,7 @@ class TestRecruitmentProcessEndpoints:
     async def test_get_recruitment_process_success(self):
         """Test getting a specific recruitment process"""
         async with AsyncClient(app=app, base_url="http://test") as client:
-            process_id = 1
+            workflow_id = 1
             response = await client.get(
                 f"/api/recruitment-processes/{process_id}",
                 headers={"Authorization": "Bearer employer_token"},
@@ -122,7 +122,7 @@ class TestRecruitmentProcessEndpoints:
             assert data["id"] == process_id
             assert "name" in data
             assert "nodes" in data
-            assert "candidate_processes" in data
+            assert "candidate_workflows" in data
             assert "viewers" in data
 
     @pytest.mark.asyncio
@@ -141,7 +141,7 @@ class TestRecruitmentProcessEndpoints:
     async def test_get_recruitment_process_access_denied(self):
         """Test access control for recruitment process"""
         async with AsyncClient(app=app, base_url="http://test") as client:
-            process_id = 1
+            workflow_id = 1
 
             # Recruiter without access
             response = await client.get(
@@ -154,7 +154,7 @@ class TestRecruitmentProcessEndpoints:
     async def test_update_recruitment_process_success(self):
         """Test updating a recruitment process"""
         async with AsyncClient(app=app, base_url="http://test") as client:
-            process_id = 1
+            workflow_id = 1
             update_data = {
                 "name": "Updated Process Name",
                 "description": "Updated description",
@@ -176,7 +176,7 @@ class TestRecruitmentProcessEndpoints:
     async def test_update_active_process_requires_force(self):
         """Test that updating active processes requires force flag"""
         async with AsyncClient(app=app, base_url="http://test") as client:
-            process_id = 1  # Assume this is an active process
+            workflow_id = 1  # Assume this is an active process
             update_data = {"name": "Updated Name"}
 
             response = await client.put(
@@ -191,7 +191,7 @@ class TestRecruitmentProcessEndpoints:
     async def test_activate_recruitment_process_success(self):
         """Test activating a recruitment process"""
         async with AsyncClient(app=app, base_url="http://test") as client:
-            process_id = 1  # Assume this is a valid draft process
+            workflow_id = 1  # Assume this is a valid draft process
             activation_data = {"force_activate": False}
 
             response = await client.post(
@@ -209,7 +209,7 @@ class TestRecruitmentProcessEndpoints:
     async def test_activate_recruitment_process_validation_failed(self):
         """Test activating process with validation issues"""
         async with AsyncClient(app=app, base_url="http://test") as client:
-            process_id = 1  # Process with validation issues
+            workflow_id = 1  # Process with validation issues
             activation_data = {"force_activate": False}
 
             response = await client.post(
@@ -225,7 +225,7 @@ class TestRecruitmentProcessEndpoints:
     async def test_force_activate_recruitment_process(self):
         """Test force activating process despite validation issues"""
         async with AsyncClient(app=app, base_url="http://test") as client:
-            process_id = 1
+            workflow_id = 1
             activation_data = {"force_activate": True}
 
             response = await client.post(
@@ -242,7 +242,7 @@ class TestRecruitmentProcessEndpoints:
     async def test_archive_recruitment_process_success(self):
         """Test archiving a recruitment process"""
         async with AsyncClient(app=app, base_url="http://test") as client:
-            process_id = 1
+            workflow_id = 1
             archive_data = {"reason": "No longer needed"}
 
             response = await client.post(
@@ -260,7 +260,7 @@ class TestRecruitmentProcessEndpoints:
     async def test_clone_recruitment_process_success(self):
         """Test cloning a recruitment process"""
         async with AsyncClient(app=app, base_url="http://test") as client:
-            process_id = 1
+            workflow_id = 1
             clone_data = {
                 "new_name": "Cloned Process",
                 "clone_candidates": False,
@@ -283,7 +283,7 @@ class TestRecruitmentProcessEndpoints:
     async def test_delete_recruitment_process_success(self):
         """Test deleting a draft recruitment process"""
         async with AsyncClient(app=app, base_url="http://test") as client:
-            process_id = 1  # Assume this is a draft process
+            workflow_id = 1  # Assume this is a draft process
 
             response = await client.delete(
                 f"/api/recruitment-processes/{process_id}",
@@ -296,7 +296,7 @@ class TestRecruitmentProcessEndpoints:
     async def test_delete_active_process_fails(self):
         """Test that active processes cannot be deleted"""
         async with AsyncClient(app=app, base_url="http://test") as client:
-            process_id = 1  # Assume this is an active process
+            workflow_id = 1  # Assume this is an active process
 
             response = await client.delete(
                 f"/api/recruitment-processes/{process_id}",
@@ -310,7 +310,7 @@ class TestRecruitmentProcessEndpoints:
     async def test_validate_recruitment_process(self):
         """Test validating a recruitment process"""
         async with AsyncClient(app=app, base_url="http://test") as client:
-            process_id = 1
+            workflow_id = 1
 
             response = await client.get(
                 f"/api/recruitment-processes/{process_id}/validate",
@@ -330,7 +330,7 @@ class TestRecruitmentProcessEndpoints:
     async def test_get_process_analytics(self):
         """Test getting process analytics"""
         async with AsyncClient(app=app, base_url="http://test") as client:
-            process_id = 1
+            workflow_id = 1
 
             response = await client.get(
                 f"/api/recruitment-processes/{process_id}/analytics",
@@ -486,7 +486,7 @@ class TestCandidateProcessEndpoints:
     async def test_assign_candidate_to_process_success(self):
         """Test successfully assigning candidate to process"""
         async with AsyncClient(app=app, base_url="http://test") as client:
-            process_id = 1
+            workflow_id = 1
             assignment_data = {
                 "candidate_id": 100,
                 "assigned_recruiter_id": 50,
@@ -513,7 +513,7 @@ class TestCandidateProcessEndpoints:
     async def test_assign_candidate_with_immediate_start(self):
         """Test assigning candidate with immediate start"""
         async with AsyncClient(app=app, base_url="http://test") as client:
-            process_id = 1
+            workflow_id = 1
             assignment_data = {
                 "candidate_id": 101,
                 "assigned_recruiter_id": 50,
@@ -535,7 +535,7 @@ class TestCandidateProcessEndpoints:
     async def test_assign_duplicate_candidate_fails(self):
         """Test that assigning duplicate candidate fails"""
         async with AsyncClient(app=app, base_url="http://test") as client:
-            process_id = 1
+            workflow_id = 1
             assignment_data = {
                 "candidate_id": 100,  # Same candidate as previous test
                 "assigned_recruiter_id": 50,
@@ -554,7 +554,7 @@ class TestCandidateProcessEndpoints:
     async def test_bulk_assign_candidates_success(self):
         """Test bulk assigning candidates to process"""
         async with AsyncClient(app=app, base_url="http://test") as client:
-            process_id = 1
+            workflow_id = 1
             bulk_data = {
                 "candidate_ids": [200, 201, 202],
                 "assigned_recruiter_id": 50,
@@ -585,7 +585,7 @@ class TestCandidateProcessEndpoints:
     async def test_bulk_assign_invalid_data(self):
         """Test bulk assign with invalid data"""
         async with AsyncClient(app=app, base_url="http://test") as client:
-            process_id = 1
+            workflow_id = 1
 
             # Empty candidate list
             response = await client.post(
@@ -607,7 +607,7 @@ class TestCandidateProcessEndpoints:
     async def test_list_process_candidates(self):
         """Test listing candidates in a process"""
         async with AsyncClient(app=app, base_url="http://test") as client:
-            process_id = 1
+            workflow_id = 1
 
             response = await client.get(
                 f"/api/recruitment-processes/{process_id}/candidates",
@@ -636,7 +636,7 @@ class TestCandidateProcessEndpoints:
     async def test_get_candidate_process_success(self):
         """Test getting candidate process details"""
         async with AsyncClient(app=app, base_url="http://test") as client:
-            candidate_process_id = 1
+            candidate_workflow_id = 1
 
             response = await client.get(
                 f"/api/recruitment-processes/candidate-processes/{candidate_process_id}",
@@ -656,7 +656,7 @@ class TestCandidateProcessEndpoints:
     async def test_candidate_can_view_own_process(self):
         """Test that candidates can view their own processes"""
         async with AsyncClient(app=app, base_url="http://test") as client:
-            candidate_process_id = 1
+            candidate_workflow_id = 1
 
             response = await client.get(
                 f"/api/recruitment-processes/candidate-processes/{candidate_process_id}",
@@ -669,7 +669,7 @@ class TestCandidateProcessEndpoints:
     async def test_candidate_cannot_view_other_process(self):
         """Test that candidates cannot view other candidate's processes"""
         async with AsyncClient(app=app, base_url="http://test") as client:
-            candidate_process_id = 1  # Belongs to different candidate
+            candidate_workflow_id = 1  # Belongs to different candidate
 
             response = await client.get(
                 f"/api/recruitment-processes/candidate-processes/{candidate_process_id}",
@@ -682,7 +682,7 @@ class TestCandidateProcessEndpoints:
     async def test_start_candidate_process_success(self):
         """Test starting a candidate process"""
         async with AsyncClient(app=app, base_url="http://test") as client:
-            candidate_process_id = 1
+            candidate_workflow_id = 1
             start_data = {
                 "send_notification": True,
                 "custom_message": "Welcome to our recruitment process!",
@@ -704,7 +704,7 @@ class TestCandidateProcessEndpoints:
     async def test_start_already_started_process_fails(self):
         """Test starting already started process fails"""
         async with AsyncClient(app=app, base_url="http://test") as client:
-            candidate_process_id = 1  # Already started
+            candidate_workflow_id = 1  # Already started
             start_data = {"send_notification": True}
 
             response = await client.post(
@@ -720,7 +720,7 @@ class TestCandidateProcessEndpoints:
     async def test_update_candidate_process_status_complete(self):
         """Test completing a candidate process"""
         async with AsyncClient(app=app, base_url="http://test") as client:
-            candidate_process_id = 1
+            candidate_workflow_id = 1
             status_data = {
                 "status": "completed",
                 "final_result": "hired",
@@ -744,7 +744,7 @@ class TestCandidateProcessEndpoints:
     async def test_update_candidate_process_status_fail(self):
         """Test failing a candidate process"""
         async with AsyncClient(app=app, base_url="http://test") as client:
-            candidate_process_id = 2
+            candidate_workflow_id = 2
             status_data = {
                 "status": "failed",
                 "reason": "Did not meet technical requirements",
@@ -765,7 +765,7 @@ class TestCandidateProcessEndpoints:
     async def test_complete_without_final_result_fails(self):
         """Test that completing without final_result fails"""
         async with AsyncClient(app=app, base_url="http://test") as client:
-            candidate_process_id = 1
+            candidate_workflow_id = 1
             status_data = {
                 "status": "completed"
                 # Missing final_result
@@ -784,7 +784,7 @@ class TestCandidateProcessEndpoints:
     async def test_get_candidate_timeline(self):
         """Test getting candidate process timeline"""
         async with AsyncClient(app=app, base_url="http://test") as client:
-            candidate_process_id = 1
+            candidate_workflow_id = 1
 
             response = await client.get(
                 f"/api/recruitment-processes/candidate-processes/{candidate_process_id}/timeline",
@@ -801,7 +801,7 @@ class TestCandidateProcessEndpoints:
             assert isinstance(data["timeline_items"], list)
 
     @pytest.mark.asyncio
-    async def test_get_my_candidate_processes_as_candidate(self):
+    async def test_get_my_candidate_workflows_as_candidate(self):
         """Test getting own processes as candidate"""
         async with AsyncClient(app=app, base_url="http://test") as client:
             response = await client.get(
@@ -820,7 +820,7 @@ class TestCandidateProcessEndpoints:
                 assert "status" in process
 
     @pytest.mark.asyncio
-    async def test_get_my_candidate_processes_as_recruiter(self):
+    async def test_get_my_candidate_workflows_as_recruiter(self):
         """Test getting assigned processes as recruiter"""
         async with AsyncClient(app=app, base_url="http://test") as client:
             response = await client.get(

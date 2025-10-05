@@ -125,7 +125,7 @@ class CRUDRecruitmentProcess(CRUDBase[RecruitmentProcess, dict, dict]):
             select(RecruitmentProcess)
             .options(
                 selectinload(RecruitmentProcess.nodes),
-                selectinload(RecruitmentProcess.candidate_processes),
+                selectinload(RecruitmentProcess.candidate_workflows),
                 selectinload(RecruitmentProcess.viewers),
             )
             .where(RecruitmentProcess.id == id, RecruitmentProcess.is_deleted == False)

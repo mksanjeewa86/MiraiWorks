@@ -17,9 +17,9 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # Create recruitment_processes table
+    # Create workflows table
     op.create_table(
-        "recruitment_processes",
+        "workflows",
         sa.Column("id", sa.Integer(), primary_key=True, nullable=False),
         sa.Column("name", sa.String(255), nullable=False),
         sa.Column("description", sa.Text(), nullable=True),
@@ -80,7 +80,7 @@ def upgrade() -> None:
         sa.Column(
             "process_id",
             sa.Integer(),
-            sa.ForeignKey("recruitment_processes.id", ondelete="CASCADE"),
+            sa.ForeignKey("workflows.id", ondelete="CASCADE"),
             nullable=False,
             index=True,
         ),
@@ -137,21 +137,21 @@ def upgrade() -> None:
         sa.Column(
             "process_id",
             sa.Integer(),
-            sa.ForeignKey("recruitment_processes.id", ondelete="CASCADE"),
+            sa.ForeignKey("workflows.id", ondelete="CASCADE"),
             nullable=False,
             index=True,
         ),
         sa.Column(
             "source_node_id",
             sa.Integer(),
-            sa.ForeignKey("process_nodes.id", ondelete="CASCADE"),
+            sa.ForeignKey("workflow_nodes.id", ondelete="CASCADE"),
             nullable=False,
             index=True,
         ),
         sa.Column(
             "target_node_id",
             sa.Integer(),
-            sa.ForeignKey("process_nodes.id", ondelete="CASCADE"),
+            sa.ForeignKey("workflow_nodes.id", ondelete="CASCADE"),
             nullable=False,
             index=True,
         ),
@@ -174,9 +174,9 @@ def upgrade() -> None:
         ),
     )
 
-    # Create candidate_processes table
+    # Create candidate_workflows table
     op.create_table(
-        "candidate_processes",
+        "candidate_workflows",
         sa.Column("id", sa.Integer(), primary_key=True, nullable=False),
         sa.Column(
             "candidate_id",
@@ -188,14 +188,14 @@ def upgrade() -> None:
         sa.Column(
             "process_id",
             sa.Integer(),
-            sa.ForeignKey("recruitment_processes.id", ondelete="CASCADE"),
+            sa.ForeignKey("workflows.id", ondelete="CASCADE"),
             nullable=False,
             index=True,
         ),
         sa.Column(
             "current_node_id",
             sa.Integer(),
-            sa.ForeignKey("process_nodes.id", ondelete="SET NULL"),
+            sa.ForeignKey("workflow_nodes.id", ondelete="SET NULL"),
             nullable=True,
             index=True,
         ),
@@ -241,14 +241,14 @@ def upgrade() -> None:
         sa.Column(
             "candidate_process_id",
             sa.Integer(),
-            sa.ForeignKey("candidate_processes.id", ondelete="CASCADE"),
+            sa.ForeignKey("candidate_workflows.id", ondelete="CASCADE"),
             nullable=False,
             index=True,
         ),
         sa.Column(
             "node_id",
             sa.Integer(),
-            sa.ForeignKey("process_nodes.id", ondelete="CASCADE"),
+            sa.ForeignKey("workflow_nodes.id", ondelete="CASCADE"),
             nullable=False,
             index=True,
         ),
@@ -322,7 +322,7 @@ def upgrade() -> None:
         sa.Column(
             "process_id",
             sa.Integer(),
-            sa.ForeignKey("recruitment_processes.id", ondelete="CASCADE"),
+            sa.ForeignKey("workflows.id", ondelete="CASCADE"),
             nullable=False,
             index=True,
         ),
@@ -354,8 +354,8 @@ def upgrade() -> None:
 
     # Create indexes for better performance
     op.create_index(
-        "ix_recruitment_processes_status_company",
-        "recruitment_processes",
+        "ix_workflows_status_company",
+        "workflows",
         ["status", "employer_company_id"],
     )
     op.create_index(
@@ -364,8 +364,8 @@ def upgrade() -> None:
         ["process_id", "sequence_order"],
     )
     op.create_index(
-        "ix_candidate_processes_status_recruiter",
-        "candidate_processes",
+        "ix_candidate_workflows_status_recruiter",
+        "candidate_workflows",
         ["status", "assigned_recruiter_id"],
     )
     op.create_index(
@@ -380,14 +380,14 @@ def downgrade() -> None:
     # Drop indexes
     op.drop_index("ix_node_executions_due_date")
     op.drop_index("ix_node_executions_status_assigned")
-    op.drop_index("ix_candidate_processes_status_recruiter")
+    op.drop_index("ix_candidate_workflows_status_recruiter")
     op.drop_index("ix_process_nodes_process_sequence")
-    op.drop_index("ix_recruitment_processes_status_company")
+    op.drop_index("ix_workflows_status_company")
 
     # Drop tables in reverse order (to handle foreign key constraints)
     op.drop_table("process_viewers")
     op.drop_table("node_executions")
-    op.drop_table("candidate_processes")
+    op.drop_table("candidate_workflows")
     op.drop_table("node_connections")
     op.drop_table("process_nodes")
-    op.drop_table("recruitment_processes")
+    op.drop_table("workflows")

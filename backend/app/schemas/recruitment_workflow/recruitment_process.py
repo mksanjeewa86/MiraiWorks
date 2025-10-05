@@ -90,7 +90,7 @@ class RecruitmentProcessDetails(RecruitmentProcessInfo):
     """Detailed schema for recruitment process with relationships"""
 
     nodes: list[ProcessNodeInfo] = Field(default_factory=list)
-    candidate_processes: list[CandidateProcessInfo] = Field(default_factory=list)
+    candidate_workflows: list[CandidateProcessInfo] = Field(default_factory=list)
     viewers: list[ProcessViewerInfo] = Field(default_factory=list)
 
     # Statistics
@@ -186,7 +186,7 @@ class ProcessStatistics(BaseModel):
 class ProcessAnalytics(BaseModel):
     """Schema for detailed process analytics"""
 
-    process_id: int
+    workflow_id: int
     process_name: str
     total_candidates: int
     completed_candidates: int

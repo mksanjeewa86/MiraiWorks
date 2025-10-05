@@ -21,7 +21,7 @@ class TestRecruitmentWorkflowScenarios:
         )
         assert response.status_code == 201
         process = response.json()
-        process_id = process["id"]
+        workflow_id = process["id"]
 
         # Step 2: Add nodes to the process
         nodes = [
@@ -90,7 +90,7 @@ class TestRecruitmentWorkflowScenarios:
         # Step 4: Add a candidate to the process
         candidate_data = {
             "candidate_id": 100,
-            "recruitment_process_id": process_id,
+            "recruitment_process_id": workflow_id,
             "position_id": 1,
             "initial_stage": "hr_screening",
         }
@@ -104,7 +104,7 @@ class TestRecruitmentWorkflowScenarios:
         candidate_process = response.json()
 
         # Step 5: Progress candidate through workflow
-        candidate_process_id = candidate_process["id"]
+        candidate_workflow_id = candidate_process["id"]
 
         # Complete HR screening
         completion_data = {

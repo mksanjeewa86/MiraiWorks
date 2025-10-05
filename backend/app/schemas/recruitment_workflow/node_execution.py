@@ -18,7 +18,7 @@ class NodeExecutionBase(BaseModel):
 class NodeExecutionCreate(NodeExecutionBase):
     """Schema for creating a node execution"""
 
-    candidate_process_id: int = Field(..., description="Candidate process ID")
+    candidate_workflow_id: int = Field(..., description="Candidate process ID")
     node_id: int = Field(..., description="Process node ID")
     assigned_to: Optional[int] = Field(
         None, description="User ID to assign this execution to"
@@ -99,7 +99,7 @@ class NodeExecutionInfo(NodeExecutionBase):
     """Schema for node execution information"""
 
     id: int
-    candidate_process_id: int
+    candidate_workflow_id: int
     node_id: int
     status: ExecutionStatus
     result: Optional[ExecutionResult]

@@ -148,7 +148,7 @@ class TestCandidateProcess:
         candidate_process = CandidateProcess(candidate_id=100, process_id=1)
 
         assert candidate_process.candidate_id == 100
-        assert candidate_process.process_id == 1
+        assert candidate_process.workflow_id == 1
         assert candidate_process.status == "not_started"
         assert not candidate_process.is_active
         assert not candidate_process.is_completed
@@ -293,7 +293,7 @@ class TestNodeExecution:
         """Test creating a node execution"""
         execution = NodeExecution(candidate_process_id=1, node_id=10)
 
-        assert execution.candidate_process_id == 1
+        assert execution.candidate_workflow_id == 1
         assert execution.node_id == 10
         assert execution.status == "pending"
         assert execution.is_pending
@@ -472,7 +472,7 @@ class TestProcessViewer:
         """Test creating a process viewer"""
         viewer = ProcessViewer(process_id=1, user_id=50, role="member", added_by=10)
 
-        assert viewer.process_id == 1
+        assert viewer.workflow_id == 1
         assert viewer.user_id == 50
         assert viewer.role == "member"
         assert viewer.is_recruiter
@@ -557,7 +557,7 @@ class TestNodeConnection:
             process_id=1, source_node_id=10, target_node_id=20, condition_type="success"
         )
 
-        assert connection.process_id == 1
+        assert connection.workflow_id == 1
         assert connection.source_node_id == 10
         assert connection.target_node_id == 20
         assert connection.condition_type == "success"
