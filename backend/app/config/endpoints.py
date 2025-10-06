@@ -66,8 +66,8 @@ class UserRoutes:
 
     BASE = "/users"
     BY_ID = "/users/{user_id}"
-    PROFILE = "/user/profile"
-    SETTINGS = "/user/settings"
+    PROFILE = "/profile"
+    SETTINGS = "/settings"
 
     # Admin user endpoints (used with /api/admin prefix)
     ADMIN_USERS = "/users"
@@ -387,9 +387,9 @@ class ResumeRoutes:
 class DashboardRoutes:
     """Dashboard and statistics endpoints."""
 
-    BASE = "/dashboard"
-    STATS = "/dashboard/stats"
-    ACTIVITY = "/dashboard/activity"
+    BASE = ""
+    STATS = "/stats"
+    ACTIVITY = "/activity"
 
 
 class FileRoutes:
@@ -664,6 +664,7 @@ class SubscriptionRoutes:
     MY_PLAN_CHANGE_REQUESTS = "/my-plan-change-requests"
     ALL_PLAN_CHANGE_REQUESTS = "/plan-change-requests"
     REVIEW_PLAN_CHANGE = "/plan-change-requests/{request_id}/review"
+    CANCEL_PLAN_CHANGE = "/plan-change-requests/{request_id}/cancel"
 
 
 class FeatureRoutes:

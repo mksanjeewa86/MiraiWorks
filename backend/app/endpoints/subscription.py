@@ -102,8 +102,11 @@ async def get_my_subscription(
         **subscription.plan.__dict__, features=features
     )
 
+    # Build subscription response, excluding 'plan' from dict to avoid duplicate
+    subscription_dict = {k: v for k, v in subscription.__dict__.items() if k != 'plan' and not k.startswith('_')}
+
     return CompanySubscriptionWithFeatures(
-        **subscription.__dict__, plan=plan_with_features
+        **subscription_dict, plan=plan_with_features
     )
 
 
@@ -310,9 +313,27 @@ async def get_all_plan_change_requests(
     # Build response with details
     results = []
     for req in requests:
+        # Create a dict from the model, excluding relationship fields
+        req_dict = {
+            'id': req.id,
+            'company_id': req.company_id,
+            'subscription_id': req.subscription_id,
+            'current_plan_id': req.current_plan_id,
+            'requested_plan_id': req.requested_plan_id,
+            'request_type': req.request_type,
+            'requested_by': req.requested_by,
+            'request_message': req.request_message,
+            'status': req.status,
+            'reviewed_by': req.reviewed_by,
+            'review_message': req.review_message,
+            'reviewed_at': req.reviewed_at,
+            'created_at': req.created_at,
+            'updated_at': req.updated_at,
+        }
+
         results.append(
             PlanChangeRequestWithDetails(
-                **req.__dict__,
+                **req_dict,
                 current_plan=req.current_plan,
                 requested_plan=req.requested_plan,
                 company_name=req.company.name if req.company else None,
@@ -348,8 +369,26 @@ async def review_plan_change_request(
         review_message=review_data.review_message,
     )
 
+    # Create a dict from the model, excluding relationship fields
+    req_dict = {
+        'id': reviewed_request.id,
+        'company_id': reviewed_request.company_id,
+        'subscription_id': reviewed_request.subscription_id,
+        'current_plan_id': reviewed_request.current_plan_id,
+        'requested_plan_id': reviewed_request.requested_plan_id,
+        'request_type': reviewed_request.request_type,
+        'requested_by': reviewed_request.requested_by,
+        'request_message': reviewed_request.request_message,
+        'status': reviewed_request.status,
+        'reviewed_by': reviewed_request.reviewed_by,
+        'review_message': reviewed_request.review_message,
+        'reviewed_at': reviewed_request.reviewed_at,
+        'created_at': reviewed_request.created_at,
+        'updated_at': reviewed_request.updated_at,
+    }
+
     return PlanChangeRequestWithDetails(
-        **reviewed_request.__dict__,
+        **req_dict,
         current_plan=reviewed_request.current_plan,
         requested_plan=reviewed_request.requested_plan,
         company_name=(
@@ -362,5 +401,62 @@ async def review_plan_change_request(
         ),
         reviewer_name=(
             reviewed_request.reviewer.full_name if reviewed_request.reviewer else None
+        ),
+    )
+
+
+@router.post(
+    API_ROUTES.SUBSCRIPTIONS.CANCEL_PLAN_CHANGE,
+    response_model=PlanChangeRequestWithDetails,
+)
+async def cancel_plan_change_request(
+    request_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """
+    Cancel your own pending plan change request.
+    Company Admin can cancel their own requests only.
+    """
+    require_roles(current_user, [UserRole.ADMIN])
+
+    cancelled_request = await subscription_service.cancel_plan_change_request(
+        db,
+        request_id=request_id,
+        user_id=current_user.id,
+    )
+
+    # Create a dict from the model, excluding relationship fields
+    req_dict = {
+        'id': cancelled_request.id,
+        'company_id': cancelled_request.company_id,
+        'subscription_id': cancelled_request.subscription_id,
+        'current_plan_id': cancelled_request.current_plan_id,
+        'requested_plan_id': cancelled_request.requested_plan_id,
+        'request_type': cancelled_request.request_type,
+        'requested_by': cancelled_request.requested_by,
+        'request_message': cancelled_request.request_message,
+        'status': cancelled_request.status,
+        'reviewed_by': cancelled_request.reviewed_by,
+        'review_message': cancelled_request.review_message,
+        'reviewed_at': cancelled_request.reviewed_at,
+        'created_at': cancelled_request.created_at,
+        'updated_at': cancelled_request.updated_at,
+    }
+
+    return PlanChangeRequestWithDetails(
+        **req_dict,
+        current_plan=cancelled_request.current_plan,
+        requested_plan=cancelled_request.requested_plan,
+        company_name=(
+            cancelled_request.company.name if cancelled_request.company else None
+        ),
+        requester_name=(
+            cancelled_request.requester.full_name
+            if cancelled_request.requester
+            else None
+        ),
+        reviewer_name=(
+            cancelled_request.reviewer.full_name if cancelled_request.reviewer else None
         ),
     )

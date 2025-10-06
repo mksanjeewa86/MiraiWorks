@@ -247,5 +247,47 @@ class SubscriptionService:
             db, request_id=request_id
         )
 
+    async def cancel_plan_change_request(
+        self,
+        db: AsyncSession,
+        *,
+        request_id: int,
+        user_id: int
+    ):
+        """
+        Cancel a pending plan change request.
+        Only the requester can cancel their own request, and only if it's pending.
+        """
+        # Get the request
+        request = await plan_change_request_crud.get_with_details(
+            db, request_id=request_id
+        )
+
+        if not request:
+            raise HTTPException(status_code=404, detail="Request not found")
+
+        # Only pending requests can be cancelled
+        if request.status != PlanChangeRequestStatus.PENDING:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cannot cancel request with status: {request.status}"
+            )
+
+        # Only the requester can cancel their own request
+        if request.requested_by != user_id:
+            raise HTTPException(
+                status_code=403,
+                detail="You can only cancel your own requests"
+            )
+
+        # Update request status to cancelled
+        await plan_change_request_crud.cancel_request(
+            db, request_id=request_id
+        )
+
+        return await plan_change_request_crud.get_with_details(
+            db, request_id=request_id
+        )
+
 
 subscription_service = SubscriptionService()

@@ -894,6 +894,86 @@ export function useUsers() {  // Move to hooks/useUsers.ts!
 }
 ```
 
+#### 🔤 **IMPORTANT: API Config Alphabetical Ordering Rules**
+
+**File**: `src/api/config.ts`
+
+**MANDATORY RULES FOR `API_ENDPOINTS` OBJECT:**
+
+1. **Top-level keys MUST be alphabetically ordered** (A-Z)
+   - Example: `ADMIN`, `ASSIGNMENTS`, `AUTH`, `CALENDAR`, etc.
+
+2. **All nested keys MUST also be alphabetically ordered**
+   - Within `AUTH`: `ACTIVATE`, `FORGOT_PASSWORD`, `LOGIN`, `LOGOUT`, etc.
+   - Within nested objects like `CALENDAR.ACCOUNTS`: `BASE`, `BY_ID`, `SYNC`
+
+3. **Benefits of alphabetical ordering:**
+   - ✅ Quick navigation and endpoint discovery
+   - ✅ Prevents duplicate definitions
+   - ✅ Easier code reviews and diffs
+   - ✅ Consistent codebase structure
+
+#### 📝 **Correct Example**:
+```typescript
+// ✅ GOOD - api/config.ts
+export const API_ENDPOINTS = {
+  // Keys are alphabetically ordered
+  ADMIN: {
+    USER_BY_ID: (id: string | number) => `/api/admin/users/${id}`,
+    USERS: '/api/admin/users',
+  },
+
+  AUTH: {
+    ACTIVATE: '/api/auth/activate',
+    FORGOT_PASSWORD: '/api/auth/forgot-password',
+    LOGIN: '/api/auth/login',
+    LOGOUT: '/api/auth/logout',
+    ME: '/api/auth/me',
+  },
+
+  CALENDAR: {
+    ACCOUNTS: {
+      BASE: '/api/calendar/accounts',
+      BY_ID: (id: number) => `/api/calendar/accounts/${id}`,
+      SYNC: (id: number) => `/api/calendar/accounts/${id}/sync`,
+    },
+    BASE: '/api/calendar',
+    EVENTS: '/api/calendar/events',
+  },
+} as const;
+```
+
+#### ❌ **Incorrect Example**:
+```typescript
+// ❌ BAD - Not alphabetically ordered
+export const API_ENDPOINTS = {
+  AUTH: { ... },        // Should come after ADMIN
+  CALENDAR: { ... },
+  ADMIN: { ... },       // Wrong position!
+
+  AUTH: {
+    LOGIN: '/api/auth/login',
+    ME: '/api/auth/me',
+    ACTIVATE: '/api/auth/activate',  // Wrong! Should come before LOGIN
+    LOGOUT: '/api/auth/logout',
+  },
+} as const;
+```
+
+#### ⚠️ **When Adding New Endpoints:**
+1. Find the correct alphabetical position
+2. Insert the new key at that position
+3. If adding to nested object, maintain alphabetical order there too
+4. Keep section comments for clarity
+
+#### 🔍 **Quick Validation Check:**
+```bash
+# Check if keys are ordered (manual review)
+# Open frontend/src/api/config.ts and verify:
+# - Top-level keys: A-Z order
+# - Each nested object: keys in A-Z order
+```
+
 ---
 
 ### 🟨 **3. HOOKS (`src/hooks/`)**

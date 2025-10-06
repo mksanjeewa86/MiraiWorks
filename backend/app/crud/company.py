@@ -51,7 +51,6 @@ async def get_companies(
     search: str | None = None,
     company_type: CompanyType | None = None,
     is_active: bool | None = None,
-    is_demo: bool | None = None,
     include_deleted: bool = False,
 ):
     """Get companies with filtering, pagination and search."""
@@ -78,8 +77,6 @@ async def get_companies(
         # Convert boolean to string since is_active is stored as String(1) in database
         active_value = "1" if is_active else "0"
         conditions.append(Company.is_active == active_value)
-    if is_demo is not None:
-        conditions.append(Company.is_demo == is_demo)
 
     # Build query
     query = select(Company)

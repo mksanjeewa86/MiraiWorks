@@ -189,3 +189,4 @@ class PlanChangeRequestStatus(str, Enum):
     PENDING = "pending"
     APPROVED = "approved"
     REJECTED = "rejected"
+    CANCELLED = "cancelled"  # User cancelled their own request

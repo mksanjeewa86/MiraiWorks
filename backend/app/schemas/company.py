@@ -22,8 +22,10 @@ class CompanyBase(BaseModel):
 class CompanyCreate(CompanyBase):
     """Schema for creating a new company."""
 
-    is_demo: Optional[bool] = False
-    demo_days: Optional[int] = 30  # Default 30 days demo period
+    # Subscription options (optional - if not provided, will auto-assign basic plan)
+    plan_id: Optional[int] = None  # Which plan to assign
+    is_trial: Optional[bool] = False  # Whether to create as trial subscription
+    trial_days: Optional[int] = 30  # Trial period in days (if is_trial=True)
 
 
 class CompanyUpdate(BaseModel):
@@ -39,10 +41,6 @@ class CompanyUpdate(BaseModel):
     city: Optional[str] = None
     description: Optional[str] = None
     is_active: Optional[bool] = None
-    is_demo: Optional[bool] = None
-    demo_end_date: Optional[str] = None
-    demo_features: Optional[str] = None
-    demo_notes: Optional[str] = None
 
 
 class CompanyResponse(CompanyBase):
@@ -50,10 +48,6 @@ class CompanyResponse(CompanyBase):
 
     id: int
     is_active: bool
-    is_demo: bool
-    demo_end_date: Optional[str]
-    demo_features: Optional[str] = None
-    demo_notes: Optional[str] = None
     user_count: int
     job_count: int
     is_deleted: bool

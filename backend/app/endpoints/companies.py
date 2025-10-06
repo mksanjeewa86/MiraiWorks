@@ -12,6 +12,8 @@ from app.crud import company as company_crud
 from app.database import get_db
 from app.dependencies import get_current_active_user, require_super_admin
 from app.models import Company, Role, User, UserRole, UserSettings
+from app.models.company_subscription import CompanySubscription
+from app.models.subscription_plan import SubscriptionPlan
 from app.schemas.company import (
     CompanyAdminStatus,
     CompanyCreate,
@@ -38,7 +40,6 @@ async def get_companies(
     search: str | None = Query(None),
     company_type: CompanyType | None = Query(None),
     is_active: bool | None = Query(None),
-    is_demo: bool | None = Query(None),
     include_deleted: bool = Query(False),
 ):
     """Get companies with filtering, pagination and search.
@@ -89,7 +90,6 @@ async def get_companies(
             search=search,
             company_type=company_type,
             is_active=is_active,
-            is_demo=is_demo,
             include_deleted=include_deleted,
         )
 
@@ -106,12 +106,6 @@ async def get_companies(
             city=company.city,
             description=company.description,
             is_active=company.is_active == "1",
-            is_demo=company.is_demo or False,
-            demo_end_date=company.demo_end_date.isoformat()
-            if company.demo_end_date
-            else None,
-            demo_features=company.demo_features,
-            demo_notes=company.demo_notes,
             user_count=0,
             job_count=0,
             is_deleted=company.is_deleted,
@@ -162,12 +156,6 @@ async def get_company(
         city=company.city,
         description=company.description,
         is_active=company.is_active == "1",
-        is_demo=company.is_demo or False,
-        demo_end_date=company.demo_end_date.isoformat()
-        if company.demo_end_date
-        else None,
-        demo_features=company.demo_features,
-        demo_notes=company.demo_notes,
         user_count=user_count or 0,
         job_count=job_count or 0,
         is_deleted=company.is_deleted,
@@ -207,10 +195,6 @@ async def create_company(
             detail="User with this email already exists",
         )
 
-    demo_end_date = None
-    if company_data.is_demo and company_data.demo_days:
-        demo_end_date = get_utc_now() + timedelta(days=company_data.demo_days)
-
     company = Company(
         name=company_data.name,
         type=company_data.type,
@@ -222,8 +206,6 @@ async def create_company(
         city=company_data.city,
         description=company_data.description,
         is_active="0",
-        is_demo=company_data.is_demo or False,
-        demo_end_date=demo_end_date,
     )
 
     db.add(company)
@@ -279,6 +261,39 @@ async def create_company(
     )
     db.add(default_settings)
 
+    # Create subscription based on provided options or auto-assign Basic plan
+    plan_id = company_data.plan_id
+    if not plan_id:
+        # No plan specified - auto-assign Basic plan
+        basic_plan_query = select(SubscriptionPlan).where(SubscriptionPlan.name == "basic")
+        basic_plan_result = await db.execute(basic_plan_query)
+        basic_plan = basic_plan_result.scalar_one_or_none()
+        if basic_plan:
+            plan_id = basic_plan.id
+        else:
+            logger.warning(f"Basic plan not found - company {company.id} created without subscription")
+
+    if plan_id:
+        # Calculate trial end date if trial subscription
+        trial_end_date = None
+        if company_data.is_trial and company_data.trial_days:
+            trial_end_date = get_utc_now() + timedelta(days=company_data.trial_days)
+
+        subscription = CompanySubscription(
+            company_id=company.id,
+            plan_id=plan_id,
+            is_active=True,
+            is_trial=company_data.is_trial or False,
+            start_date=get_utc_now(),
+            trial_end_date=trial_end_date,
+            billing_cycle="monthly",
+            auto_renew=True,
+        )
+        db.add(subscription)
+
+        plan_name = "trial" if company_data.is_trial else "paid"
+        logger.info(f"Assigned {plan_name} subscription (plan_id={plan_id}) to company {company.id} ({company_data.name})")
+
     await db.commit()
     await db.refresh(company)
     await db.refresh(admin_user)
@@ -306,12 +321,6 @@ async def create_company(
         city=company.city,
         description=company.description,
         is_active=company.is_active == "1",
-        is_demo=company.is_demo or False,
-        demo_end_date=company.demo_end_date.isoformat()
-        if company.demo_end_date
-        else None,
-        demo_features=company.demo_features,
-        demo_notes=company.demo_notes,
         user_count=1,
         job_count=0,
         is_deleted=company.is_deleted,
@@ -375,12 +384,6 @@ async def update_company(
         city=company.city,
         description=company.description,
         is_active=company.is_active == "1",
-        is_demo=company.is_demo or False,
-        demo_end_date=company.demo_end_date.isoformat()
-        if company.demo_end_date
-        else None,
-        demo_features=company.demo_features,
-        demo_notes=company.demo_notes,
         user_count=user_count or 0,
         job_count=job_count or 0,
         is_deleted=company.is_deleted,

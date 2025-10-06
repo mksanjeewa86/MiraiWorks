@@ -45,8 +45,13 @@ async def get_current_user(
     if payload is None:
         raise credentials_exception
 
-    user_id: int = int(payload.get("sub"))
+    user_id = payload.get("sub")
     if user_id is None:
+        raise credentials_exception
+
+    try:
+        user_id = int(user_id)
+    except (ValueError, TypeError):
         raise credentials_exception
 
     # Get user from database with explicit join

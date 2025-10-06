@@ -6,6 +6,7 @@ from sqlalchemy.orm import selectinload
 
 from app.crud.base import CRUDBase
 from app.models.company_subscription import CompanySubscription
+from app.models.subscription_plan import SubscriptionPlan
 from app.schemas.subscription import (
     CompanySubscriptionCreate,
     CompanySubscriptionUpdate,
@@ -51,7 +52,7 @@ class CRUDCompanySubscription(
             .where(CompanySubscription.company_id == company_id)
             .options(
                 selectinload(CompanySubscription.plan).selectinload(
-                    CompanySubscription.plan.plan_features
+                    SubscriptionPlan.plan_features
                 )
             )
         )

@@ -132,6 +132,27 @@ class CRUDPlanChangeRequest(CRUDBase[PlanChangeRequest, dict, dict]):
         await db.refresh(request)
         return request
 
+    async def cancel_request(
+        self,
+        db: AsyncSession,
+        *,
+        request_id: int
+    ) -> Optional[PlanChangeRequest]:
+        """Cancel a plan change request (user cancels their own request)."""
+        from app.utils.datetime_utils import get_utc_now
+
+        request = await self.get(db, id=request_id)
+        if not request or request.status != PlanChangeRequestStatus.PENDING:
+            return None
+
+        request.status = PlanChangeRequestStatus.CANCELLED
+        request.reviewed_at = get_utc_now()
+
+        db.add(request)
+        await db.commit()
+        await db.refresh(request)
+        return request
+
     async def create_request(
         self,
         db: AsyncSession,

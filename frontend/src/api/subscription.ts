@@ -166,6 +166,21 @@ export const planChangeRequestApi = {
       return { success: false, error: error.response?.data?.detail || 'Failed to review request' };
     }
   },
+
+  /**
+   * Cancel a plan change request (Company Admin - own requests only)
+   */
+  async cancelRequest(requestId: number): Promise<SubscriptionApiResponse<PlanChangeRequestWithDetails>> {
+    try {
+      const response = await apiClient.post<PlanChangeRequestWithDetails>(
+        API_ENDPOINTS.SUBSCRIPTIONS.CANCEL_PLAN_CHANGE(requestId),
+        {}
+      );
+      return { data: response.data, success: true };
+    } catch (error: any) {
+      return { success: false, error: error.response?.data?.detail || 'Failed to cancel request' };
+    }
+  },
 };
 
 /**

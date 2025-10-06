@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useMySubscription } from '@/hooks/useSubscription';
 import type { SidebarProps, NavItem } from '@/types/components';
 import { getRoleColorScheme, getRoleDisplayName } from '@/utils/roleColorSchemes';
 
@@ -111,6 +112,7 @@ const navigationItems: NavItem[] = [
     roles: ['candidate', 'member', 'admin', 'system_admin'],
     color: 'bg-rose-600',
     lightColor: 'bg-rose-500',
+    requiredFeature: 'view_exams', // Requires exam feature
   },
   {
     name: 'Profile',
@@ -143,6 +145,7 @@ const navigationItems: NavItem[] = [
     roles: ['admin', 'system_admin'],
     color: 'bg-fuchsia-600',
     lightColor: 'bg-fuchsia-500',
+    requiredFeature: 'exam_management', // Requires exam management feature
   },
   {
     name: 'Settings',
@@ -164,23 +167,40 @@ export default function Sidebar({
   const { user } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+  const { subscription } = useMySubscription();
 
   // Get role-based color scheme
   const colorScheme = getRoleColorScheme(user?.roles);
   const roleDisplayName = getRoleDisplayName(user?.roles);
 
-  // Filter navigation items based on user role
+  // Get available feature names from subscription
+  const availableFeatures = subscription?.plan?.features?.map(f => f.name) || [];
+
+  // Filter navigation items based on user role AND feature access
   const allVisibleItems = navigationItems.filter((item) => {
     if (!user?.roles?.length) return false;
-    return user.roles.some((userRole) => item.roles.includes(userRole.role.name));
+
+    // Check role access
+    const hasRoleAccess = user.roles.some((userRole) => item.roles.includes(userRole.role.name));
+    if (!hasRoleAccess) return false;
+
+    // Check feature access if requiredFeature is specified
+    if (item.requiredFeature) {
+      // System admins and candidates bypass feature checks
+      const isSystemAdmin = user.roles.some((userRole) => userRole.role.name === 'system_admin');
+      const isCandidate = user.roles.some((userRole) => userRole.role.name === 'candidate');
+
+      if (!isSystemAdmin && !isCandidate) {
+        // For company users (members/admins), check subscription features
+        return availableFeatures.includes(item.requiredFeature);
+      }
+    }
+
+    return true;
   });
 
-  // Separate main navigation from settings/profile
-  const mainNavItems = allVisibleItems.filter(
-    (item) => item.name !== 'Settings' && item.name !== 'Profile'
-  );
-  const settingsItem = allVisibleItems.find((item) => item.name === 'Settings');
-  const profileItem = allVisibleItems.find((item) => item.name === 'Profile');
+  // Use all visible items in the same navigation section
+  const mainNavItems = allVisibleItems;
 
   const isActive = (href: string) => {
     if (href === '/dashboard') {
@@ -291,13 +311,22 @@ export default function Sidebar({
 
             {/* Navigation */}
             <nav
-              className={`flex-1 flex flex-col overflow-hidden ${isCollapsed ? 'px-2 py-4 items-center' : 'p-4'} min-h-0`}
+              className={`flex-1 flex flex-col min-h-0 ${isCollapsed ? 'px-2' : 'px-4'}`}
             >
-              {/* Main navigation items */}
+              {/* Scrollable main navigation items */}
               <div
-                className={`${isCollapsed ? 'flex flex-col items-center space-y-3' : 'space-y-3'}`}
+                className={`flex-1 overflow-y-auto overflow-x-hidden py-4 ${
+                  isCollapsed ? 'scrollbar-hide' : 'scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent hover:scrollbar-thumb-gray-500'
+                }`}
+                style={{
+                  scrollbarWidth: isCollapsed ? 'none' : 'thin',
+                  msOverflowStyle: isCollapsed ? 'none' : 'auto',
+                }}
               >
-                {mainNavItems.map((item) => {
+                <div
+                  className={`${isCollapsed ? 'flex flex-col items-center space-y-2' : 'space-y-2'}`}
+                >
+                  {mainNavItems.map((item) => {
                   const Icon = item.icon;
                   const active = isActive(item.href);
 
@@ -319,15 +348,15 @@ export default function Sidebar({
                         }
                       }}
                       className={`
-                      group flex items-center transition-all duration-300 transform hover:scale-105 text-sm font-medium relative cursor-pointer w-full border-0 bg-transparent
+                      group flex items-center transition-all duration-200 text-sm font-medium relative cursor-pointer w-full border-0 bg-transparent flex-shrink-0
                       ${
                         isCollapsed
-                          ? 'p-2 justify-center hover:scale-105 w-10 h-10 rounded-lg'
-                          : 'px-4 py-2 h-10 rounded-xl'
+                          ? 'p-2 justify-center w-10 h-10 rounded-lg hover:scale-105'
+                          : 'px-3 py-2.5 h-11 rounded-xl hover:translate-x-1'
                       }
                       ${
                         active
-                          ? `${colorScheme.buttonActive} ${colorScheme.textPrimary} shadow-lg shadow-black/20`
+                          ? `${colorScheme.buttonActive} ${colorScheme.textPrimary} shadow-lg shadow-black/10`
                           : `${colorScheme.textSecondary} ${colorScheme.buttonHover} hover:${colorScheme.textPrimary} border ${colorScheme.buttonBorder}`
                       }
                     `}
@@ -389,185 +418,7 @@ export default function Sidebar({
                     </button>
                   );
                 })}
-              </div>
-
-              {/* Bottom navigation items */}
-              <div
-                className={`${isCollapsed ? 'flex flex-col items-center space-y-3' : 'space-y-3'} mt-auto`}
-              >
-                {/* Profile */}
-                {profileItem && (
-                  <button
-                    key={profileItem.name}
-                    type="button"
-                    onClick={(e) => {
-                      // Prevent any bubbling and default behavior
-                      e.stopPropagation();
-                      e.preventDefault();
-
-                      // Navigate immediately
-                      router.push(profileItem.href);
-
-                      // Close mobile sidebar if open
-                      if (isMobile) {
-                        onClose();
-                      }
-                    }}
-                    className={`
-                    group flex items-center transition-all duration-300 transform hover:scale-105 text-sm font-medium relative cursor-pointer w-full border-0 bg-transparent
-                    ${
-                      isCollapsed
-                        ? 'p-2 justify-center hover:scale-105 w-10 h-10 rounded-lg'
-                        : 'px-4 py-2 h-10 rounded-xl'
-                    }
-                    ${
-                      isActive(profileItem.href)
-                        ? `${colorScheme.buttonActive} ${colorScheme.textPrimary} shadow-lg shadow-black/20`
-                        : `${colorScheme.textSecondary} ${colorScheme.buttonHover} hover:${colorScheme.textPrimary} border ${colorScheme.buttonBorder}`
-                    }
-                  `}
-                    title={isCollapsed ? profileItem.name : undefined}
-                  >
-                    <div
-                      className={`
-                    flex-shrink-0 transition-all duration-300 transform flex items-center justify-center
-                    ${isCollapsed ? 'w-8 h-8 rounded-md min-w-8' : 'p-2 rounded-lg'}
-                    ${
-                      isActive(profileItem.href)
-                        ? `bg-white/20 ${isCollapsed ? 'bg-white/30 shadow-md' : ''}`
-                        : `${colorScheme.brandAccent} group-hover:scale-110 group-hover:rotate-6`
-                    }
-                  `}
-                    >
-                      <profileItem.icon
-                        className={`
-                      h-4 w-4 transition-all duration-300 transform flex-shrink-0
-                      ${
-                        isActive(profileItem.href)
-                          ? `${colorScheme.textPrimary} animate-pulse`
-                          : `${colorScheme.textPrimary} group-hover:${colorScheme.textPrimary} group-hover:scale-110 group-hover:-rotate-12`
-                      }
-                    `}
-                      />
-                    </div>
-
-                    {!isCollapsed && (
-                      <span className="ml-3 truncate font-semibold">{profileItem.name}</span>
-                    )}
-
-                    {/* Active indicator with glow effect */}
-                    {isActive(profileItem.href) && !isCollapsed && (
-                      <div className="ml-auto">
-                        <div
-                          className={`w-2 h-2 rounded-full ${colorScheme.activeIndicator} shadow-lg ${colorScheme.activeIndicatorShadow} animate-pulse`}
-                        />
-                      </div>
-                    )}
-
-                    {/* Hover effect indicator */}
-                    {!isActive(profileItem.href) && !isCollapsed && (
-                      <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        <div
-                          className={`w-1.5 h-1.5 rounded-full ${colorScheme.activeIndicator}/60`}
-                        />
-                      </div>
-                    )}
-
-                    {/* Collapsed hover indicator */}
-                    {!isActive(profileItem.href) && isCollapsed && (
-                      <div className="absolute -right-0.5 -top-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        <div className={`w-2 h-2 rounded-full ${colorScheme.activeIndicator}/60`} />
-                      </div>
-                    )}
-                  </button>
-                )}
-
-                {/* Settings */}
-                {settingsItem && (
-                  <button
-                    key={settingsItem.name}
-                    type="button"
-                    onClick={(e) => {
-                      // Prevent any bubbling and default behavior
-                      e.stopPropagation();
-                      e.preventDefault();
-
-                      // Navigate immediately
-                      router.push(settingsItem.href);
-
-                      // Close mobile sidebar if open
-                      if (isMobile) {
-                        onClose();
-                      }
-                    }}
-                    className={`
-                    group flex items-center transition-all duration-300 transform hover:scale-105 text-sm font-medium relative cursor-pointer w-full border-0 bg-transparent
-                    ${
-                      isCollapsed
-                        ? 'p-2 justify-center hover:scale-105 w-10 h-10 rounded-lg'
-                        : 'px-4 py-2 h-10 rounded-xl'
-                    }
-                    ${
-                      isActive(settingsItem.href)
-                        ? `${colorScheme.buttonActive} ${colorScheme.textPrimary} shadow-lg shadow-black/20`
-                        : `${colorScheme.textSecondary} ${colorScheme.buttonHover} hover:${colorScheme.textPrimary} border ${colorScheme.buttonBorder}`
-                    }
-                  `}
-                    title={isCollapsed ? settingsItem.name : undefined}
-                  >
-                    <div
-                      className={`
-                    flex-shrink-0 transition-all duration-300 transform flex items-center justify-center
-                    ${isCollapsed ? 'w-8 h-8 rounded-md min-w-8' : 'p-2 rounded-lg'}
-                    ${
-                      isActive(settingsItem.href)
-                        ? `bg-white/20 ${isCollapsed ? 'bg-white/30 shadow-md' : ''}`
-                        : `${colorScheme.brandAccent} group-hover:scale-110 group-hover:rotate-6`
-                    }
-                  `}
-                    >
-                      <settingsItem.icon
-                        className={`
-                      h-4 w-4 transition-all duration-300 transform flex-shrink-0
-                      ${
-                        isActive(settingsItem.href)
-                          ? `${colorScheme.textPrimary} animate-pulse`
-                          : `${colorScheme.textPrimary} group-hover:${colorScheme.textPrimary} group-hover:scale-110 group-hover:-rotate-12`
-                      }
-                    `}
-                      />
-                    </div>
-
-                    {!isCollapsed && (
-                      <span className="ml-3 truncate font-semibold">{settingsItem.name}</span>
-                    )}
-
-                    {/* Active indicator with glow effect */}
-                    {isActive(settingsItem.href) && !isCollapsed && (
-                      <div className="ml-auto">
-                        <div
-                          className={`w-2 h-2 rounded-full ${colorScheme.activeIndicator} shadow-lg ${colorScheme.activeIndicatorShadow} animate-pulse`}
-                        />
-                      </div>
-                    )}
-
-                    {/* Hover effect indicator */}
-                    {!isActive(settingsItem.href) && !isCollapsed && (
-                      <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        <div
-                          className={`w-1.5 h-1.5 rounded-full ${colorScheme.activeIndicator}/60`}
-                        />
-                      </div>
-                    )}
-
-                    {/* Collapsed hover indicator */}
-                    {!isActive(settingsItem.href) && isCollapsed && (
-                      <div className="absolute -right-0.5 -top-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        <div className={`w-2 h-2 rounded-full ${colorScheme.activeIndicator}/60`} />
-                      </div>
-                    )}
-                  </button>
-                )}
+                </div>
               </div>
             </nav>
 

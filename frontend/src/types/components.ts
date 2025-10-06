@@ -330,6 +330,7 @@ export interface NavItem {
   roles: string[];
   color: string;
   lightColor: string;
+  requiredFeature?: string; // Optional feature name required to access this item
 }
 
 export interface SidebarProps {

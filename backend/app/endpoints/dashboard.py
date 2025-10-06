@@ -71,8 +71,8 @@ async def get_recent_activity(
     for session in recent_exam_sessions:
         status_label = session.status.replace("_", " ").title()
         description = f"Exam {status_label}"
-        if session.status == "completed" and session.final_score is not None:
-            description += f" - Score: {session.final_score:.1f}%"
+        if session.status == "completed" and session.score is not None:
+            description += f" - Score: {session.score:.1f}%"
 
         recent_activities.append(
             ActivityItem(
@@ -86,7 +86,7 @@ async def get_recent_activity(
                     "session_id": session.id,
                     "exam_id": session.exam_id,
                     "status": session.status,
-                    "score": session.final_score,
+                    "score": session.score,
                 },
             )
         )

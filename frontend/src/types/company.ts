@@ -15,10 +15,6 @@ export interface Company {
   user_count: number;
   position_count: number;
   job_count?: number; // Legacy compatibility
-  is_demo: boolean;
-  demo_end_date?: string;
-  demo_features?: string;
-  demo_notes?: string;
   is_deleted: boolean;
   deleted_at?: string;
   deleted_by?: number;
@@ -36,10 +32,9 @@ export interface CompanyCreate {
   prefecture?: string;
   city?: string;
   description?: string;
-  is_demo?: boolean;
-  demo_end_date?: string;
-  demo_features?: string;
-  demo_notes?: string;
+  plan_id?: number;
+  is_trial?: boolean;
+  trial_days?: number;
 }
 
 export interface CompanyUpdate {
@@ -53,10 +48,6 @@ export interface CompanyUpdate {
   city?: string;
   description?: string;
   is_active?: boolean;
-  is_demo?: boolean;
-  demo_end_date?: string;
-  demo_features?: string;
-  demo_notes?: string;
 }
 
 export interface CompanyListResponse {
@@ -73,7 +64,6 @@ export interface CompanyFilters {
   search?: string;
   company_type?: CompanyType;
   is_active?: boolean;
-  is_demo?: boolean;
   include_deleted?: boolean;
 }
 

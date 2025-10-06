@@ -37,7 +37,7 @@ class CRUDDashboard:
         # Active conversations (conversations with messages in last 30 days)
         thirty_days_ago = get_utc_now() - timedelta(days=30)
         active_conversations_result = await db.execute(
-            select(func.count(Message.id.distinct())).where(
+            select(func.count(func.distinct(Message.id))).where(
                 Message.created_at >= thirty_days_ago
             )
         )
@@ -64,9 +64,9 @@ class CRUDDashboard:
 
         # Average exam score (for completed sessions with scores)
         avg_score_result = await db.execute(
-            select(func.avg(ExamSession.final_score)).where(
+            select(func.avg(ExamSession.score)).where(
                 ExamSession.status == "completed",
-                ExamSession.final_score.isnot(None),
+                ExamSession.score.isnot(None),
             )
         )
         avg_exam_score = avg_score_result.scalar()

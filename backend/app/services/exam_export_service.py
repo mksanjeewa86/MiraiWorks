@@ -117,15 +117,15 @@ class ExamExportService:
 
         if total_completed > 0:
             avg_score = (
-                sum(s.final_score for s in completed_sessions if s.final_score)
+                sum(s.score for s in completed_sessions if s.score)
                 / total_completed
             )
             passed_sessions = [
                 s
                 for s in completed_sessions
-                if s.final_score
+                if s.score
                 and exam.passing_score
-                and s.final_score >= exam.passing_score
+                and s.score >= exam.passing_score
             ]
             pass_rate = (
                 (len(passed_sessions) / total_completed * 100)
@@ -195,7 +195,7 @@ class ExamExportService:
                         str(session.id),
                         str(session.candidate_id),
                         session.status,
-                        f"{session.final_score:.1f}%" if session.final_score else "N/A",
+                        f"{session.score:.1f}%" if session.score else "N/A",
                         time_taken,
                         session.completed_at.strftime("%Y-%m-%d %H:%M")
                         if session.completed_at
@@ -336,15 +336,15 @@ class ExamExportService:
 
         if total_completed > 0:
             avg_score = (
-                sum(s.final_score for s in completed_sessions if s.final_score)
+                sum(s.score for s in completed_sessions if s.score)
                 / total_completed
             )
             passed_sessions = [
                 s
                 for s in completed_sessions
-                if s.final_score
+                if s.score
                 and exam.passing_score
-                and s.final_score >= exam.passing_score
+                and s.score >= exam.passing_score
             ]
             pass_rate = (
                 (len(passed_sessions) / total_completed * 100)
@@ -419,8 +419,8 @@ class ExamExportService:
 
             # Check if passed
             passed = "N/A"
-            if exam.passing_score and session.final_score:
-                passed = "Yes" if session.final_score >= exam.passing_score else "No"
+            if exam.passing_score and session.score:
+                passed = "Yes" if session.score >= exam.passing_score else "No"
 
             sheet.cell(row=row, column=1, value=session.id)
             sheet.cell(row=row, column=2, value=session.candidate_id)
@@ -428,7 +428,7 @@ class ExamExportService:
             sheet.cell(
                 row=row,
                 column=4,
-                value=f"{session.final_score:.1f}" if session.final_score else "",
+                value=f"{session.score:.1f}" if session.score else "",
             )
             sheet.cell(row=row, column=5, value=time_taken)
             sheet.cell(

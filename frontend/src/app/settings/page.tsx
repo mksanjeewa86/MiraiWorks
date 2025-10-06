@@ -4,7 +4,9 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { userSettingsApi } from '@/api/userSettings';
 import { calendarApi } from '@/api/calendar';
+import { subscriptionPlanApi, planChangeRequestApi } from '@/api/subscription';
 import { UserSettings, CalendarConnection } from '@/types';
+import { useMySubscription, useMyPlanChangeRequests, usePlanChangeRequestMutations, useSubscriptionPlans } from '@/hooks/useSubscription';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { Card } from '@/components/ui';
@@ -28,6 +30,13 @@ import {
   AlertCircle,
   CheckCircle,
   ExternalLink,
+  Building2,
+  CreditCard,
+  ArrowUpRight,
+  ArrowDownRight,
+  Clock,
+  X,
+  Star,
 } from 'lucide-react';
 import type { SettingsState } from '@/types/pages';
 
@@ -48,6 +57,20 @@ function SettingsPageContent() {
       confirm_password: '',
     },
   });
+
+  // Subscription hooks (only for company admins)
+  const { subscription, refetch: refetchSubscription } = useMySubscription();
+  const { plans } = useSubscriptionPlans();
+  const { requests, refetch: refetchRequests } = useMyPlanChangeRequests();
+  const { requestPlanChange } = usePlanChangeRequestMutations();
+
+  const [showPlanChangeModal, setShowPlanChangeModal] = useState(false);
+  const [selectedPlanForChange, setSelectedPlanForChange] = useState<number | null>(null);
+  const [planChangeMessage, setPlanChangeMessage] = useState('');
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [requestToCancel, setRequestToCancel] = useState<number | null>(null);
+  const [higherPlanFeatures, setHigherPlanFeatures] = useState<any[]>([]);
+  const [minimumPlanFeatureIds, setMinimumPlanFeatureIds] = useState<Set<number>>(new Set());
 
   const [calendarState, setCalendarState] = useState({
     connections: [] as CalendarConnection[],
@@ -102,6 +125,108 @@ function SettingsPageContent() {
       loadCalendarConnections();
     }
   }, [state.activeSection, user]);
+
+  // Fetch features for higher-priced plans
+  useEffect(() => {
+    const fetchHigherPlanFeatures = async () => {
+      if (!subscription?.plan || !plans || plans.length === 0) {
+        setHigherPlanFeatures([]);
+        return;
+      }
+
+      try {
+        const currentPlanPrice = parseFloat(subscription.plan.price_monthly.toString());
+
+        // Get all plans with higher prices
+        const higherPlans = plans.filter(
+          p => parseFloat(p.price_monthly.toString()) > currentPlanPrice
+        );
+
+        if (higherPlans.length === 0) {
+          setHigherPlanFeatures([]);
+          return;
+        }
+
+        // Fetch features for each higher plan
+        const featuresPromises = higherPlans.map(async plan => {
+          const response = await subscriptionPlanApi.getPlanWithFeatures(plan.id);
+          return {
+            planId: plan.id,
+            planName: plan.display_name,
+            features: response.data?.features || []
+          };
+        });
+
+        const allHigherPlansData = await Promise.all(featuresPromises);
+
+        // Get current plan's feature IDs
+        const currentFeatureIds = new Set(
+          subscription.plan.features?.map(f => f.id) || []
+        );
+
+        // Collect all unique features from higher plans that current plan doesn't have
+        const uniqueFeatures: any[] = [];
+        const seenFeatureIds = new Set<number>();
+
+        allHigherPlansData.forEach(planData => {
+          planData.features.forEach((feature: any) => {
+            // Only include if current plan doesn't have it and we haven't seen it yet
+            if (!currentFeatureIds.has(feature.id) && !seenFeatureIds.has(feature.id)) {
+              uniqueFeatures.push({
+                ...feature,
+                planName: planData.planName,
+                planId: planData.planId
+              });
+              seenFeatureIds.add(feature.id);
+            }
+          });
+        });
+
+        setHigherPlanFeatures(uniqueFeatures);
+      } catch (error) {
+        console.error('Failed to fetch higher plan features:', error);
+        setHigherPlanFeatures([]);
+      }
+    };
+
+    fetchHigherPlanFeatures();
+  }, [subscription, plans]);
+
+  // Fetch features for minimum plan to identify premium-only features
+  useEffect(() => {
+    const fetchMinimumPlanFeatures = async () => {
+      if (!plans || plans.length === 0) {
+        setMinimumPlanFeatureIds(new Set());
+        return;
+      }
+
+      try {
+        // Find the minimum plan (lowest priced plan)
+        const sortedPlans = [...plans].sort(
+          (a, b) => parseFloat(a.price_monthly.toString()) - parseFloat(b.price_monthly.toString())
+        );
+        const minimumPlan = sortedPlans[0];
+
+        if (!minimumPlan) {
+          setMinimumPlanFeatureIds(new Set());
+          return;
+        }
+
+        // Fetch features for minimum plan
+        const response = await subscriptionPlanApi.getPlanWithFeatures(minimumPlan.id);
+        const minimumFeatureIds = new Set(
+          response.data?.features?.map((f: any) => f.id) || []
+        );
+
+        setMinimumPlanFeatureIds(minimumFeatureIds);
+      } catch (error) {
+        console.error('Failed to fetch minimum plan features:', error);
+        setMinimumPlanFeatureIds(new Set());
+      }
+    };
+
+    fetchMinimumPlanFeatures();
+  }, [plans]);
 
   const loadCalendarConnections = async () => {
     try {
@@ -375,6 +500,9 @@ function SettingsPageContent() {
     }
   };
 
+  // Check if user is company admin
+  const isCompanyAdmin = user?.roles?.some(role => role.role.name === 'admin');
+
   const sections = [
     { id: 'account', name: 'Account', icon: User, description: 'Personal information and profile' },
     { id: 'security', name: 'Security', icon: Shield, description: 'Password and authentication' },
@@ -396,6 +524,12 @@ function SettingsPageContent() {
       icon: Globe,
       description: 'Theme, language, and display',
     },
+    ...(isCompanyAdmin ? [{
+      id: 'company-profile' as const,
+      name: 'Company Profile',
+      icon: Building2,
+      description: 'Company info and subscription',
+    }] : []),
   ];
 
   const renderAccountSection = () => (
@@ -1069,6 +1203,521 @@ function SettingsPageContent() {
     </div>
   );
 
+  const formatPrice = (price: string | number) => {
+    const numPrice = typeof price === 'string' ? parseFloat(price) : price;
+    return new Intl.NumberFormat('ja-JP', {
+      style: 'currency',
+      currency: 'JPY',
+      minimumFractionDigits: 0,
+    }).format(numPrice);
+  };
+
+  const handleRequestPlanChange = async () => {
+    if (!selectedPlanForChange) return;
+
+    try {
+      await requestPlanChange({
+        requested_plan_id: selectedPlanForChange,
+        request_message: planChangeMessage || 'Plan change request from settings',
+      });
+      setShowPlanChangeModal(false);
+      setSelectedPlanForChange(null);
+      setPlanChangeMessage('');
+      refetchRequests();
+    } catch (error) {
+      // Error handled by hook
+    }
+  };
+
+  const handleCancelRequest = (requestId: number) => {
+    setRequestToCancel(requestId);
+    setShowCancelModal(true);
+  };
+
+  const confirmCancelRequest = async () => {
+    if (!requestToCancel) return;
+
+    try {
+      const response = await planChangeRequestApi.cancelRequest(requestToCancel);
+      if (response.success) {
+        setShowCancelModal(false);
+        setRequestToCancel(null);
+        refetchRequests();
+      }
+    } catch (error) {
+      console.error('Failed to cancel request:', error);
+    }
+  };
+
+  const getRequestStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800"><Clock className="h-3 w-3 mr-1" />Pending</span>;
+      case 'approved':
+        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"><CheckCircle className="h-3 w-3 mr-1" />Approved</span>;
+      case 'rejected':
+        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"><AlertCircle className="h-3 w-3 mr-1" />Rejected</span>;
+      case 'cancelled':
+        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"><AlertCircle className="h-3 w-3 mr-1" />Cancelled</span>;
+      default:
+        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">{status}</span>;
+    }
+  };
+
+  const renderCompanyProfileSection = () => {
+    const pendingRequest = requests.find(r => r.status === 'pending');
+    const currentPlan = subscription?.plan;
+    const isTrial = subscription?.is_trial || false;
+
+    // If on trial, show ALL plans as conversion options (including Minimum)
+    // Otherwise, show plans based on price comparison
+    const higherPlans = plans.filter(p => {
+      if (!currentPlan) return true;
+      if (isTrial) {
+        // On trial: show ALL plans as valid conversion options
+        // (trial is temporary state, not a pricing tier)
+        return true;
+      }
+      // Not on trial: show plans with higher price
+      return parseFloat(p.price_monthly.toString()) > parseFloat(currentPlan.price_monthly.toString());
+    });
+
+    const lowerPlans = plans.filter(p => {
+      if (!currentPlan || isTrial) return false; // No downgrade from trial
+      return parseFloat(p.price_monthly.toString()) < parseFloat(currentPlan.price_monthly.toString());
+    });
+
+    // Features from higher-priced plans that current plan doesn't have
+    const allPlanFeatures = higherPlanFeatures;
+
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+            Company Profile
+          </h2>
+          <p style={{ color: 'var(--text-secondary)' }}>
+            Manage your company information and subscription plan
+          </p>
+        </div>
+
+        {/* No Subscription - Show Available Plans */}
+        {!subscription ? (
+          <>
+            <Card className="p-6 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-1">
+                    No Active Subscription
+                  </h3>
+                  <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                    Your company doesn't have an active subscription plan. Choose a plan below to get started.
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            {/* Available Plans */}
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+                Available Plans
+              </h3>
+              <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
+                Select a plan to request subscription approval from the system administrator
+              </p>
+
+              <div className="space-y-3">
+                {plans.map((plan) => (
+                  <div key={plan.id} className="border rounded-lg p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-lg" style={{ color: 'var(--text-primary)' }}>
+                          {plan.display_name}
+                        </h4>
+                        <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
+                          {plan.description}
+                        </p>
+                        <p className="text-2xl font-bold mt-2" style={{ color: 'var(--text-primary)' }}>
+                          {formatPrice(plan.price_monthly)}
+                          <span className="text-sm font-normal" style={{ color: 'var(--text-secondary)' }}>/month</span>
+                        </p>
+
+                        {/* Show some features if available */}
+                        {plan.max_users && (
+                          <div className="mt-3 space-y-1">
+                            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                              • Up to {plan.max_users} users
+                            </p>
+                            {plan.max_workflows && (
+                              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                                • Up to {plan.max_workflows} workflows
+                              </p>
+                            )}
+                            {plan.max_exams && (
+                              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                                • Up to {plan.max_exams} exams
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      <Button
+                        onClick={() => {
+                          setSelectedPlanForChange(plan.id);
+                          setShowPlanChangeModal(true);
+                        }}
+                        variant="default"
+                        className="ml-4"
+                      >
+                        Request Plan
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </>
+        ) : (
+          <>
+            {/* Compact Current Plan Overview */}
+            <Card className={`p-4 ${subscription.is_trial ? 'border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20' : 'border-blue-200 dark:border-blue-800'}`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div>
+                    <p className={`text-xs ${subscription.is_trial ? 'text-amber-600 dark:text-amber-400' : 'text-blue-600 dark:text-blue-400'}`}>
+                      {subscription.is_trial ? 'Trial Period' : 'Current Plan'}
+                    </p>
+                    <h3 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                      {subscription.plan.display_name}
+                      {subscription.is_trial && ' (Trial)'}
+                    </h3>
+                    {subscription.is_trial && subscription.trial_end_date && (
+                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                        Ends: {new Date(subscription.trial_end_date).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
+                  {!subscription.is_trial && (
+                    <>
+                      <div className="h-8 w-px bg-gray-300 dark:bg-gray-600"></div>
+                      <div>
+                        <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Price</p>
+                        <p className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+                          {formatPrice(subscription.plan.price_monthly)}<span className="text-xs">/month</span>
+                        </p>
+                      </div>
+                      <div className="h-8 w-px bg-gray-300 dark:bg-gray-600"></div>
+                      <div>
+                        <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Billing</p>
+                        <p className="text-sm font-medium capitalize" style={{ color: 'var(--text-primary)' }}>
+                          {subscription.billing_cycle}
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                  subscription.is_trial
+                    ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300'
+                    : subscription.is_active
+                      ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300'
+                      : 'bg-gray-100 text-gray-800'
+                }`}>
+                  {subscription.is_trial ? '⏱ Trial' : subscription.is_active ? '✓ Active' : 'Inactive'}
+                </span>
+              </div>
+            </Card>
+
+            {/* UPGRADE OPTIONS - EMPHASIZED */}
+            {allPlanFeatures.length > 0 && higherPlans.length > 0 && (
+              <Card className={`p-8 border-2 shadow-lg ${
+                subscription.is_trial
+                  ? 'bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 border-blue-300 dark:border-blue-700'
+                  : 'bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/30 dark:to-red-900/30 border-orange-300 dark:border-orange-700'
+              }`}>
+                <div className="text-center mb-6">
+                  <h3 className={`text-2xl font-bold flex items-center justify-center gap-3 mb-2 ${
+                    subscription.is_trial
+                      ? 'text-blue-700 dark:text-blue-300'
+                      : 'text-orange-700 dark:text-orange-300'
+                  }`}>
+                    <ArrowUpRight className="h-7 w-7" />
+                    {subscription.is_trial ? 'Choose Your Plan' : 'Unlock Premium Features'}
+                  </h3>
+                  <p className={`text-base font-medium ${
+                    subscription.is_trial
+                      ? 'text-blue-600 dark:text-blue-400'
+                      : 'text-orange-600 dark:text-orange-400'
+                  }`}>
+                    {subscription.is_trial
+                      ? 'Convert your trial to a paid plan to continue using these features'
+                      : 'Upgrade your plan to access these powerful features'}
+                  </p>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4 mb-6 md:auto-rows-fr">
+                  {allPlanFeatures.slice(0, 6).map((feature, index) => (
+                    <div key={index} className="flex items-start gap-3 p-4 bg-white dark:bg-gray-800 rounded-lg border-2 border-orange-200 dark:border-orange-700 shadow-sm h-full">
+                      <div className="h-6 w-6 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <AlertCircle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                      </div>
+                      <div className="flex-1 flex flex-col">
+                        <p className="font-semibold text-base" style={{ color: 'var(--text-primary)' }}>{feature.display_name}</p>
+                        {feature.description && (
+                          <p className="text-sm mt-1 flex-1" style={{ color: 'var(--text-secondary)' }}>{feature.description}</p>
+                        )}
+                        <p className="text-xs font-medium text-orange-600 dark:text-orange-400 mt-2">
+                          ✨ Available in {feature.planName}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {!pendingRequest && higherPlans.length > 0 && (
+                  <div className="flex gap-3 mt-6">
+                    {higherPlans.map(plan => (
+                      <Button
+                        key={plan.id}
+                        onClick={() => {
+                          setSelectedPlanForChange(plan.id);
+                          setShowPlanChangeModal(true);
+                        }}
+                        className={`flex-1 py-6 text-lg font-bold shadow-lg hover:shadow-xl transition-all ${
+                          subscription.is_trial
+                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'
+                            : 'bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700'
+                        }`}
+                      >
+                        <ArrowUpRight className="h-6 w-6 mr-2" />
+                        {subscription.is_trial ? `Choose ${plan.display_name}` : `Upgrade to ${plan.display_name}`}
+                      </Button>
+                    ))}
+                  </div>
+                )}
+              </Card>
+            )}
+
+            {/* Current Features - Compact with Premium Indicators */}
+            <Card className="p-5">
+              <h3 className="text-base font-semibold mb-3 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                Current Features ({subscription.plan.display_name})
+              </h3>
+              <div className="grid md:grid-cols-3 gap-2 md:auto-rows-fr">
+                {subscription.plan.features?.map((feature) => {
+                  // Premium feature = NOT in minimum plan
+                  const isPremiumFeature = !minimumPlanFeatureIds.has(feature.id);
+
+                  return (
+                    <div
+                      key={feature.id}
+                      className={`flex items-center gap-2 p-2 rounded border h-full ${
+                        isPremiumFeature
+                          ? 'bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/30 dark:to-amber-900/30 border-orange-300 dark:border-orange-700'
+                          : 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                      }`}
+                    >
+                      <CheckCircle className={`h-4 w-4 flex-shrink-0 ${isPremiumFeature ? 'text-orange-600' : 'text-green-600'}`} />
+                      <div className="flex-1 min-w-0 flex flex-col justify-center">
+                        <p className={`text-sm font-medium ${
+                          isPremiumFeature
+                            ? 'text-orange-900 dark:text-orange-100'
+                            : 'text-green-900 dark:text-green-100'
+                        }`}>
+                          {feature.display_name}
+                        </p>
+                        {isPremiumFeature && (
+                          <span className="inline-flex items-center gap-1 text-xs font-semibold text-orange-600 dark:text-orange-400 mt-1">
+                            <Star className="h-3 w-3" />
+                            Premium Only
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+
+            {/* Downgrade Option (if available) */}
+            {lowerPlans.length > 0 && !pendingRequest && (
+              <Card className="p-6 border-gray-200 dark:border-gray-700">
+                <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
+                  Looking to Reduce Costs?
+                </h3>
+                <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
+                  You can downgrade to a lower plan if you don't need all current features
+                </p>
+                <div className="flex gap-2">
+                  {lowerPlans.map(plan => (
+                    <Button
+                      key={plan.id}
+                      onClick={() => {
+                        setSelectedPlanForChange(plan.id);
+                        setShowPlanChangeModal(true);
+                      }}
+                      variant="outline"
+                      className="flex items-center gap-2"
+                    >
+                      <ArrowDownRight className="h-4 w-4" />
+                      Downgrade to {plan.display_name}
+                    </Button>
+                  ))}
+                </div>
+              </Card>
+            )}
+
+            {/* Pending Request Alert */}
+            {pendingRequest && (
+              <Card className="p-6 border-yellow-500/50 bg-yellow-50 dark:bg-yellow-900/20">
+                <div className="flex items-start gap-3">
+                  <Clock className="h-6 w-6 text-yellow-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-lg text-yellow-800 dark:text-yellow-200">
+                      Plan Change Request Pending
+                    </h4>
+                    <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-2">
+                      Your request to change to <strong>{pendingRequest.requested_plan?.display_name}</strong> is awaiting system admin approval.
+                    </p>
+                    {pendingRequest.request_message && (
+                      <div className="mt-3 p-3 bg-yellow-100 dark:bg-yellow-900/40 rounded-lg">
+                        <p className="text-xs font-medium text-yellow-800 dark:text-yellow-200 mb-1">Your Message:</p>
+                        <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                          {pendingRequest.request_message}
+                        </p>
+                      </div>
+                    )}
+                    <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-3">
+                      Requested on {new Date(pendingRequest.created_at).toLocaleDateString()}
+                    </p>
+                    <Button
+                      variant="outline"
+                      onClick={() => handleCancelRequest(pendingRequest.id)}
+                      className="mt-4 text-red-600 border-red-300 hover:bg-red-50 dark:text-red-400 dark:border-red-700 dark:hover:bg-red-900/20"
+                    >
+                      Cancel Request
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            )}
+
+            {/* Request History */}
+            {requests.length > 0 && (
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+                  Request History
+                </h3>
+                <div className="space-y-3">
+                  {requests.map((request) => (
+                    <div key={request.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                          {request.current_plan?.display_name} → {request.requested_plan?.display_name}
+                        </p>
+                        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                          {new Date(request.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      {getRequestStatusBadge(request.status)}
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
+          </>
+        )}
+
+        {/* Plan Change Request Modal */}
+        {showPlanChangeModal && selectedPlanForChange && (
+          <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <Card className="max-w-md w-full p-6">
+              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+                Request Plan Change
+              </h3>
+              <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
+                Selected plan: <strong>{plans.find(p => p.id === selectedPlanForChange)?.display_name}</strong>
+              </p>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+                  Message to Admin (optional)
+                </label>
+                <textarea
+                  value={planChangeMessage}
+                  onChange={(e) => setPlanChangeMessage(e.target.value)}
+                  placeholder="Why do you need this plan change?"
+                  rows={3}
+                  className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800"
+                  style={{ color: 'var(--text-primary)' }}
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <Button onClick={handleRequestPlanChange} className="flex-1">
+                  Submit Request
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowPlanChangeModal(false);
+                    setSelectedPlanForChange(null);
+                    setPlanChangeMessage('');
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {/* Cancel Request Confirmation Modal */}
+        {showCancelModal && requestToCancel && (
+          <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <Card className="max-w-md w-full p-6">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                  <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Cancel Plan Change Request
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                    Are you sure you want to cancel this plan change request? This action cannot be undone.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-2 mt-6">
+                <Button
+                  onClick={confirmCancelRequest}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                >
+                  Yes, Cancel Request
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowCancelModal(false);
+                    setRequestToCancel(null);
+                  }}
+                  className="flex-1"
+                >
+                  Keep Request
+                </Button>
+              </div>
+            </Card>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const renderCurrentSection = () => {
     switch (state.activeSection) {
       case 'account':
@@ -1081,6 +1730,8 @@ function SettingsPageContent() {
         return renderPreferencesSection();
       case 'calendar':
         return renderCalendarSection();
+      case 'company-profile':
+        return renderCompanyProfileSection();
       default:
         return null;
     }

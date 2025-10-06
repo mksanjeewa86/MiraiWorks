@@ -22,7 +22,6 @@ export const companiesApi = {
     if (filters?.search) params.set('search', filters.search);
     if (filters?.company_type) params.set('company_type', filters.company_type);
     if (filters?.is_active !== undefined) params.set('is_active', filters.is_active.toString());
-    if (filters?.is_demo !== undefined) params.set('is_demo', filters.is_demo.toString());
     if (filters?.include_deleted !== undefined)
       params.set('include_deleted', filters.include_deleted.toString());
 

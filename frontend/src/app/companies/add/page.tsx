@@ -4,12 +4,14 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Save, Calendar, Settings } from 'lucide-react';
 import { companiesApi } from '@/api/companies';
+import { subscriptionPlanApi } from '@/api/subscription';
 import { CompanyCreate, CompanyType } from '@/types/company';
 import { CompanyFormData } from '@/types/forms';
 import { useToast } from '@/contexts/ToastContext';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { PREFECTURES } from '@/utils/prefectures';
+import type { SubscriptionPlan } from '@/types/subscription';
 
 const emptyFormData: CompanyFormData = {
   name: '',
@@ -21,10 +23,9 @@ const emptyFormData: CompanyFormData = {
   prefecture: '',
   city: '',
   description: '',
-  is_demo: false,
-  demo_end_date: '',
-  demo_features: '',
-  demo_notes: '',
+  plan_id: undefined,
+  is_trial: false,
+  trial_days: 30,
 };
 
 function AddCompanyContent() {
@@ -35,6 +36,24 @@ function AddCompanyContent() {
   const [error, setError] = useState<string | null>(null);
   const [showPrefectureDropdown, setShowPrefectureDropdown] = useState(false);
   const prefectureDropdownRef = useRef<HTMLDivElement>(null);
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+  const [loadingPlans, setLoadingPlans] = useState(true);
+
+  // Fetch subscription plans
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        setLoadingPlans(true);
+        const response = await subscriptionPlanApi.getPlans();
+        setPlans(response.data || []);
+      } catch (err) {
+        console.error('Failed to load subscription plans:', err);
+      } finally {
+        setLoadingPlans(false);
+      }
+    };
+    fetchPlans();
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -74,12 +93,9 @@ function AddCompanyContent() {
         prefecture: formData.prefecture || undefined,
         city: formData.city || undefined,
         description: formData.description || undefined,
-        is_demo: formData.is_demo,
-        demo_end_date:
-          formData.is_demo && formData.demo_end_date ? formData.demo_end_date : undefined,
-        demo_features:
-          formData.is_demo && formData.demo_features ? formData.demo_features : undefined,
-        demo_notes: formData.is_demo && formData.demo_notes ? formData.demo_notes : undefined,
+        plan_id: formData.plan_id || undefined,
+        is_trial: formData.is_trial || false,
+        trial_days: formData.is_trial ? (formData.trial_days || 30) : undefined,
       };
 
       await companiesApi.createCompany(companyData);
@@ -301,92 +317,95 @@ function AddCompanyContent() {
               />
             </div>
 
-            {/* Demo Settings Section */}
+            {/* Subscription Settings Section */}
             <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
               <div className="flex items-center mb-4">
                 <Settings className="h-5 w-5 text-gray-500 mr-2" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white">Demo Settings</h3>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white">Subscription Settings</h3>
               </div>
 
-              {/* Demo Company Toggle */}
-              <div className="mb-6">
-                <div className="flex items-center">
-                  <input
-                    id="is_demo"
-                    type="checkbox"
-                    checked={formData.is_demo}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, is_demo: e.target.checked }))
-                    }
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label
-                    htmlFor="is_demo"
-                    className="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    This is a demo company
+              <div className="space-y-6">
+                {/* Subscription Plan Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Subscription Plan
                   </label>
+                  <select
+                    value={formData.plan_id || ''}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        plan_id: e.target.value ? parseInt(e.target.value) : undefined
+                      }))
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    disabled={loadingPlans}
+                  >
+                    <option value="">Auto-assign Basic Plan</option>
+                    {plans.map((plan) => (
+                      <option key={plan.id} value={plan.id}>
+                        {plan.display_name} - ¥{plan.price_monthly.toLocaleString()}/month
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Select a subscription plan or leave empty to auto-assign Basic Plan
+                  </p>
                 </div>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  Enable demo features and set expiration for this company
-                </p>
-              </div>
 
-              {/* Demo Fields - Only show when is_demo is checked */}
-              {formData.is_demo && (
-                <div className="space-y-6 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Demo End Date */}
+                {/* Trial Subscription Toggle */}
+                <div className="mb-6">
+                  <div className="flex items-center">
+                    <input
+                      id="is_trial"
+                      type="checkbox"
+                      checked={formData.is_trial}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, is_trial: e.target.checked }))
+                      }
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label
+                      htmlFor="is_trial"
+                      className="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      Create as trial subscription
+                    </label>
+                  </div>
+                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Enable trial period with limited time access to the selected plan
+                  </p>
+                </div>
+
+                {/* Trial Days - Only show when is_trial is checked */}
+                {formData.is_trial && (
+                  <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg border border-amber-200 dark:border-amber-800">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         <Calendar className="inline h-4 w-4 mr-1" />
-                        Demo End Date
+                        Trial Period (days)
                       </label>
                       <input
-                        type="date"
-                        value={formData.demo_end_date}
+                        type="number"
+                        min="1"
+                        max="365"
+                        value={formData.trial_days}
                         onChange={(e) =>
-                          setFormData((prev) => ({ ...prev, demo_end_date: e.target.value }))
+                          setFormData((prev) => ({
+                            ...prev,
+                            trial_days: parseInt(e.target.value) || 30
+                          }))
                         }
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                        min={new Date().toISOString().split('T')[0]}
+                        placeholder="30"
                       />
-                    </div>
-
-                    {/* Demo Features */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Demo Features
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.demo_features}
-                        onChange={(e) =>
-                          setFormData((prev) => ({ ...prev, demo_features: e.target.value }))
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                        placeholder="e.g., Basic Plan, 50 job posts, 100 applications"
-                      />
+                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        Trial will expire after this many days from creation
+                      </p>
                     </div>
                   </div>
-
-                  {/* Demo Notes */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Demo Notes
-                    </label>
-                    <textarea
-                      value={formData.demo_notes}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, demo_notes: e.target.value }))
-                      }
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none"
-                      placeholder="Internal notes about this demo account..."
-                    />
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
             {/* Submit Buttons */}

@@ -18,9 +18,9 @@ function EditCompanyContent() {
   const [showPrefectureDropdown, setShowPrefectureDropdown] = useState(false);
   const prefectureDropdownRef = useRef<HTMLDivElement>(null);
   const [company, setCompany] = useState<Company | null>(null);
-  const [formData, setFormData] = useState<CompanyFormData>({
+  const [formData, setFormData] = useState({
     name: '',
-    type: 'recruiter',
+    type: 'recruiter' as CompanyType,
     email: '',
     phone: '',
     website: '',
@@ -28,10 +28,6 @@ function EditCompanyContent() {
     prefecture: '',
     city: '',
     description: '',
-    is_demo: false,
-    demo_end_date: '',
-    demo_features: '',
-    demo_notes: '',
   });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -86,10 +82,6 @@ function EditCompanyContent() {
           prefecture: companyData.prefecture || '',
           city: companyData.city || '',
           description: companyData.description || '',
-          is_demo: companyData.is_demo || false,
-          demo_end_date: companyData.demo_end_date ? companyData.demo_end_date.split('T')[0] : '',
-          demo_features: companyData.demo_features || '',
-          demo_notes: companyData.demo_notes || '',
         });
         setError(null);
       } catch (err) {
@@ -120,12 +112,6 @@ function EditCompanyContent() {
         prefecture: formData.prefecture || undefined,
         city: formData.city || undefined,
         description: formData.description || undefined,
-        is_demo: formData.is_demo,
-        demo_end_date:
-          formData.is_demo && formData.demo_end_date ? formData.demo_end_date : undefined,
-        demo_features:
-          formData.is_demo && formData.demo_features ? formData.demo_features : undefined,
-        demo_notes: formData.is_demo && formData.demo_notes ? formData.demo_notes : undefined,
       };
 
       await companiesApi.updateCompany(company.id, updateData);
@@ -419,94 +405,6 @@ function EditCompanyContent() {
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none"
                 placeholder="Brief description of the company..."
               />
-            </div>
-
-            {/* Demo Settings Section */}
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-              <div className="flex items-center mb-4">
-                <Settings className="h-5 w-5 text-gray-500 mr-2" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white">Demo Settings</h3>
-              </div>
-
-              {/* Demo Company Toggle */}
-              <div className="mb-6">
-                <div className="flex items-center">
-                  <input
-                    id="is_demo"
-                    type="checkbox"
-                    checked={formData.is_demo}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, is_demo: e.target.checked }))
-                    }
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label
-                    htmlFor="is_demo"
-                    className="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    This is a demo company
-                  </label>
-                </div>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  Enable demo features and set expiration for this company
-                </p>
-              </div>
-
-              {/* Demo Fields - Only show when is_demo is checked */}
-              {formData.is_demo && (
-                <div className="space-y-6 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Demo End Date */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        <Calendar className="inline h-4 w-4 mr-1" />
-                        Demo End Date
-                      </label>
-                      <input
-                        type="date"
-                        value={formData.demo_end_date}
-                        onChange={(e) =>
-                          setFormData((prev) => ({ ...prev, demo_end_date: e.target.value }))
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                        min={new Date().toISOString().split('T')[0]}
-                      />
-                    </div>
-
-                    {/* Demo Features */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Demo Features
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.demo_features}
-                        onChange={(e) =>
-                          setFormData((prev) => ({ ...prev, demo_features: e.target.value }))
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                        placeholder="e.g., Basic Plan, 50 job posts, 100 applications"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Demo Notes */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Demo Notes
-                    </label>
-                    <textarea
-                      value={formData.demo_notes}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, demo_notes: e.target.value }))
-                      }
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none"
-                      placeholder="Internal notes about this demo account..."
-                    />
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Action Buttons */}

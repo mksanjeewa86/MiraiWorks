@@ -17,11 +17,19 @@ import {
   AlertTriangle,
   Power,
   PowerOff,
+  CreditCard,
+  Clock,
+  ArrowUpRight,
+  ArrowDownRight,
+  MessageSquare,
 } from 'lucide-react';
 import { companiesApi } from '@/api/companies';
 import { Company, CompanyFilters, CompanyType } from '@/types/company';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import { useAllPlanChangeRequests, useReviewPlanChangeRequest } from '@/hooks/useSubscription';
+import { PlanChangeRequestWithDetails } from '@/types/subscription';
+import { Button, Card } from '@/components/ui';
 
 function CompaniesPageContent() {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -30,6 +38,15 @@ function CompaniesPageContent() {
   const [selectedCompanies, setSelectedCompanies] = useState<Set<number>>(new Set());
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [viewingCompany, setViewingCompany] = useState<Company | null>(null);
+  const [activeTab, setActiveTab] = useState<'companies' | 'subscription-requests'>('companies');
+
+  // Subscription requests management
+  const { requests: subscriptionRequests, refetch: refetchRequests } = useAllPlanChangeRequests('pending');
+  const { reviewRequest } = useReviewPlanChangeRequest();
+  const [selectedRequest, setSelectedRequest] = useState<PlanChangeRequestWithDetails | null>(null);
+  const [reviewMessage, setReviewMessage] = useState('');
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewAction, setReviewAction] = useState<'approved' | 'rejected'>('approved');
 
   // Prevent body scroll on this page
   useEffect(() => {
@@ -46,7 +63,6 @@ function CompaniesPageContent() {
     search: '',
     company_type: undefined,
     is_active: undefined,
-    is_demo: undefined,
     include_deleted: false,
   });
 
@@ -214,6 +230,30 @@ function CompaniesPageContent() {
     }
   };
 
+  const handleReviewSubscriptionRequest = async () => {
+    if (!selectedRequest) return;
+
+    try {
+      await reviewRequest(selectedRequest.id, reviewAction, reviewMessage);
+      setShowReviewModal(false);
+      setSelectedRequest(null);
+      setReviewMessage('');
+      refetchRequests();
+      setSuccessMessage(`Request ${reviewAction} successfully`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to review request');
+    }
+  };
+
+  const formatPrice = (price: string | number) => {
+    const numPrice = typeof price === 'string' ? parseFloat(price) : price;
+    return new Intl.NumberFormat('ja-JP', {
+      style: 'currency',
+      currency: 'JPY',
+      minimumFractionDigits: 0,
+    }).format(numPrice);
+  };
+
   if (loading && companies.length === 0) {
     return (
       <AppLayout>
@@ -254,17 +294,63 @@ function CompaniesPageContent() {
           </div>
         )}
 
-        {selectedCompanies.size === 0 && (
-          <div className="flex items-center justify-end mb-6 mt-6 min-h-[56px]">
-            <Link
-              href="/companies/add"
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2"
-            >
-              <Plus className="h-4 w-4" />
-              <span>Add Company</span>
-            </Link>
+        {/* Tab Navigation */}
+        <div className="mb-6 mt-6">
+          <div className="border-b border-gray-200 dark:border-gray-700">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('companies')}
+                className={`
+                  py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                  ${activeTab === 'companies'
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                  }
+                `}
+              >
+                <div className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5" />
+                  Companies
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab('subscription-requests')}
+                className={`
+                  py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                  ${activeTab === 'subscription-requests'
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                  }
+                `}
+              >
+                <div className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" />
+                  Subscription Requests
+                  {subscriptionRequests.length > 0 && (
+                    <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                      {subscriptionRequests.length}
+                    </span>
+                  )}
+                </div>
+              </button>
+            </nav>
           </div>
-        )}
+        </div>
+
+        {/* Companies Tab Content */}
+        {activeTab === 'companies' && (
+          <>
+            {selectedCompanies.size === 0 && (
+              <div className="flex items-center justify-end mb-6 mt-6 min-h-[56px]">
+                <Link
+                  href="/companies/add"
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Add Company</span>
+                </Link>
+              </div>
+            )}
 
         {selectedCompanies.size > 0 && (
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6 mt-6 min-h-[56px]">
@@ -370,44 +456,30 @@ function CompaniesPageContent() {
             <div className="min-w-32">
               <select
                 value={
-                  filters.is_active === undefined && filters.is_demo === undefined
+                  filters.is_active === undefined
                     ? ''
-                    : filters.is_demo === true
-                      ? 'demo'
-                      : filters.is_active === true
-                        ? 'true'
-                        : filters.is_active === false
-                          ? 'false'
-                          : ''
+                    : filters.is_active === true
+                      ? 'true'
+                      : 'false'
                 }
                 onChange={(e) => {
                   const value = e.target.value;
-                  if (value === 'demo') {
-                    setFilters((prev) => ({
-                      ...prev,
-                      is_demo: true,
-                      is_active: undefined,
-                      page: 1,
-                    }));
-                  } else if (value === 'true') {
+                  if (value === 'true') {
                     setFilters((prev) => ({
                       ...prev,
                       is_active: true,
-                      is_demo: undefined,
                       page: 1,
                     }));
                   } else if (value === 'false') {
                     setFilters((prev) => ({
                       ...prev,
                       is_active: false,
-                      is_demo: undefined,
                       page: 1,
                     }));
                   } else {
                     setFilters((prev) => ({
                       ...prev,
                       is_active: undefined,
-                      is_demo: undefined,
                       page: 1,
                     }));
                   }
@@ -423,7 +495,6 @@ function CompaniesPageContent() {
                 <option value="">All Status</option>
                 <option value="true">Active</option>
                 <option value="false">Inactive</option>
-                <option value="demo">Demo</option>
               </select>
             </div>
 
@@ -608,11 +679,6 @@ function CompaniesPageContent() {
                               {company.is_active ? 'Active' : 'Inactive'}
                             </span>
                           )}
-                          {company.is_demo && (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-300">
-                              Demo
-                            </span>
-                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right">
@@ -637,14 +703,6 @@ function CompaniesPageContent() {
                                 <Edit className="h-3 w-3" />
                                 <span>Edit</span>
                               </Link>
-                              {company.is_demo && (
-                                <Link
-                                  href={`/companies/${company.id}/demo-settings`}
-                                  className="bg-orange-600 text-white px-3 py-1 rounded text-sm hover:bg-orange-700 flex items-center space-x-1"
-                                >
-                                  <span>Demo Settings</span>
-                                </Link>
-                              )}
                               <button
                                 onClick={async () => {
                                   if (confirm(`Are you sure you want to delete ${company.name}?`)) {
@@ -852,11 +910,6 @@ function CompaniesPageContent() {
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-900/40 dark:text-gray-300">
                             Deleted
                           </span>
-                          {viewingCompany.is_demo && (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-300">
-                              Demo
-                            </span>
-                          )}
                         </div>
                       </div>
 
@@ -904,6 +957,172 @@ function CompaniesPageContent() {
                 </button>
               </div>
             </div>
+          </div>
+        )}
+          </>
+        )}
+
+        {/* Subscription Requests Tab Content */}
+        {activeTab === 'subscription-requests' && (
+          <div className="space-y-6">
+            {subscriptionRequests.length === 0 ? (
+              <Card className="p-8 text-center">
+                <CreditCard className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                  No Pending Requests
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400">
+                  There are no subscription plan change requests awaiting review.
+                </p>
+              </Card>
+            ) : (
+              subscriptionRequests.map((request) => {
+                const isUpgrade =
+                  parseFloat(request.requested_plan?.price_monthly?.toString() || '0') >
+                  parseFloat(request.current_plan?.price_monthly?.toString() || '0');
+
+                return (
+                  <Card key={request.id} className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          {isUpgrade ? (
+                            <ArrowUpRight className="h-5 w-5 text-green-600" />
+                          ) : (
+                            <ArrowDownRight className="h-5 w-5 text-blue-600" />
+                          )}
+                          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                            {request.current_plan?.display_name} → {request.requested_plan?.display_name}
+                          </h3>
+                        </div>
+
+                        <div className="grid md:grid-cols-2 gap-4 mt-4">
+                          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                            <Building2 className="h-4 w-4" />
+                            <span>{request.company_name || 'Unknown Company'}</span>
+                          </div>
+
+                          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                            <Users className="h-4 w-4" />
+                            <span>Requested by {request.requester_name || 'Unknown User'}</span>
+                          </div>
+
+                          <div className="text-sm text-gray-600 dark:text-gray-400">
+                            {new Date(request.created_at).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                            })}
+                          </div>
+
+                          {request.current_plan && request.requested_plan && (
+                            <div className="text-sm font-medium text-gray-900 dark:text-white">
+                              {formatPrice(request.current_plan.price_monthly)} → {formatPrice(request.requested_plan.price_monthly)}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {request.request_message && (
+                      <div className="bg-gray-50 dark:bg-gray-900/20 p-4 rounded-lg mb-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <MessageSquare className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">Request Message</p>
+                        </div>
+                        <p className="text-sm text-gray-700 dark:text-gray-300">
+                          {request.request_message}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => {
+                          setSelectedRequest(request);
+                          setReviewAction('approved');
+                          setShowReviewModal(true);
+                        }}
+                        className="flex-1 bg-green-600 hover:bg-green-700"
+                      >
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Approve
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          setSelectedRequest(request);
+                          setReviewAction('rejected');
+                          setShowReviewModal(true);
+                        }}
+                        variant="outline"
+                        className="flex-1 text-red-600 border-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
+                      >
+                        <X className="h-4 w-4 mr-2" />
+                        Reject
+                      </Button>
+                    </div>
+                  </Card>
+                );
+              })
+            )}
+          </div>
+        )}
+
+        {/* Review Modal */}
+        {showReviewModal && selectedRequest && (
+          <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <Card className="max-w-md w-full p-6">
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+                {reviewAction === 'approved' ? 'Approve' : 'Reject'} Request
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                {selectedRequest.current_plan?.display_name} → {selectedRequest.requested_plan?.display_name}
+              </p>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
+                  Review Message (optional)
+                </label>
+                <textarea
+                  value={reviewMessage}
+                  onChange={(e) => setReviewMessage(e.target.value)}
+                  placeholder={
+                    reviewAction === 'approved'
+                      ? 'Approved. Welcome to the new plan!'
+                      : 'Reason for rejection...'
+                  }
+                  rows={3}
+                  className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                />
+              </div>
+
+              {reviewAction === 'approved' && (
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-3 rounded-lg mb-4">
+                  <p className="text-sm text-green-800 dark:text-green-200">
+                    <strong>Note:</strong> Approving this request will immediately change the company's plan to {selectedRequest.requested_plan?.display_name}.
+                  </p>
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleReviewSubscriptionRequest}
+                  className={`flex-1 ${reviewAction === 'approved' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}
+                >
+                  {reviewAction === 'approved' ? 'Approve' : 'Reject'}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowReviewModal(false);
+                    setSelectedRequest(null);
+                    setReviewMessage('');
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </Card>
           </div>
         )}
       </div>
