@@ -3,11 +3,9 @@ Subscription Email Service
 Handles email notifications for subscription-related events
 """
 import logging
-from typing import Optional
 
 from app.config import settings
 from app.models.plan_change_request import PlanChangeRequest
-from app.models.user import User
 from app.services.email_service import EmailService
 from app.services.email_template_service import EmailTemplateService
 

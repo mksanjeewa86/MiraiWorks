@@ -2,9 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config.endpoints import API_ROUTES
-from app.database import get_db
 from app.crud.feature import feature as feature_crud
 from app.crud.plan_feature import plan_feature as plan_feature_crud
+from app.database import get_db
+from app.dependencies import get_current_active_user
 from app.models.user import User
 from app.schemas.subscription import (
     FeatureCreate,
@@ -14,7 +15,6 @@ from app.schemas.subscription import (
     PlanFeatureAdd,
     PlanFeatureInfo,
 )
-from app.dependencies import get_current_active_user
 from app.utils.auth import require_roles
 from app.utils.constants import UserRole
 

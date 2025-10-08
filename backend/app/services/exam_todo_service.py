@@ -8,13 +8,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.crud.exam import exam as exam_crud
 from app.crud.exam import exam_assignment as exam_assignment_crud
 from app.crud.todo import todo as todo_crud
-from app.models.exam import Exam, ExamAssignment
+from app.models.exam import ExamAssignment
 from app.models.todo import Todo
 from app.models.workflow_node_execution import WorkflowNodeExecution
 from app.schemas.exam import ExamAssignmentCreate
 from app.services.exam_email_service import exam_email_service
 from app.utils.constants import TodoStatus, TodoType
-from app.utils.datetime_utils import get_utc_now
 
 
 class ExamTodoService:

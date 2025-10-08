@@ -1,16 +1,17 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config.endpoints import API_ROUTES
-from app.database import get_db
 from app.crud.company_subscription import company_subscription as subscription_crud
 from app.crud.plan_change_request import (
     plan_change_request as plan_change_request_crud,
 )
 from app.crud.plan_feature import plan_feature as plan_feature_crud
 from app.crud.subscription_plan import subscription_plan as plan_crud
+from app.database import get_db
+from app.dependencies import get_current_active_user
 from app.models.user import User
 from app.schemas.subscription import (
     CompanySubscriptionCreate,
@@ -25,7 +26,6 @@ from app.schemas.subscription import (
     SubscriptionPlanInfo,
     SubscriptionPlanWithFeatures,
 )
-from app.dependencies import get_current_active_user
 from app.services.subscription_service import subscription_service
 from app.utils.auth import require_roles
 from app.utils.constants import PlanChangeRequestStatus, UserRole

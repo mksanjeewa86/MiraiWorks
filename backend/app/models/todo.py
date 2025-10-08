@@ -17,7 +17,7 @@ from app.utils.constants import (
 from app.utils.datetime_utils import get_utc_now
 
 if TYPE_CHECKING:
-    from app.models.exam import Exam, ExamAssignment
+    from app.models.exam import Exam
     from app.models.todo_extension_request import TodoExtensionRequest
     from app.models.todo_viewer import TodoViewer
     from app.models.user import User

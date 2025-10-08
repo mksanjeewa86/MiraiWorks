@@ -6,7 +6,6 @@ from pydantic import BaseModel, ConfigDict
 
 from app.utils.constants import PlanChangeRequestStatus, PlanChangeRequestType
 
-
 # ============================================================================
 # Feature Schemas (with hierarchical support)
 # ============================================================================

@@ -31,7 +31,6 @@ from app.schemas.exam import (
     ExamUpdate,
     HybridExamCreate,
 )
-from app.schemas.question_bank import TemplateQuestionSelection
 from app.utils.datetime_utils import get_utc_now
 
 

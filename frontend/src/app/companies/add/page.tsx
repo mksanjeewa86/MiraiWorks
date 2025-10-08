@@ -44,7 +44,7 @@ function AddCompanyContent() {
     const fetchPlans = async () => {
       try {
         setLoadingPlans(true);
-        const response = await subscriptionPlanApi.getPlans();
+        const response = await subscriptionPlanApi.getPublicPlans();
         setPlans(response.data || []);
       } catch (err) {
         console.error('Failed to load subscription plans:', err);
