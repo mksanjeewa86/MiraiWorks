@@ -60,22 +60,14 @@ const WebsiteHeader = () => {
           </nav>
 
           {/* Desktop Action Buttons */}
-          <div className="hidden md:block">
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/auth/login"
-                className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
-              >
-                Sign In
-              </Link>
-              <Link
-                href="/auth/register"
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white shadow-sm transition-colors"
-                style={{ backgroundColor: 'var(--brand-primary)' }}
-              >
-                Get Started
-              </Link>
-            </div>
+          <div className="hidden md:flex items-center">
+            <Link
+              href="/auth/login"
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white shadow-sm transition-colors"
+              style={{ backgroundColor: 'var(--brand-primary)' }}
+            >
+              Sign In
+            </Link>
           </div>
 
           {/* Mobile menu button */}
@@ -146,18 +138,11 @@ const WebsiteHeader = () => {
               <div className="pt-4 pb-3 border-t border-gray-200">
                 <Link
                   href="/auth/login"
-                  className="text-gray-600 hover:text-gray-900 block px-3 py-2 text-base font-medium transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href="/auth/register"
-                  className="inline-flex items-center w-full justify-center px-4 py-2 mt-2 border border-transparent text-base font-medium rounded-md text-white shadow-sm transition-colors"
+                  className="inline-flex items-center w-full justify-center px-4 py-2 border border-transparent text-base font-medium rounded-md text-white shadow-sm transition-colors"
                   style={{ backgroundColor: 'var(--brand-primary)' }}
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  Get Started
+                  Sign In
                 </Link>
               </div>
             </div>
