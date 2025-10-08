@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import WebsiteLayout from '@/components/website/WebsiteLayout';
 
 export default function ServicesPage() {
   const services = [
@@ -129,7 +128,7 @@ export default function ServicesPage() {
   ];
 
   return (
-    <WebsiteLayout>
+    <>
       {/* Hero Section */}
       <section className="py-24 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
         {/* Background Pattern */}
@@ -576,6 +575,6 @@ export default function ServicesPage() {
           </div>
         </div>
       </section>
-    </WebsiteLayout>
+    </>
   );
 }

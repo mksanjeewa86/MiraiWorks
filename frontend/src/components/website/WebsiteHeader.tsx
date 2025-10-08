@@ -3,12 +3,18 @@
 import { useState } from 'react';
 import Link from 'next/link';
 
-const WebsiteHeader = () => {
+interface WebsiteHeaderProps {
+  siteType?: 'employer' | 'recruiter';
+}
+
+const WebsiteHeader = ({ siteType = 'employer' }: WebsiteHeaderProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
+
+  const basePath = siteType === 'employer' ? '/employer' : '/recruiter';
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-100">
@@ -27,31 +33,31 @@ const WebsiteHeader = () => {
           <nav className="hidden md:block">
             <div className="ml-10 flex items-center space-x-8">
               <Link
-                href="/"
+                href={basePath}
                 className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
               >
                 Home
               </Link>
               <Link
-                href="/jobs"
-                className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
-              >
-                Browse Jobs
-              </Link>
-              <Link
-                href="/about"
+                href={`${basePath}/about`}
                 className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
               >
                 About
               </Link>
               <Link
-                href="/services"
+                href={`${basePath}/services`}
                 className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
               >
                 Services
               </Link>
               <Link
-                href="/contact"
+                href={`${basePath}/pricing`}
+                className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
+              >
+                Pricing
+              </Link>
+              <Link
+                href={`${basePath}/contact`}
                 className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
               >
                 Contact
@@ -101,35 +107,35 @@ const WebsiteHeader = () => {
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 border-t border-gray-200">
               <Link
-                href="/"
+                href={basePath}
                 className="text-gray-600 hover:text-gray-900 block px-3 py-2 text-base font-medium transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Home
               </Link>
               <Link
-                href="/jobs"
-                className="text-gray-600 hover:text-gray-900 block px-3 py-2 text-base font-medium transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Browse Jobs
-              </Link>
-              <Link
-                href="/about"
+                href={`${basePath}/about`}
                 className="text-gray-600 hover:text-gray-900 block px-3 py-2 text-base font-medium transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 About
               </Link>
               <Link
-                href="/services"
+                href={`${basePath}/services`}
                 className="text-gray-600 hover:text-gray-900 block px-3 py-2 text-base font-medium transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Services
               </Link>
               <Link
-                href="/contact"
+                href={`${basePath}/pricing`}
+                className="text-gray-600 hover:text-gray-900 block px-3 py-2 text-base font-medium transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Pricing
+              </Link>
+              <Link
+                href={`${basePath}/contact`}
                 className="text-gray-600 hover:text-gray-900 block px-3 py-2 text-base font-medium transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >

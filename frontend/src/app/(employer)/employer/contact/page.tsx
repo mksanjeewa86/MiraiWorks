@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import WebsiteLayout from '@/components/website/WebsiteLayout';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -28,7 +27,7 @@ export default function ContactPage() {
   };
 
   return (
-    <WebsiteLayout>
+    <>
       {/* Hero Section */}
       <section className="py-24 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 relative overflow-hidden">
         {/* Background Pattern */}
@@ -421,6 +420,6 @@ export default function ContactPage() {
           </div>
         </div>
       </section>
-    </WebsiteLayout>
+    </>
   );
 }

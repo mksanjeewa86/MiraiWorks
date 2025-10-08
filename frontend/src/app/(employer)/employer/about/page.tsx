@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import WebsiteLayout from '@/components/website/WebsiteLayout';
 
 export default function AboutPage() {
   const teamMembers = [
@@ -30,7 +29,7 @@ export default function AboutPage() {
   ];
 
   return (
-    <WebsiteLayout>
+    <>
       {/* Hero Section */}
       <section className="py-24 bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 relative overflow-hidden">
         {/* Background Pattern */}
@@ -326,6 +325,6 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
-    </WebsiteLayout>
+    </>
   );
 }

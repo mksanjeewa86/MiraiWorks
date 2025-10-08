@@ -1,6 +1,11 @@
 import Link from 'next/link';
 
-const WebsiteFooter = () => {
+interface WebsiteFooterProps {
+  siteType?: 'employer' | 'recruiter';
+}
+
+const WebsiteFooter = ({ siteType = 'employer' }: WebsiteFooterProps) => {
+  const basePath = siteType === 'employer' ? '/employer' : '/recruiter';
   return (
     <footer className="bg-gray-900 text-gray-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -117,23 +122,23 @@ const WebsiteFooter = () => {
             <h4 className="text-lg font-semibold text-white mb-4">Company</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/about" className="text-gray-400 hover:text-white transition-colors">
+                <Link href={`${basePath}/about`} className="text-gray-400 hover:text-white transition-colors">
                   About Us
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="text-gray-400 hover:text-white transition-colors">
+                <Link href={`${basePath}/contact`} className="text-gray-400 hover:text-white transition-colors">
                   Contact
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors">
-                  Privacy Policy
+                <Link href={`${basePath}/services`} className="text-gray-400 hover:text-white transition-colors">
+                  Services
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="text-gray-400 hover:text-white transition-colors">
-                  Terms of Service
+                <Link href={`${basePath}/pricing`} className="text-gray-400 hover:text-white transition-colors">
+                  Pricing
                 </Link>
               </li>
             </ul>
