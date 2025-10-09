@@ -167,7 +167,12 @@ export default function Sidebar({
   const { user } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
-  const { subscription } = useMySubscription();
+
+  // Only fetch subscription for company users (not candidates)
+  const isCandidate = user?.roles?.some((userRole) => userRole.role.name === 'candidate');
+  const { subscription } = useMySubscription({
+    enabled: !isCandidate // Only run for non-candidate users
+  });
 
   // Get role-based color scheme
   const colorScheme = getRoleColorScheme(user?.roles);

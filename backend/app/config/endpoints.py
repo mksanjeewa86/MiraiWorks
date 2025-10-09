@@ -51,6 +51,7 @@ class AuthRoutes:
 
     # 2FA endpoints
     TWO_FA_VERIFY = "/2fa/verify"
+    TWO_FA_RESEND = "/2fa/resend"
 
     # Password reset endpoints
     PASSWORD_RESET_REQUEST = "/password-reset/request"

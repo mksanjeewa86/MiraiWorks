@@ -13,15 +13,19 @@ class LoginRequest(BaseModel):
 
 class RegisterRequest(BaseModel):
     email: EmailStr
-    password: str
     first_name: str
     last_name: str
     phone: Optional[str] = None
+    role: Optional[str] = "candidate"  # candidate, employer, recruiter
+    password: Optional[str] = None  # Optional - if not provided, system generates temp password
+    company_name: Optional[str] = None
+    company_domain: Optional[str] = None
 
     @field_validator("password")
     @classmethod
     def validate_password(cls, v):
-        if len(v) < 8:
+        # Only validate if password is provided (for backward compatibility)
+        if v is not None and len(v) < 8:
             raise ValueError("Password must be at least 8 characters long")
         return v
 
@@ -31,6 +35,13 @@ class RegisterRequest(BaseModel):
         if not v or not v.strip():
             raise ValueError("Name fields cannot be empty")
         return v.strip()
+
+    @field_validator("role")
+    @classmethod
+    def validate_role(cls, v):
+        if v and v not in ["candidate", "employer", "recruiter", "admin"]:
+            raise ValueError("Invalid role. Must be candidate, employer, recruiter, or admin")
+        return v or "candidate"
 
 
 class RegisterResponse(BaseModel):
@@ -63,6 +74,15 @@ class TwoFAVerifyResponse(BaseModel):
     token_type: str = "bearer"
     expires_in: int
     user: "UserInfo"
+
+
+class TwoFAResendRequest(BaseModel):
+    user_id: int
+    email: EmailStr
+
+
+class TwoFAResendResponse(BaseModel):
+    message: str
 
 
 class RefreshTokenRequest(BaseModel):

@@ -21,6 +21,7 @@ export type AuthAction =
   | { type: 'AUTH_START' }
   | { type: 'AUTH_SUCCESS'; payload: AuthResponse }
   | { type: 'AUTH_ERROR'; payload: string }
+  | { type: 'AUTH_IDLE' }
   | { type: 'LOGOUT' }
   | { type: 'CLEAR_ERROR' }
   | { type: 'UPDATE_USER'; payload: User }

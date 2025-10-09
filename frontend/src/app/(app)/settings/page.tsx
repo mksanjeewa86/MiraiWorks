@@ -58,10 +58,18 @@ function SettingsPageContent() {
     },
   });
 
-  // Subscription hooks (only for company admins)
-  const { subscription, refetch: refetchSubscription } = useMySubscription();
+  // Check if user is company admin (for subscription features)
+  const isCompanyAdmin = user?.roles?.some(role => role.role.name === 'admin');
+  const isCandidate = user?.roles?.some(role => role.role.name === 'candidate');
+
+  // Subscription hooks (only for company admins, not candidates)
+  const { subscription, refetch: refetchSubscription } = useMySubscription({
+    enabled: isCompanyAdmin && !isCandidate
+  });
   const { plans } = useSubscriptionPlans();
-  const { requests, refetch: refetchRequests } = useMyPlanChangeRequests();
+  const { requests, refetch: refetchRequests } = useMyPlanChangeRequests({
+    enabled: isCompanyAdmin && !isCandidate
+  });
   const { requestPlanChange } = usePlanChangeRequestMutations();
 
   const [showPlanChangeModal, setShowPlanChangeModal] = useState(false);
@@ -500,9 +508,7 @@ function SettingsPageContent() {
     }
   };
 
-  // Check if user is company admin
-  const isCompanyAdmin = user?.roles?.some(role => role.role.name === 'admin');
-
+  // Sections configuration (isCompanyAdmin already defined at top)
   const sections = [
     { id: 'account', name: 'Account', icon: User, description: 'Personal information and profile' },
     { id: 'security', name: 'Security', icon: Shield, description: 'Password and authentication' },

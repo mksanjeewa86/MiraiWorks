@@ -135,6 +135,7 @@ export const API_ENDPOINTS = {
     ME: '/api/auth/me',
     REFRESH: '/api/auth/refresh',
     REGISTER: '/api/auth/register',
+    RESEND_2FA: '/api/auth/2fa/resend',
     RESET_PASSWORD: '/api/auth/reset-password',
     VERIFY_2FA: '/api/auth/2fa/verify',
   },

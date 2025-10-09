@@ -52,12 +52,13 @@ export interface LoginCredentials {
 
 export interface RegisterData {
   email: string;
-  password: string;
+  password?: string;
   first_name: string;
   last_name: string;
   phone?: string;
-  company_name: string;
-  company_domain: string;
+  role?: string;
+  company_name?: string;
+  company_domain?: string;
   industry?: string;
 }
 

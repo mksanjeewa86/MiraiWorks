@@ -181,6 +181,30 @@ class AuthService:
         """Generate a 6-digit 2FA code."""
         return str(secrets.randbelow(900000) + 100000)
 
+    def generate_temporary_password(self) -> str:
+        """
+        Generate secure temporary password.
+        - 16 characters long
+        - Mix of uppercase, lowercase, numbers, special chars
+        - Cryptographically random
+        - Cannot be guessed or brute-forced easily
+        """
+        import string
+
+        chars = string.ascii_letters + string.digits + "@$!%*?&#"
+        password = "".join(secrets.choice(chars) for _ in range(16))
+
+        # Ensure all character types are present
+        while not (
+            any(c.isupper() for c in password)
+            and any(c.islower() for c in password)
+            and any(c.isdigit() for c in password)
+            and any(c in "@$!%*?&#" for c in password)
+        ):
+            password = "".join(secrets.choice(chars) for _ in range(16))
+
+        return password
+
     def generate_activation_token(self, email: str) -> str:
         """Generate an activation token for user email verification."""
         data = {"sub": email, "type": "activation"}

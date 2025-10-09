@@ -96,6 +96,16 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
         ...state,
         isLoading: action.payload,
       };
+    case 'AUTH_IDLE':
+      return {
+        ...state,
+        isLoading: false,
+        error: null,
+        isAuthenticated: false,
+        user: null,
+        accessToken: null,
+        refreshToken: null,
+      };
     default:
       return state;
   }
@@ -303,13 +313,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await authApi.register(data);
 
-      // Store tokens
-      localStorage.setItem('accessToken', response.data!.access_token);
-      localStorage.setItem('refreshToken', response.data!.refresh_token);
-
-      dispatch({ type: 'AUTH_SUCCESS', payload: response.data! });
+      // Only store tokens if they exist (backward compatibility)
+      // New flow: No tokens returned, user must activate account first
+      if (response.data?.access_token && response.data?.refresh_token) {
+        localStorage.setItem('accessToken', response.data.access_token);
+        localStorage.setItem('refreshToken', response.data.refresh_token);
+        dispatch({ type: 'AUTH_SUCCESS', payload: response.data });
+      } else {
+        // Registration successful but no auto-login (account inactive)
+        dispatch({ type: 'AUTH_IDLE' });
+      }
     } catch (error: unknown) {
-      console.error('Registration error:', error);
       let errorMessage = 'Registration failed';
 
       // Handle different error response formats

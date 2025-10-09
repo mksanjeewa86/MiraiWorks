@@ -21,13 +21,18 @@ import { toast } from 'sonner';
 
 /**
  * Hook for fetching company's current subscription
+ * @param options.enabled - If false, skip fetching subscription (default: true)
  */
-export function useMySubscription() {
+export function useMySubscription(options?: { enabled?: boolean }) {
+  const enabled = options?.enabled ?? true; // Default to true if not provided
+
   const [subscription, setSubscription] = useState<CompanySubscriptionWithFeatures | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchSubscription = useCallback(async () => {
+    if (!enabled) return; // Skip if disabled
+
     setLoading(true);
     setError(null);
 
@@ -45,11 +50,13 @@ export function useMySubscription() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [enabled]);
 
   useEffect(() => {
-    fetchSubscription();
-  }, [fetchSubscription]);
+    if (enabled) {
+      fetchSubscription();
+    }
+  }, [fetchSubscription, enabled]);
 
   return { subscription, loading, error, refetch: fetchSubscription };
 }
@@ -134,13 +141,18 @@ export function useSubscriptionMutations() {
 
 /**
  * Hook for plan change requests
+ * @param options.enabled - If false, skip fetching requests (default: true)
  */
-export function useMyPlanChangeRequests() {
+export function useMyPlanChangeRequests(options?: { enabled?: boolean }) {
+  const enabled = options?.enabled ?? true; // Default to true if not provided
+
   const [requests, setRequests] = useState<PlanChangeRequestWithDetails[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchRequests = useCallback(async () => {
+    if (!enabled) return; // Skip if disabled
+
     setLoading(true);
     setError(null);
 
@@ -158,11 +170,13 @@ export function useMyPlanChangeRequests() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [enabled]);
 
   useEffect(() => {
-    fetchRequests();
-  }, [fetchRequests]);
+    if (enabled) {
+      fetchRequests();
+    }
+  }, [fetchRequests, enabled]);
 
   return { requests, loading, error, refetch: fetchRequests };
 }

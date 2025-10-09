@@ -34,6 +34,8 @@ from app.schemas.auth import (
     RefreshTokenResponse,
     RegisterRequest,
     RegisterResponse,
+    TwoFAResendRequest,
+    TwoFAResendResponse,
     TwoFAVerifyRequest,
     TwoFAVerifyResponse,
     UserInfo,
@@ -104,7 +106,7 @@ async def login(
     )
 
     # Check if 2FA is required (either individual setting or role-based requirement)
-    requires_2fa = False
+    requires_2fa = user.require_2fa
     if requires_2fa:
         logger.info(
             "2FA required for user", user_id=user.id, email=user.email, component="2fa"
@@ -118,22 +120,19 @@ async def login(
         await email_service.send_2fa_code(user.email, code, user.full_name)
         logger.info("2FA code sent", user_id=user.id, component="2fa")
 
-        # Determine if this is individual user 2FA or admin role-based 2FA
-        user_data = None
-        if user.require_2fa:
-            # Individual user 2FA - include user data in response
-            user_data = UserInfo(
-                id=user.id,
-                email=user.email,
-                first_name=user.first_name,
-                last_name=user.last_name,
-                full_name=user.full_name,
-                company_id=user.company_id,
-                company=user.company,
-                roles=user.user_roles,
-                is_active=user.is_active,
-                last_login=user.last_login,
-            )
+        # Include user data in response for 2FA verification
+        user_data = UserInfo(
+            id=user.id,
+            email=user.email,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            full_name=user.full_name,
+            company_id=user.company_id,
+            company=user.company,
+            roles=user.user_roles,
+            is_active=user.is_active,
+            last_login=user.last_login,
+        )
 
         return LoginResponse(
             access_token="",
@@ -169,9 +168,12 @@ async def login(
 
 @router.post(API_ROUTES.AUTH.REGISTER, response_model=RegisterResponse)
 async def register(register_data: RegisterRequest, db: AsyncSession = Depends(get_db)):
-    """Register a new candidate user."""
+    """Register a new user with standardized flow (all roles)."""
     logger.info(
-        "New user registration attempt", email=register_data.email, component="auth"
+        "New user registration attempt",
+        email=register_data.email,
+        role=register_data.role,
+        component="auth",
     )
 
     # Check if user already exists
@@ -180,90 +182,93 @@ async def register(register_data: RegisterRequest, db: AsyncSession = Depends(ge
     )
     existing_user = existing_user_result.scalar_one_or_none()
 
+    # Generate temporary password if not provided
+    if register_data.password:
+        # Password provided (for backward compatibility or admin-created users)
+        temp_password = register_data.password
+        hashed_password = auth_service.get_password_hash(register_data.password)
+    else:
+        # Generate secure temporary password
+        temp_password = auth_service.generate_temporary_password()
+        hashed_password = auth_service.get_password_hash(temp_password)
+
     if existing_user:
-        logger.warning(
-            "Registration failed - email already exists",
+        # If user exists and is ACTIVE, reject registration
+        if existing_user.is_active:
+            logger.warning(
+                "Registration failed - email already exists (active account)",
+                email=register_data.email,
+                component="auth",
+            )
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email address is already registered",
+            )
+
+        # If user exists but is INACTIVE, update the user record
+        logger.info(
+            "Updating existing inactive user",
             email=register_data.email,
+            user_id=existing_user.id,
             component="auth",
         )
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email address is already registered",
+
+        # Update existing user with new information
+        existing_user.hashed_password = hashed_password
+        existing_user.first_name = register_data.first_name
+        existing_user.last_name = register_data.last_name
+        existing_user.phone = register_data.phone or "+81-90-0000-0000"
+        existing_user.is_active = False
+        existing_user.last_login = None
+
+        await db.commit()
+        await db.refresh(existing_user)
+        new_user = existing_user
+    else:
+        # Create new user with INACTIVE status
+        new_user = User(
+            email=register_data.email,
+            hashed_password=hashed_password,
+            first_name=register_data.first_name,
+            last_name=register_data.last_name,
+            phone=register_data.phone or "+81-90-0000-0000",  # Default Japanese phone
+            is_active=False,  # INACTIVE until password reset
+            is_admin=False,
+            company_id=None,  # No company for self-registered users
+            created_by=None,  # Self-registered user
+            last_login=None,  # No login yet
         )
 
-    # Hash password
-    hashed_password = auth_service.get_password_hash(register_data.password)
-
-    # Create new user
-    new_user = User(
-        email=register_data.email,
-        hashed_password=hashed_password,
-        first_name=register_data.first_name,
-        last_name=register_data.last_name,
-        phone=register_data.phone or "+81-90-0000-0000",  # Default Japanese phone
-        is_active=True,  # Candidates are immediately active
-        is_admin=False,  # Candidates are not admins
-        company_id=None,  # Candidates don't belong to companies
-        created_by=None,  # Self-registered user
-        last_login=get_utc_now(),
-    )
-
-    db.add(new_user)
-    await db.commit()
-    await db.refresh(new_user)
-
-    # Assign default "candidate" role
-    candidate_role_result = await db.execute(
-        select(Role).where(Role.name == "candidate")
-    )
-    candidate_role = candidate_role_result.scalar_one_or_none()
-
-    if candidate_role:
-        user_role = UserRoleModel(user_id=new_user.id, role_id=candidate_role.id)
-        db.add(user_role)
-
-    # Create default user settings
-    default_settings = UserSettings(
-        user_id=new_user.id,
-        job_title="Job Seeker",
-        bio="Welcome to MiraiWorks! I'm looking for exciting career opportunities.",
-        email_notifications=True,
-        push_notifications=True,
-        sms_notifications=False,
-        interview_reminders=True,
-        application_updates=True,
-        message_notifications=True,
-        language="en",
-        timezone="Asia/Tokyo",
-        date_format="YYYY/MM/DD",
-    )
-    db.add(default_settings)
-    await db.commit()
-
-    # Refresh user to get updated relationships
-    await db.refresh(new_user)
+        db.add(new_user)
+        await db.commit()
+        await db.refresh(new_user)
 
     logger.info(
-        "User registered successfully",
+        "User registered successfully - account INACTIVE",
         user_id=new_user.id,
         email=new_user.email,
+        role=register_data.role or "candidate",
         component="auth",
     )
 
-    # Send registration completion email
+    # Send welcome email with temporary password
     try:
-        await email_service.send_registration_completion_email(
-            email=new_user.email, first_name=new_user.first_name
+        await email_service.send_activation_email(
+            email=new_user.email,
+            first_name=new_user.first_name,
+            activation_token="",  # Not using token-based activation
+            temporary_password=temp_password,
+            user_id=new_user.id,
         )
         logger.info(
-            "Registration completion email sent successfully",
+            "Welcome email sent successfully with temporary password",
             user_id=new_user.id,
             email=new_user.email,
             component="email",
         )
     except Exception as e:
         logger.error(
-            "Failed to send registration completion email",
+            "Failed to send welcome email",
             user_id=new_user.id,
             email=new_user.email,
             error=str(e),
@@ -271,27 +276,14 @@ async def register(register_data: RegisterRequest, db: AsyncSession = Depends(ge
         )
         # Don't fail registration if email fails
 
-    # Generate authentication tokens for automatic login
-    tokens = await auth_service.create_login_tokens(db, new_user)
-
+    # Return success response WITHOUT tokens (no auto-login)
     return RegisterResponse(
-        message="Account created successfully",
+        message="Account created successfully. Check your email for login instructions.",
         success=True,
-        access_token=tokens["access_token"],
-        refresh_token=tokens["refresh_token"],
-        expires_in=tokens["expires_in"],
-        user=UserInfo(
-            id=new_user.id,
-            email=new_user.email,
-            first_name=new_user.first_name,
-            last_name=new_user.last_name,
-            full_name=new_user.full_name,
-            company_id=new_user.company_id,
-            company=new_user.company,
-            roles=new_user.user_roles,
-            is_active=new_user.is_active,
-            last_login=new_user.last_login,
-        ),
+        access_token=None,
+        refresh_token=None,
+        expires_in=None,
+        user=None,
     )
 
 
@@ -314,7 +306,7 @@ async def verify_2fa(
             selectinload(User.company),
             selectinload(User.user_roles).selectinload(UserRoleModel.role),
         )
-        .where(User.id == verify_data.user_id, User.is_active is True)
+        .where(User.id == verify_data.user_id, User.is_active == True)
     )
 
     user = result.scalar_one_or_none()
@@ -343,6 +335,59 @@ async def verify_2fa(
             last_login=user.last_login,
         ),
     )
+
+
+@router.post(API_ROUTES.AUTH.TWO_FA_RESEND, response_model=TwoFAResendResponse)
+async def resend_2fa_code(
+    resend_data: TwoFAResendRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Resend 2FA code to user's email."""
+    logger.info(
+        "2FA code resend request",
+        user_id=resend_data.user_id,
+        email=resend_data.email,
+        component="2fa",
+    )
+
+    client_ip = await get_client_ip(request)
+
+    # Rate limiting for resend attempts
+    rate_key = f"2fa_resend:{client_ip}:{resend_data.user_id}"
+    if not await check_rate_limit(rate_key, limit=3, window=300):  # 3 attempts per 5 minutes
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many resend attempts. Please try again later.",
+        )
+
+    # Get user
+    result = await db.execute(
+        select(User).where(User.id == resend_data.user_id, User.is_active == True)
+    )
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+
+    # Verify email matches
+    if user.email != resend_data.email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid email address"
+        )
+
+    # Generate and send new 2FA code
+    code = auth_service.generate_2fa_code()
+    await store_2fa_code(user.id, code, ttl=600)  # 10 minutes
+
+    # Send 2FA code via email
+    await email_service.send_2fa_code(user.email, code, user.full_name)
+
+    logger.info("2FA code resent", user_id=user.id, component="2fa")
+
+    return TwoFAResendResponse(message="Verification code sent successfully")
 
 
 @router.post(API_ROUTES.AUTH.REFRESH, response_model=RefreshTokenResponse)
@@ -410,7 +455,7 @@ async def request_password_reset(
     result = await db.execute(
         select(User)
         .options(selectinload(User.company))
-        .where(User.email == reset_data.email, User.is_active is True)
+        .where(User.email == reset_data.email, User.is_active == True)
     )
 
     user = result.scalar_one_or_none()
@@ -442,8 +487,8 @@ async def request_password_reset(
             .join(UserRoleModel.role)
             .where(
                 User.company_id == user.company_id,
-                User.is_active is True,
-                User.is_admin is True,
+                User.is_active == True,
+                User.is_admin == True,
             )
         )
         company_admins = admin_result.scalars().all()
@@ -453,7 +498,7 @@ async def request_password_reset(
             select(User)
             .join(User.user_roles)
             .join(UserRoleModel.role)
-            .where(User.is_active is True, User.is_admin is True)
+            .where(User.is_active == True, User.is_admin == True)
         )
         company_admins = admin_result.scalars().all()
 
@@ -759,6 +804,23 @@ async def activate_account(
         await db.execute(
             update(Company).where(Company.id == user.company_id).values(is_active="1")
         )
+
+    # Assign default "candidate" role if user doesn't have any roles
+    user_roles_result = await db.execute(
+        select(UserRoleModel).where(UserRoleModel.user_id == user.id)
+    )
+    existing_roles = user_roles_result.scalars().all()
+
+    if not existing_roles:
+        # Assign default candidate role
+        candidate_role_result = await db.execute(
+            select(Role).where(Role.name == "candidate")
+        )
+        candidate_role = candidate_role_result.scalar_one_or_none()
+
+        if candidate_role:
+            user_role = UserRoleModel(user_id=user.id, role_id=candidate_role.id)
+            db.add(user_role)
 
     await db.commit()
 

@@ -35,7 +35,7 @@ export default function RecruiterHome() {
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
               <Link
-                href="/auth/register"
+                href="/auth/register?role=recruiter"
                 className="group relative inline-flex items-center px-8 py-4 text-lg font-semibold rounded-2xl text-white bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl"
               >
                 <span className="relative z-10">Start Free Trial</span>
@@ -196,7 +196,7 @@ export default function RecruiterHome() {
           </p>
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
             <Link
-              href="/auth/register"
+              href="/auth/register?role=recruiter"
               className="group relative inline-flex items-center px-10 py-5 text-xl font-bold rounded-2xl text-white bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 transition-all duration-300 transform hover:scale-105 shadow-2xl"
             >
               <span className="relative z-10">Start Free Trial</span>

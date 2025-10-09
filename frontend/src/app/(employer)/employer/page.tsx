@@ -35,7 +35,7 @@ export default function EmployerHome() {
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
               <Link
-                href="/auth/register"
+                href="/auth/register?role=employer"
                 className="group relative inline-flex items-center px-8 py-4 text-lg font-semibold rounded-2xl text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl"
               >
                 <span className="relative z-10">Start Free Trial</span>
@@ -196,7 +196,7 @@ export default function EmployerHome() {
           </p>
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
             <Link
-              href="/auth/register"
+              href="/auth/register?role=employer"
               className="group relative inline-flex items-center px-10 py-5 text-xl font-bold rounded-2xl text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transition-all duration-300 transform hover:scale-105 shadow-2xl"
             >
               <span className="relative z-10">Start Hiring Now</span>

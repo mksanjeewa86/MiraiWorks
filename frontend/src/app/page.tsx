@@ -22,7 +22,7 @@ export default function Home() {
           </p>
 
           {/* Choice Cards */}
-          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {/* Employer Card */}
             <Link
               href="/employer"
@@ -75,6 +75,36 @@ export default function Home() {
                 </p>
 
                 <div className="inline-flex items-center text-blue-300 font-semibold group-hover:text-blue-200">
+                  Get Started
+                  <svg className="w-5 h-5 ml-2 transform group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </div>
+              </div>
+            </Link>
+
+            {/* Candidate Card */}
+            <Link
+              href="/candidate"
+              className="group relative bg-white/10 backdrop-blur-lg rounded-3xl p-12 border-2 border-white/20 hover:border-green-400 transition-all duration-300 transform hover:scale-105 hover:shadow-2xl"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-green-600/20 to-teal-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+              <div className="relative">
+                <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-green-500 to-teal-500 rounded-2xl flex items-center justify-center transform group-hover:rotate-6 transition-transform duration-300">
+                  <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+
+                <h2 className="text-3xl font-bold text-white mb-4">
+                  I'm a Candidate
+                </h2>
+                <p className="text-lg text-gray-300 mb-6">
+                  Find your dream job. Create your resume, apply to positions, and track your applications.
+                </p>
+
+                <div className="inline-flex items-center text-green-300 font-semibold group-hover:text-green-200">
                   Get Started
                   <svg className="w-5 h-5 ml-2 transform group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
