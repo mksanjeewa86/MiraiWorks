@@ -10,7 +10,6 @@ from sqlalchemy.orm import joinedload
 
 from app.crud.base import CRUDBase
 from app.models.system_update import SystemUpdate
-from app.models.user import User
 
 
 class CRUDSystemUpdate(CRUDBase[SystemUpdate, dict, dict]):
