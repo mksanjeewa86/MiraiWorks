@@ -208,6 +208,12 @@ class User(Base):
         back_populates="updater",
         cascade="all, delete-orphan",
     )
+    system_updates_created = relationship(
+        "SystemUpdate",
+        foreign_keys="SystemUpdate.created_by_id",
+        back_populates="created_by",
+        cascade="all, delete-orphan",
+    )
 
     @property
     def full_name(self):

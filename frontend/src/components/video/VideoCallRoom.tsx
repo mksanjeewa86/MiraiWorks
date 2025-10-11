@@ -15,6 +15,7 @@ import { useTranscription } from '../../hooks/useTranscription';
 import { ChatMessage } from '../../types/video';
 import { useAuth } from '../../contexts/AuthContext';
 import type { VideoCallRoomProps } from '@/types/components';
+import { ROUTES } from '@/routes/config';
 
 export const VideoCallRoom: React.FC<VideoCallRoomProps> = ({ callId: propCallId, roomCode }) => {
   const { callId: paramCallId } = useParams<{ callId: string }>();
@@ -124,7 +125,7 @@ export const VideoCallRoom: React.FC<VideoCallRoomProps> = ({ callId: propCallId
     try {
       await disconnect();
       await endCall();
-      router.push('/interviews');
+      router.push(ROUTES.INTERVIEWS.BASE);
     } catch (error) {
       console.error('Failed to end call:', error);
     }
@@ -164,7 +165,7 @@ export const VideoCallRoom: React.FC<VideoCallRoomProps> = ({ callId: propCallId
           <h2 className="text-xl font-semibold text-red-600 mb-4">
             {callError || 'Video call not found'}
           </h2>
-          <Button onClick={() => router.push('/interviews')}>Return to Interviews</Button>
+          <Button onClick={() => router.push(ROUTES.INTERVIEWS.BASE)}>Return to Interviews</Button>
         </Card>
       </div>
     );

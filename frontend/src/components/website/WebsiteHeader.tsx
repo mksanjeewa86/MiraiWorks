@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { ROUTES } from '@/routes/config';
 
 interface WebsiteHeaderProps {
   siteType?: 'employer' | 'recruiter';
@@ -14,7 +15,7 @@ const WebsiteHeader = ({ siteType = 'employer' }: WebsiteHeaderProps) => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  const basePath = siteType === 'employer' ? '/employer' : '/recruiter';
+  const basePath = siteType === 'employer' ? ROUTES.LANDING.EMPLOYER.BASE : ROUTES.LANDING.RECRUITER.BASE;
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-100">
@@ -22,7 +23,7 @@ const WebsiteHeader = ({ siteType = 'employer' }: WebsiteHeaderProps) => {
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
           <div className="flex items-center">
-            <Link href="/" className="flex-shrink-0">
+            <Link href={ROUTES.HOME} className="flex-shrink-0">
               <h1 className="text-2xl font-bold" style={{ color: 'var(--brand-primary)' }}>
                 MiraiWorks
               </h1>
@@ -68,7 +69,7 @@ const WebsiteHeader = ({ siteType = 'employer' }: WebsiteHeaderProps) => {
           {/* Desktop Action Buttons */}
           <div className="hidden md:flex items-center">
             <Link
-              href="/auth/login"
+              href={ROUTES.AUTH.LOGIN}
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white shadow-sm transition-colors"
               style={{ backgroundColor: 'var(--brand-primary)' }}
             >
@@ -143,7 +144,7 @@ const WebsiteHeader = ({ siteType = 'employer' }: WebsiteHeaderProps) => {
               </Link>
               <div className="pt-4 pb-3 border-t border-gray-200">
                 <Link
-                  href="/auth/login"
+                  href={ROUTES.AUTH.LOGIN}
                   className="inline-flex items-center w-full justify-center px-4 py-2 border border-transparent text-base font-medium rounded-md text-white shadow-sm transition-colors"
                   style={{ backgroundColor: 'var(--brand-primary)' }}
                   onClick={() => setIsMenuOpen(false)}

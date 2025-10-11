@@ -1,0 +1,401 @@
+{
+  "page": {
+    "title": "Companies",
+    "subtitle": "Manage company profiles and partnerships",
+    "searchPlaceholder": "Search companies by name, industry, or location...",
+    "addCompany": "Add Company",
+    "importCompanies": "Import Companies",
+    "exportList": "Export List"
+  },
+  "tabs": {
+    "all": "All Companies",
+    "active": "Active",
+    "partners": "Partners",
+    "prospects": "Prospects",
+    "archived": "Archived"
+  },
+  "filters": {
+    "title": "Filters",
+    "clearAll": "Clear All",
+    "apply": "Apply Filters",
+    "industry": {
+      "label": "Industry",
+      "technology": "Technology",
+      "finance": "Finance",
+      "healthcare": "Healthcare",
+      "manufacturing": "Manufacturing",
+      "retail": "Retail",
+      "education": "Education",
+      "other": "Other"
+    },
+    "size": {
+      "label": "Company Size",
+      "startup": "1-10 employees",
+      "small": "11-50 employees",
+      "medium": "51-200 employees",
+      "large": "201-1000 employees",
+      "enterprise": "1000+ employees"
+    },
+    "location": {
+      "label": "Location",
+      "placeholder": "Select location"
+    },
+    "partnershipStatus": {
+      "label": "Partnership Status",
+      "active": "Active Partner",
+      "prospect": "Prospect",
+      "inactive": "Inactive"
+    }
+  },
+  "sorting": {
+    "label": "Sort by:",
+    "name": "Company Name",
+    "dateAdded": "Date Added",
+    "industry": "Industry",
+    "size": "Company Size",
+    "openPositions": "Open Positions"
+  },
+  "card": {
+    "employees": "{count} employees",
+    "openPositions": "{count} open positions",
+    "since": "Partner since {date}",
+    "location": "Location",
+    "industry": "Industry",
+    "website": "Website",
+    "viewProfile": "View Profile",
+    "editCompany": "Edit Company",
+    "viewJobs": "View Jobs",
+    "contactCompany": "Contact",
+    "archiveCompany": "Archive"
+  },
+  "profile": {
+    "title": "Company Profile",
+    "backToList": "Back to Companies",
+    "overview": "Overview",
+    "jobsTab": "Open Positions",
+    "contactsTab": "Contacts",
+    "notesTab": "Notes",
+    "activityTab": "Activity",
+    "basicInfo": {
+      "title": "Company Information",
+      "name": "Company Name",
+      "industry": "Industry",
+      "size": "Company Size",
+      "founded": "Founded",
+      "headquarters": "Headquarters",
+      "website": "Website",
+      "phone": "Phone",
+      "email": "Email",
+      "description": "About the Company"
+    },
+    "partnershipInfo": {
+      "title": "Partnership Information",
+      "status": "Status",
+      "since": "Partner Since",
+      "tier": "Partnership Tier",
+      "accountManager": "Account Manager",
+      "contractEnd": "Contract End Date",
+      "renewalDate": "Renewal Date"
+    },
+    "statistics": {
+      "title": "Statistics",
+      "totalHires": "Total Hires",
+      "activeJobs": "Active Jobs",
+      "candidates": "Candidates in Pipeline",
+      "averageTimeToHire": "Avg. Time to Hire",
+      "fillRate": "Fill Rate"
+    },
+    "contacts": {
+      "title": "Company Contacts",
+      "addContact": "Add Contact",
+      "name": "Name",
+      "role": "Role",
+      "email": "Email",
+      "phone": "Phone",
+      "primary": "Primary Contact",
+      "noContacts": "No contacts added yet"
+    },
+    "jobs": {
+      "title": "Open Positions",
+      "createJob": "Create Job",
+      "viewAll": "View All Jobs",
+      "noJobs": "No open positions",
+      "active": "Active",
+      "draft": "Draft",
+      "closed": "Closed"
+    },
+    "notes": {
+      "title": "Company Notes",
+      "addNote": "Add Note",
+      "placeholder": "Add notes about this company...",
+      "save": "Save Note",
+      "noNotes": "No notes yet",
+      "noteBy": "By {author}",
+      "noteDate": "on {date}"
+    },
+    "activity": {
+      "title": "Activity Timeline",
+      "companyAdded": "Company added",
+      "partnershipStarted": "Partnership started",
+      "jobPosted": "Job posted: {title}",
+      "candidateHired": "Candidate hired for {position}",
+      "contactAdded": "Contact added: {name}",
+      "noteAdded": "Note added",
+      "statusChanged": "Status changed to {status}"
+    },
+    "actions": {
+      "editProfile": "Edit Profile",
+      "addContact": "Add Contact",
+      "createJob": "Create Job",
+      "sendMessage": "Send Message",
+      "scheduleCall": "Schedule Call",
+      "archive": "Archive Company",
+      "delete": "Delete Company"
+    }
+  },
+  "addCompany": {
+    "title": "Add Company",
+    "subtitle": "Create a new company in the system",
+    "basicInfo": "Basic Information",
+    "companyName": "Company Name",
+    "companyNamePlaceholder": "Enter company name",
+    "industry": "Industry",
+    "size": "Company Size",
+    "website": "Website",
+    "phone": "Phone Number",
+    "email": "Email Address",
+    "emailPlaceholder": "contact@company.com",
+    "phonePlaceholder": "03-1234-5678",
+    "websitePlaceholder": "https://company.com",
+    "type": "Type",
+    "typeEmployer": "Employer",
+    "typeRecruiter": "Recruiter",
+    "location": "Location",
+    "postalCode": "郵便番号 (Postal Code)",
+    "postalCodePlaceholder": "123-4567",
+    "prefecture": "都道府県 (Prefecture)",
+    "prefectureSelect": "選択してください",
+    "city": "市区町村 (City)",
+    "cityPlaceholder": "渋谷区",
+    "description": "Description",
+    "descriptionPlaceholder": "Brief description of the company...",
+    "subscriptionSettings": "Subscription Settings",
+    "subscriptionPlan": "Subscription Plan",
+    "subscriptionPlanAuto": "Auto-assign Basic Plan",
+    "subscriptionPlanHelp": "Select a subscription plan or leave empty to auto-assign Basic Plan",
+    "isTrial": "Create as trial subscription",
+    "isTrialHelp": "Enable trial period with limited time access to the selected plan",
+    "trialPeriod": "Trial Period (days)",
+    "trialPeriodPlaceholder": "30",
+    "trialPeriodHelp": "Trial will expire after this many days from creation",
+    "partnershipInfo": "Partnership Information",
+    "partnershipStatus": "Partnership Status",
+    "tier": "Partnership Tier",
+    "accountManager": "Account Manager",
+    "notes": "Notes",
+    "submit": "Add Company",
+    "submitCreating": "Creating...",
+    "submitButton": "Create Company",
+    "cancel": "Cancel",
+    "success": {
+      "title": "Company created successfully!",
+      "message": "{name} has been created. An activation email will be sent to {email}.",
+      "viewProfile": "View Profile"
+    },
+    "error": "Failed to create company"
+  },
+  "editCompany": {
+    "title": "Edit Company",
+    "subtitle": "Update {name} information",
+    "loading": "Loading company...",
+    "notFound": "Company not found",
+    "backToCompanies": "Back to companies",
+    "emailDisabled": "Email cannot be changed",
+    "deactivate": "Deactivate",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "updateButton": "Update Company",
+    "updating": "Updating...",
+    "success": {
+      "title": "Company updated successfully!",
+      "message": "{name} has been updated.",
+      "deactivateTitle": "Company deactivated",
+      "deactivateMessage": "{name} has been deactivated.",
+      "deleteTitle": "Company deleted",
+      "deleteMessage": "{name} has been permanently deleted."
+    },
+    "error": {
+      "update": "Failed to update company",
+      "load": "Failed to load company",
+      "deactivate": "Failed to deactivate company",
+      "delete": "Failed to delete company"
+    },
+    "deleteModal": {
+      "title": "Delete Company",
+      "message": "Are you sure you want to permanently delete {name}? This action cannot be undone and will remove all associated data.",
+      "confirmButton": "Delete Company",
+      "deleting": "Deleting...",
+      "cancel": "Cancel"
+    },
+    "deactivateModal": {
+      "title": "Deactivate Company",
+      "message": "Are you sure you want to deactivate {name}? The company will no longer be able to access the system but data will be preserved.",
+      "confirmButton": "Deactivate Company",
+      "deactivating": "Deactivating...",
+      "cancel": "Cancel"
+    }
+  },
+  "delete": {
+    "title": "Delete Company",
+    "confirm": "Are you sure you want to delete this company?",
+    "warning": "This action cannot be undone. All associated jobs and data will be removed.",
+    "confirmButton": "Delete Company",
+    "cancelButton": "Cancel",
+    "success": {
+      "title": "Company Deleted",
+      "message": "The company has been successfully deleted."
+    }
+  },
+  "archive": {
+    "title": "Archive Company",
+    "confirm": "Archive this company?",
+    "message": "This company will be moved to archived companies. You can restore it later.",
+    "confirmButton": "Archive Company",
+    "cancelButton": "Cancel",
+    "success": {
+      "title": "Company Archived",
+      "message": "The company has been archived successfully."
+    }
+  },
+  "tiers": {
+    "gold": "Gold Partner",
+    "silver": "Silver Partner",
+    "bronze": "Bronze Partner",
+    "basic": "Basic Partner"
+  },
+  "noResults": {
+    "title": "No companies found",
+    "message": "Try adjusting your filters or search terms",
+    "clearFilters": "Clear Filters",
+    "addCompany": "Add Company"
+  },
+  "loading": "Loading companies...",
+  "error": "Failed to load companies. Please try again.",
+  "typeFilter": {
+    "allTypes": "All Types",
+    "employer": "Employer",
+    "recruiter": "Recruiter"
+  },
+  "statusFilter": {
+    "allStatus": "All Status",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "includeDeleted": "Include deleted companies",
+  "bulkActions": {
+    "selected": "{count} company(s) selected",
+    "clearSelection": "Clear selection",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "delete": "Delete"
+  },
+  "table": {
+    "headers": {
+      "company": "Company",
+      "type": "Type",
+      "contact": "Contact",
+      "stats": "Stats",
+      "status": "Status"
+    },
+    "stats": {
+      "users": "{count} users",
+      "jobs": "{count} jobs"
+    },
+    "actions": {
+      "details": "Details",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "emptyState": {
+      "title": "No companies found",
+      "message": "Get started by creating your first company."
+    },
+    "statusBadges": {
+      "deleted": "Deleted",
+      "active": "Active",
+      "inactive": "Inactive"
+    }
+  },
+  "pagination": {
+    "showing": "Showing {start} to {end} of {total} results",
+    "previous": "Previous",
+    "next": "Next",
+    "pageInfo": "Page {current} of {total}"
+  },
+  "modal": {
+    "companyDetails": {
+      "title": "Company Details",
+      "subtitle": "View information about this company",
+      "basicInfo": {
+        "title": "Basic Information",
+        "name": "Company Name",
+        "type": "Type",
+        "description": "Description"
+      },
+      "contactInfo": {
+        "title": "Contact Information",
+        "email": "Email",
+        "phone": "Phone",
+        "website": "Website",
+        "address": "Address"
+      },
+      "statusStats": {
+        "title": "Status & Statistics",
+        "status": "Status",
+        "totalUsers": "Total Users",
+        "totalJobs": "Total Jobs",
+        "deletedAt": "Deleted At"
+      },
+      "close": "Close"
+    }
+  },
+  "subscriptionRequests": {
+    "title": "Subscription Requests",
+    "noPending": {
+      "title": "No Pending Requests",
+      "message": "There are no subscription plan change requests awaiting review."
+    },
+    "requestedBy": "Requested by {name}",
+    "requestMessage": "Request Message",
+    "approve": "Approve",
+    "reject": "Reject",
+    "reviewModal": {
+      "titleApprove": "Approve Request",
+      "titleReject": "Reject Request",
+      "messageLabel": "Review Message (optional)",
+      "placeholderApprove": "Approved. Welcome to the new plan!",
+      "placeholderReject": "Reason for rejection...",
+      "note": "Note:",
+      "approveNote": "Approving this request will immediately change the company's plan to {plan}.",
+      "cancel": "Cancel"
+    }
+  },
+  "confirmations": {
+    "deleteCompany": "Are you sure you want to delete {name}?",
+    "bulkDelete": "Are you sure you want to delete {count} companies? This action cannot be undone."
+  },
+  "messages": {
+    "successActivate": "Successfully activated {count} companies",
+    "successDeactivate": "Successfully deactivated {count} companies",
+    "successDelete": "Successfully deleted {count} companies",
+    "successDeleteSingle": "Successfully deleted {name}",
+    "requestApproved": "Request approved successfully",
+    "requestRejected": "Request rejected successfully",
+    "errorActivate": "Failed to activate companies",
+    "errorDeactivate": "Failed to deactivate companies",
+    "errorDelete": "Failed to delete companies",
+    "errorDeleteSingle": "Failed to delete company",
+    "errorReview": "Failed to review request",
+    "noDataReceived": "No data received"
+  }
+}

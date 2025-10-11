@@ -1,0 +1,139 @@
+{
+  "page": {
+    "title": "Messages",
+    "subtitle": "Communicate with candidates and team members",
+    "searchPlaceholder": "Search conversations..."
+  },
+  "sidebar": {
+    "allMessages": "All Messages",
+    "unread": "Unread",
+    "starred": "Starred",
+    "archived": "Archived",
+    "newConversation": "New Conversation",
+    "filter": {
+      "all": "All",
+      "candidates": "Candidates",
+      "recruiters": "Recruiters",
+      "team": "Team"
+    }
+  },
+  "conversation": {
+    "typePlaceholder": "Type a message...",
+    "send": "Send",
+    "attach": "Attach File",
+    "emoji": "Add Emoji",
+    "voice": "Voice Message",
+    "online": "Online",
+    "offline": "Offline",
+    "away": "Away",
+    "typing": "{name} is typing...",
+    "lastSeen": "Last seen {time}",
+    "deliveryStatus": {
+      "sending": "Sending...",
+      "sent": "Sent",
+      "delivered": "Delivered",
+      "read": "Read",
+      "failed": "Failed to send"
+    }
+  },
+  "thread": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "loadMore": "Load More Messages",
+    "noMessages": "No messages yet",
+    "startConversation": "Start a conversation",
+    "messageActions": {
+      "reply": "Reply",
+      "forward": "Forward",
+      "copy": "Copy",
+      "delete": "Delete",
+      "star": "Star",
+      "unstar": "Unstar",
+      "markUnread": "Mark as Unread",
+      "report": "Report"
+    }
+  },
+  "newConversation": {
+    "title": "New Conversation",
+    "to": "To:",
+    "selectRecipient": "Select recipient...",
+    "subject": "Subject (optional)",
+    "message": "Message",
+    "send": "Send Message",
+    "cancel": "Cancel"
+  },
+  "attachments": {
+    "title": "Attachments",
+    "upload": "Upload File",
+    "maxSize": "Max size: 10MB",
+    "allowedTypes": "Allowed: PDF, DOC, DOCX, JPG, PNG",
+    "remove": "Remove",
+    "download": "Download",
+    "preview": "Preview"
+  },
+  "filters": {
+    "sortBy": "Sort by:",
+    "mostRecent": "Most Recent",
+    "oldest": "Oldest",
+    "unreadFirst": "Unread First",
+    "starred": "Starred"
+  },
+  "actions": {
+    "archive": "Archive",
+    "unarchive": "Unarchive",
+    "delete": "Delete Conversation",
+    "markAllRead": "Mark All as Read",
+    "deleteSelected": "Delete Selected",
+    "archiveSelected": "Archive Selected"
+  },
+  "templates": {
+    "title": "Message Templates",
+    "use": "Use Template",
+    "interviewInvitation": "Interview Invitation",
+    "offerLetter": "Offer Letter",
+    "rejection": "Rejection Email",
+    "followUp": "Follow Up",
+    "thankYou": "Thank You"
+  },
+  "notifications": {
+    "newMessage": "New message from {name}",
+    "unreadCount": "{count} unread messages",
+    "muteConversation": "Mute Conversation",
+    "unmuteConversation": "Unmute Conversation"
+  },
+  "errors": {
+    "failedToLoad": "Failed to load messages",
+    "failedToSend": "Failed to send message",
+    "attachmentTooLarge": "Attachment is too large",
+    "invalidFileType": "Invalid file type",
+    "networkError": "Network error. Please check your connection."
+  },
+  "empty": {
+    "noConversations": {
+      "title": "No conversations yet",
+      "message": "Start a new conversation to begin messaging",
+      "action": "New Conversation"
+    },
+    "noUnread": {
+      "title": "All caught up!",
+      "message": "You have no unread messages"
+    },
+    "noStarred": {
+      "title": "No starred messages",
+      "message": "Star important conversations to find them easily"
+    },
+    "noArchived": {
+      "title": "No archived conversations",
+      "message": "Archived conversations will appear here"
+    }
+  },
+  "search": {
+    "noResults": "No conversations found",
+    "searching": "Searching...",
+    "filters": {
+      "dateRange": "Date Range",
+      "sender": "Sender",
+      "hasAttachments": "Has Attachments"
+    }
+  }
+}

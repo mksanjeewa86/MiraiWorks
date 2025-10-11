@@ -1,5 +1,9 @@
 import type { NextConfig } from 'next';
 import path from 'path';
+import createNextIntlPlugin from 'next-intl/plugin';
+
+// Configure next-intl plugin
+const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
@@ -17,9 +21,9 @@ const nextConfig: NextConfig = {
             value: [
               "default-src 'self'",
               "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
-              "style-src 'self' 'unsafe-inline'",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: https: blob:",
-              "font-src 'self' data:",
+              "font-src 'self' data: https://fonts.gstatic.com",
               "connect-src 'self' http://localhost:8000 ws://localhost:8000 https://api.miraiworks.com wss://api.miraiworks.com",
               "frame-ancestors 'none'",
               "base-uri 'self'",
@@ -96,4 +100,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

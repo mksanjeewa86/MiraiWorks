@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { examApi } from '@/api/exam';
-import { useRouter } from 'next/navigation';
+import { useLocaleRouter } from '@/hooks/useLocaleRouter';
+import { ROUTES } from '@/routes/config';
 import type { Exam } from '@/types/exam';
 
 interface CloneExamDialogProps {
@@ -18,7 +19,7 @@ export function CloneExamDialog({
   onClose,
   onSuccess
 }: CloneExamDialogProps) {
-  const router = useRouter();
+  const router = useLocaleRouter();
   const [isCloning, setIsCloning] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,7 +35,7 @@ export function CloneExamDialog({
       if (onSuccess) {
         onSuccess(response.data.id);
       } else {
-        router.push(`/admin/exams/${response.data.id}/edit`);
+        router.push(ROUTES.ADMIN.EXAMS.EDIT(response.data.id));
       }
     } else {
       setError(response.message || response.errors?.[0] || 'Failed to clone exam');

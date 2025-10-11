@@ -1,0 +1,122 @@
+{
+  "page": {
+    "title": "My Todos",
+    "focusMode": "Focus mode",
+    "taskOverview": "Task overview",
+    "addNewTask": "Add new task"
+  },
+  "hero": {
+    "tasksThisWeek": "{count} task due this week",
+    "tasksThisWeek_other": "{count} tasks due this week",
+    "overdue": "{count} overdue",
+    "and": "|"
+  },
+  "stats": {
+    "inProgress": "In progress",
+    "dueToday": "Due today",
+    "completed": "Completed",
+    "overdue": "Overdue"
+  },
+  "filters": {
+    "all": "All",
+    "active": "Active",
+    "completed": "Completed",
+    "expired": "Expired",
+    "deleted": "Deleted"
+  },
+  "actions": {
+    "restore": "Restore",
+    "view": "View",
+    "finish": "Finish",
+    "reopen": "Reopen",
+    "extend": "Extend",
+    "edit": "Edit",
+    "delete": "Delete"
+  },
+  "badges": {
+    "deleted": "Deleted",
+    "overdue": "Overdue"
+  },
+  "labels": {
+    "due": "Due:",
+    "priority": "Priority:",
+    "notes": "Notes:",
+    "completed": "Completed:"
+  },
+  "dates": {
+    "noDueDate": "No due date",
+    "today": "Today",
+    "daysRemaining": "{count} day remaining",
+    "daysRemaining_other": "{count} days remaining",
+    "daysOverdue": "{count} day overdue",
+    "daysOverdue_other": "{count} days overdue"
+  },
+  "emptyStates": {
+    "all": {
+      "title": "You're all caught up",
+      "description": "Create a task or adjust your filters to see more items."
+    },
+    "active": {
+      "title": "Nothing active right now",
+      "description": "Add a task or reopen an item when you are ready."
+    },
+    "completed": {
+      "title": "No completed tasks yet",
+      "description": "Mark tasks as done to celebrate them here."
+    },
+    "expired": {
+      "title": "No overdue tasks",
+      "description": "Stay ahead by keeping an eye on due dates."
+    },
+    "deleted": {
+      "title": "No deleted tasks",
+      "description": "Deleted tasks will appear here and can be restored."
+    },
+    "noSearchResults": {
+      "title": "No tasks match your search",
+      "description": "Try a different keyword or clear the filters."
+    }
+  },
+  "search": {
+    "placeholder": "Search by keyword..."
+  },
+  "confirmations": {
+    "delete": {
+      "title": "Delete Todo",
+      "message": "Are you sure you want to move \"{title}\" to trash? You can restore it later if needed.",
+      "confirmButton": "Move to Trash"
+    },
+    "restore": {
+      "title": "Restore Todo",
+      "message": "Are you sure you want to restore \"{title}\" from trash?",
+      "confirmButton": "Restore"
+    },
+    "complete": {
+      "title": "Complete Todo",
+      "message": "Are you sure you want to mark \"{title}\" as completed?",
+      "confirmButton": "Complete"
+    },
+    "reopen": {
+      "title": "Reopen Todo",
+      "message": "Are you sure you want to reopen \"{title}\"?",
+      "confirmButton": "Reopen"
+    }
+  },
+  "toasts": {
+    "loadError": "Failed to load todos",
+    "completed": "Todo completed",
+    "completeError": "Failed to complete todo",
+    "reopened": "Todo reopened",
+    "reopenError": "Failed to reopen todo",
+    "deleted": "Todo moved to trash",
+    "deleteError": "Failed to delete todo",
+    "restored": "Todo restored",
+    "restoreError": "Failed to restore todo",
+    "extensionSubmitted": "Extension request submitted",
+    "extensionOnlyAssignee": "Only the assigned user can request an extension"
+  },
+  "createTask": {
+    "title": "Create a task",
+    "description": "Stay organized and track your progress by adding new tasks."
+  }
+}

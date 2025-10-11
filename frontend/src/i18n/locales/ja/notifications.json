@@ -1,0 +1,51 @@
+{
+  "title": "通知",
+  "description": "すべての通知を一箇所で確認できます",
+  "back": "戻る",
+  "tabs": {
+    "notifications": "通知",
+    "updates": "システム更新情報"
+  },
+  "stats": {
+    "total": "合計",
+    "unread": "未読"
+  },
+  "filters": {
+    "all": "すべて",
+    "unread": "未読",
+    "updates": "更新情報"
+  },
+  "actions": {
+    "markAllRead": "すべて既読にする",
+    "markRead": "既読にする",
+    "delete": "削除",
+    "createUpdate": "更新情報を作成"
+  },
+  "time": {
+    "justNow": "たった今",
+    "minutesAgo": "{count}分前",
+    "hoursAgo": "{count}時間前",
+    "daysAgo": "{count}日前"
+  },
+  "empty": {
+    "noNotifications": "通知はまだありません",
+    "noNotificationsDescription": "通知を受信するとここに表示されます",
+    "noUnread": "未読の通知はありません",
+    "noUnreadDescription": "すべての通知を確認しました！新しい更新があればまた確認してください。"
+  },
+  "systemUpdates": {
+    "title": "システム更新情報",
+    "description": "プラットフォームからの重要なお知らせと更新情報",
+    "loading": "更新情報を読み込み中...",
+    "noUpdates": "システム更新情報はまだありません",
+    "noUpdatesDescription": "システム全体の更新情報がある場合、ここに表示されます",
+    "createSuccess": "システム更新情報が正常に作成されました！"
+  },
+  "types": {
+    "new_message": "新しいメッセージ",
+    "interview_scheduled": "面接予定",
+    "exam_assigned": "試験割り当て",
+    "application_update": "応募状況更新",
+    "system": "システム通知"
+  }
+}

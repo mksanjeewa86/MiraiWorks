@@ -1,0 +1,307 @@
+{
+  "page": {
+    "title": "プロフィール",
+    "subtitle": "プロフェッショナルプロフィールを表示・管理",
+    "edit": "プロフィールを編集",
+    "viewPublic": "公開プロフィールを見る",
+    "shareProfile": "プロフィールを共有"
+  },
+  "tabs": {
+    "overview": "概要",
+    "experience": "職歴",
+    "education": "学歴",
+    "skills": "スキル",
+    "certifications": "資格",
+    "projects": "プロジェクト",
+    "achievements": "実績"
+  },
+  "header": {
+    "profilePicture": "プロフィール写真",
+    "uploadPhoto": "写真をアップロード",
+    "changePhoto": "写真を変更",
+    "removePhoto": "写真を削除",
+    "banner": "プロフィールバナー",
+    "changeBanner": "バナーを変更",
+    "status": {
+      "openToWork": "転職活動中",
+      "activelyLooking": "積極的に探しています",
+      "passivelyLooking": "良い機会があれば",
+      "notLooking": "探していません"
+    }
+  },
+  "overview": {
+    "title": "自己紹介",
+    "headline": "ヘッドライン",
+    "headlinePlaceholder": "例：シニアソフトウェアエンジニア | Reactエキスパート",
+    "summary": "職務経歴要約",
+    "summaryPlaceholder": "あなたの職歴とキャリア目標について魅力的な要約を書いてください...",
+    "firstName": "名",
+    "lastName": "姓",
+    "jobTitle": "役職",
+    "bio": "自己紹介",
+    "bioPlaceholder": "あなたの職歴、興味、そしてあなたをユニークにするものを共有してください...",
+    "contact": {
+      "title": "連絡先情報",
+      "email": "メール",
+      "phone": "電話",
+      "location": "所在地",
+      "website": "ウェブサイト",
+      "linkedin": "LinkedIn",
+      "github": "GitHub",
+      "twitter": "Twitter"
+    },
+    "preferences": {
+      "title": "求人の希望条件",
+      "desiredRole": "希望職種",
+      "desiredSalary": "希望年収",
+      "willingToRelocate": "転居可能",
+      "workType": "勤務形態",
+      "availability": "勤務開始可能時期"
+    },
+    "workType": {
+      "fullTime": "正社員",
+      "partTime": "パートタイム",
+      "contract": "契約社員",
+      "freelance": "フリーランス",
+      "remote": "リモート",
+      "hybrid": "ハイブリッド",
+      "onsite": "オフィス勤務"
+    }
+  },
+  "experience": {
+    "title": "職歴",
+    "add": "職歴を追加",
+    "edit": "職歴を編集",
+    "delete": "職歴を削除",
+    "current": "現職",
+    "form": {
+      "title": "役職",
+      "company": "会社名",
+      "employmentType": "雇用形態",
+      "location": "勤務地",
+      "startDate": "開始日",
+      "endDate": "終了日",
+      "currentlyWorking": "現在も在籍中",
+      "description": "業務内容",
+      "descriptionPlaceholder": "担当業務と実績を記述してください...",
+      "skills": "使用したスキル",
+      "save": "保存",
+      "cancel": "キャンセル"
+    },
+    "employmentTypes": {
+      "fullTime": "正社員",
+      "partTime": "パートタイム",
+      "contract": "契約社員",
+      "freelance": "フリーランス",
+      "internship": "インターンシップ"
+    },
+    "duration": "{years}年{months}ヶ月",
+    "present": "現在",
+    "noExperience": "まだ職歴が追加されていません"
+  },
+  "education": {
+    "title": "学歴",
+    "add": "学歴を追加",
+    "edit": "学歴を編集",
+    "delete": "学歴を削除",
+    "classOf": "卒業年",
+    "gpa": "GPA",
+    "degreeIn": "",
+    "form": {
+      "school": "学校・大学",
+      "degree": "学位",
+      "fieldOfStudy": "専攻",
+      "startDate": "開始日",
+      "endDate": "終了日",
+      "currentlyStudying": "現在も在学中",
+      "grade": "成績・GPA",
+      "description": "説明",
+      "save": "保存",
+      "cancel": "キャンセル"
+    },
+    "degrees": {
+      "highSchool": "高等学校",
+      "associate": "短期大学士",
+      "bachelor": "学士",
+      "master": "修士",
+      "doctorate": "博士",
+      "certificate": "修了証",
+      "bootcamp": "ブートキャンプ"
+    },
+    "noEducation": "まだ学歴が追加されていません"
+  },
+  "skills": {
+    "title": "スキル",
+    "add": "スキルを追加",
+    "search": "スキルを検索...",
+    "endorsements": "{count}件の推薦",
+    "proficiency": {
+      "title": "習熟度",
+      "beginner": "初級",
+      "intermediate": "中級",
+      "advanced": "上級",
+      "expert": "エキスパート"
+    },
+    "categories": {
+      "technical": "技術スキル",
+      "soft": "ソフトスキル",
+      "languages": "言語",
+      "tools": "ツール・技術"
+    },
+    "yearsOfExperience": "{years}年",
+    "noSkills": "まだスキルが追加されていません"
+  },
+  "certifications": {
+    "title": "資格・免許",
+    "add": "資格を追加",
+    "edit": "資格を編集",
+    "delete": "資格を削除",
+    "form": {
+      "name": "資格名",
+      "issuingOrganization": "発行機関",
+      "issueDate": "取得日",
+      "expirationDate": "有効期限",
+      "doesNotExpire": "この資格に有効期限はありません",
+      "credentialId": "認定ID",
+      "credentialUrl": "認定URL",
+      "description": "説明",
+      "save": "保存",
+      "cancel": "キャンセル"
+    },
+    "expires": "{date}に期限切れ",
+    "expired": "期限切れ",
+    "viewCredential": "認定情報を見る",
+    "noCertifications": "まだ資格が追加されていません"
+  },
+  "projects": {
+    "title": "プロジェクト・ポートフォリオ",
+    "add": "プロジェクトを追加",
+    "edit": "プロジェクトを編集",
+    "delete": "プロジェクトを削除",
+    "form": {
+      "name": "プロジェクト名",
+      "description": "説明",
+      "role": "あなたの役割",
+      "startDate": "開始日",
+      "endDate": "終了日",
+      "ongoing": "このプロジェクトは継続中",
+      "projectUrl": "プロジェクトURL",
+      "githubUrl": "GitHub URL",
+      "technologies": "使用技術",
+      "images": "プロジェクト画像",
+      "save": "保存",
+      "cancel": "キャンセル"
+    },
+    "viewProject": "プロジェクトを見る",
+    "viewCode": "コードを見る",
+    "noProjects": "まだプロジェクトが追加されていません"
+  },
+  "achievements": {
+    "title": "実績・受賞歴",
+    "add": "実績を追加",
+    "edit": "実績を編集",
+    "delete": "実績を削除",
+    "form": {
+      "title": "タイトル",
+      "description": "説明",
+      "issuer": "発行者",
+      "date": "日付",
+      "associatedWith": "関連",
+      "save": "保存",
+      "cancel": "キャンセル"
+    },
+    "noAchievements": "まだ実績が追加されていません"
+  },
+  "resume": {
+    "title": "履歴書・職務経歴書",
+    "upload": "履歴書をアップロード",
+    "update": "履歴書を更新",
+    "download": "履歴書をダウンロード",
+    "delete": "履歴書を削除",
+    "lastUpdated": "{date}に最終更新",
+    "fileTypes": "PDF、DOC、DOCX（最大5MB）",
+    "noResume": "履歴書がアップロードされていません"
+  },
+  "privacy": {
+    "title": "プロフィールのプライバシー",
+    "visibility": {
+      "title": "プロフィールの公開範囲",
+      "public": "公開 - 誰でも閲覧可能",
+      "recruiters": "リクルーターのみ",
+      "private": "非公開 - 自分のみ"
+    },
+    "searchable": "プロフィールを検索可能にする",
+    "showEmail": "メールアドレスを表示",
+    "showPhone": "電話番号を表示",
+    "showResume": "履歴書のダウンロードを許可"
+  },
+  "stats": {
+    "title": "プロフィール統計",
+    "profileViews": "閲覧数",
+    "connections": "つながり",
+    "endorsements": "推薦",
+    "applications": "応募",
+    "interviews": "面接"
+  },
+  "emptyStates": {
+    "noProfileData": "プロフィールデータがありません",
+    "loginRequired": "プロフィールを表示するにはログインしてください",
+    "createProfile": "プロフィールを作成"
+  },
+  "actions": {
+    "save": "変更を保存",
+    "saveProfile": "プロフィールを保存",
+    "editProfile": "プロフィールを編集",
+    "saving": "保存中...",
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "edit": "編集",
+    "add": "追加"
+  },
+  "notifications": {
+    "profileUpdated": "プロフィールを更新しました",
+    "photoUploaded": "写真をアップロードしました",
+    "photoRemoved": "写真を削除しました",
+    "experienceAdded": "職歴を追加しました",
+    "experienceUpdated": "職歴を更新しました",
+    "experienceDeleted": "職歴を削除しました",
+    "educationAdded": "学歴を追加しました",
+    "educationUpdated": "学歴を更新しました",
+    "educationDeleted": "学歴を削除しました",
+    "skillAdded": "スキルを追加しました",
+    "skillRemoved": "スキルを削除しました",
+    "certificationAdded": "資格を追加しました",
+    "certificationUpdated": "資格を更新しました",
+    "certificationDeleted": "資格を削除しました",
+    "projectAdded": "プロジェクトを追加しました",
+    "projectUpdated": "プロジェクトを更新しました",
+    "projectDeleted": "プロジェクトを削除しました",
+    "achievementAdded": "実績を追加しました",
+    "achievementUpdated": "実績を更新しました",
+    "achievementDeleted": "実績を削除しました",
+    "resumeUploaded": "履歴書をアップロードしました",
+    "resumeDeleted": "履歴書を削除しました"
+  },
+  "errors": {
+    "failedToUpdate": "プロフィールの更新に失敗しました",
+    "failedToUpload": "ファイルのアップロードに失敗しました",
+    "failedToLoad": "プロフィールデータの読み込みに失敗しました。もう一度お試しください。",
+    "fileTooLarge": "画像サイズは5MB以下にしてください",
+    "invalidFileType": "画像ファイルを選択してください",
+    "avatarSaveFailed": "アバターはアップロードされましたが、プロフィールへの保存に失敗しました。もう一度お試しください。",
+    "avatarUploadFailed": "アバターのアップロードに失敗しました。もう一度お試しください。"
+  },
+  "completeness": {
+    "title": "プロフィール完成度",
+    "percentage": "{percent}%完成",
+    "suggestions": {
+      "addPhoto": "プロフィール写真を追加",
+      "addHeadline": "ヘッドラインを追加",
+      "addSummary": "職務経歴要約を追加",
+      "addExperience": "職歴を追加",
+      "addEducation": "学歴を追加",
+      "addSkills": "少なくとも5つのスキルを追加",
+      "uploadResume": "履歴書をアップロード"
+    }
+  }
+}

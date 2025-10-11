@@ -51,6 +51,7 @@ from app.models.resume import (
 )
 from app.models.role import Role, UserRole
 from app.models.subscription_plan import SubscriptionPlan
+from app.models.system_update import SystemUpdate
 from app.models.todo import Todo
 from app.models.todo_attachment import TodoAttachment
 from app.models.todo_extension_request import TodoExtensionRequest
@@ -144,4 +145,5 @@ __all__ = [
     "PlanFeature",
     "CompanySubscription",
     "PlanChangeRequest",
+    "SystemUpdate",
 ]

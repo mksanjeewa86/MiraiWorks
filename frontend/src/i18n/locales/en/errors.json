@@ -1,0 +1,47 @@
+{
+  "general": {
+    "somethingWentWrong": "Something went wrong",
+    "unexpectedError": "An unexpected error occurred",
+    "tryAgainLater": "Please try again later",
+    "contactSupport": "If the problem persists, please contact support"
+  },
+  "network": {
+    "offline": "You are offline",
+    "connectionLost": "Connection lost",
+    "slowConnection": "Slow connection detected",
+    "requestFailed": "Request failed",
+    "timeout": "Request timed out"
+  },
+  "auth": {
+    "unauthorized": "You are not authorized to perform this action",
+    "sessionExpired": "Your session has expired. Please login again",
+    "invalidToken": "Invalid authentication token",
+    "accessDenied": "Access denied",
+    "loginRequired": "Please login to continue"
+  },
+  "validation": {
+    "invalidInput": "Invalid input",
+    "requiredField": "This field is required",
+    "invalidFormat": "Invalid format",
+    "valueTooLong": "Value is too long",
+    "valueTooShort": "Value is too short"
+  },
+  "api": {
+    "400": "Bad request",
+    "401": "Unauthorized",
+    "403": "Forbidden",
+    "404": "Not found",
+    "409": "Conflict",
+    "422": "Validation error",
+    "429": "Too many requests",
+    "500": "Server error",
+    "502": "Bad gateway",
+    "503": "Service unavailable"
+  },
+  "upload": {
+    "fileTooLarge": "File is too large",
+    "invalidFileType": "Invalid file type",
+    "uploadFailed": "Upload failed",
+    "tooManyFiles": "Too many files"
+  }
+}

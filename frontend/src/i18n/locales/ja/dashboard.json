@@ -1,0 +1,373 @@
+{
+  "candidate": {
+    "header": {
+      "title": "候補者コントロールセンター",
+      "welcomeBack": "お帰りなさい",
+      "description": "応募、面接、キャリアの成長を一か所で追跡します。",
+      "refreshButton": "更新",
+      "discoverRolesButton": "求人を探す",
+      "lastUpdated": "最終更新"
+    },
+    "metrics": {
+      "activeApplications": {
+        "label": "有効な応募",
+        "helperText": "すべてのアクティブな求人応募",
+        "inReview": "審査中"
+      },
+      "interviewsScheduled": {
+        "label": "予定された面接",
+        "helperText": "今後数週間のミーティング",
+        "completed": "完了"
+      },
+      "resumesOnFile": {
+        "label": "保存された履歴書",
+        "helperText": "より良いマッチングのために履歴書を更新してください",
+        "mostRecent": "最近更新されました",
+        "noUpdates": "まだ更新がありません"
+      },
+      "unreadConversations": {
+        "label": "未読の会話",
+        "helperText": "リクルーターや企業からのメッセージ",
+        "stayResponsive": "目立つために迅速に応答してください"
+      }
+    },
+    "applicationPipeline": {
+      "title": "応募パイプライン",
+      "badge": "ステータス内訳",
+      "description": "パイプライン全体で応募がどのように進んでいるかを監視します。",
+      "noData": "まだ応募データがありません。"
+    },
+    "interviewCadence": {
+      "title": "面接スケジュール",
+      "description": "今後の面接スケジュールを簡単に確認できます。",
+      "noData": "面接がスケジュールされたらここに表示されます。"
+    },
+    "upcomingInterviews": {
+      "title": "今後の面接",
+      "badge": "次の5件",
+      "noInterviews": "まだカレンダーに面接がありません。",
+      "browseButton": "求人を探す"
+    },
+    "recentResumes": {
+      "title": "最近の履歴書",
+      "badge": "更新",
+      "updated": "更新日",
+      "publicBadge": "公開",
+      "privateBadge": "非公開",
+      "editButton": "編集",
+      "noResumes": "まだ履歴書が作成されていません。",
+      "createButton": "履歴書を作成"
+    },
+    "activityFeed": {
+      "title": "キャリアアクティビティフィード",
+      "badge": "ライブ更新",
+      "noActivity": "プラットフォームとのエンゲージメントを開始すると、アクティビティがここに表示されます。"
+    },
+    "mbtiInsights": {
+      "title": "MBTI洞察",
+      "description": "性格プロファイルに基づいて強みとカスタマイズされた求人の推奨を発見してください。",
+      "noResults": "MBTIキャリアアライメント評価を完了して、パーソナライズされたコーチングのヒントを解除してください。"
+    },
+    "activityBadges": {
+      "interview": "面接",
+      "message": "メッセージ",
+      "resume": "履歴書",
+      "profile": "プロフィール",
+      "update": "更新"
+    }
+  },
+  "recruiter": {
+    "header": {
+      "title": "リクルーターパフォーマンスハブ",
+      "welcomeBack": "最適な候補者を見つけましょう",
+      "description": "パイプラインを追跡し、採用段階のブロックを解除し、候補者のシグナルで先を行きましょう。",
+      "refreshButton": "データを更新",
+      "createJobButton": "求人を作成",
+      "lastUpdated": "パイプライン更新"
+    },
+    "metrics": {
+      "activeCandidates": {
+        "label": "アクティブな候補者",
+        "helperText": "現在採用パイプラインにいる候補者",
+        "inScreening": "審査中"
+      },
+      "interviewsThisWeek": {
+        "label": "今週の面接",
+        "helperText": "今後7日間にスケジュールされています",
+        "logged": "記録済み"
+      },
+      "pendingProposals": {
+        "label": "保留中の提案",
+        "helperText": "雇用主の決定を待っています",
+        "conversion": "コンバージョン"
+      },
+      "placementRate": {
+        "label": "配置率",
+        "helperText": "ローリング30日間の配置",
+        "target": "目標45%以上のベンチマーク"
+      }
+    },
+    "interviewPipeline": {
+      "title": "面接パイプライン",
+      "badge": "ファネルビュー",
+      "description": "候補者が各面接段階をどのように移動するかを追跡します。",
+      "noData": "候補者が進行するにつれてパイプラインデータが表示されます。"
+    },
+    "weeklyInterviewLoad": {
+      "title": "週間面接負荷",
+      "description": "最新のスケジュールに基づく今後の面接スロット。",
+      "noData": "スケジュールすると面接がここに表示されます。"
+    },
+    "upcomingInterviews": {
+      "title": "今後の面接",
+      "badge": "次の5件",
+      "noInterviews": "面接がスケジュールされていません。候補者を招待することから始めてください。",
+      "viewCandidatesButton": "候補者を表示"
+    },
+    "topCandidates": {
+      "title": "トップ候補者",
+      "badge": "スコアベース",
+      "scoreBadge": "スコア",
+      "noCandidates": "まだランク付けされた候補者がいません。",
+      "sourceTalentButton": "人材を調達"
+    },
+    "latestActivity": {
+      "title": "最新のアクティビティ",
+      "badge": "ライブフィード",
+      "noActivity": "チームが候補者とエンゲージするとアクティビティがここに表示されます。"
+    }
+  },
+  "employer": {
+    "header": {
+      "title": "雇用主採用概要",
+      "welcomeBack": "お帰りなさい",
+      "description": "求人を監視し、候補者を前進させ、新しい採用を祝いましょう。",
+      "refreshButton": "更新",
+      "postJobButton": "求人を投稿",
+      "lastUpdated": "同期済み"
+    },
+    "metrics": {
+      "openPositions": {
+        "label": "募集中のポジション",
+        "helperText": "現在応募者を受け付けている役職",
+        "toFill": "埋める必要があります"
+      },
+      "applicationsReceived": {
+        "label": "受信した応募",
+        "helperText": "すべての求人の合計提出数",
+        "thisMonth": "今月"
+      },
+      "interviewsScheduled": {
+        "label": "予定された面接",
+        "helperText": "カレンダー上の今後の面接",
+        "hiresThisMonth": "今月の採用"
+      },
+      "hiresMade": {
+        "label": "採用完了",
+        "helperText": "面接から転換された候補者",
+        "keepMomentum": "勢いを保ちましょう"
+      }
+    },
+    "hiringActivityTimeline": {
+      "title": "採用活動タイムライン",
+      "badge": "最新の更新",
+      "description": "応募、面接、オファーの日々のパルス。",
+      "noData": "候補者がチームと対話すると、最近のアクティビティがここに表示されます。"
+    },
+    "activityByType": {
+      "title": "タイプ別アクティビティ",
+      "description": "今週チームを忙しくしているアクション。",
+      "noData": "候補者がエンゲージするとアクティビティデータが表示されます。"
+    },
+    "hiringVelocity": {
+      "title": "採用速度",
+      "badge": "目標トラッカー",
+      "description": "応募が採用に変わる速度を視覚化します。",
+      "progressLabel": "目標への進捗",
+      "greatJob": "素晴らしい！すべての求人を埋めるのに近づいています。",
+      "keepInterviewing": "コンバージョン率を上げるために面接を続けてください。",
+      "setGoals": "進捗を追跡するために採用目標を設定してください。",
+      "openingsLabel": "求人",
+      "hiresLabel": "採用"
+    },
+    "latestActivity": {
+      "title": "最新の採用活動",
+      "badge": "チームフィード",
+      "noActivity": "役職で協力するとチームのアクティビティがここに表示されます。"
+    },
+    "quickActions": {
+      "title": "クイックアクション",
+      "badge": "生産性",
+      "postOpening": "求人を投稿",
+      "reviewApplications": "応募を確認",
+      "scheduleInterview": "面接をスケジュール",
+      "viewReports": "レポートを表示"
+    }
+  },
+  "companyAdmin": {
+    "header": {
+      "title": "企業管理ポータル",
+      "hello": "こんにちは",
+      "description": "スタッフの健康を監視し、チームメンバーを承認し、業務を継続させます。",
+      "refreshButton": "更新",
+      "addEmployeeButton": "従業員を追加",
+      "snapshot": "スナップショット"
+    },
+    "metrics": {
+      "totalEmployees": {
+        "label": "総従業員数",
+        "helperText": "すべての従業員",
+        "active": "アクティブ"
+      },
+      "activePositions": {
+        "label": "アクティブなポジション",
+        "helperText": "会社全体の募集中の役職",
+        "totalRoles": "総役職"
+      },
+      "pendingEmployees": {
+        "label": "保留中の従業員",
+        "helperText": "オンボーディング承認待ち",
+        "recruitersSupporting": "サポートするリクルーター"
+      },
+      "interviewsScheduled": {
+        "label": "予定された面接",
+        "helperText": "会社全体の今後の面接",
+        "applications": "応募"
+      }
+    },
+    "employeeDistribution": {
+      "title": "従業員分布",
+      "badge": "チームの健全性",
+      "description": "アクティブ、保留中、リクルーターメンバー間で労働力がどのようにバランスしているかを確認します。",
+      "active": "アクティブ",
+      "ofTotal": "合計の",
+      "pending": "保留中",
+      "recruiters": "リクルーター",
+      "ensureAccess": "リクルーターが適切なアクセスと能力を持っていることを確認してください。"
+    },
+    "activityByCategory": {
+      "title": "カテゴリ別アクティビティ",
+      "description": "チームが最も時間を費やしている場所を追跡します。",
+      "noData": "アクションが記録されると、最近のアクティビティがここに表示されます。"
+    },
+    "recentActivity": {
+      "title": "最近の会社アクティビティ",
+      "badge": "最新5件",
+      "by": "投稿者",
+      "noActivity": "アクションが実行されると、会社のアクティビティが表示されます。"
+    },
+    "quickActions": {
+      "title": "管理者クイックアクション",
+      "badge": "ショートカット",
+      "manageEmployees": "従業員を管理",
+      "managePositions": "ポジションを管理",
+      "reviewApplications": "応募を確認",
+      "companySettings": "会社設定"
+    }
+  },
+  "superAdmin": {
+    "header": {
+      "title": "プラットフォーム管理センター",
+      "subtitle": "システム全体の可視性を一目で",
+      "description": "テナントの成長、インフラストラクチャの健全性、運用シグナルを観察します。",
+      "refreshButton": "更新",
+      "managePlatformButton": "プラットフォームを管理",
+      "telemetrySynced": "テレメトリ同期済み"
+    },
+    "metrics": {
+      "companiesOnboarded": {
+        "label": "オンボードされた企業",
+        "helperText": "すべてのアクティブなテナント",
+        "active": "アクティブ"
+      },
+      "registeredUsers": {
+        "label": "登録ユーザー",
+        "helperText": "役割全体のグローバルユーザーベース",
+        "activeMonthly": "月間アクティブ"
+      },
+      "openPositions": {
+        "label": "募集中のポジション",
+        "helperText": "現在公開されているポジション",
+        "totalApplications": "総応募数"
+      },
+      "systemUptime": {
+        "label": "システム稼働時間",
+        "helperText": "ローリング30日間の稼働時間",
+        "response": "応答"
+      }
+    },
+    "examMetrics": {
+      "title": "試験システムメトリクス",
+      "description": "システム全体の試験パフォーマンスと使用統計",
+      "totalExams": {
+        "label": "総試験数",
+        "helperText": "システム全体で作成された試験",
+        "assignments": "割り当て"
+      },
+      "examSessions": {
+        "label": "試験セッション",
+        "helperText": "総試験受験回数",
+        "completionRate": "完了率"
+      },
+      "averageScore": {
+        "label": "平均スコア",
+        "helperText": "完了した試験全体",
+        "completed": "完了"
+      }
+    },
+    "platformEngagement": {
+      "title": "プラットフォームエンゲージメント",
+      "badge": "登録",
+      "description": "新しいユーザーがプラットフォームに参加し、戻ってくる方法を追跡します。",
+      "dailySignups": "日次登録",
+      "weeklySignups": "週次登録",
+      "monthlySignups": "月次登録",
+      "monthlyActiveUsers": "月間アクティブユーザー",
+      "noData": "データが利用可能になると、プラットフォームメトリクスがここに表示されます。"
+    },
+    "systemHealth": {
+      "title": "システムの健全性",
+      "badge": "リアルタイム",
+      "database": "データベース",
+      "apiResponse": "API応答",
+      "activeSessions": "アクティブセッション",
+      "errorRate": "エラー率",
+      "healthy": "健全",
+      "warning": "警告",
+      "ms": "ms"
+    },
+    "platformActivity": {
+      "title": "プラットフォームアクティビティフィード",
+      "badge": "グローバル",
+      "noActivity": "チームがテナント全体で対話すると、プラットフォームアクティビティが表示されます。"
+    },
+    "systemLogs": {
+      "title": "システムログストリーム",
+      "badge": "最新",
+      "error": "エラー",
+      "warningBadge": "警告",
+      "info": "情報",
+      "noLogs": "イベントが記録されると、システムログがここに表示されます。"
+    },
+    "activityBreakdown": {
+      "title": "アクティビティ内訳",
+      "badge": "タイプ別",
+      "description": "テナント全体でアクティビティを促進しているアクションを比較します。",
+      "noData": "イベントが収集されると、アクティビティデータがここに表示されます。"
+    },
+    "operationalSummary": {
+      "title": "運用概要",
+      "badge": "一目で",
+      "conversionRate": "コンバージョン率",
+      "activeSessions": "アクティブセッション",
+      "weeklySignups": "週次登録",
+      "errorRate": "エラー率"
+    }
+  },
+  "common": {
+    "loading": "読み込み中...",
+    "error": "データの読み込みに失敗しました",
+    "retry": "再試行",
+    "noData": "N/A"
+  }
+}

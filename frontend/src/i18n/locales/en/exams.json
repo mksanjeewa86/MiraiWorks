@@ -1,0 +1,281 @@
+{
+  "page": {
+    "title": "Exams & Assessments",
+    "subtitle": "Manage candidate assessments and technical tests",
+    "createExam": "Create Exam",
+    "questionBank": "Question Bank",
+    "templates": "Exam Templates",
+    "analytics": "Analytics"
+  },
+  "tabs": {
+    "all": "All Exams",
+    "active": "Active",
+    "draft": "Drafts",
+    "archived": "Archived",
+    "scheduled": "Scheduled",
+    "completed": "Completed"
+  },
+  "list": {
+    "searchPlaceholder": "Search exams by title or category...",
+    "filterByCategory": "Filter by Category",
+    "filterByDifficulty": "Filter by Difficulty",
+    "sortBy": "Sort by:",
+    "mostRecent": "Most Recent",
+    "mostUsed": "Most Used",
+    "highestScore": "Highest Score",
+    "lowestScore": "Lowest Score"
+  },
+  "card": {
+    "questions": "{count} questions",
+    "duration": "{minutes} minutes",
+    "difficulty": "Difficulty",
+    "category": "Category",
+    "attempts": "{count} attempts",
+    "averageScore": "Avg. Score: {score}%",
+    "passRate": "Pass Rate: {rate}%",
+    "edit": "Edit Exam",
+    "preview": "Preview",
+    "assign": "Assign to Candidates",
+    "duplicate": "Duplicate",
+    "archive": "Archive",
+    "viewResults": "View Results",
+    "viewAnalytics": "View Analytics"
+  },
+  "create": {
+    "title": "Create Exam",
+    "editTitle": "Edit Exam",
+    "basicInfo": "Basic Information",
+    "examTitle": "Exam Title",
+    "examTitlePlaceholder": "e.g., JavaScript Developer Assessment",
+    "description": "Description",
+    "descriptionPlaceholder": "Describe the purpose and content of this exam...",
+    "category": "Category",
+    "difficulty": "Difficulty Level",
+    "duration": "Duration (minutes)",
+    "passingScore": "Passing Score (%)",
+    "instructions": "Instructions for Candidates",
+    "instructionsPlaceholder": "Provide clear instructions for taking this exam...",
+    "settings": {
+      "title": "Exam Settings",
+      "randomizeQuestions": "Randomize Question Order",
+      "randomizeAnswers": "Randomize Answer Options",
+      "showResults": "Show Results Immediately",
+      "allowReview": "Allow Reviewing Questions",
+      "requireCamera": "Require Camera (Proctoring)",
+      "preventCopyPaste": "Prevent Copy/Paste",
+      "fullScreen": "Require Full Screen Mode",
+      "timeLimit": "Enable Time Limit",
+      "attemptsLimit": "Limit Number of Attempts",
+      "maxAttempts": "Maximum Attempts"
+    },
+    "questions": {
+      "title": "Questions",
+      "addQuestion": "Add Question",
+      "addFromBank": "Add from Question Bank",
+      "importQuestions": "Import Questions",
+      "noQuestions": "No questions added yet",
+      "questionNumber": "Question {number}",
+      "editQuestion": "Edit Question",
+      "deleteQuestion": "Delete Question",
+      "moveUp": "Move Up",
+      "moveDown": "Move Down"
+    },
+    "questionForm": {
+      "questionText": "Question",
+      "questionType": "Question Type",
+      "points": "Points",
+      "required": "Required",
+      "explanation": "Explanation (optional)",
+      "addOption": "Add Option",
+      "correctAnswer": "Correct Answer",
+      "options": "Answer Options",
+      "option": "Option {number}"
+    },
+    "questionTypes": {
+      "multipleChoice": "Multiple Choice",
+      "trueFalse": "True/False",
+      "shortAnswer": "Short Answer",
+      "essay": "Essay",
+      "coding": "Coding Challenge",
+      "fileUpload": "File Upload"
+    },
+    "actions": {
+      "saveDraft": "Save as Draft",
+      "publish": "Publish Exam",
+      "cancel": "Cancel",
+      "update": "Update Exam"
+    },
+    "success": {
+      "created": "Exam created successfully",
+      "updated": "Exam updated successfully",
+      "published": "Exam published successfully"
+    }
+  },
+  "assign": {
+    "title": "Assign Exam",
+    "selectCandidates": "Select Candidates",
+    "searchCandidates": "Search candidates...",
+    "selectedCount": "{count} candidates selected",
+    "schedule": {
+      "title": "Schedule",
+      "now": "Available Immediately",
+      "scheduled": "Schedule for Later",
+      "startDate": "Start Date & Time",
+      "endDate": "End Date & Time (Optional)",
+      "deadline": "Deadline"
+    },
+    "notification": {
+      "title": "Notification",
+      "sendEmail": "Send Email Notification",
+      "emailSubject": "Email Subject",
+      "emailMessage": "Email Message",
+      "useTemplate": "Use Template"
+    },
+    "assign": "Assign Exam",
+    "cancel": "Cancel",
+    "success": {
+      "title": "Exam Assigned",
+      "message": "The exam has been assigned to {count} candidates."
+    }
+  },
+  "take": {
+    "title": "Take Exam",
+    "instructions": "Instructions",
+    "startExam": "Start Exam",
+    "resumeExam": "Resume Exam",
+    "timeRemaining": "Time Remaining: {time}",
+    "questionsProgress": "{answered} of {total} answered",
+    "navigation": {
+      "previous": "Previous",
+      "next": "Next",
+      "flagForReview": "Flag for Review",
+      "unflag": "Unflag",
+      "submit": "Submit Exam",
+      "saveAndExit": "Save & Exit"
+    },
+    "confirmSubmit": {
+      "title": "Submit Exam?",
+      "message": "Are you sure you want to submit your exam? You have {unanswered} unanswered questions.",
+      "allAnswered": "You have answered all questions. Ready to submit?",
+      "submit": "Submit",
+      "cancel": "Continue Exam"
+    },
+    "warnings": {
+      "cameraRequired": "This exam requires camera access for proctoring",
+      "fullScreenRequired": "Please stay in full screen mode during the exam",
+      "fullScreenExit": "Warning: You exited full screen mode",
+      "tabSwitch": "Warning: Switching tabs is not allowed",
+      "copyPasteDisabled": "Copy and paste are disabled for this exam"
+    }
+  },
+  "results": {
+    "title": "Exam Results",
+    "score": "Score",
+    "passFail": {
+      "passed": "Passed",
+      "failed": "Failed"
+    },
+    "details": {
+      "totalQuestions": "Total Questions",
+      "correctAnswers": "Correct Answers",
+      "incorrectAnswers": "Incorrect Answers",
+      "skippedQuestions": "Skipped Questions",
+      "timeSpent": "Time Spent",
+      "completedAt": "Completed At"
+    },
+    "breakdown": {
+      "title": "Score Breakdown",
+      "byCategory": "By Category",
+      "byDifficulty": "By Difficulty"
+    },
+    "review": {
+      "title": "Review Answers",
+      "yourAnswer": "Your Answer",
+      "correctAnswer": "Correct Answer",
+      "explanation": "Explanation",
+      "correct": "Correct",
+      "incorrect": "Incorrect",
+      "skipped": "Skipped"
+    },
+    "actions": {
+      "retakeExam": "Retake Exam",
+      "viewCertificate": "View Certificate",
+      "downloadReport": "Download Report",
+      "backToExams": "Back to Exams"
+    }
+  },
+  "analytics": {
+    "title": "Exam Analytics",
+    "overview": {
+      "totalAttempts": "Total Attempts",
+      "averageScore": "Average Score",
+      "passRate": "Pass Rate",
+      "averageTime": "Average Completion Time"
+    },
+    "charts": {
+      "scoreDistribution": "Score Distribution",
+      "questionPerformance": "Question Performance",
+      "timeAnalysis": "Time Analysis",
+      "passingTrends": "Passing Trends"
+    },
+    "questionAnalysis": {
+      "title": "Question Analysis",
+      "mostDifficult": "Most Difficult Questions",
+      "easiest": "Easiest Questions",
+      "correctRate": "Correct Rate",
+      "averageTime": "Average Time"
+    }
+  },
+  "questionBank": {
+    "title": "Question Bank",
+    "createQuestion": "Create Question",
+    "importQuestions": "Import Questions",
+    "categories": "Categories",
+    "allCategories": "All Categories",
+    "difficulty": "Difficulty",
+    "allDifficulties": "All Difficulties",
+    "searchPlaceholder": "Search questions...",
+    "selectedCount": "{count} questions selected",
+    "addToExam": "Add to Exam",
+    "edit": "Edit",
+    "delete": "Delete",
+    "preview": "Preview"
+  },
+  "categories": {
+    "programming": "Programming",
+    "database": "Database",
+    "algorithms": "Algorithms",
+    "systemDesign": "System Design",
+    "networking": "Networking",
+    "security": "Security",
+    "frontend": "Frontend",
+    "backend": "Backend",
+    "mobile": "Mobile",
+    "devops": "DevOps",
+    "softSkills": "Soft Skills",
+    "other": "Other"
+  },
+  "difficulty": {
+    "easy": "Easy",
+    "medium": "Medium",
+    "hard": "Hard"
+  },
+  "empty": {
+    "noExams": {
+      "title": "No exams yet",
+      "message": "Create your first exam to start assessing candidates",
+      "action": "Create Exam"
+    },
+    "noQuestions": {
+      "title": "No questions in bank",
+      "message": "Start building your question bank",
+      "action": "Create Question"
+    },
+    "noResults": {
+      "title": "No results yet",
+      "message": "Results will appear here once candidates complete the exam"
+    }
+  },
+  "loading": "Loading exams...",
+  "error": "Failed to load exams. Please try again."
+}

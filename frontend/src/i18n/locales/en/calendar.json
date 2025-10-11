@@ -1,0 +1,242 @@
+{
+  "page": {
+    "title": "Calendar",
+    "subtitle": "Manage your schedule and appointments",
+    "description": "Manage interviews, internal events, and synced calendars.",
+    "openSidebar": "Open calendar sidebar",
+    "today": "Today",
+    "month": "Month",
+    "week": "Week",
+    "day": "Day",
+    "agenda": "Agenda",
+    "untitledEvent": "Untitled event",
+    "untitledInterview": "Untitled interview",
+    "interviewPrefix": "Interview"
+  },
+  "navigation": {
+    "previous": "Previous",
+    "next": "Next",
+    "today": "Today",
+    "goToDate": "Go to Date"
+  },
+  "views": {
+    "month": "Month View",
+    "week": "Week View",
+    "day": "Day View",
+    "agenda": "Agenda View",
+    "year": "Year View"
+  },
+  "event": {
+    "title": "Event Title",
+    "description": "Description",
+    "location": "Location",
+    "startTime": "Start Time",
+    "endTime": "End Time",
+    "allDay": "All Day Event",
+    "repeat": "Repeat",
+    "reminder": "Reminder",
+    "attendees": "Attendees",
+    "category": "Category",
+    "status": "Status"
+  },
+  "eventTypes": {
+    "interview": "Interview",
+    "meeting": "Meeting",
+    "deadline": "Deadline",
+    "reminder": "Reminder",
+    "personal": "Personal",
+    "team": "Team Event",
+    "holiday": "Holiday",
+    "other": "Other"
+  },
+  "status": {
+    "confirmed": "Confirmed",
+    "tentative": "Tentative",
+    "cancelled": "Cancelled",
+    "pending": "Pending"
+  },
+  "repeat": {
+    "none": "Does not repeat",
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "biweekly": "Every 2 weeks",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "custom": "Custom",
+    "ends": "Ends",
+    "never": "Never",
+    "on": "On",
+    "after": "After"
+  },
+  "reminder": {
+    "none": "No reminder",
+    "atTime": "At time of event",
+    "5min": "5 minutes before",
+    "15min": "15 minutes before",
+    "30min": "30 minutes before",
+    "1hour": "1 hour before",
+    "2hours": "2 hours before",
+    "1day": "1 day before",
+    "1week": "1 week before",
+    "custom": "Custom"
+  },
+  "actions": {
+    "createEvent": "Create Event",
+    "editEvent": "Edit Event",
+    "deleteEvent": "Delete Event",
+    "duplicateEvent": "Duplicate Event",
+    "shareEvent": "Share Event",
+    "exportEvent": "Export Event",
+    "printCalendar": "Print Calendar",
+    "syncCalendar": "Sync Calendar",
+    "importEvents": "Import Events"
+  },
+  "form": {
+    "newEvent": "New Event",
+    "editEvent": "Edit Event",
+    "eventDetails": "Event Details",
+    "addGuests": "Add Guests",
+    "addLocation": "Add Location",
+    "addDescription": "Add Description",
+    "addAttachment": "Add Attachment",
+    "save": "Save Event",
+    "cancel": "Cancel",
+    "delete": "Delete Event"
+  },
+  "attendees": {
+    "title": "Attendees",
+    "add": "Add Attendees",
+    "search": "Search people...",
+    "optional": "Optional",
+    "required": "Required",
+    "organizer": "Organizer",
+    "accepted": "Accepted",
+    "declined": "Declined",
+    "tentative": "Tentative",
+    "pending": "Pending",
+    "sendInvite": "Send Invitation",
+    "notifyChanges": "Notify attendees of changes"
+  },
+  "integration": {
+    "title": "Calendar Integration",
+    "google": "Google Calendar",
+    "outlook": "Outlook Calendar",
+    "apple": "Apple Calendar",
+    "connect": "Connect",
+    "disconnect": "Disconnect",
+    "sync": "Sync Now",
+    "lastSync": "Last synced {time}",
+    "autoSync": "Auto-sync",
+    "syncSettings": "Sync Settings"
+  },
+  "filters": {
+    "title": "Filters",
+    "showAll": "Show All",
+    "myEvents": "My Events",
+    "sharedEvents": "Shared Events",
+    "categories": "Categories",
+    "calendars": "Calendars",
+    "clearFilters": "Clear Filters"
+  },
+  "shortcuts": {
+    "title": "Keyboard Shortcuts",
+    "createEvent": "Create Event",
+    "goToToday": "Go to Today",
+    "nextPeriod": "Next Period",
+    "previousPeriod": "Previous Period",
+    "switchView": "Switch View"
+  },
+  "notifications": {
+    "eventCreated": "Event created.",
+    "eventUpdated": "Event updated.",
+    "eventDeleted": "Event deleted.",
+    "reminderSent": "Reminder sent",
+    "invitationSent": "Invitation sent to {count} attendees",
+    "syncSuccess": "Sync started. It may take a moment to finish.",
+    "syncFailed": "Failed to sync calendar",
+    "calendarDisconnected": "Calendar disconnected.",
+    "completeConnectionInfo": "Complete the connection in the new tab, then return to sync."
+  },
+  "empty": {
+    "noEvents": {
+      "title": "No events scheduled",
+      "message": "Create your first event to get started",
+      "action": "Create Event"
+    },
+    "noEventsToday": {
+      "title": "No events today",
+      "message": "Your schedule is clear for today"
+    },
+    "noUpcoming": {
+      "title": "No upcoming events",
+      "message": "You have no scheduled events in the near future"
+    }
+  },
+  "conflicts": {
+    "title": "Schedule Conflict",
+    "message": "This event conflicts with another event:",
+    "viewConflict": "View Conflict",
+    "ignoreConflict": "Schedule Anyway",
+    "reschedule": "Reschedule"
+  },
+  "sharing": {
+    "title": "Share Calendar",
+    "shareWith": "Share with",
+    "permissions": {
+      "view": "Can View",
+      "edit": "Can Edit",
+      "manage": "Can Manage"
+    },
+    "publicLink": "Public Link",
+    "generateLink": "Generate Link",
+    "copyLink": "Copy Link",
+    "revokeLink": "Revoke Link"
+  },
+  "settings": {
+    "title": "Calendar Settings",
+    "defaultView": "Default View",
+    "weekStart": "Week Starts On",
+    "timeFormat": "Time Format",
+    "timezone": "Timezone",
+    "workingHours": "Working Hours",
+    "showWeekends": "Show Weekends",
+    "showWeekNumbers": "Show Week Numbers",
+    "defaultReminder": "Default Reminder",
+    "defaultDuration": "Default Event Duration"
+  },
+  "weekdays": {
+    "sunday": "Sunday",
+    "monday": "Monday",
+    "tuesday": "Tuesday",
+    "wednesday": "Wednesday",
+    "thursday": "Thursday",
+    "friday": "Friday",
+    "saturday": "Saturday"
+  },
+  "months": {
+    "january": "January",
+    "february": "February",
+    "march": "March",
+    "april": "April",
+    "may": "May",
+    "june": "June",
+    "july": "July",
+    "august": "August",
+    "september": "September",
+    "october": "October",
+    "november": "November",
+    "december": "December"
+  },
+  "errors": {
+    "failedToLoadConnections": "Unable to load calendar connections.",
+    "failedToLoadEvents": "Unable to load calendar events.",
+    "failedToSaveEvent": "Unable to save event. Please try again.",
+    "cannotEditExternalEvent": "This event can only be edited from its source.",
+    "cannotDeleteExternalEvent": "This event must be managed from the interview workflow.",
+    "failedToDeleteEvent": "Unable to delete event.",
+    "failedToStartConnection": "Unable to start the calendar connection flow.",
+    "failedToDisconnectCalendar": "Unable to disconnect calendar.",
+    "failedToSyncCalendar": "Unable to trigger sync.",
+    "missingAuthUrl": "Missing auth URL"
+  }
+}

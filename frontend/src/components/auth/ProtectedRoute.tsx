@@ -5,30 +5,34 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { LoadingSpinner } from '@/components/ui';
 import type { ProtectedRouteProps } from '@/types/components';
+import { useLocale } from 'next-intl';
+import { ROUTES } from '@/routes/config';
 
 export default function ProtectedRoute({
   children,
   allowedRoles,
   fallback,
-  redirectTo = '/auth/login',
+  redirectTo = ROUTES.AUTH.LOGIN,
 }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
+  const locale = useLocale();
 
   useEffect(() => {
     // Add a small delay to ensure auth state is fully determined
     const timeoutId = setTimeout(() => {
       if (!isLoading && !isAuthenticated && typeof window !== 'undefined') {
         const currentPath = window.location.pathname;
+        const localeRedirectTo = `/${locale}${redirectTo}`;
         // Only redirect if not already on the redirect page and not authenticated
-        if (currentPath !== redirectTo) {
-          router.push(redirectTo);
+        if (currentPath !== localeRedirectTo) {
+          router.push(localeRedirectTo);
         }
       }
     }, 100); // Small delay to let auth state settle
 
     return () => clearTimeout(timeoutId);
-  }, [isAuthenticated, isLoading, router, redirectTo]);
+  }, [isAuthenticated, isLoading, router, redirectTo, locale]);
 
   // Check role-based access if allowedRoles is specified
   const hasRequiredRole = () => {

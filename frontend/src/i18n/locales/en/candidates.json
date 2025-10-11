@@ -1,0 +1,299 @@
+{
+  "page": {
+    "title": "Candidates",
+    "subtitle": "Manage your candidate pipeline",
+    "searchPlaceholder": "Search candidates by name, skills, or position...",
+    "addCandidate": "Add Candidate",
+    "importCandidates": "Import Candidates",
+    "exportList": "Export List"
+  },
+  "tabs": {
+    "all": "All Candidates",
+    "active": "Active",
+    "shortlisted": "Shortlisted",
+    "interviewed": "Interviewed",
+    "offered": "Offered",
+    "hired": "Hired",
+    "rejected": "Rejected",
+    "archived": "Archived"
+  },
+  "filters": {
+    "title": "Filters",
+    "clearAll": "Clear all",
+    "apply": "Apply",
+    "status": {
+      "label": "Status",
+      "new": "New",
+      "screening": "Screening",
+      "interview": "Interview",
+      "offer": "Offer",
+      "hired": "Hired",
+      "rejected": "Rejected"
+    },
+    "position": {
+      "label": "Position",
+      "placeholder": "Select position"
+    },
+    "experience": {
+      "label": "Experience Level",
+      "entry": "Entry Level",
+      "mid": "Mid Level",
+      "senior": "Senior Level"
+    },
+    "skills": {
+      "label": "Skills",
+      "placeholder": "Search skills"
+    },
+    "location": {
+      "label": "Location",
+      "placeholder": "Select location"
+    },
+    "dateApplied": {
+      "label": "Date Applied",
+      "last7days": "Last 7 days",
+      "last30days": "Last 30 days",
+      "last3months": "Last 3 months",
+      "custom": "Custom range"
+    }
+  },
+  "sorting": {
+    "label": "Sort by:",
+    "recentlyApplied": "Recently Applied",
+    "name": "Name",
+    "matchScore": "Match Score",
+    "experience": "Experience",
+    "lastActivity": "Last Activity"
+  },
+  "card": {
+    "appliedDate": "Applied {date}",
+    "experience": "{years} years exp",
+    "matchScore": "{score}% match",
+    "location": "Location",
+    "skills": "Skills",
+    "showMore": "Show more",
+    "viewProfile": "View Profile",
+    "schedule Interview": "Schedule Interview",
+    "sendMessage": "Send Message",
+    "addToShortlist": "Add to Shortlist",
+    "removeFromShortlist": "Remove from Shortlist",
+    "reject": "Reject",
+    "hire": "Hire",
+    "moreActions": "More actions"
+  },
+  "profile": {
+    "title": "Candidate Profile",
+    "backToList": "Back to Candidates",
+    "overview": "Overview",
+    "resume": "Resume",
+    "interviews": "Interviews",
+    "notes": "Notes",
+    "activity": "Activity",
+    "basicInfo": {
+      "title": "Basic Information",
+      "email": "Email",
+      "phone": "Phone",
+      "location": "Location",
+      "linkedIn": "LinkedIn",
+      "website": "Website",
+      "experience": "Experience",
+      "education": "Education",
+      "currentPosition": "Current Position"
+    },
+    "applicationInfo": {
+      "title": "Application Information",
+      "appliedFor": "Applied for",
+      "appliedDate": "Applied on",
+      "source": "Source",
+      "referredBy": "Referred by",
+      "status": "Status",
+      "stage": "Stage",
+      "matchScore": "Match Score",
+      "expectedSalary": "Expected Salary"
+    },
+    "skills": {
+      "title": "Skills",
+      "technical": "Technical Skills",
+      "soft": "Soft Skills",
+      "languages": "Languages"
+    },
+    "resumeSection": {
+      "title": "Resume",
+      "download": "Download Resume",
+      "view": "View Resume",
+      "uploaded": "Uploaded on {date}",
+      "noResume": "No resume uploaded"
+    },
+    "interviewsSection": {
+      "title": "Interview History",
+      "scheduleNew": "Schedule New Interview",
+      "noInterviews": "No interviews scheduled",
+      "interviewDate": "Interview Date",
+      "interviewType": "Type",
+      "interviewer": "Interviewer",
+      "feedback": "Feedback",
+      "rating": "Rating",
+      "viewFeedback": "View Feedback"
+    },
+    "notesSection": {
+      "title": "Internal Notes",
+      "addNote": "Add Note",
+      "placeholder": "Add a note about this candidate...",
+      "save": "Save Note",
+      "noNotes": "No notes yet",
+      "noteBy": "By {author}",
+      "noteDate": "on {date}"
+    },
+    "activityTimeline": {
+      "title": "Activity Timeline",
+      "applied": "Applied for position",
+      "screeningCompleted": "Screening completed",
+      "interviewScheduled": "Interview scheduled",
+      "interviewCompleted": "Interview completed",
+      "offerSent": "Offer sent",
+      "offerAccepted": "Offer accepted",
+      "offerRejected": "Offer rejected",
+      "hired": "Hired",
+      "rejected": "Rejected",
+      "statusChanged": "Status changed to {status}"
+    },
+    "actions": {
+      "scheduleInterview": "Schedule Interview",
+      "sendMessage": "Send Message",
+      "sendOffer": "Send Offer",
+      "moveToStage": "Move to Stage",
+      "changeStatus": "Change Status",
+      "reject": "Reject Candidate",
+      "archive": "Archive",
+      "delete": "Delete"
+    }
+  },
+  "actions": {
+    "bulkActions": "Bulk Actions",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "selectedCount": "{count} selected",
+    "moveToStage": "Move to Stage",
+    "sendBulkEmail": "Send Bulk Email",
+    "exportSelected": "Export Selected",
+    "archiveSelected": "Archive Selected",
+    "deleteSelected": "Delete Selected"
+  },
+  "addCandidate": {
+    "title": "Add Candidate",
+    "manually": "Add Manually",
+    "fromResume": "Parse from Resume",
+    "basicInfo": "Basic Information",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "phone": "Phone",
+    "linkedin": "LinkedIn URL",
+    "position": "Position Applied For",
+    "source": "Source",
+    "resume": "Upload Resume",
+    "coverLetter": "Cover Letter",
+    "skills": "Skills",
+    "notes": "Notes",
+    "submit": "Add Candidate",
+    "cancel": "Cancel",
+    "success": {
+      "title": "Candidate Added",
+      "message": "The candidate has been successfully added to your pipeline.",
+      "viewProfile": "View Profile"
+    }
+  },
+  "reject": {
+    "title": "Reject Candidate",
+    "confirm": "Are you sure you want to reject this candidate?",
+    "reason": "Reason for Rejection",
+    "reasonPlaceholder": "Please provide a reason...",
+    "sendEmail": "Send rejection email to candidate",
+    "emailTemplate": "Email Template",
+    "confirmButton": "Reject Candidate",
+    "cancelButton": "Cancel",
+    "success": {
+      "title": "Candidate Rejected",
+      "message": "The candidate has been marked as rejected."
+    }
+  },
+  "stats": {
+    "totalCandidates": "Total Candidates",
+    "interviewing": "Interviewing",
+    "hired": "Hired",
+    "thisMonth": "This Month"
+  },
+  "table": {
+    "candidate": "Candidate",
+    "contactLocation": "Contact & Location",
+    "experienceSkills": "Experience & Skills",
+    "statusRating": "Status & Rating",
+    "sourceActivity": "Source & Activity",
+    "actions": "Actions",
+    "yearsExperience": "{years} years experience",
+    "moreSkills": "+{count} more",
+    "at": "at"
+  },
+  "statusOptions": {
+    "allStatuses": "All Statuses",
+    "active": "Active",
+    "interviewing": "Interviewing",
+    "hired": "Hired",
+    "rejected": "Rejected",
+    "withdrawn": "Withdrawn"
+  },
+  "sourceOptions": {
+    "allSources": "All Sources",
+    "website": "Website",
+    "referral": "Referral",
+    "linkedin": "LinkedIn",
+    "agency": "Agency",
+    "event": "Event",
+    "other": "Other"
+  },
+  "experienceOptions": {
+    "allExperience": "All Experience",
+    "entry": "Entry (0-2 years)",
+    "mid": "Mid (3-7 years)",
+    "senior": "Senior (8+ years)"
+  },
+  "sortOptions": {
+    "recentActivity": "Recent Activity",
+    "newestFirst": "Newest First",
+    "oldestFirst": "Oldest First",
+    "nameAZ": "Name (A-Z)",
+    "nameZA": "Name (Z-A)",
+    "highestRated": "Highest Rated"
+  },
+  "results": {
+    "showing": "Showing {start}-{end} of {total} candidates",
+    "filteredFrom": "(filtered from {total})"
+  },
+  "pagination": {
+    "previous": "Previous",
+    "next": "Next",
+    "pageInfo": "Page {current} of {total}"
+  },
+  "tooltips": {
+    "viewProfile": "View Profile",
+    "editCandidate": "Edit Candidate",
+    "viewResume": "View Resume",
+    "deleteCandidate": "Delete Candidate"
+  },
+  "confirmations": {
+    "deleteCandidate": "Are you sure you want to delete this candidate?"
+  },
+  "messages": {
+    "exportAlert": "Export functionality would be implemented here",
+    "subtitle": "Manage your talent pipeline and candidate relationships",
+    "noFiltersMessage": "Get started by adding your first candidate.",
+    "tryAdjusting": "Try adjusting your filters to see more results."
+  },
+  "noResults": {
+    "title": "No candidates found",
+    "message": "Try adjusting your filters or search terms",
+    "clearFilters": "Clear filters",
+    "addCandidate": "Add Candidate"
+  },
+  "loading": "Loading candidates...",
+  "error": "Failed to load candidates. Please try again."
+}

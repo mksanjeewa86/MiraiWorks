@@ -18,10 +18,13 @@ import {
 } from '@/components/dashboard/common';
 import { SimpleBarChart } from '@/components/dashboard/Charts';
 import type { CompanyAdminStats } from '@/types/dashboard';
+import { ROUTES } from '@/routes/config';
+import { useTranslations } from 'next-intl';
 
 export default function CompanyAdminDashboard() {
   const { user } = useAuth();
   const router = useRouter();
+  const t = useTranslations('dashboard.companyAdmin');
   const [stats, setStats] = useState<CompanyAdminStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,41 +50,41 @@ export default function CompanyAdminDashboard() {
     if (!stats) return [];
     return [
       {
-        label: 'Total employees',
+        label: t('metrics.totalEmployees.label'),
         value: stats.total_employees ?? 0,
-        helperText: 'All workforce members',
-        trendLabel: `${stats.active_employees ?? 0} active`,
+        helperText: t('metrics.totalEmployees.helperText'),
+        trendLabel: `${stats.active_employees ?? 0} ${t('metrics.totalEmployees.active')}`,
         trendTone: 'positive' as const,
         icon: <UsersIcon className="h-6 w-6" />,
       },
       {
-        label: 'Active positions',
+        label: t('metrics.activePositions.label'),
         value: stats.active_positions ?? 0,
-        helperText: 'Open roles across the company',
-        trendLabel: `${stats.total_positions ?? 0} total roles`,
+        helperText: t('metrics.activePositions.helperText'),
+        trendLabel: `${stats.total_positions ?? 0} ${t('metrics.activePositions.totalRoles')}`,
         trendTone: 'neutral' as const,
         icon: <BuildingOffice2Icon className="h-6 w-6" />,
       },
       {
-        label: 'Pending employees',
+        label: t('metrics.pendingEmployees.label'),
         value: stats.pending_employees ?? 0,
-        helperText: 'Awaiting onboarding approval',
-        trendLabel: `${stats.total_recruiters ?? 0} recruiters supporting`,
+        helperText: t('metrics.pendingEmployees.helperText'),
+        trendLabel: `${stats.total_recruiters ?? 0} ${t('metrics.pendingEmployees.recruitersSupporting')}`,
         trendTone: (stats.pending_employees && stats.pending_employees > 0
           ? 'negative'
           : 'neutral') as 'positive' | 'negative' | 'neutral',
         icon: <UserPlusIcon className="h-6 w-6" />,
       },
       {
-        label: 'Interviews scheduled',
+        label: t('metrics.interviewsScheduled.label'),
         value: stats.interviews_scheduled ?? 0,
-        helperText: 'Upcoming interviews company-wide',
-        trendLabel: `${stats.total_applications ?? 0} applications`,
+        helperText: t('metrics.interviewsScheduled.helperText'),
+        trendLabel: `${stats.total_applications ?? 0} ${t('metrics.interviewsScheduled.applications')}`,
         trendTone: 'neutral' as const,
         icon: <CalendarDaysIcon className="h-6 w-6" />,
       },
     ];
-  }, [stats]);
+  }, [stats, t]);
 
   const activityByType = useMemo(() => {
     const counts = new Map<string, number>();
@@ -116,20 +119,20 @@ export default function CompanyAdminDashboard() {
   return (
     <div className="space-y-6 p-6">
       <DashboardHeader
-        title="Company administration portal"
-        subtitle={`Hello${user?.full_name ? `, ${user.full_name}` : ''}`}
-        description="Oversee staffing health, approve team members, and keep operations moving."
+        title={t('header.title')}
+        subtitle={`${t('header.hello')}${user?.full_name ? `, ${user.full_name}` : ''}`}
+        description={t('header.description')}
         actions={
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={loadDashboardData}>
-              Refresh
+              {t('header.refreshButton')}
             </Button>
-            <Button size="sm" onClick={() => router.push('/app/employees/new')}>
-              Add employee
+            <Button size="sm" onClick={() => router.push(ROUTES.APP.EMPLOYEES.NEW)}>
+              {t('header.addEmployeeButton')}
             </Button>
           </div>
         }
-        meta={`Snapshot ${new Date().toLocaleTimeString()}`}
+        meta={`${t('header.snapshot')} ${new Date().toLocaleTimeString()}`}
       />
 
       <DashboardContentGate loading={loading} error={error} onRetry={loadDashboardData}>
@@ -151,47 +154,47 @@ export default function CompanyAdminDashboard() {
           <Card className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 xl:col-span-2">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-                Employee distribution
+                {t('employeeDistribution.title')}
               </h2>
-              <Badge variant="outline">Team health</Badge>
+              <Badge variant="outline">{t('employeeDistribution.badge')}</Badge>
             </div>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              View how your workforce is balanced between active, pending, and recruiter members.
+              {t('employeeDistribution.description')}
             </p>
             <div className="mt-6 grid gap-4 md:grid-cols-3">
               <div className="rounded-xl border border-gray-100 p-4 dark:border-gray-800">
                 <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                  Active
+                  {t('employeeDistribution.active')}
                 </p>
                 <p className="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-50">
                   {stats?.active_employees ?? 0}
                 </p>
                 <Progress className="mt-3" value={employeeRatios.active} max={100} />
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  {employeeRatios.active}% of total
+                  {employeeRatios.active}% {t('employeeDistribution.ofTotal')}
                 </p>
               </div>
               <div className="rounded-xl border border-gray-100 p-4 dark:border-gray-800">
                 <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                  Pending
+                  {t('employeeDistribution.pending')}
                 </p>
                 <p className="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-50">
                   {stats?.pending_employees ?? 0}
                 </p>
                 <Progress className="mt-3" value={employeeRatios.pending} max={100} />
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  {employeeRatios.pending}% of total
+                  {employeeRatios.pending}% {t('employeeDistribution.ofTotal')}
                 </p>
               </div>
               <div className="rounded-xl border border-gray-100 p-4 dark:border-gray-800">
                 <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                  Recruiters
+                  {t('employeeDistribution.recruiters')}
                 </p>
                 <p className="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-50">
                   {stats?.total_recruiters ?? 0}
                 </p>
                 <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
-                  Ensure recruiters have the right access and capacity.
+                  {t('employeeDistribution.ensureAccess')}
                 </p>
               </div>
             </div>
@@ -200,10 +203,10 @@ export default function CompanyAdminDashboard() {
           <Card className="flex flex-col gap-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
             <div>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-                Activity by category
+                {t('activityByCategory.title')}
               </h2>
               <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                Track where your team spends most of its time.
+                {t('activityByCategory.description')}
               </p>
             </div>
             <div className="h-[220px]">
@@ -211,7 +214,7 @@ export default function CompanyAdminDashboard() {
                 <SimpleBarChart data={activityByType} dataKey="value" color="#F97316" />
               ) : (
                 <div className="flex h-full items-center justify-center text-sm text-gray-500">
-                  Recent activity will populate here once actions are logged.
+                  {t('activityByCategory.noData')}
                 </div>
               )}
             </div>
@@ -222,9 +225,9 @@ export default function CompanyAdminDashboard() {
           <Card className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-                Recent company activity
+                {t('recentActivity.title')}
               </h2>
-              <Badge variant="outline">Last 5</Badge>
+              <Badge variant="outline">{t('recentActivity.badge')}</Badge>
             </div>
             <div className="mt-4 space-y-4">
               {stats?.recent_activities?.length ? (
@@ -240,7 +243,7 @@ export default function CompanyAdminDashboard() {
                           {activity.description}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          by {activity.user_name}
+                          {t('recentActivity.by')} {activity.user_name}
                         </p>
                         <p className="text-xs text-gray-400">
                           {formatTimestamp(activity.timestamp)}
@@ -252,7 +255,7 @@ export default function CompanyAdminDashboard() {
                 ))
               ) : (
                 <div className="flex h-full items-center justify-center rounded-xl border border-dashed border-gray-200 p-6 text-sm text-gray-500 dark:border-gray-800">
-                  Company activity will display once actions are performed.
+                  {t('recentActivity.noActivity')}
                 </div>
               )}
             </div>
@@ -261,37 +264,37 @@ export default function CompanyAdminDashboard() {
           <Card className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-                Admin quick actions
+                {t('quickActions.title')}
               </h2>
-              <Badge variant="outline">Shortcuts</Badge>
+              <Badge variant="outline">{t('quickActions.badge')}</Badge>
             </div>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <Button
                 className="h-20 flex-col justify-center gap-2"
-                onClick={() => router.push('/app/employees')}
+                onClick={() => router.push(ROUTES.APP.EMPLOYEES.BASE)}
               >
-                Manage employees
+                {t('quickActions.manageEmployees')}
               </Button>
               <Button
                 variant="outline"
                 className="h-20 flex-col justify-center gap-2"
-                onClick={() => router.push('/app/positions')}
+                onClick={() => router.push(ROUTES.APP.POSITIONS)}
               >
-                Manage positions
+                {t('quickActions.managePositions')}
               </Button>
               <Button
                 variant="outline"
                 className="h-20 flex-col justify-center gap-2"
-                onClick={() => router.push('/app/applications')}
+                onClick={() => router.push(ROUTES.APP.APPLICATIONS)}
               >
-                Review applications
+                {t('quickActions.reviewApplications')}
               </Button>
               <Button
                 variant="outline"
                 className="h-20 flex-col justify-center gap-2"
-                onClick={() => router.push('/app/settings')}
+                onClick={() => router.push(ROUTES.APP.SETTINGS)}
               >
-                Company settings
+                {t('quickActions.companySettings')}
               </Button>
             </div>
           </Card>

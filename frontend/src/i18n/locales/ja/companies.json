@@ -1,0 +1,401 @@
+{
+  "page": {
+    "title": "企業",
+    "subtitle": "企業プロフィールとパートナーシップを管理",
+    "searchPlaceholder": "企業名、業種、場所で検索...",
+    "addCompany": "企業を追加",
+    "importCompanies": "企業をインポート",
+    "exportList": "リストをエクスポート"
+  },
+  "tabs": {
+    "all": "すべての企業",
+    "active": "アクティブ",
+    "partners": "パートナー",
+    "prospects": "見込み客",
+    "archived": "アーカイブ"
+  },
+  "filters": {
+    "title": "フィルター",
+    "clearAll": "すべてクリア",
+    "apply": "フィルターを適用",
+    "industry": {
+      "label": "業種",
+      "technology": "テクノロジー",
+      "finance": "金融",
+      "healthcare": "ヘルスケア",
+      "manufacturing": "製造",
+      "retail": "小売",
+      "education": "教育",
+      "other": "その他"
+    },
+    "size": {
+      "label": "企業規模",
+      "startup": "1-10名",
+      "small": "11-50名",
+      "medium": "51-200名",
+      "large": "201-1000名",
+      "enterprise": "1000名以上"
+    },
+    "location": {
+      "label": "所在地",
+      "placeholder": "場所を選択"
+    },
+    "partnershipStatus": {
+      "label": "パートナーシップステータス",
+      "active": "アクティブパートナー",
+      "prospect": "見込み客",
+      "inactive": "非アクティブ"
+    }
+  },
+  "sorting": {
+    "label": "並べ替え：",
+    "name": "企業名",
+    "dateAdded": "追加日",
+    "industry": "業種",
+    "size": "企業規模",
+    "openPositions": "求人数"
+  },
+  "card": {
+    "employees": "{count}名の従業員",
+    "openPositions": "{count}件の求人",
+    "since": "{date}からのパートナー",
+    "location": "所在地",
+    "industry": "業種",
+    "website": "ウェブサイト",
+    "viewProfile": "プロフィールを見る",
+    "editCompany": "企業を編集",
+    "viewJobs": "求人を見る",
+    "contactCompany": "連絡",
+    "archiveCompany": "アーカイブ"
+  },
+  "profile": {
+    "title": "企業プロフィール",
+    "backToList": "企業一覧に戻る",
+    "overview": "概要",
+    "jobsTab": "求人",
+    "contactsTab": "連絡先",
+    "notesTab": "メモ",
+    "activityTab": "活動",
+    "basicInfo": {
+      "title": "企業情報",
+      "name": "企業名",
+      "industry": "業種",
+      "size": "企業規模",
+      "founded": "設立年",
+      "headquarters": "本社",
+      "website": "ウェブサイト",
+      "phone": "電話番号",
+      "email": "メールアドレス",
+      "description": "企業について"
+    },
+    "partnershipInfo": {
+      "title": "パートナーシップ情報",
+      "status": "ステータス",
+      "since": "パートナー開始日",
+      "tier": "パートナーシップレベル",
+      "accountManager": "アカウントマネージャー",
+      "contractEnd": "契約終了日",
+      "renewalDate": "更新日"
+    },
+    "statistics": {
+      "title": "統計",
+      "totalHires": "総採用数",
+      "activeJobs": "アクティブな求人",
+      "candidates": "パイプライン内の候補者",
+      "averageTimeToHire": "平均採用期間",
+      "fillRate": "充足率"
+    },
+    "contacts": {
+      "title": "企業担当者",
+      "addContact": "担当者を追加",
+      "name": "名前",
+      "role": "役職",
+      "email": "メール",
+      "phone": "電話",
+      "primary": "主担当者",
+      "noContacts": "まだ担当者が追加されていません"
+    },
+    "jobs": {
+      "title": "求人",
+      "createJob": "求人を作成",
+      "viewAll": "すべての求人を見る",
+      "noJobs": "求人がありません",
+      "active": "アクティブ",
+      "draft": "下書き",
+      "closed": "終了"
+    },
+    "notes": {
+      "title": "企業メモ",
+      "addNote": "メモを追加",
+      "placeholder": "この企業についてのメモを追加...",
+      "save": "メモを保存",
+      "noNotes": "メモはまだありません",
+      "noteBy": "{author}による",
+      "noteDate": "{date}"
+    },
+    "activity": {
+      "title": "活動タイムライン",
+      "companyAdded": "企業を追加",
+      "partnershipStarted": "パートナーシップ開始",
+      "jobPosted": "求人を投稿：{title}",
+      "candidateHired": "{position}の候補者を採用",
+      "contactAdded": "担当者を追加：{name}",
+      "noteAdded": "メモを追加",
+      "statusChanged": "ステータスを{status}に変更"
+    },
+    "actions": {
+      "editProfile": "プロフィールを編集",
+      "addContact": "担当者を追加",
+      "createJob": "求人を作成",
+      "sendMessage": "メッセージを送信",
+      "scheduleCall": "通話をスケジュール",
+      "archive": "企業をアーカイブ",
+      "delete": "企業を削除"
+    }
+  },
+  "addCompany": {
+    "title": "企業を追加",
+    "subtitle": "システムに新しい企業を作成",
+    "basicInfo": "基本情報",
+    "companyName": "企業名",
+    "companyNamePlaceholder": "企業名を入力",
+    "industry": "業種",
+    "size": "企業規模",
+    "website": "ウェブサイト",
+    "phone": "電話番号",
+    "email": "メールアドレス",
+    "emailPlaceholder": "contact@company.com",
+    "phonePlaceholder": "03-1234-5678",
+    "websitePlaceholder": "https://company.com",
+    "type": "タイプ",
+    "typeEmployer": "雇用主",
+    "typeRecruiter": "採用担当者",
+    "location": "所在地",
+    "postalCode": "郵便番号 (Postal Code)",
+    "postalCodePlaceholder": "123-4567",
+    "prefecture": "都道府県 (Prefecture)",
+    "prefectureSelect": "選択してください",
+    "city": "市区町村 (City)",
+    "cityPlaceholder": "渋谷区",
+    "description": "説明",
+    "descriptionPlaceholder": "企業の簡単な説明...",
+    "subscriptionSettings": "サブスクリプション設定",
+    "subscriptionPlan": "サブスクリプションプラン",
+    "subscriptionPlanAuto": "ベーシックプランを自動割り当て",
+    "subscriptionPlanHelp": "サブスクリプションプランを選択するか、空欄のままにしてベーシックプランを自動割り当てします",
+    "isTrial": "トライアルサブスクリプションとして作成",
+    "isTrialHelp": "選択したプランへの期間限定アクセスでトライアル期間を有効にする",
+    "trialPeriod": "トライアル期間（日数）",
+    "trialPeriodPlaceholder": "30",
+    "trialPeriodHelp": "トライアルは作成からこの日数後に期限切れになります",
+    "partnershipInfo": "パートナーシップ情報",
+    "partnershipStatus": "パートナーシップステータス",
+    "tier": "パートナーシップレベル",
+    "accountManager": "アカウントマネージャー",
+    "notes": "メモ",
+    "submit": "企業を追加",
+    "submitCreating": "作成中...",
+    "submitButton": "企業を作成",
+    "cancel": "キャンセル",
+    "success": {
+      "title": "企業を作成しました！",
+      "message": "{name}が作成されました。アクティベーションメールが{email}に送信されます。",
+      "viewProfile": "プロフィールを見る"
+    },
+    "error": "企業の作成に失敗しました"
+  },
+  "editCompany": {
+    "title": "企業を編集",
+    "subtitle": "{name}の情報を更新",
+    "loading": "企業を読み込み中...",
+    "notFound": "企業が見つかりません",
+    "backToCompanies": "企業一覧に戻る",
+    "emailDisabled": "メールアドレスは変更できません",
+    "deactivate": "非アクティブ化",
+    "delete": "削除",
+    "cancel": "キャンセル",
+    "updateButton": "企業を更新",
+    "updating": "更新中...",
+    "success": {
+      "title": "企業を更新しました！",
+      "message": "{name}が更新されました。",
+      "deactivateTitle": "企業を非アクティブ化しました",
+      "deactivateMessage": "{name}が非アクティブ化されました。",
+      "deleteTitle": "企業を削除しました",
+      "deleteMessage": "{name}が完全に削除されました。"
+    },
+    "error": {
+      "update": "企業の更新に失敗しました",
+      "load": "企業の読み込みに失敗しました",
+      "deactivate": "企業の非アクティブ化に失敗しました",
+      "delete": "企業の削除に失敗しました"
+    },
+    "deleteModal": {
+      "title": "企業を削除",
+      "message": "本当に{name}を完全に削除しますか？この操作は元に戻すことができず、関連するすべてのデータが削除されます。",
+      "confirmButton": "企業を削除",
+      "deleting": "削除中...",
+      "cancel": "キャンセル"
+    },
+    "deactivateModal": {
+      "title": "企業を非アクティブ化",
+      "message": "本当に{name}を非アクティブ化しますか？企業はシステムにアクセスできなくなりますが、データは保持されます。",
+      "confirmButton": "企業を非アクティブ化",
+      "deactivating": "非アクティブ化中...",
+      "cancel": "キャンセル"
+    }
+  },
+  "delete": {
+    "title": "企業を削除",
+    "confirm": "本当にこの企業を削除しますか？",
+    "warning": "この操作は元に戻せません。関連するすべての求人とデータが削除されます。",
+    "confirmButton": "企業を削除",
+    "cancelButton": "キャンセル",
+    "success": {
+      "title": "企業を削除しました",
+      "message": "企業が正常に削除されました。"
+    }
+  },
+  "archive": {
+    "title": "企業をアーカイブ",
+    "confirm": "この企業をアーカイブしますか？",
+    "message": "この企業はアーカイブに移動されます。後で復元できます。",
+    "confirmButton": "企業をアーカイブ",
+    "cancelButton": "キャンセル",
+    "success": {
+      "title": "企業をアーカイブしました",
+      "message": "企業が正常にアーカイブされました。"
+    }
+  },
+  "tiers": {
+    "gold": "ゴールドパートナー",
+    "silver": "シルバーパートナー",
+    "bronze": "ブロンズパートナー",
+    "basic": "ベーシックパートナー"
+  },
+  "noResults": {
+    "title": "企業が見つかりません",
+    "message": "フィルターや検索条件を調整してみてください",
+    "clearFilters": "フィルターをクリア",
+    "addCompany": "企業を追加"
+  },
+  "loading": "企業を読み込み中...",
+  "error": "企業の読み込みに失敗しました。もう一度お試しください。",
+  "typeFilter": {
+    "allTypes": "すべてのタイプ",
+    "employer": "雇用主",
+    "recruiter": "採用担当者"
+  },
+  "statusFilter": {
+    "allStatus": "すべてのステータス",
+    "active": "アクティブ",
+    "inactive": "非アクティブ"
+  },
+  "includeDeleted": "削除済み企業を含む",
+  "bulkActions": {
+    "selected": "{count}件の企業を選択中",
+    "clearSelection": "選択を解除",
+    "activate": "アクティブ化",
+    "deactivate": "非アクティブ化",
+    "delete": "削除"
+  },
+  "table": {
+    "headers": {
+      "company": "企業",
+      "type": "タイプ",
+      "contact": "連絡先",
+      "stats": "統計",
+      "status": "ステータス"
+    },
+    "stats": {
+      "users": "{count}人のユーザー",
+      "jobs": "{count}件の求人"
+    },
+    "actions": {
+      "details": "詳細",
+      "edit": "編集",
+      "delete": "削除"
+    },
+    "emptyState": {
+      "title": "企業が見つかりません",
+      "message": "最初の企業を作成して始めましょう。"
+    },
+    "statusBadges": {
+      "deleted": "削除済み",
+      "active": "アクティブ",
+      "inactive": "非アクティブ"
+    }
+  },
+  "pagination": {
+    "showing": "{total}件中{start}~{end}件を表示",
+    "previous": "前へ",
+    "next": "次へ",
+    "pageInfo": "{total}ページ中{current}ページ"
+  },
+  "modal": {
+    "companyDetails": {
+      "title": "企業詳細",
+      "subtitle": "この企業に関する情報を表示",
+      "basicInfo": {
+        "title": "基本情報",
+        "name": "企業名",
+        "type": "タイプ",
+        "description": "説明"
+      },
+      "contactInfo": {
+        "title": "連絡先情報",
+        "email": "メール",
+        "phone": "電話",
+        "website": "ウェブサイト",
+        "address": "住所"
+      },
+      "statusStats": {
+        "title": "ステータスと統計",
+        "status": "ステータス",
+        "totalUsers": "総ユーザー数",
+        "totalJobs": "総求人数",
+        "deletedAt": "削除日時"
+      },
+      "close": "閉じる"
+    }
+  },
+  "subscriptionRequests": {
+    "title": "サブスクリプション リクエスト",
+    "noPending": {
+      "title": "保留中のリクエストなし",
+      "message": "レビューを待っているサブスクリプションプラン変更リクエストはありません。"
+    },
+    "requestedBy": "{name}がリクエスト",
+    "requestMessage": "リクエストメッセージ",
+    "approve": "承認",
+    "reject": "却下",
+    "reviewModal": {
+      "titleApprove": "リクエストを承認",
+      "titleReject": "リクエストを却下",
+      "messageLabel": "レビューメッセージ（オプション）",
+      "placeholderApprove": "承認しました。新しいプランへようこそ！",
+      "placeholderReject": "却下の理由...",
+      "note": "注意：",
+      "approveNote": "このリクエストを承認すると、企業のプランが{plan}に即座に変更されます。",
+      "cancel": "キャンセル"
+    }
+  },
+  "confirmations": {
+    "deleteCompany": "本当に{name}を削除しますか？",
+    "bulkDelete": "本当に{count}件の企業を削除しますか？この操作は元に戻せません。"
+  },
+  "messages": {
+    "successActivate": "{count}件の企業をアクティブ化しました",
+    "successDeactivate": "{count}件の企業を非アクティブ化しました",
+    "successDelete": "{count}件の企業を削除しました",
+    "successDeleteSingle": "{name}を削除しました",
+    "requestApproved": "リクエストを承認しました",
+    "requestRejected": "リクエストを却下しました",
+    "errorActivate": "企業のアクティブ化に失敗しました",
+    "errorDeactivate": "企業の非アクティブ化に失敗しました",
+    "errorDelete": "企業の削除に失敗しました",
+    "errorDeleteSingle": "企業の削除に失敗しました",
+    "errorReview": "リクエストのレビューに失敗しました",
+    "noDataReceived": "データが受信されませんでした"
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "title": "Notifications",
+  "description": "Stay updated with all your notifications in one place",
+  "back": "Back",
+  "tabs": {
+    "notifications": "Notifications",
+    "updates": "System Updates"
+  },
+  "stats": {
+    "total": "Total",
+    "unread": "Unread"
+  },
+  "filters": {
+    "all": "All",
+    "unread": "Unread",
+    "updates": "Updates"
+  },
+  "actions": {
+    "markAllRead": "Mark all as read",
+    "markRead": "Mark as read",
+    "delete": "Delete",
+    "createUpdate": "Create Update"
+  },
+  "time": {
+    "justNow": "Just now",
+    "minutesAgo": "{count}m ago",
+    "hoursAgo": "{count}h ago",
+    "daysAgo": "{count}d ago"
+  },
+  "empty": {
+    "noNotifications": "No notifications yet",
+    "noNotificationsDescription": "You'll see notifications here when you receive them",
+    "noUnread": "No unread notifications",
+    "noUnreadDescription": "You're all caught up! Check back later for new updates."
+  },
+  "systemUpdates": {
+    "title": "System Updates",
+    "description": "Important announcements and updates from the platform",
+    "loading": "Loading updates...",
+    "noUpdates": "No system updates yet",
+    "noUpdatesDescription": "System-wide updates will appear here when available",
+    "createSuccess": "System update created successfully!"
+  },
+  "types": {
+    "new_message": "New Message",
+    "interview_scheduled": "Interview Scheduled",
+    "exam_assigned": "Exam Assigned",
+    "application_update": "Application Update",
+    "system": "System Notification"
+  }
+}

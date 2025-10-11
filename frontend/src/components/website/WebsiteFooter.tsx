@@ -1,11 +1,12 @@
 import Link from 'next/link';
+import { ROUTES } from '@/routes/config';
 
 interface WebsiteFooterProps {
   siteType?: 'employer' | 'recruiter';
 }
 
 const WebsiteFooter = ({ siteType = 'employer' }: WebsiteFooterProps) => {
-  const basePath = siteType === 'employer' ? '/employer' : '/recruiter';
+  const basePath = siteType === 'employer' ? ROUTES.LANDING.EMPLOYER.BASE : ROUTES.LANDING.RECRUITER.BASE;
   return (
     <footer className="bg-gray-900 text-gray-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -53,13 +54,13 @@ const WebsiteFooter = ({ siteType = 'employer' }: WebsiteFooterProps) => {
             <h4 className="text-lg font-semibold text-white mb-4">For Job Seekers</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/jobs" className="text-gray-400 hover:text-white transition-colors">
+                <Link href={ROUTES.JOBS.BASE} className="text-gray-400 hover:text-white transition-colors">
                   Browse Jobs
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/career-advice"
+                  href={ROUTES.RESOURCES.CAREER_ADVICE}
                   className="text-gray-400 hover:text-white transition-colors"
                 >
                   Career Advice
@@ -67,7 +68,7 @@ const WebsiteFooter = ({ siteType = 'employer' }: WebsiteFooterProps) => {
               </li>
               <li>
                 <Link
-                  href="/resume-tips"
+                  href={ROUTES.RESOURCES.RESUME_TIPS}
                   className="text-gray-400 hover:text-white transition-colors"
                 >
                   Resume Tips
@@ -75,7 +76,7 @@ const WebsiteFooter = ({ siteType = 'employer' }: WebsiteFooterProps) => {
               </li>
               <li>
                 <Link
-                  href="/interview-prep"
+                  href={ROUTES.RESOURCES.INTERVIEW_PREP}
                   className="text-gray-400 hover:text-white transition-colors"
                 >
                   Interview Prep
@@ -89,13 +90,13 @@ const WebsiteFooter = ({ siteType = 'employer' }: WebsiteFooterProps) => {
             <h4 className="text-lg font-semibold text-white mb-4">For Employers</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/post-job" className="text-gray-400 hover:text-white transition-colors">
+                <Link href={ROUTES.RESOURCES.POST_JOB} className="text-gray-400 hover:text-white transition-colors">
                   Post a Job
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/talent-search"
+                  href={ROUTES.RESOURCES.TALENT_SEARCH}
                   className="text-gray-400 hover:text-white transition-colors"
                 >
                   Search Talent
@@ -103,14 +104,14 @@ const WebsiteFooter = ({ siteType = 'employer' }: WebsiteFooterProps) => {
               </li>
               <li>
                 <Link
-                  href="/recruitment-services"
+                  href={ROUTES.RESOURCES.RECRUITMENT_SERVICES}
                   className="text-gray-400 hover:text-white transition-colors"
                 >
                   Recruitment Services
                 </Link>
               </li>
               <li>
-                <Link href="/pricing" className="text-gray-400 hover:text-white transition-colors">
+                <Link href={`${basePath}/pricing`} className="text-gray-400 hover:text-white transition-colors">
                   Pricing
                 </Link>
               </li>

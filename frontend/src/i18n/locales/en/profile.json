@@ -1,0 +1,307 @@
+{
+  "page": {
+    "title": "Profile",
+    "subtitle": "View and manage your professional profile",
+    "edit": "Edit Profile",
+    "viewPublic": "View Public Profile",
+    "shareProfile": "Share Profile"
+  },
+  "tabs": {
+    "overview": "Overview",
+    "experience": "Experience",
+    "education": "Education",
+    "skills": "Skills",
+    "certifications": "Certifications",
+    "projects": "Projects",
+    "achievements": "Achievements"
+  },
+  "header": {
+    "profilePicture": "Profile Picture",
+    "uploadPhoto": "Upload Photo",
+    "changePhoto": "Change Photo",
+    "removePhoto": "Remove Photo",
+    "banner": "Profile Banner",
+    "changeBanner": "Change Banner",
+    "status": {
+      "openToWork": "Open to Work",
+      "activelyLooking": "Actively Looking",
+      "passivelyLooking": "Open to Opportunities",
+      "notLooking": "Not Looking"
+    }
+  },
+  "overview": {
+    "title": "About",
+    "headline": "Headline",
+    "headlinePlaceholder": "e.g., Senior Software Engineer | React Expert",
+    "summary": "Professional Summary",
+    "summaryPlaceholder": "Write a compelling summary about your professional background and career goals...",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "jobTitle": "Job Title",
+    "bio": "Bio",
+    "bioPlaceholder": "Share your professional background, interests, and what makes you unique...",
+    "contact": {
+      "title": "Contact Information",
+      "email": "Email",
+      "phone": "Phone",
+      "location": "Location",
+      "website": "Website",
+      "linkedin": "LinkedIn",
+      "github": "GitHub",
+      "twitter": "Twitter"
+    },
+    "preferences": {
+      "title": "Job Preferences",
+      "desiredRole": "Desired Role",
+      "desiredSalary": "Desired Salary",
+      "willingToRelocate": "Willing to Relocate",
+      "workType": "Work Type",
+      "availability": "Availability"
+    },
+    "workType": {
+      "fullTime": "Full-time",
+      "partTime": "Part-time",
+      "contract": "Contract",
+      "freelance": "Freelance",
+      "remote": "Remote",
+      "hybrid": "Hybrid",
+      "onsite": "On-site"
+    }
+  },
+  "experience": {
+    "title": "Work Experience",
+    "add": "Add Experience",
+    "edit": "Edit Experience",
+    "delete": "Delete Experience",
+    "current": "Current Position",
+    "form": {
+      "title": "Job Title",
+      "company": "Company",
+      "employmentType": "Employment Type",
+      "location": "Location",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "currentlyWorking": "I currently work here",
+      "description": "Description",
+      "descriptionPlaceholder": "Describe your responsibilities and achievements...",
+      "skills": "Skills Used",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "employmentTypes": {
+      "fullTime": "Full-time",
+      "partTime": "Part-time",
+      "contract": "Contract",
+      "freelance": "Freelance",
+      "internship": "Internship"
+    },
+    "duration": "{years} yrs {months} mos",
+    "present": "Present",
+    "noExperience": "No work experience added yet"
+  },
+  "education": {
+    "title": "Education",
+    "add": "Add Education",
+    "edit": "Edit Education",
+    "delete": "Delete Education",
+    "classOf": "Class of",
+    "gpa": "GPA",
+    "degreeIn": "in",
+    "form": {
+      "school": "School/University",
+      "degree": "Degree",
+      "fieldOfStudy": "Field of Study",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "currentlyStudying": "I currently study here",
+      "grade": "Grade/GPA",
+      "description": "Description",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "degrees": {
+      "highSchool": "High School",
+      "associate": "Associate Degree",
+      "bachelor": "Bachelor's Degree",
+      "master": "Master's Degree",
+      "doctorate": "Doctorate",
+      "certificate": "Certificate",
+      "bootcamp": "Bootcamp"
+    },
+    "noEducation": "No education added yet"
+  },
+  "skills": {
+    "title": "Skills",
+    "add": "Add Skill",
+    "search": "Search skills...",
+    "endorsements": "{count} endorsements",
+    "proficiency": {
+      "title": "Proficiency",
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced",
+      "expert": "Expert"
+    },
+    "categories": {
+      "technical": "Technical Skills",
+      "soft": "Soft Skills",
+      "languages": "Languages",
+      "tools": "Tools & Technologies"
+    },
+    "yearsOfExperience": "{years} years",
+    "noSkills": "No skills added yet"
+  },
+  "certifications": {
+    "title": "Certifications & Licenses",
+    "add": "Add Certification",
+    "edit": "Edit Certification",
+    "delete": "Delete Certification",
+    "form": {
+      "name": "Certification Name",
+      "issuingOrganization": "Issuing Organization",
+      "issueDate": "Issue Date",
+      "expirationDate": "Expiration Date",
+      "doesNotExpire": "This certification does not expire",
+      "credentialId": "Credential ID",
+      "credentialUrl": "Credential URL",
+      "description": "Description",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "expires": "Expires {date}",
+    "expired": "Expired",
+    "viewCredential": "View Credential",
+    "noCertifications": "No certifications added yet"
+  },
+  "projects": {
+    "title": "Projects & Portfolio",
+    "add": "Add Project",
+    "edit": "Edit Project",
+    "delete": "Delete Project",
+    "form": {
+      "name": "Project Name",
+      "description": "Description",
+      "role": "Your Role",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "ongoing": "This project is ongoing",
+      "projectUrl": "Project URL",
+      "githubUrl": "GitHub URL",
+      "technologies": "Technologies Used",
+      "images": "Project Images",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "viewProject": "View Project",
+    "viewCode": "View Code",
+    "noProjects": "No projects added yet"
+  },
+  "achievements": {
+    "title": "Achievements & Awards",
+    "add": "Add Achievement",
+    "edit": "Edit Achievement",
+    "delete": "Delete Achievement",
+    "form": {
+      "title": "Title",
+      "description": "Description",
+      "issuer": "Issued by",
+      "date": "Date",
+      "associatedWith": "Associated with",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "noAchievements": "No achievements added yet"
+  },
+  "resume": {
+    "title": "Resume/CV",
+    "upload": "Upload Resume",
+    "update": "Update Resume",
+    "download": "Download Resume",
+    "delete": "Delete Resume",
+    "lastUpdated": "Last updated {date}",
+    "fileTypes": "PDF, DOC, DOCX (Max 5MB)",
+    "noResume": "No resume uploaded"
+  },
+  "privacy": {
+    "title": "Profile Privacy",
+    "visibility": {
+      "title": "Profile Visibility",
+      "public": "Public - Anyone can view",
+      "recruiters": "Recruiters Only",
+      "private": "Private - Only me"
+    },
+    "searchable": "Make profile searchable",
+    "showEmail": "Show email address",
+    "showPhone": "Show phone number",
+    "showResume": "Allow resume download"
+  },
+  "stats": {
+    "title": "Profile Stats",
+    "profileViews": "Profile Views",
+    "connections": "Connections",
+    "endorsements": "Endorsements",
+    "applications": "Applications",
+    "interviews": "Interviews"
+  },
+  "emptyStates": {
+    "noProfileData": "No Profile Data",
+    "loginRequired": "Please log in to view your profile",
+    "createProfile": "Create Profile"
+  },
+  "actions": {
+    "save": "Save Changes",
+    "saveProfile": "Save Profile",
+    "editProfile": "Edit Profile",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add"
+  },
+  "notifications": {
+    "profileUpdated": "Profile updated successfully",
+    "photoUploaded": "Photo uploaded successfully",
+    "photoRemoved": "Photo removed successfully",
+    "experienceAdded": "Experience added successfully",
+    "experienceUpdated": "Experience updated successfully",
+    "experienceDeleted": "Experience deleted successfully",
+    "educationAdded": "Education added successfully",
+    "educationUpdated": "Education updated successfully",
+    "educationDeleted": "Education deleted successfully",
+    "skillAdded": "Skill added successfully",
+    "skillRemoved": "Skill removed successfully",
+    "certificationAdded": "Certification added successfully",
+    "certificationUpdated": "Certification updated successfully",
+    "certificationDeleted": "Certification deleted successfully",
+    "projectAdded": "Project added successfully",
+    "projectUpdated": "Project updated successfully",
+    "projectDeleted": "Project deleted successfully",
+    "achievementAdded": "Achievement added successfully",
+    "achievementUpdated": "Achievement updated successfully",
+    "achievementDeleted": "Achievement deleted successfully",
+    "resumeUploaded": "Resume uploaded successfully",
+    "resumeDeleted": "Resume deleted successfully"
+  },
+  "errors": {
+    "failedToUpdate": "Failed to update profile",
+    "failedToUpload": "Failed to upload file",
+    "failedToLoad": "Failed to load profile data. Please try again.",
+    "fileTooLarge": "Image size must be less than 5MB",
+    "invalidFileType": "Please select an image file",
+    "avatarSaveFailed": "Avatar uploaded but failed to save to profile. Please try again.",
+    "avatarUploadFailed": "Failed to upload avatar. Please try again."
+  },
+  "completeness": {
+    "title": "Profile Completeness",
+    "percentage": "{percent}% Complete",
+    "suggestions": {
+      "addPhoto": "Add a profile photo",
+      "addHeadline": "Add a headline",
+      "addSummary": "Add a professional summary",
+      "addExperience": "Add work experience",
+      "addEducation": "Add education",
+      "addSkills": "Add at least 5 skills",
+      "uploadResume": "Upload your resume"
+    }
+  }
+}

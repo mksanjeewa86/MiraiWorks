@@ -1,0 +1,281 @@
+{
+  "page": {
+    "title": "試験・アセスメント",
+    "subtitle": "候補者のアセスメントと技術テストを管理",
+    "createExam": "試験を作成",
+    "questionBank": "問題バンク",
+    "templates": "試験テンプレート",
+    "analytics": "分析"
+  },
+  "tabs": {
+    "all": "すべての試験",
+    "active": "アクティブ",
+    "draft": "下書き",
+    "archived": "アーカイブ",
+    "scheduled": "スケジュール済み",
+    "completed": "完了"
+  },
+  "list": {
+    "searchPlaceholder": "タイトルまたはカテゴリーで試験を検索...",
+    "filterByCategory": "カテゴリーでフィルター",
+    "filterByDifficulty": "難易度でフィルター",
+    "sortBy": "並べ替え：",
+    "mostRecent": "最新順",
+    "mostUsed": "使用回数順",
+    "highestScore": "最高得点順",
+    "lowestScore": "最低得点順"
+  },
+  "card": {
+    "questions": "{count}問",
+    "duration": "{minutes}分",
+    "difficulty": "難易度",
+    "category": "カテゴリー",
+    "attempts": "{count}回の受験",
+    "averageScore": "平均点：{score}%",
+    "passRate": "合格率：{rate}%",
+    "edit": "試験を編集",
+    "preview": "プレビュー",
+    "assign": "候補者に割り当て",
+    "duplicate": "複製",
+    "archive": "アーカイブ",
+    "viewResults": "結果を見る",
+    "viewAnalytics": "分析を見る"
+  },
+  "create": {
+    "title": "試験を作成",
+    "editTitle": "試験を編集",
+    "basicInfo": "基本情報",
+    "examTitle": "試験タイトル",
+    "examTitlePlaceholder": "例：JavaScriptデベロッパー評価",
+    "description": "説明",
+    "descriptionPlaceholder": "この試験の目的と内容を説明してください...",
+    "category": "カテゴリー",
+    "difficulty": "難易度",
+    "duration": "制限時間（分）",
+    "passingScore": "合格点（%）",
+    "instructions": "受験者への指示",
+    "instructionsPlaceholder": "試験の受け方について明確な指示を提供してください...",
+    "settings": {
+      "title": "試験設定",
+      "randomizeQuestions": "問題順をランダムにする",
+      "randomizeAnswers": "選択肢の順序をランダムにする",
+      "showResults": "結果をすぐに表示",
+      "allowReview": "問題の見直しを許可",
+      "requireCamera": "カメラを必須にする（監視）",
+      "preventCopyPaste": "コピー＆ペーストを無効化",
+      "fullScreen": "フルスクリーンモードを必須にする",
+      "timeLimit": "制限時間を有効化",
+      "attemptsLimit": "受験回数を制限",
+      "maxAttempts": "最大受験回数"
+    },
+    "questions": {
+      "title": "問題",
+      "addQuestion": "問題を追加",
+      "addFromBank": "問題バンクから追加",
+      "importQuestions": "問題をインポート",
+      "noQuestions": "まだ問題が追加されていません",
+      "questionNumber": "問題 {number}",
+      "editQuestion": "問題を編集",
+      "deleteQuestion": "問題を削除",
+      "moveUp": "上に移動",
+      "moveDown": "下に移動"
+    },
+    "questionForm": {
+      "questionText": "問題文",
+      "questionType": "問題形式",
+      "points": "配点",
+      "required": "必須",
+      "explanation": "解説（任意）",
+      "addOption": "選択肢を追加",
+      "correctAnswer": "正解",
+      "options": "選択肢",
+      "option": "選択肢 {number}"
+    },
+    "questionTypes": {
+      "multipleChoice": "多肢選択",
+      "trueFalse": "真偽",
+      "shortAnswer": "短答",
+      "essay": "記述",
+      "coding": "コーディング課題",
+      "fileUpload": "ファイルアップロード"
+    },
+    "actions": {
+      "saveDraft": "下書きとして保存",
+      "publish": "試験を公開",
+      "cancel": "キャンセル",
+      "update": "試験を更新"
+    },
+    "success": {
+      "created": "試験を作成しました",
+      "updated": "試験を更新しました",
+      "published": "試験を公開しました"
+    }
+  },
+  "assign": {
+    "title": "試験を割り当て",
+    "selectCandidates": "候補者を選択",
+    "searchCandidates": "候補者を検索...",
+    "selectedCount": "{count}人の候補者を選択中",
+    "schedule": {
+      "title": "スケジュール",
+      "now": "すぐに利用可能",
+      "scheduled": "後でスケジュール",
+      "startDate": "開始日時",
+      "endDate": "終了日時（任意）",
+      "deadline": "締切"
+    },
+    "notification": {
+      "title": "通知",
+      "sendEmail": "メール通知を送信",
+      "emailSubject": "メール件名",
+      "emailMessage": "メール本文",
+      "useTemplate": "テンプレートを使用"
+    },
+    "assign": "試験を割り当て",
+    "cancel": "キャンセル",
+    "success": {
+      "title": "試験を割り当てました",
+      "message": "{count}人の候補者に試験を割り当てました。"
+    }
+  },
+  "take": {
+    "title": "試験を受ける",
+    "instructions": "指示",
+    "startExam": "試験を開始",
+    "resumeExam": "試験を再開",
+    "timeRemaining": "残り時間：{time}",
+    "questionsProgress": "{total}問中{answered}問回答済み",
+    "navigation": {
+      "previous": "前へ",
+      "next": "次へ",
+      "flagForReview": "要確認にマーク",
+      "unflag": "マークを解除",
+      "submit": "試験を提出",
+      "saveAndExit": "保存して終了"
+    },
+    "confirmSubmit": {
+      "title": "試験を提出しますか？",
+      "message": "本当に試験を提出しますか？{unanswered}問が未回答です。",
+      "allAnswered": "すべての問題に回答しました。提出しますか？",
+      "submit": "提出",
+      "cancel": "試験を続ける"
+    },
+    "warnings": {
+      "cameraRequired": "この試験は監視のためカメラアクセスが必要です",
+      "fullScreenRequired": "試験中はフルスクリーンモードを維持してください",
+      "fullScreenExit": "警告：フルスクリーンモードを終了しました",
+      "tabSwitch": "警告：タブの切り替えは許可されていません",
+      "copyPasteDisabled": "この試験ではコピー＆ペーストが無効になっています"
+    }
+  },
+  "results": {
+    "title": "試験結果",
+    "score": "得点",
+    "passFail": {
+      "passed": "合格",
+      "failed": "不合格"
+    },
+    "details": {
+      "totalQuestions": "総問題数",
+      "correctAnswers": "正解数",
+      "incorrectAnswers": "不正解数",
+      "skippedQuestions": "未回答数",
+      "timeSpent": "所要時間",
+      "completedAt": "完了日時"
+    },
+    "breakdown": {
+      "title": "得点内訳",
+      "byCategory": "カテゴリー別",
+      "byDifficulty": "難易度別"
+    },
+    "review": {
+      "title": "解答を確認",
+      "yourAnswer": "あなたの解答",
+      "correctAnswer": "正解",
+      "explanation": "解説",
+      "correct": "正解",
+      "incorrect": "不正解",
+      "skipped": "未回答"
+    },
+    "actions": {
+      "retakeExam": "再受験",
+      "viewCertificate": "証明書を見る",
+      "downloadReport": "レポートをダウンロード",
+      "backToExams": "試験一覧に戻る"
+    }
+  },
+  "analytics": {
+    "title": "試験分析",
+    "overview": {
+      "totalAttempts": "総受験回数",
+      "averageScore": "平均点",
+      "passRate": "合格率",
+      "averageTime": "平均完了時間"
+    },
+    "charts": {
+      "scoreDistribution": "得点分布",
+      "questionPerformance": "問題別パフォーマンス",
+      "timeAnalysis": "時間分析",
+      "passingTrends": "合格トレンド"
+    },
+    "questionAnalysis": {
+      "title": "問題分析",
+      "mostDifficult": "最も難しい問題",
+      "easiest": "最も簡単な問題",
+      "correctRate": "正解率",
+      "averageTime": "平均回答時間"
+    }
+  },
+  "questionBank": {
+    "title": "問題バンク",
+    "createQuestion": "問題を作成",
+    "importQuestions": "問題をインポート",
+    "categories": "カテゴリー",
+    "allCategories": "すべてのカテゴリー",
+    "difficulty": "難易度",
+    "allDifficulties": "すべての難易度",
+    "searchPlaceholder": "問題を検索...",
+    "selectedCount": "{count}問を選択中",
+    "addToExam": "試験に追加",
+    "edit": "編集",
+    "delete": "削除",
+    "preview": "プレビュー"
+  },
+  "categories": {
+    "programming": "プログラミング",
+    "database": "データベース",
+    "algorithms": "アルゴリズム",
+    "systemDesign": "システム設計",
+    "networking": "ネットワーキング",
+    "security": "セキュリティ",
+    "frontend": "フロントエンド",
+    "backend": "バックエンド",
+    "mobile": "モバイル",
+    "devops": "DevOps",
+    "softSkills": "ソフトスキル",
+    "other": "その他"
+  },
+  "difficulty": {
+    "easy": "簡単",
+    "medium": "普通",
+    "hard": "難しい"
+  },
+  "empty": {
+    "noExams": {
+      "title": "まだ試験がありません",
+      "message": "最初の試験を作成して候補者の評価を始めましょう",
+      "action": "試験を作成"
+    },
+    "noQuestions": {
+      "title": "問題バンクに問題がありません",
+      "message": "問題バンクの構築を始めましょう",
+      "action": "問題を作成"
+    },
+    "noResults": {
+      "title": "まだ結果がありません",
+      "message": "候補者が試験を完了すると結果がここに表示されます"
+    }
+  },
+  "loading": "試験を読み込み中...",
+  "error": "試験の読み込みに失敗しました。もう一度お試しください。"
+}

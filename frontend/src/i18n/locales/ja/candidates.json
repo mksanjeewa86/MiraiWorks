@@ -1,0 +1,299 @@
+{
+  "page": {
+    "title": "候補者",
+    "subtitle": "候補者パイプラインを管理",
+    "searchPlaceholder": "名前、スキル、ポジションで候補者を検索...",
+    "addCandidate": "候補者を追加",
+    "importCandidates": "候補者をインポート",
+    "exportList": "リストをエクスポート"
+  },
+  "tabs": {
+    "all": "すべての候補者",
+    "active": "アクティブ",
+    "shortlisted": "候補リスト",
+    "interviewed": "面接済み",
+    "offered": "オファー済み",
+    "hired": "採用済み",
+    "rejected": "不採用",
+    "archived": "アーカイブ"
+  },
+  "filters": {
+    "title": "フィルター",
+    "clearAll": "すべてクリア",
+    "apply": "適用",
+    "status": {
+      "label": "ステータス",
+      "new": "新規",
+      "screening": "スクリーニング",
+      "interview": "面接",
+      "offer": "オファー",
+      "hired": "採用",
+      "rejected": "不採用"
+    },
+    "position": {
+      "label": "ポジション",
+      "placeholder": "ポジションを選択"
+    },
+    "experience": {
+      "label": "経験レベル",
+      "entry": "エントリーレベル",
+      "mid": "ミッドレベル",
+      "senior": "シニアレベル"
+    },
+    "skills": {
+      "label": "スキル",
+      "placeholder": "スキルを検索"
+    },
+    "location": {
+      "label": "場所",
+      "placeholder": "場所を選択"
+    },
+    "dateApplied": {
+      "label": "応募日",
+      "last7days": "過去7日間",
+      "last30days": "過去30日間",
+      "last3months": "過去3ヶ月",
+      "custom": "カスタム範囲"
+    }
+  },
+  "sorting": {
+    "label": "並べ替え：",
+    "recentlyApplied": "最近応募した順",
+    "name": "名前順",
+    "matchScore": "マッチ度順",
+    "experience": "経験順",
+    "lastActivity": "最終活動順"
+  },
+  "card": {
+    "appliedDate": "{date}に応募",
+    "experience": "{years}年の経験",
+    "matchScore": "{score}%マッチ",
+    "location": "場所",
+    "skills": "スキル",
+    "showMore": "もっと見る",
+    "viewProfile": "プロフィールを見る",
+    "scheduleInterview": "面接をスケジュール",
+    "sendMessage": "メッセージを送信",
+    "addToShortlist": "候補リストに追加",
+    "removeFromShortlist": "候補リストから削除",
+    "reject": "不採用",
+    "hire": "採用",
+    "moreActions": "その他のアクション"
+  },
+  "profile": {
+    "title": "候補者プロフィール",
+    "backToList": "候補者一覧に戻る",
+    "overview": "概要",
+    "resume": "履歴書",
+    "interviews": "面接",
+    "notes": "メモ",
+    "activity": "活動",
+    "basicInfo": {
+      "title": "基本情報",
+      "email": "メール",
+      "phone": "電話",
+      "location": "場所",
+      "linkedIn": "LinkedIn",
+      "website": "ウェブサイト",
+      "experience": "経験",
+      "education": "学歴",
+      "currentPosition": "現在のポジション"
+    },
+    "applicationInfo": {
+      "title": "応募情報",
+      "appliedFor": "応募ポジション",
+      "appliedDate": "応募日",
+      "source": "応募経路",
+      "referredBy": "紹介者",
+      "status": "ステータス",
+      "stage": "ステージ",
+      "matchScore": "マッチ度",
+      "expectedSalary": "希望年収"
+    },
+    "skills": {
+      "title": "スキル",
+      "technical": "技術スキル",
+      "soft": "ソフトスキル",
+      "languages": "言語"
+    },
+    "resumeSection": {
+      "title": "履歴書",
+      "download": "履歴書をダウンロード",
+      "view": "履歴書を見る",
+      "uploaded": "{date}にアップロード",
+      "noResume": "履歴書がアップロードされていません"
+    },
+    "interviewsSection": {
+      "title": "面接履歴",
+      "scheduleNew": "新しい面接をスケジュール",
+      "noInterviews": "スケジュールされた面接はありません",
+      "interviewDate": "面接日",
+      "interviewType": "形式",
+      "interviewer": "面接官",
+      "feedback": "フィードバック",
+      "rating": "評価",
+      "viewFeedback": "フィードバックを見る"
+    },
+    "notesSection": {
+      "title": "内部メモ",
+      "addNote": "メモを追加",
+      "placeholder": "この候補者についてのメモを追加...",
+      "save": "メモを保存",
+      "noNotes": "メモはまだありません",
+      "noteBy": "{author}による",
+      "noteDate": "{date}"
+    },
+    "activityTimeline": {
+      "title": "活動タイムライン",
+      "applied": "ポジションに応募",
+      "screeningCompleted": "スクリーニング完了",
+      "interviewScheduled": "面接スケジュール済み",
+      "interviewCompleted": "面接完了",
+      "offerSent": "オファー送信済み",
+      "offerAccepted": "オファー承諾",
+      "offerRejected": "オファー辞退",
+      "hired": "採用",
+      "rejected": "不採用",
+      "statusChanged": "ステータスが{status}に変更"
+    },
+    "actions": {
+      "scheduleInterview": "面接をスケジュール",
+      "sendMessage": "メッセージを送信",
+      "sendOffer": "オファーを送信",
+      "moveToStage": "ステージを移動",
+      "changeStatus": "ステータスを変更",
+      "reject": "候補者を不採用",
+      "archive": "アーカイブ",
+      "delete": "削除"
+    }
+  },
+  "actions": {
+    "bulkActions": "一括アクション",
+    "selectAll": "すべて選択",
+    "deselectAll": "すべて選択解除",
+    "selectedCount": "{count}件選択中",
+    "moveToStage": "ステージを移動",
+    "sendBulkEmail": "一括メール送信",
+    "exportSelected": "選択項目をエクスポート",
+    "archiveSelected": "選択項目をアーカイブ",
+    "deleteSelected": "選択項目を削除"
+  },
+  "addCandidate": {
+    "title": "候補者を追加",
+    "manually": "手動で追加",
+    "fromResume": "履歴書から解析",
+    "basicInfo": "基本情報",
+    "firstName": "名",
+    "lastName": "姓",
+    "email": "メール",
+    "phone": "電話",
+    "linkedin": "LinkedIn URL",
+    "position": "応募ポジション",
+    "source": "応募経路",
+    "resume": "履歴書をアップロード",
+    "coverLetter": "カバーレター",
+    "skills": "スキル",
+    "notes": "メモ",
+    "submit": "候補者を追加",
+    "cancel": "キャンセル",
+    "success": {
+      "title": "候補者が追加されました",
+      "message": "候補者がパイプラインに正常に追加されました。",
+      "viewProfile": "プロフィールを見る"
+    }
+  },
+  "reject": {
+    "title": "候補者を不採用",
+    "confirm": "本当にこの候補者を不採用にしますか？",
+    "reason": "不採用の理由",
+    "reasonPlaceholder": "理由を入力してください...",
+    "sendEmail": "候補者に不採用メールを送信",
+    "emailTemplate": "メールテンプレート",
+    "confirmButton": "候補者を不採用",
+    "cancelButton": "キャンセル",
+    "success": {
+      "title": "候補者が不採用になりました",
+      "message": "候補者が不採用としてマークされました。"
+    }
+  },
+  "stats": {
+    "totalCandidates": "総候補者数",
+    "interviewing": "面接中",
+    "hired": "採用済み",
+    "thisMonth": "今月"
+  },
+  "table": {
+    "candidate": "候補者",
+    "contactLocation": "連絡先・所在地",
+    "experienceSkills": "経験・スキル",
+    "statusRating": "ステータス・評価",
+    "sourceActivity": "ソース・アクティビティ",
+    "actions": "アクション",
+    "yearsExperience": "{years}年の経験",
+    "moreSkills": "他{count}件",
+    "at": "勤務先"
+  },
+  "statusOptions": {
+    "allStatuses": "すべてのステータス",
+    "active": "アクティブ",
+    "interviewing": "面接中",
+    "hired": "採用済み",
+    "rejected": "不採用",
+    "withdrawn": "辞退"
+  },
+  "sourceOptions": {
+    "allSources": "すべてのソース",
+    "website": "ウェブサイト",
+    "referral": "紹介",
+    "linkedin": "LinkedIn",
+    "agency": "エージェンシー",
+    "event": "イベント",
+    "other": "その他"
+  },
+  "experienceOptions": {
+    "allExperience": "すべての経験レベル",
+    "entry": "エントリー（0-2年）",
+    "mid": "ミッド（3-7年）",
+    "senior": "シニア（8年以上）"
+  },
+  "sortOptions": {
+    "recentActivity": "最近のアクティビティ",
+    "newestFirst": "最新順",
+    "oldestFirst": "古い順",
+    "nameAZ": "名前（A-Z）",
+    "nameZA": "名前（Z-A）",
+    "highestRated": "評価が高い順"
+  },
+  "results": {
+    "showing": "{total}件中{start}-{end}件を表示",
+    "filteredFrom": "（{total}件からフィルター）"
+  },
+  "pagination": {
+    "previous": "前へ",
+    "next": "次へ",
+    "pageInfo": "{total}ページ中{current}ページ"
+  },
+  "tooltips": {
+    "viewProfile": "プロフィールを表示",
+    "editCandidate": "候補者を編集",
+    "viewResume": "履歴書を表示",
+    "deleteCandidate": "候補者を削除"
+  },
+  "confirmations": {
+    "deleteCandidate": "この候補者を削除してもよろしいですか？"
+  },
+  "messages": {
+    "exportAlert": "エクスポート機能はここに実装されます",
+    "subtitle": "候補者パイプラインと関係性を管理",
+    "noFiltersMessage": "最初の候補者を追加して始めましょう。",
+    "tryAdjusting": "フィルターを調整して、より多くの結果を表示してください。"
+  },
+  "noResults": {
+    "title": "候補者が見つかりません",
+    "message": "フィルターや検索条件を調整してみてください",
+    "clearFilters": "フィルターをクリア",
+    "addCandidate": "候補者を追加"
+  },
+  "loading": "候補者を読み込み中...",
+  "error": "候補者の読み込みに失敗しました。もう一度お試しください。"
+}

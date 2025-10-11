@@ -1,0 +1,448 @@
+{
+  "page": {
+    "title": "設定",
+    "subtitle": "アカウント設定と環境設定を管理"
+  },
+  "tabs": {
+    "profile": "プロフィール",
+    "account": "アカウント",
+    "notifications": "通知",
+    "privacy": "プライバシー",
+    "security": "セキュリティ",
+    "language": "言語と地域",
+    "integrations": "連携",
+    "billing": "請求"
+  },
+  "profile": {
+    "title": "プロフィール情報",
+    "subtitle": "個人情報とプロフィール画像を更新",
+    "avatar": {
+      "label": "プロフィール画像",
+      "upload": "写真をアップロード",
+      "remove": "写真を削除",
+      "change": "写真を変更",
+      "requirements": "JPG、PNG、またはGIF。最大サイズ2MB。"
+    },
+    "firstName": "名",
+    "lastName": "姓",
+    "email": "メールアドレス",
+    "phone": "電話番号",
+    "jobTitle": "役職",
+    "company": "会社",
+    "location": "場所",
+    "bio": "自己紹介",
+    "bioPlaceholder": "自己紹介を書いてください...",
+    "website": "ウェブサイト",
+    "linkedin": "LinkedInプロフィール",
+    "twitter": "Twitterハンドル",
+    "github": "GitHubユーザー名",
+    "save": "変更を保存",
+    "cancel": "キャンセル",
+    "success": "プロフィールを更新しました",
+    "error": "プロフィールの更新に失敗しました"
+  },
+  "account": {
+    "title": "アカウント設定",
+    "subtitle": "アカウントの環境設定を管理",
+    "email": {
+      "title": "メールアドレス",
+      "description": "通知とログイン用のメインメールアドレス",
+      "current": "現在のメール",
+      "change": "メールを変更",
+      "verify": "メールを確認",
+      "verified": "確認済み",
+      "notVerified": "未確認"
+    },
+    "password": {
+      "title": "パスワード",
+      "description": "アカウントを安全に保つためにパスワードを更新",
+      "current": "現在のパスワード",
+      "new": "新しいパスワード",
+      "confirm": "新しいパスワード（確認）",
+      "change": "パスワードを変更",
+      "lastChanged": "{date}に最終変更",
+      "requirements": "パスワード要件：",
+      "req1": "最低8文字",
+      "req2": "大文字1文字以上",
+      "req3": "小文字1文字以上",
+      "req4": "数字1文字以上",
+      "req5": "特殊文字1文字以上"
+    },
+    "timezone": {
+      "title": "タイムゾーン",
+      "description": "正確なスケジューリングのためにタイムゾーンを設定",
+      "select": "タイムゾーンを選択"
+    },
+    "deleteAccount": {
+      "title": "アカウント削除",
+      "description": "アカウントとすべてのデータを完全に削除",
+      "button": "アカウントを削除",
+      "warning": "この操作は元に戻せません",
+      "confirm": {
+        "title": "アカウントを削除しますか？",
+        "message": "本当にアカウントを削除しますか？すべてのデータが完全に削除されます。",
+        "type": "DELETEと入力して確認",
+        "confirmButton": "アカウントを削除",
+        "cancelButton": "キャンセル"
+      }
+    }
+  },
+  "notifications": {
+    "title": "通知設定",
+    "subtitle": "通知方法を選択",
+    "email": {
+      "title": "メール通知",
+      "newMessages": "新しいメッセージ",
+      "jobAlerts": "求人アラート",
+      "interviewReminders": "面接リマインダー",
+      "applicationUpdates": "応募ステータスの更新",
+      "weeklyDigest": "週間ダイジェスト",
+      "productUpdates": "製品の更新とお知らせ"
+    },
+    "push": {
+      "title": "プッシュ通知",
+      "enable": "プッシュ通知を有効化",
+      "messages": "新しいメッセージ",
+      "interviews": "面接リマインダー",
+      "applications": "応募の更新"
+    },
+    "sms": {
+      "title": "SMS通知",
+      "enable": "SMS通知を有効化",
+      "interviewReminders": "面接リマインダー",
+      "urgentUpdates": "緊急の更新のみ"
+    },
+    "save": "設定を保存",
+    "success": "通知設定を保存しました"
+  },
+  "privacy": {
+    "title": "プライバシー設定",
+    "subtitle": "プライバシーとデータ共有を管理",
+    "profileVisibility": {
+      "title": "プロフィールの公開範囲",
+      "public": "公開 - 誰でもプロフィールを表示可能",
+      "recruiters": "リクルーターのみ - リクルーターのみ表示可能",
+      "private": "非公開 - 自分のみ表示可能"
+    },
+    "searchableProfile": {
+      "title": "検索可能なプロフィール",
+      "description": "リクルーターが検索結果であなたを見つけられるようにする",
+      "enable": "プロフィールを検索可能にする"
+    },
+    "showEmail": {
+      "title": "メールを表示",
+      "description": "公開プロフィールにメールアドレスを表示",
+      "enable": "メールを公開する"
+    },
+    "showPhone": {
+      "title": "電話番号を表示",
+      "description": "公開プロフィールに電話番号を表示",
+      "enable": "電話番号を公開する"
+    },
+    "activityStatus": {
+      "title": "アクティビティステータス",
+      "description": "最終アクティブ時刻を表示",
+      "enable": "アクティビティステータスを表示"
+    },
+    "save": "設定を保存",
+    "success": "プライバシー設定を保存しました"
+  },
+  "security": {
+    "title": "セキュリティ設定",
+    "subtitle": "アカウントを安全に保つ",
+    "twoFactor": {
+      "title": "二段階認証",
+      "description": "アカウントに追加のセキュリティレイヤーを追加",
+      "enabled": "有効",
+      "disabled": "無効",
+      "enable": "2FAを有効化",
+      "disable": "2FAを無効化",
+      "setup": "2FAを設定"
+    },
+    "sessions": {
+      "title": "アクティブなセッション",
+      "description": "現在ログインしているデバイスを管理",
+      "current": "現在のセッション",
+      "lastActive": "最終アクティブ {time}",
+      "revokeAll": "すべてのセッションを取り消す",
+      "revoke": "取り消す"
+    },
+    "loginHistory": {
+      "title": "ログイン履歴",
+      "viewAll": "すべて表示",
+      "date": "日付",
+      "location": "場所",
+      "device": "デバイス",
+      "ipAddress": "IPアドレス"
+    },
+    "success": "セキュリティ設定を更新しました"
+  },
+  "language": {
+    "title": "言語と地域",
+    "subtitle": "言語と地域の設定を設定",
+    "language": {
+      "title": "表示言語",
+      "description": "優先言語を選択",
+      "select": "言語を選択",
+      "english": "English",
+      "japanese": "日本語"
+    },
+    "region": {
+      "title": "地域",
+      "description": "ローカルコンテンツの地域を設定",
+      "select": "地域を選択"
+    },
+    "dateFormat": {
+      "title": "日付形式",
+      "description": "日付の表示方法を選択",
+      "select": "形式を選択",
+      "mmddyyyy": "MM/DD/YYYY",
+      "ddmmyyyy": "DD/MM/YYYY",
+      "yyyymmdd": "YYYY-MM-DD"
+    },
+    "timeFormat": {
+      "title": "時刻形式",
+      "12hour": "12時間制",
+      "24hour": "24時間制"
+    },
+    "save": "設定を保存",
+    "success": "言語設定を保存しました"
+  },
+  "integrations": {
+    "title": "連携",
+    "subtitle": "サードパーティサービスと連携",
+    "connected": "接続済み",
+    "notConnected": "未接続",
+    "connect": "接続",
+    "disconnect": "切断",
+    "linkedin": {
+      "title": "LinkedIn",
+      "description": "LinkedInプロフィールとコネクションをインポート"
+    },
+    "google": {
+      "title": "Googleカレンダー",
+      "description": "面接をGoogleカレンダーと同期"
+    },
+    "slack": {
+      "title": "Slack",
+      "description": "Slackで通知を受け取る"
+    },
+    "zoom": {
+      "title": "Zoom",
+      "description": "Zoomでビデオ面接をスケジュール"
+    },
+    "success": "連携を更新しました"
+  },
+  "billing": {
+    "title": "請求とサブスクリプション",
+    "subtitle": "サブスクリプションと支払い方法を管理",
+    "currentPlan": {
+      "title": "現在のプラン",
+      "free": "無料プラン",
+      "basic": "ベーシックプラン",
+      "pro": "プロプラン",
+      "enterprise": "エンタープライズプラン",
+      "changePlan": "プランを変更",
+      "cancelPlan": "プランをキャンセル",
+      "renewsOn": "{date}に更新",
+      "expiresOn": "{date}に期限切れ"
+    },
+    "paymentMethod": {
+      "title": "支払い方法",
+      "add": "支払い方法を追加",
+      "update": "更新",
+      "remove": "削除",
+      "default": "デフォルト",
+      "expires": "{date}に期限切れ"
+    },
+    "billingHistory": {
+      "title": "請求履歴",
+      "date": "日付",
+      "description": "説明",
+      "amount": "金額",
+      "status": "ステータス",
+      "download": "請求書をダウンロード",
+      "viewAll": "すべて表示"
+    },
+    "success": "請求情報を更新しました"
+  },
+  "calendar": {
+    "title": "カレンダー連携",
+    "subtitle": "GoogleカレンダーまたはOutlookカレンダーを接続してイベントと会議を同期",
+    "connectedCalendars": {
+      "title": "接続されたカレンダー"
+    },
+    "connect": {
+      "title": "カレンダーを接続",
+      "google": "Googleカレンダー",
+      "googleDesc": "Googleアカウントを接続",
+      "outlook": "Outlookカレンダー",
+      "outlookDesc": "Microsoftアカウントを接続",
+      "whatHappens": "接続すると何が起こりますか？",
+      "benefit1": "カレンダーイベントが自動的に同期されます",
+      "benefit2": "設定に基づいて会議リマインダーが送信されます",
+      "benefit3": "面接スケジュールがカレンダーと統合されます",
+      "benefit4": "接続された各カレンダーの同期設定を制御できます"
+    },
+    "settings": {
+      "syncEvents": "イベントを同期",
+      "syncReminders": "リマインダーを同期",
+      "autoCreateMeetings": "会議を自動作成",
+      "enabled": "有効",
+      "lastSync": "最終同期: {date}"
+    },
+    "actions": {
+      "sync": "同期",
+      "disconnect": "切断"
+    },
+    "status": {
+      "connected": "接続済み",
+      "error": "エラー",
+      "expired": "期限切れ"
+    }
+  },
+  "preferences": {
+    "title": "環境設定",
+    "subtitle": "エクスペリエンスと表示設定をカスタマイズ",
+    "localization": {
+      "title": "ローカライゼーション",
+      "language": "言語",
+      "timezone": "タイムゾーン",
+      "dateFormat": "日付形式",
+      "et": "米国東部時間 (ET)",
+      "ct": "米国中部時間 (CT)",
+      "mt": "米国山岳部時間 (MT)",
+      "pt": "米国太平洋時間 (PT)",
+      "gmt": "グリニッジ標準時 (GMT)",
+      "jst": "日本標準時 (JST)"
+    }
+  },
+  "companyProfile": {
+    "title": "企業プロフィール",
+    "subtitle": "企業情報とサブスクリプションプランを管理",
+    "noSubscription": {
+      "title": "アクティブなサブスクリプションなし",
+      "description": "あなたの企業にはアクティブなサブスクリプションプランがありません。以下からプランを選択して開始してください。"
+    },
+    "currentPlan": {
+      "title": "現在のプラン",
+      "trialPeriod": "トライアル期間",
+      "trial": "トライアル",
+      "active": "アクティブ",
+      "inactive": "非アクティブ",
+      "price": "価格",
+      "billing": "請求",
+      "endsOn": "終了: {date}"
+    },
+    "upgrade": {
+      "title": "プレミアム機能のロック解除",
+      "titleTrial": "プランを選択",
+      "subtitle": "プランをアップグレードしてこれらの強力な機能にアクセス",
+      "subtitleTrial": "トライアルを有料プランに変換してこれらの機能を引き続き使用",
+      "availableIn": "{plan}で利用可能",
+      "premiumOnly": "プレミアム限定",
+      "button": "{plan}にアップグレード",
+      "buttonTrial": "{plan}を選択"
+    },
+    "downgrade": {
+      "title": "コストを削減したいですか？",
+      "subtitle": "すべての現在の機能が不要な場合は、下位プランにダウングレードできます",
+      "button": "{plan}にダウングレード"
+    },
+    "features": {
+      "title": "現在の機能 ({plan})",
+      "upTo": "最大{count}人の{item}",
+      "users": "ユーザー",
+      "workflows": "ワークフロー",
+      "exams": "試験"
+    },
+    "planRequest": {
+      "pending": "プラン変更リクエスト保留中",
+      "pendingDesc": "{plan}への変更リクエストはシステム管理者の承認を待っています。",
+      "yourMessage": "あなたのメッセージ:",
+      "requestedOn": "{date}にリクエスト",
+      "cancelRequest": "リクエストをキャンセル",
+      "modalTitle": "プラン変更をリクエスト",
+      "selectedPlan": "選択されたプラン: {plan}",
+      "messageLabel": "管理者へのメッセージ（オプション）",
+      "messagePlaceholder": "なぜこのプラン変更が必要ですか？",
+      "submit": "リクエストを送信",
+      "cancel": "キャンセル",
+      "confirmCancelTitle": "プラン変更リクエストをキャンセル",
+      "confirmCancelDesc": "本当にこのプラン変更リクエストをキャンセルしますか？この操作は元に戻せません。",
+      "confirmYes": "はい、リクエストをキャンセル",
+      "confirmNo": "リクエストを保持"
+    },
+    "requestHistory": {
+      "title": "リクエスト履歴"
+    },
+    "availablePlans": {
+      "title": "利用可能なプラン",
+      "subtitle": "システム管理者からサブスクリプション承認をリクエストするプランを選択",
+      "requestPlan": "プランをリクエスト",
+      "perMonth": "/月"
+    },
+    "status": {
+      "pending": "保留中",
+      "approved": "承認済み",
+      "rejected": "却下",
+      "cancelled": "キャンセル済み"
+    }
+  },
+  "common": {
+    "firstName": "名",
+    "lastName": "姓",
+    "email": "メールアドレス",
+    "phone": "電話番号",
+    "jobTitle": "役職",
+    "bio": "自己紹介",
+    "bioPlaceholder": "自己紹介を書いてください...",
+    "currentPassword": "現在のパスワード",
+    "newPassword": "新しいパスワード",
+    "confirmPassword": "パスワード（確認）",
+    "changePassword": "パスワードを変更",
+    "changingPassword": "パスワードを変更中...",
+    "twoFactorAuth": "二段階認証",
+    "enable2FA": "2FAを有効化",
+    "twoFactorEnabled": "2FAが有効です",
+    "twoFactorDesc": "あなたのアカウントは二段階認証で保護されています",
+    "twoFactorSubtitle": "アカウントに追加のセキュリティレイヤーを追加",
+    "enabled": "有効",
+    "disabled": "無効",
+    "saving": "保存中...",
+    "error": "エラー"
+  },
+  "notificationChannels": {
+    "title": "通知チャネル",
+    "emailNotifications": "メール通知",
+    "emailDesc": "メールで通知を受け取る",
+    "pushNotifications": "プッシュ通知",
+    "pushDesc": "ブラウザのプッシュ通知",
+    "smsNotifications": "SMS通知",
+    "smsDesc": "テキストメッセージ通知",
+    "smsRequiresPhone": "電話番号が必要です（最初にプロフィールで追加してください）",
+    "smsRequiresPhoneError": "SMS通知には電話番号が必要です。まずプロフィールに電話番号を追加してください。"
+  },
+  "eventNotifications": {
+    "title": "イベント通知",
+    "interviewReminders": "面接リマインダー",
+    "interviewDesc": "予定されている面接の前に通知を受け取る",
+    "applicationUpdates": "応募の更新",
+    "applicationDesc": "求人応募とステータス変更の更新",
+    "messageNotifications": "新しいメッセージ",
+    "messageDesc": "新しいメッセージと会話の通知"
+  },
+  "errors": {
+    "loadUserData": "ユーザーデータの読み込みに失敗しました",
+    "loadCalendarConnections": "カレンダー接続の読み込みに失敗しました",
+    "saveChanges": "変更の保存に失敗しました",
+    "disconnectCalendar": "カレンダーの切断に失敗しました",
+    "syncCalendar": "カレンダーの同期に失敗しました",
+    "updateCalendarConnection": "カレンダー接続の更新に失敗しました",
+    "changePassword": "パスワードの変更に失敗しました"
+  },
+  "save": "変更を保存",
+  "cancel": "キャンセル",
+  "saved": "変更を保存しました",
+  "error": "変更の保存に失敗しました"
+}

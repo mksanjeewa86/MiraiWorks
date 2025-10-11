@@ -1,7 +1,6 @@
 'use client';
 
 import { createContext, useContext, useReducer, useEffect, type ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
 import type {
   User,
   LoginCredentials,
@@ -13,6 +12,8 @@ import type {
 import { authApi } from '@/api/auth';
 import { setAuthHandler } from '@/api/apiClient';
 import { toast } from 'sonner';
+import { ROUTES } from '@/routes/config';
+import { useLocaleRouter } from '@/hooks/useLocaleRouter';
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -113,7 +114,7 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
-  const router = useRouter();
+  const router = useLocaleRouter();
 
   // Force logout without API call (used by API interceptor)
   const forceLogout = () => {
@@ -123,7 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Redirect to login page using Next.js router
     if (typeof window !== 'undefined') {
-      router.replace('/auth/login');
+      router.replace(ROUTES.AUTH.LOGIN);
     }
   };
 
@@ -175,7 +176,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         // Redirect to login page
         if (typeof window !== 'undefined') {
-          router.replace('/auth/login?expired=true');
+          router.replace(ROUTES.AUTH.LOGIN_EXPIRED);
         }
       } else {
         // Network or other error - don't logout, just log the error
@@ -387,7 +388,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Redirect to login page after logout using Next.js router
     if (typeof window !== 'undefined') {
-      router.replace('/auth/login');
+      router.replace(ROUTES.AUTH.LOGIN);
     }
   };
 

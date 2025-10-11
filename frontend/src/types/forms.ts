@@ -41,9 +41,19 @@ export const twoFactorSchema = z.object({
     .regex(/^\d+$/, 'Code must contain only numbers'),
 });
 
+// Passwordless registration schema (used in registration page)
+export const passwordlessRegisterSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  first_name: z.string().min(1, 'First name is required'),
+  last_name: z.string().min(1, 'Last name is required'),
+  phone: z.string().optional(),
+  role: z.enum(['candidate', 'employer', 'recruiter']),
+});
+
 // Form Data Types (Zod-inferred)
 export type LoginFormData = z.infer<typeof loginSchema>;
 export type RegisterFormData = z.infer<typeof registerSchema>;
+export type PasswordlessRegisterFormData = z.infer<typeof passwordlessRegisterSchema>;
 export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 export type TwoFactorFormData = z.infer<typeof twoFactorSchema>;

@@ -19,10 +19,14 @@ import {
 import { SimpleAreaChart, SimpleBarChart } from '@/components/dashboard/Charts';
 import type { EmployerStats } from '@/types/dashboard';
 import type { ActivityItem } from '@/types';
+import { ROUTES } from '@/routes/config';
+import { useTranslations, useLocale } from 'next-intl';
 
 export default function EmployerDashboard() {
   const { user } = useAuth();
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations('dashboard.employer');
   const [stats, setStats] = useState<EmployerStats | null>(null);
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,34 +69,34 @@ export default function EmployerDashboard() {
     if (!stats) return [];
     return [
       {
-        label: 'Open positions',
+        label: t('metrics.openPositions.label'),
         value: stats.open_positions ?? 0,
-        helperText: 'Roles currently accepting applicants',
-        trendLabel: `${stats.open_positions && stats.hires_made ? Math.max(stats.open_positions - stats.hires_made, 0) : 0} to fill`,
+        helperText: t('metrics.openPositions.helperText'),
+        trendLabel: `${stats.open_positions && stats.hires_made ? Math.max(stats.open_positions - stats.hires_made, 0) : 0} ${t('metrics.openPositions.toFill')}`,
         trendTone: 'neutral' as const,
         icon: <BriefcaseIcon className="h-6 w-6" />,
       },
       {
-        label: 'Applications received',
+        label: t('metrics.applicationsReceived.label'),
         value: stats.applications_received ?? 0,
-        helperText: 'Total submissions across openings',
-        trendLabel: `${stats.applications_received ?? 0} this month`,
+        helperText: t('metrics.applicationsReceived.helperText'),
+        trendLabel: `${stats.applications_received ?? 0} ${t('metrics.applicationsReceived.thisMonth')}`,
         trendTone: 'positive' as const,
         icon: <BuildingOffice2Icon className="h-6 w-6" />,
       },
       {
-        label: 'Interviews scheduled',
+        label: t('metrics.interviewsScheduled.label'),
         value: stats.interviews_scheduled ?? 0,
-        helperText: 'Upcoming interviews on the calendar',
-        trendLabel: `${stats.hires_made ?? 0} hires this month`,
+        helperText: t('metrics.interviewsScheduled.helperText'),
+        trendLabel: `${stats.hires_made ?? 0} ${t('metrics.interviewsScheduled.hiresThisMonth')}`,
         trendTone: 'neutral' as const,
         icon: <CalendarDaysIcon className="h-6 w-6" />,
       },
       {
-        label: 'Hires made',
+        label: t('metrics.hiresMade.label'),
         value: stats.hires_made ?? 0,
-        helperText: 'Converted candidates from interviews',
-        trendLabel: 'Keep up the momentum',
+        helperText: t('metrics.hiresMade.helperText'),
+        trendLabel: t('metrics.hiresMade.keepMomentum'),
         trendTone: (stats.hires_made && stats.hires_made > 0 ? 'positive' : 'neutral') as
           | 'positive'
           | 'negative'
@@ -100,7 +104,7 @@ export default function EmployerDashboard() {
         icon: <UserGroupIcon className="h-6 w-6" />,
       },
     ];
-  }, [stats]);
+  }, [stats, t]);
 
   const activityByType = useMemo(() => {
     const counts = new Map<string, number>();
@@ -133,19 +137,19 @@ export default function EmployerDashboard() {
 
   const hiringProgress = useMemo(() => {
     if (!stats)
-      return { percentage: 0, message: 'Set your hiring goals to start tracking progress.' };
+      return { percentage: 0, message: t('hiringVelocity.setGoals') };
     const totalTargets = (stats.open_positions ?? 0) + (stats.hires_made ?? 0);
     if (!totalTargets)
-      return { percentage: 0, message: 'Set your hiring goals to start tracking progress.' };
+      return { percentage: 0, message: t('hiringVelocity.setGoals') };
     const percentage = Math.round(((stats.hires_made ?? 0) / totalTargets) * 100);
     return {
       percentage,
       message:
         percentage >= 75
-          ? 'Great job! You are close to filling all openings.'
-          : 'Keep interviewing to boost your conversion rate.',
+          ? t('hiringVelocity.greatJob')
+          : t('hiringVelocity.keepInterviewing'),
     };
-  }, [stats]);
+  }, [stats, t]);
 
   const formatTimestamp = (value?: string) => {
     if (!value) return 'N/A';
@@ -162,20 +166,20 @@ export default function EmployerDashboard() {
   return (
     <div className="space-y-6 p-6">
       <DashboardHeader
-        title="Employer hiring overview"
-        subtitle={`Welcome back${user?.full_name ? `, ${user.full_name}` : ''}`}
-        description="Monitor openings, move candidates forward, and celebrate new hires."
+        title={t('header.title')}
+        subtitle={`${t('header.welcomeBack')}${user?.full_name ? `, ${user.full_name}` : ''}`}
+        description={t('header.description')}
         actions={
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={loadDashboardData}>
-              Refresh
+              {t('header.refreshButton')}
             </Button>
-            <Button size="sm" onClick={() => router.push('/app/jobs/new')}>
-              Post a job
+            <Button size="sm" onClick={() => router.push(`/${locale}${ROUTES.APP.JOBS.NEW}`)}>
+              {t('header.postJobButton')}
             </Button>
           </div>
         }
-        meta={`Synced ${new Date().toLocaleTimeString()}`}
+        meta={`${t('header.lastUpdated')} ${new Date().toLocaleTimeString()}`}
       />
 
       <DashboardContentGate loading={loading} error={error} onRetry={loadDashboardData}>
@@ -197,19 +201,19 @@ export default function EmployerDashboard() {
           <Card className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 lg:col-span-2">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-                Hiring activity timeline
+                {t('hiringActivityTimeline.title')}
               </h2>
-              <Badge variant="outline">Last updates</Badge>
+              <Badge variant="outline">{t('hiringActivityTimeline.badge')}</Badge>
             </div>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              Daily pulse of applications, interviews, and offers.
+              {t('hiringActivityTimeline.description')}
             </p>
             <div className="mt-6 h-[260px]">
               {activityTimeline.length ? (
                 <SimpleAreaChart data={activityTimeline} dataKey="value" color="#60A5FA" />
               ) : (
                 <div className="flex h-full items-center justify-center text-sm text-gray-500">
-                  Recent activity will populate here as candidates interact with your team.
+                  {t('hiringActivityTimeline.noData')}
                 </div>
               )}
             </div>
@@ -218,10 +222,10 @@ export default function EmployerDashboard() {
           <Card className="flex flex-col gap-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
             <div>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-                Activity by type
+                {t('activityByType.title')}
               </h2>
               <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                Which actions are keeping your team busy this week.
+                {t('activityByType.description')}
               </p>
             </div>
             <div className="h-[220px]">
@@ -229,7 +233,7 @@ export default function EmployerDashboard() {
                 <SimpleBarChart data={activityByType} dataKey="value" color="#34D399" />
               ) : (
                 <div className="flex h-full items-center justify-center text-sm text-gray-500">
-                  Activity data will appear once candidates engage.
+                  {t('activityByType.noData')}
                 </div>
               )}
             </div>
@@ -240,16 +244,16 @@ export default function EmployerDashboard() {
           <Card className="flex flex-col gap-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-                Hiring velocity
+                {t('hiringVelocity.title')}
               </h2>
-              <Badge variant="secondary">Goal tracker</Badge>
+              <Badge variant="secondary">{t('hiringVelocity.badge')}</Badge>
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Visualize how quickly applications turn into hires.
+              {t('hiringVelocity.description')}
             </p>
             <div>
               <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
-                <span>Progress to goal</span>
+                <span>{t('hiringVelocity.progressLabel')}</span>
                 <span>{hiringProgress.percentage}%</span>
               </div>
               <Progress className="mt-2" value={hiringProgress.percentage} max={100} />
@@ -258,7 +262,7 @@ export default function EmployerDashboard() {
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div className="rounded-xl border border-gray-100 p-3 dark:border-gray-800">
                 <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                  Openings
+                  {t('hiringVelocity.openingsLabel')}
                 </p>
                 <p className="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-100">
                   {stats?.open_positions ?? 0}
@@ -266,7 +270,7 @@ export default function EmployerDashboard() {
               </div>
               <div className="rounded-xl border border-gray-100 p-3 dark:border-gray-800">
                 <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                  Hires
+                  {t('hiringVelocity.hiresLabel')}
                 </p>
                 <p className="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-100">
                   {stats?.hires_made ?? 0}
@@ -278,9 +282,9 @@ export default function EmployerDashboard() {
           <Card className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-                Latest hiring activity
+                {t('latestActivity.title')}
               </h2>
-              <Badge variant="outline">Team feed</Badge>
+              <Badge variant="outline">{t('latestActivity.badge')}</Badge>
             </div>
             {activityLoading ? (
               <div className="flex h-40 items-center justify-center">
@@ -310,7 +314,7 @@ export default function EmployerDashboard() {
               </div>
             ) : (
               <div className="mt-4 flex items-center justify-center rounded-xl border border-dashed border-gray-200 p-6 text-sm text-gray-500 dark:border-gray-800">
-                Team activity will show up here as you collaborate on roles.
+                {t('latestActivity.noActivity')}
               </div>
             )}
           </Card>
@@ -318,36 +322,36 @@ export default function EmployerDashboard() {
 
         <Card className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">Quick actions</h2>
-            <Badge variant="outline">Productivity</Badge>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">{t('quickActions.title')}</h2>
+            <Badge variant="outline">{t('quickActions.badge')}</Badge>
           </div>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Button
               className="h-24 flex-col justify-center gap-2"
-              onClick={() => router.push('/app/jobs/new')}
+              onClick={() => router.push(`/${locale}${ROUTES.APP.JOBS.NEW}`)}
             >
-              Post opening
+              {t('quickActions.postOpening')}
             </Button>
             <Button
               variant="outline"
               className="h-24 flex-col justify-center gap-2"
-              onClick={() => router.push('/app/applications')}
+              onClick={() => router.push(`/${locale}${ROUTES.APP.APPLICATIONS}`)}
             >
-              Review applications
+              {t('quickActions.reviewApplications')}
             </Button>
             <Button
               variant="outline"
               className="h-24 flex-col justify-center gap-2"
-              onClick={() => router.push('/app/interviews')}
+              onClick={() => router.push(`/${locale}${ROUTES.APP.INTERVIEWS}`)}
             >
-              Schedule interview
+              {t('quickActions.scheduleInterview')}
             </Button>
             <Button
               variant="outline"
               className="h-24 flex-col justify-center gap-2"
-              onClick={() => router.push('/app/reports')}
+              onClick={() => router.push(`/${locale}${ROUTES.APP.REPORTS}`)}
             >
-              View reports
+              {t('quickActions.viewReports')}
             </Button>
           </div>
         </Card>

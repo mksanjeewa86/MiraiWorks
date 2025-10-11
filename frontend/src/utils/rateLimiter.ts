@@ -5,16 +5,7 @@
  * Useful for protecting against accidental DDoS and reducing server load.
  */
 
-interface RateLimitConfig {
-  maxRequests: number;
-  timeWindowMs: number;
-}
-
-interface RequestRecord {
-  timestamps: number[];
-  blocked: boolean;
-  blockedUntil?: number;
-}
+import type { RateLimitConfig, RequestRecord } from '@/types/utils';
 
 export class RateLimiter {
   private requests: Map<string, RequestRecord> = new Map();

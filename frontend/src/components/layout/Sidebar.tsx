@@ -8,106 +8,107 @@ import {
   CheckSquare,
   Video,
   FileText,
-  Settings,
   Users,
   Building2,
   X,
   ChevronLeft,
-  User,
   Menu,
   GitBranch,
   BookOpen,
 } from 'lucide-react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMySubscription } from '@/hooks/useSubscription';
 import type { SidebarProps, NavItem } from '@/types/components';
 import { getRoleColorScheme, getRoleDisplayName } from '@/utils/roleColorSchemes';
+import { useTranslations, useLocale } from 'next-intl';
+import { ROUTES } from '@/routes/config';
+import { useLocaleRouter } from '@/hooks/useLocaleRouter';
 
 const navigationItems: NavItem[] = [
   {
-    name: 'Dashboard',
-    href: '/dashboard',
+    name: 'dashboard',
+    href: ROUTES.DASHBOARD,
     icon: LayoutDashboard,
     roles: ['candidate', 'member', 'admin', 'system_admin'],
     color: 'bg-blue-600',
     lightColor: 'bg-blue-500',
   },
   {
-    name: 'Jobs',
-    href: '/jobs',
+    name: 'jobs',
+    href: ROUTES.JOBS.BASE,
     icon: Briefcase,
     roles: ['candidate', 'system_admin'],
     color: 'bg-emerald-600',
     lightColor: 'bg-emerald-500',
   },
   {
-    name: 'Positions',
-    href: '/positions',
+    name: 'positions',
+    href: ROUTES.POSITIONS.BASE,
     icon: Briefcase,
     roles: ['member', 'admin', 'system_admin'],
     color: 'bg-emerald-600',
     lightColor: 'bg-emerald-500',
   },
   {
-    name: 'Workflows',
-    href: '/workflows',
+    name: 'workflows',
+    href: ROUTES.WORKFLOWS.BASE,
     icon: GitBranch,
     roles: ['member', 'admin', 'system_admin'],
     color: 'bg-violet-600',
     lightColor: 'bg-violet-500',
   },
   {
-    name: 'Candidates',
-    href: '/candidates',
+    name: 'candidates',
+    href: ROUTES.CANDIDATES.BASE,
     icon: Users,
     roles: ['member', 'admin', 'system_admin'],
     color: 'bg-purple-600',
     lightColor: 'bg-purple-500',
   },
   {
-    name: 'Messages',
-    href: '/messages',
+    name: 'messages',
+    href: ROUTES.MESSAGES.BASE,
     icon: MessageSquare,
     roles: ['candidate', 'member', 'admin', 'system_admin'],
     color: 'bg-orange-600',
     lightColor: 'bg-orange-500',
   },
   {
-    name: 'Calendar',
-    href: '/calendar',
+    name: 'calendar',
+    href: ROUTES.CALENDAR.BASE,
     icon: Calendar,
     roles: ['candidate', 'member', 'admin', 'system_admin'],
     color: 'bg-red-600',
     lightColor: 'bg-red-500',
   },
   {
-    name: 'Todos',
-    href: '/todos',
+    name: 'todos',
+    href: ROUTES.TODOS.BASE,
     icon: CheckSquare,
     roles: ['candidate', 'member', 'admin', 'system_admin'],
     color: 'bg-lime-600',
     lightColor: 'bg-lime-500',
   },
   {
-    name: 'Interviews',
-    href: '/interviews',
+    name: 'interviews',
+    href: ROUTES.INTERVIEWS.BASE,
     icon: Video,
     roles: ['candidate', 'member', 'admin', 'system_admin'],
     color: 'bg-indigo-600',
     lightColor: 'bg-indigo-500',
   },
   {
-    name: 'Resume',
-    href: '/resumes',
+    name: 'resume',
+    href: ROUTES.RESUMES.BASE,
     icon: FileText,
     roles: ['candidate', 'system_admin'],
     color: 'bg-teal-600',
     lightColor: 'bg-teal-500',
   },
   {
-    name: 'Exams',
-    href: '/exams',
+    name: 'exams',
+    href: ROUTES.EXAMS.BASE,
     icon: BookOpen,
     roles: ['candidate', 'member', 'admin', 'system_admin'],
     color: 'bg-rose-600',
@@ -115,45 +116,29 @@ const navigationItems: NavItem[] = [
     requiredFeature: 'view_exams', // Requires exam feature
   },
   {
-    name: 'Profile',
-    href: '/profile',
-    icon: User,
-    roles: ['candidate', 'member', 'admin', 'system_admin'],
-    color: 'bg-pink-600',
-    lightColor: 'bg-pink-500',
-  },
-  {
-    name: 'Companies',
-    href: '/companies',
+    name: 'companies',
+    href: ROUTES.COMPANIES.BASE,
     icon: Building2,
     roles: ['admin', 'system_admin'],
     color: 'bg-amber-600',
     lightColor: 'bg-amber-500',
   },
   {
-    name: 'Users',
-    href: '/users',
+    name: 'users',
+    href: ROUTES.USERS.BASE,
     icon: Users,
     roles: ['admin', 'system_admin'],
     color: 'bg-cyan-600',
     lightColor: 'bg-cyan-500',
   },
   {
-    name: 'Admin Exams',
-    href: '/admin/exams',
+    name: 'adminExams',
+    href: ROUTES.ADMIN.EXAMS.BASE,
     icon: BookOpen,
     roles: ['admin', 'system_admin'],
     color: 'bg-fuchsia-600',
     lightColor: 'bg-fuchsia-500',
     requiredFeature: 'exam_management', // Requires exam management feature
-  },
-  {
-    name: 'Settings',
-    href: '/settings',
-    icon: Settings,
-    roles: ['candidate', 'member', 'admin', 'system_admin'],
-    color: 'bg-gray-600',
-    lightColor: 'bg-gray-500',
   },
 ];
 
@@ -166,7 +151,9 @@ export default function Sidebar({
 }: SidebarProps) {
   const { user } = useAuth();
   const pathname = usePathname();
-  const router = useRouter();
+  const router = useLocaleRouter();
+  const t = useTranslations('common.nav');
+  const locale = useLocale();
 
   // Only fetch subscription for company users (not candidates)
   const isCandidate = user?.roles?.some((userRole) => userRole.role.name === 'candidate');
@@ -208,10 +195,11 @@ export default function Sidebar({
   const mainNavItems = allVisibleItems;
 
   const isActive = (href: string) => {
-    if (href === '/dashboard') {
-      return pathname === '/dashboard' || pathname === '/';
+    const localeHref = `/${locale}${href}`;
+    if (href === ROUTES.DASHBOARD) {
+      return pathname === localeHref || pathname === `/${locale}` || pathname === `/${locale}/`;
     }
-    return pathname?.startsWith(href) ?? false;
+    return pathname?.startsWith(localeHref) ?? false;
   };
 
   const sidebarClasses = `
@@ -259,7 +247,7 @@ export default function Sidebar({
                 <>
                   {/* MiraiWorks brand when expanded */}
                   <button
-                    onClick={() => router.push('/')}
+                    onClick={() => router.push(ROUTES.HOME)}
                     className={`flex items-center space-x-2 ${colorScheme.buttonHover} rounded-lg p-2 transition-colors duration-200`}
                   >
                     <div
@@ -344,7 +332,7 @@ export default function Sidebar({
                         e.stopPropagation();
                         e.preventDefault();
 
-                        // Navigate immediately
+                        // Navigate immediately (locale prefix added automatically by useLocaleRouter)
                         router.push(item.href);
 
                         // Close mobile sidebar if open
@@ -365,7 +353,7 @@ export default function Sidebar({
                           : `${colorScheme.textSecondary} ${colorScheme.buttonHover} hover:${colorScheme.textPrimary} border ${colorScheme.buttonBorder}`
                       }
                     `}
-                      title={isCollapsed ? item.name : undefined}
+                      title={isCollapsed ? t(item.name) : undefined}
                     >
                       <div
                         className={`
@@ -391,16 +379,7 @@ export default function Sidebar({
                       </div>
 
                       {!isCollapsed && (
-                        <span className="ml-3 truncate font-semibold">{item.name}</span>
-                      )}
-
-                      {/* Active indicator with glow effect */}
-                      {active && !isCollapsed && (
-                        <div className="ml-auto">
-                          <div
-                            className={`w-2 h-2 rounded-full ${colorScheme.activeIndicator} shadow-lg ${colorScheme.activeIndicatorShadow} animate-pulse`}
-                          />
-                        </div>
+                        <span className="ml-3 truncate font-semibold">{t(item.name)}</span>
                       )}
 
                       {/* Hover effect indicator */}

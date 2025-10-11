@@ -1,0 +1,262 @@
+{
+  "page": {
+    "title": "Interviews",
+    "subtitle": "Manage your interview schedule",
+    "upcomingTab": "Upcoming",
+    "completedTab": "Completed",
+    "allTab": "All"
+  },
+  "list": {
+    "scheduled": "Scheduled",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "noShow": "No Show",
+    "rescheduled": "Rescheduled",
+    "pending": "Pending Confirmation",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "thisWeek": "This Week",
+    "nextWeek": "Next Week",
+    "laterDate": "Later"
+  },
+  "card": {
+    "interviewWith": "Interview with",
+    "position": "Position",
+    "interviewType": "Interview Type",
+    "duration": "Duration",
+    "minutes": "{minutes} minutes",
+    "location": "Location",
+    "interviewer": "Interviewer",
+    "viewDetails": "View Details",
+    "joinMeeting": "Join Meeting",
+    "reschedule": "Reschedule",
+    "cancel": "Cancel",
+    "addToCalendar": "Add to Calendar"
+  },
+  "types": {
+    "phone": "Phone Screening",
+    "video": "Video Interview",
+    "onsite": "On-site Interview",
+    "technical": "Technical Interview",
+    "behavioral": "Behavioral Interview",
+    "final": "Final Interview",
+    "panel": "Panel Interview",
+    "group": "Group Interview"
+  },
+  "details": {
+    "title": "Interview Details",
+    "backToList": "Back to Interviews",
+    "overview": "Overview",
+    "preparation": "Preparation",
+    "notes": "Notes",
+    "feedbackTab": "Feedback",
+    "interviewInfo": {
+      "date": "Date & Time",
+      "duration": "Duration",
+      "location": "Location",
+      "meetingLink": "Meeting Link",
+      "dialIn": "Dial-in Number",
+      "interviewType": "Type",
+      "interviewer": "Interviewer(s)",
+      "position": "Position"
+    },
+    "preparationTips": {
+      "title": "Preparation Tips",
+      "researchCompany": "Research the company",
+      "reviewJobDescription": "Review the job description",
+      "prepareQuestions": "Prepare questions to ask",
+      "practiceAnswers": "Practice common interview questions",
+      "testTechnology": "Test your technology (for video interviews)"
+    },
+    "candidateNotes": {
+      "title": "Your Notes",
+      "placeholder": "Add notes about this interview...",
+      "save": "Save Notes",
+      "lastUpdated": "Last updated: {date}"
+    },
+    "actions": {
+      "confirm": "Confirm Attendance",
+      "decline": "Decline Interview",
+      "requestReschedule": "Request Reschedule",
+      "cancel": "Cancel Interview",
+      "joinMeeting": "Join Meeting",
+      "addToCalendar": "Add to Calendar"
+    },
+    "feedback": {
+      "title": "Interview Feedback",
+      "notAvailable": "Feedback not yet available",
+      "interviewerComments": "Interviewer Comments",
+      "rating": "Rating",
+      "strengths": "Strengths",
+      "areasForImprovement": "Areas for Improvement",
+      "overallImpression": "Overall Impression",
+      "nextSteps": "Next Steps"
+    }
+  },
+  "schedule": {
+    "title": "Schedule Interview",
+    "subtitle": "Create a new interview session",
+    "selectDate": "Select Date",
+    "selectTime": "Select Time",
+    "selectType": "Interview Type",
+    "duration": "Duration",
+    "location": "Location / Meeting Link",
+    "notes": "Additional Notes",
+    "interviewers": "Interviewers",
+    "submit": "Schedule Interview",
+    "submitting": "Scheduling...",
+    "cancel": "Cancel",
+    "interviewTitle": "Interview Title",
+    "interviewTitlePlaceholder": "e.g., Technical Interview - Frontend Developer",
+    "selectCandidate": "Select Candidate",
+    "candidateSearchPlaceholder": "Search candidates...",
+    "candidateLoadingPlaceholder": "Loading candidates...",
+    "noCandidatesFound": "No candidates found matching your search",
+    "noCandidatesAvailable": "No candidates available",
+    "noActiveCandidates": "No active candidates found. Make sure candidates are registered in the system.",
+    "positionTitle": "Position Title",
+    "positionTitlePlaceholder": "e.g., Senior Frontend Developer",
+    "interviewTypeLabel": "Interview Type",
+    "typeVideoCall": "Video Call",
+    "typePhoneCall": "Phone Call",
+    "typeInPerson": "In-Person",
+    "videoCallConfig": "Video Call Configuration",
+    "videoCallSetup": "Video Call Setup",
+    "systemGenerated": "System Generated",
+    "systemGeneratedDesc": "Auto-create video call room",
+    "customUrl": "Custom URL",
+    "customUrlDesc": "Use Zoom, Google Meet, etc.",
+    "meetingUrl": "Meeting URL",
+    "meetingUrlPlaceholder": "https://zoom.us/j/123456789 or https://meet.google.com/xxx-yyyy-zzz",
+    "meetingUrlHelper": "Enter your Zoom, Google Meet, Teams, or other video call URL",
+    "autoGenTitle": "Auto-Generated Meeting Room",
+    "autoGenDesc": "A secure video call room will be automatically created. Both interviewer and candidate will receive the meeting link.",
+    "autoGenFeatures": "Features: Screen sharing, Recording, Real-time transcription",
+    "startTime": "Start Time",
+    "endTime": "End Time",
+    "startTimePlaceholder": "Select start time",
+    "endTimePlaceholder": "Select end time",
+    "locationRequired": "Location",
+    "locationPlaceholder": "Office address or meeting room",
+    "phoneDetails": "Phone Details",
+    "phoneDetailsPlaceholder": "Phone number or instructions",
+    "description": "Description",
+    "descriptionPlaceholder": "Brief description of the interview purpose and format",
+    "interviewNotes": "Interview Notes",
+    "interviewNotesPlaceholder": "Internal notes about the interview",
+    "preparationNotes": "Preparation Notes",
+    "preparationNotesPlaceholder": "Notes for interview preparation",
+    "validation": {
+      "titleRequired": "Interview title is required",
+      "candidateRequired": "Candidate is required",
+      "startTimeRequired": "Start time is required",
+      "endTimeRequired": "End time is required",
+      "endAfterStart": "End time must be after start time",
+      "meetingUrlRequired": "Meeting URL is required when using custom URL option",
+      "locationRequired": "Location is required for in-person interviews"
+    },
+    "errors": {
+      "sessionNotFound": "User session not found. Please refresh and try again.",
+      "candidatesLoadFailed": "Failed to load candidates list"
+    },
+    "success": {
+      "title": "Interview Scheduled",
+      "message": "The interview has been successfully scheduled",
+      "viewInterview": "View Interview"
+    },
+    "error": {
+      "title": "Error",
+      "message": "Failed to schedule interview"
+    }
+  },
+  "reschedule": {
+    "title": "Reschedule Interview",
+    "reason": "Reason for Rescheduling",
+    "reasonPlaceholder": "Please provide a reason...",
+    "proposedTimes": "Proposed Times",
+    "addTimeSlot": "Add Time Slot",
+    "submit": "Request Reschedule",
+    "cancel": "Cancel",
+    "success": {
+      "title": "Reschedule Request Sent",
+      "message": "Your reschedule request has been sent. You'll be notified once it's confirmed.",
+      "backToInterviews": "Back to Interviews"
+    }
+  },
+  "cancel": {
+    "title": "Cancel Interview",
+    "confirm": "Are you sure you want to cancel this interview?",
+    "reason": "Reason for Cancellation",
+    "reasonPlaceholder": "Please provide a reason...",
+    "confirmButton": "Yes, Cancel Interview",
+    "cancelButton": "No, Keep Interview",
+    "success": {
+      "title": "Interview Cancelled",
+      "message": "The interview has been cancelled. A notification has been sent to all participants."
+    }
+  },
+  "delete": {
+    "confirm": "Are you sure you want to delete \"{title}\"?\n\nThis action cannot be undone and will permanently remove the interview and all associated data.",
+    "success": {
+      "title": "Interview Deleted",
+      "message": "\"{title}\" has been successfully deleted"
+    },
+    "error": "Failed to delete interview",
+    "errorTitle": "Delete Failed"
+  },
+  "filters": {
+    "search": "Search interviews...",
+    "allStatuses": "All Statuses",
+    "allTypes": "All Types",
+    "sortBy": {
+      "dateEarliest": "Date (Earliest)",
+      "dateLatest": "Date (Latest)",
+      "candidateAZ": "Candidate (A-Z)",
+      "candidateZA": "Candidate (Z-A)",
+      "statusAZ": "Status (A-Z)"
+    }
+  },
+  "table": {
+    "headers": {
+      "interviewDetails": "Interview Details",
+      "participants": "Participants",
+      "schedule": "Schedule",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "recruiter": "Recruiter: {name}",
+    "view": "View",
+    "edit": "Edit",
+    "delete": "Delete",
+    "cannotDelete": "Cannot delete interviews that are in progress or completed"
+  },
+  "pagination": {
+    "showing": "Showing {start}-{end} of {total} interviews",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {current} of {total}"
+  },
+  "emptyState": {
+    "title": "No interviews found",
+    "withFilters": "Try adjusting your filters to see more results.",
+    "forCreators": "Get started by scheduling your first interview.",
+    "forCandidates": "No interviews have been scheduled for you yet."
+  },
+  "noInterviews": {
+    "upcoming": {
+      "title": "No upcoming interviews",
+      "message": "You don't have any upcoming interviews scheduled.",
+      "browseJobs": "Browse Jobs"
+    },
+    "completed": {
+      "title": "No completed interviews",
+      "message": "You haven't completed any interviews yet."
+    },
+    "all": {
+      "title": "No interviews",
+      "message": "You don't have any interviews scheduled."
+    }
+  },
+  "loading": "Loading interviews...",
+  "error": "Failed to load interviews. Please try again."
+}

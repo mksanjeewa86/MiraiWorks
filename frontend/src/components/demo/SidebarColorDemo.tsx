@@ -1,26 +1,26 @@
 'use client';
 
 import React, { useState } from 'react';
-import { roleColorSchemes } from '@/utils/roleColorSchemes';
+import { userTypeColorSchemes } from '@/utils/roleColorSchemes';
 
 /**
- * Demo component to showcase different sidebar color schemes for each user role
+ * Demo component to showcase different sidebar color schemes for each user type
  * This is a development utility to visualize the color schemes
  */
 export default function SidebarColorDemo() {
-  const [selectedRole, setSelectedRole] = useState<string>('system_admin');
+  const [selectedRole, setSelectedRole] = useState<string>('employer');
 
-  const roles = Object.keys(roleColorSchemes);
-  const colorScheme = roleColorSchemes[selectedRole];
+  const roles = Object.keys(userTypeColorSchemes);
+  const colorScheme = userTypeColorSchemes[selectedRole];
 
   return (
     <div className="p-8 bg-gray-100 min-h-screen">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Sidebar Color Schemes by Role</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Sidebar Color Schemes by User Type</h1>
 
-        {/* Role Selector */}
+        {/* User Type Selector */}
         <div className="mb-8">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Select User Role:</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Select User Type:</label>
           <select
             value={selectedRole}
             onChange={(e) => setSelectedRole(e.target.value)}
@@ -28,7 +28,7 @@ export default function SidebarColorDemo() {
           >
             {roles.map((role) => (
               <option key={role} value={role}>
-                {role.replace('_', ' ').toUpperCase()}
+                {role.charAt(0).toUpperCase() + role.slice(1)}
               </option>
             ))}
           </select>
@@ -108,7 +108,7 @@ export default function SidebarColorDemo() {
                       Test User
                     </p>
                     <p className={`text-xs ${colorScheme.textSecondary} truncate font-medium`}>
-                      {selectedRole.replace('_', ' ').toUpperCase()}
+                      {selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)}
                     </p>
                   </div>
                   <div
@@ -136,12 +136,12 @@ export default function SidebarColorDemo() {
           </div>
         </div>
 
-        {/* Role Comparison */}
+        {/* User Type Comparison */}
         <div className="mt-12">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">All Role Previews</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">All User Type Previews</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {roles.map((role) => {
-              const scheme = roleColorSchemes[role];
+              const scheme = userTypeColorSchemes[role];
               return (
                 <div key={role} className="text-center">
                   <div
@@ -156,7 +156,7 @@ export default function SidebarColorDemo() {
                     ></div>
                   </div>
                   <p className="text-sm font-medium text-gray-900">
-                    {role.replace('_', ' ').toUpperCase()}
+                    {role.charAt(0).toUpperCase() + role.slice(1)}
                   </p>
                 </div>
               );

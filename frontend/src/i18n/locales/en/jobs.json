@@ -1,0 +1,178 @@
+{
+  "page": {
+    "title": "Job Opportunities",
+    "subtitle": "Discover your next career move",
+    "pageTitle": "Positions - MiraiWorks",
+    "browseJobs": "Browse Jobs",
+    "findYourDreamJob": "Find Your",
+    "dreamJob": "Dream Job",
+    "heroDescription": "Discover thousands of opportunities from top companies in Japan. Filter by prefecture, salary range, posting date and more - no account required to explore!",
+    "searchPlaceholder": "Search jobs, companies, or skills...",
+    "filterButton": "Filters",
+    "sortLabel": "Sort by:",
+    "viewToggle": {
+      "grid": "Grid view",
+      "list": "List view"
+    }
+  },
+  "filters": {
+    "title": "Filters",
+    "activeFilters": "Active Filters:",
+    "clearAll": "Clear All",
+    "apply": "Apply filters",
+    "categories": {
+      "allCategories": "All Categories",
+      "technology": "Technology",
+      "marketing": "Marketing",
+      "design": "Design",
+      "sales": "Sales",
+      "finance": "Finance",
+      "healthcare": "Healthcare"
+    },
+    "jobTypes": {
+      "allTypes": "All Types",
+      "fullTime": "Full-time",
+      "partTime": "Part-time",
+      "contract": "Contract",
+      "temporary": "Temporary",
+      "internship": "Internship",
+      "freelance": "Freelance"
+    },
+    "location": {
+      "allLocations": "All Locations",
+      "label": "Location",
+      "placeholder": "Select location",
+      "remote": "Remote",
+      "onsite": "On-site",
+      "hybrid": "Hybrid"
+    },
+    "salary": {
+      "anySalary": "Any Salary",
+      "label": "Salary Range",
+      "min": "Min",
+      "max": "Max",
+      "perYear": "/ year"
+    },
+    "datePosted": {
+      "anyTime": "Any Time",
+      "last24Hours": "Last 24 hours",
+      "last3Days": "Last 3 days",
+      "lastWeek": "Last week",
+      "lastMonth": "Last month"
+    },
+    "activeFilterLabels": {
+      "search": "Search",
+      "category": "Category",
+      "type": "Type",
+      "location": "Location",
+      "salary": "Salary",
+      "posted": "Posted"
+    }
+  },
+  "sorting": {
+    "mostRecent": "Most Recent",
+    "salary": "Highest Salary",
+    "relevance": "Most Relevant",
+    "title": "Job Title"
+  },
+  "details": {
+    "title": "Job Details",
+    "backToJobs": "Back to Jobs",
+    "applyButton": "Apply for this position",
+    "saveButton": "Save Job",
+    "shareButton": "Share",
+    "reportButton": "Report",
+    "overview": {
+      "title": "Overview",
+      "jobType": "Job Type",
+      "location": "Location",
+      "experience": "Experience",
+      "salary": "Salary",
+      "posted": "Posted",
+      "deadline": "Application Deadline",
+      "openings": "Openings"
+    },
+    "description": {
+      "title": "Job Description",
+      "responsibilities": "Responsibilities",
+      "requirements": "Requirements",
+      "niceToHave": "Nice to Have",
+      "benefits": "Benefits"
+    },
+    "company": {
+      "title": "About the Company",
+      "size": "Company Size",
+      "founded": "Founded",
+      "website": "Website",
+      "viewProfile": "View Company Profile"
+    },
+    "similarJobs": "Similar Jobs",
+    "application": {
+      "title": "Apply for {jobTitle}",
+      "resume": "Select Resume",
+      "coverLetter": "Cover Letter",
+      "coverLetterPlaceholder": "Tell us why you're a great fit for this role...",
+      "attachments": "Additional Attachments",
+      "submitButton": "Submit Application",
+      "cancelButton": "Cancel",
+      "success": {
+        "title": "Application Submitted!",
+        "message": "Your application has been successfully submitted. The employer will review it and contact you if there's a match.",
+        "backToJobs": "Back to Jobs",
+        "viewMyApplications": "View My Applications"
+      }
+    }
+  },
+  "results": {
+    "loading": "Loading...",
+    "positionsFound": "{count} Position Found",
+    "positionsFoundPlural": "{count} Positions Found",
+    "showing": "Showing {start}-{end} of {total} results",
+    "pageInfo": "Page {current} of {total}",
+    "loadingPositions": "Loading positions...",
+    "unknownCompany": "Unknown Company",
+    "recently": "Recently",
+    "posted": "Posted"
+  },
+  "card": {
+    "newBadge": "New",
+    "urgentBadge": "Urgent",
+    "featuredBadge": "Featured",
+    "remote": "Remote",
+    "hybrid": "Hybrid",
+    "onsite": "On-site",
+    "fullTime": "Full-time",
+    "partTime": "Part-time",
+    "contract": "Contract",
+    "postedDate": "Posted {date}",
+    "applicants": "{count} applicants",
+    "viewDetails": "View Details",
+    "applyNow": "Apply Now",
+    "apply": "Apply",
+    "saved": "Saved",
+    "saveJob": "Save Job"
+  },
+  "pagination": {
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "noResults": {
+    "title": "No positions found",
+    "message": "Try adjusting your search criteria or browse all categories",
+    "clearFilters": "Clear Filters",
+    "browseAll": "Browse all jobs"
+  },
+  "errors": {
+    "title": "Error Loading Positions",
+    "failedToFetch": "Failed to fetch positions",
+    "tryAgain": "Try Again"
+  },
+  "cta": {
+    "title": "Don't See the Right Position?",
+    "description": "Create a profile and let employers find you, or set up job alerts to never miss an opportunity.",
+    "createProfile": "Create Profile",
+    "setUpAlerts": "Set Up Position Alerts"
+  },
+  "loading": "Loading jobs...",
+  "error": "Failed to load jobs. Please try again."
+}

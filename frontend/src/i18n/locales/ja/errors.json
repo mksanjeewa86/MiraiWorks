@@ -1,0 +1,47 @@
+{
+  "general": {
+    "somethingWentWrong": "問題が発生しました",
+    "unexpectedError": "予期しないエラーが発生しました",
+    "tryAgainLater": "しばらくしてからもう一度お試しください",
+    "contactSupport": "問題が解決しない場合は、サポートにお問い合わせください"
+  },
+  "network": {
+    "offline": "オフラインです",
+    "connectionLost": "接続が失われました",
+    "slowConnection": "低速接続が検出されました",
+    "requestFailed": "リクエストが失敗しました",
+    "timeout": "リクエストがタイムアウトしました"
+  },
+  "auth": {
+    "unauthorized": "この操作を実行する権限がありません",
+    "sessionExpired": "セッションの有効期限が切れました。再度ログインしてください",
+    "invalidToken": "無効な認証トークンです",
+    "accessDenied": "アクセスが拒否されました",
+    "loginRequired": "続行するにはログインしてください"
+  },
+  "validation": {
+    "invalidInput": "無効な入力です",
+    "requiredField": "このフィールドは必須です",
+    "invalidFormat": "無効な形式です",
+    "valueTooLong": "値が長すぎます",
+    "valueTooShort": "値が短すぎます"
+  },
+  "api": {
+    "400": "不正なリクエスト",
+    "401": "認証が必要です",
+    "403": "アクセス禁止",
+    "404": "見つかりません",
+    "409": "競合",
+    "422": "検証エラー",
+    "429": "リクエストが多すぎます",
+    "500": "サーバーエラー",
+    "502": "不正なゲートウェイ",
+    "503": "サービス利用不可"
+  },
+  "upload": {
+    "fileTooLarge": "ファイルが大きすぎます",
+    "invalidFileType": "無効なファイル形式です",
+    "uploadFailed": "アップロードが失敗しました",
+    "tooManyFiles": "ファイルが多すぎます"
+  }
+}

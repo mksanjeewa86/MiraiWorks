@@ -369,6 +369,13 @@ export const API_ENDPOINTS = {
     WITH_FEATURES: (planId: number | string) => `/api/subscriptions/plans/${planId}`,
   },
 
+  // System Update endpoints
+  SYSTEM_UPDATES: {
+    ACTIVATE: (id: number | string) => `/api/system-updates/${id}/activate`,
+    BASE: '/api/system-updates',
+    BY_ID: (id: number | string) => `/api/system-updates/${id}`,
+  },
+
   // Todo endpoints
   TODOS: {
     ASSIGN: (id: number | string) => `/api/todos/${id}/assign`,

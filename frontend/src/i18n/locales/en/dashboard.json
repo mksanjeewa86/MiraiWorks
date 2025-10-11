@@ -1,0 +1,373 @@
+{
+  "candidate": {
+    "header": {
+      "title": "Candidate control center",
+      "welcomeBack": "Welcome back",
+      "description": "Track your applications, interviews, and career growth in one place.",
+      "refreshButton": "Refresh",
+      "discoverRolesButton": "Discover roles",
+      "lastUpdated": "Last updated"
+    },
+    "metrics": {
+      "activeApplications": {
+        "label": "Active applications",
+        "helperText": "Across all active job submissions",
+        "inReview": "in review"
+      },
+      "interviewsScheduled": {
+        "label": "Interviews scheduled",
+        "helperText": "Upcoming meetings in the next weeks",
+        "completed": "completed"
+      },
+      "resumesOnFile": {
+        "label": "Resumes on file",
+        "helperText": "Keep resumes updated for better matches",
+        "mostRecent": "Most recent updated",
+        "noUpdates": "No updates yet"
+      },
+      "unreadConversations": {
+        "label": "Unread conversations",
+        "helperText": "Messages from recruiters and companies",
+        "stayResponsive": "Stay responsive to stand out"
+      }
+    },
+    "applicationPipeline": {
+      "title": "Application pipeline",
+      "badge": "Status breakdown",
+      "description": "Monitor how your applications are progressing across the pipeline.",
+      "noData": "No application data yet."
+    },
+    "interviewCadence": {
+      "title": "Interview cadence",
+      "description": "A quick look at your upcoming interview schedule.",
+      "noData": "Interviews will appear here once scheduled."
+    },
+    "upcomingInterviews": {
+      "title": "Upcoming interviews",
+      "badge": "Next 5",
+      "noInterviews": "No interviews on your calendar yet.",
+      "browseButton": "Browse opportunities"
+    },
+    "recentResumes": {
+      "title": "Recent resumes",
+      "badge": "Updates",
+      "updated": "Updated",
+      "publicBadge": "Public",
+      "privateBadge": "Private",
+      "editButton": "Edit",
+      "noResumes": "No resumes created yet.",
+      "createButton": "Create resume"
+    },
+    "activityFeed": {
+      "title": "Career activity feed",
+      "badge": "Live updates",
+      "noActivity": "Activity will appear here as you start engaging with the platform."
+    },
+    "mbtiInsights": {
+      "title": "MBTI insights",
+      "description": "Discover strengths and tailored role recommendations based on your personality profile.",
+      "noResults": "Complete the MBTI career alignment assessment to unlock personalized coaching tips."
+    },
+    "activityBadges": {
+      "interview": "Interview",
+      "message": "Message",
+      "resume": "Resume",
+      "profile": "Profile",
+      "update": "Update"
+    }
+  },
+  "recruiter": {
+    "header": {
+      "title": "Recruiter performance hub",
+      "welcomeBack": "Let's find the right fit",
+      "description": "Follow your pipeline, unblock hiring stages, and stay ahead with candidate signals.",
+      "refreshButton": "Refresh data",
+      "createJobButton": "Create job",
+      "lastUpdated": "Pipeline updated"
+    },
+    "metrics": {
+      "activeCandidates": {
+        "label": "Active candidates",
+        "helperText": "Currently in your hiring pipeline",
+        "inScreening": "in screening"
+      },
+      "interviewsThisWeek": {
+        "label": "Interviews this week",
+        "helperText": "Scheduled in the next 7 days",
+        "logged": "logged"
+      },
+      "pendingProposals": {
+        "label": "Pending proposals",
+        "helperText": "Awaiting employer decision",
+        "conversion": "conversion"
+      },
+      "placementRate": {
+        "label": "Placement rate",
+        "helperText": "Rolling 30-day placements",
+        "target": "Target 45%+ benchmark"
+      }
+    },
+    "interviewPipeline": {
+      "title": "Interview pipeline",
+      "badge": "Funnel view",
+      "description": "Track how candidates move through each interview stage.",
+      "noData": "Pipeline data will appear as candidates progress."
+    },
+    "weeklyInterviewLoad": {
+      "title": "Weekly interview load",
+      "description": "Upcoming interview slots based on the latest schedule.",
+      "noData": "Interviews will populate here as you schedule them."
+    },
+    "upcomingInterviews": {
+      "title": "Upcoming interviews",
+      "badge": "Next 5",
+      "noInterviews": "No interviews scheduled. Start by inviting candidates.",
+      "viewCandidatesButton": "View candidates"
+    },
+    "topCandidates": {
+      "title": "Top candidates",
+      "badge": "Score based",
+      "scoreBadge": "Score",
+      "noCandidates": "No ranked candidates yet.",
+      "sourceTalentButton": "Source talent"
+    },
+    "latestActivity": {
+      "title": "Latest activity",
+      "badge": "Live feed",
+      "noActivity": "Activity will show up here once your team engages with candidates."
+    }
+  },
+  "employer": {
+    "header": {
+      "title": "Employer hiring overview",
+      "welcomeBack": "Welcome back",
+      "description": "Monitor openings, move candidates forward, and celebrate new hires.",
+      "refreshButton": "Refresh",
+      "postJobButton": "Post a job",
+      "lastUpdated": "Synced"
+    },
+    "metrics": {
+      "openPositions": {
+        "label": "Open positions",
+        "helperText": "Roles currently accepting applicants",
+        "toFill": "to fill"
+      },
+      "applicationsReceived": {
+        "label": "Applications received",
+        "helperText": "Total submissions across openings",
+        "thisMonth": "this month"
+      },
+      "interviewsScheduled": {
+        "label": "Interviews scheduled",
+        "helperText": "Upcoming interviews on the calendar",
+        "hiresThisMonth": "hires this month"
+      },
+      "hiresMade": {
+        "label": "Hires made",
+        "helperText": "Converted candidates from interviews",
+        "keepMomentum": "Keep up the momentum"
+      }
+    },
+    "hiringActivityTimeline": {
+      "title": "Hiring activity timeline",
+      "badge": "Last updates",
+      "description": "Daily pulse of applications, interviews, and offers.",
+      "noData": "Recent activity will populate here as candidates interact with your team."
+    },
+    "activityByType": {
+      "title": "Activity by type",
+      "description": "Which actions are keeping your team busy this week.",
+      "noData": "Activity data will appear once candidates engage."
+    },
+    "hiringVelocity": {
+      "title": "Hiring velocity",
+      "badge": "Goal tracker",
+      "description": "Visualize how quickly applications turn into hires.",
+      "progressLabel": "Progress to goal",
+      "greatJob": "Great job! You are close to filling all openings.",
+      "keepInterviewing": "Keep interviewing to boost your conversion rate.",
+      "setGoals": "Set your hiring goals to start tracking progress.",
+      "openingsLabel": "Openings",
+      "hiresLabel": "Hires"
+    },
+    "latestActivity": {
+      "title": "Latest hiring activity",
+      "badge": "Team feed",
+      "noActivity": "Team activity will show up here as you collaborate on roles."
+    },
+    "quickActions": {
+      "title": "Quick actions",
+      "badge": "Productivity",
+      "postOpening": "Post opening",
+      "reviewApplications": "Review applications",
+      "scheduleInterview": "Schedule interview",
+      "viewReports": "View reports"
+    }
+  },
+  "companyAdmin": {
+    "header": {
+      "title": "Company administration portal",
+      "hello": "Hello",
+      "description": "Oversee staffing health, approve team members, and keep operations moving.",
+      "refreshButton": "Refresh",
+      "addEmployeeButton": "Add employee",
+      "snapshot": "Snapshot"
+    },
+    "metrics": {
+      "totalEmployees": {
+        "label": "Total employees",
+        "helperText": "All workforce members",
+        "active": "active"
+      },
+      "activePositions": {
+        "label": "Active positions",
+        "helperText": "Open roles across the company",
+        "totalRoles": "total roles"
+      },
+      "pendingEmployees": {
+        "label": "Pending employees",
+        "helperText": "Awaiting onboarding approval",
+        "recruitersSupporting": "recruiters supporting"
+      },
+      "interviewsScheduled": {
+        "label": "Interviews scheduled",
+        "helperText": "Upcoming interviews company-wide",
+        "applications": "applications"
+      }
+    },
+    "employeeDistribution": {
+      "title": "Employee distribution",
+      "badge": "Team health",
+      "description": "View how your workforce is balanced between active, pending, and recruiter members.",
+      "active": "Active",
+      "ofTotal": "of total",
+      "pending": "Pending",
+      "recruiters": "Recruiters",
+      "ensureAccess": "Ensure recruiters have the right access and capacity."
+    },
+    "activityByCategory": {
+      "title": "Activity by category",
+      "description": "Track where your team spends most of its time.",
+      "noData": "Recent activity will populate here once actions are logged."
+    },
+    "recentActivity": {
+      "title": "Recent company activity",
+      "badge": "Last 5",
+      "by": "by",
+      "noActivity": "Company activity will display once actions are performed."
+    },
+    "quickActions": {
+      "title": "Admin quick actions",
+      "badge": "Shortcuts",
+      "manageEmployees": "Manage employees",
+      "managePositions": "Manage positions",
+      "reviewApplications": "Review applications",
+      "companySettings": "Company settings"
+    }
+  },
+  "superAdmin": {
+    "header": {
+      "title": "Platform control center",
+      "subtitle": "System-wide visibility at a glance",
+      "description": "Observe tenant growth, infrastructure health, and operational signals.",
+      "refreshButton": "Refresh",
+      "managePlatformButton": "Manage platform",
+      "telemetrySynced": "Telemetry synced"
+    },
+    "metrics": {
+      "companiesOnboarded": {
+        "label": "Companies onboarded",
+        "helperText": "Across all active tenants",
+        "active": "active"
+      },
+      "registeredUsers": {
+        "label": "Registered users",
+        "helperText": "Global user base across roles",
+        "activeMonthly": "active monthly"
+      },
+      "openPositions": {
+        "label": "Open positions",
+        "helperText": "Positions currently published",
+        "totalApplications": "total applications"
+      },
+      "systemUptime": {
+        "label": "System uptime",
+        "helperText": "Rolling 30-day uptime",
+        "response": "response"
+      }
+    },
+    "examMetrics": {
+      "title": "Exam system metrics",
+      "description": "System-wide exam performance and usage statistics",
+      "totalExams": {
+        "label": "Total exams",
+        "helperText": "Exams created system-wide",
+        "assignments": "assignments"
+      },
+      "examSessions": {
+        "label": "Exam sessions",
+        "helperText": "Total exam attempts",
+        "completionRate": "completion rate"
+      },
+      "averageScore": {
+        "label": "Average score",
+        "helperText": "Across completed exams",
+        "completed": "completed"
+      }
+    },
+    "platformEngagement": {
+      "title": "Platform engagement",
+      "badge": "Signups",
+      "description": "Track how new users are joining and returning to the platform.",
+      "dailySignups": "Daily signups",
+      "weeklySignups": "Weekly signups",
+      "monthlySignups": "Monthly signups",
+      "monthlyActiveUsers": "Monthly active users",
+      "noData": "Platform metrics will show here once data is available."
+    },
+    "systemHealth": {
+      "title": "System health",
+      "badge": "Realtime",
+      "database": "Database",
+      "apiResponse": "API response",
+      "activeSessions": "Active sessions",
+      "errorRate": "Error rate",
+      "healthy": "healthy",
+      "warning": "warning",
+      "ms": "ms"
+    },
+    "platformActivity": {
+      "title": "Platform activity feed",
+      "badge": "Global",
+      "noActivity": "Platform activity will appear as teams interact across tenants."
+    },
+    "systemLogs": {
+      "title": "System log stream",
+      "badge": "Latest",
+      "error": "error",
+      "warningBadge": "warning",
+      "info": "info",
+      "noLogs": "System logs will show here once events are recorded."
+    },
+    "activityBreakdown": {
+      "title": "Activity breakdown",
+      "badge": "By type",
+      "description": "Compare which actions are driving activity across tenants.",
+      "noData": "Activity data will appear here once events are collected."
+    },
+    "operationalSummary": {
+      "title": "Operational summary",
+      "badge": "At a glance",
+      "conversionRate": "Conversion rate",
+      "activeSessions": "Active sessions",
+      "weeklySignups": "Weekly signups",
+      "errorRate": "Error rate"
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Failed to load data",
+    "retry": "Retry",
+    "noData": "N/A"
+  }
+}

@@ -23,10 +23,14 @@ import MBTITestModal from '@/components/mbti/MBTITestModal';
 import MBTIResultCard from '@/components/mbti/MBTIResultCard';
 import { mbtiApi } from '@/api/mbti';
 import type { MBTITestSummary } from '@/types/mbti';
+import { ROUTES } from '@/routes/config';
+import { useTranslations, useLocale } from 'next-intl';
 
 export default function CandidateDashboard() {
   const { user } = useAuth();
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations('dashboard.candidate');
   const [stats, setStats] = useState<CandidateDashboardStats | null>(null);
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -105,26 +109,26 @@ export default function CandidateDashboard() {
 
     return [
       {
-        label: 'Active applications',
+        label: t('metrics.activeApplications.label'),
         value: stats.total_applications ?? 0,
-        helperText: 'Across all active job submissions',
-        trendLabel: `${stats.application_stats?.find((s) => s.status === 'in_review')?.count ?? 0} in review`,
+        helperText: t('metrics.activeApplications.helperText'),
+        trendLabel: `${stats.application_stats?.find((s) => s.status === 'in_review')?.count ?? 0} ${t('metrics.activeApplications.inReview')}`,
         trendTone: 'neutral' as const,
         icon: <ClipboardDocumentCheckIcon className="h-6 w-6" />,
       },
       {
-        label: 'Interviews scheduled',
+        label: t('metrics.interviewsScheduled.label'),
         value: stats.interviews_scheduled ?? 0,
-        helperText: 'Upcoming meetings in the next weeks',
-        trendLabel: `${stats.interviews_completed ?? 0} completed`,
+        helperText: t('metrics.interviewsScheduled.helperText'),
+        trendLabel: `${stats.interviews_completed ?? 0} ${t('metrics.interviewsScheduled.completed')}`,
         trendTone: 'positive' as const,
         icon: <CalendarDaysIcon className="h-6 w-6" />,
       },
       {
-        label: 'Resumes on file',
+        label: t('metrics.resumesOnFile.label'),
         value: stats.resumes_created ?? 0,
-        helperText: 'Keep resumes updated for better matches',
-        trendLabel: `${stats.recent_resumes?.[0]?.title ? 'Most recent updated' : 'No updates yet'}`,
+        helperText: t('metrics.resumesOnFile.helperText'),
+        trendLabel: stats.recent_resumes?.[0]?.title ? t('metrics.resumesOnFile.mostRecent') : t('metrics.resumesOnFile.noUpdates'),
         trendTone: (stats.recent_resumes?.length ? 'positive' : 'neutral') as
           | 'positive'
           | 'negative'
@@ -132,15 +136,15 @@ export default function CandidateDashboard() {
         icon: <BriefcaseIcon className="h-6 w-6" />,
       },
       {
-        label: 'Unread conversations',
+        label: t('metrics.unreadConversations.label'),
         value: stats.activeConversations ?? 0,
-        helperText: 'Messages from recruiters and companies',
-        trendLabel: 'Stay responsive to stand out',
+        helperText: t('metrics.unreadConversations.helperText'),
+        trendLabel: t('metrics.unreadConversations.stayResponsive'),
         trendTone: 'neutral' as const,
         icon: <ChatBubbleLeftRightIcon className="h-6 w-6" />,
       },
     ];
-  }, [stats]);
+  }, [stats, t]);
 
   const applicationChartData = useMemo(() => {
     return (stats?.application_stats ?? []).map((item) => ({
@@ -164,15 +168,15 @@ export default function CandidateDashboard() {
   const renderActivityBadge = (type?: ActivityItem['type']) => {
     switch (type) {
       case 'interview':
-        return <Badge variant="primary">Interview</Badge>;
+        return <Badge variant="primary">{t('activityBadges.interview')}</Badge>;
       case 'message':
-        return <Badge variant="secondary">Message</Badge>;
+        return <Badge variant="secondary">{t('activityBadges.message')}</Badge>;
       case 'resume':
-        return <Badge variant="success">Resume</Badge>;
+        return <Badge variant="success">{t('activityBadges.resume')}</Badge>;
       case 'user':
-        return <Badge variant="outline">Profile</Badge>;
+        return <Badge variant="outline">{t('activityBadges.profile')}</Badge>;
       default:
-        return <Badge variant="outline">Update</Badge>;
+        return <Badge variant="outline">{t('activityBadges.update')}</Badge>;
     }
   };
 
@@ -191,20 +195,20 @@ export default function CandidateDashboard() {
   return (
     <div className="space-y-6 p-6">
       <DashboardHeader
-        title="Candidate control center"
-        subtitle={`Welcome back${user?.full_name ? `, ${user.full_name}` : ''}`}
-        description="Track your applications, interviews, and career growth in one place."
+        title={t('header.title')}
+        subtitle={`${t('header.welcomeBack')}${user?.full_name ? `, ${user.full_name}` : ''}`}
+        description={t('header.description')}
         actions={
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={loadDashboardData}>
-              Refresh
+              {t('header.refreshButton')}
             </Button>
-            <Button size="sm" onClick={() => router.push('/app/jobs')}>
-              Discover roles
+            <Button size="sm" onClick={() => router.push(`/${locale}${ROUTES.APP.JOBS.BASE}`)}>
+              {t('header.discoverRolesButton')}
             </Button>
           </div>
         }
-        meta={`Last updated ${new Date().toLocaleTimeString()}`}
+        meta={`${t('header.lastUpdated')} ${new Date().toLocaleTimeString()}`}
       />
 
       <DashboardContentGate loading={loading} error={error} onRetry={loadDashboardData}>
@@ -226,19 +230,19 @@ export default function CandidateDashboard() {
           <Card className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 lg:col-span-2">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-                Application pipeline
+                {t('applicationPipeline.title')}
               </h2>
-              <Badge variant="outline">Status breakdown</Badge>
+              <Badge variant="outline">{t('applicationPipeline.badge')}</Badge>
             </div>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              Monitor how your applications are progressing across the pipeline.
+              {t('applicationPipeline.description')}
             </p>
             <div className="mt-6 h-[260px]">
               {applicationChartData.length ? (
                 <SimpleBarChart data={applicationChartData} dataKey="value" color="#6366F1" />
               ) : (
                 <div className="flex h-full items-center justify-center text-sm text-gray-500">
-                  No application data yet.
+                  {t('applicationPipeline.noData')}
                 </div>
               )}
             </div>
@@ -247,10 +251,10 @@ export default function CandidateDashboard() {
           <Card className="flex flex-col justify-between gap-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
             <div>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-                Interview cadence
+                {t('interviewCadence.title')}
               </h2>
               <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                A quick look at your upcoming interview schedule.
+                {t('interviewCadence.description')}
               </p>
             </div>
             <div className="h-[220px]">
@@ -258,7 +262,7 @@ export default function CandidateDashboard() {
                 <SimpleAreaChart data={interviewTimelineData} dataKey="value" color="#22C55E" />
               ) : (
                 <div className="flex h-full items-center justify-center text-sm text-gray-500">
-                  Interviews will appear here once scheduled.
+                  {t('interviewCadence.noData')}
                 </div>
               )}
             </div>
@@ -269,9 +273,9 @@ export default function CandidateDashboard() {
           <Card className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-                Upcoming interviews
+                {t('upcomingInterviews.title')}
               </h2>
-              <Badge variant="secondary">Next 5</Badge>
+              <Badge variant="secondary">{t('upcomingInterviews.badge')}</Badge>
             </div>
             <div className="mt-4 space-y-4">
               {stats?.recent_interviews?.length ? (
@@ -294,9 +298,9 @@ export default function CandidateDashboard() {
               ) : (
                 <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-gray-200 p-6 text-center text-sm text-gray-500 dark:border-gray-800">
                   <CalendarDaysIcon className="h-6 w-6" />
-                  <p>No interviews on your calendar yet.</p>
+                  <p>{t('upcomingInterviews.noInterviews')}</p>
                   <Button variant="outline" size="sm">
-                    Browse opportunities
+                    {t('upcomingInterviews.browseButton')}
                   </Button>
                 </div>
               )}
@@ -306,9 +310,9 @@ export default function CandidateDashboard() {
           <Card className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-                Recent resumes
+                {t('recentResumes.title')}
               </h2>
-              <Badge variant="outline">Updates</Badge>
+              <Badge variant="outline">{t('recentResumes.badge')}</Badge>
             </div>
             <div className="mt-4 space-y-4">
               {stats?.recent_resumes?.length ? (
@@ -322,15 +326,15 @@ export default function CandidateDashboard() {
                         {resume.title}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Updated {formatDateTime(resume.updated_at)}
+                        {t('recentResumes.updated')} {formatDateTime(resume.updated_at)}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge variant={resume.is_public ? 'success' : 'secondary'}>
-                        {resume.is_public ? 'Public' : 'Private'}
+                        {resume.is_public ? t('recentResumes.publicBadge') : t('recentResumes.privateBadge')}
                       </Badge>
                       <Button variant="outline" size="sm">
-                        Edit
+                        {t('recentResumes.editButton')}
                       </Button>
                     </div>
                   </div>
@@ -338,8 +342,8 @@ export default function CandidateDashboard() {
               ) : (
                 <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-gray-200 p-6 text-center text-sm text-gray-500 dark:border-gray-800">
                   <ClipboardDocumentCheckIcon className="h-6 w-6" />
-                  <p>No resumes created yet.</p>
-                  <Button size="sm">Create resume</Button>
+                  <p>{t('recentResumes.noResumes')}</p>
+                  <Button size="sm">{t('recentResumes.createButton')}</Button>
                 </div>
               )}
             </div>
@@ -350,9 +354,9 @@ export default function CandidateDashboard() {
           <Card className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 lg:col-span-2">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-                Career activity feed
+                {t('activityFeed.title')}
               </h2>
-              <Badge variant="outline">Live updates</Badge>
+              <Badge variant="outline">{t('activityFeed.badge')}</Badge>
             </div>
             {activityLoading ? (
               <div className="flex h-40 items-center justify-center">
@@ -384,7 +388,7 @@ export default function CandidateDashboard() {
               </div>
             ) : (
               <div className="flex h-full items-center justify-center rounded-xl border border-dashed border-gray-200 p-6 text-sm text-gray-500 dark:border-gray-800">
-                Activity will appear here as you start engaging with the platform.
+                {t('activityFeed.noActivity')}
               </div>
             )}
           </Card>
@@ -392,11 +396,10 @@ export default function CandidateDashboard() {
           <Card className="flex flex-col gap-4 rounded-2xl border border-gray-100 bg-gradient-to-br from-indigo-50 via-white to-indigo-50 p-6 shadow-sm dark:border-indigo-900/40 dark:from-indigo-950 dark:via-slate-950 dark:to-indigo-950">
             <div>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-                MBTI insights
+                {t('mbtiInsights.title')}
               </h2>
               <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                Discover strengths and tailored role recommendations based on your personality
-                profile.
+                {t('mbtiInsights.description')}
               </p>
             </div>
             {mbtiLoading ? (
@@ -408,8 +411,7 @@ export default function CandidateDashboard() {
             ) : (
               <div className="flex flex-col gap-3 rounded-xl border border-dashed border-indigo-200 p-4 text-sm text-gray-600 dark:border-indigo-900/60 dark:text-gray-300">
                 <p>
-                  Complete the MBTI career alignment assessment to unlock personalized coaching
-                  tips.
+                  {t('mbtiInsights.noResults')}
                 </p>
                 <MBTITestButton onStartTest={() => setShowMBTITest(true)} />
               </div>

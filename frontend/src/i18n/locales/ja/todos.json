@@ -1,0 +1,122 @@
+{
+  "page": {
+    "title": "マイTodo",
+    "focusMode": "集中モード",
+    "taskOverview": "タスク概要",
+    "addNewTask": "新しいタスクを追加"
+  },
+  "hero": {
+    "tasksThisWeek": "今週期限のタスク {count} 件",
+    "tasksThisWeek_other": "今週期限のタスク {count} 件",
+    "overdue": "期限切れ {count} 件",
+    "and": "|"
+  },
+  "stats": {
+    "inProgress": "進行中",
+    "dueToday": "今日期限",
+    "completed": "完了",
+    "overdue": "期限切れ"
+  },
+  "filters": {
+    "all": "すべて",
+    "active": "アクティブ",
+    "completed": "完了",
+    "expired": "期限切れ",
+    "deleted": "削除済み"
+  },
+  "actions": {
+    "restore": "復元",
+    "view": "表示",
+    "finish": "完了",
+    "reopen": "再開",
+    "extend": "延長",
+    "edit": "編集",
+    "delete": "削除"
+  },
+  "badges": {
+    "deleted": "削除済み",
+    "overdue": "期限切れ"
+  },
+  "labels": {
+    "due": "期限:",
+    "priority": "優先度:",
+    "notes": "メモ:",
+    "completed": "完了:"
+  },
+  "dates": {
+    "noDueDate": "期限なし",
+    "today": "今日",
+    "daysRemaining": "残り {count} 日",
+    "daysRemaining_other": "残り {count} 日",
+    "daysOverdue": "{count} 日遅れ",
+    "daysOverdue_other": "{count} 日遅れ"
+  },
+  "emptyStates": {
+    "all": {
+      "title": "すべてのタスクを完了しました",
+      "description": "タスクを作成するか、フィルターを調整してください。"
+    },
+    "active": {
+      "title": "アクティブなタスクはありません",
+      "description": "準備ができたらタスクを追加または再開してください。"
+    },
+    "completed": {
+      "title": "完了したタスクはまだありません",
+      "description": "タスクを完了済みとしてマークすると、ここに表示されます。"
+    },
+    "expired": {
+      "title": "期限切れのタスクはありません",
+      "description": "期限日に注意して、先を見据えて行動しましょう。"
+    },
+    "deleted": {
+      "title": "削除されたタスクはありません",
+      "description": "削除されたタスクはここに表示され、復元できます。"
+    },
+    "noSearchResults": {
+      "title": "検索に一致するタスクがありません",
+      "description": "別のキーワードを試すか、フィルターをクリアしてください。"
+    }
+  },
+  "search": {
+    "placeholder": "キーワードで検索..."
+  },
+  "confirmations": {
+    "delete": {
+      "title": "Todoを削除",
+      "message": "「{title}」をゴミ箱に移動してもよろしいですか？後で復元できます。",
+      "confirmButton": "ゴミ箱に移動"
+    },
+    "restore": {
+      "title": "Todoを復元",
+      "message": "「{title}」をゴミ箱から復元してもよろしいですか？",
+      "confirmButton": "復元"
+    },
+    "complete": {
+      "title": "Todoを完了",
+      "message": "「{title}」を完了済みとしてマークしてもよろしいですか？",
+      "confirmButton": "完了"
+    },
+    "reopen": {
+      "title": "Todoを再開",
+      "message": "「{title}」を再開してもよろしいですか？",
+      "confirmButton": "再開"
+    }
+  },
+  "toasts": {
+    "loadError": "Todoの読み込みに失敗しました",
+    "completed": "Todoを完了しました",
+    "completeError": "Todoの完了に失敗しました",
+    "reopened": "Todoを再開しました",
+    "reopenError": "Todoの再開に失敗しました",
+    "deleted": "Todoをゴミ箱に移動しました",
+    "deleteError": "Todoの削除に失敗しました",
+    "restored": "Todoを復元しました",
+    "restoreError": "Todoの復元に失敗しました",
+    "extensionSubmitted": "延長リクエストを送信しました",
+    "extensionOnlyAssignee": "割り当てられたユーザーのみが延長をリクエストできます"
+  },
+  "createTask": {
+    "title": "タスクを作成",
+    "description": "新しいタスクを追加して、整理整頓と進捗の追跡を行いましょう。"
+  }
+}

@@ -1,0 +1,262 @@
+{
+  "page": {
+    "title": "面接",
+    "subtitle": "面接スケジュールを管理",
+    "upcomingTab": "予定",
+    "completedTab": "完了",
+    "allTab": "すべて"
+  },
+  "list": {
+    "scheduled": "予定済み",
+    "completed": "完了",
+    "cancelled": "キャンセル",
+    "noShow": "欠席",
+    "rescheduled": "再スケジュール",
+    "pending": "確認待ち",
+    "today": "今日",
+    "tomorrow": "明日",
+    "thisWeek": "今週",
+    "nextWeek": "来週",
+    "laterDate": "それ以降"
+  },
+  "card": {
+    "interviewWith": "面接相手",
+    "position": "ポジション",
+    "interviewType": "面接形式",
+    "duration": "所要時間",
+    "minutes": "{minutes}分",
+    "location": "場所",
+    "interviewer": "面接官",
+    "viewDetails": "詳細を見る",
+    "joinMeeting": "ミーティングに参加",
+    "reschedule": "再スケジュール",
+    "cancel": "キャンセル",
+    "addToCalendar": "カレンダーに追加"
+  },
+  "types": {
+    "phone": "電話スクリーニング",
+    "video": "ビデオ面接",
+    "onsite": "対面面接",
+    "technical": "技術面接",
+    "behavioral": "行動面接",
+    "final": "最終面接",
+    "panel": "パネル面接",
+    "group": "グループ面接"
+  },
+  "details": {
+    "title": "面接詳細",
+    "backToList": "面接一覧に戻る",
+    "overview": "概要",
+    "preparation": "準備",
+    "notes": "メモ",
+    "feedbackTab": "フィードバック",
+    "interviewInfo": {
+      "date": "日時",
+      "duration": "所要時間",
+      "location": "場所",
+      "meetingLink": "ミーティングリンク",
+      "dialIn": "ダイヤルイン番号",
+      "interviewType": "形式",
+      "interviewer": "面接官",
+      "position": "ポジション"
+    },
+    "preparationTips": {
+      "title": "準備のヒント",
+      "researchCompany": "企業について調査する",
+      "reviewJobDescription": "求人内容を確認する",
+      "prepareQuestions": "質問を準備する",
+      "practiceAnswers": "よくある質問の回答を練習する",
+      "testTechnology": "技術をテストする（ビデオ面接の場合）"
+    },
+    "candidateNotes": {
+      "title": "あなたのメモ",
+      "placeholder": "この面接についてのメモを追加...",
+      "save": "メモを保存",
+      "lastUpdated": "最終更新：{date}"
+    },
+    "actions": {
+      "confirm": "出席を確認",
+      "decline": "面接を辞退",
+      "requestReschedule": "再スケジュールを依頼",
+      "cancel": "面接をキャンセル",
+      "joinMeeting": "ミーティングに参加",
+      "addToCalendar": "カレンダーに追加"
+    },
+    "feedback": {
+      "title": "面接フィードバック",
+      "notAvailable": "フィードバックはまだ利用できません",
+      "interviewerComments": "面接官のコメント",
+      "rating": "評価",
+      "strengths": "強み",
+      "areasForImprovement": "改善点",
+      "overallImpression": "総合評価",
+      "nextSteps": "次のステップ"
+    }
+  },
+  "schedule": {
+    "title": "面接をスケジュール",
+    "subtitle": "新しい面接セッションを作成",
+    "selectDate": "日付を選択",
+    "selectTime": "時間を選択",
+    "selectType": "面接形式",
+    "duration": "所要時間",
+    "location": "場所 / ミーティングリンク",
+    "notes": "追加メモ",
+    "interviewers": "面接官",
+    "submit": "面接をスケジュール",
+    "submitting": "スケジュール中...",
+    "cancel": "キャンセル",
+    "interviewTitle": "面接タイトル",
+    "interviewTitlePlaceholder": "例：技術面接 - フロントエンド開発者",
+    "selectCandidate": "候補者を選択",
+    "candidateSearchPlaceholder": "候補者を検索...",
+    "candidateLoadingPlaceholder": "候補者を読み込み中...",
+    "noCandidatesFound": "検索条件に一致する候補者が見つかりません",
+    "noCandidatesAvailable": "利用可能な候補者がいません",
+    "noActiveCandidates": "アクティブな候補者が見つかりません。候補者がシステムに登録されていることを確認してください。",
+    "positionTitle": "ポジション名",
+    "positionTitlePlaceholder": "例：シニアフロントエンド開発者",
+    "interviewTypeLabel": "面接形式",
+    "typeVideoCall": "ビデオ通話",
+    "typePhoneCall": "電話",
+    "typeInPerson": "対面",
+    "videoCallConfig": "ビデオ通話設定",
+    "videoCallSetup": "ビデオ通話セットアップ",
+    "systemGenerated": "システム生成",
+    "systemGeneratedDesc": "ビデオ通話ルームを自動作成",
+    "customUrl": "カスタムURL",
+    "customUrlDesc": "Zoom、Google Meetなどを使用",
+    "meetingUrl": "ミーティングURL",
+    "meetingUrlPlaceholder": "https://zoom.us/j/123456789 または https://meet.google.com/xxx-yyyy-zzz",
+    "meetingUrlHelper": "Zoom、Google Meet、Teams、またはその他のビデオ通話URLを入力してください",
+    "autoGenTitle": "自動生成ミーティングルーム",
+    "autoGenDesc": "安全なビデオ通話ルームが自動的に作成されます。面接官と候補者の両方にミーティングリンクが送信されます。",
+    "autoGenFeatures": "機能：画面共有、録画、リアルタイム文字起こし",
+    "startTime": "開始時刻",
+    "endTime": "終了時刻",
+    "startTimePlaceholder": "開始時刻を選択",
+    "endTimePlaceholder": "終了時刻を選択",
+    "locationRequired": "場所",
+    "locationPlaceholder": "オフィスの住所または会議室",
+    "phoneDetails": "電話詳細",
+    "phoneDetailsPlaceholder": "電話番号または手順",
+    "description": "説明",
+    "descriptionPlaceholder": "面接の目的と形式の簡単な説明",
+    "interviewNotes": "面接メモ",
+    "interviewNotesPlaceholder": "面接に関する内部メモ",
+    "preparationNotes": "準備メモ",
+    "preparationNotesPlaceholder": "面接準備のためのメモ",
+    "validation": {
+      "titleRequired": "面接タイトルは必須です",
+      "candidateRequired": "候補者は必須です",
+      "startTimeRequired": "開始時刻は必須です",
+      "endTimeRequired": "終了時刻は必須です",
+      "endAfterStart": "終了時刻は開始時刻より後である必要があります",
+      "meetingUrlRequired": "カスタムURLオプションを使用する場合、ミーティングURLは必須です",
+      "locationRequired": "対面面接の場合、場所は必須です"
+    },
+    "errors": {
+      "sessionNotFound": "ユーザーセッションが見つかりません。更新してもう一度お試しください。",
+      "candidatesLoadFailed": "候補者リストの読み込みに失敗しました"
+    },
+    "success": {
+      "title": "面接がスケジュールされました",
+      "message": "面接が正常にスケジュールされました",
+      "viewInterview": "面接を見る"
+    },
+    "error": {
+      "title": "エラー",
+      "message": "面接のスケジュールに失敗しました"
+    }
+  },
+  "reschedule": {
+    "title": "面接を再スケジュール",
+    "reason": "再スケジュールの理由",
+    "reasonPlaceholder": "理由を入力してください...",
+    "proposedTimes": "提案時間",
+    "addTimeSlot": "時間枠を追加",
+    "submit": "再スケジュールを依頼",
+    "cancel": "キャンセル",
+    "success": {
+      "title": "再スケジュール依頼が送信されました",
+      "message": "再スケジュール依頼が送信されました。確認されたら通知されます。",
+      "backToInterviews": "面接一覧に戻る"
+    }
+  },
+  "cancel": {
+    "title": "面接をキャンセル",
+    "confirm": "本当にこの面接をキャンセルしますか？",
+    "reason": "キャンセルの理由",
+    "reasonPlaceholder": "理由を入力してください...",
+    "confirmButton": "はい、面接をキャンセル",
+    "cancelButton": "いいえ、面接を維持",
+    "success": {
+      "title": "面接がキャンセルされました",
+      "message": "面接がキャンセルされました。すべての参加者に通知が送信されました。"
+    }
+  },
+  "delete": {
+    "confirm": "本当に「{title}」を削除しますか？\n\nこの操作は元に戻すことができず、面接と関連するすべてのデータが完全に削除されます。",
+    "success": {
+      "title": "面接を削除しました",
+      "message": "「{title}」が正常に削除されました"
+    },
+    "error": "面接の削除に失敗しました",
+    "errorTitle": "削除に失敗"
+  },
+  "filters": {
+    "search": "面接を検索...",
+    "allStatuses": "すべてのステータス",
+    "allTypes": "すべての形式",
+    "sortBy": {
+      "dateEarliest": "日付（早い順）",
+      "dateLatest": "日付（遅い順）",
+      "candidateAZ": "候補者（A-Z）",
+      "candidateZA": "候補者（Z-A）",
+      "statusAZ": "ステータス（A-Z）"
+    }
+  },
+  "table": {
+    "headers": {
+      "interviewDetails": "面接詳細",
+      "participants": "参加者",
+      "schedule": "スケジュール",
+      "status": "ステータス",
+      "actions": "アクション"
+    },
+    "recruiter": "採用担当者：{name}",
+    "view": "表示",
+    "edit": "編集",
+    "delete": "削除",
+    "cannotDelete": "進行中または完了した面接は削除できません"
+  },
+  "pagination": {
+    "showing": "{total}件中{start}～{end}件の面接を表示",
+    "previous": "前へ",
+    "next": "次へ",
+    "pageOf": "{total}ページ中{current}ページ"
+  },
+  "emptyState": {
+    "title": "面接が見つかりません",
+    "withFilters": "フィルターを調整してより多くの結果を表示してください。",
+    "forCreators": "最初の面接をスケジュールして始めましょう。",
+    "forCandidates": "まだ面接がスケジュールされていません。"
+  },
+  "noInterviews": {
+    "upcoming": {
+      "title": "予定されている面接はありません",
+      "message": "現在予定されている面接はありません。",
+      "browseJobs": "求人を見る"
+    },
+    "completed": {
+      "title": "完了した面接はありません",
+      "message": "まだ完了した面接はありません。"
+    },
+    "all": {
+      "title": "面接はありません",
+      "message": "スケジュールされている面接はありません。"
+    }
+  },
+  "loading": "面接を読み込み中...",
+  "error": "面接の読み込みに失敗しました。もう一度お試しください。"
+}

@@ -1,0 +1,144 @@
+'use client';
+
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
+import Brand from '@/components/common/Brand';
+import ResetPasswordForm from '@/components/auth/ResetPasswordForm';
+import { API_CONFIG, API_ENDPOINTS } from '@/api/config';
+import { ROUTES } from '@/routes/config';
+
+function ResetPasswordContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const locale = useLocale();
+  const t = useTranslations('auth.resetPassword');
+  const [error, setError] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const token = searchParams?.get('token');
+
+  useEffect(() => {
+    if (!token) {
+      router.push(`/${locale}${ROUTES.AUTH.FORGOT_PASSWORD}`);
+    }
+  }, [token, router, locale]);
+
+  const handleResetPassword = async (password: string) => {
+    if (!token) {
+      setError(t('errors.invalidToken'));
+      return;
+    }
+
+    setError('');
+    setIsLoading(true);
+
+    try {
+      // Call reset password API
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.AUTH.RESET_PASSWORD}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token, password }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || t('errors.invalidToken'));
+      }
+
+      // Success is handled by the form component
+      // After a short delay, redirect to login
+      setTimeout(() => {
+        router.push(`/${locale}${ROUTES.AUTH.LOGIN_PASSWORD_RESET_SUCCESS}`);
+      }, 2000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('errors.invalidToken'));
+      throw err; // Re-throw so form knows about the error
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (!token) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-950">
+        <div className="max-w-md w-full">
+          <div className="text-center">
+            <Brand className="justify-center mb-8" />
+            <div className="card p-8">
+              <h2 className="text-2xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
+                {t('invalidLink.title')}
+              </h2>
+              <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
+                {t('invalidLink.message')}
+              </p>
+              <Link href={`/${locale}${ROUTES.AUTH.FORGOT_PASSWORD}`} className="btn btn-primary w-full">
+                {t('invalidLink.button')}
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-950">
+      <div className="max-w-md w-full">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <Brand className="justify-center" />
+          <h2 className="mt-6 text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
+            {t('title')}
+          </h2>
+          <p className="mt-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
+            {t('subtitle')}
+          </p>
+        </div>
+
+        {/* Reset Password Form */}
+        <div className="card p-8">
+          <ResetPasswordForm onSubmit={handleResetPassword} isLoading={isLoading} error={error} />
+
+          {/* Back to Login */}
+          <div className="mt-6 text-center">
+            <Link
+              href={`/${locale}${ROUTES.AUTH.LOGIN}`}
+              className="inline-flex items-center text-sm font-medium text-brand-primary hover:opacity-80 transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              {t('backToLogin')}
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-950">
+          <div className="max-w-md w-full">
+            <div className="text-center">
+              <Brand className="justify-center mb-8" />
+              <div className="card p-8">
+                <div className="animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <ResetPasswordContent />
+    </Suspense>
+  );
+}

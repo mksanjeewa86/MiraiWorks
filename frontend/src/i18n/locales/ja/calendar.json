@@ -1,0 +1,242 @@
+{
+  "page": {
+    "title": "カレンダー",
+    "subtitle": "スケジュールと予定を管理",
+    "description": "面接、社内イベント、同期されたカレンダーを管理します。",
+    "openSidebar": "カレンダーサイドバーを開く",
+    "today": "今日",
+    "month": "月",
+    "week": "週",
+    "day": "日",
+    "agenda": "予定リスト",
+    "untitledEvent": "無題のイベント",
+    "untitledInterview": "無題の面接",
+    "interviewPrefix": "面接"
+  },
+  "navigation": {
+    "previous": "前へ",
+    "next": "次へ",
+    "today": "今日",
+    "goToDate": "日付に移動"
+  },
+  "views": {
+    "month": "月表示",
+    "week": "週表示",
+    "day": "日表示",
+    "agenda": "予定リスト表示",
+    "year": "年表示"
+  },
+  "event": {
+    "title": "イベントタイトル",
+    "description": "説明",
+    "location": "場所",
+    "startTime": "開始時刻",
+    "endTime": "終了時刻",
+    "allDay": "終日イベント",
+    "repeat": "繰り返し",
+    "reminder": "リマインダー",
+    "attendees": "参加者",
+    "category": "カテゴリー",
+    "status": "ステータス"
+  },
+  "eventTypes": {
+    "interview": "面接",
+    "meeting": "ミーティング",
+    "deadline": "締切",
+    "reminder": "リマインダー",
+    "personal": "個人",
+    "team": "チームイベント",
+    "holiday": "休日",
+    "other": "その他"
+  },
+  "status": {
+    "confirmed": "確定",
+    "tentative": "仮",
+    "cancelled": "キャンセル",
+    "pending": "保留中"
+  },
+  "repeat": {
+    "none": "繰り返しなし",
+    "daily": "毎日",
+    "weekly": "毎週",
+    "biweekly": "隔週",
+    "monthly": "毎月",
+    "yearly": "毎年",
+    "custom": "カスタム",
+    "ends": "終了",
+    "never": "なし",
+    "on": "日付指定",
+    "after": "回数指定"
+  },
+  "reminder": {
+    "none": "リマインダーなし",
+    "atTime": "イベント開始時刻",
+    "5min": "5分前",
+    "15min": "15分前",
+    "30min": "30分前",
+    "1hour": "1時間前",
+    "2hours": "2時間前",
+    "1day": "1日前",
+    "1week": "1週間前",
+    "custom": "カスタム"
+  },
+  "actions": {
+    "createEvent": "イベントを作成",
+    "editEvent": "イベントを編集",
+    "deleteEvent": "イベントを削除",
+    "duplicateEvent": "イベントを複製",
+    "shareEvent": "イベントを共有",
+    "exportEvent": "イベントをエクスポート",
+    "printCalendar": "カレンダーを印刷",
+    "syncCalendar": "カレンダーを同期",
+    "importEvents": "イベントをインポート"
+  },
+  "form": {
+    "newEvent": "新しいイベント",
+    "editEvent": "イベントを編集",
+    "eventDetails": "イベント詳細",
+    "addGuests": "参加者を追加",
+    "addLocation": "場所を追加",
+    "addDescription": "説明を追加",
+    "addAttachment": "添付ファイルを追加",
+    "save": "イベントを保存",
+    "cancel": "キャンセル",
+    "delete": "イベントを削除"
+  },
+  "attendees": {
+    "title": "参加者",
+    "add": "参加者を追加",
+    "search": "ユーザーを検索...",
+    "optional": "任意",
+    "required": "必須",
+    "organizer": "主催者",
+    "accepted": "承諾",
+    "declined": "辞退",
+    "tentative": "仮承諾",
+    "pending": "保留中",
+    "sendInvite": "招待を送信",
+    "notifyChanges": "参加者に変更を通知"
+  },
+  "integration": {
+    "title": "カレンダー連携",
+    "google": "Googleカレンダー",
+    "outlook": "Outlookカレンダー",
+    "apple": "Appleカレンダー",
+    "connect": "接続",
+    "disconnect": "切断",
+    "sync": "今すぐ同期",
+    "lastSync": "最終同期 {time}",
+    "autoSync": "自動同期",
+    "syncSettings": "同期設定"
+  },
+  "filters": {
+    "title": "フィルター",
+    "showAll": "すべて表示",
+    "myEvents": "自分のイベント",
+    "sharedEvents": "共有イベント",
+    "categories": "カテゴリー",
+    "calendars": "カレンダー",
+    "clearFilters": "フィルターをクリア"
+  },
+  "shortcuts": {
+    "title": "キーボードショートカット",
+    "createEvent": "イベントを作成",
+    "goToToday": "今日に移動",
+    "nextPeriod": "次の期間",
+    "previousPeriod": "前の期間",
+    "switchView": "表示を切り替え"
+  },
+  "notifications": {
+    "eventCreated": "イベントを作成しました。",
+    "eventUpdated": "イベントを更新しました。",
+    "eventDeleted": "イベントを削除しました。",
+    "reminderSent": "リマインダーを送信しました",
+    "invitationSent": "{count}人の参加者に招待を送信しました",
+    "syncSuccess": "同期を開始しました。完了するまで少し時間がかかる場合があります。",
+    "syncFailed": "カレンダーの同期に失敗しました",
+    "calendarDisconnected": "カレンダーを切断しました。",
+    "completeConnectionInfo": "新しいタブで接続を完了してから、戻って同期してください。"
+  },
+  "empty": {
+    "noEvents": {
+      "title": "イベントがありません",
+      "message": "最初のイベントを作成して始めましょう",
+      "action": "イベントを作成"
+    },
+    "noEventsToday": {
+      "title": "今日のイベントはありません",
+      "message": "今日のスケジュールは空いています"
+    },
+    "noUpcoming": {
+      "title": "予定されたイベントがありません",
+      "message": "近い将来のイベントはありません"
+    }
+  },
+  "conflicts": {
+    "title": "スケジュールの競合",
+    "message": "このイベントは別のイベントと競合しています：",
+    "viewConflict": "競合を表示",
+    "ignoreConflict": "このままスケジュール",
+    "reschedule": "再スケジュール"
+  },
+  "sharing": {
+    "title": "カレンダーを共有",
+    "shareWith": "共有相手",
+    "permissions": {
+      "view": "閲覧可能",
+      "edit": "編集可能",
+      "manage": "管理可能"
+    },
+    "publicLink": "公開リンク",
+    "generateLink": "リンクを生成",
+    "copyLink": "リンクをコピー",
+    "revokeLink": "リンクを無効化"
+  },
+  "settings": {
+    "title": "カレンダー設定",
+    "defaultView": "デフォルト表示",
+    "weekStart": "週の開始曜日",
+    "timeFormat": "時刻形式",
+    "timezone": "タイムゾーン",
+    "workingHours": "勤務時間",
+    "showWeekends": "週末を表示",
+    "showWeekNumbers": "週番号を表示",
+    "defaultReminder": "デフォルトリマインダー",
+    "defaultDuration": "デフォルトイベント期間"
+  },
+  "weekdays": {
+    "sunday": "日曜日",
+    "monday": "月曜日",
+    "tuesday": "火曜日",
+    "wednesday": "水曜日",
+    "thursday": "木曜日",
+    "friday": "金曜日",
+    "saturday": "土曜日"
+  },
+  "months": {
+    "january": "1月",
+    "february": "2月",
+    "march": "3月",
+    "april": "4月",
+    "may": "5月",
+    "june": "6月",
+    "july": "7月",
+    "august": "8月",
+    "september": "9月",
+    "october": "10月",
+    "november": "11月",
+    "december": "12月"
+  },
+  "errors": {
+    "failedToLoadConnections": "カレンダー接続を読み込めませんでした。",
+    "failedToLoadEvents": "カレンダーイベントを読み込めませんでした。",
+    "failedToSaveEvent": "イベントを保存できませんでした。もう一度お試しください。",
+    "cannotEditExternalEvent": "このイベントはソースからのみ編集できます。",
+    "cannotDeleteExternalEvent": "このイベントは面接ワークフローから管理する必要があります。",
+    "failedToDeleteEvent": "イベントを削除できませんでした。",
+    "failedToStartConnection": "カレンダー接続フローを開始できませんでした。",
+    "failedToDisconnectCalendar": "カレンダーを切断できませんでした。",
+    "failedToSyncCalendar": "同期をトリガーできませんでした。",
+    "missingAuthUrl": "認証URLが見つかりません"
+  }
+}

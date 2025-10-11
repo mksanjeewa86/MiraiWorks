@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslations } from 'next-intl';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import '@/styles/datepicker.css';
@@ -37,6 +38,7 @@ export default function InterviewModal({
 }: InterviewModalProps) {
   const { user } = useAuth();
   const { showToast } = useToast();
+  const t = useTranslations('interviews.schedule');
 
   // Form state
   const [formData, setFormData] = useState<InterviewFormData>({
@@ -128,7 +130,7 @@ export default function InterviewModal({
         console.error('Error fetching interview:', error);
         showToast({
           type: 'error',
-          title: 'Failed to load interview details',
+          title: t('error.message'),
         });
       } finally {
         setLoading(false);
@@ -277,26 +279,26 @@ export default function InterviewModal({
     const newErrors: Record<string, string> = {};
 
     if (!formData.title.trim()) {
-      newErrors.title = 'Interview title is required';
+      newErrors.title = t('validation.titleRequired');
     }
 
     if (!formData.candidate_id) {
-      newErrors.candidate_id = 'Candidate is required';
+      newErrors.candidate_id = t('validation.candidateRequired');
     }
 
     if (!formData.scheduled_start) {
-      newErrors.scheduled_start = 'Start time is required';
+      newErrors.scheduled_start = t('validation.startTimeRequired');
     }
 
     if (!formData.scheduled_end) {
-      newErrors.scheduled_end = 'End time is required';
+      newErrors.scheduled_end = t('validation.endTimeRequired');
     }
 
     if (formData.scheduled_start && formData.scheduled_end) {
       const start = new Date(formData.scheduled_start);
       const end = new Date(formData.scheduled_end);
       if (end <= start) {
-        newErrors.scheduled_end = 'End time must be after start time';
+        newErrors.scheduled_end = t('validation.endAfterStart');
       }
     }
 
@@ -305,11 +307,11 @@ export default function InterviewModal({
       formData.video_call_type === 'custom_url' &&
       !formData.meeting_url.trim()
     ) {
-      newErrors.meeting_url = 'Meeting URL is required when using custom URL option';
+      newErrors.meeting_url = t('validation.meetingUrlRequired');
     }
 
     if (formData.interview_type === 'in_person' && !formData.location.trim()) {
-      newErrors.location = 'Location is required for in-person interviews';
+      newErrors.location = t('validation.locationRequired');
     }
 
     setErrors(newErrors);
@@ -322,7 +324,8 @@ export default function InterviewModal({
     if (!validateForm()) {
       showToast({
         type: 'error',
-        title: 'Please fill in all required fields',
+        title: t('error.title'),
+        message: t('error.message'),
       });
       return;
     }
@@ -337,7 +340,8 @@ export default function InterviewModal({
     if (!user) {
       showToast({
         type: 'error',
-        title: 'User session not found. Please refresh and try again.',
+        title: t('error.title'),
+        message: t('errors.sessionNotFound'),
       });
       return;
     }
@@ -380,8 +384,8 @@ export default function InterviewModal({
 
       showToast({
         type: 'success',
-        title:
-          mode === 'edit' ? 'Interview updated successfully' : 'Interview scheduled successfully',
+        title: t('success.title'),
+        message: t('success.message'),
       });
 
       if (result.data) {
@@ -392,7 +396,8 @@ export default function InterviewModal({
       console.error('Error saving interview:', error);
       showToast({
         type: 'error',
-        title: error instanceof Error ? error.message : 'Failed to save interview',
+        title: t('error.title'),
+        message: error instanceof Error ? error.message : t('error.message'),
       });
     } finally {
       setSaving(false);
@@ -410,11 +415,9 @@ export default function InterviewModal({
             <div className="space-y-1">
               <DialogTitle className="flex items-center gap-2 text-xl font-semibold">
                 <Video className="h-5 w-5 text-blue-600" />
-                {mode === 'edit' ? 'Edit Interview' : 'Schedule Interview'}
+                {t('title')}
               </DialogTitle>
-              <DialogDescription className="text-sm">
-                {mode === 'edit' ? 'Update interview details' : 'Create a new interview session'}
-              </DialogDescription>
+              <DialogDescription className="text-sm">{t('subtitle')}</DialogDescription>
             </div>
             <DialogClose className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
               <X className="h-4 w-4" />
@@ -442,7 +445,7 @@ export default function InterviewModal({
                   {/* Interview Title */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Interview Title *
+                      {t('interviewTitle')} *
                     </label>
                     <Input
                       type="text"
@@ -450,7 +453,7 @@ export default function InterviewModal({
                       value={formData.title}
                       onChange={handleInputChange}
                       className={errors.title ? 'border-red-300' : ''}
-                      placeholder="e.g., Technical Interview"
+                      placeholder={t('interviewTitlePlaceholder')}
                     />
                     {errors.title && (
                       <p className="mt-1 text-xs text-red-600 flex items-center">
@@ -463,7 +466,7 @@ export default function InterviewModal({
                   {/* Select Candidate */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Select Candidate *
+                      {t('selectCandidate')} *
                     </label>
                     <div className="relative" ref={candidateDropdownRef}>
                       <div className="relative">
@@ -476,7 +479,11 @@ export default function InterviewModal({
                             setShowCandidateDropdown(true);
                           }}
                           onFocus={() => setShowCandidateDropdown(true)}
-                          placeholder={candidatesLoading ? 'Loading...' : 'Search candidates...'}
+                          placeholder={
+                            candidatesLoading
+                              ? t('candidateLoadingPlaceholder')
+                              : t('candidateSearchPlaceholder')
+                          }
                           disabled={candidatesLoading}
                           className={`pl-10 pr-16 ${errors.candidate_id ? 'border-red-300' : ''}`}
                         />
@@ -503,7 +510,9 @@ export default function InterviewModal({
                         <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                           {filteredCandidates.length === 0 ? (
                             <div className="px-4 py-3 text-sm text-gray-500">
-                              {candidateSearch ? 'No candidates found' : 'No candidates available'}
+                              {candidateSearch
+                                ? t('noCandidatesFound')
+                                : t('noCandidatesAvailable')}
                             </div>
                           ) : (
                             filteredCandidates.map((candidate) => (
@@ -543,28 +552,28 @@ export default function InterviewModal({
                   {/* Position Title */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Position Title
+                      {t('positionTitle')}
                     </label>
                     <Input
                       type="text"
                       name="position_title"
                       value={formData.position_title}
                       onChange={handleInputChange}
-                      placeholder="e.g., Senior Frontend Developer"
+                      placeholder={t('positionTitlePlaceholder')}
                     />
                   </div>
 
                   {/* Description */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Description
+                      {t('description')}
                     </label>
                     <Textarea
                       name="description"
                       value={formData.description}
                       onChange={handleInputChange}
                       rows={3}
-                      placeholder="Brief description of the interview purpose"
+                      placeholder={t('descriptionPlaceholder')}
                     />
                   </div>
                 </div>
@@ -580,13 +589,13 @@ export default function InterviewModal({
                   {/* Interview Type */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Interview Type *
+                      {t('interviewTypeLabel')} *
                     </label>
                     <div className="grid grid-cols-3 gap-2">
                       {[
-                        { value: 'video', label: 'Video', icon: Video },
-                        { value: 'phone', label: 'Phone', icon: Phone },
-                        { value: 'in_person', label: 'In-Person', icon: Users },
+                        { value: 'video', label: t('typeVideoCall'), icon: Video },
+                        { value: 'phone', label: t('typePhoneCall'), icon: Phone },
+                        { value: 'in_person', label: t('typeInPerson'), icon: Users },
                       ].map((type) => (
                         <label key={type.value} className="relative">
                           <input
@@ -619,7 +628,7 @@ export default function InterviewModal({
                     <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
                       <h4 className="text-sm font-medium text-gray-900 mb-2.5 flex items-center">
                         <Video className="h-4 w-4 mr-1.5 text-purple-600" />
-                        Video Call Setup
+                        {t('videoCallSetup')}
                       </h4>
                       <div className="space-y-2.5">
                         <label className="flex items-start cursor-pointer">
@@ -633,9 +642,9 @@ export default function InterviewModal({
                           />
                           <div className="ml-2.5">
                             <div className="text-sm font-medium text-gray-900">
-                              System Generated
+                              {t('systemGenerated')}
                             </div>
-                            <div className="text-xs text-gray-600">Auto-create video call room</div>
+                            <div className="text-xs text-gray-600">{t('systemGeneratedDesc')}</div>
                           </div>
                         </label>
                         <label className="flex items-start cursor-pointer">
@@ -648,8 +657,8 @@ export default function InterviewModal({
                             className="mt-0.5"
                           />
                           <div className="ml-2.5">
-                            <div className="text-sm font-medium text-gray-900">Custom URL</div>
-                            <div className="text-xs text-gray-600">Use Zoom, Google Meet, etc.</div>
+                            <div className="text-sm font-medium text-gray-900">{t('customUrl')}</div>
+                            <div className="text-xs text-gray-600">{t('customUrlDesc')}</div>
                           </div>
                         </label>
 
@@ -661,7 +670,7 @@ export default function InterviewModal({
                               value={formData.meeting_url}
                               onChange={handleInputChange}
                               className={`text-sm ${errors.meeting_url ? 'border-red-300' : ''}`}
-                              placeholder="https://zoom.us/j/123456789"
+                              placeholder={t('meetingUrlPlaceholder')}
                             />
                             {errors.meeting_url && (
                               <p className="mt-1 text-xs text-red-600">{errors.meeting_url}</p>
@@ -814,7 +823,7 @@ export default function InterviewModal({
                   {formData.interview_type === 'in_person' && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                        Location *
+                        {t('locationRequired')} *
                       </label>
                       <Input
                         type="text"
@@ -822,7 +831,7 @@ export default function InterviewModal({
                         value={formData.location}
                         onChange={handleInputChange}
                         className={errors.location ? 'border-red-300' : ''}
-                        placeholder="Office address or meeting room"
+                        placeholder={t('locationPlaceholder')}
                       />
                       {errors.location && (
                         <p className="mt-1 text-xs text-red-600">{errors.location}</p>
@@ -833,14 +842,14 @@ export default function InterviewModal({
                   {formData.interview_type === 'phone' && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                        Phone Details
+                        {t('phoneDetails')}
                       </label>
                       <Input
                         type="text"
                         name="location"
                         value={formData.location}
                         onChange={handleInputChange}
-                        placeholder="Phone number or instructions"
+                        placeholder={t('phoneDetailsPlaceholder')}
                       />
                     </div>
                   )}
@@ -854,27 +863,27 @@ export default function InterviewModal({
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Interview Notes
+                      {t('interviewNotes')}
                     </label>
                     <Textarea
                       name="notes"
                       value={formData.notes}
                       onChange={handleInputChange}
                       rows={3}
-                      placeholder="Internal notes about the interview"
+                      placeholder={t('interviewNotesPlaceholder')}
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Preparation Notes
+                      {t('preparationNotes')}
                     </label>
                     <Textarea
                       name="preparation_notes"
                       value={formData.preparation_notes}
                       onChange={handleInputChange}
                       rows={3}
-                      placeholder="Notes for interview preparation"
+                      placeholder={t('preparationNotesPlaceholder')}
                     />
                   </div>
                 </div>
@@ -891,7 +900,7 @@ export default function InterviewModal({
             onClick={onClose}
             className="min-w-[120px]"
           >
-            Cancel
+            {t('cancel')}
           </Button>
           <Button
             type="button"
@@ -909,10 +918,8 @@ export default function InterviewModal({
             {workflowContext
               ? 'Save & Return to Workflow'
               : saving
-                ? 'Saving...'
-                : mode === 'edit'
-                  ? 'Save Changes'
-                  : 'Schedule Interview'}
+                ? t('submitting')
+                : t('submit')}
           </Button>
         </DialogFooter>
       </DialogContent>

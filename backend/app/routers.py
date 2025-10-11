@@ -24,6 +24,7 @@ from app.endpoints import (
     question_bank,
     resumes,
     subscription,
+    system_updates,
     todo_attachments,
     todo_extensions,
     todos,
@@ -47,6 +48,9 @@ def include_routers(app: FastAPI) -> None:
     app.include_router(messages.router, prefix="/api/messages", tags=["messages"])
     app.include_router(
         notifications.router, prefix="/api/notifications", tags=["notifications"]
+    )
+    app.include_router(
+        system_updates.router, prefix="/api/system-updates", tags=["system-updates"]
     )
     app.include_router(files.router, prefix="/api/files", tags=["files"])
     app.include_router(todos.router, prefix="/api/todos", tags=["todos"])

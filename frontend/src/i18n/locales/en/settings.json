@@ -1,0 +1,448 @@
+{
+  "page": {
+    "title": "Settings",
+    "subtitle": "Manage your account settings and preferences"
+  },
+  "tabs": {
+    "profile": "Profile",
+    "account": "Account",
+    "notifications": "Notifications",
+    "privacy": "Privacy",
+    "security": "Security",
+    "language": "Language & Region",
+    "integrations": "Integrations",
+    "billing": "Billing"
+  },
+  "profile": {
+    "title": "Profile Information",
+    "subtitle": "Update your personal information and profile picture",
+    "avatar": {
+      "label": "Profile Picture",
+      "upload": "Upload Photo",
+      "remove": "Remove Photo",
+      "change": "Change Photo",
+      "requirements": "JPG, PNG or GIF. Max size 2MB."
+    },
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email Address",
+    "phone": "Phone Number",
+    "jobTitle": "Job Title",
+    "company": "Company",
+    "location": "Location",
+    "bio": "Bio",
+    "bioPlaceholder": "Write a short bio about yourself...",
+    "website": "Website",
+    "linkedin": "LinkedIn Profile",
+    "twitter": "Twitter Handle",
+    "github": "GitHub Username",
+    "save": "Save Changes",
+    "cancel": "Cancel",
+    "success": "Profile updated successfully",
+    "error": "Failed to update profile"
+  },
+  "account": {
+    "title": "Account Settings",
+    "subtitle": "Manage your account preferences",
+    "email": {
+      "title": "Email Address",
+      "description": "Your primary email for notifications and login",
+      "current": "Current Email",
+      "change": "Change Email",
+      "verify": "Verify Email",
+      "verified": "Verified",
+      "notVerified": "Not Verified"
+    },
+    "password": {
+      "title": "Password",
+      "description": "Update your password to keep your account secure",
+      "current": "Current Password",
+      "new": "New Password",
+      "confirm": "Confirm New Password",
+      "change": "Change Password",
+      "lastChanged": "Last changed {date}",
+      "requirements": "Password requirements:",
+      "req1": "At least 8 characters",
+      "req2": "One uppercase letter",
+      "req3": "One lowercase letter",
+      "req4": "One number",
+      "req5": "One special character"
+    },
+    "timezone": {
+      "title": "Timezone",
+      "description": "Set your timezone for accurate scheduling",
+      "select": "Select Timezone"
+    },
+    "deleteAccount": {
+      "title": "Delete Account",
+      "description": "Permanently delete your account and all data",
+      "button": "Delete Account",
+      "warning": "This action cannot be undone",
+      "confirm": {
+        "title": "Delete Account?",
+        "message": "Are you sure you want to delete your account? All your data will be permanently removed.",
+        "type": "Type DELETE to confirm",
+        "confirmButton": "Delete My Account",
+        "cancelButton": "Cancel"
+      }
+    }
+  },
+  "notifications": {
+    "title": "Notification Preferences",
+    "subtitle": "Choose how you want to be notified",
+    "email": {
+      "title": "Email Notifications",
+      "newMessages": "New messages",
+      "jobAlerts": "Job alerts",
+      "interviewReminders": "Interview reminders",
+      "applicationUpdates": "Application status updates",
+      "weeklyDigest": "Weekly digest",
+      "productUpdates": "Product updates and announcements"
+    },
+    "push": {
+      "title": "Push Notifications",
+      "enable": "Enable push notifications",
+      "messages": "New messages",
+      "interviews": "Interview reminders",
+      "applications": "Application updates"
+    },
+    "sms": {
+      "title": "SMS Notifications",
+      "enable": "Enable SMS notifications",
+      "interviewReminders": "Interview reminders",
+      "urgentUpdates": "Urgent updates only"
+    },
+    "save": "Save Preferences",
+    "success": "Notification preferences saved"
+  },
+  "privacy": {
+    "title": "Privacy Settings",
+    "subtitle": "Control your privacy and data sharing",
+    "profileVisibility": {
+      "title": "Profile Visibility",
+      "public": "Public - Anyone can view your profile",
+      "recruiters": "Recruiters Only - Only recruiters can view",
+      "private": "Private - Only you can view"
+    },
+    "searchableProfile": {
+      "title": "Searchable Profile",
+      "description": "Allow recruiters to find you in search results",
+      "enable": "Make my profile searchable"
+    },
+    "showEmail": {
+      "title": "Show Email",
+      "description": "Display your email on your public profile",
+      "enable": "Show email publicly"
+    },
+    "showPhone": {
+      "title": "Show Phone",
+      "description": "Display your phone number on your public profile",
+      "enable": "Show phone publicly"
+    },
+    "activityStatus": {
+      "title": "Activity Status",
+      "description": "Show when you were last active",
+      "enable": "Show activity status"
+    },
+    "save": "Save Settings",
+    "success": "Privacy settings saved"
+  },
+  "security": {
+    "title": "Security Settings",
+    "subtitle": "Keep your account secure",
+    "twoFactor": {
+      "title": "Two-Factor Authentication",
+      "description": "Add an extra layer of security to your account",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "enable": "Enable 2FA",
+      "disable": "Disable 2FA",
+      "setup": "Setup 2FA"
+    },
+    "sessions": {
+      "title": "Active Sessions",
+      "description": "Manage devices where you're currently logged in",
+      "current": "Current Session",
+      "lastActive": "Last active {time}",
+      "revokeAll": "Revoke All Sessions",
+      "revoke": "Revoke"
+    },
+    "loginHistory": {
+      "title": "Login History",
+      "viewAll": "View All",
+      "date": "Date",
+      "location": "Location",
+      "device": "Device",
+      "ipAddress": "IP Address"
+    },
+    "success": "Security settings updated"
+  },
+  "language": {
+    "title": "Language & Region",
+    "subtitle": "Set your language and regional preferences",
+    "language": {
+      "title": "Display Language",
+      "description": "Choose your preferred language",
+      "select": "Select Language",
+      "english": "English",
+      "japanese": "日本語"
+    },
+    "region": {
+      "title": "Region",
+      "description": "Set your region for local content",
+      "select": "Select Region"
+    },
+    "dateFormat": {
+      "title": "Date Format",
+      "description": "Choose how dates are displayed",
+      "select": "Select Format",
+      "mmddyyyy": "MM/DD/YYYY",
+      "ddmmyyyy": "DD/MM/YYYY",
+      "yyyymmdd": "YYYY-MM-DD"
+    },
+    "timeFormat": {
+      "title": "Time Format",
+      "12hour": "12-hour",
+      "24hour": "24-hour"
+    },
+    "save": "Save Preferences",
+    "success": "Language preferences saved"
+  },
+  "integrations": {
+    "title": "Integrations",
+    "subtitle": "Connect with third-party services",
+    "connected": "Connected",
+    "notConnected": "Not Connected",
+    "connect": "Connect",
+    "disconnect": "Disconnect",
+    "linkedin": {
+      "title": "LinkedIn",
+      "description": "Import your LinkedIn profile and connections"
+    },
+    "google": {
+      "title": "Google Calendar",
+      "description": "Sync your interviews with Google Calendar"
+    },
+    "slack": {
+      "title": "Slack",
+      "description": "Get notifications in Slack"
+    },
+    "zoom": {
+      "title": "Zoom",
+      "description": "Schedule video interviews with Zoom"
+    },
+    "success": "Integration updated successfully"
+  },
+  "billing": {
+    "title": "Billing & Subscription",
+    "subtitle": "Manage your subscription and payment methods",
+    "currentPlan": {
+      "title": "Current Plan",
+      "free": "Free Plan",
+      "basic": "Basic Plan",
+      "pro": "Pro Plan",
+      "enterprise": "Enterprise Plan",
+      "changePlan": "Change Plan",
+      "cancelPlan": "Cancel Plan",
+      "renewsOn": "Renews on {date}",
+      "expiresOn": "Expires on {date}"
+    },
+    "paymentMethod": {
+      "title": "Payment Method",
+      "add": "Add Payment Method",
+      "update": "Update",
+      "remove": "Remove",
+      "default": "Default",
+      "expires": "Expires {date}"
+    },
+    "billingHistory": {
+      "title": "Billing History",
+      "date": "Date",
+      "description": "Description",
+      "amount": "Amount",
+      "status": "Status",
+      "download": "Download Invoice",
+      "viewAll": "View All"
+    },
+    "success": "Billing information updated"
+  },
+  "calendar": {
+    "title": "Calendar Integration",
+    "subtitle": "Connect your Google Calendar or Outlook Calendar to sync events and meetings",
+    "connectedCalendars": {
+      "title": "Connected Calendars"
+    },
+    "connect": {
+      "title": "Connect Calendar",
+      "google": "Google Calendar",
+      "googleDesc": "Connect your Google account",
+      "outlook": "Outlook Calendar",
+      "outlookDesc": "Connect your Microsoft account",
+      "whatHappens": "What happens when you connect?",
+      "benefit1": "Your calendar events will be synced automatically",
+      "benefit2": "Meeting reminders will be sent based on your preferences",
+      "benefit3": "Interview scheduling will integrate with your calendar",
+      "benefit4": "You can control sync settings for each connected calendar"
+    },
+    "settings": {
+      "syncEvents": "Sync Events",
+      "syncReminders": "Sync Reminders",
+      "autoCreateMeetings": "Auto-create Meetings",
+      "enabled": "Enabled",
+      "lastSync": "Last sync: {date}"
+    },
+    "actions": {
+      "sync": "Sync",
+      "disconnect": "Disconnect"
+    },
+    "status": {
+      "connected": "Connected",
+      "error": "Error",
+      "expired": "Expired"
+    }
+  },
+  "preferences": {
+    "title": "Preferences",
+    "subtitle": "Customize your experience and display settings",
+    "localization": {
+      "title": "Localization",
+      "language": "Language",
+      "timezone": "Timezone",
+      "dateFormat": "Date Format",
+      "et": "Eastern Time (ET)",
+      "ct": "Central Time (CT)",
+      "mt": "Mountain Time (MT)",
+      "pt": "Pacific Time (PT)",
+      "gmt": "Greenwich Mean Time (GMT)",
+      "jst": "Japan Standard Time (JST)"
+    }
+  },
+  "companyProfile": {
+    "title": "Company Profile",
+    "subtitle": "Manage your company information and subscription plan",
+    "noSubscription": {
+      "title": "No Active Subscription",
+      "description": "Your company doesn't have an active subscription plan. Choose a plan below to get started."
+    },
+    "currentPlan": {
+      "title": "Current Plan",
+      "trialPeriod": "Trial Period",
+      "trial": "Trial",
+      "active": "Active",
+      "inactive": "Inactive",
+      "price": "Price",
+      "billing": "Billing",
+      "endsOn": "Ends: {date}"
+    },
+    "upgrade": {
+      "title": "Unlock Premium Features",
+      "titleTrial": "Choose Your Plan",
+      "subtitle": "Upgrade your plan to access these powerful features",
+      "subtitleTrial": "Convert your trial to a paid plan to continue using these features",
+      "availableIn": "Available in {plan}",
+      "premiumOnly": "Premium Only",
+      "button": "Upgrade to {plan}",
+      "buttonTrial": "Choose {plan}"
+    },
+    "downgrade": {
+      "title": "Looking to Reduce Costs?",
+      "subtitle": "You can downgrade to a lower plan if you don't need all current features",
+      "button": "Downgrade to {plan}"
+    },
+    "features": {
+      "title": "Current Features ({plan})",
+      "upTo": "Up to {count} {item}",
+      "users": "users",
+      "workflows": "workflows",
+      "exams": "exams"
+    },
+    "planRequest": {
+      "pending": "Plan Change Request Pending",
+      "pendingDesc": "Your request to change to {plan} is awaiting system admin approval.",
+      "yourMessage": "Your Message:",
+      "requestedOn": "Requested on {date}",
+      "cancelRequest": "Cancel Request",
+      "modalTitle": "Request Plan Change",
+      "selectedPlan": "Selected plan: {plan}",
+      "messageLabel": "Message to Admin (optional)",
+      "messagePlaceholder": "Why do you need this plan change?",
+      "submit": "Submit Request",
+      "cancel": "Cancel",
+      "confirmCancelTitle": "Cancel Plan Change Request",
+      "confirmCancelDesc": "Are you sure you want to cancel this plan change request? This action cannot be undone.",
+      "confirmYes": "Yes, Cancel Request",
+      "confirmNo": "Keep Request"
+    },
+    "requestHistory": {
+      "title": "Request History"
+    },
+    "availablePlans": {
+      "title": "Available Plans",
+      "subtitle": "Select a plan to request subscription approval from the system administrator",
+      "requestPlan": "Request Plan",
+      "perMonth": "/month"
+    },
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "cancelled": "Cancelled"
+    }
+  },
+  "common": {
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "phone": "Phone",
+    "jobTitle": "Job Title",
+    "bio": "Bio",
+    "bioPlaceholder": "Tell us about yourself...",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "changePassword": "Change Password",
+    "changingPassword": "Changing Password...",
+    "twoFactorAuth": "Two-Factor Authentication",
+    "enable2FA": "Enable 2FA",
+    "twoFactorEnabled": "2FA is enabled",
+    "twoFactorDesc": "Your account is protected with two-factor authentication",
+    "twoFactorSubtitle": "Add an extra layer of security to your account",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "saving": "Saving...",
+    "error": "Error"
+  },
+  "notificationChannels": {
+    "title": "Notification Channels",
+    "emailNotifications": "Email Notifications",
+    "emailDesc": "Receive notifications via email",
+    "pushNotifications": "Push Notifications",
+    "pushDesc": "Browser push notifications",
+    "smsNotifications": "SMS Notifications",
+    "smsDesc": "Text message notifications",
+    "smsRequiresPhone": "Requires phone number (add in profile first)",
+    "smsRequiresPhoneError": "SMS notifications require a phone number. Please add your phone number in your profile first."
+  },
+  "eventNotifications": {
+    "title": "Event Notifications",
+    "interviewReminders": "Interview Reminders",
+    "interviewDesc": "Get notified before scheduled interviews",
+    "applicationUpdates": "Application Updates",
+    "applicationDesc": "Updates on job applications and status changes",
+    "messageNotifications": "New Messages",
+    "messageDesc": "Notifications for new messages and conversations"
+  },
+  "errors": {
+    "loadUserData": "Failed to load user data",
+    "loadCalendarConnections": "Failed to load calendar connections",
+    "saveChanges": "Failed to save changes",
+    "disconnectCalendar": "Failed to disconnect calendar",
+    "syncCalendar": "Failed to sync calendar",
+    "updateCalendarConnection": "Failed to update calendar connection",
+    "changePassword": "Failed to change password"
+  },
+  "save": "Save Changes",
+  "cancel": "Cancel",
+  "saved": "Changes saved successfully",
+  "error": "Failed to save changes"
+}

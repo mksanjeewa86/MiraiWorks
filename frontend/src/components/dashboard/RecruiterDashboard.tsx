@@ -18,10 +18,14 @@ import {
 import { SimpleAreaChart, SimpleBarChart } from '@/components/dashboard/Charts';
 import type { RecruiterStats } from '@/types/dashboard';
 import type { ActivityItem } from '@/types';
+import { ROUTES } from '@/routes/config';
+import { useTranslations, useLocale } from 'next-intl';
 
 export default function RecruiterDashboard() {
   const { user } = useAuth();
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations('dashboard.recruiter');
   const [stats, setStats] = useState<RecruiterStats | null>(null);
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,41 +68,41 @@ export default function RecruiterDashboard() {
     if (!stats) return [];
     return [
       {
-        label: 'Active candidates',
+        label: t('metrics.activeCandidates.label'),
         value: stats.active_candidates ?? 0,
-        helperText: 'Currently in your hiring pipeline',
-        trendLabel: `${stats.interview_pipeline?.[0]?.count ?? 0} in screening`,
+        helperText: t('metrics.activeCandidates.helperText'),
+        trendLabel: `${stats.interview_pipeline?.[0]?.count ?? 0} ${t('metrics.activeCandidates.inScreening')}`,
         trendTone: 'neutral' as const,
         icon: <UsersIcon className="h-6 w-6" />,
       },
       {
-        label: 'Interviews this week',
+        label: t('metrics.interviewsThisWeek.label'),
         value: stats.interviews_this_week ?? 0,
-        helperText: 'Scheduled in the next 7 days',
-        trendLabel: `${stats.recent_interviews?.length ?? 0} logged`,
+        helperText: t('metrics.interviewsThisWeek.helperText'),
+        trendLabel: `${stats.recent_interviews?.length ?? 0} ${t('metrics.interviewsThisWeek.logged')}`,
         trendTone: 'positive' as const,
         icon: <CalendarDaysIcon className="h-6 w-6" />,
       },
       {
-        label: 'Pending proposals',
+        label: t('metrics.pendingProposals.label'),
         value: stats.pending_proposals ?? 0,
-        helperText: 'Awaiting employer decision',
-        trendLabel: `${stats.placement_rate ? Math.round(stats.placement_rate * 100) : 0}% conversion`,
+        helperText: t('metrics.pendingProposals.helperText'),
+        trendLabel: `${stats.placement_rate ? Math.round(stats.placement_rate * 100) : 0}% ${t('metrics.pendingProposals.conversion')}`,
         trendTone: 'neutral' as const,
         icon: <ClipboardDocumentCheckIcon className="h-6 w-6" />,
       },
       {
-        label: 'Placement rate',
+        label: t('metrics.placementRate.label'),
         value: stats.placement_rate ? `${(stats.placement_rate * 100).toFixed(1)}%` : '0%',
-        helperText: 'Rolling 30-day placements',
-        trendLabel: 'Target 45%+ benchmark',
+        helperText: t('metrics.placementRate.helperText'),
+        trendLabel: t('metrics.placementRate.target'),
         trendTone: (stats.placement_rate && stats.placement_rate >= 0.45
           ? 'positive'
           : 'neutral') as 'positive' | 'negative' | 'neutral',
         icon: <FunnelIcon className="h-6 w-6" />,
       },
     ];
-  }, [stats]);
+  }, [stats, t]);
 
   const pipelineData = useMemo(() => {
     return (stats?.interview_pipeline ?? []).map((stage) => ({
@@ -134,20 +138,20 @@ export default function RecruiterDashboard() {
   return (
     <div className="space-y-6 p-6">
       <DashboardHeader
-        title="Recruiter performance hub"
-        subtitle={`Let’s find the right fit${user?.full_name ? `, ${user.full_name}` : ''}`}
-        description="Follow your pipeline, unblock hiring stages, and stay ahead with candidate signals."
+        title={t('header.title')}
+        subtitle={`${t('header.welcomeBack')}${user?.full_name ? `, ${user.full_name}` : ''}`}
+        description={t('header.description')}
         actions={
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={loadDashboardData}>
-              Refresh data
+              {t('header.refreshButton')}
             </Button>
-            <Button size="sm" onClick={() => router.push('/app/jobs')}>
-              Create job
+            <Button size="sm" onClick={() => router.push(`/${locale}${ROUTES.APP.JOBS.NEW}`)}>
+              {t('header.createJobButton')}
             </Button>
           </div>
         }
-        meta={`Pipeline updated ${new Date().toLocaleTimeString()}`}
+        meta={`${t('header.lastUpdated')} ${new Date().toLocaleTimeString()}`}
       />
 
       <DashboardContentGate loading={loading} error={error} onRetry={loadDashboardData}>
@@ -169,19 +173,19 @@ export default function RecruiterDashboard() {
           <Card className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 lg:col-span-2">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-                Interview pipeline
+                {t('interviewPipeline.title')}
               </h2>
-              <Badge variant="outline">Funnel view</Badge>
+              <Badge variant="outline">{t('interviewPipeline.badge')}</Badge>
             </div>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              Track how candidates move through each interview stage.
+              {t('interviewPipeline.description')}
             </p>
             <div className="mt-6 h-[260px]">
               {pipelineData.length ? (
                 <SimpleBarChart data={pipelineData} dataKey="value" color="#8B5CF6" horizontal />
               ) : (
                 <div className="flex h-full items-center justify-center text-sm text-gray-500">
-                  Pipeline data will appear as candidates progress.
+                  {t('interviewPipeline.noData')}
                 </div>
               )}
             </div>
@@ -190,10 +194,10 @@ export default function RecruiterDashboard() {
           <Card className="flex flex-col gap-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
             <div>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-                Weekly interview load
+                {t('weeklyInterviewLoad.title')}
               </h2>
               <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                Upcoming interview slots based on the latest schedule.
+                {t('weeklyInterviewLoad.description')}
               </p>
             </div>
             <div className="h-[220px]">
@@ -201,7 +205,7 @@ export default function RecruiterDashboard() {
                 <SimpleAreaChart data={interviewsTimeline} dataKey="value" color="#34D399" />
               ) : (
                 <div className="flex h-full items-center justify-center text-sm text-gray-500">
-                  Interviews will populate here as you schedule them.
+                  {t('weeklyInterviewLoad.noData')}
                 </div>
               )}
             </div>
@@ -212,9 +216,9 @@ export default function RecruiterDashboard() {
           <Card className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-                Upcoming interviews
+                {t('upcomingInterviews.title')}
               </h2>
-              <Badge variant="secondary">Next 5</Badge>
+              <Badge variant="secondary">{t('upcomingInterviews.badge')}</Badge>
             </div>
             <div className="mt-4 space-y-4">
               {stats?.recent_interviews?.length ? (
@@ -237,13 +241,13 @@ export default function RecruiterDashboard() {
               ) : (
                 <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-gray-200 p-6 text-center text-sm text-gray-500 dark:border-gray-800">
                   <CalendarDaysIcon className="h-6 w-6" />
-                  <p>No interviews scheduled. Start by inviting candidates.</p>
+                  <p>{t('upcomingInterviews.noInterviews')}</p>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => router.push('/app/candidates')}
+                    onClick={() => router.push(`/${locale}${ROUTES.APP.CANDIDATES}`)}
                   >
-                    View candidates
+                    {t('upcomingInterviews.viewCandidatesButton')}
                   </Button>
                 </div>
               )}
@@ -253,9 +257,9 @@ export default function RecruiterDashboard() {
           <Card className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-                Top candidates
+                {t('topCandidates.title')}
               </h2>
-              <Badge variant="outline">Score based</Badge>
+              <Badge variant="outline">{t('topCandidates.badge')}</Badge>
             </div>
             <div className="mt-4 space-y-4">
               {stats?.top_candidates?.length ? (
@@ -270,15 +274,15 @@ export default function RecruiterDashboard() {
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">{candidate.email}</p>
                     </div>
-                    <Badge variant="success">Score {candidate.score}</Badge>
+                    <Badge variant="success">{t('topCandidates.scoreBadge')} {candidate.score}</Badge>
                   </div>
                 ))
               ) : (
                 <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-gray-200 p-6 text-center text-sm text-gray-500 dark:border-gray-800">
                   <UsersIcon className="h-6 w-6" />
-                  <p>No ranked candidates yet.</p>
-                  <Button size="sm" onClick={() => router.push('/app/candidates')}>
-                    Source talent
+                  <p>{t('topCandidates.noCandidates')}</p>
+                  <Button size="sm" onClick={() => router.push(`/${locale}${ROUTES.APP.CANDIDATES}`)}>
+                    {t('topCandidates.sourceTalentButton')}
                   </Button>
                 </div>
               )}
@@ -289,9 +293,9 @@ export default function RecruiterDashboard() {
         <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-              Latest activity
+              {t('latestActivity.title')}
             </h2>
-            <Badge variant="outline">Live feed</Badge>
+            <Badge variant="outline">{t('latestActivity.badge')}</Badge>
           </div>
           {activityLoading ? (
             <div className="flex h-40 items-center justify-center">
@@ -321,7 +325,7 @@ export default function RecruiterDashboard() {
             </div>
           ) : (
             <div className="mt-4 flex items-center justify-center rounded-xl border border-dashed border-gray-200 p-6 text-sm text-gray-500 dark:border-gray-800">
-              Activity will show up here once your team engages with candidates.
+              {t('latestActivity.noActivity')}
             </div>
           )}
         </section>

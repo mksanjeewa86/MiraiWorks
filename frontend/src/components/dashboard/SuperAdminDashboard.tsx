@@ -25,9 +25,13 @@ import {
 import { SimpleAreaChart, SimpleBarChart } from '@/components/dashboard/Charts';
 import type { SuperAdminStats } from '@/types/dashboard';
 import type { ActivityItem } from '@/types';
+import { ROUTES } from '@/routes/config';
+import { useTranslations } from 'next-intl';
 
 export default function SuperAdminDashboard() {
   const router = useRouter();
+  const t = useTranslations('dashboard.superAdmin');
+  const tCommon = useTranslations('dashboard.common');
   const [stats, setStats] = useState<SuperAdminStats | null>(null);
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,36 +74,36 @@ export default function SuperAdminDashboard() {
     if (!stats) return [];
     return [
       {
-        label: 'Companies onboarded',
+        label: t('metrics.companiesOnboarded.label'),
         value: stats.total_companies ?? 0,
-        helperText: 'Across all active tenants',
-        trendLabel: `${stats.active_companies ?? 0} active`,
+        helperText: t('metrics.companiesOnboarded.helperText'),
+        trendLabel: `${stats.active_companies ?? 0} ${t('metrics.companiesOnboarded.active')}`,
         trendTone: 'positive' as const,
         icon: <BuildingOffice2Icon className="h-6 w-6" />,
       },
       {
-        label: 'Registered users',
+        label: t('metrics.registeredUsers.label'),
         value: stats.total_users ?? 0,
-        helperText: 'Global user base across roles',
-        trendLabel: `${stats.active_users ?? 0} active monthly`,
+        helperText: t('metrics.registeredUsers.helperText'),
+        trendLabel: `${stats.active_users ?? 0} ${t('metrics.registeredUsers.activeMonthly')}`,
         trendTone: 'positive' as const,
         icon: <UsersIcon className="h-6 w-6" />,
       },
       {
-        label: 'Open positions',
+        label: t('metrics.openPositions.label'),
         value: stats.total_positions ?? 0,
-        helperText: 'Positions currently published',
-        trendLabel: `${stats.total_applications ?? 0} total applications`,
+        helperText: t('metrics.openPositions.helperText'),
+        trendLabel: `${stats.total_applications ?? 0} ${t('metrics.openPositions.totalApplications')}`,
         trendTone: 'neutral' as const,
         icon: <BarChart3 className="h-6 w-6" />,
       },
       {
-        label: 'System uptime',
+        label: t('metrics.systemUptime.label'),
         value: stats.platform_metrics?.system_uptime
           ? `${stats.platform_metrics.system_uptime}%`
-          : 'N/A',
-        helperText: 'Rolling 30-day uptime',
-        trendLabel: `${stats.system_health?.api_response_time ?? 0}ms response`,
+          : tCommon('noData'),
+        helperText: t('metrics.systemUptime.helperText'),
+        trendLabel: `${stats.system_health?.api_response_time ?? 0}ms ${t('metrics.systemUptime.response')}`,
         trendTone: (stats.platform_metrics?.system_uptime &&
         stats.platform_metrics.system_uptime >= 99.5
           ? 'positive'
@@ -107,7 +111,7 @@ export default function SuperAdminDashboard() {
         icon: <ShieldCheckIcon className="h-6 w-6" />,
       },
     ];
-  }, [stats]);
+  }, [stats, t, tCommon]);
 
   const examMetrics = useMemo(() => {
     if (!stats) return [];
@@ -118,26 +122,26 @@ export default function SuperAdminDashboard() {
 
     return [
       {
-        label: 'Total exams',
+        label: t('examMetrics.totalExams.label'),
         value: stats.total_exams ?? 0,
-        helperText: 'Exams created system-wide',
-        trendLabel: `${stats.total_exam_assignments ?? 0} assignments`,
+        helperText: t('examMetrics.totalExams.helperText'),
+        trendLabel: `${stats.total_exam_assignments ?? 0} ${t('examMetrics.totalExams.assignments')}`,
         trendTone: 'neutral' as const,
         icon: <ClipboardCheck className="h-6 w-6" />,
       },
       {
-        label: 'Exam sessions',
+        label: t('examMetrics.examSessions.label'),
         value: stats.total_exam_sessions ?? 0,
-        helperText: 'Total exam attempts',
-        trendLabel: `${completionRate.toFixed(1)}% completion rate`,
+        helperText: t('examMetrics.examSessions.helperText'),
+        trendLabel: `${completionRate.toFixed(1)}% ${t('examMetrics.examSessions.completionRate')}`,
         trendTone: completionRate >= 70 ? ('positive' as const) : ('neutral' as const),
         icon: <Activity className="h-6 w-6" />,
       },
       {
-        label: 'Average score',
-        value: stats.avg_exam_score ? `${stats.avg_exam_score.toFixed(1)}%` : 'N/A',
-        helperText: 'Across completed exams',
-        trendLabel: `${stats.completed_exam_sessions ?? 0} completed`,
+        label: t('examMetrics.averageScore.label'),
+        value: stats.avg_exam_score ? `${stats.avg_exam_score.toFixed(1)}%` : tCommon('noData'),
+        helperText: t('examMetrics.averageScore.helperText'),
+        trendLabel: `${stats.completed_exam_sessions ?? 0} ${t('examMetrics.averageScore.completed')}`,
         trendTone:
           stats.avg_exam_score && stats.avg_exam_score >= 70
             ? ('positive' as const)
@@ -145,32 +149,33 @@ export default function SuperAdminDashboard() {
         icon: <Award className="h-6 w-6" />,
       },
     ];
-  }, [stats]);
+  }, [stats, t, tCommon]);
 
   const platformMetricsData = useMemo(() => {
     if (!stats?.platform_metrics) return [];
     return [
-      { name: 'Daily signups', value: stats.platform_metrics.daily_signups ?? 0 },
-      { name: 'Weekly signups', value: stats.platform_metrics.weekly_signups ?? 0 },
-      { name: 'Monthly signups', value: stats.platform_metrics.monthly_signups ?? 0 },
-      { name: 'Monthly active users', value: stats.platform_metrics.monthly_active_users ?? 0 },
+      { name: t('platformEngagement.dailySignups'), value: stats.platform_metrics.daily_signups ?? 0 },
+      { name: t('platformEngagement.weeklySignups'), value: stats.platform_metrics.weekly_signups ?? 0 },
+      { name: t('platformEngagement.monthlySignups'), value: stats.platform_metrics.monthly_signups ?? 0 },
+      { name: t('platformEngagement.monthlyActiveUsers'), value: stats.platform_metrics.monthly_active_users ?? 0 },
     ];
-  }, [stats]);
+  }, [stats, t]);
 
   const systemHealthSummary = useMemo(() => {
     const health = stats?.system_health;
+    const na = tCommon('noData');
     if (!health) {
       return [
-        { label: 'Database', value: 'N/A', tone: 'neutral' as const },
-        { label: 'API response', value: 'N/A', tone: 'neutral' as const },
-        { label: 'Active sessions', value: 'N/A', tone: 'neutral' as const },
-        { label: 'Error rate', value: 'N/A', tone: 'neutral' as const },
+        { label: t('systemHealth.database'), value: na, tone: 'neutral' as const },
+        { label: t('systemHealth.apiResponse'), value: na, tone: 'neutral' as const },
+        { label: t('systemHealth.activeSessions'), value: na, tone: 'neutral' as const },
+        { label: t('systemHealth.errorRate'), value: na, tone: 'neutral' as const },
       ];
     }
     return [
       {
-        label: 'Database',
-        value: health.database_status,
+        label: t('systemHealth.database'),
+        value: health.database_status === 'healthy' ? t('systemHealth.healthy') : health.database_status === 'warning' ? t('systemHealth.warning') : health.database_status,
         tone:
           health.database_status === 'healthy'
             ? 'positive'
@@ -179,22 +184,22 @@ export default function SuperAdminDashboard() {
               : 'negative',
       },
       {
-        label: 'API response',
-        value: `${health.api_response_time ?? 0} ms`,
+        label: t('systemHealth.apiResponse'),
+        value: `${health.api_response_time ?? 0} ${t('systemHealth.ms')}`,
         tone: health.api_response_time && health.api_response_time < 400 ? 'positive' : 'neutral',
       },
       {
-        label: 'Active sessions',
+        label: t('systemHealth.activeSessions'),
         value: health.active_sessions ?? 0,
         tone: 'neutral' as const,
       },
       {
-        label: 'Error rate',
+        label: t('systemHealth.errorRate'),
         value: `${health.error_rate ?? 0}%`,
         tone: health.error_rate && health.error_rate > 3 ? 'negative' : 'positive',
       },
     ];
-  }, [stats]);
+  }, [stats, t, tCommon]);
 
   const activityByType = useMemo(() => {
     const counts = new Map<string, number>();
@@ -206,9 +211,9 @@ export default function SuperAdminDashboard() {
   }, [activity]);
 
   const formatTimestamp = (value?: string) => {
-    if (!value) return 'N/A';
+    if (!value) return tCommon('noData');
     const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return 'N/A';
+    if (Number.isNaN(date.getTime())) return tCommon('noData');
     return date.toLocaleString('en-US', {
       month: 'short',
       day: 'numeric',
@@ -220,11 +225,11 @@ export default function SuperAdminDashboard() {
   const renderLogBadge = (level: string) => {
     switch (level.toLowerCase()) {
       case 'error':
-        return <Badge variant="error">error</Badge>;
+        return <Badge variant="error">{t('systemLogs.error')}</Badge>;
       case 'warning':
-        return <Badge variant="warning">warning</Badge>;
+        return <Badge variant="warning">{t('systemLogs.warningBadge')}</Badge>;
       default:
-        return <Badge variant="secondary">info</Badge>;
+        return <Badge variant="secondary">{t('systemLogs.info')}</Badge>;
     }
   };
 
@@ -242,20 +247,20 @@ export default function SuperAdminDashboard() {
   return (
     <div className="space-y-6 p-6">
       <DashboardHeader
-        title="Platform control center"
-        subtitle="System-wide visibility at a glance"
-        description="Observe tenant growth, infrastructure health, and operational signals."
+        title={t('header.title')}
+        subtitle={t('header.subtitle')}
+        description={t('header.description')}
         actions={
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={loadDashboardData}>
-              Refresh
+              {t('header.refreshButton')}
             </Button>
-            <Button size="sm" onClick={() => router.push('/admin/settings')}>
-              Manage platform
+            <Button size="sm" onClick={() => router.push(ROUTES.ADMIN.SETTINGS)}>
+              {t('header.managePlatformButton')}
             </Button>
           </div>
         }
-        meta={`Telemetry synced ${new Date().toLocaleTimeString()}`}
+        meta={`${t('header.telemetrySynced')} ${new Date().toLocaleTimeString()}`}
       />
 
       <DashboardContentGate loading={loading} error={error} onRetry={loadDashboardData}>
@@ -276,10 +281,10 @@ export default function SuperAdminDashboard() {
         <section className="mt-6">
           <div className="mb-4">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-              Exam system metrics
+              {t('examMetrics.title')}
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              System-wide exam performance and usage statistics
+              {t('examMetrics.description')}
             </p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -301,19 +306,19 @@ export default function SuperAdminDashboard() {
           <Card className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 lg:col-span-2">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-                Platform engagement
+                {t('platformEngagement.title')}
               </h2>
-              <Badge variant="outline">Signups</Badge>
+              <Badge variant="outline">{t('platformEngagement.badge')}</Badge>
             </div>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              Track how new users are joining and returning to the platform.
+              {t('platformEngagement.description')}
             </p>
             <div className="mt-6 h-[260px]">
               {platformMetricsData.length ? (
                 <SimpleAreaChart data={platformMetricsData} dataKey="value" color="#6366F1" />
               ) : (
                 <div className="flex h-full items-center justify-center text-sm text-gray-500">
-                  Platform metrics will show here once data is available.
+                  {t('platformEngagement.noData')}
                 </div>
               )}
             </div>
@@ -322,9 +327,9 @@ export default function SuperAdminDashboard() {
           <Card className="flex flex-col gap-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-                System health
+                {t('systemHealth.title')}
               </h2>
-              <Badge variant="secondary">Realtime</Badge>
+              <Badge variant="secondary">{t('systemHealth.badge')}</Badge>
             </div>
             <div className="space-y-3">
               {systemHealthSummary.map((item) => (
@@ -359,9 +364,9 @@ export default function SuperAdminDashboard() {
           <Card className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-                Platform activity feed
+                {t('platformActivity.title')}
               </h2>
-              <Badge variant="outline">Global</Badge>
+              <Badge variant="outline">{t('platformActivity.badge')}</Badge>
             </div>
             {activityLoading ? (
               <div className="flex h-40 items-center justify-center">
@@ -391,7 +396,7 @@ export default function SuperAdminDashboard() {
               </div>
             ) : (
               <div className="mt-4 flex items-center justify-center rounded-xl border border-dashed border-gray-200 p-6 text-sm text-gray-500 dark:border-gray-800">
-                Platform activity will appear as teams interact across tenants.
+                {t('platformActivity.noActivity')}
               </div>
             )}
           </Card>
@@ -399,9 +404,9 @@ export default function SuperAdminDashboard() {
           <Card className="flex flex-col gap-6 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-                System log stream
+                {t('systemLogs.title')}
               </h2>
-              <Badge variant="outline">Latest</Badge>
+              <Badge variant="outline">{t('systemLogs.badge')}</Badge>
             </div>
             <div className="space-y-4">
               {stats?.recent_system_logs?.length ? (
@@ -425,7 +430,7 @@ export default function SuperAdminDashboard() {
                 ))
               ) : (
                 <div className="flex items-center justify-center rounded-xl border border-dashed border-gray-200 p-6 text-sm text-gray-500 dark:border-gray-800">
-                  System logs will show here once events are recorded.
+                  {t('systemLogs.noLogs')}
                 </div>
               )}
             </div>
@@ -436,19 +441,19 @@ export default function SuperAdminDashboard() {
           <Card className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-                Activity breakdown
+                {t('activityBreakdown.title')}
               </h2>
-              <Badge variant="outline">By type</Badge>
+              <Badge variant="outline">{t('activityBreakdown.badge')}</Badge>
             </div>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              Compare which actions are driving activity across tenants.
+              {t('activityBreakdown.description')}
             </p>
             <div className="mt-6 h-[240px]">
               {activityByType.length ? (
                 <SimpleBarChart data={activityByType} dataKey="value" color="#22D3EE" />
               ) : (
                 <div className="flex h-full items-center justify-center text-sm text-gray-500">
-                  Activity data will appear here once events are collected.
+                  {t('activityBreakdown.noData')}
                 </div>
               )}
             </div>
@@ -457,35 +462,35 @@ export default function SuperAdminDashboard() {
           <Card className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-                Operational summary
+                {t('operationalSummary.title')}
               </h2>
-              <Badge variant="outline">At a glance</Badge>
+              <Badge variant="outline">{t('operationalSummary.badge')}</Badge>
             </div>
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <div className="flex flex-col gap-2 rounded-xl border border-gray-100 p-4 dark:border-gray-800">
                 <GaugeCircle className="h-6 w-6 text-indigo-500" />
-                <p className="text-sm text-gray-500 dark:text-gray-400">Conversion rate</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{t('operationalSummary.conversionRate')}</p>
                 <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                   {stats?.platform_metrics?.conversion_rate ?? 0}%
                 </p>
               </div>
               <div className="flex flex-col gap-2 rounded-xl border border-gray-100 p-4 dark:border-gray-800">
                 <ServerStackIcon className="h-6 w-6 text-emerald-500" />
-                <p className="text-sm text-gray-500 dark:text-gray-400">Active sessions</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{t('operationalSummary.activeSessions')}</p>
                 <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                   {stats?.system_health?.active_sessions ?? 0}
                 </p>
               </div>
               <div className="flex flex-col gap-2 rounded-xl border border-gray-100 p-4 dark:border-gray-800">
                 <BarChart3 className="h-6 w-6 text-sky-500" />
-                <p className="text-sm text-gray-500 dark:text-gray-400">Weekly signups</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{t('operationalSummary.weeklySignups')}</p>
                 <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                   {stats?.platform_metrics?.weekly_signups ?? 0}
                 </p>
               </div>
               <div className="flex flex-col gap-2 rounded-xl border border-gray-100 p-4 dark:border-gray-800">
                 <ShieldCheckIcon className="h-6 w-6 text-amber-500" />
-                <p className="text-sm text-gray-500 dark:text-gray-400">Error rate</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{t('operationalSummary.errorRate')}</p>
                 <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                   {stats?.system_health?.error_rate ?? 0}%
                 </p>
