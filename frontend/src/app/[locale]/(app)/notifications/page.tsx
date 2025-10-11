@@ -9,10 +9,12 @@ import { useRouter } from 'next/navigation';
 import { systemUpdatesApi } from '@/api/systemUpdates';
 import CreateSystemUpdateModal from '@/components/admin/CreateSystemUpdateModal';
 import SystemUpdateCard from '@/components/system-updates/SystemUpdateCard';
+import AppLayout from '@/components/layout/AppLayout';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import type { AppNotification } from '@/types/notification';
 import type { SystemUpdate } from '@/types/system-update';
 
-export default function NotificationsPage() {
+function NotificationsPageContent() {
   const t = useTranslations('notifications');
   const router = useRouter();
   const { user } = useAuth();
@@ -148,36 +150,36 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <style jsx>{`
-        @keyframes pulse-highlight {
-          0%, 100% {
-            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
-            border-color: rgb(96, 165, 250);
+    <AppLayout>
+      <div className="max-w-4xl mx-auto">
+        <style jsx>{`
+          @keyframes pulse-highlight {
+            0%, 100% {
+              box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+              border-color: rgb(96, 165, 250);
+            }
+            50% {
+              box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+              border-color: rgb(147, 197, 253);
+            }
           }
-          50% {
-            box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
-            border-color: rgb(147, 197, 253);
+          @keyframes pulse-highlight-purple {
+            0%, 100% {
+              box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.7);
+              border-color: rgb(192, 132, 252);
+            }
+            50% {
+              box-shadow: 0 0 0 10px rgba(168, 85, 247, 0);
+              border-color: rgb(216, 180, 254);
+            }
           }
-        }
-        @keyframes pulse-highlight-purple {
-          0%, 100% {
-            box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.7);
-            border-color: rgb(192, 132, 252);
+          .animate-pulse-highlight {
+            animation: pulse-highlight 1.5s ease-in-out 2;
           }
-          50% {
-            box-shadow: 0 0 0 10px rgba(168, 85, 247, 0);
-            border-color: rgb(216, 180, 254);
+          .animate-pulse-highlight-purple {
+            animation: pulse-highlight-purple 1.5s ease-in-out 2;
           }
-        }
-        .animate-pulse-highlight {
-          animation: pulse-highlight 1.5s ease-in-out 2;
-        }
-        .animate-pulse-highlight-purple {
-          animation: pulse-highlight-purple 1.5s ease-in-out 2;
-        }
-      `}</style>
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        `}</style>
         {/* Success Message */}
         {successMessage && (
           <div className="mb-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded-lg flex items-center justify-between animate-in fade-in slide-in-from-top-2">
@@ -195,7 +197,7 @@ export default function NotificationsPage() {
         )}
 
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-8 mt-6">
           <button
             onClick={() => router.back()}
             className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors mb-4 group"
@@ -467,6 +469,14 @@ export default function NotificationsPage() {
           onSuccess={handleUpdateCreated}
         />
       </div>
-    </div>
+    </AppLayout>
+  );
+}
+
+export default function NotificationsPage() {
+  return (
+    <ProtectedRoute>
+      <NotificationsPageContent />
+    </ProtectedRoute>
   );
 }
