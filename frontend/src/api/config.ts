@@ -175,6 +175,17 @@ export const API_ENDPOINTS = {
     BY_ID: (id: string) => `/api/admin/companies/${id}`,
   },
 
+  // Company Connections endpoints (new company-based connection system)
+  COMPANY_CONNECTIONS: {
+    ACTIVATE: (id: number | string) => `/api/company-connections/${id}/activate`,
+    BASE: '/api/company-connections',
+    BY_ID: (id: number | string) => `/api/company-connections/${id}`,
+    COMPANY_TO_COMPANY: '/api/company-connections/company-to-company',
+    DEACTIVATE: (id: number | string) => `/api/company-connections/${id}/deactivate`,
+    MY_CONNECTIONS: '/api/company-connections/my-connections',
+    USER_TO_COMPANY: '/api/company-connections/user-to-company',
+  },
+
   // Exam endpoints
   EXAMS: {
     ASSIGNMENTS: (examId: number | string) => `/api/exam/exams/${examId}/assignments`,

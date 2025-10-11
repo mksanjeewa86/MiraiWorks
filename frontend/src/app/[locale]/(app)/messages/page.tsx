@@ -885,12 +885,18 @@ function MessagesPageContent() {
   }
 
   const sidebarClassName = clsx(
-    'fixed inset-y-0 left-0 z-40 flex w-full max-w-xs flex-col bg-white dark:bg-gray-900 shadow-xl transition-transform duration-200 md:static md:z-auto md:w-80 md:translate-x-0 md:shadow-none md:border-r md:border-gray-200 md:dark:border-gray-800',
+    'fixed inset-y-0 left-0 z-40 flex w-full max-w-xs flex-col overflow-hidden bg-white dark:bg-gray-900 shadow-xl transition-transform duration-200 md:static md:z-auto md:w-80 md:translate-x-0 md:shadow-none md:border-r md:border-gray-200 md:dark:border-gray-800',
     isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
   );
   return (
     <AppLayout>
-      <div className="relative flex h-[calc(100vh-4rem)] flex-col bg-slate-50 dark:bg-gray-950 md:flex-row">
+      <style jsx global>{`
+        html, body {
+          overflow: hidden !important;
+          height: 100vh;
+        }
+      `}</style>
+      <div className="relative flex h-[calc(100vh-80px)] -mx-6 -mb-6 flex-col overflow-hidden bg-slate-50 dark:bg-gray-950 md:flex-row">
         {isMobileSidebarOpen && (
           <div
             className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm md:hidden"
@@ -1045,63 +1051,67 @@ function MessagesPageContent() {
                 </div>
               ) : state.activeTab === 'conversations' ? (
                 filteredConversations.length > 0 ? (
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     {filteredConversations.map((conversation) => (
                       <button
                         key={conversation.other_user_id}
                         type="button"
                         onClick={() => handleConversationSelect(conversation.other_user_id)}
-                        className={`p-4 cursor-pointer rounded-2xl border border-transparent bg-white transition hover:border-blue-200 hover:bg-blue-50 dark:bg-gray-900 dark:hover:border-blue-500/40 dark:hover:bg-gray-800 ${
+                        className={clsx(
+                          'w-full group relative flex items-center gap-3 rounded-lg py-2.5 transition-all duration-150 text-left',
                           state.activeConversationId === conversation.other_user_id
-                            ? 'border-blue-200 bg-blue-50 dark:border-blue-500/40 dark:bg-blue-900/20'
-                            : ''
-                        }`}
+                            ? 'bg-blue-50 dark:bg-blue-500/10 pl-4 pr-3'
+                            : 'hover:bg-gray-50 dark:hover:bg-gray-800/50 px-3'
+                        )}
                       >
-                        <div className="flex items-center gap-3">
+                        {/* Active Indicator */}
+                        {state.activeConversationId === conversation.other_user_id && (
+                          <div className="absolute left-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-blue-500" />
+                        )}
+
+                        {/* Avatar */}
+                        <div className="relative flex-shrink-0">
                           <div
-                            className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold text-white ${getAvatarColor(conversation.other_user_id)}`}
+                            className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold text-white ${getAvatarColor(conversation.other_user_id)}`}
                           >
                             {getInitials(conversation.other_user_name || '')}
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center justify-between">
-                              <h3 className="truncate text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                {conversation.other_user_name}
-                              </h3>
-                              {conversation.last_message && (
-                                <span className="text-xs text-gray-400">
-                                  {formatTime(conversation.last_message.created_at)}
-                                </span>
-                              )}
+                          {conversation.unread_count > 0 && (
+                            <div className="absolute -right-1 -top-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white ring-2 ring-white dark:ring-gray-900">
+                              {conversation.unread_count > 9 ? '9+' : conversation.unread_count}
                             </div>
-                            <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
-                              {conversation.last_message ? (
-                                <>
-                                  <span className="font-medium">
-                                    {conversation.last_message.sender_id === user?.id
-                                      ? 'You'
-                                      : conversation.last_message.sender_name}
-                                    :
-                                  </span>{' '}
-                                  {conversation.last_message.content}
-                                </>
-                              ) : (
-                                conversation.other_user_email
-                              )}
-                            </p>
-                            <div className="mt-1 flex items-center gap-2">
-                              {conversation.other_user_company && (
-                                <span className="text-xs text-gray-400">
-                                  {conversation.other_user_company}
-                                </span>
-                              )}
-                              {conversation.unread_count > 0 && (
-                                <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-blue-500 px-2 text-xs font-semibold text-white">
-                                  {conversation.unread_count}
-                                </span>
-                              )}
-                            </div>
+                          )}
+                        </div>
+
+                        {/* Content */}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between gap-2 mb-0.5">
+                            <h3 className="truncate text-sm font-semibold text-gray-900 dark:text-gray-100">
+                              {conversation.other_user_name}
+                            </h3>
+                            {conversation.last_message && (
+                              <span className="flex-shrink-0 text-[11px] leading-none text-gray-400 dark:text-gray-500">
+                                {formatTime(conversation.last_message.created_at)}
+                              </span>
+                            )}
                           </div>
+                          <p className="truncate text-xs leading-snug text-gray-500 dark:text-gray-400">
+                            {conversation.last_message ? (
+                              <>
+                                {conversation.last_message.sender_id === user?.id && (
+                                  <span className="text-gray-400 dark:text-gray-500">You: </span>
+                                )}
+                                {conversation.last_message.content}
+                              </>
+                            ) : (
+                              <span className="text-gray-400">{conversation.other_user_email}</span>
+                            )}
+                          </p>
+                          {conversation.other_user_company && (
+                            <p className="mt-0.5 truncate text-[10px] leading-none text-gray-400 dark:text-gray-500">
+                              {conversation.other_user_company}
+                            </p>
+                          )}
                         </div>
                       </button>
                     ))}
@@ -1123,39 +1133,49 @@ function MessagesPageContent() {
                   Loading contacts...
                 </div>
               ) : visibleContacts.length > 0 ? (
-                <div className="space-y-2">
+                <div className="space-y-1">
                   {visibleContacts.map((contact) => (
-                    <div
+                    <button
                       key={contact.id}
-                      className="flex items-center gap-3 rounded-2xl border border-transparent bg-white p-4 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 dark:bg-gray-900 dark:hover:border-blue-500/40 dark:hover:bg-gray-800"
+                      type="button"
+                      onClick={() => handleConversationSelect(contact.id, true)}
+                      className="group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-all duration-150 hover:bg-gray-50 dark:hover:bg-gray-800/50"
                     >
-                      <div
-                        className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold text-white ${getAvatarColor(contact.id)}`}
-                      >
-                        {getInitials(contact.full_name)}
+                      {/* Avatar */}
+                      <div className="relative flex-shrink-0">
+                        <div
+                          className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold text-white ${getAvatarColor(contact.id)}`}
+                        >
+                          {getInitials(contact.full_name)}
+                        </div>
                       </div>
-                      <div
-                        className="min-w-0 flex-1 cursor-pointer"
-                        onClick={() => handleContactProfileView(contact)}
-                      >
+
+                      {/* Content */}
+                      <div className="min-w-0 flex-1 pr-8">
                         <h3 className="truncate text-sm font-semibold text-gray-900 dark:text-gray-100">
                           {contact.full_name}
                         </h3>
-                        <p className="truncate text-sm text-gray-600 dark:text-gray-300">
+                        <p className="truncate text-xs leading-snug text-gray-500 dark:text-gray-400">
                           {contact.email}
                         </p>
                         {contact.company_name && (
-                          <p className="mt-1 text-xs text-gray-400">{contact.company_name}</p>
+                          <p className="mt-0.5 truncate text-[10px] leading-none text-gray-400 dark:text-gray-500">
+                            {contact.company_name}
+                          </p>
                         )}
                       </div>
-                      <Button
-                        size="sm"
-                        className="rounded-full bg-blue-500 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-600"
-                        onClick={() => handleConversationSelect(contact.id, true)}
-                      >
-                        Message
-                      </Button>
-                    </div>
+
+                      {/* Send Icon - Appears on hover */}
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 transition-opacity group-hover:opacity-100">
+                        <div className="group/icon relative flex h-7 w-7 items-center justify-center rounded-full bg-blue-500 text-white shadow-sm hover:bg-blue-600">
+                          <Send className="h-3.5 w-3.5" />
+                          {/* Tooltip */}
+                          <div className="pointer-events-none absolute -top-8 right-0 z-10 hidden whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover/icon:block group-hover/icon:opacity-100 dark:bg-gray-700">
+                            Send message
+                          </div>
+                        </div>
+                      </div>
+                    </button>
                   ))}
                 </div>
               ) : (
@@ -1169,7 +1189,7 @@ function MessagesPageContent() {
             </div>
           </div>
         </aside>
-        <main className="flex flex-1 flex-col bg-white dark:bg-gray-900 min-h-0">
+        <main className="flex flex-1 flex-col overflow-hidden bg-white dark:bg-gray-900 min-h-0">
           {state.activeConversationId && displayConversation ? (
             <>
               <header className="flex items-center justify-between border-b border-gray-200 px-4 py-4 dark:border-gray-800 sm:px-6">
@@ -1224,7 +1244,7 @@ function MessagesPageContent() {
                 </div>
               </header>
 
-              <div className="flex flex-1 flex-col min-h-0 bg-gradient-to-b from-white via-slate-50 to-slate-100 dark:from-gray-900 dark:via-gray-900 dark:to-gray-950">
+              <div className="flex flex-1 flex-col overflow-hidden min-h-0 bg-gradient-to-b from-white via-slate-50 to-slate-100 dark:from-gray-900 dark:via-gray-900 dark:to-gray-950">
                 <div
                   ref={messagesContainerRef}
                   className="flex-1 overflow-y-auto px-4 py-6 sm:px-8"

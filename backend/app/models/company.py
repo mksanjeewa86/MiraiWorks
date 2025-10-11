@@ -52,5 +52,19 @@ class Company(Base):
         cascade="all, delete-orphan",
     )
 
+    # Company connections (new system)
+    company_connections_as_source = relationship(
+        "CompanyConnection",
+        foreign_keys="CompanyConnection.source_company_id",
+        back_populates="source_company",
+        cascade="all, delete-orphan",
+    )
+    company_connections_as_target = relationship(
+        "CompanyConnection",
+        foreign_keys="CompanyConnection.target_company_id",
+        back_populates="target_company",
+        cascade="all, delete-orphan",
+    )
+
     def __repr__(self):
         return f"<Company(id={self.id}, name='{self.name}', type='{self.type}')>"

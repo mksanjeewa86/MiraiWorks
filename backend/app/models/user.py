@@ -138,6 +138,14 @@ class User(Base):
         cascade="all, delete-orphan",
     )
 
+    # Company connections (new system)
+    company_connections_as_user = relationship(
+        "CompanyConnection",
+        foreign_keys="CompanyConnection.source_user_id",
+        back_populates="source_user",
+        cascade="all, delete-orphan",
+    )
+
     # Creator relationship (who created this user)
     creator = relationship("User", remote_side="User.id", post_update=True)
 

@@ -54,6 +54,8 @@ class UserConnectionService:
 
     async def get_connected_users(self, db: AsyncSession, user_id: int) -> list[User]:
         """Get all users connected to this user."""
+        from sqlalchemy.orm import selectinload
+        from app.models.role import UserRole
 
         # Get all active connections where user is involved
         query = select(UserConnection).where(
@@ -62,7 +64,7 @@ class UserConnectionService:
                     UserConnection.user_id == user_id,
                     UserConnection.connected_user_id == user_id,
                 ),
-                UserConnection.is_active is True,
+                UserConnection.is_active == True,
             )
         )
 
@@ -80,12 +82,20 @@ class UserConnectionService:
         if not connected_user_ids:
             return []
 
-        # Get user objects
-        users_query = select(User).where(
-            and_(
-                User.id.in_(connected_user_ids),
-                User.is_active is True,
-                User.is_deleted is False,
+        # Get user objects with company and roles relationships
+        # IMPORTANT: Load nested relationships to avoid lazy loading errors
+        users_query = (
+            select(User)
+            .options(
+                selectinload(User.company),
+                selectinload(User.user_roles).selectinload(UserRole.role)
+            )
+            .where(
+                and_(
+                    User.id.in_(connected_user_ids),
+                    User.is_active == True,
+                    User.is_deleted == False,
+                )
             )
         )
 

@@ -7,6 +7,7 @@ from app.endpoints import (
     calendar,
     calendar_connections,
     companies,
+    company_connections,
     connection_invitations,
     email_preview,
     exam,
@@ -99,6 +100,11 @@ def include_routers(app: FastAPI) -> None:
         user_connections.router,
         prefix="/api/user/connections",
         tags=["user-connections"],
+    )
+    app.include_router(
+        company_connections.router,
+        prefix="/api/company-connections",
+        tags=["company-connections"],
     )
     app.include_router(
         connection_invitations.router,

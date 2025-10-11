@@ -11,6 +11,7 @@ from app.schemas.message import (
     MessageInfo,
     MessageSearchRequest,
 )
+from app.services.company_connection_service import company_connection_service
 from app.utils.datetime_utils import get_utc_now
 from app.utils.logging import get_logger
 
@@ -25,17 +26,26 @@ class MessageService:
         self, db: AsyncSession, sender_id: int, message_data: MessageCreate
     ) -> Message:
         """Send a direct message to another user."""
-        # Direct messaging - no restrictions by default
-
         # Verify recipient exists and is active
         recipient = await db.execute(
             select(User).where(
-                User.id == message_data.recipient_id, User.is_active is True
+                User.id == message_data.recipient_id, User.is_active == True
             )
         )
         if not recipient.scalar_one_or_none():
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Recipient not found"
+            )
+
+        # Validate company connection - users can only message if connected
+        can_interact = await company_connection_service.can_users_interact(
+            db, sender_id, message_data.recipient_id
+        )
+
+        if not can_interact:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You cannot message this user. No company connection exists between you.",
             )
 
         # Create message
@@ -87,12 +97,12 @@ class MessageService:
                     and_(
                         Message.sender_id == current_user_id,
                         Message.recipient_id == other_user_id,
-                        Message.is_deleted_by_sender is False,
+                        Message.is_deleted_by_sender == False,
                     ),
                     and_(
                         Message.sender_id == other_user_id,
                         Message.recipient_id == current_user_id,
-                        Message.is_deleted_by_recipient is False,
+                        Message.is_deleted_by_recipient == False,
                     ),
                 )
             )
@@ -192,12 +202,12 @@ class MessageService:
                         and_(
                             Message.sender_id == user_id,
                             Message.recipient_id == other_user_id,
-                            Message.is_deleted_by_sender is False,
+                            Message.is_deleted_by_sender == False,
                         ),
                         and_(
                             Message.sender_id == other_user_id,
                             Message.recipient_id == user_id,
-                            Message.is_deleted_by_recipient is False,
+                            Message.is_deleted_by_recipient == False,
                         ),
                     )
                 )
@@ -211,8 +221,8 @@ class MessageService:
                 select(func.count(Message.id)).where(
                     Message.sender_id == other_user_id,
                     Message.recipient_id == user_id,
-                    Message.is_read is False,
-                    Message.is_deleted_by_recipient is False,
+                    Message.is_read == False,
+                    Message.is_deleted_by_recipient == False,
                 )
             )
             unread_count = unread_result.scalar()
@@ -269,11 +279,11 @@ class MessageService:
                 or_(
                     and_(
                         Message.sender_id == user_id,
-                        Message.is_deleted_by_sender is False,
+                        Message.is_deleted_by_sender == False,
                     ),
                     and_(
                         Message.recipient_id == user_id,
-                        Message.is_deleted_by_recipient is False,
+                        Message.is_deleted_by_recipient == False,
                     ),
                 )
             )
@@ -317,7 +327,7 @@ class MessageService:
             select(Message).where(
                 Message.id.in_(message_ids),
                 Message.recipient_id == user_id,
-                Message.is_read is False,
+                Message.is_read == False,
             )
         )
         messages = result.scalars().all()
@@ -346,8 +356,8 @@ class MessageService:
             select(Message).where(
                 Message.sender_id == other_user_id,
                 Message.recipient_id == user_id,
-                Message.is_read is False,
-                Message.is_deleted_by_recipient is False,
+                Message.is_read == False,
+                Message.is_deleted_by_recipient == False,
             )
         )
         messages = result.scalars().all()

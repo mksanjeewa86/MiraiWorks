@@ -27,30 +27,14 @@ async def validate_messaging_permission(
     db: AsyncSession, sender_id: int, recipient_id: int
 ):
     """Validate that sender can message recipient - only connected users can message."""
-    from sqlalchemy import select, or_
-    from app.models.user_connection import UserConnection
+    from app.services.company_connection_service import company_connection_service
 
-    # Get both users
-    users = await message.get_users_with_roles(db, [sender_id, recipient_id])
-    if len(users) != 2:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Sender or recipient not found",
-        )
-
-    # Check if users are connected in user_connections table
-    query = select(UserConnection).where(
-        or_(
-            (UserConnection.user_id == sender_id) & (UserConnection.connected_user_id == recipient_id),
-            (UserConnection.user_id == recipient_id) & (UserConnection.connected_user_id == sender_id)
-        ),
-        UserConnection.is_active == True
+    # Check if users can interact via company connections
+    can_interact = await company_connection_service.can_users_interact(
+        db, sender_id, recipient_id
     )
 
-    result = await db.execute(query)
-    connection = result.scalar_one_or_none()
-
-    if not connection:
+    if not can_interact:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You can only message users you are connected with",

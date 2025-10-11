@@ -201,8 +201,6 @@ class CRUDMessage(CRUDBase[Message, dict, dict]):
         """Get users with their roles by IDs."""
         result = await db.execute(
             select(User)
-            .join(User.user_roles)
-            .join(UserRole.role)
             .where(User.id.in_(user_ids))
             .options(selectinload(User.user_roles).selectinload(UserRole.role))
         )

@@ -6,6 +6,7 @@ from app.models.calendar_connection import CalendarConnection
 from app.models.calendar_event import CalendarEvent
 from app.models.calendar_integration import ExternalCalendarAccount, SyncedEvent
 from app.models.candidate_workflow import CandidateWorkflow
+from app.models.company_connection import CompanyConnection  # Import BEFORE Company
 from app.models.company import Company
 from app.models.company_subscription import CompanySubscription
 from app.models.connection_invitation import ConnectionInvitation
@@ -74,6 +75,7 @@ from app.models.workflow_viewer import WorkflowViewer
 
 __all__ = [
     "Company",
+    "CompanyConnection",
     "User",
     "UserConnection",
     "ConnectionInvitation",
