@@ -19,7 +19,7 @@ import {
   X,
 } from 'lucide-react';
 import { messagesApi } from '@/api/messages';
-import { usersApi } from '@/api/users';
+import { userConnectionsApi } from '@/api/userConnections';
 import type { Conversation, LegacyMessage as Message } from '@/types';
 import type { MessagesPageState } from '@/types/pages';
 import dynamic from 'next/dynamic';
@@ -41,7 +41,6 @@ function MessagesPageContent() {
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const isPageVisibleRef = useRef(true);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const [superAdminIds, setSuperAdminIds] = useState<number[]>([]);
 
   const [state, setState] = useState<MessagesPageState>({
     conversations: [],
@@ -78,48 +77,16 @@ function MessagesPageContent() {
   >([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const isSuperAdminUser = useMemo(() => {
-    if (!user) {
-      return false;
-    }
-
-    const rawRoles = (user as { roles?: unknown[] })?.roles || [];
-    const normalizedRoles = Array.isArray(rawRoles)
-      ? rawRoles.map((role) => {
-          if (typeof role === 'string') {
-            return role;
-          }
-          if (role && typeof role === 'object' && 'role' in (role as Record<string, unknown>)) {
-            return (role as { role?: { name?: string } }).role?.name;
-          }
-          return undefined;
-        })
-      : [];
-
-    return Boolean(normalizedRoles.some((name) => name === 'system_admin') || user?.id === 7);
-  }, [user]);
-
-  const superAdminIdSet = useMemo(() => new Set(superAdminIds), [superAdminIds]);
-  const superAdminKey = useMemo(
-    () =>
-      superAdminIds
-        .slice()
-        .sort((a, b) => a - b)
-        .join(','),
-    [superAdminIds]
-  );
 
   const isUserRestricted = useCallback(
     (targetId?: number | null) => {
       if (!targetId) {
         return false;
       }
-      if (isSuperAdminUser) {
-        return true;
-      }
-      return superAdminIdSet.has(targetId);
+      // Super admins can message everyone - no restrictions
+      return false;
     },
-    [isSuperAdminUser, superAdminIdSet]
+    []
   );
 
   const allowedConversations = useMemo(
@@ -129,9 +96,8 @@ function MessagesPageContent() {
   );
 
   const visibleContacts = useMemo(
-    () =>
-      isSuperAdminUser ? [] : state.contacts.filter((contact) => !isUserRestricted(contact.id)),
-    [isSuperAdminUser, state.contacts, isUserRestricted]
+    () => state.contacts.filter((contact) => !isUserRestricted(contact.id)),
+    [state.contacts, isUserRestricted]
   );
 
   const visibleSearchResults = useMemo(() => {
@@ -140,42 +106,6 @@ function MessagesPageContent() {
       return !isUserRestricted(otherUserId ?? null);
     });
   }, [state.searchResults, user, isUserRestricted]);
-
-  const isActiveConversationRestricted = useMemo(
-    () => isUserRestricted(state.activeConversationId),
-    [isUserRestricted, state.activeConversationId]
-  );
-
-  const messagingDisabledCopy = 'Messaging with super administrator accounts is disabled.';
-
-  useEffect(() => {
-    if (!user) {
-      return;
-    }
-
-    const loadRestrictedUsers = async () => {
-      try {
-        const response = await messagesApi.getRestrictedUserIds();
-        if (response.success && response.data?.restricted_user_ids) {
-          setSuperAdminIds(response.data.restricted_user_ids);
-        }
-      } catch (error) {
-        console.error('Failed to load restricted user list', error);
-      }
-    };
-
-    loadRestrictedUsers();
-  }, [user]);
-
-  useEffect(() => {
-    if (state.activeConversationId && isUserRestricted(state.activeConversationId)) {
-      setState((prev) => ({
-        ...prev,
-        activeConversationId: null,
-        messages: [],
-      }));
-    }
-  }, [isUserRestricted, state.activeConversationId]);
 
   useEffect(() => {
     const fetchConversations = async () => {
@@ -218,7 +148,7 @@ function MessagesPageContent() {
     if (user) {
       fetchConversations();
     }
-  }, [user, superAdminKey]);
+  }, [user]);
 
   const scrollToBottom = useCallback(() => {
     if (messagesContainerRef.current) {
@@ -381,7 +311,7 @@ function MessagesPageContent() {
     if (isUserRestricted(state.activeConversationId)) {
       setState((prev) => ({
         ...prev,
-        error: messagingDisabledCopy,
+        error: 'You can only message users you are connected with.',
       }));
       return;
     }
@@ -458,9 +388,9 @@ function MessagesPageContent() {
       let friendlyMessage = errorMessage;
 
       if (isUserRestricted(state.activeConversationId)) {
-        friendlyMessage = messagingDisabledCopy;
-      } else if (errorMessage.includes('Super admin can only message company admins')) {
-        friendlyMessage = messagingDisabledCopy;
+        friendlyMessage = 'You can only message users you are connected with.';
+      } else if (errorMessage.includes('You can only message users you are connected with')) {
+        friendlyMessage = 'You can only message users you are connected with.';
       } else if (errorMessage.includes('Recipient not found')) {
         friendlyMessage =
           'The selected contact is no longer available. Please try selecting a different contact.';
@@ -641,7 +571,7 @@ function MessagesPageContent() {
       setIsMobileSidebarOpen(false);
       setState((prev) => ({
         ...prev,
-        error: messagingDisabledCopy,
+        error: 'You can only message users you are connected with.',
       }));
       return;
     }
@@ -739,111 +669,33 @@ function MessagesPageContent() {
     setState((prev) => ({ ...prev, activeTab: tab }));
 
     if (tab === 'contacts' && state.contacts.length === 0) {
-      if (isSuperAdminUser) {
-        setState((prev) => ({ ...prev, contacts: [], searchingContacts: false }));
-        return;
-      }
-
       try {
         setState((prev) => ({ ...prev, searchingContacts: true, error: null }));
 
-        let participants: Array<{
-          id: number;
-          email: string;
-          full_name: string;
-          company_name?: string;
-          is_online?: boolean;
-        }> = [];
+        // Get connected users from user_connections table
+        const response = await userConnectionsApi.getMyConnections();
 
-        // First try the regular participants endpoint
-        try {
-          const response = await messagesApi.searchParticipants();
+        if (response.success && response.data) {
+          const participants = response.data.map((connectedUser) => ({
+            id: connectedUser.id,
+            email: connectedUser.email,
+            full_name: connectedUser.full_name,
+            company_name: connectedUser.company_name || undefined,
+            is_online: false,
+          }));
 
-          if (response.success && response.data) {
-            participants = response.data?.participants || [];
-
-            // Filter participants for super admin (same logic as users API)
-            if (user?.roles?.some((role) => role.role.name === 'system_admin') || user?.id === 7) {
-              participants = participants.filter((p) => {
-                // For now, show participants with company_name (indicating they're company users)
-                return p.company_name && p.company_name.trim() !== '';
-              });
-            }
-          }
-        } catch {
-          // Silently continue to fallback
+          setState((prev) => ({
+            ...prev,
+            contacts: participants,
+            searchingContacts: false,
+          }));
+        } else {
+          setState((prev) => ({
+            ...prev,
+            contacts: [],
+            searchingContacts: false,
+          }));
         }
-
-        // If no participants found, try users API as fallback (especially for admin users)
-        if (participants.length === 0) {
-          try {
-            // Try multiple user queries to find any users
-            let usersResponse = await usersApi.getUsers({
-              is_active: true,
-              size: 100,
-            });
-
-            // Query 2: If no active users, try all users (non-deleted)
-            if (!usersResponse.data?.users?.length) {
-              usersResponse = await usersApi.getUsers({
-                size: 100,
-                include_deleted: false,
-              });
-            }
-
-            // Query 3: If still nothing, try absolutely everything
-            if (!usersResponse.data?.users?.length) {
-              usersResponse = await usersApi.getUsers({
-                size: 100,
-              });
-            }
-
-            if (usersResponse.data?.users?.length) {
-              // Convert users to participant format and exclude current user
-              let filteredUsers = usersResponse.data.users.filter((u) => u.id !== user?.id);
-              filteredUsers = filteredUsers.filter((u) => !u.roles.includes('system_admin'));
-
-              // For super admin, only show company admins (users who can receive messages)
-              // Check multiple ways to identify super admin
-              const isSuperAdmin =
-                user?.roles?.some(
-                  (role) => (role as { role: { name: string } }).role?.name === 'system_admin'
-                ) ||
-                user?.id === 7 ||
-                (user && !user.company_id && user.is_admin); // Super admin typically has no company_id but is admin
-
-              if (isSuperAdmin) {
-                filteredUsers = filteredUsers.filter((u) => {
-                  const isCompanyAdmin =
-                    u.roles.includes('admin') ||
-                    u.roles.includes('admin') ||
-                    (u.is_admin === true && u.company_id);
-                  return isCompanyAdmin;
-                });
-              }
-
-              participants = filteredUsers.map((u) => ({
-                id: u.id,
-                email: u.email,
-                full_name: `${u.first_name} ${u.last_name}`,
-                company_name: u.company_name || '', // Use company_name field
-                is_online: false,
-              }));
-            }
-          } catch (usersError) {
-            throw usersError;
-          }
-        }
-
-        const availableParticipants = participants.filter(
-          (participant) => !isUserRestricted(participant.id)
-        );
-
-        setState((prev) => ({
-          ...prev,
-          contacts: availableParticipants,
-          searchingContacts: false,
-        }));
       } catch (error) {
         setState((prev) => ({
           ...prev,
@@ -1027,24 +879,6 @@ function MessagesPageContent() {
           >
             Try again
           </Button>
-        </div>
-      </AppLayout>
-    );
-  }
-
-  if (isSuperAdminUser) {
-    return (
-      <AppLayout>
-        <div className="flex h-[calc(100vh-4rem)] flex-col items-center justify-center gap-6 bg-slate-50 px-6 text-center dark:bg-gray-950">
-          <div className="space-y-3">
-            <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
-              Messaging disabled
-            </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Super administrator accounts cannot use direct messaging. Switch to a company or
-              candidate account to chat.
-            </p>
-          </div>
         </div>
       </AppLayout>
     );
@@ -1395,11 +1229,7 @@ function MessagesPageContent() {
                   ref={messagesContainerRef}
                   className="flex-1 overflow-y-auto px-4 py-6 sm:px-8"
                 >
-                  {isActiveConversationRestricted ? (
-                    <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-sm text-gray-500 dark:text-gray-400">
-                      <p>{messagingDisabledCopy}</p>
-                    </div>
-                  ) : state.messages.length === 0 ? (
+                  {state.messages.length === 0 ? (
                     <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
                       <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 text-3xl font-semibold text-blue-500">
                         Chat
@@ -1568,12 +1398,7 @@ function MessagesPageContent() {
                 </div>
 
                 <div className="border-t border-gray-200 bg-white/95 px-4 py-5 shadow-[0_-12px_30px_rgba(15,23,42,0.08)] backdrop-blur dark:border-gray-800 dark:bg-gray-900/95 sm:px-6">
-                  {isActiveConversationRestricted ? (
-                    <div className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-100">
-                      {messagingDisabledCopy}
-                    </div>
-                  ) : (
-                    <>
+                  <>
                       {replyingTo && (
                         <div className="mb-4 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm dark:border-blue-800 dark:bg-blue-900/30">
                           <div className="flex items-start justify-between gap-3">
@@ -1728,8 +1553,7 @@ function MessagesPageContent() {
                           )}
                         </Button>
                       </div>
-                    </>
-                  )}
+                  </>
                 </div>
               </div>
             </>

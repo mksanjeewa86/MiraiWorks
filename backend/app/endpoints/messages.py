@@ -26,8 +26,11 @@ logger = get_logger(__name__)
 async def validate_messaging_permission(
     db: AsyncSession, sender_id: int, recipient_id: int
 ):
-    """Validate that sender can message recipient based on role restrictions."""
-    # Get both users with their roles
+    """Validate that sender can message recipient - only connected users can message."""
+    from sqlalchemy import select, or_
+    from app.models.user_connection import UserConnection
+
+    # Get both users
     users = await message.get_users_with_roles(db, [sender_id, recipient_id])
     if len(users) != 2:
         raise HTTPException(
@@ -35,34 +38,22 @@ async def validate_messaging_permission(
             detail="Sender or recipient not found",
         )
 
-    # Identify sender and recipient
-    sender = next(u for u in users if u.id == sender_id)
-    recipient = next(u for u in users if u.id == recipient_id)
+    # Check if users are connected in user_connections table
+    query = select(UserConnection).where(
+        or_(
+            (UserConnection.user_id == sender_id) & (UserConnection.connected_user_id == recipient_id),
+            (UserConnection.user_id == recipient_id) & (UserConnection.connected_user_id == sender_id)
+        ),
+        UserConnection.is_active == True
+    )
 
-    # Get user roles
-    sender_roles = [ur.role.name for ur in sender.user_roles]
-    recipient_roles = [ur.role.name for ur in recipient.user_roles]
+    result = await db.execute(query)
+    connection = result.scalar_one_or_none()
 
-    # Check messaging permissions
-    if UserRole.SYSTEM_ADMIN.value in sender_roles:
-        # System admin can only message company admins
-        if UserRole.ADMIN.value not in recipient_roles:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="System admin can only message admins",
-            )
-    elif UserRole.ADMIN.value in sender_roles:
-        # Admin can only message system admins
-        if UserRole.SYSTEM_ADMIN.value not in recipient_roles:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Admins can only message system admins",
-            )
-    # Other roles can message anyone except admins
-    elif UserRole.ADMIN.value in recipient_roles:
+    if not connection:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only system admins can message admins",
+            detail="You can only message users you are connected with",
         )
 
 
@@ -275,53 +266,5 @@ async def get_restricted_user_ids(
     db: AsyncSession = Depends(get_db),
 ):
     """Get list of user IDs that current user cannot message."""
-    from sqlalchemy import select
-
-    from app.models.role import Role, UserRole
-
-    # Get current user's roles
-    current_user_roles = [user_role.role.name for user_role in current_user.user_roles]
-
-    # Determine which users are restricted based on messaging rules
-    restricted_user_ids = []
-
-    if UserRole.SYSTEM_ADMIN.value in current_user_roles:
-        # System admin can only message admins, so restrict non-admin users
-        query = (
-            select(User.id)
-            .join(UserRole, User.id == UserRole.user_id)
-            .join(Role, UserRole.role_id == Role.id)
-            .where(Role.name != UserRole.ADMIN.value)
-            .where(User.is_active is True)
-            .where(User.is_deleted is False)
-        )
-        result = await db.execute(query)
-        restricted_user_ids = [user_id for (user_id,) in result.fetchall()]
-
-    elif UserRole.ADMIN.value in current_user_roles:
-        # Admin can only message system admins, so restrict non-system-admin users
-        query = (
-            select(User.id)
-            .join(UserRole, User.id == UserRole.user_id)
-            .join(Role, UserRole.role_id == Role.id)
-            .where(Role.name != UserRole.SYSTEM_ADMIN.value)
-            .where(User.is_active is True)
-            .where(User.is_deleted is False)
-        )
-        result = await db.execute(query)
-        restricted_user_ids = [user_id for (user_id,) in result.fetchall()]
-
-    else:
-        # Other users can message anyone except admins
-        query = (
-            select(User.id)
-            .join(UserRole, User.id == UserRole.user_id)
-            .join(Role, UserRole.role_id == Role.id)
-            .where(Role.name == UserRole.ADMIN.value)
-            .where(User.is_active is True)
-            .where(User.is_deleted is False)
-        )
-        result = await db.execute(query)
-        restricted_user_ids = [user_id for (user_id,) in result.fetchall()]
-
-    return {"restricted_user_ids": restricted_user_ids}
+    # No restrictions - everyone can message everyone
+    return {"restricted_user_ids": []}

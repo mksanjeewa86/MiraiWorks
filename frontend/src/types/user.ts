@@ -79,6 +79,21 @@ export interface BulkUserOperation {
 }
 
 // ============================================================================
+// USER CONNECTIONS
+// ============================================================================
+
+export interface ConnectedUser {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+  full_name: string;
+  company_id: number | null;
+  company_name: string | null;
+  is_active: boolean;
+}
+
+// ============================================================================
 // USER FORMS & STATE
 // ============================================================================
 

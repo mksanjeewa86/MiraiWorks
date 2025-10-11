@@ -417,6 +417,14 @@ export const API_ENDPOINTS = {
     BASE: '/api/users',
   },
 
+  // User Connections endpoints
+  USER_CONNECTIONS: {
+    ASSIGNABLE_USERS: '/api/user/connections/assignable-users',
+    CONNECT: (userId: number | string) => `/api/user/connections/connect/${userId}`,
+    DISCONNECT: (userId: number | string) => `/api/user/connections/disconnect/${userId}`,
+    MY_CONNECTIONS: '/api/user/connections/my-connections',
+  },
+
   // Video Call endpoints
   VIDEO_CALLS: {
     BY_ID: (id: string | number) => `/api/video-calls/${id}`,

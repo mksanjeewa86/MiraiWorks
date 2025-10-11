@@ -17,6 +17,7 @@ export * from './resumes';
 export * from './users';
 export * from './userSettings';
 export * from './candidates';
+export * from './userConnections';
 
 // Communication APIs
 export * from './messages';
