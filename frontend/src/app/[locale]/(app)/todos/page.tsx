@@ -41,7 +41,7 @@ function formatDisplayDate(input?: string | null, noDueDateText?: string): strin
   return date.toLocaleString();
 }
 
-function formatRelativeTime(input?: string | null, t?: (key: string, params?: Record<string, unknown>) => string): string {
+function formatRelativeTime(input?: string | null, t?: ReturnType<typeof useTranslations<'todos'>>): string {
   if (!input) return '';
   const date = new Date(input);
   if (Number.isNaN(date.getTime())) return '';
@@ -78,7 +78,7 @@ function TodoItem({
   loadingId,
   onRequestExtension,
   t,
-}: TodoItemProps & { onRequestExtension?: (todo: Todo) => void; t: (key: string, params?: Record<string, unknown>) => string }) {
+}: TodoItemProps & { onRequestExtension?: (todo: Todo) => void; t: ReturnType<typeof useTranslations<'todos'>> }) {
   const isProcessing = loadingId === todo.id;
   const showExpired = todo.status === 'expired' || todo.is_expired;
   const showCompleteAction = !todo.is_deleted && todo.status !== 'completed';
