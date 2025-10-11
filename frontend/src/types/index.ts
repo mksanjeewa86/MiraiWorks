@@ -24,9 +24,6 @@ export * from './api';
 // Notification types
 export * from './notification';
 
-// Dashboard types
-export * from './dashboard';
-
 // Hook-related types
 export * from './hooks';
 

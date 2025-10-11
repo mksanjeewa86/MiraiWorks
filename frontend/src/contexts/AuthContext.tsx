@@ -374,17 +374,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
+    // Clear local storage first
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
 
-    // Call logout API if token exists
+    // Dispatch logout to clear auth state
+    dispatch({ type: 'LOGOUT' });
+
+    // Try to call logout API silently (don't wait for it)
+    // This will invalidate the token on the backend if it's still valid
     if (state.accessToken) {
       authApi.logout(state.accessToken).catch(() => {
-        // Ignore errors on logout
+        // Silently ignore - logout is already complete on frontend
       });
     }
-
-    dispatch({ type: 'LOGOUT' });
 
     // Redirect to login page after logout using Next.js router
     if (typeof window !== 'undefined') {

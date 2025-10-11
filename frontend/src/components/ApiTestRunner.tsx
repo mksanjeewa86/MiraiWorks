@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { authApi } from '@/api/auth';
-import { dashboardApi } from '@/api/dashboard';
 import { messagesApi } from '@/api/messages';
 import { resumesApi } from '@/api/resumes';
 import { API_CONFIG } from '@/api/config';
@@ -100,38 +99,6 @@ const ApiTestRunner: React.FC = () => {
     markSuiteCompleted(suiteName);
   };
 
-  const runDashboardTests = async () => {
-    const suiteName = 'Dashboard API';
-    const testNames = ['Get dashboard statistics', 'Get activity feed'];
-
-    addTestSuite(suiteName, testNames);
-
-    if (!accessToken) {
-      testNames.forEach((testName) => {
-        updateTestResult(suiteName, testName, {
-          status: 'fail',
-          details: 'No access token available',
-        });
-      });
-      markSuiteCompleted(suiteName);
-      return;
-    }
-
-    // Test dashboard stats
-    const statsResult = await runTest('Get dashboard statistics', () =>
-      dashboardApi.getStats(accessToken)
-    );
-    updateTestResult(suiteName, 'Get dashboard statistics', statsResult);
-
-    // Test activity feed
-    const activityResult = await runTest('Get activity feed', () =>
-      dashboardApi.getRecentActivity(10, accessToken)
-    );
-    updateTestResult(suiteName, 'Get activity feed', activityResult);
-
-    markSuiteCompleted(suiteName);
-  };
-
   const runMessagingTests = async () => {
     const suiteName = 'Messaging API';
     const testNames = ['Get conversations', 'Mark conversation as read'];
@@ -223,7 +190,6 @@ const ApiTestRunner: React.FC = () => {
 
     try {
       await runAuthTests();
-      await runDashboardTests();
       await runMessagingTests();
       await runResumeTests();
     } finally {

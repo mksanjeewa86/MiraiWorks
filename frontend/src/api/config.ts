@@ -30,7 +30,7 @@ export const buildApiUrl = (endpoint: string): string => {
  * - Keep the comment above each section for clarity
  *
  * Example:
- * If adding a new endpoint starting with 'D', it should go between COMPANIES and DASHBOARD
+ * If adding a new endpoint starting with 'D', it should go between COMPANIES and EXAMS
  * If adding a new key to AUTH, ensure it's alphabetically ordered with LOGIN, LOGOUT, etc.
  */
 export const API_ENDPOINTS = {
@@ -173,13 +173,6 @@ export const API_ENDPOINTS = {
   COMPANIES: {
     BASE: '/api/admin/companies',
     BY_ID: (id: string) => `/api/admin/companies/${id}`,
-  },
-
-  // Dashboard endpoints
-  DASHBOARD: {
-    ACTIVITY: '/api/dashboard/activity',
-    BASE: '/api/dashboard',
-    STATS: '/api/dashboard/stats',
   },
 
   // Exam endpoints

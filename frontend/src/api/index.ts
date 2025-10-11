@@ -24,6 +24,3 @@ export * from './notifications';
 
 // Calendar APIs
 export * from './calendar';
-
-// Dashboard APIs
-export * from './dashboard';
