@@ -316,12 +316,55 @@ export const API_ENDPOINTS = {
     STATUS: (id: string | number) => `/api/positions/${id}/status`,
   },
 
+  // Privacy Settings endpoints
+  PRIVACY: {
+    ME: '/api/privacy/me',
+  },
+
+  // Profile endpoints
+  PROFILE: {
+    // Certifications
+    CERTIFICATIONS: '/api/profile/certifications',
+    CERTIFICATIONS_BY_ID: (id: number | string) => `/api/profile/certifications/${id}`,
+    // Completeness
+    COMPLETENESS: '/api/profile/completeness',
+    // Education
+    EDUCATION: '/api/profile/education',
+    EDUCATION_BY_ID: (id: number | string) => `/api/profile/education/${id}`,
+    // Job Preferences
+    JOB_PREFERENCES: '/api/profile/job-preferences',
+    // Projects
+    PROJECTS: '/api/profile/projects',
+    PROJECTS_BY_ID: (id: number | string) => `/api/profile/projects/${id}`,
+    // Skills
+    SKILLS: '/api/profile/skills',
+    SKILLS_BY_ID: (id: number | string) => `/api/profile/skills/${id}`,
+    // Work Experience
+    WORK_EXPERIENCE: '/api/profile/work-experience',
+    WORK_EXPERIENCE_BY_ID: (id: number | string) => `/api/profile/work-experience/${id}`,
+  },
+
+  // Profile Views endpoints
+  PROFILE_VIEWS: {
+    COUNT: '/api/profile-views/count',
+    MY_VIEWS: '/api/profile-views/my-views',
+    RECENT_VIEWERS: '/api/profile-views/recent-viewers',
+    RECORD: '/api/profile-views/',
+    STATS: '/api/profile-views/stats',
+  },
+
   // Question Bank endpoints
   QUESTION_BANKS: {
     BASE: '/api/question-banks',
     BY_ID: (bankId: number | string) => `/api/question-banks/${bankId}`,
     CLONE: (bankId: number | string) => `/api/question-banks/${bankId}/clone`,
     STATS: (bankId: number | string) => `/api/question-banks/${bankId}/stats`,
+  },
+
+  // Recruiter Profile endpoints
+  RECRUITER_PROFILE: {
+    BY_USER_ID: (userId: number | string) => `/api/recruiter-profile/${userId}`,
+    ME: '/api/recruiter-profile/me',
   },
 
   // Resume endpoints

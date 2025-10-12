@@ -131,6 +131,7 @@ async def get_user_profile(
         job_title=user_settings.job_title if user_settings else None,
         bio=user_settings.bio if user_settings else None,
         avatar_url=user_settings.avatar_url if user_settings else None,
+        cover_photo_url=user_settings.cover_photo_url if user_settings else None,
     )
 
 
@@ -145,7 +146,7 @@ async def update_user_profile(
 
     # Separate user fields and settings fields
     user_fields = {"first_name", "last_name", "phone"}
-    settings_fields = {"job_title", "bio", "avatar_url"}
+    settings_fields = {"job_title", "bio", "avatar_url", "cover_photo_url"}
 
     user_data = {k: v for k, v in update_data.items() if k in user_fields}
     settings_data = {k: v for k, v in update_data.items() if k in settings_fields}
@@ -180,4 +181,5 @@ async def update_user_profile(
         job_title=user_settings.job_title if user_settings else None,
         bio=user_settings.bio if user_settings else None,
         avatar_url=user_settings.avatar_url if user_settings else None,
+        cover_photo_url=user_settings.cover_photo_url if user_settings else None,
     )

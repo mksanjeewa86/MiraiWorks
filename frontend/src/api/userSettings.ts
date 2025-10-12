@@ -17,10 +17,10 @@ export const userSettingsApi = {
   },
 
   async getProfile(): Promise<{ data: UserProfile }> {
-    return await apiClient.get<UserProfile>(API_ENDPOINTS.AUTH.ME);
+    return await apiClient.get<UserProfile>(API_ENDPOINTS.USER.UPDATE_PROFILE);
   },
 
   async updateProfile(profile: UserProfileUpdate): Promise<{ data: UserProfile }> {
-    return await apiClient.put<UserProfile>(API_ENDPOINTS.AUTH.ME, profile);
+    return await apiClient.put<UserProfile>(API_ENDPOINTS.USER.UPDATE_PROFILE, profile);
   },
 };

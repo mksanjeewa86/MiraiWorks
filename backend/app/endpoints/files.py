@@ -8,7 +8,7 @@ from sqlalchemy.orm import selectinload
 
 from app.config.endpoints import API_ROUTES
 from app.database import get_db
-from app.dependencies import get_current_active_user
+from app.dependencies import get_current_active_user, get_optional_current_user
 from app.models.message import Message
 from app.models.role import UserRole
 from app.models.user import User
@@ -37,6 +37,9 @@ ALLOWED_EXTENSIONS = {
     "jpg",
     "jpeg",
     "gif",
+    "heic",
+    "heif",
+    "webp",
     "doc",
     "docx",
     "xls",
@@ -229,13 +232,23 @@ async def upload_file(
 
         storage_service = get_local_storage_service()
 
+        # Determine upload category based on content type or file purpose
+        # Profile avatars should use a different category for easier access control
+        upload_category = "message-attachments"  # Default category
+
+        # Check if this is likely a profile avatar (image file without message context)
+        if file.content_type and file.content_type.startswith('image/'):
+            # For now, treat all image uploads as potential profile avatars
+            # In the future, this could be determined by a request parameter
+            upload_category = "profile-avatars"
+
         # Upload with local storage
         file_path, file_hash, file_size = await storage_service.upload_file_data(
             file_content,
             file.filename,
             file.content_type,
             current_user.id,
-            "message-attachments",
+            upload_category,
         )
 
         # Generate download URL
@@ -274,7 +287,7 @@ async def upload_file(
 async def download_file(
     s3_key: str,
     download: str | None = None,  # Add query parameter to control download behavior
-    current_user: User = Depends(get_current_active_user),
+    current_user: User | None = Depends(get_optional_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Download a file from storage (MinIO or local) with permission check."""
@@ -282,16 +295,29 @@ async def download_file(
     # Validate and normalise the requested key
     safe_key = _normalize_storage_key(s3_key)
 
-    # Check if user has permission to access this file
-    has_permission = await check_file_access_permission(db, current_user.id, safe_key)
-    if not has_permission:
-        logger.warning(f"User {current_user.id} denied access to file {safe_key}")
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to access this file",
-        )
+    # Profile avatars are publicly accessible (no authentication required)
+    is_profile_avatar = safe_key.startswith("profile-avatars/")
 
-    logger.info(f"User {current_user.id} granted access to file {safe_key}")
+    if not is_profile_avatar:
+        # For non-profile files, require authentication
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication required",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        # Check if user has permission to access this file
+        has_permission = await check_file_access_permission(db, current_user.id, safe_key)
+        if not has_permission:
+            logger.warning(f"User {current_user.id} denied access to file {safe_key}")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to access this file",
+            )
+
+    user_id_log = current_user.id if current_user else "anonymous"
+    logger.info(f"User {user_id_log} granted access to file {safe_key}")
 
     # Try MinIO first
     try:
@@ -321,9 +347,11 @@ async def download_file(
         storage_service = get_local_storage_service()
 
         # Resolve the full path to the file
-        # s3_key comes in as: "message-attachments/8/2025/09/file.pdf"
-        # We need to make it: "uploads/message-attachments/8/2025/09/file.pdf"
+        # s3_key comes in as: "message-attachments/8/2025/09/file.pdf" or "profile-avatars/137/2025/10/file.jpg"
+        # We need to resolve it relative to the base_path
         full_file_path = _resolve_local_path(storage_service.base_path, safe_key)
+
+        logger.info(f"Attempting to serve file: base_path={storage_service.base_path}, safe_key={safe_key}, resolved_path={full_file_path}, exists={full_file_path.exists()}")
 
         # Check if file exists
         if full_file_path.exists():
@@ -335,6 +363,8 @@ async def download_file(
             media_type = "application/octet-stream"
             if file_ext in ["jpg", "jpeg", "png", "gif", "webp"]:
                 media_type = f'image/{file_ext.replace("jpg", "jpeg")}'
+            elif file_ext in ["heic", "heif"]:
+                media_type = "image/heic"
             elif file_ext in ["pdf"]:
                 media_type = "application/pdf"
             elif file_ext in ["txt"]:

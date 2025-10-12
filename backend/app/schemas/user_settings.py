@@ -58,6 +58,7 @@ class UserProfileUpdate(BaseModel):
     job_title: Optional[str] = None
     bio: Optional[str] = None
     avatar_url: Optional[str] = None
+    cover_photo_url: Optional[str] = None
 
 
 class UserProfileResponse(BaseModel):
@@ -70,5 +71,6 @@ class UserProfileResponse(BaseModel):
     job_title: Optional[str] = None
     bio: Optional[str] = None
     avatar_url: Optional[str] = None
+    cover_photo_url: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)

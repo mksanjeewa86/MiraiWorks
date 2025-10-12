@@ -21,9 +21,9 @@ const shadowClasses = {
   lg: 'shadow-lg',
 };
 
-function Card({ children, className, padding = 'md', shadow = 'sm' }: CardProps) {
+function Card({ children, className, padding = 'md', shadow = 'sm', id }: CardProps & { id?: string }) {
   return (
-    <div className={clsx('card', paddingClasses[padding], shadowClasses[shadow], className)}>
+    <div id={id} className={clsx('card', paddingClasses[padding], shadowClasses[shadow], className)}>
       {children}
     </div>
   );

@@ -79,13 +79,24 @@ class LocalStorageService:
             rel_path = Path(file_path).relative_to(self.base_path)
             # URL encode the path
             import urllib.parse
+            import os
 
             encoded_path = urllib.parse.quote(str(rel_path))
-            return f"/api/files/download/{encoded_path}"
+
+            # Get the API base URL from environment or use default
+            # This ensures the frontend can access the file from the backend
+            api_host = os.environ.get("API_HOST", "http://localhost:8000")
+
+            return f"{api_host}/api/files/download/{encoded_path}"
         except ValueError:
             # If file is not under base_path, use absolute path
+            import urllib.parse
+            import os
+
             encoded_path = urllib.parse.quote(file_path)
-            return f"/api/files/download/{encoded_path}"
+            api_host = os.environ.get("API_HOST", "http://localhost:8000")
+
+            return f"{api_host}/api/files/download/{encoded_path}"
 
     def file_exists(self, file_path: str) -> bool:
         """Check if file exists."""

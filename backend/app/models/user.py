@@ -223,6 +223,70 @@ class User(Base):
         cascade="all, delete-orphan",
     )
 
+    # Profile-related relationships
+    work_experiences = relationship(
+        "ProfileWorkExperience",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        order_by="ProfileWorkExperience.display_order",
+    )
+    educations = relationship(
+        "ProfileEducation",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        order_by="ProfileEducation.display_order",
+    )
+    skills = relationship(
+        "ProfileSkill",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        order_by="ProfileSkill.display_order",
+    )
+    certifications = relationship(
+        "ProfileCertification",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        order_by="ProfileCertification.display_order",
+    )
+    projects = relationship(
+        "ProfileProject",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        order_by="ProfileProject.display_order",
+    )
+    job_preference = relationship(
+        "JobPreference",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        uselist=False,  # One-to-one relationship
+    )
+    recruiter_profile = relationship(
+        "RecruiterProfile",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        uselist=False,  # One-to-one relationship
+    )
+    privacy_settings = relationship(
+        "PrivacySettings",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        uselist=False,  # One-to-one relationship
+    )
+
+    # Profile view tracking
+    profile_views_received = relationship(
+        "ProfileView",
+        foreign_keys="ProfileView.profile_user_id",
+        back_populates="profile_user",
+        cascade="all, delete-orphan",
+    )
+    profile_views_made = relationship(
+        "ProfileView",
+        foreign_keys="ProfileView.viewer_user_id",
+        back_populates="viewer_user",
+        cascade="all, delete-orphan",
+    )
+
     @property
     def full_name(self):
         return f"{self.first_name} {self.last_name}"

@@ -233,7 +233,11 @@
     "searchable": "Make profile searchable",
     "showEmail": "Show email address",
     "showPhone": "Show phone number",
-    "showResume": "Allow resume download"
+    "showResume": "Allow resume download",
+    "visible": "Visible",
+    "hidden": "Hidden",
+    "visibleToOthers": "This section is visible to others",
+    "hiddenFromOthers": "This section is hidden from others"
   },
   "stats": {
     "title": "Profile Stats",
@@ -252,6 +256,7 @@
     "save": "Save Changes",
     "saveProfile": "Save Profile",
     "editProfile": "Edit Profile",
+    "editCover": "Edit Cover Photo",
     "saving": "Saving...",
     "cancel": "Cancel",
     "delete": "Delete",
@@ -302,6 +307,66 @@
       "addEducation": "Add education",
       "addSkills": "Add at least 5 skills",
       "uploadResume": "Upload your resume"
+    },
+    "sections": {
+      "basic_info": "Basic Information",
+      "work_experience": "Work Experience",
+      "education": "Education",
+      "skills": "Skills",
+      "profile_picture": "Profile Picture",
+      "projects": "Projects",
+      "certifications": "Certifications",
+      "job_preferences": "Job Preferences"
     }
+  },
+  "jobPreferences": {
+    "title": "Job Preferences",
+    "subtitle": "Manage your job search preferences",
+    "edit": "Edit Preferences",
+    "form": {
+      "desiredJobTypes": "Desired Job Types",
+      "desiredJobTypesPlaceholder": "e.g., Software Engineer, Full Stack Developer",
+      "desiredSalaryMin": "Minimum Desired Salary",
+      "desiredSalaryMax": "Maximum Desired Salary",
+      "salaryCurrency": "Currency",
+      "salaryPeriod": "Salary Period",
+      "willingToRelocate": "Willing to Relocate",
+      "preferredLocations": "Preferred Locations",
+      "preferredLocationsPlaceholder": "e.g., Tokyo, Osaka, Remote",
+      "workModePreferences": "Work Mode Preferences",
+      "workModePreferencesPlaceholder": "e.g., Remote, Hybrid, On-site",
+      "availableFrom": "Available From",
+      "noticePeriodDays": "Notice Period (Days)",
+      "jobSearchStatus": "Job Search Status",
+      "preferredIndustries": "Preferred Industries",
+      "preferredIndustriesPlaceholder": "e.g., Technology, Finance, Healthcare",
+      "preferredCompanySizes": "Preferred Company Sizes",
+      "preferredCompanySizesPlaceholder": "e.g., Startup, SME, Enterprise",
+      "otherPreferences": "Other Preferences",
+      "otherPreferencesPlaceholder": "Any other preferences or requirements...",
+      "save": "Save Preferences",
+      "cancel": "Cancel"
+    },
+    "status": {
+      "actively_looking": "Actively Looking",
+      "open_to_opportunities": "Open to Opportunities",
+      "not_looking": "Not Looking"
+    },
+    "salaryPeriod": {
+      "yearly": "Yearly",
+      "monthly": "Monthly",
+      "hourly": "Hourly"
+    },
+    "workMode": {
+      "remote": "Remote",
+      "hybrid": "Hybrid",
+      "onsite": "On-site"
+    },
+    "companySize": {
+      "startup": "Startup (1-50 employees)",
+      "sme": "SME (51-500 employees)",
+      "enterprise": "Enterprise (500+ employees)"
+    },
+    "noPreferences": "No job preferences set yet"
   }
 }

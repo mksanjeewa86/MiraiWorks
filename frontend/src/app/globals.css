@@ -295,6 +295,17 @@ body {
   }
 }
 
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes glow {
   0%,
   100% {
@@ -328,6 +339,10 @@ body {
 
 .animate-glow {
   animation: glow 2s ease-in-out infinite alternate;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
 }
 
 /* Animation Delays */
@@ -811,4 +826,68 @@ body {
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+/* React Easy Crop Styles */
+.reactEasyCrop_Container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  user-select: none;
+  touch-action: none;
+  cursor: move;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.reactEasyCrop_Image,
+.reactEasyCrop_Video {
+  will-change: transform;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.reactEasyCrop_CropArea {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-sizing: border-box;
+  box-shadow: 0 0 0 9999em rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.reactEasyCrop_CropAreaRound {
+  border-radius: 50%;
+}
+
+.reactEasyCrop_CropAreaGrid::before {
+  content: ' ';
+  box-sizing: border-box;
+  position: absolute;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  top: 0;
+  bottom: 0;
+  left: 33.33%;
+  right: 33.33%;
+  border-top: 0;
+  border-bottom: 0;
+}
+
+.reactEasyCrop_CropAreaGrid::after {
+  content: ' ';
+  box-sizing: border-box;
+  position: absolute;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  top: 33.33%;
+  bottom: 33.33%;
+  left: 0;
+  right: 0;
+  border-left: 0;
+  border-right: 0;
 }

@@ -233,7 +233,11 @@
     "searchable": "プロフィールを検索可能にする",
     "showEmail": "メールアドレスを表示",
     "showPhone": "電話番号を表示",
-    "showResume": "履歴書のダウンロードを許可"
+    "showResume": "履歴書のダウンロードを許可",
+    "visible": "表示",
+    "hidden": "非表示",
+    "visibleToOthers": "このセクションは他のユーザーに表示されます",
+    "hiddenFromOthers": "このセクションは他のユーザーから非表示になります"
   },
   "stats": {
     "title": "プロフィール統計",
@@ -252,6 +256,7 @@
     "save": "変更を保存",
     "saveProfile": "プロフィールを保存",
     "editProfile": "プロフィールを編集",
+    "editCover": "カバー写真を編集",
     "saving": "保存中...",
     "cancel": "キャンセル",
     "delete": "削除",
@@ -302,6 +307,66 @@
       "addEducation": "学歴を追加",
       "addSkills": "少なくとも5つのスキルを追加",
       "uploadResume": "履歴書をアップロード"
+    },
+    "sections": {
+      "basic_info": "基本情報",
+      "work_experience": "職歴",
+      "education": "学歴",
+      "skills": "スキル",
+      "profile_picture": "プロフィール写真",
+      "projects": "プロジェクト",
+      "certifications": "資格",
+      "job_preferences": "求人の希望条件"
     }
+  },
+  "jobPreferences": {
+    "title": "求人の希望条件",
+    "subtitle": "転職活動の希望条件を管理",
+    "edit": "希望条件を編集",
+    "form": {
+      "desiredJobTypes": "希望職種",
+      "desiredJobTypesPlaceholder": "例：ソフトウェアエンジニア、フルスタック開発者",
+      "desiredSalaryMin": "最低希望年収",
+      "desiredSalaryMax": "最高希望年収",
+      "salaryCurrency": "通貨",
+      "salaryPeriod": "給与期間",
+      "willingToRelocate": "転居可能",
+      "preferredLocations": "希望勤務地",
+      "preferredLocationsPlaceholder": "例：東京、大阪、リモート",
+      "workModePreferences": "希望勤務形態",
+      "workModePreferencesPlaceholder": "例：リモート、ハイブリッド、オフィス勤務",
+      "availableFrom": "勤務開始可能時期",
+      "noticePeriodDays": "退職予告期間（日数）",
+      "jobSearchStatus": "転職活動状況",
+      "preferredIndustries": "希望業界",
+      "preferredIndustriesPlaceholder": "例：IT、金融、医療",
+      "preferredCompanySizes": "希望企業規模",
+      "preferredCompanySizesPlaceholder": "例：スタートアップ、中小企業、大企業",
+      "otherPreferences": "その他の希望条件",
+      "otherPreferencesPlaceholder": "その他の希望や要望があれば記入してください...",
+      "save": "希望条件を保存",
+      "cancel": "キャンセル"
+    },
+    "status": {
+      "actively_looking": "積極的に探しています",
+      "open_to_opportunities": "良い機会があれば",
+      "not_looking": "探していません"
+    },
+    "salaryPeriod": {
+      "yearly": "年収",
+      "monthly": "月収",
+      "hourly": "時給"
+    },
+    "workMode": {
+      "remote": "リモート",
+      "hybrid": "ハイブリッド",
+      "onsite": "オフィス勤務"
+    },
+    "companySize": {
+      "startup": "スタートアップ（1〜50人）",
+      "sme": "中小企業（51〜500人）",
+      "enterprise": "大企業（500人以上）"
+    },
+    "noPreferences": "まだ希望条件が設定されていません"
   }
 }

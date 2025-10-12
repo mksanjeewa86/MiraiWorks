@@ -20,8 +20,12 @@ from app.endpoints import (
     messages,
     notifications,
     positions,
+    privacy_settings,
+    profile,
+    profile_views,
     public,
     question_bank,
+    recruiter_profile,
     resumes,
     subscription,
     system_updates,
@@ -96,6 +100,10 @@ def include_routers(app: FastAPI) -> None:
     app.include_router(webhooks.router, prefix="/api/webhooks", tags=["webhooks"])
     app.include_router(resumes.router, prefix="/api/resumes", tags=["resumes"])
     app.include_router(user_settings.router, prefix="/api/user", tags=["user-settings"])
+    app.include_router(profile.router, prefix="/api/profile", tags=["profile"])
+    app.include_router(recruiter_profile.router, prefix="/api/recruiter-profile", tags=["recruiter-profile"])
+    app.include_router(privacy_settings.router, prefix="/api/privacy", tags=["privacy-settings"])
+    app.include_router(profile_views.router, prefix="/api", tags=["profile-views"])
     app.include_router(
         user_connections.router,
         prefix="/api/user/connections",

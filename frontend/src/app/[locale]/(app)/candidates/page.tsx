@@ -20,6 +20,7 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import ProfilePreviewModal from '@/components/profile/ProfilePreviewModal';
 import { candidatesApi } from '@/api/candidates';
 import type { Candidate, CandidateApiFilters } from '@/types/candidate';
 import { ROUTES } from '@/routes/config';
@@ -39,6 +40,10 @@ function CandidatesPageContent() {
   const [itemsPerPage] = useState(10);
   const [totalCandidates, setTotalCandidates] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+
+  // Profile preview modal state
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [selectedCandidateId, setSelectedCandidateId] = useState<number | null>(null);
 
   // Mock data for development
 
@@ -665,13 +670,16 @@ function CandidatesPageContent() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex justify-end gap-2">
-                            <Link
-                              href={`/candidates/${candidate.id}`}
+                            <button
+                              onClick={() => {
+                                setSelectedCandidateId(candidate.id);
+                                setPreviewModalOpen(true);
+                              }}
                               className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
                               title={t('tooltips.viewProfile')}
                             >
                               <Eye size={16} />
-                            </Link>
+                            </button>
                             <Link
                               href={`/candidates/${candidate.id}/edit`}
                               className="text-gray-600 hover:text-gray-900 p-1 rounded hover:bg-gray-50"
@@ -751,6 +759,18 @@ function CandidatesPageContent() {
           )}
         </div>
       </div>
+
+      {/* Profile Preview Modal */}
+      {selectedCandidateId && (
+        <ProfilePreviewModal
+          isOpen={previewModalOpen}
+          onClose={() => {
+            setPreviewModalOpen(false);
+            setSelectedCandidateId(null);
+          }}
+          userId={selectedCandidateId}
+        />
+      )}
     </AppLayout>
   );
 }

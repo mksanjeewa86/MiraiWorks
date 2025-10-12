@@ -57,7 +57,7 @@ async def get_current_user(
     # Get user from database with explicit join
     result = await db.execute(
         select(User)
-        .options(selectinload(User.company))
+        .options(selectinload(User.company), selectinload(User.settings))
         .where(User.id == user_id, User.is_active.is_(True))
     )
 

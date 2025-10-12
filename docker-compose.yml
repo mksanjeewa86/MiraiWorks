@@ -111,7 +111,11 @@ services:
       - ./backend:/app
       - backend_logs:/app/logs
       - uploads_data:/uploads
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app --use-colors --access-log --reload-delay 1 --reload-include='*.py'
+    command: >
+      uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      --reload-dir /app/app
+      --reload-dir /app/alembic
+      --use-colors --access-log --reload-delay 1 --reload-include='*.py'
     depends_on:
       db:
         condition: service_healthy

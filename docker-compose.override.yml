@@ -8,8 +8,28 @@ services:
       - LOG_LEVEL=DEBUG
       - ENVIRONMENT=development
       - RELOAD=true
+      # Use polling mode for file watching on Windows/Docker (suppresses watchfiles error)
+      - WATCHFILES_FORCE_POLLING=true
     # Override CMD for development with auto-reload
-    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--log-level", "debug"]
+    # Note: Watchfiles error on Windows is harmless - auto-reload still works via polling
+    command:
+      - uvicorn
+      - app.main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --reload
+      - --reload-dir
+      - /app/app
+      - --reload-dir
+      - /app/alembic
+      - --log-level
+      - debug
+      - --use-colors
+      - --access-log
+      - --reload-delay
+      - "2"
     # Enable code mounting for development (comment out for production)
     volumes:
       - ./backend:/app

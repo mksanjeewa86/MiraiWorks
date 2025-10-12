@@ -684,6 +684,36 @@ class FeatureRoutes:
     REMOVE_FEATURE_FROM_PLAN = "/plan/{plan_id}/features/{feature_id}"
 
 
+class ProfileRoutes:
+    """User profile information endpoints."""
+
+    # Certifications
+    CERTIFICATIONS = "/certifications"
+    CERTIFICATIONS_BY_ID = "/certifications/{certification_id}"
+
+    # Profile Completeness
+    COMPLETENESS = "/completeness"
+
+    # Education
+    EDUCATION = "/education"
+    EDUCATION_BY_ID = "/education/{education_id}"
+
+    # Job Preferences
+    JOB_PREFERENCES = "/job-preferences"
+
+    # Projects
+    PROJECTS = "/projects"
+    PROJECTS_BY_ID = "/projects/{project_id}"
+
+    # Skills
+    SKILLS = "/skills"
+    SKILLS_BY_ID = "/skills/{skill_id}"
+
+    # Work Experience
+    WORK_EXPERIENCE = "/work-experience"
+    WORK_EXPERIENCE_BY_ID = "/work-experience/{experience_id}"
+
+
 class API_ROUTES:
     """
     Centralized API route definitions.
@@ -723,6 +753,7 @@ class API_ROUTES:
     WEBHOOKS = WebhookRoutes
     USER_CONNECTIONS = UserConnectionRoutes
     EMAIL_PREVIEW = EmailPreviewRoutes
+    PROFILE = ProfileRoutes
     PUBLIC = PublicRoutes
     CONNECTION_INVITATIONS = ConnectionInvitationRoutes
     WEBSOCKET_VIDEO = WebsocketVideoRoutes

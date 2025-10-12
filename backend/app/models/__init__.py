@@ -6,10 +6,19 @@ from app.models.calendar_connection import CalendarConnection
 from app.models.calendar_event import CalendarEvent
 from app.models.calendar_integration import ExternalCalendarAccount, SyncedEvent
 from app.models.candidate_workflow import CandidateWorkflow
+from app.models.certification import ProfileCertification
 from app.models.company_connection import CompanyConnection  # Import BEFORE Company
 from app.models.company import Company
 from app.models.company_subscription import CompanySubscription
 from app.models.connection_invitation import ConnectionInvitation
+from app.models.education import ProfileEducation
+from app.models.job_preference import JobPreference
+from app.models.privacy_settings import PrivacySettings
+from app.models.profile_view import ProfileView
+from app.models.project import ProfileProject
+from app.models.recruiter_profile import RecruiterProfile
+from app.models.skill import ProfileSkill
+from app.models.work_experience import ProfileWorkExperience
 from app.models.exam import (
     Exam,
     ExamAnswer,
@@ -148,4 +157,13 @@ __all__ = [
     "CompanySubscription",
     "PlanChangeRequest",
     "SystemUpdate",
+    "ProfileWorkExperience",
+    "ProfileEducation",
+    "ProfileSkill",
+    "ProfileCertification",
+    "ProfileProject",
+    "JobPreference",
+    "RecruiterProfile",
+    "PrivacySettings",
+    "ProfileView",
 ]
