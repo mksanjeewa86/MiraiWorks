@@ -8,7 +8,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class SystemUpdateTag(str, Enum):
@@ -37,7 +37,8 @@ class SystemUpdateBase(BaseModel):
         default_factory=list, description="Category tags for the update"
     )
 
-    @validator("tags")
+    @field_validator("tags")
+    @classmethod
     def validate_tags(cls, v):
         """Ensure tags list doesn't have duplicates."""
         if v and len(v) != len(set(v)):
@@ -59,7 +60,8 @@ class SystemUpdateUpdate(BaseModel):
     tags: Optional[list[SystemUpdateTag]] = None
     is_active: Optional[bool] = None
 
-    @validator("tags")
+    @field_validator("tags")
+    @classmethod
     def validate_tags(cls, v):
         """Ensure tags list doesn't have duplicates."""
         if v and len(v) != len(set(v)):

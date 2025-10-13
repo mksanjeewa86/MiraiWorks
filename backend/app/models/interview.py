@@ -1,15 +1,12 @@
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
 
-from app.database import Base
+from app.models.base import BaseModel
 from app.utils.constants import InterviewStatus
 
 
-class Interview(Base):
+class Interview(BaseModel):
     __tablename__ = "interviews"
-
-    id = Column(Integer, primary_key=True, index=True)
 
     # Participants
     candidate_id = Column(
@@ -86,16 +83,6 @@ class Interview(Base):
     cancelled_at = Column(DateTime(timezone=True), nullable=True)
     cancellation_reason = Column(Text, nullable=True)
 
-    created_at = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False, index=True
-    )
-    updated_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False,
-    )
-
     # Soft delete
     is_deleted = Column(Boolean, nullable=False, default=False, index=True)
     deleted_at = Column(DateTime(timezone=True), nullable=True)
@@ -145,10 +132,8 @@ class Interview(Base):
         return f"<Interview(id={self.id}, title='{self.title}', status='{self.status}', candidate_id={self.candidate_id})>"
 
 
-class InterviewProposal(Base):
+class InterviewProposal(BaseModel):
     __tablename__ = "interview_proposals"
-
-    id = Column(Integer, primary_key=True, index=True)
     interview_id = Column(
         Integer,
         ForeignKey("interviews.id", ondelete="CASCADE"),
@@ -187,16 +172,6 @@ class InterviewProposal(Base):
 
     # Expiration
     expires_at = Column(DateTime(timezone=True), nullable=True, index=True)
-
-    created_at = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False, index=True
-    )
-    updated_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False,
-    )
 
     # Relationships
     interview = relationship("Interview", back_populates="proposals")

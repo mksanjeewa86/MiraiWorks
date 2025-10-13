@@ -5,10 +5,11 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database import get_db
+from app.config.endpoints import API_ROUTES
 from app.crud.profile_views import profile_view as profile_view_crud
-from app.models.user import User
+from app.database import get_db
 from app.endpoints.auth import get_current_active_user
+from app.models.user import User
 from app.schemas.profile_view import (
     ProfileViewCreate,
     ProfileViewInfo,
@@ -19,7 +20,7 @@ from app.schemas.profile_view import (
 router = APIRouter(prefix="/profile-views", tags=["profile-views"])
 
 
-@router.post("/", response_model=ProfileViewInfo, status_code=201)
+@router.post(API_ROUTES.PROFILE_VIEWS.BASE, response_model=ProfileViewInfo, status_code=201)
 async def record_profile_view(
     *,
     db: AsyncSession = Depends(get_db),
@@ -75,7 +76,7 @@ async def record_profile_view(
     )
 
 
-@router.get("/my-views", response_model=List[ProfileViewInfo])
+@router.get(API_ROUTES.PROFILE_VIEWS.MY_VIEWS, response_model=List[ProfileViewInfo])
 async def get_my_profile_views(
     *,
     db: AsyncSession = Depends(get_db),
@@ -113,7 +114,7 @@ async def get_my_profile_views(
     ]
 
 
-@router.get("/stats", response_model=ProfileViewStats)
+@router.get(API_ROUTES.PROFILE_VIEWS.STATS, response_model=ProfileViewStats)
 async def get_profile_view_stats(
     *,
     db: AsyncSession = Depends(get_db),
@@ -138,7 +139,7 @@ async def get_profile_view_stats(
     return ProfileViewStats(**stats)
 
 
-@router.get("/recent-viewers", response_model=List[RecentViewer])
+@router.get(API_ROUTES.PROFILE_VIEWS.RECENT_VIEWERS, response_model=List[RecentViewer])
 async def get_recent_viewers(
     *,
     db: AsyncSession = Depends(get_db),
@@ -166,7 +167,7 @@ async def get_recent_viewers(
     return [RecentViewer(**viewer) for viewer in viewers]
 
 
-@router.get("/count")
+@router.get(API_ROUTES.PROFILE_VIEWS.COUNT)
 async def get_profile_view_count(
     *,
     db: AsyncSession = Depends(get_db),

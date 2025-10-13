@@ -16,7 +16,6 @@ from app.schemas.message import (
 )
 from app.services.message_service import message_service
 from app.services.notification_service import notification_service
-from app.utils.constants import UserRole
 from app.utils.logging import get_logger
 
 router = APIRouter()

@@ -1,7 +1,6 @@
 """Connection invitation model for managing connection requests between users."""
 
 from datetime import datetime
-from enum import Enum
 from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint
@@ -9,19 +8,11 @@ from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
+from app.schemas.connection_invitation import InvitationStatus
 from app.utils.datetime_utils import get_utc_now
 
 if TYPE_CHECKING:
     from app.models.user import User
-
-
-class InvitationStatus(str, Enum):
-    """Status of connection invitations."""
-
-    PENDING = "pending"  # Invitation sent, awaiting response
-    ACCEPTED = "accepted"  # Invitation accepted (should create connection)
-    REJECTED = "rejected"  # Invitation declined
-    CANCELLED = "cancelled"  # Sender cancelled the invitation
 
 
 class ConnectionInvitation(Base):

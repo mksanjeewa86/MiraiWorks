@@ -1,13 +1,10 @@
-from sqlalchemy import Boolean, Column, Date, DateTime, Integer, String
+from sqlalchemy import Boolean, Column, Date, Integer, String
 
-from app.database import Base
-from app.utils.datetime_utils import get_utc_now
+from app.models.base import BaseModel
 
 
-class Holiday(Base):
+class Holiday(BaseModel):
     __tablename__ = "holidays"
-
-    id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False)
     name_en = Column(String(255), nullable=True)
     date = Column(Date, nullable=False, index=True)
@@ -17,10 +14,6 @@ class Holiday(Base):
     is_recurring = Column(Boolean, default=True, nullable=False)
     description = Column(String(500), nullable=True)
     description_en = Column(String(500), nullable=True)
-    created_at = Column(DateTime, default=get_utc_now, nullable=False)
-    updated_at = Column(
-        DateTime, default=get_utc_now, onupdate=get_utc_now, nullable=False
-    )
 
     def __str__(self) -> str:
         return (

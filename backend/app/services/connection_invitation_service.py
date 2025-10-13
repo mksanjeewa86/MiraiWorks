@@ -4,7 +4,8 @@
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.connection_invitation import ConnectionInvitation, InvitationStatus
+from app.models.connection_invitation import ConnectionInvitation
+from app.schemas.connection_invitation import InvitationStatus
 from app.services.user_connection_service import user_connection_service
 from app.utils.datetime_utils import get_utc_now
 

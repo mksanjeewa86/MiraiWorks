@@ -1,8 +1,10 @@
 """CRUD operations for privacy settings"""
 
 from typing import Optional
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.privacy_settings import PrivacySettings
 from app.schemas.privacy_settings import PrivacySettingsCreate, PrivacySettingsUpdate
 

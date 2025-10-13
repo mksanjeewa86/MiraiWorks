@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Optional
 from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import Base
+from app.models.base import BaseModel
 from app.utils.constants import (
     AssignmentStatus,
     TodoPublishStatus,
@@ -24,10 +24,8 @@ if TYPE_CHECKING:
     from app.models.workflow import Workflow
 
 
-class Todo(Base):
+class Todo(BaseModel):
     __tablename__ = "todos"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
     owner_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
@@ -115,15 +113,6 @@ class Todo(Base):
     )
     expired_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=get_utc_now, nullable=False, index=True
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=get_utc_now,
-        onupdate=get_utc_now,
-        nullable=False,
     )
 
     owner: Mapped[User] = relationship("User", foreign_keys=[owner_id], backref="todos")

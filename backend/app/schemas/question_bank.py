@@ -4,7 +4,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.models.exam import QuestionType
+from app.schemas.exam import QuestionType
 
 
 class QuestionBankItemBase(BaseModel):

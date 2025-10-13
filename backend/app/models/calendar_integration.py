@@ -9,15 +9,13 @@ from sqlalchemy import (
     Text,
 )
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
 
-from app.database import Base
+from app.models.base import BaseModel
 
 
-class ExternalCalendarAccount(Base):
+class ExternalCalendarAccount(BaseModel):
     __tablename__ = "external_calendar_accounts"
 
-    id = Column(Integer, primary_key=True, index=True)
     user_id = Column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
@@ -44,16 +42,6 @@ class ExternalCalendarAccount(Base):
     # Webhook settings
     webhook_id = Column(String(255), nullable=True)  # Provider webhook/subscription ID
     webhook_expires_at = Column(DateTime(timezone=True), nullable=True)
-
-    created_at = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
-    updated_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False,
-    )
 
     # Relationships
     user = relationship("User")
@@ -95,10 +83,9 @@ class ExternalCalendarAccount(Base):
         await db.refresh(self)
 
 
-class SyncedEvent(Base):
+class SyncedEvent(BaseModel):
     __tablename__ = "synced_events"
 
-    id = Column(Integer, primary_key=True, index=True)
     calendar_account_id = Column(
         Integer,
         ForeignKey("external_calendar_accounts.id", ondelete="CASCADE"),
@@ -141,16 +128,6 @@ class SyncedEvent(Base):
         ForeignKey("interviews.id", ondelete="SET NULL"),
         nullable=True,
         index=True,
-    )
-
-    created_at = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
-    updated_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False,
     )
 
     # Relationships

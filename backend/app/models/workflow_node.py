@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     JSON,
     Boolean,
-    DateTime,
     Float,
     ForeignKey,
     Integer,
@@ -16,8 +14,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import Base
-from app.utils.datetime_utils import get_utc_now
+from app.models.base import BaseModel
 
 if TYPE_CHECKING:
     from app.models.user import User
@@ -26,15 +23,13 @@ if TYPE_CHECKING:
     from app.models.workflow_node_execution import WorkflowNodeExecution
 
 
-class WorkflowNode(Base):
+class WorkflowNode(BaseModel):
     __tablename__ = "workflow_nodes"
     __table_args__ = (
         UniqueConstraint(
             "workflow_id", "sequence_order", name="uq_workflow_node_sequence"
         ),
     )
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
     # Workflow relationship
     workflow_id: Mapped[int] = mapped_column(
@@ -78,17 +73,6 @@ class WorkflowNode(Base):
     )
     updated_by: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
-    )
-
-    # Timestamps
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=get_utc_now, nullable=False, index=True
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=get_utc_now,
-        onupdate=get_utc_now,
-        nullable=False,
     )
 
     # Relationships

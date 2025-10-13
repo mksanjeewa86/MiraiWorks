@@ -1,16 +1,17 @@
 """CRUD operations for profile views."""
 
-from datetime import datetime, timedelta
-from typing import List, Optional, Dict, Any
+from datetime import timedelta
+from typing import Any, Dict, List, Optional
 
-from sqlalchemy import func, desc, and_
+from sqlalchemy import and_, desc, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
+from app.models.company import Company
 from app.models.profile_view import ProfileView
 from app.models.user import User
-from app.models.company import Company
+from app.utils.datetime_utils import get_utc_now
 
 
 class CRUDProfileView:
@@ -52,7 +53,7 @@ class CRUDProfileView:
             viewer_user_agent=viewer_user_agent,
             view_duration=view_duration,
             referrer=referrer,
-            created_at=datetime.utcnow(),
+            created_at=get_utc_now(),
         )
 
         db.add(profile_view)
@@ -124,7 +125,7 @@ class CRUDProfileView:
 
         # Filter by date range if specified
         if days:
-            cutoff_date = datetime.utcnow() - timedelta(days=days)
+            cutoff_date = get_utc_now() - timedelta(days=days)
             query = query.where(ProfileView.created_at >= cutoff_date)
 
         # Total views
@@ -142,15 +143,24 @@ class CRUDProfileView:
         unique_viewers = unique_viewers_result.scalar() or 0
 
         # Views by company (top 5)
+        base_filter = ProfileView.profile_user_id == profile_user_id
+        if days:
+            cutoff_date = get_utc_now() - timedelta(days=days)
+            base_filter = and_(base_filter, ProfileView.created_at >= cutoff_date)
+
         views_by_company_query = (
             select(
                 ProfileView.viewer_company_id,
                 Company.name.label("company_name"),
                 func.count(ProfileView.id).label("view_count"),
             )
-            .select_from(query.subquery().join(ProfileView))
             .join(Company, ProfileView.viewer_company_id == Company.id)
-            .where(ProfileView.viewer_company_id.isnot(None))
+            .where(
+                and_(
+                    base_filter,
+                    ProfileView.viewer_company_id.isnot(None)
+                )
+            )
             .group_by(ProfileView.viewer_company_id, Company.name)
             .order_by(desc("view_count"))
             .limit(5)
@@ -168,7 +178,7 @@ class CRUDProfileView:
                     func.date(ProfileView.created_at).label("date"),
                     func.count(ProfileView.id).label("count"),
                 )
-                .select_from(query.subquery().join(ProfileView))
+                .where(base_filter)
                 .group_by(func.date(ProfileView.created_at))
                 .order_by("date")
             )
@@ -230,7 +240,7 @@ class CRUDProfileView:
 
         # Filter by date range if specified
         if days:
-            cutoff_date = datetime.utcnow() - timedelta(days=days)
+            cutoff_date = get_utc_now() - timedelta(days=days)
             query = query.where(ProfileView.created_at >= cutoff_date)
 
         query = (
@@ -286,7 +296,7 @@ class CRUDProfileView:
 
         # Filter by date range if specified
         if days:
-            cutoff_date = datetime.utcnow() - timedelta(days=days)
+            cutoff_date = get_utc_now() - timedelta(days=days)
             query = query.where(ProfileView.created_at >= cutoff_date)
 
         result = await db.execute(query)
@@ -308,7 +318,7 @@ class CRUDProfileView:
         Returns:
             Number of deleted records
         """
-        cutoff_date = datetime.utcnow() - timedelta(days=days)
+        cutoff_date = get_utc_now() - timedelta(days=days)
 
         result = await db.execute(
             select(ProfileView).where(ProfileView.created_at < cutoff_date)

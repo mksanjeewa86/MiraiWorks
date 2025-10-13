@@ -7,18 +7,11 @@ from app.models.calendar_event import CalendarEvent
 from app.models.calendar_integration import ExternalCalendarAccount, SyncedEvent
 from app.models.candidate_workflow import CandidateWorkflow
 from app.models.certification import ProfileCertification
-from app.models.company_connection import CompanyConnection  # Import BEFORE Company
 from app.models.company import Company
+from app.models.company_connection import CompanyConnection  # Import BEFORE Company
 from app.models.company_subscription import CompanySubscription
 from app.models.connection_invitation import ConnectionInvitation
 from app.models.education import ProfileEducation
-from app.models.job_preference import JobPreference
-from app.models.privacy_settings import PrivacySettings
-from app.models.profile_view import ProfileView
-from app.models.project import ProfileProject
-from app.models.recruiter_profile import RecruiterProfile
-from app.models.skill import ProfileSkill
-from app.models.work_experience import ProfileWorkExperience
 from app.models.exam import (
     Exam,
     ExamAnswer,
@@ -35,20 +28,25 @@ from app.models.feature import Feature
 from app.models.holiday import Holiday
 from app.models.interview import Interview, InterviewProposal
 from app.models.interview_note import InterviewNote
+from app.models.job_preference import JobPreference
 from app.models.mbti_model import MBTIQuestion, MBTITest
 from app.models.meeting import (
     Meeting,
+    MeetingParticipant,
     MeetingRecording,
     MeetingSummary,
     MeetingTranscript,
-    meeting_participants,
 )
 from app.models.message import Message
 from app.models.notification import Notification
 from app.models.plan_change_request import PlanChangeRequest
 from app.models.plan_feature import PlanFeature
 from app.models.position import CompanyProfile, Position, PositionApplication
+from app.models.privacy_settings import PrivacySettings
+from app.models.profile_view import ProfileView
+from app.models.project import ProfileProject
 from app.models.question_bank import QuestionBank, QuestionBankItem
+from app.models.recruiter_profile import RecruiterProfile
 from app.models.resume import (
     Certification,
     Education,
@@ -60,6 +58,7 @@ from app.models.resume import (
     WorkExperience,
 )
 from app.models.role import Role, UserRole
+from app.models.skill import ProfileSkill
 from app.models.subscription_plan import SubscriptionPlan
 from app.models.system_update import SystemUpdate
 from app.models.todo import Todo
@@ -76,6 +75,7 @@ from app.models.video_call import (
     TranscriptionSegment,
     VideoCall,
 )
+from app.models.work_experience import ProfileWorkExperience
 from app.models.workflow import Workflow
 from app.models.workflow_node import WorkflowNode
 from app.models.workflow_node_connection import WorkflowNodeConnection
@@ -109,10 +109,10 @@ __all__ = [
     "Language",
     "Reference",
     "Meeting",
+    "MeetingParticipant",
     "MeetingRecording",
     "MeetingTranscript",
     "MeetingSummary",
-    "meeting_participants",
     "CompanyProfile",
     "Position",
     "PositionApplication",

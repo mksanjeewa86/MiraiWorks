@@ -1,8 +1,18 @@
 """Privacy settings schemas"""
 
 from datetime import datetime
+from enum import Enum
 from typing import Optional
+
 from pydantic import BaseModel, Field
+
+
+class ProfileVisibility(str, Enum):
+    """Profile visibility levels"""
+
+    PUBLIC = "public"
+    RECRUITERS_ONLY = "recruiters"
+    PRIVATE = "private"
 
 
 class PrivacySettingsBase(BaseModel):

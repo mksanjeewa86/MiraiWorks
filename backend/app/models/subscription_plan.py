@@ -1,18 +1,15 @@
-from sqlalchemy import Boolean, Column, DateTime, Integer, Numeric, String, Text
+from sqlalchemy import Boolean, Column, Integer, Numeric, String, Text
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
 
-from app.database import Base
+from app.models.base import BaseModel
 
 
-class SubscriptionPlan(Base):
+class SubscriptionPlan(BaseModel):
     """
     Subscription plans (Basic, Premium, etc.).
     Features are managed dynamically via PlanFeature junction table.
     """
     __tablename__ = "subscription_plans"
-
-    id = Column(Integer, primary_key=True, index=True)
 
     # Plan identification
     name = Column(String(50), nullable=False, unique=True, index=True)  # 'basic', 'premium'
@@ -36,15 +33,6 @@ class SubscriptionPlan(Base):
 
     # Display order
     display_order = Column(Integer, nullable=False, default=0)
-
-    # Timestamps
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False,
-    )
 
     # Relationships
     plan_features = relationship(

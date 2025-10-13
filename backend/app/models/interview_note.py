@@ -1,16 +1,13 @@
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, Text, UniqueConstraint
+from sqlalchemy import Column, ForeignKey, Integer, Text, UniqueConstraint
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
 
-from app.database import Base
+from app.models.base import BaseModel
 
 
-class InterviewNote(Base):
+class InterviewNote(BaseModel):
     """Private notes that interview participants can add for themselves."""
 
     __tablename__ = "interview_notes"
-
-    id = Column(Integer, primary_key=True, index=True)
 
     # References
     interview_id = Column(
@@ -25,17 +22,6 @@ class InterviewNote(Base):
 
     # Note content
     content = Column(Text, nullable=True)
-
-    # Timestamps
-    created_at = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
-    updated_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False,
-    )
 
     # Relationships
     interview = relationship("Interview", back_populates="participant_notes")

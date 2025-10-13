@@ -1,15 +1,14 @@
 """Recruiter profile model"""
 
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, JSON
-from sqlalchemy.orm import relationship, Mapped, mapped_column
-from app.models.base import Base, TimestampMixin
+from sqlalchemy import ForeignKey, Integer, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.models.base import BaseModel
 
 
-class RecruiterProfile(Base, TimestampMixin):
+class RecruiterProfile(BaseModel):
     """Recruiter profile with recruitment focus and specializations"""
     __tablename__ = "recruiter_profiles"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False)
 
     # Professional info

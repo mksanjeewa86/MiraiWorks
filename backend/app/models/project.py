@@ -3,16 +3,13 @@
 from sqlalchemy import Column, Date, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 
-from app.models.base import TimestampMixin
-from app.database import Base
+from app.models.base import BaseModel
 
 
-class ProfileProject(Base, TimestampMixin):
+class ProfileProject(BaseModel):
     """Project entries for user profiles."""
 
     __tablename__ = "profile_projects"
-
-    id = Column(Integer, primary_key=True, index=True)
     user_id = Column(
         Integer,
         ForeignKey("users.id", ondelete="CASCADE"),

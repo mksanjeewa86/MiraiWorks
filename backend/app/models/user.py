@@ -1,14 +1,11 @@
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
 
-from app.database import Base
+from app.models.base import BaseModel
 
 
-class User(Base):
+class User(BaseModel):
     __tablename__ = "users"
-
-    id = Column(Integer, primary_key=True, index=True)
     company_id = Column(
         Integer,
         ForeignKey("companies.id", ondelete="CASCADE"),
@@ -36,15 +33,6 @@ class User(Base):
     is_suspended = Column(Boolean, nullable=False, default=False, index=True)
     suspended_at = Column(DateTime(timezone=True), nullable=True)
     suspended_by = Column(Integer, nullable=True)  # ID of user who suspended this user
-    created_at = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
-    updated_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False,
-    )
 
     # Relationships
     company = relationship("Company", back_populates="users", lazy="noload")
@@ -72,8 +60,8 @@ class User(Base):
     resumes = relationship(
         "Resume", back_populates="user", cascade="all, delete-orphan"
     )
-    meetings = relationship(
-        "Meeting", secondary="meeting_participants", back_populates="participants"
+    meeting_participations = relationship(
+        "MeetingParticipant", back_populates="user", cascade="all, delete-orphan"
     )
     settings = relationship(
         "UserSettings",

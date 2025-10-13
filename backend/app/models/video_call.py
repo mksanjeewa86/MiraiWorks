@@ -14,12 +14,11 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from app.database import Base
+from app.models.base import BaseModel
 
 
-class VideoCall(Base):
+class VideoCall(BaseModel):
     __tablename__ = "video_calls"
-
-    id = Column(Integer, primary_key=True, index=True)
 
     # Related entities
     job_id = Column(
@@ -53,17 +52,6 @@ class VideoCall(Base):
     transcription_enabled = Column(Boolean, default=True)
     transcription_language = Column(String(10), default="ja")
 
-    # Timestamps
-    created_at = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
-    updated_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False,
-    )
-
     # Relationships
     job = relationship("Position", foreign_keys=[job_id], lazy="noload")
     interview = relationship("Interview", foreign_keys=[interview_id], lazy="noload")
@@ -91,10 +79,8 @@ class VideoCall(Base):
     )
 
 
-class CallParticipant(Base):
+class CallParticipant(BaseModel):
     __tablename__ = "call_participants"
-
-    id = Column(Integer, primary_key=True, index=True)
     video_call_id = Column(
         Integer,
         ForeignKey("video_calls.id", ondelete="CASCADE"),
@@ -110,17 +96,6 @@ class CallParticipant(Base):
     left_at = Column(DateTime(timezone=True), nullable=True)
     connection_quality = Column(String(20), nullable=True)
     device_info = Column(JSON, nullable=True)
-
-    # Timestamps
-    created_at = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
-    updated_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False,
-    )
 
     # Relationships
     video_call = relationship("VideoCall", back_populates="participants")

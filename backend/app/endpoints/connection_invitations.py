@@ -8,8 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config.endpoints import API_ROUTES
 from app.database import get_db
 from app.dependencies import get_current_active_user
-from app.models.connection_invitation import InvitationStatus
 from app.models.user import User
+from app.schemas.connection_invitation import InvitationStatus
 from app.services.connection_invitation_service import connection_invitation_service
 
 router = APIRouter()

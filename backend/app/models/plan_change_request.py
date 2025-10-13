@@ -1,20 +1,17 @@
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, Text
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
 
-from app.database import Base
+from app.models.base import BaseModel
 from app.utils.constants import PlanChangeRequestStatus, PlanChangeRequestType
 
 
-class PlanChangeRequest(Base):
+class PlanChangeRequest(BaseModel):
     """
     Request for changing a company's subscription plan.
     Requires system admin approval.
     """
     __tablename__ = "plan_change_requests"
-
-    id = Column(Integer, primary_key=True, index=True)
 
     # Foreign keys
     company_id = Column(Integer, ForeignKey("companies.id"), nullable=False, index=True)
@@ -32,15 +29,6 @@ class PlanChangeRequest(Base):
     reviewed_by = Column(Integer, ForeignKey("users.id"), nullable=True)  # System admin user ID
     review_message = Column(Text, nullable=True)  # Response from system admin
     reviewed_at = Column(DateTime(timezone=True), nullable=True)
-
-    # Timestamps
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False,
-    )
 
     # Relationships
     company = relationship("Company", foreign_keys=[company_id])

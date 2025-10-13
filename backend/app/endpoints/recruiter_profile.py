@@ -2,20 +2,22 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.database import get_db
-from app.models.user import User
-from app.endpoints.auth import get_current_active_user
+
+from app.config.endpoints import API_ROUTES
 from app.crud.recruiter_profile import recruiter_profile as recruiter_profile_crud
+from app.database import get_db
+from app.endpoints.auth import get_current_active_user
+from app.models.user import User
 from app.schemas.recruiter_profile import (
-    RecruiterProfileInfo,
     RecruiterProfileCreate,
+    RecruiterProfileInfo,
     RecruiterProfileUpdate,
 )
 
 router = APIRouter()
 
 
-@router.get("/me", response_model=RecruiterProfileInfo)
+@router.get(API_ROUTES.RECRUITER_PROFILE.ME, response_model=RecruiterProfileInfo)
 async def get_my_recruiter_profile(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
@@ -30,7 +32,7 @@ async def get_my_recruiter_profile(
     return profile
 
 
-@router.post("/me", response_model=RecruiterProfileInfo, status_code=status.HTTP_201_CREATED)
+@router.post(API_ROUTES.RECRUITER_PROFILE.ME, response_model=RecruiterProfileInfo, status_code=status.HTTP_201_CREATED)
 async def create_my_recruiter_profile(
     profile_data: RecruiterProfileCreate,
     db: AsyncSession = Depends(get_db),
@@ -51,7 +53,7 @@ async def create_my_recruiter_profile(
     return profile
 
 
-@router.put("/me", response_model=RecruiterProfileInfo)
+@router.put(API_ROUTES.RECRUITER_PROFILE.ME, response_model=RecruiterProfileInfo)
 async def update_my_recruiter_profile(
     profile_data: RecruiterProfileUpdate,
     db: AsyncSession = Depends(get_db),
@@ -69,7 +71,7 @@ async def update_my_recruiter_profile(
     return profile
 
 
-@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(API_ROUTES.RECRUITER_PROFILE.ME, status_code=status.HTTP_204_NO_CONTENT)
 async def delete_my_recruiter_profile(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
@@ -84,7 +86,7 @@ async def delete_my_recruiter_profile(
     return None
 
 
-@router.get("/{user_id}", response_model=RecruiterProfileInfo)
+@router.get(API_ROUTES.RECRUITER_PROFILE.BY_USER_ID, response_model=RecruiterProfileInfo)
 async def get_recruiter_profile_by_id(
     user_id: int,
     db: AsyncSession = Depends(get_db),

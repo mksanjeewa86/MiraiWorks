@@ -1,11 +1,9 @@
 """Exam template models."""
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     JSON,
     Boolean,
-    DateTime,
     ForeignKey,
     Integer,
     String,
@@ -13,20 +11,18 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.database import Base
-from app.utils.datetime_utils import get_utc_now
+from app.models.base import BaseModel
 
 if TYPE_CHECKING:
     from app.models.company import Company
     from app.models.user import User
 
 
-class ExamTemplate(Base):
+class ExamTemplate(BaseModel):
     """Exam template model for reusable exam configurations."""
 
     __tablename__ = "exam_templates"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     exam_type: Mapped[str] = mapped_column(String(50), nullable=False)
@@ -78,14 +74,6 @@ class ExamTemplate(Base):
     )
     company_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("companies.id"), nullable=True
-    )
-
-    # Timestamps
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=get_utc_now, nullable=False
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=get_utc_now, onupdate=get_utc_now, nullable=False
     )
 
     # Relationships

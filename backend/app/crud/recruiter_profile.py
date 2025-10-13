@@ -1,8 +1,10 @@
 """CRUD operations for recruiter profiles"""
 
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 from typing import Optional
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.crud.base import CRUDBase
 from app.models.recruiter_profile import RecruiterProfile
 from app.schemas.recruiter_profile import RecruiterProfileCreate, RecruiterProfileUpdate

@@ -3,15 +3,13 @@ from datetime import datetime
 from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import Base
-from app.models.db_types import CompatLONGTEXT as LONGTEXT
+from app.models.base import BaseModel
 from app.utils.datetime_utils import get_utc_now
+from app.utils.db_types import LONGTEXT
 
 
-class Position(Base):
+class Position(BaseModel):
     __tablename__ = "positions"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
     # Basic job information
     title: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
@@ -111,12 +109,6 @@ class Position(Base):
     posted_by: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id"), nullable=False
     )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=get_utc_now, index=True
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=get_utc_now, onupdate=get_utc_now
-    )
 
     # Relationships
     company = relationship("Company", back_populates="positions")
@@ -187,10 +179,8 @@ class Position(Base):
         return self.is_active and not self.external_apply_url
 
 
-class PositionApplication(Base):
+class PositionApplication(BaseModel):
     __tablename__ = "position_applications"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
     # References
     position_id: Mapped[int] = mapped_column(
@@ -241,9 +231,6 @@ class PositionApplication(Base):
     applied_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=get_utc_now, index=True
     )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=get_utc_now, onupdate=get_utc_now
-    )
 
     # Relationships
     position = relationship("Position", back_populates="applications")
@@ -274,10 +261,9 @@ class PositionApplication(Base):
         return (get_utc_now() - self.applied_at).days
 
 
-class CompanyProfile(Base):
+class CompanyProfile(BaseModel):
     __tablename__ = "company_profiles"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
     company_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("companies.id", ondelete="CASCADE"),
@@ -343,14 +329,6 @@ class CompanyProfile(Base):
     profile_views: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     last_updated_by: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id"), nullable=True
-    )
-
-    # Metadata
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=get_utc_now
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=get_utc_now, onupdate=get_utc_now
     )
 
     # Relationships

@@ -78,8 +78,8 @@ class LocalStorageService:
         try:
             rel_path = Path(file_path).relative_to(self.base_path)
             # URL encode the path
-            import urllib.parse
             import os
+            import urllib.parse
 
             encoded_path = urllib.parse.quote(str(rel_path))
 
@@ -90,8 +90,8 @@ class LocalStorageService:
             return f"{api_host}/api/files/download/{encoded_path}"
         except ValueError:
             # If file is not under base_path, use absolute path
-            import urllib.parse
             import os
+            import urllib.parse
 
             encoded_path = urllib.parse.quote(file_path)
             api_host = os.environ.get("API_HOST", "http://localhost:8000")

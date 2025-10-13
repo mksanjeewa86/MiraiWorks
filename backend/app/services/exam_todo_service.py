@@ -159,7 +159,8 @@ class ExamTodoService:
         # Find exam by type and optionally by name
         from sqlalchemy import and_, select
 
-        from app.models.exam import Exam, ExamStatus
+        from app.models.exam import Exam
+        from app.schemas.exam import ExamStatus
 
         query = select(Exam).where(
             and_(

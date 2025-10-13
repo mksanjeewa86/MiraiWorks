@@ -12,6 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config.endpoints import API_ROUTES
 from app.crud.system_update import system_update as system_update_crud
 from app.database import get_db
 from app.endpoints.auth import get_current_active_user
@@ -63,7 +64,7 @@ async def get_current_system_admin(
     return current_user
 
 
-@router.get("", response_model=list[SystemUpdateInfo])
+@router.get(API_ROUTES.SYSTEM_UPDATES.BASE, response_model=list[SystemUpdateInfo])
 async def get_system_updates(
     skip: int = Query(0, ge=0, description="Number of records to skip"),
     limit: int = Query(100, ge=1, le=500, description="Maximum number of records"),
@@ -86,7 +87,7 @@ async def get_system_updates(
     return updates
 
 
-@router.get("/{update_id}", response_model=SystemUpdateWithCreator)
+@router.get(API_ROUTES.SYSTEM_UPDATES.BY_ID, response_model=SystemUpdateWithCreator)
 async def get_system_update(
     update_id: int,
     db: AsyncSession = Depends(get_db),
@@ -112,7 +113,7 @@ async def get_system_update(
     return result
 
 
-@router.post("", response_model=SystemUpdateInfo, status_code=status.HTTP_201_CREATED)
+@router.post(API_ROUTES.SYSTEM_UPDATES.BASE, response_model=SystemUpdateInfo, status_code=status.HTTP_201_CREATED)
 async def create_system_update(
     update_in: SystemUpdateCreate,
     db: AsyncSession = Depends(get_db),
@@ -137,7 +138,7 @@ async def create_system_update(
     return update
 
 
-@router.put("/{update_id}", response_model=SystemUpdateInfo)
+@router.put(API_ROUTES.SYSTEM_UPDATES.BY_ID, response_model=SystemUpdateInfo)
 async def update_system_update(
     update_id: int,
     update_in: SystemUpdateUpdate,
@@ -169,7 +170,7 @@ async def update_system_update(
     return updated
 
 
-@router.delete("/{update_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(API_ROUTES.SYSTEM_UPDATES.BY_ID, status_code=status.HTTP_204_NO_CONTENT)
 async def deactivate_system_update(
     update_id: int,
     db: AsyncSession = Depends(get_db),
@@ -190,7 +191,7 @@ async def deactivate_system_update(
     await db.commit()
 
 
-@router.post("/{update_id}/activate", response_model=SystemUpdateInfo)
+@router.post(API_ROUTES.SYSTEM_UPDATES.ACTIVATE, response_model=SystemUpdateInfo)
 async def activate_system_update(
     update_id: int,
     db: AsyncSession = Depends(get_db),

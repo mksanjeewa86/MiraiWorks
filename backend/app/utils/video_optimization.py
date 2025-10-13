@@ -4,13 +4,14 @@ Performance optimization utilities for video call functionality.
 
 import asyncio
 import logging
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 from typing import Any
 
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.video_call import TranscriptionSegment, VideoCall
+from app.utils.datetime_utils import get_utc_now
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,7 @@ class VideoCallOptimizer:
 
         try:
             # Clean up old transcription segments
-            cutoff_date = datetime.now(UTC) - self.old_calls_threshold
+            cutoff_date = get_utc_now() - self.old_calls_threshold
 
             # Delete old transcription segments to free up space
             old_segments_query = (
@@ -105,7 +106,7 @@ class VideoCallOptimizer:
                     segment.segment_text = self._compress_text(segment.segment_text)
                     optimizations["compressed_texts"] += 1
 
-                segment.processed_at = datetime.now(UTC)
+                segment.processed_at = get_utc_now()
                 optimizations["batched_segments"] += 1
 
             await db.commit()
@@ -142,7 +143,7 @@ class VideoCallOptimizer:
                 "disk_usage_percent": disk.percent,
                 "disk_free_gb": disk.free / (1024**3),
                 "process_memory_mb": process_memory.rss / (1024**2),
-                "timestamp": datetime.now(UTC).isoformat(),
+                "timestamp": get_utc_now().isoformat(),
             }
 
             # Log warnings for high resource usage
@@ -190,7 +191,7 @@ class VideoCallOptimizer:
 
         try:
             # Find sessions that have been "in_progress" for too long
-            timeout_threshold = datetime.now(UTC) - timedelta(hours=2)
+            timeout_threshold = get_utc_now() - timedelta(hours=2)
 
             stuck_calls_query = select(VideoCall).where(
                 and_(
@@ -206,7 +207,7 @@ class VideoCallOptimizer:
             for call in calls_to_cleanup:
                 # Mark as failed instead of completed
                 call.status = "failed"
-                call.ended_at = datetime.now(UTC)
+                call.ended_at = get_utc_now()
                 cleaned_count += 1
 
                 logger.warning(f"Cleaned up stuck video call: {call.id}")
@@ -261,7 +262,7 @@ video_optimizer = VideoCallOptimizer()
 async def run_optimization_cycle(db: AsyncSession) -> dict[str, Any]:
     """Run a complete optimization cycle."""
     results = {
-        "started_at": datetime.now(UTC).isoformat(),
+        "started_at": get_utc_now().isoformat(),
         "database_optimization": {},
         "transcription_optimization": {},
         "system_metrics": {},
@@ -286,7 +287,7 @@ async def run_optimization_cycle(db: AsyncSession) -> dict[str, Any]:
             "session_cleanup_count"
         ] = await video_optimizer.cleanup_inactive_sessions(db)
 
-        results["completed_at"] = datetime.now(UTC).isoformat()
+        results["completed_at"] = get_utc_now().isoformat()
 
         logger.info(f"Optimization cycle completed successfully: {results}")
 

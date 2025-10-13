@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
-
 from sqlalchemy import Select, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -24,6 +22,7 @@ from app.utils.constants import (
     TodoStatus,
     TodoVisibility,
 )
+from app.utils.datetime_utils import get_utc_now
 
 
 class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
@@ -47,7 +46,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
 
     async def auto_mark_expired(self, db: AsyncSession, owner_id: int) -> None:
         """Automatically mark overdue todos as expired."""
-        now = datetime.now(UTC)
+        now = get_utc_now()
         await db.execute(
             update(Todo)
             .where(
@@ -140,9 +139,9 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         data["created_by"] = created_by
         data["last_updated_by"] = created_by
 
-        if data.get("due_date") and data["due_date"] < datetime.now(UTC):
+        if data.get("due_date") and data["due_date"] < get_utc_now():
             data["status"] = TodoStatus.EXPIRED.value
-            data["expired_at"] = datetime.now(UTC)
+            data["expired_at"] = get_utc_now()
 
         db_obj = Todo(**data)
         db.add(db_obj)
@@ -160,7 +159,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
     ) -> Todo:
         update_data = obj_in.model_dump(exclude_unset=True)
         if update_data.get("status") == TodoStatus.COMPLETED.value:
-            update_data.setdefault("completed_at", datetime.now(UTC))
+            update_data.setdefault("completed_at", get_utc_now())
             update_data.pop("expired_at", None)
         elif update_data.get("status") == TodoStatus.PENDING.value:
             update_data.setdefault("completed_at", None)
@@ -322,9 +321,9 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         obj_data["created_by"] = created_by
         obj_data["last_updated_by"] = created_by
 
-        if obj_data.get("due_date") and obj_data["due_date"] < datetime.now(UTC):
+        if obj_data.get("due_date") and obj_data["due_date"] < get_utc_now():
             obj_data["status"] = TodoStatus.EXPIRED.value
-            obj_data["expired_at"] = datetime.now(UTC)
+            obj_data["expired_at"] = get_utc_now()
 
         db_obj = Todo(**obj_data)
         db.add(db_obj)

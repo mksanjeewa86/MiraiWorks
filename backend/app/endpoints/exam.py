@@ -15,7 +15,6 @@ from app.crud.exam import exam_session as exam_session_crud
 from app.crud.user import user as user_crud
 from app.database import get_db
 from app.dependencies import get_current_active_user, get_current_user_with_company
-from app.models.exam import ExamStatus, SessionStatus
 from app.models.user import User
 from app.schemas.exam import (
     ExamAnswerInfo,
@@ -33,6 +32,7 @@ from app.schemas.exam import (
     ExamResultSummary,
     ExamSessionInfo,
     ExamSessionListResponse,
+    ExamStatus,
     ExamTakeRequest,
     ExamTakeResponse,
     ExamUpdate,
@@ -40,6 +40,7 @@ from app.schemas.exam import (
     FaceVerificationSubmit,
     HybridExamCreate,
     HybridExamResponse,
+    SessionStatus,
 )
 from app.services.exam_email_service import exam_email_service
 from app.services.exam_export_service import exam_export_service

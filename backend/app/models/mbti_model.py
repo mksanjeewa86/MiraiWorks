@@ -8,20 +8,18 @@ from typing import TYPE_CHECKING, Any
 from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.database import Base
+from app.models.base import BaseModel
 from app.utils.constants import MBTITestStatus
-from app.utils.datetime_utils import get_utc_now
 
 if TYPE_CHECKING:
     from app.models.user import User
 
 
-class MBTITest(Base):
+class MBTITest(BaseModel):
     """Model for MBTI personality test results."""
 
     __tablename__ = "mbti_tests"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -59,14 +57,6 @@ class MBTITest(Base):
     # Timing information
     started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-
-    # Audit fields
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=get_utc_now
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=get_utc_now, onupdate=get_utc_now
-    )
 
     # Relationships
     user: Mapped[User] = relationship("User", back_populates="mbti_test")
@@ -138,12 +128,10 @@ class MBTITest(Base):
         return f"<MBTITest(id={self.id}, user_id={self.user_id}, type={self.mbti_type}, status={self.status})>"
 
 
-class MBTIQuestion(Base):
+class MBTIQuestion(BaseModel):
     """Model for MBTI test questions."""
 
     __tablename__ = "mbti_questions"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
     # Question details
     question_number: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
@@ -171,14 +159,6 @@ class MBTIQuestion(Base):
     # Question metadata
     version: Mapped[str] = mapped_column(String(10), nullable=False, default="1.0")
     is_active: Mapped[bool] = mapped_column(Integer, nullable=False, default=True)
-
-    # Audit fields
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=get_utc_now
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=get_utc_now, onupdate=get_utc_now
-    )
 
     def __repr__(self) -> str:
         return f"<MBTIQuestion(id={self.id}, number={self.question_number}, dimension={self.dimension})>"

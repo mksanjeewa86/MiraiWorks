@@ -55,6 +55,7 @@ class UserConnectionService:
     async def get_connected_users(self, db: AsyncSession, user_id: int) -> list[User]:
         """Get all users connected to this user."""
         from sqlalchemy.orm import selectinload
+
         from app.models.role import UserRole
 
         # Get all active connections where user is involved

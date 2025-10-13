@@ -8,18 +8,15 @@ from sqlalchemy import (
     Text,
 )
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
 
-from app.database import Base
+from app.models.base import BaseModel
 from app.utils.constants import MessageType
 
 
-class Message(Base):
+class Message(BaseModel):
     """Message between two users."""
 
     __tablename__ = "messages"
-
-    id = Column(Integer, primary_key=True, index=True)
     sender_id = Column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
@@ -43,9 +40,6 @@ class Message(Base):
     file_name = Column(String(255), nullable=True)
     file_size = Column(Integer, nullable=True)
     file_type = Column(String(100), nullable=True)
-    created_at = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False, index=True
-    )
     read_at = Column(DateTime(timezone=True), nullable=True)
 
     # Relationships

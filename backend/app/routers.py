@@ -1,6 +1,7 @@
 # Router configuration
 from fastapi import FastAPI
 
+# Alphabetically ordered imports
 from app.endpoints import (
     assignment_workflow,
     auth,
@@ -43,72 +44,29 @@ from app.endpoints.workflow import candidates, nodes, workflows
 
 
 def include_routers(app: FastAPI) -> None:
-    """Include all routers in the FastAPI app."""
-    app.include_router(infrastructure.router, tags=["infrastructure"])
-    app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+    """Include all routers in the FastAPI app.
 
-    # Messages system (unified messaging)
-    app.include_router(messages.router, prefix="/api/messages", tags=["messages"])
-    app.include_router(
-        notifications.router, prefix="/api/notifications", tags=["notifications"]
-    )
-    app.include_router(
-        system_updates.router, prefix="/api/system-updates", tags=["system-updates"]
-    )
-    app.include_router(files.router, prefix="/api/files", tags=["files"])
-    app.include_router(todos.router, prefix="/api/todos", tags=["todos"])
+    Routers are organized alphabetically for easy maintenance.
+    Exception: infrastructure and auth are kept at the top as they're foundational.
+    """
+    # Foundational routers (authentication, health checks)
+    app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+    app.include_router(infrastructure.router, tags=["infrastructure"])
+
+    # All other routers in alphabetical order
     app.include_router(
         assignment_workflow.router, prefix="/api/assignments", tags=["assignments"]
-    )
-    app.include_router(
-        todo_attachments.router, prefix="/api", tags=["todo-attachments"]
-    )
-    app.include_router(
-        todo_extensions.router, prefix="/api/todos", tags=["todo-extensions"]
     )
     app.include_router(calendar.router, prefix="/api/calendar", tags=["calendar"])
     app.include_router(
         calendar_connections.router, prefix="/api/user", tags=["calendar-connections"]
-    )
-    app.include_router(holidays.router, prefix="/api/holidays", tags=["holidays"])
-    app.include_router(interviews.router, prefix="/api/interviews", tags=["interviews"])
-
-    # Workflow endpoints
-    app.include_router(
-        workflows.router,
-        prefix="/api/workflows",
-        tags=["workflows"],
     )
     app.include_router(
         candidates.router,
         prefix="/api/workflows",
         tags=["workflow-candidates"],
     )
-    app.include_router(
-        nodes.router,
-        prefix="/api/workflows",
-        tags=["workflow-nodes"],
-    )
-    app.include_router(video_calls.router, prefix="/api", tags=["video-calls"])
-    app.include_router(websocket_video.router, tags=["websocket-video"])
-    app.include_router(mbti.router, prefix="/api/mbti", tags=["mbti"])
-    app.include_router(positions.router, prefix="/api/positions", tags=["positions"])
-    app.include_router(exam.router, prefix="/api/exam", tags=["exam"])
-    app.include_router(question_bank.router, prefix="/api", tags=["question-banks"])
-    app.include_router(subscription.router, prefix="/api", tags=["subscriptions"])
-    app.include_router(features.router, prefix="/api", tags=["features"])
-    app.include_router(webhooks.router, prefix="/api/webhooks", tags=["webhooks"])
-    app.include_router(resumes.router, prefix="/api/resumes", tags=["resumes"])
-    app.include_router(user_settings.router, prefix="/api/user", tags=["user-settings"])
-    app.include_router(profile.router, prefix="/api/profile", tags=["profile"])
-    app.include_router(recruiter_profile.router, prefix="/api/recruiter-profile", tags=["recruiter-profile"])
-    app.include_router(privacy_settings.router, prefix="/api/privacy", tags=["privacy-settings"])
-    app.include_router(profile_views.router, prefix="/api", tags=["profile-views"])
-    app.include_router(
-        user_connections.router,
-        prefix="/api/user/connections",
-        tags=["user-connections"],
-    )
+    app.include_router(companies.router, prefix="/api/admin", tags=["companies"])
     app.include_router(
         company_connections.router,
         prefix="/api/company-connections",
@@ -119,11 +77,57 @@ def include_routers(app: FastAPI) -> None:
         prefix="/api/user/invitations",
         tags=["connection-invitations"],
     )
-    app.include_router(companies.router, prefix="/api/admin", tags=["companies"])
+    app.include_router(exam.router, prefix="/api/exam", tags=["exam"])
+    app.include_router(features.router, prefix="/api", tags=["features"])
+    app.include_router(files.router, prefix="/api/files", tags=["files"])
+    app.include_router(holidays.router, prefix="/api/holidays", tags=["holidays"])
+    app.include_router(interviews.router, prefix="/api/interviews", tags=["interviews"])
+    app.include_router(mbti.router, prefix="/api/mbti", tags=["mbti"])
+    app.include_router(messages.router, prefix="/api/messages", tags=["messages"])
+    app.include_router(
+        nodes.router,
+        prefix="/api/workflows",
+        tags=["workflow-nodes"],
+    )
+    app.include_router(
+        notifications.router, prefix="/api/notifications", tags=["notifications"]
+    )
+    app.include_router(positions.router, prefix="/api/positions", tags=["positions"])
+    app.include_router(privacy_settings.router, prefix="/api/privacy", tags=["privacy-settings"])
+    app.include_router(profile.router, prefix="/api/profile", tags=["profile"])
+    app.include_router(profile_views.router, prefix="/api", tags=["profile-views"])
+    app.include_router(public.router, prefix="/api/public", tags=["public"])
+    app.include_router(question_bank.router, prefix="/api", tags=["question-banks"])
+    app.include_router(recruiter_profile.router, prefix="/api/recruiter-profile", tags=["recruiter-profile"])
+    app.include_router(resumes.router, prefix="/api/resumes", tags=["resumes"])
+    app.include_router(subscription.router, prefix="/api", tags=["subscriptions"])
+    app.include_router(
+        system_updates.router, prefix="/api/system-updates", tags=["system-updates"]
+    )
+    app.include_router(
+        todo_attachments.router, prefix="/api", tags=["todo-attachments"]
+    )
+    app.include_router(
+        todo_extensions.router, prefix="/api/todos", tags=["todo-extensions"]
+    )
+    app.include_router(todos.router, prefix="/api/todos", tags=["todos"])
+    app.include_router(
+        user_connections.router,
+        prefix="/api/user/connections",
+        tags=["user-connections"],
+    )
+    app.include_router(user_settings.router, prefix="/api/user", tags=["user-settings"])
     app.include_router(
         users_management.router, prefix="/api/admin", tags=["users-management"]
     )
-    app.include_router(public.router, prefix="/api/public", tags=["public"])
+    app.include_router(video_calls.router, prefix="/api", tags=["video-calls"])
+    app.include_router(webhooks.router, prefix="/api/webhooks", tags=["webhooks"])
+    app.include_router(websocket_video.router, tags=["websocket-video"])
+    app.include_router(
+        workflows.router,
+        prefix="/api/workflows",
+        tags=["workflows"],
+    )
 
     # Development tools (only include in development)
     import os

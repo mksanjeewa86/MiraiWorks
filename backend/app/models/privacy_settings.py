@@ -1,25 +1,21 @@
 """Privacy settings model for user profiles"""
 
-from datetime import datetime
-from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, Integer, String
+from typing import TYPE_CHECKING
+
+from sqlalchemy import Boolean, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.models.base import Base
-import enum
+
+from app.models.base import BaseModel
+from app.schemas.privacy_settings import ProfileVisibility
+
+if TYPE_CHECKING:
+    from app.models.user import User
 
 
-class ProfileVisibility(str, enum.Enum):
-    """Profile visibility levels"""
-    PUBLIC = "public"
-    RECRUITERS_ONLY = "recruiters"
-    PRIVATE = "private"
-
-
-class PrivacySettings(Base):
+class PrivacySettings(BaseModel):
     """Privacy settings for user profiles"""
 
     __tablename__ = "privacy_settings"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -49,15 +45,6 @@ class PrivacySettings(Base):
     show_certifications: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     show_projects: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     show_resume: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-
-    # Timestamps
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
-        nullable=False
-    )
 
     # Relationships
     user: Mapped["User"] = relationship("User", back_populates="privacy_settings")

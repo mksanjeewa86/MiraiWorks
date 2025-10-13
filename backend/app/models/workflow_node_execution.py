@@ -15,7 +15,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import Base
+from app.models.base import BaseModel
 from app.utils.datetime_utils import get_utc_now
 
 if TYPE_CHECKING:
@@ -26,15 +26,13 @@ if TYPE_CHECKING:
     from app.models.workflow_node import WorkflowNode
 
 
-class WorkflowNodeExecution(Base):
+class WorkflowNodeExecution(BaseModel):
     __tablename__ = "workflow_node_executions"
     __table_args__ = (
         UniqueConstraint(
             "candidate_workflow_id", "node_id", name="uq_candidate_node_execution"
         ),
     )
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
     # Core relationships
     candidate_workflow_id: Mapped[int] = mapped_column(
@@ -95,17 +93,6 @@ class WorkflowNodeExecution(Base):
     )
     reviewed_by: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
-    )
-
-    # Timestamps
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=get_utc_now, nullable=False, index=True
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=get_utc_now,
-        onupdate=get_utc_now,
-        nullable=False,
     )
 
     # Relationships

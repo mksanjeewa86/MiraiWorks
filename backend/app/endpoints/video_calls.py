@@ -1,5 +1,3 @@
-from datetime import UTC, datetime
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -23,6 +21,7 @@ from app.schemas.video_call import (
 from app.services.permission_service import permission_service
 from app.services.video_notification_service import video_notification_service
 from app.services.video_service import video_service
+from app.utils.datetime_utils import get_utc_now
 
 router = APIRouter(prefix="/video-calls", tags=["video-calls"])
 
@@ -144,7 +143,7 @@ async def join_video_call_by_room(
     # Update call status to in_progress if it's the first participant
     if video_call.status == "scheduled":
         await crud.video_call.update_call_status(
-            db, db_obj=video_call, status="in_progress", started_at=datetime.now(UTC)
+            db, db_obj=video_call, status="in_progress", started_at=get_utc_now()
         )
 
     # Add participant
@@ -187,7 +186,7 @@ async def join_video_call(
     if video_call.status == "scheduled":
         print("DEBUG: Updating video call status to in_progress")
         await crud.video_call.update_call_status(
-            db, db_obj=video_call, status="in_progress", started_at=datetime.now(UTC)
+            db, db_obj=video_call, status="in_progress", started_at=get_utc_now()
         )
         print(f"DEBUG: Video call status after update: {video_call.status}")
     else:
@@ -241,7 +240,7 @@ async def leave_video_call_by_room(
     if len(active_participants) == 0:
         # Last participant left, end the call
         video_call = await crud.video_call.update_call_status(
-            db, db_obj=video_call, status="completed", ended_at=datetime.now(UTC)
+            db, db_obj=video_call, status="completed", ended_at=get_utc_now()
         )
         return {
             "message": "Left call and ended session (last participant)",
@@ -288,7 +287,7 @@ async def leave_video_call(
     if len(active_participants) == 0:
         # Last participant left, end the call
         video_call = await crud.video_call.update_call_status(
-            db, db_obj=video_call, status="completed", ended_at=datetime.now(UTC)
+            db, db_obj=video_call, status="completed", ended_at=get_utc_now()
         )
         return {
             "message": "Left call and ended session (last participant)",
@@ -324,7 +323,7 @@ async def end_video_call(
 
     # Update call status
     video_call = await crud.video_call.update_call_status(
-        db, db_obj=video_call, status="completed", ended_at=datetime.now(UTC)
+        db, db_obj=video_call, status="completed", ended_at=get_utc_now()
     )
 
     return video_call
@@ -462,8 +461,6 @@ async def get_call_transcript(
 
     if not transcript:
         # Return empty transcript for calls that haven't started transcription yet
-        from datetime import datetime
-
         return CallTranscriptionInfo(
             id=0,
             video_call_id=call_id,
@@ -472,7 +469,7 @@ async def get_call_transcript(
             language=video_call.transcription_language,
             processing_status=TranscriptionStatus.PENDING,
             word_count=0,
-            created_at=datetime.now(UTC),
+            created_at=get_utc_now(),
             processed_at=None,
             segments=[],
         )

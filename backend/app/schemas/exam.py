@@ -1,13 +1,60 @@
+from __future__ import annotations
+
 from datetime import datetime
+from enum import Enum
 from typing import Any, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-# Import enums from models
-from app.models.exam import ExamStatus, ExamType, QuestionType, SessionStatus
 
-# Import TemplateQuestionSelection from question_bank schemas
-from app.schemas.question_bank import TemplateQuestionSelection
+class ExamType(str, Enum):
+    # General Categories
+    APTITUDE = "aptitude"  # 適性検査
+    SKILL = "skill"
+    KNOWLEDGE = "knowledge"
+    PERSONALITY = "personality"
+    CUSTOM = "custom"
+
+    # Japanese Aptitude Tests (適性検査)
+    SPI = "spi"  # SPI（総合適性検査）
+    TAMATEBAKO = "tamatebako"  # 玉手箱
+    CAB = "cab"  # CAB（IT適性検査）
+    GAB = "gab"  # GAB（総合適性検査）
+    TG_WEB = "tg_web"  # TG-WEB
+    CUBIC = "cubic"  # CUBIC
+    NTT = "ntt_aptitude"  # NTT適性検査
+    KRAEPELIN = "kraepelin"  # クレペリン検査
+    SJT = "sjt"  # 状況判断テスト
+
+    # Technical/Industry-Specific
+    PROGRAMMING_APTITUDE = "programming_aptitude"  # プログラミング適性検査
+    NUMERICAL_ABILITY = "numerical_ability"  # 数理能力検査
+    VERBAL_ABILITY = "verbal_ability"  # 言語能力検査
+    LOGICAL_THINKING = "logical_thinking"  # 論理思考テスト
+
+
+class ExamStatus(str, Enum):
+    DRAFT = "draft"
+    ACTIVE = "active"
+    ARCHIVED = "archived"
+
+
+class QuestionType(str, Enum):
+    MULTIPLE_CHOICE = "multiple_choice"
+    SINGLE_CHOICE = "single_choice"
+    TEXT_INPUT = "text_input"
+    ESSAY = "essay"
+    TRUE_FALSE = "true_false"
+    RATING = "rating"
+    MATCHING = "matching"
+
+
+class SessionStatus(str, Enum):
+    NOT_STARTED = "not_started"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    EXPIRED = "expired"
+    SUSPENDED = "suspended"
 
 
 class ExamBase(BaseModel):
@@ -367,7 +414,7 @@ class HybridExamCreate(BaseModel):
     )
 
     # Template selections (randomly select from question banks)
-    template_selections: list[TemplateQuestionSelection] = Field(
+    template_selections: list["TemplateQuestionSelection"] = Field(
         default_factory=list,
         description="Question bank selections for random question picking",
     )
@@ -386,3 +433,10 @@ class HybridExamResponse(BaseModel):
     custom_count: int
     template_count: int
     selection_rules: dict[str, Any]  # The question_selection_rules stored in exam
+
+
+# Import at end to avoid circular imports
+from app.schemas.question_bank import TemplateQuestionSelection
+
+# Rebuild models to resolve forward references
+HybridExamCreate.model_rebuild()

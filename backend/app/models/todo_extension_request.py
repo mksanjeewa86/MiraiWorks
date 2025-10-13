@@ -8,21 +8,19 @@ from typing import TYPE_CHECKING
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.database import Base
+from app.models.base import BaseModel
 from app.utils.constants import ExtensionRequestStatus
-from app.utils.datetime_utils import get_utc_now
 
 if TYPE_CHECKING:
     from app.models.todo import Todo
     from app.models.user import User
 
 
-class TodoExtensionRequest(Base):
+class TodoExtensionRequest(BaseModel):
     """Model for todo due date extension requests."""
 
     __tablename__ = "todo_extension_requests"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     todo_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("todos.id", ondelete="CASCADE"), nullable=False, index=True
     )
@@ -51,14 +49,6 @@ class TodoExtensionRequest(Base):
     responded_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     responded_by_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
-    )
-
-    # Audit fields
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=get_utc_now
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=get_utc_now, onupdate=get_utc_now
     )
 
     # Relationships

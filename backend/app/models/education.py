@@ -1,18 +1,15 @@
 """Education model for user profiles."""
 
-from sqlalchemy import Column, Date, ForeignKey, Integer, String, Text, Numeric
+from sqlalchemy import Column, Date, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.orm import relationship
 
-from app.models.base import TimestampMixin
-from app.database import Base
+from app.models.base import BaseModel
 
 
-class ProfileEducation(Base, TimestampMixin):
+class ProfileEducation(BaseModel):
     """Education entries for user profiles."""
 
     __tablename__ = "profile_educations"
-
-    id = Column(Integer, primary_key=True, index=True)
     user_id = Column(
         Integer,
         ForeignKey("users.id", ondelete="CASCADE"),

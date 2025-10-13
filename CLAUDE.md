@@ -4,6 +4,68 @@
 
 This document defines the **STRICT** architectural rules that must be followed in all future development. These rules ensure code maintainability, separation of concerns, and consistent project structure.
 
+> **Note**: For additional development guidelines and testing requirements, see [`.github/copilot-instructions.md`](.github/copilot-instructions.md).
+
+---
+
+## ⚡ **CRITICAL RULES - ALWAYS FOLLOW**
+
+### 🕐 **DateTime Handling**
+**ALWAYS use `get_utc_now()` from `app.utils.datetime_utils`**
+
+```python
+# ✅ CORRECT
+from app.utils.datetime_utils import get_utc_now
+
+user.created_at = get_utc_now()
+user.updated_at = get_utc_now()
+
+# ❌ WRONG - NEVER use these
+from datetime import datetime, UTC
+user.created_at = datetime.utcnow()  # Deprecated!
+user.created_at = datetime.now(UTC)  # Don't use directly!
+```
+
+**Why this matters:**
+- ✅ Consistent timezone handling across the entire application
+- ✅ Better testability - can mock `get_utc_now()` easily
+- ✅ Future-proofing - easy to change datetime behavior globally
+- ✅ Timezone safety - prevents timezone-related bugs
+
+---
+
+### ✅ **Pydantic Validation**
+**ALWAYS use `@field_validator` instead of deprecated `@validator`**
+
+```python
+# ✅ CORRECT - Pydantic v2
+from pydantic import BaseModel, field_validator
+
+class JobCreate(BaseModel):
+    title: str
+
+    @field_validator('title')
+    @classmethod
+    def validate_title(cls, v):
+        return v.strip()
+
+# ❌ WRONG - Deprecated in Pydantic v2
+from pydantic import validator
+
+class JobCreate(BaseModel):
+    title: str
+
+    @validator('title')  # Don't use this!
+    def validate_title(cls, v):
+        return v.strip()
+```
+
+**Why this matters:**
+- ✅ Pydantic v2 compatibility
+- ✅ Better type checking and IDE support
+- ✅ More explicit validation rules
+- ✅ `@classmethod` decorator requirement makes the pattern clearer
+
 ---
 
 ## 🏗️ **Core Architecture Pattern**
@@ -15,8 +77,10 @@ This document defines the **STRICT** architectural rules that must be followed i
 ├── 📁 crud/           # Database operations
 ├── 📁 endpoints/      # HTTP routing logic ONLY
 ├── 📁 services/       # Business logic
-└── 📁 utils/          # Shared utilities
+└── 📁 utils/          # Shared utilities (datetime_utils, security, validators)
 ```
+
+> **⚠️ CRITICAL**: Always use `get_utc_now()` from `app.utils.datetime_utils` instead of `datetime.utcnow()`
 
 ---
 
@@ -61,6 +125,121 @@ class JobStatus(str, Enum):  # Move to schemas!
 
 ---
 
+### 🗄️ **BaseModel Pattern - ALWAYS USE FOR STANDARD MODELS**
+
+**ALL standard models MUST inherit from `BaseModel` instead of `Base`**
+
+#### ✅ **BaseModel provides:**
+- `id` - Auto-incrementing primary key (Integer)
+- `created_at` - Timestamp when record was created (UTC, server_default)
+- `updated_at` - Timestamp when record was last updated (UTC, auto-updated)
+
+#### 📝 **CORRECT USAGE**:
+```python
+# ✅ GOOD - models/user.py
+from app.models.base import BaseModel
+
+class User(BaseModel):
+    __tablename__ = "users"
+
+    email = Column(String(255), unique=True, nullable=False)
+    first_name = Column(String(100), nullable=False)
+    # id, created_at, updated_at are inherited from BaseModel
+```
+
+#### ❌ **WRONG - Don't duplicate base fields**:
+```python
+# ❌ BAD - Duplicating fields that BaseModel provides
+from app.database import Base
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)  # DUPLICATE!
+    created_at = Column(DateTime(timezone=True), server_default=func.now())  # DUPLICATE!
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())  # DUPLICATE!
+    email = Column(String(255), unique=True, nullable=False)
+```
+
+#### ⚠️ **WHEN NOT TO USE BaseModel:**
+
+Some models don't need all three fields (id, created_at, updated_at). In these cases, inherit from `Base` directly:
+
+```python
+# ✅ GOOD - Models that only need id and created_at
+from app.database import Base
+
+class RefreshToken(Base):
+    __tablename__ = "refresh_tokens"
+
+    id = Column(Integer, primary_key=True, index=True)
+    token_hash = Column(String(255), unique=True, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    # No updated_at - refresh tokens don't get updated
+```
+
+#### 📊 **Migration Status: ✅ COMPLETE**
+
+**Total Models Using BaseModel: 66 models**
+
+All models with standard `id + created_at + updated_at` pattern have been successfully migrated:
+
+✅ **Core Models**: User, Company, OauthAccount
+✅ **Profile Models**: RecruiterProfile, Project, Skill, Education, WorkExperience, Certification, JobPreference
+✅ **Workflow Models**: Workflow, WorkflowNode, WorkflowNodeExecution, CandidateWorkflow
+✅ **Interview Models**: Interview, InterviewProposal, InterviewNote
+✅ **Meeting Models**: Meeting, MeetingRecording, MeetingTranscript, MeetingSummary
+✅ **Position Models**: Position, PositionApplication, CompanyProfile
+✅ **Exam Models**: Exam, ExamQuestion, ExamSession, ExamAssignment, ExamTemplate
+✅ **Message Models**: Message, Notification, Attachment
+✅ **Todo Models**: Todo, TodoExtensionRequest
+✅ **Calendar Models**: CalendarEvent, CalendarConnection, ExternalCalendarAccount, SyncedEvent
+✅ **Video Models**: VideoCall, CallParticipant
+✅ **Subscription Models**: SubscriptionPlan, CompanySubscription, Feature, PlanChangeRequest
+✅ **Question Bank Models**: QuestionBank, QuestionBankItem
+✅ **Connection Models**: CompanyConnection
+✅ **Settings Models**: UserSettings, PrivacySettings
+✅ **Other Models**: Holiday, SystemUpdate, MBTITest, MBTIQuestion, Resume (+ 10 resume-related models)
+
+**Code Reduction Achieved**: ~1,980 lines removed (66 models × 30 lines average)
+
+#### ⚠️ **Models Correctly NOT Using BaseModel (18 models)**
+
+These models **intentionally use `Base`** because they have different timestamp requirements:
+
+**Immutable Records (write-once, never updated):**
+- `AuditLog` - Audit trail (only `created_at`)
+- `RefreshToken` - Auth tokens (only `created_at`)
+- `PasswordResetRequest` - Reset requests (only `created_at`)
+- `PlanFeature` - Junction table (only `added_at`)
+- `ProfileView` - View tracking (only `viewed_at`)
+- `RecordingConsent` - Legal consent (only `created_at`)
+- `CallTranscription` - Transcripts (only `created_at`, `processed_at`)
+- `TranscriptionSegment` - Speech segments (only `created_at`)
+- `ConnectionInvitation` - Invitations (only `sent_at`, `responded_at`)
+- `UserConnection` - Connections (only `created_at`)
+- `WorkflowNodeConnection` - Workflow edges (only `created_at`)
+- `TodoViewer` - Todo viewers (only `added_at`)
+- `WorkflowViewer` - Workflow viewers (only `added_at`)
+- `ExamAnswer` - Exam answers (only `created_at`)
+- `ExamMonitoringEvent` - Monitoring events (only `created_at`)
+
+**Custom Timestamp Fields:**
+- `TodoAttachment` - Uses `uploaded_at` instead of `created_at`
+
+**Static/Junction Tables:**
+- `Role` - Permission definitions
+- `UserRole` - User-role assignments
+
+#### 🎯 **Benefits of BaseModel:**
+- ✅ **DRY principle** - No field duplication across models
+- ✅ **Consistency** - All models have the same base fields
+- ✅ **Maintainability** - Single source of truth for common fields
+- ✅ **Type safety** - Inherited fields are type-checked
+- ✅ **Database migrations** - Easier to manage schema changes
+
+---
+
 ### 🟢 **2. SCHEMAS (`app/schemas/`)**
 **Purpose**: API validation, serialization, and enums
 
@@ -68,19 +247,20 @@ class JobStatus(str, Enum):  # Move to schemas!
 - **All enums** for the domain
 - **Pydantic BaseModel** classes
 - **API request/response** schemas
-- **Field validation** with validators
+- **Field validation** with `@field_validator`
 - **Data transformation** logic
 
 #### ❌ **FORBIDDEN**:
 - **Database queries** → Move to `app/crud/`
 - **Business logic** → Move to `app/services/`
 - **HTTP handling** → Move to `app/endpoints/`
+- **`@validator` decorator** → Use `@field_validator` instead (Pydantic v2)
 
 #### 📝 **Example**:
 ```python
 # ✅ GOOD - schemas/job.py
 from enum import Enum
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 class JobStatus(str, Enum):
     DRAFT = "draft"
@@ -90,9 +270,17 @@ class JobCreate(BaseModel):
     title: str = Field(..., min_length=1, max_length=255)
     status: JobStatus = JobStatus.DRAFT
 
-    @validator('title')
+    @field_validator('title')
+    @classmethod
     def validate_title(cls, v):
         return v.strip()
+
+# ❌ BAD - Don't use deprecated @validator
+from pydantic import validator  # Don't import this!
+
+@validator('title')  # Use @field_validator instead
+def validate_title(cls, v):
+    return v.strip()
 ```
 
 ---
@@ -174,6 +362,155 @@ async def get_jobs(db: AsyncSession = Depends(get_db)):
 
 ---
 
+### 📍 **ENDPOINT CENTRALIZATION - `app/config/endpoints.py`**
+**MANDATORY: NO HARDCODED ENDPOINTS**
+
+#### 🎯 **CRITICAL RULE:**
+**ALL endpoint paths MUST be defined in `app/config/endpoints.py`**
+- ❌ **NEVER** hardcode endpoint strings in `@router` decorators
+- ✅ **ALWAYS** use centralized route definitions from `API_ROUTES`
+
+#### 🔤 **ALPHABETICAL ORDERING REQUIREMENT**
+
+**File**: `backend/app/config/endpoints.py`
+
+**MANDATORY: All definitions MUST be in strict alphabetical order (A-Z)**
+
+#### **3-Tier Alphabetical Structure:**
+
+1. **Route Class Definitions** - All route classes alphabetically ordered
+2. **API_ROUTES Properties** - All properties alphabetically ordered
+3. **__all__ Exports** - All exports alphabetically ordered
+
+#### ✅ **CORRECT Example**:
+```python
+# ✅ GOOD - config/endpoints.py (alphabetically ordered)
+
+# 1. Route Classes (A-Z)
+class AdminRoutes:
+    """Administrative endpoints."""
+    AUDIT_LOGS = "/admin/audit-logs"
+    BULK_DELETE = "/admin/bulk/delete"
+    SYSTEM_HEALTH = "/admin/system/health"
+
+class AuthRoutes:
+    """Authentication endpoints."""
+    ACTIVATE_ACCOUNT = "/activate"
+    LOGIN = "/login"
+    LOGOUT = "/logout"
+    ME = "/me"
+
+class CompanyRoutes:
+    """Company management endpoints."""
+    BASE = "/companies"
+    BY_ID = "/companies/{company_id}"
+    CREATE = "/companies"
+
+# 2. API_ROUTES Class (properties A-Z)
+class API_ROUTES:
+    ADMIN = AdminRoutes
+    AUTH = AuthRoutes
+    COMPANIES = CompanyRoutes
+    # ... (all properties alphabetically ordered)
+
+# 3. __all__ Exports (A-Z)
+__all__ = [
+    "API_ROUTES",
+    "AdminRoutes",
+    "AuthRoutes",
+    "CompanyRoutes",
+    # ... (all exports alphabetically ordered)
+]
+```
+
+#### ❌ **INCORRECT Example**:
+```python
+# ❌ BAD - Not alphabetically ordered
+
+# Route classes out of order
+class CompanyRoutes:  # Should come after AuthRoutes
+    ...
+
+class AuthRoutes:     # Wrong position!
+    ...
+
+class AdminRoutes:    # Should be first!
+    ...
+
+# API_ROUTES properties out of order
+class API_ROUTES:
+    COMPANIES = CompanyRoutes  # Wrong order!
+    AUTH = AuthRoutes
+    ADMIN = AdminRoutes        # Should be first!
+```
+
+#### 📝 **Using Centralized Routes in Endpoints**:
+```python
+# ✅ GOOD - endpoints/jobs.py
+from app.config.endpoints import API_ROUTES
+from app.crud.job import job as job_crud
+from app.schemas.job import JobCreate, JobInfo
+
+router = APIRouter()
+
+@router.post(API_ROUTES.JOBS.CREATE, response_model=JobInfo)
+async def create_job(
+    job_data: JobCreate,
+    db: AsyncSession = Depends(get_db),
+):
+    """Create a new job."""
+    return await job_crud.create(db, obj_in=job_data)
+
+@router.get(API_ROUTES.JOBS.BY_ID, response_model=JobInfo)
+async def get_job(
+    job_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """Get job by ID."""
+    return await job_crud.get(db, id=job_id)
+
+# ❌ BAD - Hardcoded endpoint strings
+@router.post("/jobs", response_model=JobInfo)  # Don't hardcode!
+async def create_job(...):
+    ...
+
+@router.get("/jobs/{job_id}", response_model=JobInfo)  # Don't hardcode!
+async def get_job(...):
+    ...
+```
+
+#### ⚠️ **When Adding New Endpoints:**
+
+1. **Find correct alphabetical position** for your route class
+2. **Add route class** with properties in alphabetical order
+3. **Add to API_ROUTES** at correct alphabetical position
+4. **Add to __all__** at correct alphabetical position
+5. **Use in endpoint files** via `API_ROUTES.YOUR_ROUTE.CONSTANT`
+
+#### 🎯 **Benefits of Centralization & Alphabetical Ordering:**
+
+- ✅ **Single source of truth** for all endpoint paths
+- ✅ **Easy to find routes** - alphabetical navigation
+- ✅ **Prevents duplicates** - clear at-a-glance organization
+- ✅ **Refactoring safety** - change route in one place
+- ✅ **Better git diffs** - ordered structure shows changes clearly
+- ✅ **Consistent codebase** - all endpoints follow same pattern
+- ✅ **Quick code reviews** - easy to spot mistakes
+
+#### 🔍 **Validation Commands:**
+```bash
+# Check for hardcoded endpoints in endpoint files
+grep -r "@router\.\(get\|post\|put\|delete\|patch\)(\"/\|\"{\)" app/endpoints/
+
+# Verify alphabetical order (manual review required)
+# Open backend/app/config/endpoints.py and verify:
+# - Route classes: A-Z order
+# - API_ROUTES properties: A-Z order
+# - __all__ exports: A-Z order
+```
+
+---
+
 ### 🟣 **5. SERVICES (`app/services/`)**
 **Purpose**: Business logic and orchestration
 
@@ -194,6 +531,7 @@ async def get_jobs(db: AsyncSession = Depends(get_db)):
 # ✅ GOOD - services/job_service.py
 from app.crud.job import job as job_crud
 from app.crud.user import user as user_crud
+from app.utils.datetime_utils import get_utc_now
 
 class JobService:
     async def publish_job(self, db: AsyncSession, job_id: int, user_id: int):
@@ -205,12 +543,51 @@ class JobService:
             raise ValueError("User cannot publish jobs")
 
         job.status = "published"
-        job.published_at = datetime.utcnow()
+        job.published_at = get_utc_now()  # Use utility function
 
         await job_crud.update(db, db_obj=job)
         # Send notifications, etc.
 
 job_service = JobService()
+```
+
+---
+
+### 🟤 **6. UTILS (`app/utils/`)**
+**Purpose**: Shared utility functions and helpers
+
+#### ✅ **REQUIRED UTILITIES**:
+
+##### **⏰ DateTime Utilities**:
+**ALWAYS use `get_utc_now()` from `app.utils.datetime_utils`**
+
+```python
+# ✅ GOOD - Always use get_utc_now()
+from app.utils.datetime_utils import get_utc_now
+
+user.created_at = get_utc_now()
+user.updated_at = get_utc_now()
+
+# ❌ BAD - NEVER use datetime.utcnow()
+from datetime import datetime
+
+user.created_at = datetime.utcnow()  # DON'T DO THIS!
+```
+
+**Why this matters:**
+- ✅ **Consistent timezone handling** across the entire application
+- ✅ **Testability** - Utilities can be mocked for testing
+- ✅ **Future-proofing** - Easy to modify datetime behavior globally
+- ✅ **Timezone safety** - Prevents timezone-related bugs
+
+#### 📝 **Utility Import Patterns**:
+```python
+# ✅ All datetime operations
+from app.utils.datetime_utils import get_utc_now
+
+# ✅ Import other utilities as needed
+from app.utils.security import hash_password
+from app.utils.validators import validate_email
 ```
 
 ---
@@ -317,6 +694,10 @@ async def get_jobs(db: AsyncSession = Depends(get_db)):
 class CRUDJob:
     async def create_job_endpoint(self, request):  # Use endpoints!
         # HTTP logic in CRUD is forbidden
+
+# DON'T: Use datetime.utcnow() directly
+from datetime import datetime
+user.created_at = datetime.utcnow()  # Use get_utc_now() from utils!
 ```
 
 ### ✅ **DO THIS INSTEAD**:
@@ -338,6 +719,10 @@ class CRUDJob:
     async def get_all(self, db: AsyncSession):
         result = await db.execute(select(Job))
         return result.scalars().all()
+
+# ✅ Use get_utc_now() from utils
+from app.utils.datetime_utils import get_utc_now
+user.created_at = get_utc_now()
 ```
 
 ---
@@ -389,370 +774,12 @@ from app.services.job_service import job_service
 | **CRUD** | Data access | SQLAlchemy queries | HTTP handling, business logic |
 | **Endpoints** | HTTP routing | FastAPI routes | Inline queries, schemas |
 | **Services** | Business logic | Complex operations | Direct DB access |
-
----
-
-## 🧪 **TESTING REQUIREMENTS**
-
-### **MANDATORY TESTING RULES**
-
-#### 🎯 **100% Endpoint Coverage Rule**
-**EVERY ENDPOINT MUST HAVE COMPREHENSIVE TESTS**
-
-#### ✅ **REQUIRED for ALL endpoints:**
-
-1. **🔐 Authentication Tests**:
-   - ✅ Success with valid credentials
-   - ❌ Failure with invalid credentials
-   - ❌ Failure with missing authentication
-   - ❌ Failure with expired tokens
-   - ❌ Failure with insufficient permissions
-
-2. **📝 Input Validation Tests**:
-   - ✅ Success with valid data
-   - ❌ Failure with invalid data types
-   - ❌ Failure with missing required fields
-   - ❌ Failure with field length violations
-   - ❌ Failure with invalid field formats
-   - ❌ Failure with boundary value violations
-
-3. **🔄 Business Logic Tests**:
-   - ✅ Success scenarios for all workflows
-   - ❌ Failure scenarios for business rule violations
-   - 🔀 Edge cases and boundary conditions
-   - 🎲 Different user roles and permissions
-   - 🗂️ Different data states and contexts
-
-4. **💾 Database Operation Tests**:
-   - ✅ Successful CRUD operations
-   - ❌ Constraint violation handling
-   - 🔗 Relationship integrity tests
-   - 🔄 Transaction rollback scenarios
-
-5. **🌐 HTTP Response Tests**:
-   - ✅ Correct HTTP status codes (200, 201, 404, 400, 401, 403, 500)
-   - ✅ Response body structure validation
-   - ✅ Response headers verification
-   - ✅ Error message format consistency
-
-#### 🧪 **Test File Structure**:
-```python
-# tests/test_[endpoint_name].py
-
-class TestEndpointName:
-    """Comprehensive tests for [endpoint] functionality."""
-
-    # 🟢 SUCCESS SCENARIOS
-    async def test_[operation]_success(self):
-        """Test successful [operation]."""
-
-    async def test_[operation]_success_with_different_roles(self):
-        """Test [operation] with various user roles."""
-
-    # 🔴 ERROR SCENARIOS
-    async def test_[operation]_invalid_input(self):
-        """Test [operation] with invalid input."""
-
-    async def test_[operation]_unauthorized(self):
-        """Test [operation] without authentication."""
-
-    async def test_[operation]_forbidden(self):
-        """Test [operation] with insufficient permissions."""
-
-    async def test_[operation]_not_found(self):
-        """Test [operation] with non-existent resource."""
-
-    # 🎯 EDGE CASES
-    async def test_[operation]_edge_cases(self):
-        """Test [operation] edge cases and boundary values."""
-
-    async def test_[operation]_database_constraints(self):
-        """Test [operation] database constraint violations."""
-```
-
-#### 📊 **Required Test Coverage**:
-
-| Test Type | Minimum Coverage | Description |
-|-----------|------------------|-------------|
-| **Success Paths** | 100% | All successful workflows |
-| **Authentication** | 100% | All auth scenarios |
-| **Validation Errors** | 100% | All input validation |
-| **Permission Errors** | 100% | All permission checks |
-| **Database Errors** | 90% | Constraint violations |
-| **Edge Cases** | 80% | Boundary conditions |
-
-#### 🚨 **STRICT ENFORCEMENT**:
-
-##### **BEFORE CREATING/UPDATING ANY ENDPOINT:**
-1. ✅ Write tests FIRST (TDD approach)
-2. ✅ Cover ALL success scenarios
-3. ✅ Cover ALL error scenarios
-4. ✅ Test ALL user roles/permissions
-5. ✅ Verify ALL response formats
-6. ✅ Test ALL edge cases
-
-##### **WHEN UPDATING EXISTING ENDPOINTS:**
-1. 🔍 **MANDATORY**: Review existing tests
-2. 📝 **MANDATORY**: Update tests for new functionality
-3. 🧪 **MANDATORY**: Add tests for new error conditions
-4. ✅ **MANDATORY**: Ensure all tests pass
-5. 📊 **MANDATORY**: Verify coverage remains 100%
-
-##### **TEST EXECUTION COMMANDS**:
-```bash
-# Run all endpoint tests
-PYTHONPATH=. python -m pytest app/tests/test_*.py -v
-
-# Run specific endpoint tests
-PYTHONPATH=. python -m pytest app/tests/test_auth.py -v
-
-# Run with coverage
-PYTHONPATH=. python -m pytest --cov=app --cov-report=term-missing
-
-# Coverage must be 100% for endpoints
-PYTHONPATH=. python -m pytest --cov=app --cov-fail-under=100
-```
-
-#### 🎯 **Test Quality Standards**:
-
-##### ✅ **GOOD TEST EXAMPLES**:
-```python
-async def test_create_job_success(self, client, auth_headers):
-    """Test successful job creation with valid data."""
-    job_data = {
-        "title": "Software Engineer",
-        "description": "Great opportunity",
-        "location": "Remote"
-    }
-
-    response = await client.post(
-        "/api/jobs",
-        json=job_data,
-        headers=auth_headers
-    )
-
-    assert response.status_code == 201
-    data = response.json()
-    assert data["title"] == job_data["title"]
-    assert "id" in data
-    assert "created_at" in data
-
-async def test_create_job_unauthorized(self, client):
-    """Test job creation without authentication fails."""
-    response = await client.post("/api/jobs", json={})
-    assert response.status_code == 401
-    assert "detail" in response.json()
-
-async def test_create_job_invalid_title(self, client, auth_headers):
-    """Test job creation with invalid title fails."""
-    job_data = {"title": ""}  # Empty title
-
-    response = await client.post(
-        "/api/jobs",
-        json=job_data,
-        headers=auth_headers
-    )
-
-    assert response.status_code == 422
-    error_detail = response.json()["detail"]
-    assert any("title" in str(error).lower() for error in error_detail)
-```
-
-##### ❌ **BAD TEST EXAMPLES**:
-```python
-# DON'T: Test without assertions
-async def test_create_job(self, client):
-    response = await client.post("/api/jobs", json={})
-    # Missing assertions!
-
-# DON'T: Test only success cases
-async def test_jobs_endpoint(self, client, auth_headers):
-    response = await client.post("/api/jobs", json=valid_data)
-    assert response.status_code == 201
-    # Missing error scenarios!
-
-# DON'T: Unclear test names
-async def test_jobs(self, client):  # Too generic
-    # What specific scenario is being tested?
-```
-
-#### 🔍 **Test Review Checklist**:
-
-Before merging any code with endpoint changes:
-
-- [ ] ✅ All endpoints have test files
-- [ ] ✅ All success paths tested
-- [ ] ✅ All authentication scenarios tested
-- [ ] ✅ All validation errors tested
-- [ ] ✅ All permission errors tested
-- [ ] ✅ All edge cases tested
-- [ ] ✅ All database constraints tested
-- [ ] ✅ All response formats verified
-- [ ] ✅ Test coverage is 100%
-- [ ] ✅ All tests pass
-
-#### 🚫 **VIOLATIONS RESULT IN**:
-- **Code review rejection**
-- **Deployment blocking**
-- **Refactoring requirements**
-- **Additional testing requirements**
-
-#### 📝 **Testing Command Reference**:
-```bash
-# Create new endpoint test file
-touch app/tests/test_[endpoint_name].py
-
-# Run single test
-PYTHONPATH=. python -m pytest app/tests/test_auth.py::test_login_success -v
-
-# Run all tests for an endpoint
-PYTHONPATH=. python -m pytest app/tests/test_auth.py -v
-
-# Run tests with coverage
-PYTHONPATH=. python -m pytest --cov=app.endpoints --cov-report=term-missing
-
-# Debug failing tests
-PYTHONPATH=. python -m pytest app/tests/test_auth.py -v -s --tb=long
-```
-
----
-
-## 🚀 **CI/CD & AUTOMATION REQUIREMENTS**
-
-### **MANDATORY CI/CD PIPELINE**
-
-#### 🎯 **GitHub Actions Integration**
-**ALL code changes MUST pass automated testing**
-
-#### ✅ **REQUIRED CI/CD Components:**
-
-1. **🧪 Automated Testing**:
-   ```yaml
-   # .github/workflows/pytest.yml
-   - pytest execution on every push/PR
-   - Coverage reporting (minimum 75%)
-   - Test result artifacts
-   - Fixture validation
-   ```
-
-2. **🔍 Code Quality Checks**:
-   ```yaml
-   # .github/workflows/ci.yml
-   - Ruff linting and formatting
-   - MyPy type checking
-   - Security scanning (Bandit)
-   - Import sorting
-   ```
-
-3. **📊 Coverage Requirements**:
-   - **Endpoint coverage**: 100% required
-   - **Overall coverage**: 75% minimum
-   - **Branch coverage**: Enabled
-   - **Coverage reports**: Generated on every run
-
-#### 🛠️ **Local Development Commands**:
-```bash
-# Quick test validation
-make test
-
-# Full test suite with coverage
-make test-coverage
-
-# Fix fixtures and test
-make test-fix
-
-# CI simulation
-make test-ci
-
-# Local validation script
-python scripts/test_local.py --verbose --coverage
-```
-
-#### 📋 **Pre-commit Requirements**:
-
-##### ✅ **BEFORE every commit:**
-- [ ] All tests pass locally
-- [ ] Coverage meets minimum requirements
-- [ ] Linting passes (ruff check)
-- [ ] Formatting applied (ruff format)
-- [ ] Type checking passes (mypy)
-
-##### ✅ **BEFORE every push:**
-- [ ] `make test-ci` passes locally
-- [ ] All new endpoints have comprehensive tests
-- [ ] No test fixtures are broken
-- [ ] Documentation updated if needed
-
-#### 🚨 **CI/CD Failure Response**:
-
-##### **When CI fails:**
-1. **Fix locally first** - Don't push fixes blindly
-2. **Run `python scripts/test_local.py --fix-fixtures`**
-3. **Validate with `make test-ci`**
-4. **Only then push the fix**
-
-##### **Test fixture issues:**
-1. **Run fixture diagnosis** - `python scripts/test_local.py --fix-fixtures`
-2. **Check async configuration** - Verify pytest-asyncio setup
-3. **Validate imports** - Ensure all dependencies are correctly imported
-4. **Test collection** - Run `make test-collect` to verify test discovery
-
-#### 📈 **Continuous Improvement**:
-
-##### **Coverage Tracking**:
-- Coverage reports uploaded to Codecov
-- PR comments with coverage changes
-- HTML reports available as artifacts
-- Trend monitoring enabled
-
-##### **Performance Monitoring**:
-- Test execution time tracking
-- Slow test identification
-- Resource usage monitoring
-- Bottleneck detection
-
-#### 🔒 **Branch Protection**:
-
-##### **Main/Develop branches require:**
-- [ ] ✅ All CI checks passing
-- [ ] ✅ Code review approval
-- [ ] ✅ Up-to-date with base branch
-- [ ] ✅ All tests passing
-- [ ] ✅ Coverage requirements met
-
-#### 🛠️ **Debugging Failed Tests**:
-
-##### **Local debugging commands:**
-```bash
-# Diagnose fixture issues
-python scripts/test_local.py --fix-fixtures
-
-# Run with maximum verbosity
-make test-verbose
-
-# Debug specific test
-PYTHONPATH=. python -m pytest app/tests/test_auth.py::test_login_success -v -s --tb=long
-
-# Check test collection
-make test-collect
-
-# Full CI simulation
-make test-ci
-```
-
-##### **Common CI issues:**
-1. **Async fixture problems** → Run fixture diagnosis script
-2. **Import errors** → Check PYTHONPATH and dependencies
-3. **Database issues** → Verify test environment setup
-4. **Coverage failures** → Add missing test scenarios
-
----
-
-**Remember: Comprehensive testing ensures reliable, maintainable code! 🧪**
-
-**⚠️ NO ENDPOINT WITHOUT TESTS! ⚠️**
-
-**🚀 ALL CHANGES MUST PASS CI/CD! 🚀**
+| **Utils** | Shared utilities | Helper functions, datetime utils | Business logic, HTTP logic |
+
+### **Critical Utility Functions:**
+- 🕐 **DateTime**: Always use `get_utc_now()` from `app.utils.datetime_utils`
+- 🔒 **Security**: Use utilities from `app.utils.security`
+- ✅ **Validation**: Use utilities from `app.utils.validators`
 
 ---
 

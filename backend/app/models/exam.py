@@ -1,5 +1,3 @@
-from enum import Enum
-
 from sqlalchemy import (
     JSON,
     Boolean,
@@ -16,64 +14,14 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from app.database import Base
+from app.models.base import BaseModel
+from app.schemas.exam import ExamStatus, ExamType, QuestionType, SessionStatus
 
 
-class ExamType(str, Enum):
-    # General Categories
-    APTITUDE = "aptitude"  # 適性検査
-    SKILL = "skill"
-    KNOWLEDGE = "knowledge"
-    PERSONALITY = "personality"
-    CUSTOM = "custom"
-
-    # Japanese Aptitude Tests (適性検査)
-    SPI = "spi"  # SPI（総合適性検査）
-    TAMATEBAKO = "tamatebako"  # 玉手箱
-    CAB = "cab"  # CAB（IT適性検査）
-    GAB = "gab"  # GAB（総合適性検査）
-    TG_WEB = "tg_web"  # TG-WEB
-    CUBIC = "cubic"  # CUBIC
-    NTT = "ntt_aptitude"  # NTT適性検査
-    KRAEPELIN = "kraepelin"  # クレペリン検査
-    SJT = "sjt"  # 状況判断テスト
-
-    # Technical/Industry-Specific
-    PROGRAMMING_APTITUDE = "programming_aptitude"  # プログラミング適性検査
-    NUMERICAL_ABILITY = "numerical_ability"  # 数理能力検査
-    VERBAL_ABILITY = "verbal_ability"  # 言語能力検査
-    LOGICAL_THINKING = "logical_thinking"  # 論理思考テスト
-
-
-class ExamStatus(str, Enum):
-    DRAFT = "draft"
-    ACTIVE = "active"
-    ARCHIVED = "archived"
-
-
-class QuestionType(str, Enum):
-    MULTIPLE_CHOICE = "multiple_choice"
-    SINGLE_CHOICE = "single_choice"
-    TEXT_INPUT = "text_input"
-    ESSAY = "essay"
-    TRUE_FALSE = "true_false"
-    RATING = "rating"
-    MATCHING = "matching"
-
-
-class SessionStatus(str, Enum):
-    NOT_STARTED = "not_started"
-    IN_PROGRESS = "in_progress"
-    COMPLETED = "completed"
-    EXPIRED = "expired"
-    SUSPENDED = "suspended"
-
-
-class Exam(Base):
+class Exam(BaseModel):
     """Recruitment exam model."""
 
     __tablename__ = "exams"
-
-    id = Column(Integer, primary_key=True, index=True)
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
     exam_type = Column(
@@ -125,16 +73,6 @@ class Exam(Base):
     )  # Stores how exam was created (for audit/recreation)
     # Example: {"custom_count": 10, "template_selections": [{"bank_id": 5, "count": 20, "category": "verbal"}]}
 
-    created_at = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
-    updated_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False,
-    )
-
     # Relationships
     company = relationship("Company", back_populates="exams")
     creator = relationship("User", foreign_keys=[created_by])
@@ -154,12 +92,10 @@ class Exam(Base):
         )
 
 
-class ExamQuestion(Base):
+class ExamQuestion(BaseModel):
     """Question within an exam."""
 
     __tablename__ = "exam_questions"
-
-    id = Column(Integer, primary_key=True, index=True)
     exam_id = Column(
         Integer, ForeignKey("exams.id", ondelete="CASCADE"), nullable=False, index=True
     )
@@ -202,16 +138,6 @@ class ExamQuestion(Base):
         Integer, ForeignKey("question_bank_items.id", ondelete="SET NULL"), nullable=True
     )  # Original question
 
-    created_at = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
-    updated_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False,
-    )
-
     # Relationships
     exam = relationship("Exam", back_populates="questions")
     answers = relationship(
@@ -224,12 +150,10 @@ class ExamQuestion(Base):
         return f"<ExamQuestion(id={self.id}, exam_id={self.exam_id}, type='{self.question_type}')>"
 
 
-class ExamSession(Base):
+class ExamSession(BaseModel):
     """Individual exam session for a candidate."""
 
     __tablename__ = "exam_sessions"
-
-    id = Column(Integer, primary_key=True, index=True)
     exam_id = Column(
         Integer, ForeignKey("exams.id", ondelete="CASCADE"), nullable=False, index=True
     )
@@ -276,16 +200,6 @@ class ExamSession(Base):
     user_agent = Column(Text, nullable=True)
     ip_address = Column(String(45), nullable=True)
     screen_resolution = Column(String(20), nullable=True)
-
-    created_at = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
-    updated_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False,
-    )
 
     # Relationships
     exam = relationship("Exam", back_populates="sessions")
@@ -347,12 +261,10 @@ class ExamAnswer(Base):
         return f"<ExamAnswer(id={self.id}, session_id={self.session_id}, question_id={self.question_id})>"
 
 
-class ExamAssignment(Base):
+class ExamAssignment(BaseModel):
     """Assignment of exam to specific candidates."""
 
     __tablename__ = "exam_assignments"
-
-    id = Column(Integer, primary_key=True, index=True)
     exam_id = Column(
         Integer, ForeignKey("exams.id", ondelete="CASCADE"), nullable=False, index=True
     )
@@ -386,16 +298,6 @@ class ExamAssignment(Base):
         ForeignKey("workflow_node_executions.id", ondelete="SET NULL"),
         nullable=True,
         index=True,
-    )
-
-    created_at = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
-    updated_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False,
     )
 
     # Relationships

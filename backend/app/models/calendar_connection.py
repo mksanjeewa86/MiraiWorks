@@ -11,13 +11,12 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
-from app.database import Base
+from app.models.base import BaseModel
 
 
-class CalendarConnection(Base):
+class CalendarConnection(BaseModel):
     __tablename__ = "calendar_connections"
 
-    id = Column(Integer, primary_key=True, index=True)
     user_id = Column(
         Integer,
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -55,16 +54,6 @@ class CalendarConnection(Base):
     )  # User-friendly name for this connection
     last_sync_at = Column(DateTime(timezone=True), nullable=True)
     sync_error = Column(Text, nullable=True)  # Last sync error message
-
-    created_at = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
-    updated_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False,
-    )
 
     # Relationships
     user = relationship("User", back_populates="calendar_connections")

@@ -442,7 +442,6 @@ class ResumeTemplate(BaseModel):
 class ResumeShare(BaseModel):
     __tablename__ = "resume_shares"
 
-    id = Column(Integer, primary_key=True, index=True)
     resume_id = Column(Integer, ForeignKey("resumes.id"), nullable=False)
 
     # Share details
@@ -489,7 +488,6 @@ class ResumeShare(BaseModel):
 class ResumeMessageAttachment(BaseModel):
     __tablename__ = "resume_message_attachments"
 
-    id = Column(Integer, primary_key=True, index=True)
     resume_id = Column(Integer, ForeignKey("resumes.id"), nullable=False)
     message_id = Column(Integer, ForeignKey("messages.id"), nullable=False)
 

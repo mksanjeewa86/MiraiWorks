@@ -5,20 +5,18 @@ System-wide updates that are visible to all users without creating individual no
 Only system administrators can create these updates.
 """
 
-from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, Boolean, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.database import Base
-from app.utils.datetime_utils import get_utc_now
+from app.models.base import BaseModel
 
 if TYPE_CHECKING:
     from app.models.user import User
 
 
-class SystemUpdate(Base):
+class SystemUpdate(BaseModel):
     """
     System-wide update announcements.
 
@@ -27,8 +25,6 @@ class SystemUpdate(Base):
     """
 
     __tablename__ = "system_updates"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     message: Mapped[str] = mapped_column(Text, nullable=False)
     tags: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
@@ -37,12 +33,6 @@ class SystemUpdate(Base):
     # Track who created this update
     created_by_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=get_utc_now, nullable=False
-    )
-    updated_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime, default=None, onupdate=get_utc_now, nullable=True
     )
 
     # Relationships

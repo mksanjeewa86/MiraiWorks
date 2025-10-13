@@ -1,6 +1,5 @@
 """Service for company-based connections."""
 
-from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import and_, or_, select

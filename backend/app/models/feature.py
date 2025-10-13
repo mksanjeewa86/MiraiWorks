@@ -1,11 +1,10 @@
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
 
-from app.database import Base
+from app.models.base import BaseModel
 
 
-class Feature(Base):
+class Feature(BaseModel):
     """
     Feature catalog for subscription plans.
     Supports hierarchical features with parent-child relationships.
@@ -16,8 +15,6 @@ class Feature(Base):
       - Sub-feature: "suspend_user" (parent_feature_id = user_management.id)
     """
     __tablename__ = "features"
-
-    id = Column(Integer, primary_key=True, index=True)
 
     # Feature identification
     name = Column(String(50), nullable=False, unique=True, index=True)
@@ -33,15 +30,6 @@ class Feature(Base):
 
     # Status
     is_active = Column(Boolean, nullable=False, default=True, index=True)
-
-    # Timestamps
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False,
-    )
 
     # Relationships
     parent = relationship(

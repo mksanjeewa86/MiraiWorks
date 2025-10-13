@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from app.database import Base
+from app.models.base import BaseModel
 
 
 class RefreshToken(Base):
@@ -55,10 +56,8 @@ class PasswordResetRequest(Base):
         return f"<PasswordResetRequest(id={self.id}, user_id={self.user_id}, is_used={self.is_used})>"
 
 
-class OauthAccount(Base):
+class OauthAccount(BaseModel):
     __tablename__ = "oauth_accounts"
-
-    id = Column(Integer, primary_key=True, index=True)
     user_id = Column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
@@ -68,15 +67,6 @@ class OauthAccount(Base):
     access_token = Column(Text, nullable=True)  # Encrypted
     refresh_token = Column(Text, nullable=True)  # Encrypted
     token_expires_at = Column(DateTime(timezone=True), nullable=True)
-    created_at = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
-    updated_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False,
-    )
 
     # Relationships
     user = relationship("User", back_populates="oauth_accounts")

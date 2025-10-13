@@ -6,10 +6,7 @@ from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from app.models.interview import Interview
-from app.models.meeting import (
-    Meeting,
-    meeting_participants,
-)
+from app.models.meeting import Meeting, MeetingParticipant
 from app.models.user import User
 from app.rbac import has_permission
 from app.schemas.meeting import (
@@ -89,14 +86,15 @@ class MeetingService:
 
         # Add participants
         for participant_data in meeting_data.participants:
-            participant_stmt = meeting_participants.insert().values(
+            participant = MeetingParticipant(
                 meeting_id=meeting.id,
                 user_id=participant_data.user_id,
                 role=participant_data.role,
                 can_record=participant_data.can_record,
                 recording_consent=participant_data.recording_consent,
+                status=ParticipantStatus.INVITED,
             )
-            self.db.execute(participant_stmt)
+            self.db.add(participant)
 
         self.db.commit()
 
@@ -159,8 +157,8 @@ class MeetingService:
         # Role-based filtering
         if not has_permission(current_user, "meeting.view_all"):
             # Non-admin users can only see meetings they participate in
-            query = query.join(meeting_participants).filter(
-                meeting_participants.c.user_id == current_user.id
+            query = query.join(MeetingParticipant).filter(
+                MeetingParticipant.user_id == current_user.id
             )
 
         # Apply filters
@@ -177,8 +175,8 @@ class MeetingService:
             query = query.filter(Meeting.scheduled_start <= params.end_date)
 
         if params.participant_id:
-            query = query.join(meeting_participants).filter(
-                meeting_participants.c.user_id == params.participant_id
+            query = query.join(MeetingParticipant).filter(
+                MeetingParticipant.user_id == params.participant_id
             )
 
         # Get total count
@@ -257,14 +255,16 @@ class MeetingService:
             )
 
         # Check if user is a participant
-        participant = self.db.execute(
-            meeting_participants.select().where(
+        participant = (
+            self.db.query(MeetingParticipant)
+            .filter(
                 and_(
-                    meeting_participants.c.meeting_id == meeting.id,
-                    meeting_participants.c.user_id == current_user.id,
+                    MeetingParticipant.meeting_id == meeting.id,
+                    MeetingParticipant.user_id == current_user.id,
                 )
             )
-        ).first()
+            .first()
+        )
 
         if not participant:
             raise HTTPException(
@@ -273,16 +273,8 @@ class MeetingService:
             )
 
         # Update participant status and join time
-        self.db.execute(
-            meeting_participants.update()
-            .where(
-                and_(
-                    meeting_participants.c.meeting_id == meeting.id,
-                    meeting_participants.c.user_id == current_user.id,
-                )
-            )
-            .values(status=ParticipantStatus.JOINED, joined_at=get_utc_now())
-        )
+        participant.status = ParticipantStatus.JOINED
+        participant.joined_at = get_utc_now()
 
         # Update meeting status if first participant
         if meeting.status == MeetingStatus.SCHEDULED:
@@ -308,26 +300,32 @@ class MeetingService:
         meeting = self.get_meeting_by_room_id(room_id, current_user)
 
         # Update participant status
-        self.db.execute(
-            meeting_participants.update()
-            .where(
+        participant = (
+            self.db.query(MeetingParticipant)
+            .filter(
                 and_(
-                    meeting_participants.c.meeting_id == meeting.id,
-                    meeting_participants.c.user_id == current_user.id,
+                    MeetingParticipant.meeting_id == meeting.id,
+                    MeetingParticipant.user_id == current_user.id,
                 )
             )
-            .values(status=ParticipantStatus.LEFT, left_at=get_utc_now())
+            .first()
         )
 
+        if participant:
+            participant.status = ParticipantStatus.LEFT
+            participant.left_at = get_utc_now()
+
         # Check if all participants have left
-        active_participants = self.db.execute(
-            meeting_participants.select().where(
+        active_participants = (
+            self.db.query(MeetingParticipant)
+            .filter(
                 and_(
-                    meeting_participants.c.meeting_id == meeting.id,
-                    meeting_participants.c.status == ParticipantStatus.JOINED,
+                    MeetingParticipant.meeting_id == meeting.id,
+                    MeetingParticipant.status == ParticipantStatus.JOINED,
                 )
             )
-        ).fetchall()
+            .all()
+        )
 
         # End meeting if no active participants
         if not active_participants and meeting.status == MeetingStatus.IN_PROGRESS:
@@ -480,14 +478,16 @@ class MeetingService:
             return meeting.company_id == user.company_id
 
         # Check if user is a participant
-        participant = self.db.execute(
-            meeting_participants.select().where(
+        participant = (
+            self.db.query(MeetingParticipant)
+            .filter(
                 and_(
-                    meeting_participants.c.meeting_id == meeting.id,
-                    meeting_participants.c.user_id == user.id,
+                    MeetingParticipant.meeting_id == meeting.id,
+                    MeetingParticipant.user_id == user.id,
                 )
             )
-        ).first()
+            .first()
+        )
 
         return participant is not None
 
@@ -504,15 +504,17 @@ class MeetingService:
             return True
 
         # Host participants can modify
-        participant = self.db.execute(
-            meeting_participants.select().where(
+        participant = (
+            self.db.query(MeetingParticipant)
+            .filter(
                 and_(
-                    meeting_participants.c.meeting_id == meeting.id,
-                    meeting_participants.c.user_id == user.id,
-                    meeting_participants.c.role == ParticipantRole.HOST,
+                    MeetingParticipant.meeting_id == meeting.id,
+                    MeetingParticipant.user_id == user.id,
+                    MeetingParticipant.role == ParticipantRole.HOST,
                 )
             )
-        ).first()
+            .first()
+        )
 
         return participant is not None
 

@@ -1,13 +1,11 @@
 """Question bank models for reusable exam questions."""
 
-from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, Boolean, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.database import Base
-from app.utils.datetime_utils import get_utc_now
+from app.models.base import BaseModel
 
 if TYPE_CHECKING:
     from app.models.company import Company
@@ -15,12 +13,11 @@ if TYPE_CHECKING:
     from app.models.user import User
 
 
-class QuestionBank(Base):
+class QuestionBank(BaseModel):
     """Reusable question pools for exams."""
 
     __tablename__ = "question_banks"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
@@ -47,15 +44,6 @@ class QuestionBank(Base):
     created_by: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=get_utc_now, nullable=False
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=get_utc_now,
-        onupdate=get_utc_now,
-        nullable=False,
-    )
 
     # Relationships
     company: Mapped["Company | None"] = relationship(
@@ -70,12 +58,11 @@ class QuestionBank(Base):
         return f"<QuestionBank(id={self.id}, name='{self.name}', exam_type='{self.exam_type}')>"
 
 
-class QuestionBankItem(Base):
+class QuestionBankItem(BaseModel):
     """Individual questions in a question bank."""
 
     __tablename__ = "question_bank_items"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     bank_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("question_banks.id", ondelete="CASCADE"),
@@ -120,17 +107,6 @@ class QuestionBankItem(Base):
     rating_scale: Mapped[int | None] = mapped_column(
         Integer, nullable=True
     )  # 1-5, 1-10, etc.
-
-    # Timestamps
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=get_utc_now, nullable=False
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=get_utc_now,
-        onupdate=get_utc_now,
-        nullable=False,
-    )
 
     # Relationships
     bank: Mapped["QuestionBank"] = relationship(

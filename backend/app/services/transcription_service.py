@@ -1,13 +1,13 @@
 import asyncio
 import base64
 import logging
-from datetime import UTC, datetime
 
 import aiohttp
 
 from app.config import settings
 from app.schemas.video_call import TranscriptionSegmentCreate
 from app.services.free_transcription import transcribe_audio_free
+from app.utils.datetime_utils import get_utc_now
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ class TranscriptionService:
                 "room_id": room_id,
                 "language": language,
                 "is_active": True,
-                "start_time": datetime.now(UTC),
+                "start_time": get_utc_now(),
                 "segments_count": 0,
             }
 

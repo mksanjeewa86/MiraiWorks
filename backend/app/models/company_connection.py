@@ -1,12 +1,9 @@
 """Company connection model for company-based interactions."""
 
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     Boolean,
-    DateTime,
-    Enum,
     ForeignKey,
     Integer,
     String,
@@ -14,15 +11,14 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import Base
-from app.utils.datetime_utils import get_utc_now
+from app.models.base import BaseModel
 
 if TYPE_CHECKING:
     from app.models.company import Company
     from app.models.user import User
 
 
-class CompanyConnection(Base):
+class CompanyConnection(BaseModel):
     """
     Company-based connections for messaging and interactions.
 
@@ -32,8 +28,6 @@ class CompanyConnection(Base):
     """
 
     __tablename__ = "company_connections"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
     # Source entity (user or company)
     source_type: Mapped[str] = mapped_column(
@@ -101,12 +95,6 @@ class CompanyConnection(Base):
         index=True,
         comment="User who created this connection",
     )
-
-    # Timestamps
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=get_utc_now, index=True
-    )
-    updated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # Relationships
     source_user: Mapped["User | None"] = relationship(

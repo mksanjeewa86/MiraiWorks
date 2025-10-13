@@ -2,10 +2,11 @@ import base64
 import hashlib
 import hmac
 import json
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 
 from app.config import settings
 from app.schemas.video_call import VideoCallToken
+from app.utils.datetime_utils import get_utc_now
 
 
 class VideoService:
@@ -20,7 +21,7 @@ class VideoService:
         with your chosen WebRTC provider (Twilio, Agora, Daily.co, etc.)
         """
         # Token expiry time (1 hour)
-        expires_at = datetime.now(UTC) + timedelta(hours=1)
+        expires_at = get_utc_now() + timedelta(hours=1)
 
         # Create token payload
         payload = {

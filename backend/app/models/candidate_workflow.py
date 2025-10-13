@@ -14,7 +14,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import Base
+from app.models.base import BaseModel
 from app.utils.datetime_utils import get_utc_now
 
 if TYPE_CHECKING:
@@ -24,13 +24,11 @@ if TYPE_CHECKING:
     from app.models.workflow_node_execution import WorkflowNodeExecution
 
 
-class CandidateWorkflow(Base):
+class CandidateWorkflow(BaseModel):
     __tablename__ = "candidate_workflows"
     __table_args__ = (
         UniqueConstraint("candidate_id", "workflow_id", name="uq_candidate_workflow"),
     )
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
     # Core relationships
     candidate_id: Mapped[int] = mapped_column(
@@ -82,17 +80,6 @@ class CandidateWorkflow(Base):
         String(50), nullable=True, index=True
     )
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
-
-    # Timestamps
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=get_utc_now, nullable=False, index=True
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=get_utc_now,
-        onupdate=get_utc_now,
-        nullable=False,
-    )
 
     # Relationships
     candidate: Mapped[User] = relationship(

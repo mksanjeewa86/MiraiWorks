@@ -2,62 +2,60 @@ from datetime import datetime, timedelta
 
 from sqlalchemy import (
     Boolean,
-    Column,
     DateTime,
     ForeignKey,
     Index,
     Integer,
     String,
-    Table,
     Text,
     UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import Base
-from app.models.db_types import CompatLONGTEXT as LONGTEXT
+from app.models.base import BaseModel
 from app.utils.datetime_utils import get_utc_now
-
-# Association table for meeting participants
-meeting_participants = Table(
-    "meeting_participants",
-    Base.metadata,
-    Column("id", Integer, primary_key=True),
-    Column(
-        "meeting_id",
-        Integer,
-        ForeignKey("meetings.id", ondelete="CASCADE"),
-        nullable=False,
-    ),
-    Column(
-        "user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
-    ),
-    Column("role", String(20), nullable=False),  # ParticipantRole
-    Column("status", String(20), nullable=False, default="invited"),
-    Column("joined_at", DateTime, nullable=True),
-    Column("left_at", DateTime, nullable=True),
-    Column("can_record", Boolean, nullable=False, default=False),
-    Column(
-        "recording_consent", Boolean, nullable=True
-    ),  # True/False/None for not decided
-    Column("created_at", DateTime, nullable=False, default=get_utc_now),
-    Column(
-        "updated_at",
-        DateTime,
-        nullable=False,
-        default=get_utc_now,
-        onupdate=get_utc_now,
-    ),
-    UniqueConstraint("meeting_id", "user_id", name="unique_meeting_user"),
-    Index("idx_meeting_participants_meeting", "meeting_id"),
-    Index("idx_meeting_participants_user", "user_id"),
-)
+from app.utils.db_types import LONGTEXT
 
 
-class Meeting(Base):
+class MeetingParticipant(BaseModel):
+    """Meeting participant model with role and status tracking."""
+
+    __tablename__ = "meeting_participants"
+
+    meeting_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("meetings.id", ondelete="CASCADE"), nullable=False
+    )
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+
+    # Participant details
+    role: Mapped[str] = mapped_column(String(20), nullable=False)  # ParticipantRole
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="invited")
+    joined_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    left_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    # Recording permissions
+    can_record: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    recording_consent: Mapped[bool | None] = mapped_column(
+        Boolean, nullable=True
+    )  # True/False/None for not decided
+
+    # Relationships
+    meeting = relationship("Meeting", back_populates="participant_records")
+    user = relationship("User", back_populates="meeting_participations")
+
+    # Constraints and indexes
+    __table_args__ = (
+        UniqueConstraint("meeting_id", "user_id", name="unique_meeting_user"),
+        Index("idx_meeting_participants_meeting", "meeting_id"),
+        Index("idx_meeting_participants_user", "user_id"),
+    )
+
+
+class Meeting(BaseModel):
     __tablename__ = "meetings"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
     interview_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("interviews.id", ondelete="SET NULL"), nullable=True
     )
@@ -106,19 +104,13 @@ class Meeting(Base):
     created_by: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id"), nullable=False
     )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=get_utc_now
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=get_utc_now, onupdate=get_utc_now
-    )
 
     # Relationships
     interview = relationship("Interview", back_populates="meetings")
     company = relationship("Company")
     creator = relationship("User", foreign_keys=[created_by])
-    participants = relationship(
-        "User", secondary=meeting_participants, back_populates="meetings"
+    participant_records = relationship(
+        "MeetingParticipant", back_populates="meeting", cascade="all, delete-orphan"
     )
     recordings = relationship(
         "MeetingRecording", back_populates="meeting", cascade="all, delete-orphan"
@@ -165,10 +157,9 @@ class Meeting(Base):
         ]
 
 
-class MeetingRecording(Base):
+class MeetingRecording(BaseModel):
     __tablename__ = "meeting_recordings"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
     meeting_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("meetings.id", ondelete="CASCADE"), nullable=False
     )
@@ -203,12 +194,6 @@ class MeetingRecording(Base):
     recorded_by: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id"), nullable=False
     )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=get_utc_now
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=get_utc_now, onupdate=get_utc_now
-    )
 
     # Relationships
     meeting = relationship("Meeting", back_populates="recordings")
@@ -222,10 +207,9 @@ class MeetingRecording(Base):
     )
 
 
-class MeetingTranscript(Base):
+class MeetingTranscript(BaseModel):
     __tablename__ = "meeting_transcripts"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
     meeting_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("meetings.id", ondelete="CASCADE"), nullable=False
     )
@@ -262,14 +246,6 @@ class MeetingTranscript(Base):
     )
     processing_error: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    # Metadata
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=get_utc_now
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=get_utc_now, onupdate=get_utc_now
-    )
-
     # Relationships
     meeting = relationship("Meeting", back_populates="transcripts")
     recording = relationship("MeetingRecording")
@@ -282,10 +258,9 @@ class MeetingTranscript(Base):
     )
 
 
-class MeetingSummary(Base):
+class MeetingSummary(BaseModel):
     __tablename__ = "meeting_summaries"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
     meeting_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("meetings.id", ondelete="CASCADE"), nullable=False
     )
@@ -339,14 +314,6 @@ class MeetingSummary(Base):
         Integer, ForeignKey("users.id"), nullable=True
     )
     reviewed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-
-    # Metadata
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=get_utc_now
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=get_utc_now, onupdate=get_utc_now
-    )
 
     # Relationships
     meeting = relationship("Meeting", back_populates="summaries")

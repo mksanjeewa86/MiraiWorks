@@ -1,14 +1,11 @@
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 
-from app.database import Base
-from app.utils.datetime_utils import get_utc_now
+from app.models.base import BaseModel
 
 
-class CalendarEvent(Base):
+class CalendarEvent(BaseModel):
     __tablename__ = "calendar_events"
-
-    id = Column(Integer, primary_key=True, index=True)
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
     start_datetime = Column(DateTime, nullable=False, index=True)
@@ -19,10 +16,6 @@ class CalendarEvent(Base):
     status = Column(String(20), default="confirmed", nullable=False, index=True)
     creator_id = Column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
-    )
-    created_at = Column(DateTime, default=get_utc_now, nullable=False)
-    updated_at = Column(
-        DateTime, default=get_utc_now, onupdate=get_utc_now, nullable=False
     )
     recurrence_rule = Column(String(255), nullable=True)
     parent_event_id = Column(

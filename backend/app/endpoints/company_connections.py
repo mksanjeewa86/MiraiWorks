@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.config.endpoints import API_ROUTES
 from app.database import get_db
 from app.dependencies import get_current_active_user
 from app.models.user import User
@@ -17,7 +18,7 @@ from app.services.company_connection_service import company_connection_service
 router = APIRouter()
 
 
-@router.post("/user-to-company", response_model=CompanyConnectionInfo)
+@router.post(API_ROUTES.COMPANY_CONNECTIONS.USER_TO_COMPANY, response_model=CompanyConnectionInfo)
 async def create_user_to_company_connection(
     connection_data: UserToCompanyConnectionCreate,
     current_user: User = Depends(get_current_active_user),
@@ -74,7 +75,7 @@ async def create_user_to_company_connection(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@router.post("/company-to-company", response_model=CompanyConnectionInfo)
+@router.post(API_ROUTES.COMPANY_CONNECTIONS.COMPANY_TO_COMPANY, response_model=CompanyConnectionInfo)
 async def create_company_to_company_connection(
     connection_data: CompanyToCompanyConnectionCreate,
     current_user: User = Depends(get_current_active_user),
@@ -139,7 +140,7 @@ async def create_company_to_company_connection(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@router.get("/my-connections", response_model=list[CompanyConnectionInfo])
+@router.get(API_ROUTES.COMPANY_CONNECTIONS.MY_CONNECTIONS, response_model=list[CompanyConnectionInfo])
 async def get_my_connections(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
@@ -209,7 +210,7 @@ async def get_my_connections(
     ]
 
 
-@router.get("/{connection_id}", response_model=CompanyConnectionInfo)
+@router.get(API_ROUTES.COMPANY_CONNECTIONS.BY_ID, response_model=CompanyConnectionInfo)
 async def get_connection_by_id(
     connection_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -275,7 +276,7 @@ async def get_connection_by_id(
     )
 
 
-@router.put("/{connection_id}/deactivate", response_model=CompanyConnectionInfo)
+@router.put(API_ROUTES.COMPANY_CONNECTIONS.DEACTIVATE, response_model=CompanyConnectionInfo)
 async def deactivate_connection(
     connection_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -361,7 +362,7 @@ async def deactivate_connection(
     )
 
 
-@router.put("/{connection_id}/activate", response_model=CompanyConnectionInfo)
+@router.put(API_ROUTES.COMPANY_CONNECTIONS.ACTIVATE, response_model=CompanyConnectionInfo)
 async def activate_connection(
     connection_id: int,
     current_user: User = Depends(get_current_active_user),

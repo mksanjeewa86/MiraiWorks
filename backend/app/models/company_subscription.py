@@ -2,17 +2,15 @@ from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
-from app.database import Base
+from app.models.base import BaseModel
 
 
-class CompanySubscription(Base):
+class CompanySubscription(BaseModel):
     """
     Company subscription to a plan.
     One company can only have one active subscription at a time.
     """
     __tablename__ = "company_subscriptions"
-
-    id = Column(Integer, primary_key=True, index=True)
 
     # Foreign keys
     company_id = Column(Integer, ForeignKey("companies.id"), nullable=False, unique=True, index=True)
@@ -35,15 +33,6 @@ class CompanySubscription(Base):
     # Cancellation
     cancelled_at = Column(DateTime(timezone=True), nullable=True)
     cancellation_reason = Column(String(255), nullable=True)
-
-    # Timestamps
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False,
-    )
 
     # Relationships
     company = relationship("Company", backref="subscription")

@@ -1,9 +1,9 @@
 import logging
-from datetime import UTC, datetime
 from typing import Any
 
 from app.models.video_call import RecordingConsent, VideoCall
 from app.services.video_service import video_service
+from app.utils.datetime_utils import get_utc_now
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class RecordingService:
 
             # Generate recording session
             recording_id = (
-                f"rec_{video_call.room_id}_{int(datetime.now(UTC).timestamp())}"
+                f"rec_{video_call.room_id}_{int(get_utc_now().timestamp())}"
             )
 
             # Start recording through video service
@@ -39,7 +39,7 @@ class RecordingService:
                 self.active_recordings[video_call.room_id] = {
                     "recording_id": recording_id,
                     "video_call_id": video_call.id,
-                    "started_at": datetime.now(UTC),
+                    "started_at": get_utc_now(),
                     "recording_url": recording_url,
                     "consents": [consent.id for consent in consents],
                 }
@@ -70,7 +70,7 @@ class RecordingService:
 
             if final_url:
                 # Update recording session
-                recording_session["ended_at"] = datetime.now(UTC)
+                recording_session["ended_at"] = get_utc_now()
                 recording_session["final_url"] = final_url
 
                 # Clean up active session
@@ -100,7 +100,7 @@ class RecordingService:
             success = await video_service.pause_recording(recording_id)
 
             if success:
-                recording_session["paused_at"] = datetime.now(UTC)
+                recording_session["paused_at"] = get_utc_now()
                 logger.info(f"Paused recording {recording_id}")
 
             return success
@@ -122,7 +122,7 @@ class RecordingService:
             success = await video_service.resume_recording(recording_id)
 
             if success:
-                recording_session["resumed_at"] = datetime.now(UTC)
+                recording_session["resumed_at"] = get_utc_now()
                 logger.info(f"Resumed recording {recording_id}")
 
             return success
@@ -145,7 +145,7 @@ class RecordingService:
                 "started_at": recording_session["started_at"].isoformat(),
                 "status": "active",
                 "duration_seconds": (
-                    datetime.now(UTC) - recording_session["started_at"]
+                    get_utc_now() - recording_session["started_at"]
                 ).total_seconds(),
             }
 
@@ -219,7 +219,7 @@ class RecordingService:
                 "recording_url": recording_url,
                 "transcription_enabled": video_call.transcription_enabled,
                 "language": video_call.transcription_language,
-                "created_at": datetime.now(UTC).isoformat(),
+                "created_at": get_utc_now().isoformat(),
             }
 
             return metadata

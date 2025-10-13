@@ -2,20 +2,22 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.database import get_db
-from app.models.user import User
-from app.endpoints.auth import get_current_active_user
+
+from app.config.endpoints import API_ROUTES
 from app.crud.privacy_settings import privacy_settings as privacy_settings_crud
+from app.database import get_db
+from app.endpoints.auth import get_current_active_user
+from app.models.user import User
 from app.schemas.privacy_settings import (
-    PrivacySettingsInfo,
     PrivacySettingsCreate,
+    PrivacySettingsInfo,
     PrivacySettingsUpdate,
 )
 
 router = APIRouter()
 
 
-@router.get("/me", response_model=PrivacySettingsInfo)
+@router.get(API_ROUTES.PRIVACY_SETTINGS.ME, response_model=PrivacySettingsInfo)
 async def get_my_privacy_settings(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
@@ -25,7 +27,7 @@ async def get_my_privacy_settings(
     return settings
 
 
-@router.put("/me", response_model=PrivacySettingsInfo)
+@router.put(API_ROUTES.PRIVACY_SETTINGS.ME, response_model=PrivacySettingsInfo)
 async def update_my_privacy_settings(
     settings_data: PrivacySettingsUpdate,
     db: AsyncSession = Depends(get_db),
@@ -49,7 +51,7 @@ async def update_my_privacy_settings(
     return settings
 
 
-@router.post("/me", response_model=PrivacySettingsInfo, status_code=status.HTTP_201_CREATED)
+@router.post(API_ROUTES.PRIVACY_SETTINGS.ME, response_model=PrivacySettingsInfo, status_code=status.HTTP_201_CREATED)
 async def create_my_privacy_settings(
     settings_data: PrivacySettingsCreate,
     db: AsyncSession = Depends(get_db),
@@ -70,7 +72,7 @@ async def create_my_privacy_settings(
     return settings
 
 
-@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(API_ROUTES.PRIVACY_SETTINGS.ME, status_code=status.HTTP_204_NO_CONTENT)
 async def delete_my_privacy_settings(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),

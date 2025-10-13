@@ -9,16 +9,13 @@ from sqlalchemy import (
     Text,
 )
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
 
-from app.database import Base
+from app.models.base import BaseModel
 from app.utils.constants import VirusStatus
 
 
-class Attachment(Base):
+class Attachment(BaseModel):
     __tablename__ = "attachments"
-
-    id = Column(Integer, primary_key=True, index=True)
     message_id = Column(
         Integer,
         ForeignKey("messages.id", ondelete="CASCADE"),
@@ -52,16 +49,6 @@ class Attachment(Base):
     )  # Only true after clean scan
     is_deleted = Column(Boolean, nullable=False, default=False, index=True)
     upload_ip = Column(String(45), nullable=True)  # IP address of uploader
-
-    created_at = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False, index=True
-    )
-    updated_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False,
-    )
     deleted_at = Column(DateTime(timezone=True), nullable=True)
 
     # Relationships
