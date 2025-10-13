@@ -2,16 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import { Briefcase, X } from 'lucide-react';
 import {
   Dialog,
+  DialogClose,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { JobPreference, JobPreferenceCreate, JobPreferenceUpdate } from '@/types/profile';
@@ -125,217 +127,282 @@ export default function JobPreferencesModal({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            {mode === 'create' ? 'Set Job Preferences' : t('jobPreferences.edit')}
-          </DialogTitle>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent
+        closeButton={false}
+        className="flex flex-col h-[90vh] max-h-[90vh] w-full max-w-4xl md:max-w-3xl overflow-hidden rounded-3xl border border-slate-200 bg-white text-slate-900 shadow-[0_30px_80px_-20px_rgba(15,23,42,0.2)]"
+      >
+        <DialogHeader className="flex-shrink-0 px-6 pt-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                  <Briefcase className="h-5 w-5" />
+                </span>
+                <div>
+                  <DialogTitle className="text-xl font-semibold text-slate-900">
+                    {mode === 'create' ? 'Set Job Preferences' : 'Edit Job Preferences'}
+                  </DialogTitle>
+                  <DialogDescription className="text-sm text-slate-500">
+                    {mode === 'create'
+                      ? 'Define your career goals and preferences to help recruiters find the right opportunities.'
+                      : 'Update your job search preferences and career goals.'}
+                  </DialogDescription>
+                </div>
+              </div>
+            </div>
+            <DialogClose className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
+              <X className="h-4 w-4" />
+            </DialogClose>
+          </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Job Search Status - Most Important */}
-          <div className="space-y-2 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-2 border-blue-200 dark:border-blue-700">
-            <Label htmlFor="job_search_status" className="text-base font-semibold">
-              {t('jobPreferences.form.jobSearchStatus')} *
-            </Label>
-            <Select
-              value={formData.job_search_status}
-              onValueChange={(value) => setFormData({ ...formData, job_search_status: value })}
+        <form onSubmit={handleSubmit} className="flex flex-1 flex-col min-h-0">
+          <div className="flex-1 overflow-y-auto px-6 py-6 min-h-0">
+            <div className="space-y-8">
+              {/* Main Section */}
+              <div className="grid gap-6 rounded-2xl border border-slate-200 bg-slate-50 p-6">
+                {/* Job Search Status - Most Important */}
+                <div className="space-y-2">
+                  <label htmlFor="job_search_status" className="text-sm font-medium text-slate-700">
+                    {t('jobPreferences.form.jobSearchStatus')} *
+                  </label>
+                  <Select
+                    value={formData.job_search_status}
+                    onValueChange={(value) => setFormData({ ...formData, job_search_status: value })}
+                  >
+                    <SelectTrigger className="border-slate-300 bg-white text-slate-900">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={JobSearchStatus.ACTIVELY_LOOKING}>
+                        {t('jobPreferences.status.actively_looking')}
+                      </SelectItem>
+                      <SelectItem value={JobSearchStatus.OPEN_TO_OPPORTUNITIES}>
+                        {t('jobPreferences.status.open_to_opportunities')}
+                      </SelectItem>
+                      <SelectItem value={JobSearchStatus.NOT_LOOKING}>
+                        {t('jobPreferences.status.not_looking')}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-slate-500">Let recruiters know your current availability</p>
+                </div>
+
+                {/* Desired Job Types */}
+                <div className="space-y-2">
+                  <label htmlFor="desired_job_types" className="text-sm font-medium text-slate-700">
+                    {t('jobPreferences.form.desiredJobTypes')}
+                  </label>
+                  <Input
+                    id="desired_job_types"
+                    value={formData.desired_job_types}
+                    onChange={(e) => setFormData({ ...formData, desired_job_types: e.target.value })}
+                    placeholder="Full-time, Part-time, Contract, Freelance"
+                  />
+                  <p className="text-xs text-slate-500">Comma-separated list</p>
+                </div>
+
+                {/* Salary Expectations */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label htmlFor="desired_salary_min" className="text-sm font-medium text-slate-700">
+                      {t('jobPreferences.form.desiredSalaryMin')}
+                    </label>
+                    <Input
+                      id="desired_salary_min"
+                      type="number"
+                      value={formData.desired_salary_min}
+                      onChange={(e) => setFormData({ ...formData, desired_salary_min: e.target.value })}
+                      placeholder="50000"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="desired_salary_max" className="text-sm font-medium text-slate-700">
+                      {t('jobPreferences.form.desiredSalaryMax')}
+                    </label>
+                    <Input
+                      id="desired_salary_max"
+                      type="number"
+                      value={formData.desired_salary_max}
+                      onChange={(e) => setFormData({ ...formData, desired_salary_max: e.target.value })}
+                      placeholder="100000"
+                    />
+                  </div>
+                </div>
+
+                {/* Currency and Period */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label htmlFor="salary_currency" className="text-sm font-medium text-slate-700">
+                      {t('jobPreferences.form.salaryCurrency')}
+                    </label>
+                    <Select
+                      value={formData.salary_currency}
+                      onValueChange={(value) => setFormData({ ...formData, salary_currency: value })}
+                    >
+                      <SelectTrigger className="border-slate-300 bg-white text-slate-900">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="USD">USD</SelectItem>
+                        <SelectItem value="JPY">JPY</SelectItem>
+                        <SelectItem value="EUR">EUR</SelectItem>
+                        <SelectItem value="GBP">GBP</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="salary_period" className="text-sm font-medium text-slate-700">
+                      {t('jobPreferences.form.salaryPeriod')}
+                    </label>
+                    <Select
+                      value={formData.salary_period}
+                      onValueChange={(value) => setFormData({ ...formData, salary_period: value })}
+                    >
+                      <SelectTrigger className="border-slate-300 bg-white text-slate-900">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={SalaryPeriod.YEARLY}>{t('jobPreferences.salaryPeriod.yearly')}</SelectItem>
+                        <SelectItem value={SalaryPeriod.MONTHLY}>{t('jobPreferences.salaryPeriod.monthly')}</SelectItem>
+                        <SelectItem value={SalaryPeriod.HOURLY}>{t('jobPreferences.salaryPeriod.hourly')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Work Mode Preferences */}
+                <div className="space-y-2">
+                  <label htmlFor="work_mode_preferences" className="text-sm font-medium text-slate-700">
+                    {t('jobPreferences.form.workModePreferences')}
+                  </label>
+                  <Input
+                    id="work_mode_preferences"
+                    value={formData.work_mode_preferences}
+                    onChange={(e) => setFormData({ ...formData, work_mode_preferences: e.target.value })}
+                    placeholder="Remote, Hybrid, Onsite"
+                  />
+                  <p className="text-xs text-slate-500">Comma-separated list</p>
+                </div>
+
+                {/* Preferred Locations */}
+                <div className="space-y-2">
+                  <label htmlFor="preferred_locations" className="text-sm font-medium text-slate-700">
+                    {t('jobPreferences.form.preferredLocations')}
+                  </label>
+                  <Input
+                    id="preferred_locations"
+                    value={formData.preferred_locations}
+                    onChange={(e) => setFormData({ ...formData, preferred_locations: e.target.value })}
+                    placeholder="Tokyo, Osaka, Remote"
+                  />
+                  <p className="text-xs text-slate-500">Comma-separated list</p>
+                </div>
+
+                {/* Willing to Relocate */}
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="willing_to_relocate"
+                    checked={formData.willing_to_relocate}
+                    onChange={(e) => setFormData({ ...formData, willing_to_relocate: e.target.checked })}
+                    className="h-4 w-4 rounded border-slate-300"
+                  />
+                  <label htmlFor="willing_to_relocate" className="text-sm font-medium text-slate-700 cursor-pointer">
+                    {t('jobPreferences.form.willingToRelocate')}
+                  </label>
+                </div>
+
+                {/* Availability */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label htmlFor="available_from" className="text-sm font-medium text-slate-700">
+                      {t('jobPreferences.form.availableFrom')}
+                    </label>
+                    <Input
+                      id="available_from"
+                      type="date"
+                      value={formData.available_from}
+                      onChange={(e) => setFormData({ ...formData, available_from: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="notice_period_days" className="text-sm font-medium text-slate-700">
+                      {t('jobPreferences.form.noticePeriodDays')}
+                    </label>
+                    <Input
+                      id="notice_period_days"
+                      type="number"
+                      value={formData.notice_period_days}
+                      onChange={(e) => setFormData({ ...formData, notice_period_days: e.target.value })}
+                      placeholder="30"
+                    />
+                  </div>
+                </div>
+
+                {/* Preferred Industries */}
+                <div className="space-y-2">
+                  <label htmlFor="preferred_industries" className="text-sm font-medium text-slate-700">
+                    {t('jobPreferences.form.preferredIndustries')}
+                  </label>
+                  <Input
+                    id="preferred_industries"
+                    value={formData.preferred_industries}
+                    onChange={(e) => setFormData({ ...formData, preferred_industries: e.target.value })}
+                    placeholder="Technology, Finance, Healthcare"
+                  />
+                  <p className="text-xs text-slate-500">Comma-separated list</p>
+                </div>
+
+                {/* Preferred Company Sizes */}
+                <div className="space-y-2">
+                  <label htmlFor="preferred_company_sizes" className="text-sm font-medium text-slate-700">
+                    {t('jobPreferences.form.preferredCompanySizes')}
+                  </label>
+                  <Input
+                    id="preferred_company_sizes"
+                    value={formData.preferred_company_sizes}
+                    onChange={(e) => setFormData({ ...formData, preferred_company_sizes: e.target.value })}
+                    placeholder="Startup, SME, Enterprise"
+                  />
+                  <p className="text-xs text-slate-500">Comma-separated list</p>
+                </div>
+
+                {/* Other Preferences */}
+                <div className="space-y-2">
+                  <label htmlFor="other_preferences" className="text-sm font-medium text-slate-700">
+                    {t('jobPreferences.form.otherPreferences')}
+                  </label>
+                  <Textarea
+                    id="other_preferences"
+                    value={formData.other_preferences}
+                    onChange={(e) => setFormData({ ...formData, other_preferences: e.target.value })}
+                    placeholder={t('jobPreferences.form.otherPreferencesPlaceholder')}
+                    rows={4}
+                    className="border border-slate-300 bg-white text-slate-900 focus-visible:ring-blue-500"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex-shrink-0 gap-3 border-t border-slate-200 bg-white px-6 py-4">
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={saving}
+              onClick={onClose}
+              className="min-w-[120px] border border-slate-300 bg-white text-slate-600 hover:bg-slate-100"
             >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={JobSearchStatus.ACTIVELY_LOOKING}>
-                  {t('jobPreferences.status.actively_looking')}
-                </SelectItem>
-                <SelectItem value={JobSearchStatus.OPEN_TO_OPPORTUNITIES}>
-                  {t('jobPreferences.status.open_to_opportunities')}
-                </SelectItem>
-                <SelectItem value={JobSearchStatus.NOT_LOOKING}>
-                  {t('jobPreferences.status.not_looking')}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Desired Job Types */}
-          <div className="space-y-2">
-            <Label htmlFor="desired_job_types">{t('jobPreferences.form.desiredJobTypes')}</Label>
-            <Input
-              id="desired_job_types"
-              value={formData.desired_job_types}
-              onChange={(e) => setFormData({ ...formData, desired_job_types: e.target.value })}
-              placeholder="Full-time, Part-time, Contract, Freelance"
-            />
-            <p className="text-xs text-gray-500">Comma-separated list</p>
-          </div>
-
-          {/* Salary Expectations */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="desired_salary_min">{t('jobPreferences.form.desiredSalaryMin')}</Label>
-              <Input
-                id="desired_salary_min"
-                type="number"
-                value={formData.desired_salary_min}
-                onChange={(e) => setFormData({ ...formData, desired_salary_min: e.target.value })}
-                placeholder="50000"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="desired_salary_max">{t('jobPreferences.form.desiredSalaryMax')}</Label>
-              <Input
-                id="desired_salary_max"
-                type="number"
-                value={formData.desired_salary_max}
-                onChange={(e) => setFormData({ ...formData, desired_salary_max: e.target.value })}
-                placeholder="100000"
-              />
-            </div>
-          </div>
-
-          {/* Currency and Period */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="salary_currency">{t('jobPreferences.form.salaryCurrency')}</Label>
-              <Select
-                value={formData.salary_currency}
-                onValueChange={(value) => setFormData({ ...formData, salary_currency: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="USD">USD</SelectItem>
-                  <SelectItem value="JPY">JPY</SelectItem>
-                  <SelectItem value="EUR">EUR</SelectItem>
-                  <SelectItem value="GBP">GBP</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="salary_period">{t('jobPreferences.form.salaryPeriod')}</Label>
-              <Select
-                value={formData.salary_period}
-                onValueChange={(value) => setFormData({ ...formData, salary_period: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={SalaryPeriod.YEARLY}>{t('jobPreferences.salaryPeriod.yearly')}</SelectItem>
-                  <SelectItem value={SalaryPeriod.MONTHLY}>{t('jobPreferences.salaryPeriod.monthly')}</SelectItem>
-                  <SelectItem value={SalaryPeriod.HOURLY}>{t('jobPreferences.salaryPeriod.hourly')}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Work Mode Preferences */}
-          <div className="space-y-2">
-            <Label htmlFor="work_mode_preferences">{t('jobPreferences.form.workModePreferences')}</Label>
-            <Input
-              id="work_mode_preferences"
-              value={formData.work_mode_preferences}
-              onChange={(e) => setFormData({ ...formData, work_mode_preferences: e.target.value })}
-              placeholder="Remote, Hybrid, Onsite"
-            />
-            <p className="text-xs text-gray-500">Comma-separated list</p>
-          </div>
-
-          {/* Preferred Locations */}
-          <div className="space-y-2">
-            <Label htmlFor="preferred_locations">{t('jobPreferences.form.preferredLocations')}</Label>
-            <Input
-              id="preferred_locations"
-              value={formData.preferred_locations}
-              onChange={(e) => setFormData({ ...formData, preferred_locations: e.target.value })}
-              placeholder="Tokyo, Osaka, Remote"
-            />
-            <p className="text-xs text-gray-500">Comma-separated list</p>
-          </div>
-
-          {/* Willing to Relocate */}
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="willing_to_relocate"
-              checked={formData.willing_to_relocate}
-              onChange={(e) => setFormData({ ...formData, willing_to_relocate: e.target.checked })}
-              className="h-4 w-4 rounded border-gray-300"
-            />
-            <Label htmlFor="willing_to_relocate" className="font-normal cursor-pointer">
-              {t('jobPreferences.form.willingToRelocate')}
-            </Label>
-          </div>
-
-          {/* Availability */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="available_from">{t('jobPreferences.form.availableFrom')}</Label>
-              <Input
-                id="available_from"
-                type="date"
-                value={formData.available_from}
-                onChange={(e) => setFormData({ ...formData, available_from: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="notice_period_days">{t('jobPreferences.form.noticePeriodDays')}</Label>
-              <Input
-                id="notice_period_days"
-                type="number"
-                value={formData.notice_period_days}
-                onChange={(e) => setFormData({ ...formData, notice_period_days: e.target.value })}
-                placeholder="30"
-              />
-            </div>
-          </div>
-
-          {/* Preferred Industries */}
-          <div className="space-y-2">
-            <Label htmlFor="preferred_industries">{t('jobPreferences.form.preferredIndustries')}</Label>
-            <Input
-              id="preferred_industries"
-              value={formData.preferred_industries}
-              onChange={(e) => setFormData({ ...formData, preferred_industries: e.target.value })}
-              placeholder="Technology, Finance, Healthcare"
-            />
-            <p className="text-xs text-gray-500">Comma-separated list</p>
-          </div>
-
-          {/* Preferred Company Sizes */}
-          <div className="space-y-2">
-            <Label htmlFor="preferred_company_sizes">{t('jobPreferences.form.preferredCompanySizes')}</Label>
-            <Input
-              id="preferred_company_sizes"
-              value={formData.preferred_company_sizes}
-              onChange={(e) => setFormData({ ...formData, preferred_company_sizes: e.target.value })}
-              placeholder="Startup, SME, Enterprise"
-            />
-            <p className="text-xs text-gray-500">Comma-separated list</p>
-          </div>
-
-          {/* Other Preferences */}
-          <div className="space-y-2">
-            <Label htmlFor="other_preferences">{t('jobPreferences.form.otherPreferences')}</Label>
-            <Textarea
-              id="other_preferences"
-              value={formData.other_preferences}
-              onChange={(e) => setFormData({ ...formData, other_preferences: e.target.value })}
-              placeholder={t('jobPreferences.form.otherPreferencesPlaceholder')}
-              rows={4}
-            />
-          </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
-              {t('actions.cancel')}
+              Cancel
             </Button>
-            <Button type="submit" disabled={saving}>
-              {saving ? t('actions.saving') : t('jobPreferences.form.save')}
+            <Button
+              type="submit"
+              loading={saving}
+              className="min-w-[160px] bg-blue-600 text-white shadow-lg shadow-blue-500/30 hover:bg-blue-600/90"
+            >
+              {saving ? 'Saving...' : mode === 'create' ? 'Create Preferences' : 'Save Changes'}
             </Button>
           </DialogFooter>
         </form>

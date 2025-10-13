@@ -89,10 +89,10 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         )
 
         # Filter by deleted status
-        if include_deleted:
-            query = query.where(Todo.is_deleted is True)
-        else:
+        if not include_deleted:
+            # Only show non-deleted todos
             query = query.where(Todo.is_deleted is False)
+        # If include_deleted is True, don't filter - show all todos
 
         if status:
             query = query.where(Todo.status == status)

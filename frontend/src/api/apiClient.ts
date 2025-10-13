@@ -75,19 +75,16 @@ export const makeAuthenticatedRequest = async <T>(
 
           // Retry the request with new token
           response = await makeRequest(newToken);
-        } catch {
-          // Refresh failed, force logout
-          if (authHandlerRef.logout) {
-            authHandlerRef.logout();
-          }
-          throw new Error('Authentication failed. Please log in again.');
+        } catch (refreshError) {
+          // Refresh failed - don't logout, just throw error
+          // This allows the user to stay logged in even if refresh fails
+          // They'll only be truly logged out when they manually logout or their session fully expires
+          console.warn('Token refresh failed, but keeping user session:', refreshError);
+          throw new Error('Session refresh failed. Some features may be unavailable.');
         }
       } else {
-        // No refresh handler available, force logout
-        if (authHandlerRef.logout) {
-          authHandlerRef.logout();
-        }
-        throw new Error('Authentication failed. Please log in again.');
+        // No refresh handler available - throw error without logout
+        throw new Error('Authentication failed. Please try refreshing the page.');
       }
     }
 

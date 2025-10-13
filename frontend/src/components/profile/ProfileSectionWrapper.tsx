@@ -57,7 +57,7 @@ export default function ProfileSectionWrapper({
 
   return (
     <Card className={`${className} transition-all duration-300`} id={sectionId ? `section-${sectionId}` : undefined}>
-      <CardHeader>
+      <CardHeader className="mb-4">
         <div className="flex items-center justify-between">
           <CardTitle>{title}</CardTitle>
           <div className="flex items-center gap-3">

@@ -1,4 +1,4 @@
-"""CRUD operations for privacy settings"""
+"""CRUD operations for privacy settings - Section-specific profile visibility controls"""
 
 from typing import Optional
 
@@ -6,11 +6,16 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.privacy_settings import PrivacySettings
-from app.schemas.privacy_settings import PrivacySettingsCreate, PrivacySettingsUpdate
+from app.schemas.privacy_settings import PrivacySettingsUpdate
 
 
 class CRUDPrivacySettings:
-    """CRUD operations for privacy settings"""
+    """
+    CRUD operations for privacy settings.
+
+    Supports section-specific privacy controls on profile pages,
+    allowing users to toggle visibility of individual profile sections.
+    """
 
     async def get_by_user(
         self, db: AsyncSession, user_id: int
@@ -25,13 +30,9 @@ class CRUDPrivacySettings:
         self,
         db: AsyncSession,
         user_id: int,
-        obj_in: Optional[PrivacySettingsCreate] = None,
     ) -> PrivacySettings:
-        """Create privacy settings for a user with defaults"""
-        data = obj_in.model_dump() if obj_in else {}
-        data["user_id"] = user_id
-
-        db_obj = PrivacySettings(**data)
+        """Create default privacy settings for a user"""
+        db_obj = PrivacySettings(user_id=user_id)
         db.add(db_obj)
         await db.commit()
         await db.refresh(db_obj)
@@ -40,7 +41,14 @@ class CRUDPrivacySettings:
     async def update_by_user(
         self, db: AsyncSession, user_id: int, obj_in: PrivacySettingsUpdate
     ) -> Optional[PrivacySettings]:
-        """Update privacy settings for a user"""
+        """
+        Update privacy settings for a user (supports partial updates).
+
+        This allows section-specific updates where only changed fields are provided.
+        Example: {"show_work_experience": false} updates only that field.
+        """
+        from app.utils.datetime_utils import get_utc_now
+
         db_obj = await self.get_by_user(db, user_id=user_id)
         if not db_obj:
             return None
@@ -48,6 +56,9 @@ class CRUDPrivacySettings:
         update_data = obj_in.model_dump(exclude_unset=True)
         for field, value in update_data.items():
             setattr(db_obj, field, value)
+
+        # Explicitly set updated_at to ensure it's updated
+        db_obj.updated_at = get_utc_now()
 
         db.add(db_obj)
         await db.commit()
@@ -63,16 +74,6 @@ class CRUDPrivacySettings:
             return db_obj
 
         return await self.create_for_user(db, user_id=user_id)
-
-    async def delete_by_user(self, db: AsyncSession, user_id: int) -> bool:
-        """Delete privacy settings for a user"""
-        db_obj = await self.get_by_user(db, user_id=user_id)
-        if not db_obj:
-            return False
-
-        await db.delete(db_obj)
-        await db.commit()
-        return True
 
 
 # Create a singleton instance

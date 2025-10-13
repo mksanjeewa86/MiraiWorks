@@ -19,6 +19,10 @@ export class FileService {
     'image/jpeg',
     'image/png',
     'image/gif',
+    'image/heic',
+    'image/heif',
+    'image/heic-sequence',
+    'image/heif-sequence',
     'application/pdf',
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -203,6 +207,10 @@ export class FileService {
       'image/jpeg': ['jpg', 'jpeg'],
       'image/png': ['png'],
       'image/gif': ['gif'],
+      'image/heic': ['heic'],
+      'image/heif': ['heif'],
+      'image/heic-sequence': ['heic'],
+      'image/heif-sequence': ['heif'],
       'application/pdf': ['pdf'],
       'application/msword': ['doc'],
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['docx'],
@@ -283,11 +291,19 @@ export class FileService {
 
     // Check for malicious content or corrupted files
     try {
-      if (file.type.startsWith('image/')) {
+      // Skip validation for HEIC/HEIF as browsers may not support them natively
+      // The backend will handle validation for these formats
+      const isHeicFormat = file.type === 'image/heic' ||
+                          file.type === 'image/heif' ||
+                          file.type === 'image/heic-sequence' ||
+                          file.type === 'image/heif-sequence';
+
+      if (file.type.startsWith('image/') && !isHeicFormat) {
         await this.validateImage(file);
       } else if (file.type === 'application/pdf') {
         await this.validatePDF(file);
       }
+      // For HEIC/HEIF files, allow them through - backend will validate
     } catch {
       errors.push(`File ${file.name} appears to be corrupted or invalid`);
     }

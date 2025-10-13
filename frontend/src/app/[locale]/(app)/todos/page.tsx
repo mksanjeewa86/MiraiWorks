@@ -90,241 +90,191 @@ function TodoItem({
   const canRequestExtension =
     !isDeleted && !isCompleted && todo.due_date && todo.assigned_user_id && onRequestExtension;
 
-  const statusAccentClass = isDeleted
-    ? 'bg-red-500/20 text-red-700 dark:bg-red-500/25 dark:text-red-300'
+  // Modern color scheme
+  const cardColors = isDeleted
+    ? 'bg-gray-50 border-gray-200 dark:bg-gray-900/50 dark:border-gray-700'
     : showExpired
-      ? 'bg-red-500/20 text-red-600 dark:bg-red-500/25 dark:text-red-200'
+      ? 'bg-rose-50 border-rose-200 dark:bg-rose-900/10 dark:border-rose-800'
       : isCompleted
-        ? 'bg-emerald-500/20 text-emerald-600 dark:bg-emerald-500/25 dark:text-emerald-200'
-        : 'bg-blue-500/20 text-blue-600 dark:bg-blue-500/25 dark:text-blue-200';
+        ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-900/10 dark:border-emerald-800'
+        : 'bg-white border-slate-200 dark:bg-slate-800/50 dark:border-slate-700';
 
-  const gradientClass = isDeleted
-    ? 'from-red-500/20'
+  const iconColors = isDeleted
+    ? 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
     : showExpired
-      ? 'from-red-500/20'
+      ? 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400'
       : isCompleted
-        ? 'from-emerald-500/20'
-        : 'from-blue-500/20';
+        ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'
+        : 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400';
 
   return (
     <div
-      className={`group relative overflow-hidden rounded-xl shadow-sm transition-all duration-200 ${
-        isDeleted
-          ? 'border border-red-200/80 bg-red-50/50 hover:shadow-xl hover:border-red-300/80 dark:border-red-700/50 dark:bg-red-900/10 dark:hover:border-red-600/70'
-          : 'border border-gray-200/60 bg-white hover:shadow-xl hover:border-gray-300/80 dark:border-gray-700/50 dark:bg-gray-800 dark:hover:border-gray-600/70'
-      }`}
+      className={`group relative overflow-hidden rounded-lg border ${cardColors} shadow-sm hover:shadow-md transition-all duration-200`}
     >
-      <div
-        className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${gradientClass} via-transparent to-transparent opacity-50`}
-      />
-      <div className="relative flex flex-col gap-4 p-6">
-        <div className="space-y-4">
-          <div className="flex items-start gap-4">
-            <div
-              className={`flex h-12 w-12 items-center justify-center rounded-full ${statusAccentClass} ring-2 ring-white/50 dark:ring-gray-800/50`}
+      {/* Compact header with icon and title */}
+      <div className="flex items-start gap-3 p-4">
+        <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg ${iconColors}`}>
+          {isDeleted ? (
+            <Trash2 className="h-5 w-5" />
+          ) : isCompleted ? (
+            <CheckCircle2 className="h-5 w-5" />
+          ) : showExpired ? (
+            <AlertCircle className="h-5 w-5" />
+          ) : (
+            <ClipboardList className="h-5 w-5" />
+          )}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <h3
+              className={`text-base font-semibold leading-snug line-clamp-2 ${
+                isDeleted ? 'line-through opacity-60' : ''
+              }`}
+              style={{ color: 'var(--text-primary)' }}
             >
-              {isDeleted ? (
-                <Trash2 className="h-6 w-6" />
-              ) : isCompleted ? (
-                <CheckCircle2 className="h-6 w-6" />
-              ) : showExpired ? (
-                <AlertCircle className="h-6 w-6" />
-              ) : (
-                <ClipboardList className="h-6 w-6" />
-              )}
-            </div>
-            <div className="min-w-0 flex-1 space-y-3">
-              <div>
-                <h3
-                  className={`text-lg font-semibold leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2 ${
-                    isDeleted ? 'line-through opacity-70' : ''
-                  }`}
-                  style={{ color: 'var(--text-primary)' }}
-                >
-                  {todo.title}
-                </h3>
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  {isDeleted && (
-                    <Badge variant="error" size="sm" className="flex items-center gap-1">
-                      <Trash2 className="h-3 w-3" /> {t('badges.deleted')}
-                    </Badge>
-                  )}
-                  {showExpired && !isDeleted && (
-                    <Badge variant="error" size="sm" className="flex items-center gap-1">
-                      <AlertCircle className="h-3 w-3" /> {t('badges.overdue')}
-                    </Badge>
-                  )}
-                </div>
-              </div>
-              {todo.description && (
-                <p
-                  className={`text-sm leading-relaxed line-clamp-2 ${
-                    isDeleted ? 'opacity-60' : ''
-                  }`}
-                  style={{ color: 'var(--text-secondary)' }}
-                >
-                  {todo.description}
-                </p>
-              )}
-            </div>
+              {todo.title}
+            </h3>
+            {todo.priority && (
+              <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 whitespace-nowrap">
+                <ListCheck className="h-3 w-3" />
+                {todo.priority}
+              </span>
+            )}
           </div>
 
-          <div className="space-y-3">
-            <div
-              className="grid grid-cols-1 gap-2 text-sm"
+          {/* Status badges */}
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+            {isDeleted && (
+              <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                <Trash2 className="h-3 w-3" /> {t('badges.deleted')}
+              </span>
+            )}
+            {showExpired && !isDeleted && (
+              <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300">
+                <AlertCircle className="h-3 w-3" /> {t('badges.overdue')}
+              </span>
+            )}
+            {isCompleted && todo.completed_at && (
+              <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                <CheckCircle2 className="h-3 w-3" /> {new Date(todo.completed_at).toLocaleDateString()}
+              </span>
+            )}
+            {todo.due_date && (
+              <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium ${
+                showExpired
+                  ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300'
+                  : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
+              }`}>
+                <Clock className="h-3 w-3" />
+                {formatRelativeTime(todo.due_date, t)}
+              </span>
+            )}
+          </div>
+
+          {/* Description */}
+          {todo.description && (
+            <p
+              className={`mt-2 text-sm leading-relaxed line-clamp-2 ${
+                isDeleted ? 'opacity-50' : 'opacity-75'
+              }`}
               style={{ color: 'var(--text-secondary)' }}
             >
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-blue-500" />
-                  <span className="font-medium">{t('labels.due')}</span>
-                </div>
-                <div className="pl-6 space-y-1">
-                  <div>{formatDisplayDate(todo.due_date, t('dates.noDueDate'))}</div>
-                  {todo.due_date && (
-                    <div>
-                      <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-                        {formatRelativeTime(todo.due_date, t)}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-              {todo.priority && (
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2">
-                    <ListCheck className="h-4 w-4 text-purple-500" />
-                    <span className="font-medium">{t('labels.priority')}</span>
-                  </div>
-                  <span className="px-2 py-1 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 text-xs font-medium">
-                    {todo.priority}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
+              {todo.description}
+            </p>
+          )}
 
+          {/* Notes - compact */}
           {todo.notes && (
-            <div className="p-3 rounded-lg bg-amber-50/80 border border-amber-200/50 dark:bg-amber-900/20 dark:border-amber-700/30">
-              <div className="flex items-start gap-3">
-                <div className="flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-300">
-                  <StickyNote className="h-4 w-4" />
-                  <span>{t('labels.notes')}</span>
-                </div>
+            <div className="mt-2 rounded-md bg-amber-50 border border-amber-200 p-2 dark:bg-amber-900/20 dark:border-amber-800/50">
+              <div className="flex items-center gap-1.5 text-xs font-medium text-amber-700 dark:text-amber-300">
+                <StickyNote className="h-3 w-3" />
+                <span>{t('labels.notes')}</span>
               </div>
-              <p className="mt-2 text-sm leading-relaxed text-amber-800 dark:text-amber-200 line-clamp-3">
+              <p className="mt-1 text-xs leading-relaxed text-amber-800 dark:text-amber-200 line-clamp-2">
                 {todo.notes}
               </p>
             </div>
           )}
-
-          {isCompleted && todo.completed_at && (
-            <div className="p-3 rounded-lg bg-emerald-50/80 border border-emerald-200/50 dark:bg-emerald-900/20 dark:border-emerald-700/30">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 text-sm font-medium text-emerald-700 dark:text-emerald-300">
-                  <CheckCircle2 className="h-4 w-4" />
-                  <span>{t('labels.completed')}</span>
-                </div>
-                <span className="text-sm text-emerald-800 dark:text-emerald-200">
-                  {new Date(todo.completed_at).toLocaleString()}
-                </span>
-              </div>
-            </div>
-          )}
         </div>
+      </div>
 
-        <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
-          {isDeleted ? (
-            <div className="grid grid-cols-2 gap-2">
-              {/* Restore Action */}
+      {/* Compact action buttons */}
+      <div className="border-t border-slate-100 dark:border-slate-700/50 bg-slate-50/50 dark:bg-slate-800/30 px-4 py-2">
+        {isDeleted ? (
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="primary"
+              className="flex-1 h-8 text-xs"
+              loading={isProcessing}
+              onClick={() => onRestore?.(todo)}
+              leftIcon={<RotateCcw className="h-3.5 w-3.5" />}
+            >
+              {t('actions.restore')}
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="flex-1 h-8 text-xs"
+              onClick={() => onEdit(todo)}
+              leftIcon={<ClipboardList className="h-3.5 w-3.5" />}
+            >
+              {t('actions.view')}
+            </Button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5">
+            {showCompleteAction && (
               <Button
                 size="sm"
                 variant="primary"
-                className="w-full shadow-sm"
+                className="flex-1 h-8 text-xs"
                 loading={isProcessing}
-                onClick={() => onRestore?.(todo)}
-                leftIcon={<RotateCcw className="h-4 w-4" />}
+                onClick={() => onComplete?.(todo)}
+                leftIcon={<CheckCircle2 className="h-3.5 w-3.5" />}
               >
-                {t('actions.restore')}
+                {t('actions.finish')}
               </Button>
-
-              {/* View/Edit Action */}
+            )}
+            {showReopenAction && (
               <Button
                 size="sm"
-                variant="ghost"
-                className="w-full text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-                onClick={() => onEdit(todo)}
-                leftIcon={<ClipboardList className="h-4 w-4" />}
-              >
-                {t('actions.view')}
-              </Button>
-            </div>
-          ) : (
-            <div className={`grid gap-2 ${canRequestExtension ? 'grid-cols-4' : 'grid-cols-3'}`}>
-              {/* Primary Action (Complete/Reopen) */}
-              {showCompleteAction && (
-                <Button
-                  size="sm"
-                  variant="primary"
-                  className="w-full shadow-sm"
-                  loading={isProcessing}
-                  onClick={() => onComplete?.(todo)}
-                  leftIcon={<CheckCircle2 className="h-4 w-4" />}
-                >
-                  {t('actions.finish')}
-                </Button>
-              )}
-              {showReopenAction && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="w-full border-gray-300 dark:border-gray-600"
-                  loading={isProcessing}
-                  onClick={() => onReopen?.(todo)}
-                  leftIcon={<RotateCcw className="h-4 w-4" />}
-                >
-                  {t('actions.reopen')}
-                </Button>
-              )}
-
-              {/* Extension Request Action */}
-              {canRequestExtension && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="w-full text-orange-600 hover:bg-orange-100 hover:text-orange-700 dark:text-orange-400 dark:hover:bg-orange-900/30 dark:hover:text-orange-300"
-                  onClick={() => onRequestExtension(todo)}
-                  leftIcon={<CalendarRange className="h-4 w-4" />}
-                >
-                  {t('actions.extend')}
-                </Button>
-              )}
-
-              {/* Edit Action */}
-              <Button
-                size="sm"
-                variant="ghost"
-                className="w-full text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-                onClick={() => onEdit(todo)}
-                leftIcon={<ClipboardList className="h-4 w-4" />}
-              >
-                {t('actions.edit')}
-              </Button>
-
-              {/* Delete Action */}
-              <Button
-                size="sm"
-                variant="ghost"
-                className="w-full text-red-600 hover:bg-red-100 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-900/30 dark:hover:text-red-300"
+                variant="outline"
+                className="flex-1 h-8 text-xs"
                 loading={isProcessing}
-                onClick={() => onDelete(todo)}
-                leftIcon={<Trash2 className="h-4 w-4" />}
+                onClick={() => onReopen?.(todo)}
+                leftIcon={<RotateCcw className="h-3.5 w-3.5" />}
               >
-                {t('actions.delete')}
+                {t('actions.reopen')}
               </Button>
-            </div>
-          )}
-        </div>
+            )}
+            {canRequestExtension && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="px-2 h-8 text-orange-600 hover:bg-orange-100 dark:text-orange-400 dark:hover:bg-orange-900/30"
+                onClick={() => onRequestExtension(todo)}
+                leftIcon={<CalendarRange className="h-3.5 w-3.5" />}
+              />
+            )}
+            <Button
+              size="sm"
+              variant="ghost"
+              className="px-2 h-8"
+              onClick={() => onEdit(todo)}
+              leftIcon={<ClipboardList className="h-3.5 w-3.5" />}
+            />
+            <Button
+              size="sm"
+              variant="ghost"
+              className="px-2 h-8 text-rose-600 hover:bg-rose-100 dark:text-rose-400 dark:hover:bg-rose-900/30"
+              loading={isProcessing}
+              onClick={() => onDelete(todo)}
+              leftIcon={<Trash2 className="h-3.5 w-3.5" />}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -363,7 +313,7 @@ function TodosPageContent() {
     try {
       const listResponse = await todosApi.list({
         includeCompleted: true,
-        includeDeleted: viewFilter === 'deleted',
+        includeDeleted: true, // Always load all todos, filter client-side
         limit: 200,
       });
       setTodos(listResponse.items);
@@ -375,7 +325,7 @@ function TodosPageContent() {
     } finally {
       setLoading(false);
     }
-  }, [showToast, viewFilter, t]);
+  }, [showToast, t]);
 
   useEffect(() => {
     void loadTodos();

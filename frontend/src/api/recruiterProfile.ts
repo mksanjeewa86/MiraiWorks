@@ -9,7 +9,7 @@ import type {
   RecruiterProfile,
   RecruiterProfileCreate,
   RecruiterProfileUpdate,
-} from '@/types/recruiter';
+} from '@/types/profile';
 
 export const recruiterProfileApi = {
   /**

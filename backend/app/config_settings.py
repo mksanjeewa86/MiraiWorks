@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     # JWT
     jwt_secret: str = Field(default="changeme")
     jwt_access_ttl_min: int = 15
-    jwt_refresh_ttl_days: int = 30
+    jwt_refresh_ttl_days: int = 14
 
     # 2FA
     force_2fa_for_admins: bool = False

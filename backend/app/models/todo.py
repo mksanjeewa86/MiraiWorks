@@ -153,7 +153,12 @@ class Todo(BaseModel):
         if self.expired_at:
             return True
         if self.due_date:
-            return self.due_date < get_utc_now()
+            # Handle timezone-naive datetimes by treating them as UTC
+            due_date_aware = self.due_date
+            if due_date_aware.tzinfo is None:
+                from datetime import UTC
+                due_date_aware = due_date_aware.replace(tzinfo=UTC)
+            return due_date_aware < get_utc_now()
         return False
 
     def mark_completed(self) -> None:

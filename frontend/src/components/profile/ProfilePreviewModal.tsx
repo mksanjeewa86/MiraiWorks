@@ -9,12 +9,15 @@ import {
 } from '@/components/ui/dialog';
 import { Card } from '@/components/ui';
 import UnifiedProfileView from './UnifiedProfileView';
-import { X, MapPin, Mail, Phone } from 'lucide-react';
+import { X, MapPin, Mail, Phone, Eye } from 'lucide-react';
 import { usersApi } from '@/api/users';
 import { userSettingsApi } from '@/api/userSettings';
 import { profileViewsApi } from '@/api/profileViews';
+import { privacyApi } from '@/api/privacy';
+import { useAuth } from '@/contexts/AuthContext';
 import type { UserManagement } from '@/types/user';
 import type { UserProfile } from '@/types';
+import type { PrivacySettings } from '@/api/privacy';
 
 interface ProfilePreviewModalProps {
   isOpen: boolean;
@@ -30,8 +33,10 @@ export default function ProfilePreviewModal({
   viewAsRole,
 }: ProfilePreviewModalProps) {
   const t = useTranslations('profile');
+  const { user: currentUser } = useAuth();
   const [user, setUser] = useState<UserManagement | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [privacySettings, setPrivacySettings] = useState<PrivacySettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewStartTime] = useState<number>(Date.now());
@@ -60,14 +65,30 @@ export default function ProfilePreviewModal({
             // Profile data is optional, continue without it
           }
 
+          // Fetch privacy settings to respect hidden sections
+          // Note: This only works when viewing your own profile in preview mode
+          // For viewing other users' profiles, you'd need a backend endpoint to fetch their privacy settings
+          if (currentUser && currentUser.id === userId) {
+            try {
+              const privacyResponse = await privacyApi.getMySettings();
+              setPrivacySettings(privacyResponse);
+            } catch (privacyErr) {
+              console.log('Privacy settings not available:', privacyErr);
+              // Privacy settings are optional, continue without them
+            }
+          }
+
           // Record profile view (async, don't wait for it)
-          profileViewsApi.recordView({
-            profile_user_id: userId,
-            referrer: window.location.href,
-          }).catch((err) => {
-            console.log('Failed to record profile view:', err);
-            // Don't show error to user, view tracking is background functionality
-          });
+          // Only record if not viewing own profile
+          if (currentUser && currentUser.id !== userId) {
+            profileViewsApi.recordView({
+              profile_user_id: userId,
+              referrer: window.location.href,
+            }).catch((err) => {
+              console.log('Failed to record profile view:', err);
+              // Don't show error to user, view tracking is background functionality
+            });
+          }
         } catch (err: any) {
           console.error('Error fetching user:', err);
           setError('Failed to load profile');
@@ -83,7 +104,7 @@ export default function ProfilePreviewModal({
   // Record view duration when modal closes
   useEffect(() => {
     return () => {
-      if (isOpen && userId) {
+      if (isOpen && userId && currentUser && currentUser.id !== userId) {
         const viewDuration = Math.floor((Date.now() - viewStartTime) / 1000);
 
         // Only record duration if user spent at least 3 seconds viewing
@@ -98,7 +119,7 @@ export default function ProfilePreviewModal({
         }
       }
     };
-  }, [isOpen, userId, viewStartTime]);
+  }, [isOpen, userId, viewStartTime, currentUser]);
 
   const getInitials = (firstName?: string, lastName?: string) => {
     if (!firstName && !lastName) return 'U';
@@ -107,13 +128,13 @@ export default function ProfilePreviewModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-7xl max-h-[95vh] overflow-hidden p-0">
+      <DialogContent className="w-[100vw] h-[100vh] max-w-none max-h-none overflow-hidden p-0 rounded-none">
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-50 p-2 rounded-full bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm hover:bg-white dark:hover:bg-gray-900 transition-colors shadow-lg"
+          className="absolute top-6 right-6 z-50 rounded-lg border border-slate-200 bg-white/95 backdrop-blur-md p-2.5 text-slate-600 shadow-lg transition hover:bg-slate-50 hover:text-slate-700 hover:shadow-xl"
         >
-          <X className="h-5 w-5 text-gray-700 dark:text-gray-300" />
+          <X className="h-5 w-5" />
         </button>
 
         {/* Scrollable content */}
@@ -144,9 +165,10 @@ export default function ProfilePreviewModal({
                     priority
                   />
                 )}
-                {/* Preview Mode Badge - Top Right */}
-                <div className="absolute top-4 right-16 inline-flex items-center px-4 py-2 rounded-lg bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border border-blue-200 dark:border-blue-700 shadow-lg">
-                  <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">
+                {/* Preview Mode Badge - Top Left */}
+                <div className="absolute top-6 left-6 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-100/95 backdrop-blur-md border border-blue-200 shadow-lg">
+                  <Eye className="h-4 w-4 text-blue-600" />
+                  <span className="text-sm font-semibold text-blue-700">
                     Preview Mode
                   </span>
                 </div>
@@ -235,6 +257,7 @@ export default function ProfilePreviewModal({
                     userId={userId}
                     isOwnProfile={false}
                     readOnly={true}
+                    privacySettings={privacySettings}
                   />
                 </div>
               </div>

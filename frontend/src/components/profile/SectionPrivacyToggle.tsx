@@ -41,12 +41,19 @@ export default function SectionPrivacyToggle({
     setLoading(true);
     try {
       const newValue = !isVisible;
-      await privacyApi.updateMySettings({
+      console.log('Updating privacy setting:', { [sectionKey]: newValue });
+
+      const response = await privacyApi.updateMySettings({
         [sectionKey]: newValue,
       } as PrivacySettingsUpdate);
+
+      console.log('Privacy settings updated successfully:', response);
       setIsVisible(newValue);
     } catch (err) {
       console.error('Failed to update privacy settings:', err);
+      console.error('Error details:', err);
+      // Revert the UI state on error
+      alert('Failed to update privacy settings. Please try again.');
     } finally {
       setLoading(false);
     }

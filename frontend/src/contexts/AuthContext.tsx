@@ -162,22 +162,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Check if this is a 401 error
       const is401 = error?.response?.status === 401;
 
-      // Only logout and show message if it's truly a session expiration (401)
+      // Only clear tokens if it's truly a session expiration (401)
+      // But DON'T automatically logout or redirect - let the user stay logged in
       if (is401) {
-        // Refresh failed, clear auth
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        dispatch({ type: 'LOGOUT' });
+        // Log the issue but don't force logout
+        console.warn('Token refresh failed - tokens may be expired:', error);
 
-        // Show user-friendly message
-        toast.error('Your session has expired. Please log in again.', {
+        // Show a gentle warning instead of forcing logout
+        toast.warning('Your session may have expired. You may need to log in again to access some features.', {
           duration: 5000,
         });
 
-        // Redirect to login page
-        if (typeof window !== 'undefined') {
-          router.replace(ROUTES.AUTH.LOGIN_EXPIRED);
-        }
+        // Don't clear tokens or logout - let the user decide when to logout
+        // This prevents automatic logout which is disruptive to user experience
       } else {
         // Network or other error - don't logout, just log the error
         console.error('Token refresh failed (non-auth error):', error);

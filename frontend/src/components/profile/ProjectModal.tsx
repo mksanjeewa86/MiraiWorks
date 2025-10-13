@@ -2,8 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import type { Project, ProjectCreate, ProjectUpdate } from '@/types/profile';
-import { X } from 'lucide-react';
+import { X, FolderGit2 } from 'lucide-react';
 
 interface ProjectModalProps {
   isOpen: boolean;
@@ -85,157 +94,197 @@ export default function ProjectModal({
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-            <h2 className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>
-              {mode === 'create' ? 'Add Project' : 'Edit Project'}
-            </h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-            >
-              <X className="h-6 w-6" />
-            </button>
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="p-6 space-y-4">
-            {error && (
-              <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-red-600 dark:text-red-400 text-sm">
-                {error}
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Project Name */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-                  Project Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  className="input w-full"
-                  value={formData.project_name}
-                  onChange={(e) => handleChange('project_name', e.target.value)}
-                  placeholder="e.g., E-commerce Platform"
-                />
-              </div>
-
-              {/* Role */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-                  Your Role
-                </label>
-                <input
-                  type="text"
-                  className="input w-full"
-                  value={formData.role || ''}
-                  onChange={(e) => handleChange('role', e.target.value || null)}
-                  placeholder="e.g., Lead Developer, Designer"
-                />
-              </div>
-
-              {/* Description */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-                  Description
-                </label>
-                <textarea
-                  className="input w-full"
-                  rows={4}
-                  value={formData.description || ''}
-                  onChange={(e) => handleChange('description', e.target.value || null)}
-                  placeholder="Describe the project, your contributions, and achievements..."
-                />
-              </div>
-
-              {/* Technologies */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-                  Technologies Used
-                </label>
-                <input
-                  type="text"
-                  className="input w-full"
-                  value={formData.technologies || ''}
-                  onChange={(e) => handleChange('technologies', e.target.value || null)}
-                  placeholder="Separate with commas (e.g., React, Node.js, MongoDB)"
-                />
-              </div>
-
-              {/* Project URL */}
-              <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-                  Project URL
-                </label>
-                <input
-                  type="url"
-                  className="input w-full"
-                  value={formData.project_url || ''}
-                  onChange={(e) => handleChange('project_url', e.target.value || null)}
-                  placeholder="https://project-demo.com"
-                />
-              </div>
-
-              {/* GitHub URL */}
-              <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-                  GitHub URL
-                </label>
-                <input
-                  type="url"
-                  className="input w-full"
-                  value={formData.github_url || ''}
-                  onChange={(e) => handleChange('github_url', e.target.value || null)}
-                  placeholder="https://github.com/username/project"
-                />
-              </div>
-
-              {/* Start Date */}
-              <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-                  Start Date
-                </label>
-                <input
-                  type="date"
-                  className="input w-full"
-                  value={formData.start_date || ''}
-                  onChange={(e) => handleChange('start_date', e.target.value || null)}
-                />
-              </div>
-
-              {/* End Date */}
-              <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-                  End Date
-                </label>
-                <input
-                  type="date"
-                  className="input w-full"
-                  value={formData.end_date || ''}
-                  onChange={(e) => handleChange('end_date', e.target.value || null)}
-                />
-                <p className="text-xs text-gray-500 mt-1">Leave blank if ongoing</p>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent
+        closeButton={false}
+        className="flex flex-col h-[90vh] max-h-[90vh] w-full max-w-4xl md:max-w-3xl overflow-hidden rounded-3xl border border-slate-200 bg-white text-slate-900 shadow-[0_30px_80px_-20px_rgba(15,23,42,0.2)]"
+      >
+        <DialogHeader className="flex-shrink-0 px-6 pt-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-purple-100 text-purple-600">
+                  <FolderGit2 className="h-5 w-5" />
+                </span>
+                <div>
+                  <DialogTitle className="text-xl font-semibold text-slate-900">
+                    {mode === 'create' ? 'Add Project' : 'Edit Project'}
+                  </DialogTitle>
+                  <DialogDescription className="text-sm text-slate-500">
+                    {mode === 'create'
+                      ? 'Showcase your projects and technical achievements.'
+                      : 'Update your project details and accomplishments.'}
+                  </DialogDescription>
+                </div>
               </div>
             </div>
+            <DialogClose className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
+              <X className="h-4 w-4" />
+            </DialogClose>
+          </div>
+        </DialogHeader>
 
-            {/* Actions */}
-            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
+        <form onSubmit={handleSubmit} className="flex flex-1 flex-col min-h-0">
+          <div className="flex-1 overflow-y-auto px-6 py-6 min-h-0">
+            <div className="space-y-8">
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+                  {error}
+                </div>
+              )}
+
+              <div className="grid gap-6 rounded-2xl border border-slate-200 bg-slate-50 p-6">
+                {/* Project Name */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Project Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    className="w-full border-slate-300 bg-white text-slate-900 rounded-md px-3 py-2"
+                    value={formData.project_name}
+                    onChange={(e) => handleChange('project_name', e.target.value)}
+                    placeholder="e.g., E-commerce Platform"
+                  />
+                </div>
+
+                {/* Role */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Your Role
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full border-slate-300 bg-white text-slate-900 rounded-md px-3 py-2"
+                    value={formData.role || ''}
+                    onChange={(e) => handleChange('role', e.target.value || null)}
+                    placeholder="e.g., Lead Developer, Designer"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    Specify your role in the project
+                  </p>
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    className="w-full border border-slate-300 bg-white text-slate-900 rounded-md px-3 py-2 focus-visible:ring-blue-500"
+                    rows={4}
+                    value={formData.description || ''}
+                    onChange={(e) => handleChange('description', e.target.value || null)}
+                    placeholder="Describe the project, your contributions, and achievements..."
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    Highlight key features and your impact
+                  </p>
+                </div>
+
+                {/* Technologies */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Technologies Used
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full border-slate-300 bg-white text-slate-900 rounded-md px-3 py-2"
+                    value={formData.technologies || ''}
+                    onChange={(e) => handleChange('technologies', e.target.value || null)}
+                    placeholder="React, Node.js, MongoDB"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    Separate with commas
+                  </p>
+                </div>
+
+                {/* Project URL & GitHub URL */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Project URL
+                    </label>
+                    <input
+                      type="url"
+                      className="w-full border-slate-300 bg-white text-slate-900 rounded-md px-3 py-2"
+                      value={formData.project_url || ''}
+                      onChange={(e) => handleChange('project_url', e.target.value || null)}
+                      placeholder="https://project-demo.com"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      GitHub URL
+                    </label>
+                    <input
+                      type="url"
+                      className="w-full border-slate-300 bg-white text-slate-900 rounded-md px-3 py-2"
+                      value={formData.github_url || ''}
+                      onChange={(e) => handleChange('github_url', e.target.value || null)}
+                      placeholder="https://github.com/username/project"
+                    />
+                  </div>
+                </div>
+
+                {/* Start Date & End Date */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Start Date
+                    </label>
+                    <input
+                      type="date"
+                      className="w-full border-slate-300 bg-white text-slate-900 rounded-md px-3 py-2"
+                      value={formData.start_date || ''}
+                      onChange={(e) => handleChange('start_date', e.target.value || null)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      End Date
+                    </label>
+                    <input
+                      type="date"
+                      className="w-full border-slate-300 bg-white text-slate-900 rounded-md px-3 py-2"
+                      value={formData.end_date || ''}
+                      onChange={(e) => handleChange('end_date', e.target.value || null)}
+                    />
+                    <p className="text-xs text-slate-500 mt-1">
+                      Leave blank if ongoing
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex-shrink-0 gap-3 border-t border-slate-200 bg-white px-6 py-4">
+            <div className="flex w-full items-center justify-end gap-3">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={onClose}
+                disabled={saving}
+                className="min-w-[120px] border border-slate-300 bg-white text-slate-600 hover:bg-slate-100"
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={saving}>
+              <Button
+                type="submit"
+                disabled={saving}
+                className="min-w-[160px] bg-blue-600 text-white shadow-lg shadow-blue-500/30 hover:bg-blue-600/90"
+              >
                 {saving ? 'Saving...' : mode === 'create' ? 'Add Project' : 'Save Changes'}
               </Button>
             </div>
-          </form>
-        </div>
-      </div>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

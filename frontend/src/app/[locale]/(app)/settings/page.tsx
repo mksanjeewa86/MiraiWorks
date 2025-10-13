@@ -7,7 +7,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { userSettingsApi } from '@/api/userSettings';
 import { calendarApi } from '@/api/calendar';
 import { subscriptionPlanApi, planChangeRequestApi } from '@/api/subscription';
+import { getJobPreferences, createJobPreferences, updateJobPreferences } from '@/api/profile';
 import { UserSettings, CalendarConnection } from '@/types';
+import type { JobPreference, JobPreferenceCreate, JobPreferenceUpdate } from '@/types/profile';
+import JobPreferencesModal from '@/components/profile/JobPreferencesModal';
 import { useMySubscription, useMyPlanChangeRequests, usePlanChangeRequestMutations, useSubscriptionPlans } from '@/hooks/useSubscription';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
@@ -39,7 +42,7 @@ import {
   Clock,
   X,
   Star,
-  Lock,
+  Briefcase,
 } from 'lucide-react';
 import type { SettingsState } from '@/types/pages';
 
@@ -93,6 +96,13 @@ function SettingsPageContent() {
     error: null as string | null,
   });
 
+  const [jobPreferences, setJobPreferences] = useState<JobPreference | null>(null);
+  const [jobPreferencesLoading, setJobPreferencesLoading] = useState(false);
+  const [jobPreferencesModal, setJobPreferencesModal] = useState<{ isOpen: boolean; mode: 'create' | 'edit' }>({
+    isOpen: false,
+    mode: 'create'
+  });
+
   const [showPasswords, setShowPasswords] = useState({
     current: false,
     new: false,
@@ -139,6 +149,24 @@ function SettingsPageContent() {
       loadCalendarConnections();
     }
   }, [state.activeSection, user]);
+
+  // Load job preferences when job-preferences section is active
+  useEffect(() => {
+    const loadJobPreferences = async () => {
+      if (state.activeSection === 'job-preferences' && user && isCandidate) {
+        setJobPreferencesLoading(true);
+        try {
+          const prefs = await getJobPreferences();
+          setJobPreferences(prefs);
+        } catch (error) {
+          console.error('Failed to load job preferences:', error);
+        } finally {
+          setJobPreferencesLoading(false);
+        }
+      }
+    };
+    loadJobPreferences();
+  }, [state.activeSection, user, isCandidate]);
 
   // Fetch features for higher-priced plans
   useEffect(() => {
@@ -541,6 +569,32 @@ function SettingsPageContent() {
     }
   };
 
+  // Job Preferences Handlers
+  const handleEditJobPreferences = () => {
+    setJobPreferencesModal({
+      isOpen: true,
+      mode: jobPreferences ? 'edit' : 'create'
+    });
+  };
+
+  const handleSaveJobPreferences = async (data: JobPreferenceCreate | JobPreferenceUpdate) => {
+    try {
+      if (jobPreferences) {
+        // Update existing
+        const updated = await updateJobPreferences(data as JobPreferenceUpdate);
+        setJobPreferences(updated);
+      } else {
+        // Create new
+        const newPrefs = await createJobPreferences(data as JobPreferenceCreate);
+        setJobPreferences(newPrefs);
+      }
+      setJobPreferencesModal({ isOpen: false, mode: 'create' });
+    } catch (error) {
+      console.error('Failed to save job preferences:', error);
+      throw error; // Let the modal handle the error
+    }
+  };
+
   // Sections configuration (isCompanyAdmin already defined at top)
   const sections = [
     { id: 'account', name: t('tabs.account'), icon: User, description: t('account.subtitle') },
@@ -563,6 +617,12 @@ function SettingsPageContent() {
       icon: Globe,
       description: t('preferences.subtitle'),
     },
+    ...(isCandidate ? [{
+      id: 'job-preferences' as const,
+      name: 'Job Preferences',
+      icon: Briefcase,
+      description: 'Manage your job search preferences and career goals',
+    }] : []),
     ...(isCompanyAdmin ? [{
       id: 'company-profile' as const,
       name: t('companyProfile.title'),
@@ -675,7 +735,7 @@ function SettingsPageContent() {
       {/* Change Password Card */}
       <div className="relative z-10 bg-gradient-to-br from-white/80 to-white/60 dark:from-gray-800/80 dark:to-gray-800/60 backdrop-blur-xl rounded-3xl p-8 border-2 border-white/20 dark:border-gray-700/20 shadow-2xl transition-all duration-500 hover:shadow-red-500/10 hover:border-red-400/30 animate-fade-in-up">
         <h3 className="text-xl font-bold mb-6 flex items-center gap-3" style={{ color: 'var(--text-primary)' }}>
-          <Lock className="h-6 w-6 text-red-600" />
+          <Shield className="h-6 w-6 text-red-600" />
           {t('common.changePassword')}
         </h3>
 
@@ -1851,6 +1911,225 @@ function SettingsPageContent() {
     );
   };
 
+  const renderJobPreferencesSection = () => {
+    const parseList = (str: string | null): string[] => {
+      if (!str) return [];
+      return str.split(',').map(item => item.trim()).filter(Boolean);
+    };
+
+    const formatSalary = (min: number | null, max: number | null, currency: string, period: string) => {
+      if (!min && !max) return 'Not specified';
+      if (min && max) {
+        return `${currency} ${min.toLocaleString()} - ${max.toLocaleString()} / ${period}`;
+      } else if (min) {
+        return `${currency} ${min.toLocaleString()}+ / ${period}`;
+      } else if (max) {
+        return `Up to ${currency} ${max.toLocaleString()} / ${period}`;
+      }
+      return 'Not specified';
+    };
+
+    const isEmpty = !jobPreferences || !jobPreferences.job_search_status;
+
+    return (
+      <div className="space-y-8 relative">
+        {/* Background Pattern & Floating Elements */}
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiM5Q0EzQUYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0ibTM2IDM0IDIyLTIyIDQgMjIgNC0yIDAtMiAyLTQgMC0yem0wLTIyIDIwIDIwLTEyIDEyLTEyIDAgMC04IDEyLTEyem0yNCAyNCAxMi0xMiAwLTggMC0xMC00IDAgMCA0aC04djhoLTRsLTQgMCA0IDRoMTJ6bTAtMTYgOC04IDAgMCAwIDhoLTh6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-10 pointer-events-none rounded-3xl"></div>
+        <div className="absolute top-10 left-10 w-32 h-32 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob pointer-events-none"></div>
+        <div className="absolute top-20 right-10 w-32 h-32 bg-indigo-400 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob animation-delay-2000 pointer-events-none"></div>
+        <div className="absolute bottom-10 left-20 w-32 h-32 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob animation-delay-4000 pointer-events-none"></div>
+
+        {/* Header */}
+        <div className="relative z-10 animate-fade-in-up">
+          <h2 className="text-3xl font-extrabold mb-2 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            Job Preferences
+          </h2>
+          <p className="text-base" style={{ color: 'var(--text-secondary)' }}>
+            Manage your job search preferences and career goals
+          </p>
+        </div>
+
+        {jobPreferencesLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <LoadingSpinner />
+          </div>
+        ) : isEmpty ? (
+          <div className="relative z-10 bg-gradient-to-br from-white/80 to-white/60 dark:from-gray-800/80 dark:to-gray-800/60 backdrop-blur-xl rounded-3xl p-8 border-2 border-white/20 dark:border-gray-700/20 shadow-2xl">
+            <div className="text-center py-12">
+              <Briefcase className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+              <p className="text-lg text-gray-600 dark:text-gray-400 mb-4">
+                No job preferences set yet
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-500 mb-6">
+                Set your job preferences to help recruiters find the right opportunities for you
+              </p>
+              <Button onClick={handleEditJobPreferences}>
+                <Briefcase className="h-4 w-4 mr-2" />
+                Set Job Preferences
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="relative z-10 space-y-6">
+            {/* Job Search Status */}
+            {jobPreferences && jobPreferences.job_search_status && (
+              <div className="bg-gradient-to-br from-white/80 to-white/60 dark:from-gray-800/80 dark:to-gray-800/60 backdrop-blur-xl rounded-3xl p-8 border-2 border-white/20 dark:border-gray-700/20 shadow-2xl">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                    Job Search Status
+                  </h3>
+                  <Button
+                    onClick={handleEditJobPreferences}
+                    variant="outline"
+                    size="sm"
+                  >
+                    Edit Preferences
+                  </Button>
+                </div>
+                <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-lg font-bold">
+                  <Star className="h-5 w-5" />
+                  <span>{jobPreferences.job_search_status}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Job Details Grid */}
+            <div className="grid gap-6 md:grid-cols-2">
+              {/* Desired Job Types */}
+              {jobPreferences && jobPreferences.desired_job_types && parseList(jobPreferences.desired_job_types).length > 0 && (
+                <div className="bg-gradient-to-br from-white/80 to-white/60 dark:from-gray-800/80 dark:to-gray-800/60 backdrop-blur-xl rounded-3xl p-6 border-2 border-white/20 dark:border-gray-700/20 shadow-xl">
+                  <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3 flex items-center gap-2">
+                    <Briefcase className="h-4 w-4" />
+                    Desired Job Types
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {parseList(jobPreferences.desired_job_types).map((type, idx) => (
+                      <span
+                        key={idx}
+                        className="px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-sm font-medium border border-blue-200 dark:border-blue-700"
+                      >
+                        {type}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Salary Expectations */}
+              {jobPreferences && (jobPreferences.desired_salary_min || jobPreferences.desired_salary_max) && (
+                <div className="bg-gradient-to-br from-white/80 to-white/60 dark:from-gray-800/80 dark:to-gray-800/60 backdrop-blur-xl rounded-3xl p-6 border-2 border-white/20 dark:border-gray-700/20 shadow-xl">
+                  <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">
+                    Salary Expectations
+                  </h4>
+                  <p className="text-base font-medium text-gray-900 dark:text-white">
+                    {formatSalary(
+                      jobPreferences.desired_salary_min,
+                      jobPreferences.desired_salary_max,
+                      jobPreferences.salary_currency,
+                      jobPreferences.salary_period
+                    )}
+                  </p>
+                </div>
+              )}
+
+              {/* Work Mode */}
+              {jobPreferences && jobPreferences.work_mode_preferences && parseList(jobPreferences.work_mode_preferences).length > 0 && (
+                <div className="bg-gradient-to-br from-white/80 to-white/60 dark:from-gray-800/80 dark:to-gray-800/60 backdrop-blur-xl rounded-3xl p-6 border-2 border-white/20 dark:border-gray-700/20 shadow-xl">
+                  <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3 flex items-center gap-2">
+                    <Building2 className="h-4 w-4" />
+                    Work Mode Preferences
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {parseList(jobPreferences.work_mode_preferences).map((mode, idx) => (
+                      <span
+                        key={idx}
+                        className="px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 text-sm font-medium border border-purple-200 dark:border-purple-700"
+                      >
+                        {mode}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Preferred Locations */}
+              {jobPreferences && jobPreferences.preferred_locations && parseList(jobPreferences.preferred_locations).length > 0 && (
+                <div className="bg-gradient-to-br from-white/80 to-white/60 dark:from-gray-800/80 dark:to-gray-800/60 backdrop-blur-xl rounded-3xl p-6 border-2 border-white/20 dark:border-gray-700/20 shadow-xl">
+                  <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">
+                    Preferred Locations
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {parseList(jobPreferences.preferred_locations).map((location, idx) => (
+                      <span
+                        key={idx}
+                        className="px-3 py-1 rounded-full bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 text-sm font-medium border border-orange-200 dark:border-orange-700"
+                      >
+                        {location}
+                      </span>
+                    ))}
+                  </div>
+                  {jobPreferences.willing_to_relocate && (
+                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                      ✓ Willing to relocate
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Full-width sections */}
+            {jobPreferences && jobPreferences.preferred_industries && parseList(jobPreferences.preferred_industries).length > 0 && (
+              <div className="bg-gradient-to-br from-white/80 to-white/60 dark:from-gray-800/80 dark:to-gray-800/60 backdrop-blur-xl rounded-3xl p-6 border-2 border-white/20 dark:border-gray-700/20 shadow-xl">
+                <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">
+                  Preferred Industries
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {parseList(jobPreferences.preferred_industries).map((industry, idx) => (
+                    <span
+                      key={idx}
+                      className="px-3 py-1 rounded-full bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 text-sm font-medium border border-teal-200 dark:border-teal-700"
+                    >
+                      {industry}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {jobPreferences && jobPreferences.preferred_company_sizes && parseList(jobPreferences.preferred_company_sizes).length > 0 && (
+              <div className="bg-gradient-to-br from-white/80 to-white/60 dark:from-gray-800/80 dark:to-gray-800/60 backdrop-blur-xl rounded-3xl p-6 border-2 border-white/20 dark:border-gray-700/20 shadow-xl">
+                <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">
+                  Preferred Company Sizes
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {parseList(jobPreferences.preferred_company_sizes).map((size, idx) => (
+                    <span
+                      key={idx}
+                      className="px-3 py-1 rounded-full bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300 text-sm font-medium border border-cyan-200 dark:border-cyan-700"
+                    >
+                      {size}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {jobPreferences && jobPreferences.other_preferences && (
+              <div className="bg-gradient-to-br from-white/80 to-white/60 dark:from-gray-800/80 dark:to-gray-800/60 backdrop-blur-xl rounded-3xl p-6 border-2 border-white/20 dark:border-gray-700/20 shadow-xl">
+                <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">
+                  Other Preferences
+                </h4>
+                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                  {jobPreferences.other_preferences}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const renderCurrentSection = () => {
     switch (state.activeSection) {
       case 'account':
@@ -1863,6 +2142,8 @@ function SettingsPageContent() {
         return renderPreferencesSection();
       case 'calendar':
         return renderCalendarSection();
+      case 'job-preferences':
+        return renderJobPreferencesSection();
       case 'company-profile':
         return renderCompanyProfileSection();
       default:
@@ -1926,7 +2207,9 @@ function SettingsPageContent() {
                         | 'security'
                         | 'notifications'
                         | 'calendar'
-                        | 'preferences',
+                        | 'preferences'
+                        | 'job-preferences'
+                        | 'company-profile',
                     }))
                   }
                   className={`w-full text-left p-3 rounded-lg transition-colors flex items-center gap-3 ${
@@ -1954,6 +2237,15 @@ function SettingsPageContent() {
         </div>
       </div>
       </div>
+
+      {/* Job Preferences Modal */}
+      <JobPreferencesModal
+        isOpen={jobPreferencesModal.isOpen}
+        onClose={() => setJobPreferencesModal({ isOpen: false, mode: 'create' })}
+        onSave={handleSaveJobPreferences}
+        jobPreferences={jobPreferences}
+        mode={jobPreferencesModal.mode}
+      />
     </AppLayout>
   );
 }

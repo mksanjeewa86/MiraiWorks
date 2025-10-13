@@ -48,7 +48,7 @@ export const privacyApi = {
   },
 
   /**
-   * Update current user's privacy settings
+   * Update current user's privacy settings (supports partial updates for section-specific changes)
    */
   async updateMySettings(settings: PrivacySettingsUpdate): Promise<PrivacySettings> {
     const response = await makeAuthenticatedRequest<PrivacySettings>(
@@ -59,29 +59,5 @@ export const privacyApi = {
       }
     );
     return response.data;
-  },
-
-  /**
-   * Create privacy settings for current user
-   */
-  async createMySettings(settings: PrivacySettingsUpdate): Promise<PrivacySettings> {
-    const response = await makeAuthenticatedRequest<PrivacySettings>(
-      API_ENDPOINTS.PRIVACY.ME,
-      {
-        method: 'POST',
-        body: JSON.stringify(settings),
-      }
-    );
-    return response.data;
-  },
-
-  /**
-   * Delete current user's privacy settings (resets to defaults)
-   */
-  async deleteMySettings(): Promise<void> {
-    await makeAuthenticatedRequest<void>(
-      API_ENDPOINTS.PRIVACY.ME,
-      { method: 'DELETE' }
-    );
   },
 };

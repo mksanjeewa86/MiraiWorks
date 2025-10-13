@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Card, LoadingSpinner } from '@/components/ui';
 import { recruiterProfileApi } from '@/api/recruiterProfile';
-import type { RecruiterProfile } from '@/types/recruiter';
+import type { RecruiterProfile } from '@/types/profile';
 import { AlertCircle, Briefcase, Building, MapPin, Calendar, Users, TrendingUp } from 'lucide-react';
 
 interface RecruiterProfileViewProps {

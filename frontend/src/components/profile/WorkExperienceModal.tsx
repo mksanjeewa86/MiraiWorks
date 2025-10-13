@@ -2,8 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import type { WorkExperience, WorkExperienceCreate, WorkExperienceUpdate } from '@/types/profile';
-import { X } from 'lucide-react';
+import { X, Briefcase } from 'lucide-react';
 
 interface WorkExperienceModalProps {
   isOpen: boolean;
@@ -111,198 +120,216 @@ export default function WorkExperienceModal({
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-            <h2 className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>
-              {mode === 'create' ? 'Add Work Experience' : 'Edit Work Experience'}
-            </h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-            >
-              <X className="h-6 w-6" />
-            </button>
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="p-6 space-y-4">
-            {error && (
-              <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-red-600 dark:text-red-400 text-sm">
-                {error}
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Company Name */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-                  Company Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  className="input w-full"
-                  value={formData.company_name}
-                  onChange={(e) => handleChange('company_name', e.target.value)}
-                />
-              </div>
-
-              {/* Position Title */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-                  Position Title *
-                </label>
-                <input
-                  type="text"
-                  required
-                  className="input w-full"
-                  value={formData.position_title}
-                  onChange={(e) => handleChange('position_title', e.target.value)}
-                />
-              </div>
-
-              {/* Employment Type */}
-              <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-                  Employment Type
-                </label>
-                <select
-                  className="input w-full"
-                  value={formData.employment_type || ''}
-                  onChange={(e) => handleChange('employment_type', e.target.value)}
-                >
-                  <option value="Full-time">Full-time</option>
-                  <option value="Part-time">Part-time</option>
-                  <option value="Contract">Contract</option>
-                  <option value="Freelance">Freelance</option>
-                  <option value="Internship">Internship</option>
-                </select>
-              </div>
-
-              {/* Location */}
-              <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-                  Location
-                </label>
-                <input
-                  type="text"
-                  className="input w-full"
-                  value={formData.location || ''}
-                  onChange={(e) => handleChange('location', e.target.value)}
-                  placeholder="e.g., San Francisco, CA"
-                />
-              </div>
-
-              {/* Start Date */}
-              <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-                  Start Date *
-                </label>
-                <input
-                  type="date"
-                  required
-                  className="input w-full"
-                  value={formData.start_date}
-                  onChange={(e) => handleChange('start_date', e.target.value)}
-                />
-              </div>
-
-              {/* End Date */}
-              <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-                  End Date
-                </label>
-                <input
-                  type="date"
-                  className="input w-full"
-                  value={formData.end_date || ''}
-                  onChange={(e) => handleChange('end_date', e.target.value || null)}
-                  disabled={formData.is_current}
-                />
-              </div>
-
-              {/* Currently Working */}
-              <div className="md:col-span-2">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={formData.is_current}
-                    onChange={(e) => {
-                      handleChange('is_current', e.target.checked);
-                      if (e.target.checked) {
-                        handleChange('end_date', null);
-                      }
-                    }}
-                  />
-                  <span className="text-sm" style={{ color: 'var(--text-primary)' }}>
-                    I currently work here
-                  </span>
-                </label>
-              </div>
-
-              {/* Description */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-                  Description
-                </label>
-                <textarea
-                  className="input w-full"
-                  rows={4}
-                  value={formData.description || ''}
-                  onChange={(e) => handleChange('description', e.target.value)}
-                  placeholder="Describe your responsibilities and achievements..."
-                />
-              </div>
-
-              {/* Skills */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-                  Skills Used
-                </label>
-                <input
-                  type="text"
-                  className="input w-full"
-                  value={formData.skills || ''}
-                  onChange={(e) => handleChange('skills', e.target.value)}
-                  placeholder="Separate skills with commas (e.g., Python, React, SQL)"
-                />
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent
+        closeButton={false}
+        className="flex flex-col h-[90vh] max-h-[90vh] w-full max-w-4xl md:max-w-3xl overflow-hidden rounded-3xl border border-slate-200 bg-white text-slate-900 shadow-[0_30px_80px_-20px_rgba(15,23,42,0.2)]"
+      >
+        <DialogHeader className="flex-shrink-0 px-6 pt-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                  <Briefcase className="h-5 w-5" />
+                </span>
+                <div>
+                  <DialogTitle className="text-xl font-semibold text-slate-900">
+                    {mode === 'create' ? 'Add Work Experience' : 'Edit Work Experience'}
+                  </DialogTitle>
+                  <DialogDescription className="text-sm text-slate-500">
+                    {mode === 'create'
+                      ? 'Add your professional work experience to showcase your career journey.'
+                      : 'Update your work experience details and responsibilities.'}
+                  </DialogDescription>
+                </div>
               </div>
             </div>
+            <DialogClose className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
+              <X className="h-4 w-4" />
+            </DialogClose>
+          </div>
+        </DialogHeader>
 
-            {/* Actions */}
-            <div className="flex justify-between gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-              {/* Delete button (only in edit mode) */}
-              {mode === 'edit' && onDelete && experience?.id && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleDelete}
-                  disabled={saving || deleting}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
-                >
-                  {deleting ? 'Deleting...' : 'Delete'}
-                </Button>
+        <form onSubmit={handleSubmit} className="flex flex-1 flex-col min-h-0">
+          <div className="flex-1 overflow-y-auto px-6 py-6 min-h-0">
+            <div className="space-y-8">
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+                  {error}
+                </div>
               )}
 
-              {/* Spacer for alignment when no delete button */}
-              {!(mode === 'edit' && onDelete && experience?.id) && <div />}
+              <div className="grid gap-6 rounded-2xl border border-slate-200 bg-slate-50 p-6">
+                {/* Company Name */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Company Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    className="w-full border-slate-300 bg-white text-slate-900 rounded-md px-3 py-2"
+                    value={formData.company_name}
+                    onChange={(e) => handleChange('company_name', e.target.value)}
+                  />
+                </div>
 
-              <div className="flex gap-3">
-                <Button type="button" variant="outline" onClick={onClose} disabled={saving || deleting}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={saving || deleting}>
-                  {saving ? 'Saving...' : mode === 'create' ? 'Add Experience' : 'Save Changes'}
-                </Button>
+                {/* Position Title */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Position Title *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    className="w-full border-slate-300 bg-white text-slate-900 rounded-md px-3 py-2"
+                    value={formData.position_title}
+                    onChange={(e) => handleChange('position_title', e.target.value)}
+                  />
+                </div>
+
+                {/* Employment Type & Location */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Employment Type
+                    </label>
+                    <select
+                      className="w-full border-slate-300 bg-white text-slate-900 rounded-md px-3 py-2"
+                      value={formData.employment_type || ''}
+                      onChange={(e) => handleChange('employment_type', e.target.value)}
+                    >
+                      <option value="Full-time">Full-time</option>
+                      <option value="Part-time">Part-time</option>
+                      <option value="Contract">Contract</option>
+                      <option value="Freelance">Freelance</option>
+                      <option value="Internship">Internship</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Location
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full border-slate-300 bg-white text-slate-900 rounded-md px-3 py-2"
+                      value={formData.location || ''}
+                      onChange={(e) => handleChange('location', e.target.value)}
+                      placeholder="e.g., San Francisco, CA"
+                    />
+                  </div>
+                </div>
+
+                {/* Start Date & End Date */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Start Date *
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      className="w-full border-slate-300 bg-white text-slate-900 rounded-md px-3 py-2"
+                      value={formData.start_date}
+                      onChange={(e) => handleChange('start_date', e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      End Date
+                    </label>
+                    <input
+                      type="date"
+                      className="w-full border-slate-300 bg-white text-slate-900 rounded-md px-3 py-2"
+                      value={formData.end_date || ''}
+                      onChange={(e) => handleChange('end_date', e.target.value || null)}
+                      disabled={formData.is_current}
+                    />
+                  </div>
+                </div>
+
+                {/* Currently Working */}
+                <div>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.is_current}
+                      onChange={(e) => {
+                        handleChange('is_current', e.target.checked);
+                        if (e.target.checked) {
+                          handleChange('end_date', null);
+                        }
+                      }}
+                      className="h-4 w-4 rounded border-slate-300"
+                    />
+                    <span className="text-sm font-medium text-slate-700">
+                      I currently work here
+                    </span>
+                  </label>
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    className="w-full border border-slate-300 bg-white text-slate-900 rounded-md px-3 py-2 focus-visible:ring-blue-500"
+                    rows={4}
+                    value={formData.description || ''}
+                    onChange={(e) => handleChange('description', e.target.value)}
+                    placeholder="Describe your responsibilities and achievements..."
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    Highlight your key responsibilities and major achievements
+                  </p>
+                </div>
+
+                {/* Skills */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Skills Used
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full border-slate-300 bg-white text-slate-900 rounded-md px-3 py-2"
+                    value={formData.skills || ''}
+                    onChange={(e) => handleChange('skills', e.target.value)}
+                    placeholder="Python, React, SQL"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    Separate skills with commas
+                  </p>
+                </div>
               </div>
             </div>
-          </form>
-        </div>
-      </div>
+          </div>
+
+          <DialogFooter className="flex-shrink-0 gap-3 border-t border-slate-200 bg-white px-6 py-4">
+            <div className="flex w-full items-center justify-end gap-3">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={onClose}
+                disabled={saving}
+                className="min-w-[120px] border border-slate-300 bg-white text-slate-600 hover:bg-slate-100"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={saving}
+                className="min-w-[160px] bg-blue-600 text-white shadow-lg shadow-blue-500/30 hover:bg-blue-600/90"
+              >
+                {saving ? 'Saving...' : mode === 'create' ? 'Add Experience' : 'Save Changes'}
+              </Button>
+            </div>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -264,25 +264,26 @@ These can be reused across roles with conditional rendering:
 - ✅ All modals for editing sections
 - ✅ Role-based visibility utility (profileVisibility.ts)
 
-### Phase 2 🚧 IN PROGRESS (90% Complete)
+### Phase 2 ✅ COMPLETED
 - ✅ Backend: RecruiterProfile model and database table
 - ✅ Backend: Recruiter profile CRUD operations
 - ✅ Backend: Recruiter profile API endpoints
 - ✅ Backend: Router integration
 - ✅ Database migration for recruiter_profiles table
-- 🚧 Frontend: TypeScript types for recruiter/employer
-- 🚧 Frontend: API client functions
-- 🚧 Frontend: RecruiterProfileView component
-- 🚧 Frontend: EmployerProfileView component
-- 🚧 Frontend: Role-based routing in UnifiedProfileView
-- ⬜ Privacy controls UI
-- ⬜ Profile completeness indicators
+- ✅ Frontend: TypeScript types for recruiter/employer
+- ✅ Frontend: API client functions
+- ✅ Frontend: RecruiterProfileView component
+- ✅ Frontend: EmployerProfileView component
+- ✅ Frontend: Role-based routing in UnifiedProfileView
+- ✅ Privacy controls UI (integrated into settings page)
+- ✅ Profile completeness indicators (with visual progress)
+- ✅ HEIC/HEIF file upload support
 
-### Phase 3
-- 🚧 Recruiter profile implementation (Backend ✅, Frontend 🚧)
-- 🚧 Employer profile implementation (Backend ✅, Frontend 🚧)
+### Phase 3 (Partially Complete)
+- ✅ Recruiter profile implementation (Backend ✅, Frontend ✅)
+- ✅ Employer profile implementation (Backend ✅, Frontend ✅)
 - ⬜ Company profile pages
-- ⬜ Profile visibility settings
+- ✅ Profile visibility settings (privacy controls implemented)
 
 ### Phase 4
 - ⬜ Advanced features (endorsements, recommendations)
@@ -294,11 +295,19 @@ These can be reused across roles with conditional rendering:
 
 ## 🚀 Next Steps
 
-1. **Fix HEIC upload issue** - Backend needs to accept HEIC/HEIF files
-2. **Add role-based rendering** - Show different sections based on user role
-3. **Implement privacy controls** - Allow users to control who sees what
-4. **Add profile completeness** - Visual indicator of profile completion
-5. **Create recruiter/employer profiles** - Simplified versions
+### Completed ✅:
+1. ✅ **Fix HEIC upload issue** - HEIC/HEIF files now supported
+2. ✅ **Add role-based rendering** - Different profile views based on user role
+3. ✅ **Implement privacy controls** - Full privacy settings in Settings page
+4. ✅ **Add profile completeness** - Visual circular progress indicator
+5. ✅ **Create recruiter/employer profiles** - Both implemented with role-based routing
+
+### Remaining (Phase 3-4):
+1. **Company profile pages** - Dedicated pages for company information
+2. **Advanced features** - Endorsements, recommendations, profile views
+3. **Profile analytics dashboard** - Enhanced analytics and insights
+4. **Public profile URLs** - Shareable public profile pages
+5. **Profile export/download** - Export profile as PDF/JSON
 
 ---
 
@@ -352,7 +361,7 @@ These can be reused across roles with conditional rendering:
 - ✅ `POST /api/profile/projects` - Add project
 - ✅ `PUT /api/profile/projects/{id}` - Update project
 - ✅ `DELETE /api/profile/projects/{id}` - Delete project
-- ⬜ `GET /api/profile/completeness` - Get completion %
+- ✅ `GET /api/profile/completeness` - Get completion %
 
 ### Recruiter Endpoints ✅:
 - ✅ `GET /api/recruiter-profile/me` - Get recruiter profile
@@ -361,9 +370,11 @@ These can be reused across roles with conditional rendering:
 - ✅ `DELETE /api/recruiter-profile/me` - Delete recruiter profile
 - ✅ `GET /api/recruiter-profile/{user_id}` - View recruiter profile
 
-### Privacy Endpoints (Future):
-- ⬜ `GET /api/user/privacy` - Get privacy settings
-- ⬜ `PUT /api/user/privacy` - Update privacy settings
+### Privacy Endpoints ✅:
+- ✅ `GET /api/privacy/me` - Get privacy settings
+- ✅ `PUT /api/privacy/me` - Update privacy settings
+- ✅ `POST /api/privacy/me` - Create privacy settings
+- ✅ `DELETE /api/privacy/me` - Delete privacy settings (reset to defaults)
 
 ### Public Profile (Future):
 - ⬜ `GET /api/public/profiles/{user_id}` - Get public profile (respects privacy)

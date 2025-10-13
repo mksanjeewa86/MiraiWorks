@@ -510,7 +510,13 @@ class PositionRoutes:
 
 
 class PrivacySettingsRoutes:
-    """Privacy settings endpoints."""
+    """
+    Privacy settings endpoints for section-specific profile visibility controls.
+
+    These endpoints support the privacy toggles on profile sections
+    (work experience, education, skills, etc.) allowing users to control
+    what information is visible to others.
+    """
 
     ME = "/me"
 

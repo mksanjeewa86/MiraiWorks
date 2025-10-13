@@ -318,7 +318,7 @@ export const API_ENDPOINTS = {
 
   // Privacy Settings endpoints
   PRIVACY: {
-    ME: '/api/privacy/me',
+    ME: '/api/privacy-settings/me',
   },
 
   // Profile endpoints

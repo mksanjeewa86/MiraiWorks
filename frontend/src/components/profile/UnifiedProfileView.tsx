@@ -13,20 +13,17 @@ import EducationSection from './EducationSection';
 import SkillsSection from './SkillsSection';
 import CertificationsSection from './CertificationsSection';
 import ProjectsSection from './ProjectsSection';
-import JobPreferencesSection from './JobPreferencesSection';
 import WorkExperienceModal from './WorkExperienceModal';
 import EducationModal from './EducationModal';
 import SkillModal from './SkillModal';
 import CertificationModal from './CertificationModal';
 import ProjectModal from './ProjectModal';
-import JobPreferencesModal from './JobPreferencesModal';
 import {
   getWorkExperiences,
   getEducations,
   getSkills,
   getCertifications,
   getProjects,
-  getJobPreferences,
   createWorkExperience,
   updateWorkExperience,
   deleteWorkExperience,
@@ -42,8 +39,6 @@ import {
   createProject,
   updateProject,
   deleteProject,
-  createJobPreferences,
-  updateJobPreferences,
 } from '@/api/profile';
 import type {
   WorkExperience,
@@ -61,22 +56,22 @@ import type {
   Project,
   ProjectCreate,
   ProjectUpdate,
-  JobPreference,
-  JobPreferenceCreate,
-  JobPreferenceUpdate,
 } from '@/types/profile';
 import { AlertCircle } from 'lucide-react';
+import type { PrivacySettings } from '@/api/privacy';
 
 interface UnifiedProfileViewProps {
   userId?: number;
   isOwnProfile?: boolean;
   readOnly?: boolean;
+  privacySettings?: PrivacySettings | null;
 }
 
 export default function UnifiedProfileView({
   userId,
   isOwnProfile = true,
   readOnly = false,
+  privacySettings = null,
 }: UnifiedProfileViewProps) {
   const t = useTranslations('profile');
   const { primaryRole, isSystemAdmin, isCompanyAdmin } = useUserRole();
@@ -88,7 +83,6 @@ export default function UnifiedProfileView({
   const [skills, setSkills] = useState<Skill[]>([]);
   const [certifications, setCertifications] = useState<Certification[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [jobPreferences, setJobPreferences] = useState<JobPreference | null>(null);
 
   // Loading states
   const [loading, setLoading] = useState(true);
@@ -100,7 +94,6 @@ export default function UnifiedProfileView({
   const [skillModal, setSkillModal] = useState<{ isOpen: boolean; mode: 'create' | 'edit'; item?: Skill }>({ isOpen: false, mode: 'create' });
   const [certificationModal, setCertificationModal] = useState<{ isOpen: boolean; mode: 'create' | 'edit'; item?: Certification }>({ isOpen: false, mode: 'create' });
   const [projectModal, setProjectModal] = useState<{ isOpen: boolean; mode: 'create' | 'edit'; item?: Project }>({ isOpen: false, mode: 'create' });
-  const [jobPreferencesModal, setJobPreferencesModal] = useState<{ isOpen: boolean; mode: 'create' | 'edit' }>({ isOpen: false, mode: 'create' });
 
   // Fetch all profile data
   useEffect(() => {
@@ -116,13 +109,12 @@ export default function UnifiedProfileView({
 
       try {
         // Fetch all profile sections in parallel
-        const [workExpData, eduData, skillsData, certsData, projectsData, jobPrefsData] = await Promise.all([
+        const [workExpData, eduData, skillsData, certsData, projectsData] = await Promise.all([
           getWorkExperiences().catch(() => []),
           getEducations().catch(() => []),
           getSkills().catch(() => []),
           getCertifications().catch(() => []),
           getProjects().catch(() => []),
-          getJobPreferences().catch(() => null),
         ]);
 
         setWorkExperiences(workExpData);
@@ -130,7 +122,6 @@ export default function UnifiedProfileView({
         setSkills(skillsData);
         setCertifications(certsData);
         setProjects(projectsData);
-        setJobPreferences(jobPrefsData);
       } catch (err: any) {
         console.error('Error fetching profile data:', err);
         setError(err.message || 'Failed to load profile data');
@@ -186,7 +177,6 @@ export default function UnifiedProfileView({
   };
 
   const handleDeleteEducation = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this education?')) return;
     try {
       await deleteEducation(id);
       setEducations(educations.filter(edu => edu.id !== id));
@@ -215,7 +205,6 @@ export default function UnifiedProfileView({
   };
 
   const handleDeleteSkill = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this skill?')) return;
     try {
       await deleteSkill(id);
       setSkills(skills.filter(skill => skill.id !== id));
@@ -244,7 +233,6 @@ export default function UnifiedProfileView({
   };
 
   const handleDeleteCertification = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this certification?')) return;
     try {
       await deleteCertification(id);
       setCertifications(certifications.filter(cert => cert.id !== id));
@@ -273,7 +261,6 @@ export default function UnifiedProfileView({
   };
 
   const handleDeleteProject = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this project?')) return;
     try {
       await deleteProject(id);
       setProjects(projects.filter(proj => proj.id !== id));
@@ -282,37 +269,21 @@ export default function UnifiedProfileView({
     }
   };
 
-  // Job Preferences Handlers
-  const handleEditJobPreferences = () => {
-    setJobPreferencesModal({
-      isOpen: true,
-      mode: jobPreferences ? 'edit' : 'create'
-    });
-  };
-
-  const handleSaveJobPreferences = async (data: JobPreferenceCreate | JobPreferenceUpdate) => {
-    if (jobPreferences) {
-      // Update existing
-      const updated = await updateJobPreferences(data as JobPreferenceUpdate);
-      setJobPreferences(updated);
-    } else {
-      // Create new
-      const newPrefs = await createJobPreferences(data as JobPreferenceCreate);
-      setJobPreferences(newPrefs);
-    }
-  };
-
   // Determine effective role for visibility checks
   const effectiveRole = isSystemAdmin ? 'System Admin' : isCompanyAdmin ? 'Company Admin' : primaryRole;
 
-  // Determine which sections are visible based on role
+  // Determine which sections are visible based on role AND privacy settings
   const showCompleteness = isSectionVisible('completeness_indicator', effectiveRole, isOwnProfile);
-  const showWorkExperience = isSectionVisible('work_experience', effectiveRole, isOwnProfile);
-  const showEducation = isSectionVisible('education', effectiveRole, isOwnProfile);
-  const showSkills = isSectionVisible('skills', effectiveRole, isOwnProfile);
-  const showCertifications = isSectionVisible('certifications', effectiveRole, isOwnProfile);
-  const showProjects = isSectionVisible('projects', effectiveRole, isOwnProfile);
-  const showJobPreferences = isSectionVisible('job_preferences', effectiveRole, isOwnProfile);
+  const showWorkExperience = isSectionVisible('work_experience', effectiveRole, isOwnProfile) &&
+    (isOwnProfile || !privacySettings || privacySettings.show_work_experience);
+  const showEducation = isSectionVisible('education', effectiveRole, isOwnProfile) &&
+    (isOwnProfile || !privacySettings || privacySettings.show_education);
+  const showSkills = isSectionVisible('skills', effectiveRole, isOwnProfile) &&
+    (isOwnProfile || !privacySettings || privacySettings.show_skills);
+  const showCertifications = isSectionVisible('certifications', effectiveRole, isOwnProfile) &&
+    (isOwnProfile || !privacySettings || privacySettings.show_certifications);
+  const showProjects = isSectionVisible('projects', effectiveRole, isOwnProfile) &&
+    (isOwnProfile || !privacySettings || privacySettings.show_projects);
 
   if (error) {
     return (
@@ -409,6 +380,7 @@ export default function UnifiedProfileView({
             isOwnProfile={isOwnProfile}
             onAdd={!readOnly ? handleAddWorkExperience : undefined}
             onEdit={!readOnly ? handleEditWorkExperience : undefined}
+            onDelete={!readOnly ? handleDeleteWorkExperience : undefined}
           />
         )}
 
@@ -421,6 +393,7 @@ export default function UnifiedProfileView({
             isOwnProfile={isOwnProfile}
             onAdd={!readOnly ? handleAddEducation : undefined}
             onEdit={!readOnly ? handleEditEducation : undefined}
+            onDelete={!readOnly ? handleDeleteEducation : undefined}
           />
         )}
 
@@ -433,6 +406,7 @@ export default function UnifiedProfileView({
             isOwnProfile={isOwnProfile}
             onAdd={!readOnly ? handleAddSkill : undefined}
             onEdit={!readOnly ? handleEditSkill : undefined}
+            onDelete={!readOnly ? handleDeleteSkill : undefined}
           />
         )}
 
@@ -445,6 +419,7 @@ export default function UnifiedProfileView({
             isOwnProfile={isOwnProfile}
             onAdd={!readOnly ? handleAddCertification : undefined}
             onEdit={!readOnly ? handleEditCertification : undefined}
+            onDelete={!readOnly ? handleDeleteCertification : undefined}
           />
         )}
 
@@ -457,17 +432,7 @@ export default function UnifiedProfileView({
             isOwnProfile={isOwnProfile}
             onAdd={!readOnly ? handleAddProject : undefined}
             onEdit={!readOnly ? handleEditProject : undefined}
-          />
-        )}
-
-        {/* Job Preferences Section */}
-        {showJobPreferences && (
-          <JobPreferencesSection
-            jobPreferences={jobPreferences}
-            isLoading={loading}
-            readOnly={readOnly}
-            isOwnProfile={isOwnProfile}
-            onEdit={!readOnly ? handleEditJobPreferences : undefined}
+            onDelete={!readOnly ? handleDeleteProject : undefined}
           />
         )}
 
@@ -477,7 +442,6 @@ export default function UnifiedProfileView({
           !showSkills &&
           !showCertifications &&
           !showProjects &&
-          !showJobPreferences &&
           !showCompleteness && (
             <div className="text-center py-12">
               <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
@@ -527,14 +491,6 @@ export default function UnifiedProfileView({
         onSave={handleSaveProject}
         project={projectModal.item}
         mode={projectModal.mode}
-      />
-
-      <JobPreferencesModal
-        isOpen={jobPreferencesModal.isOpen}
-        onClose={() => setJobPreferencesModal({ isOpen: false, mode: 'create' })}
-        onSave={handleSaveJobPreferences}
-        jobPreferences={jobPreferences}
-        mode={jobPreferencesModal.mode}
       />
     </>
   );

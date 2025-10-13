@@ -346,3 +346,114 @@ export interface ProfileCompleteness {
   missing_sections: string[];
   completed_sections: string[];
 }
+
+// ================== RECRUITER PROFILE ==================
+
+export interface RecruiterProfile {
+  id: number;
+  user_id: number;
+  years_of_experience: number | null;
+  specializations: string | null; // Comma-separated (e.g., "Tech Recruitment,Executive Search")
+  bio: string | null;
+  company_description: string | null;
+  industries: string | null; // Comma-separated
+  job_types: string | null; // Comma-separated
+  locations: string | null; // Comma-separated
+  experience_levels: string | null; // Comma-separated
+  calendar_link: string | null;
+  linkedin_url: string | null;
+  jobs_posted: number | null;
+  candidates_placed: number | null;
+  active_openings: number | null;
+  display_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RecruiterProfileCreate {
+  years_of_experience?: number | null;
+  specializations?: string | null;
+  bio?: string | null;
+  company_description?: string | null;
+  industries?: string | null;
+  job_types?: string | null;
+  locations?: string | null;
+  experience_levels?: string | null;
+  calendar_link?: string | null;
+  linkedin_url?: string | null;
+  jobs_posted?: number | null;
+  candidates_placed?: number | null;
+  active_openings?: number | null;
+  display_order?: number;
+}
+
+export interface RecruiterProfileUpdate {
+  years_of_experience?: number | null;
+  specializations?: string | null;
+  bio?: string | null;
+  company_description?: string | null;
+  industries?: string | null;
+  job_types?: string | null;
+  locations?: string | null;
+  experience_levels?: string | null;
+  calendar_link?: string | null;
+  linkedin_url?: string | null;
+  jobs_posted?: number | null;
+  candidates_placed?: number | null;
+  active_openings?: number | null;
+  display_order?: number;
+}
+
+// Recruiter specialization constants
+export const RecruiterSpecialization = {
+  TECH_RECRUITMENT: 'Tech Recruitment',
+  EXECUTIVE_SEARCH: 'Executive Search',
+  VOLUME_HIRING: 'Volume Hiring',
+  CONTRACT_STAFFING: 'Contract Staffing',
+  TEMP_TO_PERM: 'Temp-to-Perm',
+  HEALTHCARE: 'Healthcare Recruitment',
+  FINANCE: 'Finance Recruitment',
+  SALES_MARKETING: 'Sales & Marketing',
+  ENGINEERING: 'Engineering',
+  CUSTOMER_SERVICE: 'Customer Service',
+} as const;
+
+// Experience level constants
+export const ExperienceLevel = {
+  ENTRY: 'Entry Level',
+  JUNIOR: 'Junior',
+  MID: 'Mid Level',
+  SENIOR: 'Senior',
+  LEAD: 'Lead',
+  MANAGER: 'Manager',
+  DIRECTOR: 'Director',
+  EXECUTIVE: 'Executive',
+} as const;
+
+// ================== EMPLOYER PROFILE ==================
+
+// Employers use minimal profile info - mostly from User and Company tables
+// No separate EmployerProfile model needed, just type for display
+
+export interface EmployerProfileView {
+  user_id: number;
+  full_name: string;
+  profile_picture_url: string | null;
+  job_title: string | null;
+  role_in_company: string | null;
+  department: string | null;
+  bio: string | null;
+  email: string;
+  phone: string | null;
+  linkedin_url: string | null;
+
+  // Company info (from Company table)
+  company_id: number | null;
+  company_name: string | null;
+  company_logo_url: string | null;
+  company_industry: string | null;
+
+  // Activity stats
+  jobs_posted?: number;
+  active_openings?: number;
+}

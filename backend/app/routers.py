@@ -93,7 +93,7 @@ def include_routers(app: FastAPI) -> None:
         notifications.router, prefix="/api/notifications", tags=["notifications"]
     )
     app.include_router(positions.router, prefix="/api/positions", tags=["positions"])
-    app.include_router(privacy_settings.router, prefix="/api/privacy", tags=["privacy-settings"])
+    app.include_router(privacy_settings.router, prefix="/api/privacy-settings", tags=["privacy-settings"])
     app.include_router(profile.router, prefix="/api/profile", tags=["profile"])
     app.include_router(profile_views.router, prefix="/api", tags=["profile-views"])
     app.include_router(public.router, prefix="/api/public", tags=["public"])

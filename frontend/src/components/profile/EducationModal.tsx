@@ -2,8 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import type { Education, EducationCreate, EducationUpdate } from '@/types/profile';
-import { X } from 'lucide-react';
+import { X, GraduationCap } from 'lucide-react';
 
 interface EducationModalProps {
   isOpen: boolean;
@@ -91,197 +100,232 @@ export default function EducationModal({
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-            <h2 className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>
-              {mode === 'create' ? 'Add Education' : 'Edit Education'}
-            </h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-            >
-              <X className="h-6 w-6" />
-            </button>
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="p-6 space-y-4">
-            {error && (
-              <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-red-600 dark:text-red-400 text-sm">
-                {error}
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Institution Name */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-                  Institution Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  className="input w-full"
-                  value={formData.institution_name}
-                  onChange={(e) => handleChange('institution_name', e.target.value)}
-                />
-              </div>
-
-              {/* Degree Type */}
-              <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-                  Degree Type *
-                </label>
-                <select
-                  required
-                  className="input w-full"
-                  value={formData.degree_type}
-                  onChange={(e) => handleChange('degree_type', e.target.value)}
-                >
-                  <option value="High School">High School</option>
-                  <option value="Associate Degree">Associate Degree</option>
-                  <option value="Bachelor's Degree">Bachelor's Degree</option>
-                  <option value="Master's Degree">Master's Degree</option>
-                  <option value="Doctorate (PhD)">Doctorate (PhD)</option>
-                  <option value="MBA">MBA</option>
-                  <option value="Certificate">Certificate</option>
-                  <option value="Diploma">Diploma</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-
-              {/* Field of Study */}
-              <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-                  Field of Study *
-                </label>
-                <input
-                  type="text"
-                  required
-                  className="input w-full"
-                  value={formData.field_of_study}
-                  onChange={(e) => handleChange('field_of_study', e.target.value)}
-                  placeholder="e.g., Computer Science"
-                />
-              </div>
-
-              {/* Start Date */}
-              <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-                  Start Date
-                </label>
-                <input
-                  type="date"
-                  className="input w-full"
-                  value={formData.start_date || ''}
-                  onChange={(e) => handleChange('start_date', e.target.value || null)}
-                />
-              </div>
-
-              {/* End Date */}
-              <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-                  End Date
-                </label>
-                <input
-                  type="date"
-                  className="input w-full"
-                  value={formData.end_date || ''}
-                  onChange={(e) => handleChange('end_date', e.target.value || null)}
-                />
-              </div>
-
-              {/* Graduation Year */}
-              <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-                  Graduation Year
-                </label>
-                <input
-                  type="number"
-                  className="input w-full"
-                  value={formData.graduation_year || ''}
-                  onChange={(e) => handleChange('graduation_year', e.target.value ? parseInt(e.target.value) : null)}
-                  placeholder="e.g., 2024"
-                  min="1950"
-                  max="2050"
-                />
-              </div>
-
-              {/* GPA */}
-              <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-                  GPA
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  className="input w-full"
-                  value={formData.gpa || ''}
-                  onChange={(e) => handleChange('gpa', e.target.value ? parseFloat(e.target.value) : null)}
-                  placeholder="e.g., 3.85"
-                />
-              </div>
-
-              {/* GPA Max */}
-              <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-                  GPA Scale
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  className="input w-full"
-                  value={formData.gpa_max || ''}
-                  onChange={(e) => handleChange('gpa_max', e.target.value ? parseFloat(e.target.value) : null)}
-                  placeholder="e.g., 4.00"
-                />
-              </div>
-
-              {/* Honors & Awards */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-                  Honors & Awards
-                </label>
-                <textarea
-                  className="input w-full"
-                  rows={2}
-                  value={formData.honors_awards || ''}
-                  onChange={(e) => handleChange('honors_awards', e.target.value || null)}
-                  placeholder="List any honors, awards, or achievements..."
-                />
-              </div>
-
-              {/* Description */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-                  Description
-                </label>
-                <textarea
-                  className="input w-full"
-                  rows={3}
-                  value={formData.description || ''}
-                  onChange={(e) => handleChange('description', e.target.value || null)}
-                  placeholder="Additional details about your education..."
-                />
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent
+        closeButton={false}
+        className="flex flex-col h-[90vh] max-h-[90vh] w-full max-w-4xl md:max-w-3xl overflow-hidden rounded-3xl border border-slate-200 bg-white text-slate-900 shadow-[0_30px_80px_-20px_rgba(15,23,42,0.2)]"
+      >
+        <DialogHeader className="flex-shrink-0 px-6 pt-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-green-600">
+                  <GraduationCap className="h-5 w-5" />
+                </span>
+                <div>
+                  <DialogTitle className="text-xl font-semibold text-slate-900">
+                    {mode === 'create' ? 'Add Education' : 'Edit Education'}
+                  </DialogTitle>
+                  <DialogDescription className="text-sm text-slate-500">
+                    {mode === 'create'
+                      ? 'Add your educational background and academic achievements.'
+                      : 'Update your education details and academic information.'}
+                  </DialogDescription>
+                </div>
               </div>
             </div>
+            <DialogClose className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
+              <X className="h-4 w-4" />
+            </DialogClose>
+          </div>
+        </DialogHeader>
 
-            {/* Actions */}
-            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
+        <form onSubmit={handleSubmit} className="flex flex-1 flex-col min-h-0">
+          <div className="flex-1 overflow-y-auto px-6 py-6 min-h-0">
+            <div className="space-y-8">
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+                  {error}
+                </div>
+              )}
+
+              <div className="grid gap-6 rounded-2xl border border-slate-200 bg-slate-50 p-6">
+                {/* Institution Name */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Institution Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    className="w-full border-slate-300 bg-white text-slate-900 rounded-md px-3 py-2"
+                    value={formData.institution_name}
+                    onChange={(e) => handleChange('institution_name', e.target.value)}
+                  />
+                </div>
+
+                {/* Degree Type & Field of Study */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Degree Type *
+                    </label>
+                    <select
+                      required
+                      className="w-full border-slate-300 bg-white text-slate-900 rounded-md px-3 py-2"
+                      value={formData.degree_type}
+                      onChange={(e) => handleChange('degree_type', e.target.value)}
+                    >
+                      <option value="High School">High School</option>
+                      <option value="Associate Degree">Associate Degree</option>
+                      <option value="Bachelor's Degree">Bachelor's Degree</option>
+                      <option value="Master's Degree">Master's Degree</option>
+                      <option value="Doctorate (PhD)">Doctorate (PhD)</option>
+                      <option value="MBA">MBA</option>
+                      <option value="Certificate">Certificate</option>
+                      <option value="Diploma">Diploma</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Field of Study *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      className="w-full border-slate-300 bg-white text-slate-900 rounded-md px-3 py-2"
+                      value={formData.field_of_study}
+                      onChange={(e) => handleChange('field_of_study', e.target.value)}
+                      placeholder="e.g., Computer Science"
+                    />
+                  </div>
+                </div>
+
+                {/* Start Date, End Date & Graduation Year */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Start Date
+                    </label>
+                    <input
+                      type="date"
+                      className="w-full border-slate-300 bg-white text-slate-900 rounded-md px-3 py-2"
+                      value={formData.start_date || ''}
+                      onChange={(e) => handleChange('start_date', e.target.value || null)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      End Date
+                    </label>
+                    <input
+                      type="date"
+                      className="w-full border-slate-300 bg-white text-slate-900 rounded-md px-3 py-2"
+                      value={formData.end_date || ''}
+                      onChange={(e) => handleChange('end_date', e.target.value || null)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Graduation Year
+                    </label>
+                    <input
+                      type="number"
+                      className="w-full border-slate-300 bg-white text-slate-900 rounded-md px-3 py-2"
+                      value={formData.graduation_year || ''}
+                      onChange={(e) => handleChange('graduation_year', e.target.value ? parseInt(e.target.value) : null)}
+                      placeholder="e.g., 2024"
+                      min="1950"
+                      max="2050"
+                    />
+                  </div>
+                </div>
+
+                {/* GPA & GPA Scale */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      GPA
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="w-full border-slate-300 bg-white text-slate-900 rounded-md px-3 py-2"
+                      value={formData.gpa || ''}
+                      onChange={(e) => handleChange('gpa', e.target.value ? parseFloat(e.target.value) : null)}
+                      placeholder="e.g., 3.85"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      GPA Scale
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="w-full border-slate-300 bg-white text-slate-900 rounded-md px-3 py-2"
+                      value={formData.gpa_max || ''}
+                      onChange={(e) => handleChange('gpa_max', e.target.value ? parseFloat(e.target.value) : null)}
+                      placeholder="e.g., 4.00"
+                    />
+                  </div>
+                </div>
+
+                {/* Honors & Awards */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Honors & Awards
+                  </label>
+                  <textarea
+                    className="w-full border border-slate-300 bg-white text-slate-900 rounded-md px-3 py-2 focus-visible:ring-blue-500"
+                    rows={2}
+                    value={formData.honors_awards || ''}
+                    onChange={(e) => handleChange('honors_awards', e.target.value || null)}
+                    placeholder="List any honors, awards, or achievements..."
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    Include Dean's List, scholarships, or academic awards
+                  </p>
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    className="w-full border border-slate-300 bg-white text-slate-900 rounded-md px-3 py-2 focus-visible:ring-blue-500"
+                    rows={3}
+                    value={formData.description || ''}
+                    onChange={(e) => handleChange('description', e.target.value || null)}
+                    placeholder="Additional details about your education..."
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    Add relevant coursework, projects, or activities
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex-shrink-0 gap-3 border-t border-slate-200 bg-white px-6 py-4">
+            <div className="flex w-full items-center justify-end gap-3">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={onClose}
+                disabled={saving}
+                className="min-w-[120px] border border-slate-300 bg-white text-slate-600 hover:bg-slate-100"
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={saving}>
+              <Button
+                type="submit"
+                disabled={saving}
+                className="min-w-[160px] bg-blue-600 text-white shadow-lg shadow-blue-500/30 hover:bg-blue-600/90"
+              >
                 {saving ? 'Saving...' : mode === 'create' ? 'Add Education' : 'Save Changes'}
               </Button>
             </div>
-          </form>
-        </div>
-      </div>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -160,14 +160,16 @@ export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({ ch
       } catch (error: unknown) {
         consecutiveErrors++;
 
-        // Check if it's an authentication error
+        // Check if it's an authentication/session error
         const isAuthError = error instanceof Error &&
           (error.message.includes('Authentication failed') ||
-           error.message.includes('Unauthorized'));
+           error.message.includes('Unauthorized') ||
+           error.message.includes('Session refresh failed') ||
+           error.message.includes('Invalid or expired refresh token'));
 
         if (isAuthError) {
           // Authentication error - stop polling immediately
-          console.warn('Authentication error in notification polling, stopping');
+          console.warn('Authentication/session error in notification polling, stopping');
           if (pollingIntervalRef.current) {
             clearInterval(pollingIntervalRef.current);
             pollingIntervalRef.current = null;

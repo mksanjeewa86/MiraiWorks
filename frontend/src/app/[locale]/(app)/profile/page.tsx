@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
@@ -18,16 +19,17 @@ import {
   Phone,
   Camera,
   Eye,
+  BarChart3,
 } from 'lucide-react';
 import { makeAuthenticatedRequest } from '@/api/apiClient';
 import { useTranslations } from 'next-intl';
 import ImageCropModal from '@/components/ui/ImageCropModal';
 import UnifiedProfileView from '@/components/profile/UnifiedProfileView';
 import ProfilePreviewModal from '@/components/profile/ProfilePreviewModal';
-import ProfileViewsAnalytics from '@/components/profile/ProfileViewsAnalytics';
 
 function ProfilePageContent() {
   const { user } = useAuth();
+  const router = useRouter();
   const t = useTranslations('profile');
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -587,30 +589,53 @@ function ProfilePageContent() {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex flex-col gap-2 sm:flex-row lg:flex-col items-stretch sm:items-center">
-                  {!editing && (
-                    <Button
-                      variant="outline"
-                      leftIcon={<Eye className="h-4 w-4" />}
-                      onClick={() => user?.id && setPreviewModalOpen(true)}
-                      className="w-full sm:w-auto"
-                    >
-                      {t('page.viewPublic')}
-                    </Button>
+                <div className="flex flex-col gap-2 items-stretch">
+                  {!editing ? (
+                    <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
+                      {/* View Analytics button - primary blue - double width */}
+                      <button
+                        onClick={() => router.push('/profile/analytics')}
+                        className="flex-[2] min-w-[140px] inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg bg-blue-600 dark:bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 dark:hover:bg-blue-700"
+                      >
+                        <BarChart3 className="h-4 w-4" />
+                        <span>View Analytics</span>
+                      </button>
+                      {/* Edit button - light gray - normal width */}
+                      <button
+                        onClick={() => setEditing(true)}
+                        className="flex-1 min-w-[100px] inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm font-semibold hover:bg-gray-200 dark:hover:bg-gray-700"
+                      >
+                        <Edit className="h-4 w-4" />
+                        <span>Edit</span>
+                      </button>
+                      {/* View As button - light gray - normal width */}
+                      <button
+                        onClick={() => user?.id && setPreviewModalOpen(true)}
+                        className="flex-1 min-w-[100px] inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm font-semibold hover:bg-gray-200 dark:hover:bg-gray-700"
+                      >
+                        <Eye className="h-4 w-4" />
+                        <span>View As</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <button
+                        onClick={handleCancelEdit}
+                        disabled={saving}
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50 text-gray-700 dark:text-gray-300 text-sm font-semibold hover:bg-white dark:hover:bg-gray-900 hover:shadow-lg hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                      >
+                        {t('actions.cancel')}
+                      </button>
+                      <button
+                        onClick={handleSaveProfile}
+                        disabled={saving}
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-blue-600 dark:bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 dark:hover:bg-blue-700 hover:shadow-lg hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                      >
+                        <Edit className="h-4 w-4" />
+                        <span>{saving ? t('actions.saving') : t('actions.saveProfile')}</span>
+                      </button>
+                    </>
                   )}
-                  {editing && (
-                    <Button variant="outline" onClick={handleCancelEdit} disabled={saving} className="w-full sm:w-auto">
-                      {t('actions.cancel')}
-                    </Button>
-                  )}
-                  <Button
-                    leftIcon={<Edit className="h-4 w-4" />}
-                    onClick={editing ? handleSaveProfile : () => setEditing(true)}
-                    disabled={saving}
-                    className="w-full sm:w-auto"
-                  >
-                    {saving ? t('actions.saving') : editing ? t('actions.saveProfile') : t('actions.editProfile')}
-                  </Button>
                 </div>
               </div>
 
@@ -643,16 +668,6 @@ function ProfilePageContent() {
           {/* Profile Sections using UnifiedProfileView */}
           <div className="mt-6 space-y-6 pb-8">
             <UnifiedProfileView isOwnProfile={true} readOnly={false} />
-
-            {/* Profile Views Analytics */}
-            {user?.id && (
-              <div className="mt-8">
-                <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>
-                  Profile View Analytics
-                </h2>
-                <ProfileViewsAnalytics userId={user.id} days={30} />
-              </div>
-            )}
           </div>
         </div>
       </div>
