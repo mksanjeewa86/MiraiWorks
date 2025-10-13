@@ -34,7 +34,7 @@ class Feature(BaseModel):
     # Relationships
     parent = relationship(
         "Feature",
-        remote_side=[id],
+        remote_side="features.c.id",
         back_populates="children",
         foreign_keys=[parent_feature_id]
     )

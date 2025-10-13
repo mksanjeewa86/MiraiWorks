@@ -26,9 +26,16 @@ class CalendarEvent(BaseModel):
     # Relationships
     creator = relationship("User", back_populates="calendar_events")
     parent_event = relationship(
-        "CalendarEvent", remote_side=[id], back_populates="child_events"
+        "CalendarEvent",
+        remote_side="calendar_events.c.id",
+        back_populates="child_events",
+        foreign_keys=[parent_event_id],
     )
-    child_events = relationship("CalendarEvent", back_populates="parent_event")
+    child_events = relationship(
+        "CalendarEvent",
+        back_populates="parent_event",
+        foreign_keys="CalendarEvent.parent_event_id",
+    )
 
     def __str__(self) -> str:
         return f"CalendarEvent(id={self.id}, title='{self.title}', start={self.start_datetime})"

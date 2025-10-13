@@ -45,7 +45,11 @@ class Message(BaseModel):
     # Relationships
     sender = relationship("User", foreign_keys=[sender_id])
     recipient = relationship("User", foreign_keys=[recipient_id])
-    reply_to = relationship("Message", remote_side=[id])
+    reply_to = relationship(
+        "Message",
+        remote_side="messages.c.id",
+        foreign_keys=[reply_to_id]
+    )
     attachments = relationship("Attachment", back_populates="message")
 
     def __repr__(self):

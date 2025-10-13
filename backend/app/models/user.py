@@ -134,8 +134,9 @@ class User(BaseModel):
         cascade="all, delete-orphan",
     )
 
-    # Creator relationship (who created this user)
-    creator = relationship("User", remote_side="User.id", post_update=True)
+    # Note: created_by column exists above, but no relationship is defined
+    # to avoid circular reference issues with self-referential User relationships
+    # If needed, query User.created_by directly to get the creator's ID
 
     # Workflow relationships
     created_workflows = relationship(

@@ -22,6 +22,7 @@ export const authApi = {
   async me(token: string): Promise<ApiResponse<User>> {
     // For this method we need to pass token manually since it's called before auth context is set up
     const response = await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.AUTH.ME}`, {
+      credentials: 'include',
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -57,6 +58,7 @@ export const authApi = {
       // Use manual fetch since logout should work even if auth fails
       const response = await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.AUTH.LOGOUT}`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',

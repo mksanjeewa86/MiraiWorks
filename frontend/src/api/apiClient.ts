@@ -42,6 +42,7 @@ export const makeAuthenticatedRequest = async <T>(
       const response = await fetch(`${API_CONFIG.BASE_URL}${url}`, {
         ...options,
         signal: controller.signal,
+        credentials: 'include', // Required for CORS with credentials
         headers: {
           // Don't set Content-Type for FormData (browser will set it with boundary)
           ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
@@ -148,6 +149,7 @@ export const makePublicRequest = async <T>(
 ): Promise<{ data: T }> => {
   const response = await fetch(`${API_CONFIG.BASE_URL}${url}`, {
     ...options,
+    credentials: 'include', // Required for CORS with credentials
     headers: {
       'Content-Type': 'application/json',
       ...options.headers,
