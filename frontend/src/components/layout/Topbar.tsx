@@ -3,7 +3,7 @@
 import NotificationDropdown from '@/components/notifications/NotificationDropdown';
 import { useAuth } from '@/contexts/AuthContext';
 import type { TopbarProps } from '@/types/components';
-import { LogOut, Settings, User, ChevronDown } from 'lucide-react';
+import { LogOut, Settings, User, ChevronDown, Building2 } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import { ROUTES } from '@/routes/config';
 import { useLocaleRouter } from '@/hooks/useLocaleRouter';
@@ -71,6 +71,15 @@ export default function Topbar({ pageTitle, pageDescription }: TopbarProps = {})
   const handleSettingsClick = () => {
     router.push(ROUTES.SETTINGS);
   };
+
+  const handleCompanyProfileClick = () => {
+    router.push(ROUTES.COMPANY_PROFILE);
+  };
+
+  // Check if user is employer or recruiter (member or admin role)
+  const isCompanyUser = user?.roles?.some((userRole) =>
+    userRole.role.name === 'member' || userRole.role.name === 'admin'
+  );
 
   return (
     <header
@@ -198,6 +207,25 @@ export default function Topbar({ pageTitle, pageDescription }: TopbarProps = {})
                       <p className="text-xs text-gray-500 dark:text-gray-400">Manage your preferences</p>
                     </div>
                   </button>
+
+                  {/* Company Profile - Only for employers and recruiters */}
+                  {isCompanyUser && (
+                    <button
+                      onClick={() => {
+                        handleCompanyProfileClick();
+                        setIsUserMenuOpen(false);
+                      }}
+                      className={`w-full flex items-center gap-3 px-4 py-3 mt-1 ${colorScheme.buttonHover} rounded-xl transition-all duration-200 group`}
+                    >
+                      <div className={`w-9 h-9 ${colorScheme.brandAccent} rounded-lg flex items-center justify-center transition-transform group-hover:scale-110`}>
+                        <Building2 className={`h-4 w-4 ${colorScheme.textPrimary}`} />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white">Company Profile</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">View your company information</p>
+                      </div>
+                    </button>
+                  )}
 
                   <div className="h-px bg-gray-200 dark:bg-gray-700 my-2"></div>
 

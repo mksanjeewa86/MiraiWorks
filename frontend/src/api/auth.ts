@@ -53,21 +53,22 @@ export const authApi = {
     return { data: response.data, success: true };
   },
 
-  async logout(token: string): Promise<void> {
+  async logout(refreshToken: string): Promise<void> {
     try {
-      // Use manual fetch since logout should work even if auth fails
+      // Send refresh token in request body as backend expects
       const response = await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.AUTH.LOGOUT}`, {
         method: 'POST',
         credentials: 'include',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          refresh_token: refreshToken,
+        }),
       });
 
-      // If token is expired (401), that's fine - we still want to logout locally
-      if (!response.ok && response.status !== 401) {
-        console.warn('Logout API returned non-401 error:', response.status);
+      if (!response.ok) {
+        console.warn('Logout API returned error:', response.status);
       }
     } catch (error) {
       // Don't throw error for logout - just clear local storage regardless

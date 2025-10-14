@@ -23,7 +23,7 @@ export interface PageInfo {
 // ====================
 
 export interface SettingsState {
-  activeSection: 'account' | 'security' | 'notifications' | 'preferences' | 'calendar' | 'job-preferences' | 'company-profile';
+  activeSection: 'security' | 'notifications' | 'preferences' | 'calendar' | 'job-preferences' | 'company-profile' | 'blocked-companies';
   loading: boolean;
   autoSaving: boolean;
   passwordSaving: boolean;

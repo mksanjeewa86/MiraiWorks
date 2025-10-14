@@ -93,6 +93,9 @@ export const ROUTES = {
     EDIT: (id: string | number) => `/companies/${id}/edit`,
   },
 
+  // ===== COMPANY PROFILE ROUTES =====
+  COMPANY_PROFILE: '/company-profile',
+
   // ===== DASHBOARD ROUTES =====
   DASHBOARD: '/dashboard',
 

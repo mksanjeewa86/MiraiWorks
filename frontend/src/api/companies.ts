@@ -53,4 +53,37 @@ export const companiesApi = {
     await apiClient.delete<void>(API_ENDPOINTS.COMPANIES.BY_ID(id.toString()));
     return { data: undefined, success: true };
   },
+
+  /**
+   * Get current user's company profile
+   */
+  async getMyCompany(): Promise<ApiResponse<Company>> {
+    try {
+      const response = await apiClient.get<Company>(API_ENDPOINTS.COMPANIES.MY_COMPANY);
+      return { data: response.data, success: true };
+    } catch (error: any) {
+      return {
+        success: false,
+        errors: [error.response?.data?.detail || 'Failed to fetch company profile'],
+      };
+    }
+  },
+
+  /**
+   * Update current user's company profile (admin only)
+   */
+  async updateMyCompany(companyData: Partial<Company>): Promise<ApiResponse<Company>> {
+    try {
+      const response = await apiClient.put<Company>(
+        API_ENDPOINTS.COMPANIES.MY_COMPANY,
+        companyData
+      );
+      return { data: response.data, success: true };
+    } catch (error: any) {
+      return {
+        success: false,
+        errors: [error.response?.data?.detail || 'Failed to update company profile'],
+      };
+    }
+  },
 };

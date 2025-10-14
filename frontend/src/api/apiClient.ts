@@ -5,7 +5,7 @@ import { apiRateLimiter, checkRateLimit } from '@/utils/rateLimiter';
 // Global auth handler reference
 let authHandlerRef: {
   logout?: () => void;
-  refreshAuth?: () => Promise<unknown>;
+  refreshAuth?: (silent?: boolean) => Promise<unknown>;
 } = {};
 
 // Set auth handler (called from AuthContext)
@@ -24,7 +24,8 @@ const getAuthToken = (): string | null => {
 // Enhanced request handler with automatic auth error handling
 export const makeAuthenticatedRequest = async <T>(
   url: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  silent: boolean = false
 ): Promise<{ data: T }> => {
   // Check rate limit before making request
   checkRateLimit(apiRateLimiter, url);
@@ -70,7 +71,7 @@ export const makeAuthenticatedRequest = async <T>(
       // Try to refresh the token once
       if (authHandlerRef.refreshAuth) {
         try {
-          await authHandlerRef.refreshAuth();
+          await authHandlerRef.refreshAuth(silent);
           const newToken = getAuthToken();
 
           // Retry the request with new token
@@ -79,11 +80,16 @@ export const makeAuthenticatedRequest = async <T>(
           // Refresh failed - don't logout, just throw error
           // This allows the user to stay logged in even if refresh fails
           // They'll only be truly logged out when they manually logout or their session fully expires
-          console.warn('Token refresh failed, but keeping user session:', refreshError);
+          if (!silent) {
+            console.warn('Token refresh failed, but keeping user session:', refreshError);
+          }
           throw new Error('Session refresh failed. Some features may be unavailable.');
         }
       } else {
         // No refresh handler available - throw error without logout
+        if (!silent) {
+          console.error('No refresh handler available');
+        }
         throw new Error('Authentication failed. Please try refreshing the page.');
       }
     }
@@ -124,6 +130,11 @@ export const makeAuthenticatedRequest = async <T>(
       }
 
       throw new Error(errorMessage);
+    }
+
+    // Handle 204 No Content responses (no body to parse)
+    if (response.status === 204) {
+      return { data: null as T };
     }
 
     const data = await response.json();
@@ -196,9 +207,9 @@ export const makePublicRequest = async <T>(
 
 // Standard HTTP methods
 export const apiClient = {
-  get: <T>(url: string) => makeAuthenticatedRequest<T>(url, { method: 'GET' }),
+  get: <T>(url: string, silent?: boolean) => makeAuthenticatedRequest<T>(url, { method: 'GET' }, silent),
 
-  post: <T>(url: string, data?: unknown, config?: { headers?: Record<string, string> }) => {
+  post: <T>(url: string, data?: unknown, config?: { headers?: Record<string, string>; silent?: boolean }) => {
     const isFormData = data instanceof FormData;
     const options: RequestInit = {
       method: 'POST',
@@ -206,22 +217,22 @@ export const apiClient = {
       ...(config?.headers && { headers: config.headers }),
     };
 
-    return makeAuthenticatedRequest<T>(url, options);
+    return makeAuthenticatedRequest<T>(url, options, config?.silent);
   },
 
-  put: <T>(url: string, data?: unknown) =>
+  put: <T>(url: string, data?: unknown, silent?: boolean) =>
     makeAuthenticatedRequest<T>(url, {
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
-    }),
+    }, silent),
 
-  patch: <T>(url: string, data?: unknown) =>
+  patch: <T>(url: string, data?: unknown, silent?: boolean) =>
     makeAuthenticatedRequest<T>(url, {
       method: 'PATCH',
       body: data ? JSON.stringify(data) : undefined,
-    }),
+    }, silent),
 
-  delete: <T>(url: string) => makeAuthenticatedRequest<T>(url, { method: 'DELETE' }),
+  delete: <T>(url: string, silent?: boolean) => makeAuthenticatedRequest<T>(url, { method: 'DELETE' }, silent),
 };
 
 // Public client for non-authenticated requests

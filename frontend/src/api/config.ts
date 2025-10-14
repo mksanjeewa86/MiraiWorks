@@ -140,6 +140,13 @@ export const API_ENDPOINTS = {
     VERIFY_2FA: '/api/auth/2fa/verify',
   },
 
+  // Blocked Companies endpoints
+  BLOCKED_COMPANIES: {
+    BASE: '/api/blocked-companies',
+    BY_ID: (id: number | string) => `/api/blocked-companies/${id}`,
+    SEARCH: '/api/blocked-companies/search',
+  },
+
   // Calendar endpoints
   CALENDAR: {
     ACCOUNTS: {
@@ -173,6 +180,7 @@ export const API_ENDPOINTS = {
   COMPANIES: {
     BASE: '/api/admin/companies',
     BY_ID: (id: string) => `/api/admin/companies/${id}`,
+    MY_COMPANY: '/api/companies/my-company',
   },
 
   // Company Connections endpoints (new company-based connection system)

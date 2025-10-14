@@ -276,6 +276,13 @@ class User(BaseModel):
         cascade="all, delete-orphan",
     )
 
+    # Blocked companies relationship
+    blocked_companies = relationship(
+        "BlockedCompany",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
     @property
     def full_name(self):
         return f"{self.first_name} {self.last_name}"

@@ -3,20 +3,21 @@ import { apiClient } from './apiClient';
 import type { NotificationsResponse, UnreadCountResponse } from '@/types/notification';
 
 export const notificationsApi = {
-  async getNotifications(limit = 50, unreadOnly = false): Promise<NotificationsResponse> {
+  async getNotifications(limit = 50, unreadOnly = false, silent = false): Promise<NotificationsResponse> {
     const params = new URLSearchParams({
       limit: limit.toString(),
       unread_only: unreadOnly.toString(),
     });
 
     const url = `${API_ENDPOINTS.NOTIFICATIONS.BASE}?${params.toString()}`;
-    const response = await apiClient.get<NotificationsResponse>(url);
+    const response = await apiClient.get<NotificationsResponse>(url, silent);
     return response.data;
   },
 
-  async getUnreadCount(): Promise<UnreadCountResponse> {
+  async getUnreadCount(silent = false): Promise<UnreadCountResponse> {
     const response = await apiClient.get<UnreadCountResponse>(
-      API_ENDPOINTS.NOTIFICATIONS.UNREAD_COUNT
+      API_ENDPOINTS.NOTIFICATIONS.UNREAD_COUNT,
+      silent
     );
     return response.data;
   },

@@ -163,6 +163,7 @@ export default function ProfilePreviewModal({
                     unoptimized
                     className="object-cover"
                     priority
+                    loading="eager"
                   />
                 )}
                 {/* Preview Mode Badge - Top Left */}
@@ -192,6 +193,8 @@ export default function ProfilePreviewModal({
                               height={160}
                               unoptimized
                               className="w-32 h-32 lg:w-40 lg:h-40 rounded-full object-cover border-4 border-white dark:border-gray-800 shadow-lg"
+                              priority
+                              loading="eager"
                             />
                           ) : (
                             <div className="w-32 h-32 lg:w-40 lg:h-40 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-4xl font-bold border-4 border-white dark:border-gray-800 shadow-lg">

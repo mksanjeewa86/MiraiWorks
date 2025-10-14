@@ -2,6 +2,7 @@
 from app.models.attachment import Attachment
 from app.models.audit import AuditLog
 from app.models.auth import OauthAccount, PasswordResetRequest, RefreshToken
+from app.models.blocked_company import BlockedCompany
 from app.models.calendar_connection import CalendarConnection
 from app.models.calendar_event import CalendarEvent
 from app.models.calendar_integration import ExternalCalendarAccount, SyncedEvent
@@ -83,6 +84,7 @@ from app.models.workflow_node_execution import WorkflowNodeExecution
 from app.models.workflow_viewer import WorkflowViewer
 
 __all__ = [
+    "BlockedCompany",
     "Company",
     "CompanyConnection",
     "User",

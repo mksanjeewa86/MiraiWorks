@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from app.endpoints import (
     assignment_workflow,
     auth,
+    blocked_company,
     calendar,
     calendar_connections,
     companies,
@@ -57,6 +58,9 @@ def include_routers(app: FastAPI) -> None:
     app.include_router(
         assignment_workflow.router, prefix="/api/assignments", tags=["assignments"]
     )
+    app.include_router(
+        blocked_company.router, prefix="/api", tags=["blocked-companies"]
+    )
     app.include_router(calendar.router, prefix="/api/calendar", tags=["calendar"])
     app.include_router(
         calendar_connections.router, prefix="/api/user", tags=["calendar-connections"]
@@ -67,6 +71,7 @@ def include_routers(app: FastAPI) -> None:
         tags=["workflow-candidates"],
     )
     app.include_router(companies.router, prefix="/api/admin", tags=["companies"])
+    app.include_router(companies.router, prefix="/api/companies", tags=["companies-user"])
     app.include_router(
         company_connections.router,
         prefix="/api/company-connections",

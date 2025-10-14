@@ -203,6 +203,21 @@ class AuthRoutes:
     TWO_FA_VERIFY = "/2fa/verify"
 
 
+class BlockedCompanyRoutes:
+    """
+    Blocked company management endpoints.
+
+    Allows candidates to block companies from:
+    - Viewing their profile
+    - Receiving recommendations for these companies
+    - Being contacted by recruiters from these companies
+    """
+
+    BASE = "/blocked-companies"
+    BY_ID = "/blocked-companies/{blocked_company_id}"
+    SEARCH = "/blocked-companies/search"
+
+
 class CalendarConnectionRoutes:
     """Calendar connection endpoints."""
 
@@ -281,7 +296,9 @@ class CompanyRoutes:
     BY_ID = "/companies/{company_id}"
     CREATE = "/companies"
     DELETE = "/companies/{company_id}"
+    MY_COMPANY = "/my-company"
     UPDATE = "/companies/{company_id}"
+    UPDATE_MY_COMPANY = "/my-company"
 
 
 class ConnectionInvitationRoutes:
@@ -957,6 +974,7 @@ class API_ROUTES:
     ADMIN = AdminRoutes
     ASSIGNMENTS = AssignmentRoutes
     AUTH = AuthRoutes
+    BLOCKED_COMPANIES = BlockedCompanyRoutes
     CALENDAR = CalendarRoutes
     CALENDAR_CONNECTIONS = CalendarConnectionRoutes
     COMPANIES = CompanyRoutes
@@ -1020,6 +1038,7 @@ __all__ = [
     "AdminRoutes",
     "AssignmentRoutes",
     "AuthRoutes",
+    "BlockedCompanyRoutes",
     "CalendarConnectionRoutes",
     "CalendarRoutes",
     "CompanyConnectionRoutes",

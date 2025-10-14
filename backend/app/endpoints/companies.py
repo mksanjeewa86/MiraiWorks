@@ -438,3 +438,142 @@ async def get_company_admin_status(
     return CompanyAdminStatus(
         company_id=company_id, has_active_admin=admin_count > 0, admin_count=admin_count
     )
+
+
+@router.get(API_ROUTES.COMPANIES.MY_COMPANY, response_model=CompanyResponse)
+async def get_my_company(
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get current user's company profile."""
+    # Check if user is part of a company
+    if not current_user.company_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="You are not associated with any company"
+        )
+
+    # Check if user is a company user (member or admin)
+    user_roles = [user_role.role.name for user_role in current_user.user_roles]
+    is_company_user = any(
+        role in [UserRoleEnum.MEMBER.value, UserRoleEnum.ADMIN.value, UserRoleEnum.SYSTEM_ADMIN.value]
+        for role in user_roles
+    )
+
+    if not is_company_user:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only company users can access company profile"
+        )
+
+    company_data = await company_crud.company.get_with_counts(db, current_user.company_id)
+
+    if not company_data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Company not found"
+        )
+
+    company, user_count, job_count = company_data
+
+    return CompanyResponse(
+        id=company.id,
+        name=company.name,
+        type=company.type,
+        email=company.email,
+        phone=company.phone,
+        website=company.website,
+        postal_code=company.postal_code,
+        prefecture=company.prefecture,
+        city=company.city,
+        description=company.description,
+        is_active=company.is_active == "1",
+        user_count=user_count or 0,
+        job_count=job_count or 0,
+        is_deleted=company.is_deleted,
+        deleted_at=company.deleted_at.isoformat() if company.deleted_at else None,
+        deleted_by=company.deleted_by,
+        created_at=company.created_at.isoformat(),
+        updated_at=company.updated_at.isoformat(),
+    )
+
+
+@router.put(API_ROUTES.COMPANIES.UPDATE_MY_COMPANY, response_model=CompanyResponse)
+async def update_my_company(
+    company_data: CompanyUpdate,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Update current user's company profile. Only company admins can update."""
+    # Check if user is part of a company
+    if not current_user.company_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="You are not associated with any company"
+        )
+
+    # Check if user is admin
+    user_roles = [user_role.role.name for user_role in current_user.user_roles]
+    is_admin = any(
+        role in [UserRoleEnum.ADMIN.value, UserRoleEnum.SYSTEM_ADMIN.value]
+        for role in user_roles
+    )
+
+    if not is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only company admins can update company profile"
+        )
+
+    company = await company_crud.company.get(db, current_user.company_id)
+    if not company:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Company not found"
+        )
+
+    update_data = company_data.model_dump(exclude_unset=True)
+
+    # Check for duplicate email if email is being updated
+    if "email" in update_data and update_data["email"] != company.email:
+        existing_company_query = select(Company).where(
+            Company.email == update_data["email"]
+        )
+        existing_company_result = await db.execute(existing_company_query)
+        if existing_company_result.scalar_one_or_none():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Company with this email already exists",
+            )
+
+    if "is_active" in update_data:
+        update_data["is_active"] = "1" if update_data["is_active"] else "0"
+
+    company = await company_crud.company.update(db, db_obj=company, obj_in=update_data)
+
+    company_data_with_counts = await company_crud.company.get_with_counts(
+        db, current_user.company_id
+    )
+    if company_data_with_counts:
+        company, user_count, job_count = company_data_with_counts
+    else:
+        user_count = job_count = 0
+
+    return CompanyResponse(
+        id=company.id,
+        name=company.name,
+        type=company.type,
+        email=company.email,
+        phone=company.phone,
+        website=company.website,
+        postal_code=company.postal_code,
+        prefecture=company.prefecture,
+        city=company.city,
+        description=company.description,
+        is_active=company.is_active == "1",
+        user_count=user_count or 0,
+        job_count=job_count or 0,
+        is_deleted=company.is_deleted,
+        deleted_at=company.deleted_at.isoformat() if company.deleted_at else None,
+        deleted_by=company.deleted_by,
+        created_at=company.created_at.isoformat(),
+        updated_at=company.updated_at.isoformat(),
+    )

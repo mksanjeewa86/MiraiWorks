@@ -122,8 +122,8 @@ export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({ ch
 
     const pollForNotifications = async () => {
       try {
-        // Get latest notifications
-        const response = await notificationsApi.getNotifications(10);
+        // Get latest notifications - use silent mode to suppress auth error logs
+        const response = await notificationsApi.getNotifications(10, false, true);
         const latestNotifications = response.notifications;
 
         // Reset error counter on successful request
@@ -153,8 +153,12 @@ export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({ ch
             // Update the baseline
             lastNotificationId = newestNotificationId;
 
-            // Refresh unread count
-            await refreshUnreadCount();
+            // Refresh unread count - also silent
+            await notificationsApi.getUnreadCount(true).then(result => {
+              setUnreadCount(result.unread_count);
+            }).catch(() => {
+              // Silently ignore unread count errors during polling
+            });
           }
         }
       } catch (error: unknown) {
@@ -168,8 +172,7 @@ export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({ ch
            error.message.includes('Invalid or expired refresh token'));
 
         if (isAuthError) {
-          // Authentication error - stop polling immediately
-          console.warn('Authentication/session error in notification polling, stopping');
+          // Authentication error - stop polling silently
           if (pollingIntervalRef.current) {
             clearInterval(pollingIntervalRef.current);
             pollingIntervalRef.current = null;
@@ -177,6 +180,7 @@ export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({ ch
           return; // Exit early for auth errors
         }
 
+        // Only log non-auth errors
         console.error('Failed to poll for notifications:', error);
 
         // If we get too many consecutive errors, stop polling

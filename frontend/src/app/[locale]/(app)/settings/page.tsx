@@ -8,8 +8,10 @@ import { userSettingsApi } from '@/api/userSettings';
 import { calendarApi } from '@/api/calendar';
 import { subscriptionPlanApi, planChangeRequestApi } from '@/api/subscription';
 import { getJobPreferences, createJobPreferences, updateJobPreferences } from '@/api/profile';
+import { getBlockedCompanies, blockCompany, unblockCompany, searchCompanies } from '@/api/blocked-companies';
 import { UserSettings, CalendarConnection } from '@/types';
 import type { JobPreference, JobPreferenceCreate, JobPreferenceUpdate } from '@/types/profile';
+import type { BlockedCompany, CompanySearchResult } from '@/types/blocked-company';
 import JobPreferencesModal from '@/components/profile/JobPreferencesModal';
 import { useMySubscription, useMyPlanChangeRequests, usePlanChangeRequestMutations, useSubscriptionPlans } from '@/hooks/useSubscription';
 import AppLayout from '@/components/layout/AppLayout';
@@ -23,7 +25,6 @@ import {
   Save,
   Shield,
   Bell,
-  User,
   Eye,
   EyeOff,
   Smartphone,
@@ -43,6 +44,9 @@ import {
   X,
   Star,
   Briefcase,
+  Ban,
+  Search,
+  Plus,
 } from 'lucide-react';
 import type { SettingsState } from '@/types/pages';
 
@@ -53,7 +57,7 @@ function SettingsPageContent() {
   const router = useRouter();
 
   const [state, setState] = useState<SettingsState>({
-    activeSection: 'account',
+    activeSection: 'security',
     loading: true,
     autoSaving: false,
     passwordSaving: false,
@@ -101,6 +105,15 @@ function SettingsPageContent() {
   const [jobPreferencesModal, setJobPreferencesModal] = useState<{ isOpen: boolean; mode: 'create' | 'edit' }>({
     isOpen: false,
     mode: 'create'
+  });
+
+  const [blockedCompaniesState, setBlockedCompaniesState] = useState({
+    companies: [] as BlockedCompany[],
+    loading: false,
+    searchQuery: '',
+    searchResults: [] as CompanySearchResult[],
+    searching: false,
+    error: null as string | null,
   });
 
   const [showPasswords, setShowPasswords] = useState({
@@ -166,6 +179,27 @@ function SettingsPageContent() {
       }
     };
     loadJobPreferences();
+  }, [state.activeSection, user, isCandidate]);
+
+  // Load blocked companies when blocked-companies section is active
+  useEffect(() => {
+    const loadBlockedCompanies = async () => {
+      if (state.activeSection === 'blocked-companies' && user && isCandidate) {
+        setBlockedCompaniesState(prev => ({ ...prev, loading: true, error: null }));
+        try {
+          const response = await getBlockedCompanies();
+          if (response.success && response.data) {
+            setBlockedCompaniesState(prev => ({ ...prev, companies: response.data!, loading: false }));
+          } else {
+            setBlockedCompaniesState(prev => ({ ...prev, error: response.errors?.[0] || 'Failed to load blocked companies', loading: false }));
+          }
+        } catch (error) {
+          console.error('Failed to load blocked companies:', error);
+          setBlockedCompaniesState(prev => ({ ...prev, error: 'Failed to load blocked companies', loading: false }));
+        }
+      }
+    };
+    loadBlockedCompanies();
   }, [state.activeSection, user, isCandidate]);
 
   // Fetch features for higher-priced plans
@@ -595,9 +629,69 @@ function SettingsPageContent() {
     }
   };
 
+  // Blocked Companies Handlers
+  const handleSearchCompanies = async (query: string) => {
+    setBlockedCompaniesState(prev => ({ ...prev, searchQuery: query }));
+
+    if (!query || query.length < 2) {
+      setBlockedCompaniesState(prev => ({ ...prev, searchResults: [], searching: false }));
+      return;
+    }
+
+    setBlockedCompaniesState(prev => ({ ...prev, searching: true }));
+    try {
+      const response = await searchCompanies(query, 10);
+      if (response.success && response.data) {
+        setBlockedCompaniesState(prev => ({ ...prev, searchResults: response.data!, searching: false }));
+      } else {
+        setBlockedCompaniesState(prev => ({ ...prev, searchResults: [], searching: false }));
+      }
+    } catch (error) {
+      console.error('Failed to search companies:', error);
+      setBlockedCompaniesState(prev => ({ ...prev, searchResults: [], searching: false }));
+    }
+  };
+
+  const handleBlockCompany = async (companyId?: number, companyName?: string) => {
+    if (!companyId && !companyName) return;
+
+    try {
+      const response = await blockCompany({ company_id: companyId, company_name: companyName });
+      if (response.success && response.data) {
+        setBlockedCompaniesState(prev => ({
+          ...prev,
+          companies: [...prev.companies, response.data!],
+          searchQuery: '',
+          searchResults: [],
+        }));
+      } else {
+        setBlockedCompaniesState(prev => ({ ...prev, error: response.errors?.[0] || 'Failed to block company' }));
+      }
+    } catch (error) {
+      console.error('Failed to block company:', error);
+      setBlockedCompaniesState(prev => ({ ...prev, error: 'Failed to block company' }));
+    }
+  };
+
+  const handleUnblockCompany = async (blockedCompanyId: number) => {
+    try {
+      const response = await unblockCompany(blockedCompanyId);
+      if (response.success) {
+        setBlockedCompaniesState(prev => ({
+          ...prev,
+          companies: prev.companies.filter(c => c.id !== blockedCompanyId),
+        }));
+      } else {
+        setBlockedCompaniesState(prev => ({ ...prev, error: response.errors?.[0] || 'Failed to unblock company' }));
+      }
+    } catch (error) {
+      console.error('Failed to unblock company:', error);
+      setBlockedCompaniesState(prev => ({ ...prev, error: 'Failed to unblock company' }));
+    }
+  };
+
   // Sections configuration (isCompanyAdmin already defined at top)
   const sections = [
-    { id: 'account', name: t('tabs.account'), icon: User, description: t('account.subtitle') },
     { id: 'security', name: t('tabs.security'), icon: Shield, description: t('security.subtitle') },
     {
       id: 'notifications',
@@ -623,6 +717,12 @@ function SettingsPageContent() {
       icon: Briefcase,
       description: 'Manage your job search preferences and career goals',
     }] : []),
+    ...(isCandidate ? [{
+      id: 'blocked-companies' as const,
+      name: 'Blocked Companies',
+      icon: Ban,
+      description: 'Manage companies you want to block from viewing your profile',
+    }] : []),
     ...(isCompanyAdmin ? [{
       id: 'company-profile' as const,
       name: t('companyProfile.title'),
@@ -630,89 +730,6 @@ function SettingsPageContent() {
       description: t('companyProfile.subtitle'),
     }] : []),
   ];
-
-  const renderAccountSection = () => (
-    <div className="space-y-8 relative">
-      {/* Background Pattern & Floating Elements */}
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiM5Q0EzQUYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0ibTM2IDM0IDIyLTIyIDQgMjIgNC0yIDAtMiAyLTQgMC0yem0wLTIyIDIwIDIwLTEyIDEyLTEyIDAgMC04IDEyLTEyem0yNCAyNCAxMi0xMiAwLTggMC0xMC00IDAgMCA0aC04djhoLTRsLTQgMCA0IDRoMTJ6bTAtMTYgOC04IDAgMCAwIDhoLTh6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-10 pointer-events-none rounded-3xl"></div>
-      <div className="absolute top-10 left-10 w-32 h-32 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob pointer-events-none"></div>
-      <div className="absolute top-20 right-10 w-32 h-32 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob animation-delay-2000 pointer-events-none"></div>
-      <div className="absolute bottom-10 left-20 w-32 h-32 bg-pink-400 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob animation-delay-4000 pointer-events-none"></div>
-
-      {/* Header */}
-      <div className="relative z-10 animate-fade-in-up">
-        <h2 className="text-3xl font-extrabold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-          {t('account.title')}
-        </h2>
-        <p className="text-base" style={{ color: 'var(--text-secondary)' }}>
-          {t('account.subtitle')}
-        </p>
-      </div>
-
-      {/* Profile Information Card */}
-      <div className="relative z-10 bg-gradient-to-br from-white/80 to-white/60 dark:from-gray-800/80 dark:to-gray-800/60 backdrop-blur-xl rounded-3xl p-8 border-2 border-white/20 dark:border-gray-700/20 shadow-2xl transition-all duration-500 hover:shadow-blue-500/10 hover:border-blue-400/30 animate-fade-in-up">
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-              <Input
-                label={t('common.firstName')}
-                value={state.profile?.first_name || ''}
-                onChange={(e) => updateProfile('first_name', e.target.value)}
-                required
-              />
-            </div>
-            <div className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
-              <Input
-                label={t('common.lastName')}
-                value={state.profile?.last_name || ''}
-                onChange={(e) => updateProfile('last_name', e.target.value)}
-                required
-              />
-            </div>
-            <div className="animate-fade-in-up" style={{ animationDelay: '300ms' }}>
-              <Input
-                label={t('common.email')}
-                type="email"
-                value={state.profile?.email || ''}
-                onChange={(e) => updateProfile('email', e.target.value)}
-                required
-                disabled
-              />
-            </div>
-            <div className="animate-fade-in-up" style={{ animationDelay: '400ms' }}>
-              <Input
-                label={t('common.phone')}
-                value={state.profile?.phone || ''}
-                onChange={(e) => updateProfile('phone', e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="animate-fade-in-up" style={{ animationDelay: '500ms' }}>
-            <Input
-              label={t('common.jobTitle')}
-              value={state.profile?.job_title || ''}
-              onChange={(e) => updateProfile('job_title', e.target.value)}
-            />
-          </div>
-
-          <div className="animate-fade-in-up" style={{ animationDelay: '600ms' }}>
-            <label className="block text-sm font-bold mb-3 text-blue-700 dark:text-blue-300">
-              {t('common.bio')}
-            </label>
-            <textarea
-              className="w-full p-4 border-2 border-blue-200/50 dark:border-blue-700/50 rounded-2xl bg-white/60 dark:bg-gray-700/60 backdrop-blur-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all duration-300"
-              style={{ color: 'var(--text-primary)' }}
-              rows={4}
-              value={state.profile?.bio || ''}
-              onChange={(e) => updateProfile('bio', e.target.value)}
-              placeholder={t('common.bioPlaceholder')}
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 
   const renderSecuritySection = () => (
     <div className="space-y-8 relative">
@@ -2130,10 +2147,139 @@ function SettingsPageContent() {
     );
   };
 
+  const renderBlockedCompaniesSection = () => {
+    return (
+      <div className="space-y-8 relative">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiM5Q0EzQUYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0ibTM2IDM0IDIyLTIyIDQgMjIgNC0yIDAtMiAyLTQgMC0yem0wLTIyIDIwIDIwLTEyIDEyLTEyIDAgMC04IDEyLTEyem0yNCAyNCAxMi0xMiAwLTggMC0xMC00IDAgMCA0aC04djhoLTRsLTQgMCA0IDRoMTJ6bTAtMTYgOC04IDAgMCAwIDhoLTh6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-10 pointer-events-none rounded-3xl"></div>
+
+        {/* Header */}
+        <div className="relative z-10">
+          <h2 className="text-3xl font-extrabold mb-2 bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
+            Blocked Companies
+          </h2>
+          <p className="text-base text-gray-600 dark:text-gray-400">
+            Manage companies that you don't want to interact with
+          </p>
+        </div>
+
+        {/* Error Message */}
+        {blockedCompaniesState.error && (
+          <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-2xl p-4 flex items-start gap-3">
+            <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-red-800 dark:text-red-200">{blockedCompaniesState.error}</p>
+          </div>
+        )}
+
+        {/* Search and Add Company */}
+        <Card className="p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border-2 border-gray-200 dark:border-gray-700 shadow-xl">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Plus className="h-5 w-5 text-blue-600" />
+            Add Company to Block List
+          </h3>
+
+          <div className="space-y-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <Input
+                type="text"
+                placeholder="Search for a company..."
+                value={blockedCompaniesState.searchQuery}
+                onChange={(e) => handleSearchCompanies(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            {/* Search Results */}
+            {blockedCompaniesState.searching && (
+              <div className="flex items-center justify-center py-4">
+                <LoadingSpinner className="w-6 h-6" />
+              </div>
+            )}
+
+            {!blockedCompaniesState.searching && blockedCompaniesState.searchResults.length > 0 && (
+              <div className="border-2 border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                {blockedCompaniesState.searchResults.map((company) => (
+                  <button
+                    key={company.id}
+                    onClick={() => handleBlockCompany(company.id)}
+                    className="w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-b-0"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Building2 className="h-5 w-5 text-gray-400" />
+                      <span className="font-medium">{company.name}</span>
+                    </div>
+                    <Plus className="h-5 w-5 text-blue-600" />
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Option to add custom company name */}
+            {blockedCompaniesState.searchQuery.length >= 2 && !blockedCompaniesState.searching && (
+              <button
+                onClick={() => handleBlockCompany(undefined, blockedCompaniesState.searchQuery)}
+                className="w-full flex items-center gap-3 p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+              >
+                <Plus className="h-5 w-5 text-blue-600" />
+                <span className="text-sm font-medium">
+                  Block "{blockedCompaniesState.searchQuery}" (custom name)
+                </span>
+              </button>
+            )}
+          </div>
+        </Card>
+
+        {/* Blocked Companies List */}
+        <Card className="p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border-2 border-gray-200 dark:border-gray-700 shadow-xl">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Ban className="h-5 w-5 text-red-600" />
+            Blocked Companies ({blockedCompaniesState.companies.length})
+          </h3>
+
+          {blockedCompaniesState.loading ? (
+            <div className="flex items-center justify-center py-8">
+              <LoadingSpinner className="w-8 h-8" />
+            </div>
+          ) : blockedCompaniesState.companies.length === 0 ? (
+            <div className="text-center py-8">
+              <Ban className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+              <p className="text-gray-500 dark:text-gray-400">No companies blocked yet</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {blockedCompaniesState.companies.map((company) => (
+                <div
+                  key={company.id}
+                  className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600"
+                >
+                  <div className="flex items-center gap-3">
+                    <Building2 className="h-5 w-5 text-gray-400" />
+                    <div>
+                      <p className="font-medium">{company.company_name || `Company #${company.company_id}`}</p>
+                      {company.reason && (
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{company.reason}</p>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleUnblockCompany(company.id)}
+                    className="inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-semibold hover:bg-red-100 dark:hover:bg-red-900/30"
+                  >
+                    <X className="h-4 w-4" />
+                    <span>Unblock</span>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      </div>
+    );
+  };
+
   const renderCurrentSection = () => {
     switch (state.activeSection) {
-      case 'account':
-        return renderAccountSection();
       case 'security':
         return renderSecuritySection();
       case 'notifications':
@@ -2144,6 +2290,8 @@ function SettingsPageContent() {
         return renderCalendarSection();
       case 'job-preferences':
         return renderJobPreferencesSection();
+      case 'blocked-companies':
+        return renderBlockedCompaniesSection();
       case 'company-profile':
         return renderCompanyProfileSection();
       default:
@@ -2203,7 +2351,6 @@ function SettingsPageContent() {
                     setState((prev) => ({
                       ...prev,
                       activeSection: section.id as
-                        | 'account'
                         | 'security'
                         | 'notifications'
                         | 'calendar'
