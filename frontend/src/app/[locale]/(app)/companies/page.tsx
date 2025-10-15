@@ -32,9 +32,11 @@ import { useAllPlanChangeRequests, useReviewPlanChangeRequest } from '@/hooks/us
 import { PlanChangeRequestWithDetails } from '@/types/subscription';
 import { Button, Card } from '@/components/ui';
 import { ROUTES } from '@/routes/config';
+import { useAuth } from '@/contexts/AuthContext';
 
 function CompaniesPageContent() {
   const t = useTranslations('companies');
+  const { user } = useAuth();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +44,9 @@ function CompaniesPageContent() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [viewingCompany, setViewingCompany] = useState<Company | null>(null);
   const [activeTab, setActiveTab] = useState<'companies' | 'subscription-requests'>('companies');
+
+  // Check if user is system admin
+  const isSystemAdmin = user?.roles?.some((userRole) => userRole.role.name === 'system_admin');
 
   // Subscription requests management
   const { requests: subscriptionRequests, refetch: refetchRequests } = useAllPlanChangeRequests('pending');
@@ -341,7 +346,7 @@ function CompaniesPageContent() {
         {/* Companies Tab Content */}
         {activeTab === 'companies' && (
           <>
-            {selectedCompanies.size === 0 && (
+            {selectedCompanies.size === 0 && isSystemAdmin && (
               <div className="flex items-center justify-end mb-6 mt-6 min-h-[56px]">
                 <Link
                   href={ROUTES.COMPANIES.ADD}
@@ -353,7 +358,7 @@ function CompaniesPageContent() {
               </div>
             )}
 
-        {selectedCompanies.size > 0 && (
+        {selectedCompanies.size > 0 && isSystemAdmin && (
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6 mt-6 min-h-[56px]">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
@@ -535,13 +540,15 @@ function CompaniesPageContent() {
               <p className="text-gray-600 dark:text-gray-400 mb-4">
                 {t('table.emptyState.message')}
               </p>
-              <Link
-                href={ROUTES.COMPANIES.ADD}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 inline-flex items-center space-x-2"
-              >
-                <Plus className="h-4 w-4" />
-                <span>{t('page.addCompany')}</span>
-              </Link>
+              {isSystemAdmin && (
+                <Link
+                  href={ROUTES.COMPANIES.ADD}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 inline-flex items-center space-x-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>{t('page.addCompany')}</span>
+                </Link>
+              )}
             </div>
           ) : (
             <div
@@ -551,17 +558,19 @@ function CompaniesPageContent() {
               <table className="w-full">
                 <thead className="bg-gray-50 dark:bg-gray-900 sticky top-0 z-10">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-12 bg-gray-50 dark:bg-gray-900">
-                      <input
-                        type="checkbox"
-                        checked={
-                          companies.filter((c) => !c.is_deleted).length > 0 &&
-                          selectedCompanies.size === companies.filter((c) => !c.is_deleted).length
-                        }
-                        onChange={handleSelectAll}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      />
-                    </th>
+                    {isSystemAdmin && (
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-12 bg-gray-50 dark:bg-gray-900">
+                        <input
+                          type="checkbox"
+                          checked={
+                            companies.filter((c) => !c.is_deleted).length > 0 &&
+                            selectedCompanies.size === companies.filter((c) => !c.is_deleted).length
+                          }
+                          onChange={handleSelectAll}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                      </th>
+                    )}
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-900">
                       {t('table.headers.company')}
                     </th>
@@ -593,19 +602,21 @@ function CompaniesPageContent() {
                             ? 'bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30'
                             : 'hover:bg-gray-50 dark:hover:bg-gray-700'
                       }`}
-                      onClick={() => handleSelectCompany(company.id)}
+                      onClick={() => isSystemAdmin && handleSelectCompany(company.id)}
                     >
-                      <td className="px-6 py-4">
-                        {!company.is_deleted && (
-                          <input
-                            type="checkbox"
-                            checked={selectedCompanies.has(company.id)}
-                            onChange={() => handleSelectCompany(company.id)}
-                            onClick={(e) => e.stopPropagation()}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                          />
-                        )}
-                      </td>
+                      {isSystemAdmin && (
+                        <td className="px-6 py-4">
+                          {!company.is_deleted && (
+                            <input
+                              type="checkbox"
+                              checked={selectedCompanies.has(company.id)}
+                              onChange={() => handleSelectCompany(company.id)}
+                              onClick={(e) => e.stopPropagation()}
+                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            />
+                          )}
+                        </td>
+                      )}
                       <td className="px-6 py-4">
                         <div className="flex items-center">
                           <div className="flex-shrink-0">
@@ -683,51 +694,53 @@ function CompaniesPageContent() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <div
-                          className="flex items-center justify-end space-x-2"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {company.is_deleted ? (
-                            <button
-                              onClick={() => setViewingCompany(company)}
-                              className="bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-700 flex items-center space-x-1"
-                            >
-                              <Building2 className="h-3 w-3" />
-                              <span>{t('table.actions.details')}</span>
-                            </button>
-                          ) : (
-                            <>
-                              <Link
-                                href={ROUTES.COMPANIES.EDIT(company.id)}
-                                className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 flex items-center space-x-1"
-                              >
-                                <Edit className="h-3 w-3" />
-                                <span>{t('table.actions.edit')}</span>
-                              </Link>
+                        {isSystemAdmin && (
+                          <div
+                            className="flex items-center justify-end space-x-2"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {company.is_deleted ? (
                               <button
-                                onClick={async () => {
-                                  if (confirm(t('confirmations.deleteCompany', { name: company.name }))) {
-                                    try {
-                                      await companiesApi.deleteCompany(company.id);
-                                      setSuccessMessage(t('messages.successDeleteSingle', { name: company.name }));
-                                      await loadCompanies();
-                                    } catch (err) {
-                                      setError(
-                                        err instanceof Error
-                                          ? err.message
-                                          : t('messages.errorDeleteSingle')
-                                      );
-                                    }
-                                  }
-                                }}
-                                className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 flex items-center space-x-1"
+                                onClick={() => setViewingCompany(company)}
+                                className="bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-700 flex items-center space-x-1"
                               >
-                                <Trash2 className="h-3 w-3" />
-                                <span>{t('table.actions.delete')}</span>
+                                <Building2 className="h-3 w-3" />
+                                <span>{t('table.actions.details')}</span>
                               </button>
-                            </>
-                          )}
-                        </div>
+                            ) : (
+                              <>
+                                <Link
+                                  href={ROUTES.COMPANIES.EDIT(company.id)}
+                                  className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 flex items-center space-x-1"
+                                >
+                                  <Edit className="h-3 w-3" />
+                                  <span>{t('table.actions.edit')}</span>
+                                </Link>
+                                <button
+                                  onClick={async () => {
+                                    if (confirm(t('confirmations.deleteCompany', { name: company.name }))) {
+                                      try {
+                                        await companiesApi.deleteCompany(company.id);
+                                        setSuccessMessage(t('messages.successDeleteSingle', { name: company.name }));
+                                        await loadCompanies();
+                                      } catch (err) {
+                                        setError(
+                                          err instanceof Error
+                                            ? err.message
+                                            : t('messages.errorDeleteSingle')
+                                        );
+                                      }
+                                    }
+                                  }}
+                                  className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 flex items-center space-x-1"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                  <span>{t('table.actions.delete')}</span>
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}

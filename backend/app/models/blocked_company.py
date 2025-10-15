@@ -9,7 +9,7 @@ Allows candidates to block specific companies from:
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, Integer, String, ForeignKey, Index
+from sqlalchemy import Integer, String, ForeignKey, Index
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from app.models.base import BaseModel

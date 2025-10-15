@@ -119,7 +119,7 @@ const navigationItems: NavItem[] = [
     name: 'companies',
     href: ROUTES.COMPANIES.BASE,
     icon: Building2,
-    roles: ['admin', 'system_admin'],
+    roles: ['system_admin'],
     color: 'bg-amber-600',
     lightColor: 'bg-amber-500',
   },
@@ -175,6 +175,18 @@ export default function Sidebar({
     // Check role access
     const hasRoleAccess = user.roles.some((userRole) => item.roles.includes(userRole.role.name));
     if (!hasRoleAccess) return false;
+
+    // Special check for candidates menu - only show if company type is recruiter
+    if (item.name === 'candidates') {
+      const isSystemAdmin = user.roles.some((userRole) => userRole.role.name === 'system_admin');
+      // System admins can always see candidates
+      if (isSystemAdmin) return true;
+
+      // For company users (member/admin), only show if company type is recruiter
+      if (user.company?.type !== 'recruiter') {
+        return false;
+      }
+    }
 
     // Check feature access if requiredFeature is specified
     if (item.requiredFeature) {
