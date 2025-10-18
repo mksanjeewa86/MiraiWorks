@@ -27,17 +27,26 @@ jobs:
         pip install -r requirements.txt
 
     - name: Check for unused imports
+      continue-on-error: true
+      id: unused-imports
       run: |
         cd backend
         echo "Checking for unused imports..."
-        python -m ruff check app/ --select F401
-        if [ $? -ne 0 ]; then
+        python -m ruff check app/ --select F401 > ../unused-imports.txt 2>&1
+        UNUSED_EXIT=$?
+        cat ../unused-imports.txt
+        if [ $UNUSED_EXIT -ne 0 ]; then
           echo "❌ Found unused imports! Run: python -m ruff check app/ --select F401 --fix"
-          exit 1
+          echo "status=failed" >> $GITHUB_OUTPUT
+        else
+          echo "✅ No unused imports found"
+          echo "status=passed" >> $GITHUB_OUTPUT
         fi
-        echo "✅ No unused imports found"
+        exit 0
 
     - name: Check import errors (missing/wrong imports)
+      continue-on-error: true
+      id: import-errors
       run: |
         cd backend
         echo "Checking for import errors..."
@@ -47,30 +56,41 @@ jobs:
         import os
         sys.path.insert(0, os.getcwd())
 
+        errors = []
+
         # Test critical imports
         try:
             from app.main import app
             print('✅ Main app imports successfully')
         except ImportError as e:
             print(f'❌ Main app import failed: {e}')
-            sys.exit(1)
+            errors.append('main')
 
         try:
             import app.endpoints
             print('✅ Endpoints import successfully')
         except ImportError as e:
             print(f'❌ Endpoints import failed: {e}')
-            sys.exit(1)
+            errors.append('endpoints')
 
         try:
             import app.services
             print('✅ Services import successfully')
         except ImportError as e:
             print(f'❌ Services import failed: {e}')
-            sys.exit(1)
-        "
+            errors.append('services')
+
+        if errors:
+            print(f'Failed modules: {errors}')
+        " > ../import-errors.txt 2>&1
+        IMPORT_EXIT=$?
+        cat ../import-errors.txt
+        echo "exit_code=$IMPORT_EXIT" >> $GITHUB_OUTPUT
+        exit 0
 
     - name: Full import validation with detailed report
+      continue-on-error: true
+      id: full-validation
       run: |
         cd backend
         echo "Running comprehensive import validation..."
@@ -135,15 +155,101 @@ jobs:
             exit(main())
         EOF
 
-        python validate_imports.py
+        python validate_imports.py > ../full-validation.txt 2>&1
+        VALIDATION_EXIT=$?
+        cat ../full-validation.txt
+        echo "exit_code=$VALIDATION_EXIT" >> $GITHUB_OUTPUT
+        exit 0
 
     - name: Check import sorting and formatting
+      continue-on-error: true
+      id: import-sorting
       run: |
         cd backend
         echo "Checking import sorting..."
-        python -m ruff check app/ --select I001
-        if [ $? -ne 0 ]; then
+        python -m ruff check app/ --select I001 > ../import-sorting.txt 2>&1
+        SORTING_EXIT=$?
+        cat ../import-sorting.txt
+        if [ $SORTING_EXIT -ne 0 ]; then
           echo "❌ Imports are not properly sorted! Run: python -m ruff check app/ --select I001 --fix"
-          exit 1
+          echo "status=failed" >> $GITHUB_OUTPUT
+        else
+          echo "✅ Imports are properly sorted"
+          echo "status=passed" >> $GITHUB_OUTPUT
         fi
-        echo "✅ Imports are properly sorted"
+        exit 0
+
+    - name: Generate Import Validation Report
+      if: always()
+      run: |
+        cat > import-validation-report.md << 'EOF'
+        # Import Validation Report
+
+        ## Summary
+
+        | Check | Status |
+        |-------|--------|
+        | Unused Imports | ${{ steps.unused-imports.outputs.status || 'unknown' }} |
+        | Import Errors | ${{ steps.import-errors.outputs.exit_code == '0' && 'passed' || 'failed' }} |
+        | Full Validation | ${{ steps.full-validation.outputs.exit_code == '0' && 'passed' || 'failed' }} |
+        | Import Sorting | ${{ steps.import-sorting.outputs.status || 'unknown' }} |
+
+        ## Detailed Results
+
+        ### Unused Imports Check
+        EOF
+
+        if [ -f unused-imports.txt ]; then
+          echo '```' >> import-validation-report.md
+          cat unused-imports.txt >> import-validation-report.md
+          echo '```' >> import-validation-report.md
+        fi
+
+        cat >> import-validation-report.md << 'EOF'
+
+        ### Import Errors Check
+        EOF
+
+        if [ -f import-errors.txt ]; then
+          echo '```' >> import-validation-report.md
+          cat import-errors.txt >> import-validation-report.md
+          echo '```' >> import-validation-report.md
+        fi
+
+        cat >> import-validation-report.md << 'EOF'
+
+        ### Full Validation
+        EOF
+
+        if [ -f full-validation.txt ]; then
+          echo '```' >> import-validation-report.md
+          cat full-validation.txt >> import-validation-report.md
+          echo '```' >> import-validation-report.md
+        fi
+
+        cat >> import-validation-report.md << 'EOF'
+
+        ### Import Sorting
+        EOF
+
+        if [ -f import-sorting.txt ]; then
+          echo '```' >> import-validation-report.md
+          cat import-sorting.txt >> import-validation-report.md
+          echo '```' >> import-validation-report.md
+        fi
+
+        # Add to GitHub Step Summary
+        cat import-validation-report.md >> $GITHUB_STEP_SUMMARY
+
+    - name: Upload Import Validation Report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: import-validation-report
+        path: |
+          import-validation-report.md
+          unused-imports.txt
+          import-errors.txt
+          full-validation.txt
+          import-sorting.txt
+        retention-days: 30

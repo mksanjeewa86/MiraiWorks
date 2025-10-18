@@ -9,14 +9,14 @@ Allows candidates to block specific companies from:
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Integer, String, ForeignKey, Index
-from sqlalchemy.orm import relationship, Mapped, mapped_column
+from sqlalchemy import ForeignKey, Index, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import BaseModel
 
 if TYPE_CHECKING:
-    from app.models.user import User
     from app.models.company import Company
+    from app.models.user import User
 
 
 class BlockedCompany(BaseModel):

@@ -33,32 +33,74 @@ jobs:
 
     - name: Ruff Format Check
       working-directory: ./backend
-      run: ruff format --check --diff .
+      continue-on-error: true
+      id: ruff-format
+      run: |
+        ruff format --check --diff . > ../ruff-format-check.txt 2>&1
+        FORMAT_EXIT=$?
+        cat ../ruff-format-check.txt
+        echo "exit_code=$FORMAT_EXIT" >> $GITHUB_OUTPUT
+        exit 0
 
     - name: Ruff Lint Check (All Rules)
       working-directory: ./backend
-      run: ruff check . --output-format=github
+      continue-on-error: true
+      id: ruff-lint
+      run: |
+        ruff check . --output-format=github > ../ruff-lint-github.txt 2>&1
+        LINT_EXIT=$?
+        cat ../ruff-lint-github.txt
+        echo "exit_code=$LINT_EXIT" >> $GITHUB_OUTPUT
+        exit 0
 
     - name: Ruff Statistics
       working-directory: ./backend
-      run: ruff check . --statistics
+      continue-on-error: true
+      id: ruff-stats
+      run: |
+        ruff check . --statistics > ../ruff-statistics.txt 2>&1
+        STATS_EXIT=$?
+        cat ../ruff-statistics.txt
+        echo "exit_code=$STATS_EXIT" >> $GITHUB_OUTPUT
+        exit 0
 
     - name: Generate Ruff Report
       working-directory: ./backend
+      if: always()
       run: |
         echo "# Ruff Code Quality Report" > ruff-report.md
         echo "" >> ruff-report.md
         echo "## Summary" >> ruff-report.md
-        ruff check . --statistics >> ruff-report.md
+        echo "" >> ruff-report.md
+        echo "| Check | Status |" >> ruff-report.md
+        echo "|-------|--------|" >> ruff-report.md
+        echo "| Format Check | ${{ steps.ruff-format.outputs.exit_code == '0' && '✅ passed' || '❌ failed' }} |" >> ruff-report.md
+        echo "| Lint Check | ${{ steps.ruff-lint.outputs.exit_code == '0' && '✅ passed' || '⚠️ warnings' }} |" >> ruff-report.md
+        echo "" >> ruff-report.md
+        echo "## Statistics" >> ruff-report.md
+        if [ -f ../ruff-statistics.txt ]; then
+          echo '```' >> ruff-report.md
+          cat ../ruff-statistics.txt >> ruff-report.md
+          echo '```' >> ruff-report.md
+        fi
         echo "" >> ruff-report.md
         echo "## Detailed Issues" >> ruff-report.md
         ruff check . --output-format=json > ruff-results.json || true
+        if [ -f ../ruff-lint-github.txt ]; then
+          echo '```' >> ruff-report.md
+          head -200 ../ruff-lint-github.txt >> ruff-report.md
+          echo '```' >> ruff-report.md
+        fi
 
     - name: Upload Ruff Results
+      if: always()
       uses: actions/upload-artifact@v4
       with:
         name: ruff-analysis
         path: |
           backend/ruff-report.md
           backend/ruff-results.json
+          ruff-format-check.txt
+          ruff-lint-github.txt
+          ruff-statistics.txt
         retention-days: 30

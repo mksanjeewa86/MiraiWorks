@@ -107,7 +107,9 @@ async def test_login_with_remember_me_creates_30_day_token(
 ):
     """Test that rememberMe=True creates a refresh token with 30-day expiration."""
     from datetime import timedelta
+
     from sqlalchemy import select
+
     from app.models.auth import RefreshToken
     from app.utils.datetime_utils import get_utc_now
 
@@ -140,7 +142,9 @@ async def test_login_without_remember_me_creates_7_day_token(
 ):
     """Test that rememberMe=False creates a refresh token with 7-day expiration."""
     from datetime import timedelta
+
     from sqlalchemy import select
+
     from app.models.auth import RefreshToken
     from app.utils.datetime_utils import get_utc_now
 
@@ -172,7 +176,9 @@ async def test_login_default_remember_me_creates_7_day_token(
 ):
     """Test that omitting rememberMe defaults to False (7-day token)."""
     from datetime import timedelta
+
     from sqlalchemy import select
+
     from app.models.auth import RefreshToken
     from app.utils.datetime_utils import get_utc_now
 
