@@ -11,6 +11,7 @@ import pytest
 import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool
 
 # Set environment to test before importing settings
 try:
@@ -57,14 +58,10 @@ else:
         "mysql+asyncmy://changeme:changeme@localhost:3307/miraiworks_test"
     )
 
-# Create test engine with optimized settings for fast tests
+# Create test engine with NullPool to avoid event loop closure issues
 test_engine = create_async_engine(
     TEST_DATABASE_URL,
-    pool_size=10,  # Increased for better concurrency
-    max_overflow=20,  # Higher overflow for busy tests
-    pool_recycle=3600,  # Longer recycle time
-    pool_pre_ping=True,  # Health checks
-    pool_timeout=10,  # Faster timeout
+    poolclass=NullPool,  # No connection pooling - avoids event loop issues
     echo=False,  # No SQL logging for speed
     connect_args={
         "autocommit": False,
@@ -197,12 +194,8 @@ def setup_test_environment():
         print("Test session complete - database kept running")
 
 
-@pytest.fixture(scope="session")
-def event_loop():
-    """Create an instance of the default event loop for the test session."""
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
+# Removed custom event_loop fixture - using pytest-asyncio auto mode instead
+# The asyncio_mode = auto configuration in pytest.ini handles event loop management
 
 
 async def fast_clear_data():
@@ -232,35 +225,48 @@ async def fast_clear_data():
         return False
 
 
-@pytest_asyncio.fixture(scope="session", autouse=True)
-async def setup_database_schema():
+@pytest.fixture(scope="session", autouse=True)
+def setup_database_schema():
     """Set up test database schema once per session."""
+    import asyncio
+
     try:
-        # Fast clear any existing data
-        await fast_clear_data()
+        # Run async setup in a new event loop for session scope
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
 
-        # Create schema only if tables don't exist
-        async with test_engine.begin() as conn:
-            # Check if tables exist
-            from sqlalchemy import text
+        async def _setup():
+            # Fast clear any existing data
+            await fast_clear_data()
 
-            result = await conn.execute(text("SHOW TABLES"))
-            existing_tables = [row[0] for row in result.fetchall()]
+            # Create schema only if tables don't exist
+            async with test_engine.begin() as conn:
+                # Check if tables exist
+                from sqlalchemy import text
 
-            if not existing_tables:
-                # Create all tables
-                await conn.run_sync(
-                    lambda sync_conn: Base.metadata.create_all(sync_conn)
-                )
-                print("Database schema created")
-            else:
-                print(f"Database schema already exists ({len(existing_tables)} tables)")
+                result = await conn.execute(text("SHOW TABLES"))
+                existing_tables = [row[0] for row in result.fetchall()]
+
+                if not existing_tables:
+                    # Create all tables
+                    await conn.run_sync(
+                        lambda sync_conn: Base.metadata.create_all(sync_conn)
+                    )
+                    print("Database schema created")
+                else:
+                    print(f"Database schema already exists ({len(existing_tables)} tables)")
+
+        loop.run_until_complete(_setup())
 
         yield
 
         # Keep schema for next test run - only clear data
-        await fast_clear_data()
-        print("Test data cleared - schema preserved")
+        async def _teardown():
+            await fast_clear_data()
+            print("Test data cleared - schema preserved")
+
+        loop.run_until_complete(_teardown())
+        loop.close()
 
     except Exception as e:
         print(f"Database schema setup failed: {e}")
