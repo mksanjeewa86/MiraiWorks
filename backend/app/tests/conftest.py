@@ -1,4 +1,3 @@
-import asyncio
 import os
 import sys
 from pathlib import Path
@@ -201,6 +200,7 @@ def setup_test_environment():
 async def fast_clear_data():
     """Fast data clearing without dropping tables."""
     try:
+        # Use engine.begin() to get a transactional connection
         async with test_engine.begin() as conn:
             from sqlalchemy import text
 
@@ -240,7 +240,7 @@ def setup_database_schema():
             await fast_clear_data()
 
             # Create schema only if tables don't exist
-            async with test_engine.begin() as conn:
+            async with test_engine.connect() as conn:
                 # Check if tables exist
                 from sqlalchemy import text
 
@@ -248,10 +248,11 @@ def setup_database_schema():
                 existing_tables = [row[0] for row in result.fetchall()]
 
                 if not existing_tables:
-                    # Create all tables
-                    await conn.run_sync(
-                        lambda sync_conn: Base.metadata.create_all(sync_conn)
-                    )
+                    # Create all tables using engine.begin() for transaction
+                    async with test_engine.begin() as conn2:
+                        await conn2.run_sync(
+                            lambda sync_conn: Base.metadata.create_all(sync_conn)
+                        )
                     print("Database schema created")
                 else:
                     print(f"Database schema already exists ({len(existing_tables)} tables)")
