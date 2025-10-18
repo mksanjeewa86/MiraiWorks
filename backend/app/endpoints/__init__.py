@@ -2,6 +2,7 @@
 from . import (
     assignment_workflow,
     auth,
+    blocked_company,
     calendar,
     calendar_connections,
     companies,
@@ -42,6 +43,7 @@ from . import (
 __all__ = [
     "assignment_workflow",
     "auth",
+    "blocked_company",
     "calendar",
     "calendar_connections",
     "companies",
