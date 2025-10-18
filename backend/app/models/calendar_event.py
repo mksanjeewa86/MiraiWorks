@@ -8,8 +8,8 @@ class CalendarEvent(BaseModel):
     __tablename__ = "calendar_events"
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
-    start_datetime = Column(DateTime, nullable=False, index=True)
-    end_datetime = Column(DateTime, nullable=True)
+    start_datetime = Column(DateTime(timezone=True), nullable=False, index=True)
+    end_datetime = Column(DateTime(timezone=True), nullable=True)
     is_all_day = Column(Boolean, default=False, nullable=False)
     location = Column(String(255), nullable=True)
     event_type = Column(String(50), default="event", nullable=False, index=True)

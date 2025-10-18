@@ -25,7 +25,7 @@ from app.services.auth_service import auth_service
 from app.services.email_service import email_service
 from app.services.user_connection_service import user_connection_service
 from app.utils.constants import UserRole as UserRoleEnum
-from app.utils.permissions import is_company_admin, is_super_admin
+from app.utils.permissions import is_company_admin, is_recruiter, is_super_admin
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -67,15 +67,31 @@ async def get_users(
 ):
     """Get paginated list of users with filters."""
 
+    # Ensure company relationship is loaded
+    if current_user.company_id and not current_user.company:
+        company_result = await db.execute(
+            select(Company).where(Company.id == current_user.company_id)
+        )
+        current_user.company = company_result.scalar_one_or_none()
+
     # Check permissions
-    if not (is_super_admin(current_user) or is_company_admin(current_user)):
+    # Allow recruiters to view candidates in their company
+    is_viewing_candidates = role == UserRoleEnum.CANDIDATE
+    has_permission = (
+        is_super_admin(current_user)
+        or is_company_admin(current_user)
+        or (is_recruiter(current_user) and is_viewing_candidates)
+    )
+
+    if not has_permission:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions to view users",
         )
 
     # Determine company filter based on permissions
-    if is_company_admin(current_user) and not is_super_admin(current_user):
+    # Recruiters and company admins can only see users from their company
+    if (is_company_admin(current_user) or is_recruiter(current_user)) and not is_super_admin(current_user):
         company_id = current_user.company_id
 
     users, total = await user_crud.user.get_users_paginated(
@@ -150,6 +166,49 @@ async def create_user(
             detail="Not enough permissions to create users",
         )
 
+    # NEW RESTRICTION 1: Prevent creating system admins
+    # System admin role can never be assigned to new users
+    if UserRoleEnum.SYSTEM_ADMIN in user_data.roles:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot create system admin users. Only one system admin is allowed in the system.",
+        )
+
+    # NEW RESTRICTION 2: Only super admin can create company admins
+    if UserRoleEnum.ADMIN in user_data.roles:
+        if not is_super_admin(current_user):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only super admin can create company admin users.",
+            )
+
+    # NEW RESTRICTION 3: Prevent candidates in super admin's company
+    # Get super admin's company
+    super_admin_company_query = (
+        select(User.company_id)
+        .join(UserRole)
+        .join(Role)
+        .where(
+            and_(
+                Role.name == UserRoleEnum.SYSTEM_ADMIN.value,
+                User.is_deleted is False,
+            )
+        )
+        .limit(1)
+    )
+    super_admin_company_result = await db.execute(super_admin_company_query)
+    super_admin_company_id = super_admin_company_result.scalar_one_or_none()
+
+    # If trying to create a candidate in super admin's company, prevent it
+    if (
+        UserRoleEnum.CANDIDATE in user_data.roles
+        and user_data.company_id == super_admin_company_id
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot create candidates in super admin's company.",
+        )
+
     # Company admin can only create users in their company
     if is_company_admin(current_user) and not is_super_admin(current_user):
         if user_data.company_id and user_data.company_id != current_user.company_id:
@@ -222,22 +281,25 @@ async def create_user(
         is_admin_user = True
 
     # Check if company already has an admin (prevent duplicate company admins)
+    # Exception: Super admin's company can have unlimited admins
     if is_admin_user and user_data.company_id:
-        existing_admin_query = select(func.count(User.id)).where(
-            and_(
-                User.company_id == user_data.company_id,
-                User.is_admin is True,
-                User.is_deleted is False,
+        # Super admin's company can have unlimited admins
+        if user_data.company_id != super_admin_company_id:
+            existing_admin_query = select(func.count(User.id)).where(
+                and_(
+                    User.company_id == user_data.company_id,
+                    User.is_admin is True,
+                    User.is_deleted is False,
+                )
             )
-        )
-        existing_admin_result = await db.execute(existing_admin_query)
-        existing_admin_count = existing_admin_result.scalar() or 0
+            existing_admin_result = await db.execute(existing_admin_query)
+            existing_admin_count = existing_admin_result.scalar() or 0
 
-        if existing_admin_count > 0:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="This company already has an admin user. Only one admin per company is allowed.",
-            )
+            if existing_admin_count > 0:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="This company already has an admin user. Only one admin per company is allowed.",
+                )
 
     # Auto-enable 2FA for admin users
     require_2fa = is_admin_user or user_data.require_2fa or False
@@ -713,6 +775,48 @@ async def update_user(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions to update users",
         )
+
+    # NEW RESTRICTION 1: Prevent updating to system admin role
+    # System admin role can never be assigned through updates
+    if user_data.roles is not None and UserRoleEnum.SYSTEM_ADMIN in user_data.roles:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot assign system admin role. Only one system admin is allowed in the system.",
+        )
+
+    # NEW RESTRICTION 2: Only super admin can update users to company admin role
+    if user_data.roles is not None and UserRoleEnum.ADMIN in user_data.roles:
+        if not is_super_admin(current_user):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only super admin can assign company admin role.",
+            )
+
+    # NEW RESTRICTION 3: Prevent updating to candidate role in super admin's company
+    if user_data.roles is not None and UserRoleEnum.CANDIDATE in user_data.roles:
+        # Get super admin's company
+        super_admin_company_query = (
+            select(User.company_id)
+            .join(UserRole)
+            .join(Role)
+            .where(
+                and_(
+                    Role.name == UserRoleEnum.SYSTEM_ADMIN.value,
+                    User.is_deleted is False,
+                )
+            )
+            .limit(1)
+        )
+        super_admin_company_result = await db.execute(super_admin_company_query)
+        super_admin_company_id = super_admin_company_result.scalar_one_or_none()
+
+        # Check if updating user to candidate in super admin's company
+        target_company_id = user_data.company_id if user_data.company_id is not None else user.company_id
+        if target_company_id == super_admin_company_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Cannot assign candidate role in super admin's company.",
+            )
 
     # Company admin can only update users from their company
     if is_company_admin(current_user) and not is_super_admin(current_user):

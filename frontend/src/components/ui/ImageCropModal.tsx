@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import Cropper from 'react-easy-crop';
 import { X, Crop } from 'lucide-react';
-import { Button } from './button';
+import { Button } from './Button';
 
 interface ImageCropModalProps {
   isOpen: boolean;

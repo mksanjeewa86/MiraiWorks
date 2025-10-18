@@ -98,3 +98,102 @@ async def test_get_current_user_returns_profile(
     data = response.json()
     assert data["id"] == test_employer_user.id
     assert data["email"] == test_employer_user.email
+
+
+# Remember Me Feature Tests
+@pytest.mark.asyncio
+async def test_login_with_remember_me_creates_30_day_token(
+    client: AsyncClient, test_user: User, db_session: AsyncSession
+):
+    """Test that rememberMe=True creates a refresh token with 30-day expiration."""
+    from datetime import timedelta
+    from sqlalchemy import select
+    from app.models.auth import RefreshToken
+    from app.utils.datetime_utils import get_utc_now
+
+    response = await client.post(
+        "/api/auth/login",
+        json={"email": test_user.email, "password": "testpassword123", "rememberMe": True},
+    )
+
+    assert response.status_code == 200
+    refresh_token_value = response.json()["refresh_token"]
+
+    # Fetch the refresh token from database
+    result = await db_session.execute(
+        select(RefreshToken).where(RefreshToken.user_id == test_user.id)
+    )
+    token_record = result.scalars().first()
+
+    assert token_record is not None
+    assert token_record.remember_me is True
+
+    # Check expiration is approximately 30 days
+    expected_expiry = get_utc_now() + timedelta(days=30)
+    time_diff = abs((token_record.expires_at - expected_expiry).total_seconds())
+    assert time_diff < 60, "Token expiration should be approximately 30 days"
+
+
+@pytest.mark.asyncio
+async def test_login_without_remember_me_creates_7_day_token(
+    client: AsyncClient, test_user: User, db_session: AsyncSession
+):
+    """Test that rememberMe=False creates a refresh token with 7-day expiration."""
+    from datetime import timedelta
+    from sqlalchemy import select
+    from app.models.auth import RefreshToken
+    from app.utils.datetime_utils import get_utc_now
+
+    response = await client.post(
+        "/api/auth/login",
+        json={"email": test_user.email, "password": "testpassword123", "rememberMe": False},
+    )
+
+    assert response.status_code == 200
+
+    # Fetch the refresh token from database
+    result = await db_session.execute(
+        select(RefreshToken).where(RefreshToken.user_id == test_user.id)
+    )
+    token_record = result.scalars().first()
+
+    assert token_record is not None
+    assert token_record.remember_me is False
+
+    # Check expiration is approximately 7 days
+    expected_expiry = get_utc_now() + timedelta(days=7)
+    time_diff = abs((token_record.expires_at - expected_expiry).total_seconds())
+    assert time_diff < 60, "Token expiration should be approximately 7 days"
+
+
+@pytest.mark.asyncio
+async def test_login_default_remember_me_creates_7_day_token(
+    client: AsyncClient, test_user: User, db_session: AsyncSession
+):
+    """Test that omitting rememberMe defaults to False (7-day token)."""
+    from datetime import timedelta
+    from sqlalchemy import select
+    from app.models.auth import RefreshToken
+    from app.utils.datetime_utils import get_utc_now
+
+    response = await client.post(
+        "/api/auth/login",
+        json={"email": test_user.email, "password": "testpassword123"},
+        # rememberMe omitted - should default to False
+    )
+
+    assert response.status_code == 200
+
+    # Fetch the refresh token from database
+    result = await db_session.execute(
+        select(RefreshToken).where(RefreshToken.user_id == test_user.id)
+    )
+    token_record = result.scalars().first()
+
+    assert token_record is not None
+    assert token_record.remember_me is False
+
+    # Check expiration is approximately 7 days
+    expected_expiry = get_utc_now() + timedelta(days=7)
+    time_diff = abs((token_record.expires_at - expected_expiry).total_seconds())
+    assert time_diff < 60, "Token expiration should default to 7 days"

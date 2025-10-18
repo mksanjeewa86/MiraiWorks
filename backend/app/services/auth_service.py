@@ -88,14 +88,22 @@ class AuthService:
         return self.verify_token(token, token_type)
 
     async def store_refresh_token(
-        self, db: AsyncSession, user_id: int, token: str
+        self, db: AsyncSession, user_id: int, token: str, remember_me: bool = False
     ) -> RefreshToken:
         """Store a refresh token in the database."""
         token_hash = self.hash_token(token)
-        expires_at = get_utc_now() + timedelta(days=self.refresh_token_expire_days)
+
+        # Set expiration based on remember_me preference
+        # If remember_me=True: use longer TTL (30 days)
+        # If remember_me=False: use shorter TTL (7 days)
+        expiry_days = 30 if remember_me else 7
+        expires_at = get_utc_now() + timedelta(days=expiry_days)
 
         refresh_token = RefreshToken(
-            user_id=user_id, token_hash=token_hash, expires_at=expires_at
+            user_id=user_id,
+            token_hash=token_hash,
+            expires_at=expires_at,
+            remember_me=remember_me
         )
 
         db.add(refresh_token)
@@ -249,7 +257,9 @@ class AuthService:
 
         return False
 
-    async def create_login_tokens(self, db: AsyncSession, user: User) -> dict[str, Any]:
+    async def create_login_tokens(
+        self, db: AsyncSession, user: User, remember_me: bool = False
+    ) -> dict[str, Any]:
         """Create access and refresh tokens for a user."""
         # Update last login
         user.last_login = get_utc_now()
@@ -275,8 +285,8 @@ class AuthService:
         access_token = self.create_access_token(access_token_data)
         refresh_token = self.create_refresh_token()
 
-        # Store refresh token
-        await self.store_refresh_token(db, user.id, refresh_token)
+        # Store refresh token with remember_me preference
+        await self.store_refresh_token(db, user.id, refresh_token, remember_me)
 
         return {
             "access_token": access_token,

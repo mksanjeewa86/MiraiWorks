@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import Button from '../ui/button';
+import { Button } from '../ui/Button';
 import {
   XMarkIcon,
   ArrowsPointingOutIcon,

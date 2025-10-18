@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, field_serializer
 
 
 class EventType(str, Enum):
@@ -48,7 +48,14 @@ class CalendarEventBase(BaseModel):
     @field_validator("start_datetime")
     @classmethod
     def validate_start_datetime(cls, v):
-        if v < datetime(1900, 1, 1) or v > datetime(2100, 12, 31):
+        # Convert to timezone-aware datetime for comparison if needed
+        min_date = datetime(1900, 1, 1, tzinfo=timezone.utc)
+        max_date = datetime(2100, 12, 31, 23, 59, 59, tzinfo=timezone.utc)
+
+        # Make value timezone-aware if it's naive
+        v_aware = v if v.tzinfo is not None else v.replace(tzinfo=timezone.utc)
+
+        if v_aware < min_date or v_aware > max_date:
             raise ValueError("start_datetime must be between 1900 and 2100")
         return v
 
@@ -83,8 +90,16 @@ class CalendarEventUpdate(BaseModel):
     @field_validator("start_datetime")
     @classmethod
     def validate_start_datetime(cls, v):
-        if v and (v < datetime(1900, 1, 1) or v > datetime(2100, 12, 31)):
-            raise ValueError("start_datetime must be between 1900 and 2100")
+        if v:
+            # Convert to timezone-aware datetime for comparison if needed
+            min_date = datetime(1900, 1, 1, tzinfo=timezone.utc)
+            max_date = datetime(2100, 12, 31, 23, 59, 59, tzinfo=timezone.utc)
+
+            # Make value timezone-aware if it's naive
+            v_aware = v if v.tzinfo is not None else v.replace(tzinfo=timezone.utc)
+
+            if v_aware < min_date or v_aware > max_date:
+                raise ValueError("start_datetime must be between 1900 and 2100")
         return v
 
 
@@ -98,6 +113,17 @@ class CalendarEventInfo(CalendarEventBase):
     parent_event_id: Optional[int] = None
     is_recurring: bool = False
     is_instance: bool = False
+
+    @field_serializer('start_datetime', 'end_datetime', 'created_at', 'updated_at')
+    def serialize_datetime(self, dt: Optional[datetime], _info) -> Optional[str]:
+        """Ensure datetime fields are serialized with UTC timezone information."""
+        if dt is None:
+            return None
+        # If datetime is naive, assume it's UTC and add timezone
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        # Serialize to ISO format with Z suffix
+        return dt.isoformat()
 
 
 class CalendarEventListResponse(BaseModel):

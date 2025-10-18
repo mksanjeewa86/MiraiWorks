@@ -11,6 +11,7 @@ import { ROUTES } from '@/routes/config';
 function LoginContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [redirected, setRedirected] = useState(false);
@@ -48,7 +49,7 @@ function LoginContent() {
     clearError();
 
     try {
-      await login({ email, password });
+      await login({ email, password, rememberMe });
     } catch {
       // AuthContext handles error state
     } finally {
@@ -169,7 +170,10 @@ function LoginContent() {
                 <input
                   id="remember-me"
                   type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
                   className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-400 focus:ring-offset-0 bg-white/10 border-white/20"
+                  data-testid="remember-me-checkbox"
                 />
                 {t('rememberMe')}
               </label>

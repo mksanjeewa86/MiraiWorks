@@ -153,3 +153,13 @@ def can_manage_users(user: User, target_company_id: int | None = None) -> bool:
         return target_company_id is None or user.company_id == target_company_id
 
     return False
+
+
+def is_recruiter(user: User) -> bool:
+    """Check if user belongs to a recruiter company."""
+    from app.utils.constants import CompanyType
+
+    # Check if user has a company and if that company is of type 'recruiter'
+    if user.company and hasattr(user.company, 'type'):
+        return user.company.type == CompanyType.RECRUITER.value
+    return False

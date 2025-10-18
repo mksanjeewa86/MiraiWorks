@@ -15,7 +15,7 @@ const NotificationDropdown: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useLocaleRouter();
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const [systemUpdates, setSystemUpdates] = useState<SystemUpdate[]>([]);
   const [activeTab, setActiveTab] = useState<'notifications' | 'updates'>('notifications');
@@ -37,8 +37,13 @@ const NotificationDropdown: React.FC = () => {
 
   // Fetch system updates when dropdown opens
   useEffect(() => {
+    // Wait for auth initialization to complete before fetching
+    if (isLoading) {
+      return;
+    }
+
     const fetchSystemUpdates = async () => {
-      if (isOpen) {
+      if (isOpen && user) {
         const response = await systemUpdatesApi.getAll({ limit: 5 });
         if (response.success && response.data) {
           setSystemUpdates(response.data);
@@ -53,7 +58,7 @@ const NotificationDropdown: React.FC = () => {
     };
 
     fetchSystemUpdates();
-  }, [isOpen, notifications.length]);
+  }, [isOpen, notifications.length, isLoading, user]);
 
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp);

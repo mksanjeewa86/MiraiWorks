@@ -16,6 +16,7 @@ class RefreshToken(Base):
     token_hash = Column(String(255), nullable=False, unique=True, index=True)
     expires_at = Column(DateTime(timezone=True), nullable=False, index=True)
     is_revoked = Column(Boolean, nullable=False, default=False, index=True)
+    remember_me = Column(Boolean, nullable=False, default=False, index=True)
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

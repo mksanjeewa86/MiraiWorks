@@ -762,6 +762,89 @@ body {
   border-radius: 4px !important;
 }
 
+/* Truncate event titles with ellipsis - force fixed width */
+.fc-event {
+  overflow: hidden !important;
+}
+
+.fc-event-main {
+  overflow: hidden !important;
+}
+
+.fc-event-title {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  display: block !important;
+  max-width: 100% !important;
+}
+
+.fc-event-title-container {
+  overflow: hidden !important;
+  max-width: 100% !important;
+}
+
+/* Force truncation in daygrid (month view) */
+.fc-daygrid-event {
+  overflow: hidden !important;
+  max-width: 100% !important;
+}
+
+.fc-daygrid-event-harness {
+  overflow: hidden !important;
+  max-width: 100% !important;
+}
+
+.fc-daygrid-event .fc-event-title {
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.fc-daygrid-event .fc-event-main {
+  overflow: hidden !important;
+}
+
+/* Force truncation in timegrid (week/day view) */
+.fc-timegrid-event {
+  overflow: hidden !important;
+}
+
+.fc-timegrid-event .fc-event-title {
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.fc-timegrid-event .fc-event-main {
+  overflow: hidden !important;
+}
+
+/* Force truncation in list view */
+.fc-list-event-title {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 100% !important;
+}
+
+/* Prevent event cells from expanding */
+.fc-daygrid-day {
+  overflow: hidden !important;
+}
+
+.fc-daygrid-day-frame {
+  overflow: hidden !important;
+}
+
+/* Ensure event content doesn't expand beyond container */
+.fc-event-main-frame {
+  overflow: hidden !important;
+  max-width: 100% !important;
+}
+
 /* Responsive Animation Controls */
 @media (prefers-reduced-motion: reduce) {
   .animate-blob,
@@ -826,6 +909,50 @@ body {
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+/* FullCalendar Drag and Drop Styles */
+.fc-event-dragging {
+  opacity: 0.8 !important;
+  transform: scale(1.05) !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important;
+  z-index: 1000 !important;
+  cursor: move !important;
+}
+
+.fc-event:not(.fc-event-dragging):hover {
+  cursor: grab !important;
+  opacity: 0.9 !important;
+  transform: scale(1.02) !important;
+  transition: all 0.2s ease !important;
+}
+
+.fc-event:active {
+  cursor: grabbing !important;
+}
+
+/* Visual feedback for droppable areas */
+.fc-highlight {
+  background: rgba(59, 130, 246, 0.1) !important;
+  border: 2px dashed #3b82f6 !important;
+}
+
+[data-theme='dark'] .fc-highlight {
+  background: rgba(96, 165, 250, 0.1) !important;
+  border-color: #60a5fa !important;
+}
+
+/* Disable drag for past events and special events */
+.fc-event[data-event-id^="holiday-"],
+.fc-event[data-event-id^="interview-"] {
+  cursor: default !important;
+  opacity: 0.9 !important;
+}
+
+.fc-event[data-event-id^="holiday-"]:hover,
+.fc-event[data-event-id^="interview-"]:hover {
+  transform: none !important;
+  cursor: not-allowed !important;
 }
 
 /* React Easy Crop Styles */

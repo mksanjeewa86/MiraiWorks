@@ -1,9 +1,10 @@
 // UI Components barrel export
 export { Alert, AlertDescription } from './alert';
 export { Badge } from './badge';
-export { Button } from './button';
+export { Button } from './Button';
 export { Card, CardContent, CardDescription, CardHeader, CardTitle } from './card';
 export { Checkbox } from './checkbox';
+export { default as ConfirmDialog } from './ConfirmDialog';
 export { default as ConfirmationModal } from './confirmation-modal';
 export {
   Dialog,

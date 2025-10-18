@@ -1,23 +1,24 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { addDays, addMonths, addWeeks, endOfWeek, format, startOfWeek } from 'date-fns';
 import {
-  Calendar as CalendarIcon,
   ChevronLeft,
   ChevronRight,
   Clock,
+  CloudOff,
   Grid,
+  Link2,
   List,
-  Menu,
+  Loader2,
   Plus,
+  RefreshCcw,
   RotateCw,
 } from 'lucide-react';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import CalendarView from '@/components/calendar/CalendarView';
-import CalendarSidebar from '@/components/calendar/CalendarSidebar';
 import EventModal from '@/components/calendar/EventModal';
 import { calendarApi } from '@/api/calendar';
 import { interviewsApi } from '@/api/interviews';
@@ -195,11 +196,6 @@ const computeRangeForView = (
     start.setHours(0, 0, 0, 0);
     end.setTime(weekEnd.getTime());
     end.setHours(23, 59, 59, 999);
-  } else if (view === 'list') {
-    start.setHours(0, 0, 0, 0);
-    const listEnd = addDays(start, 14);
-    end.setTime(listEnd.getTime());
-    end.setHours(23, 59, 59, 999);
   } else {
     start.setHours(0, 0, 0, 0);
     end.setHours(23, 59, 59, 999);
@@ -213,11 +209,11 @@ function CalendarPageContent() {
   const t = useTranslations('calendar');
   const userId = user?.id ?? null;
   const userCompanyId = user?.company_id ?? null;
+  const connectionsDropdownRef = useRef<HTMLDivElement>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewType, setViewType] = useState<CalendarViewMode>('month');
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [filters, setFilters] = useState<CalendarFilters>(defaultFilters);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -227,10 +223,16 @@ function CalendarPageContent() {
   const [connections, setConnections] = useState<CalendarConnection[]>([]);
   const [connectionsLoading, setConnectionsLoading] = useState(false);
   const [syncingConnectionId, setSyncingConnectionId] = useState<number | null>(null);
+  const [showConnections, setShowConnections] = useState(false);
 
   const goToToday = useCallback(() => {
     setCurrentDate(new Date());
   }, []);
+
+  // Reset to today when view type changes
+  useEffect(() => {
+    setCurrentDate(new Date());
+  }, [viewType]);
 
   const navigateNext = useCallback(() => {
     setCurrentDate((prevDate) => {
@@ -240,8 +242,6 @@ function CalendarPageContent() {
         return addWeeks(prevDate, 1); // Move to next week
       } else if (viewType === 'day') {
         return addDays(prevDate, 1); // Move to next day
-      } else if (viewType === 'list') {
-        return addWeeks(prevDate, 2); // Move 2 weeks forward for list view
       }
       return prevDate;
     });
@@ -255,8 +255,6 @@ function CalendarPageContent() {
         return addWeeks(prevDate, -1); // Move to previous week
       } else if (viewType === 'day') {
         return addDays(prevDate, -1); // Move to previous day
-      } else if (viewType === 'list') {
-        return addWeeks(prevDate, -2); // Move 2 weeks back for list view
       }
       return prevDate;
     });
@@ -366,6 +364,25 @@ function CalendarPageContent() {
     void loadConnections();
   }, [loadConnections]);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        connectionsDropdownRef.current &&
+        !connectionsDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowConnections(false);
+      }
+    };
+
+    if (showConnections) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showConnections]);
+
   const filteredEvents = useMemo(() => {
     const searchTerm = filters.search.trim().toLowerCase();
 
@@ -390,14 +407,38 @@ function CalendarPageContent() {
   };
 
   const openCreateModal = useCallback((range?: SelectionRange) => {
-    const start = range?.start ?? new Date();
-    const end = range?.end ?? new Date(start.getTime() + 60 * 60 * 1000);
+    let start: Date;
+    let end: Date;
+
+    if (range?.start) {
+      // If a date range is provided (user clicked on a date)
+      // Use the clicked date but with current time
+      const now = new Date();
+      const clickedDate = new Date(range.start);
+
+      // Set the clicked date with current time
+      start = new Date(
+        clickedDate.getFullYear(),
+        clickedDate.getMonth(),
+        clickedDate.getDate(),
+        now.getHours(),
+        now.getMinutes()
+      );
+
+      // End time is ALWAYS 1 hour after start (ignore range.end)
+      end = new Date(start.getTime() + 60 * 60 * 1000);
+    } else {
+      // No range provided (e.g., clicked "New Event" button)
+      // Use current date and time
+      start = new Date();
+      end = new Date(start.getTime() + 60 * 60 * 1000);
+    }
+
     setIsCreateMode(true);
     setSelectedEvent(null);
     setSelectedDate(start);
-    setSelectedRange(range ?? { start, end, allDay: false });
+    setSelectedRange({ start, end, allDay: false });
     setModalOpen(true);
-    setSidebarOpen(false);
   }, []);
 
   const handleRangeSelect = useCallback(
@@ -408,12 +449,16 @@ function CalendarPageContent() {
   );
 
   const handleEventClick = useCallback((event: CalendarEvent) => {
+    // Don't open modal for holiday events
+    if (event.id?.startsWith('holiday-')) {
+      return;
+    }
+
     setIsCreateMode(false);
     setSelectedEvent(event);
     setSelectedDate(toDateOrNull(event.startDatetime));
     setSelectedRange(undefined);
     setModalOpen(true);
-    setSidebarOpen(false);
   }, []);
 
   const handleSaveEvent = async (eventData: Partial<CalendarEvent>) => {
@@ -421,12 +466,20 @@ function CalendarPageContent() {
       if (isCreateMode) {
         await calendarApi.createEvent(eventData);
         toast.success(t('notifications.eventCreated'));
-      } else if (selectedEvent && /^\d+$/.test(selectedEvent.id)) {
-        await calendarApi.updateEvent(Number(selectedEvent.id), eventData);
-        toast.success(t('notifications.eventUpdated'));
-      } else {
-        toast.error(t('errors.cannotEditExternalEvent'));
-        return;
+      } else if (selectedEvent) {
+        // Check if the event is editable (numeric ID or starts with "event-" followed by number)
+        const isInternalEvent = /^\d+$/.test(selectedEvent.id) || /^event-\d+$/.test(selectedEvent.id);
+
+        if (isInternalEvent) {
+          // Extract numeric ID from formats like "12" or "event-12"
+          const numericId = selectedEvent.id.replace(/^event-/, '');
+          await calendarApi.updateEvent(Number(numericId), eventData);
+          toast.success(t('notifications.eventUpdated'));
+        } else {
+          // External event - cannot edit, silently close modal
+          closeModal();
+          return;
+        }
       }
 
       await loadEvents();
@@ -440,13 +493,24 @@ function CalendarPageContent() {
 
   const handleDeleteEvent = async (event: CalendarEvent) => {
     try {
-      if (event.id && /^\d+$/.test(event.id)) {
-        await calendarApi.deleteEvent(Number(event.id));
-        toast.success(t('notifications.eventDeleted'));
-        await loadEvents();
-        closeModal();
+      if (event.id) {
+        // Check if the event is deletable (numeric ID or starts with "event-" followed by number)
+        const isInternalEvent = /^\d+$/.test(event.id) || /^event-\d+$/.test(event.id);
+
+        if (isInternalEvent) {
+          // Extract numeric ID from formats like "12" or "event-12"
+          const numericId = event.id.replace(/^event-/, '');
+          await calendarApi.deleteEvent(Number(numericId));
+          toast.success(t('notifications.eventDeleted'));
+          await loadEvents();
+          closeModal();
+        } else {
+          // External event - cannot delete, silently close modal
+          closeModal();
+        }
       } else {
-        toast.error(t('errors.cannotDeleteExternalEvent'));
+        // No ID - cannot delete, silently close modal
+        closeModal();
       }
     } catch (error) {
       console.error('Failed to delete event', error);
@@ -454,6 +518,40 @@ function CalendarPageContent() {
       throw error;
     }
   };
+
+  const handleEventDrop = useCallback(
+    async (event: CalendarEvent, newStart: Date, newEnd: Date, allDay: boolean) => {
+      try {
+        // Check if the event is editable (numeric ID or starts with "event-" followed by number)
+        const isInternalEvent = /^\d+$/.test(event.id) || /^event-\d+$/.test(event.id);
+
+        if (!isInternalEvent) {
+          // External event - cannot edit
+          toast.error(t('errors.cannotEditExternalEvent'));
+          return;
+        }
+
+        // Extract numeric ID from formats like "12" or "event-12"
+        const numericId = event.id.replace(/^event-/, '');
+
+        // Update the event with new times
+        await calendarApi.updateEvent(Number(numericId), {
+          startDatetime: newStart.toISOString(),
+          endDatetime: newEnd.toISOString(),
+          isAllDay: allDay,
+        });
+
+        toast.success(t('notifications.eventUpdated'));
+        await loadEvents();
+      } catch (error) {
+        console.error('Failed to update event', error);
+        toast.error(t('errors.failedToSaveEvent'));
+        // Reload events to revert the visual change
+        await loadEvents();
+      }
+    },
+    [t, loadEvents]
+  );
 
   const handleConnectProvider = async (provider: CalendarProvider) => {
     try {
@@ -508,9 +606,6 @@ function CalendarPageContent() {
     if (viewType === 'day') {
       return format(currentDate, 'EEEE, MMM d, yyyy');
     }
-    if (viewType === 'list') {
-      return `${format(currentDate, 'MMM d')} - ${format(addDays(currentDate, 14), 'MMM d, yyyy')}`;
-    }
     return format(currentDate, 'MMMM yyyy');
   }, [currentDate, viewType]);
 
@@ -518,19 +613,12 @@ function CalendarPageContent() {
     <AppLayout
       pageTitle={t('page.title')}
       pageDescription={t('page.description')}
+      noPadding={true}
     >
-      <div className="flex h-screen flex-col bg-slate-100/80">
-        <div className="border-b border-slate-200 bg-white/90 backdrop-blur">
-          <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between gap-4 px-4 py-4 lg:px-6">
+      <div className="flex h-full flex-col bg-slate-100/80 overflow-hidden">
+        <div className="flex-shrink-0 border-b border-slate-200 bg-white/90 backdrop-blur overflow-visible relative z-[40]">
+          <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between gap-4 px-4 py-4 lg:px-6 overflow-visible">
             <div className="flex flex-1 items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setSidebarOpen(true)}
-                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white p-2 text-slate-500 transition hover:border-blue-300 hover:text-blue-600 lg:hidden"
-                aria-label={t('page.openSidebar')}
-              >
-                <Menu className="h-5 w-5" />
-              </button>
               <div>
                 <h1 className="text-xl font-semibold text-slate-900">{t('page.title')}</h1>
                 <div className="flex items-center gap-2">
@@ -569,7 +657,6 @@ function CalendarPageContent() {
                     { key: 'month', label: t('page.month'), icon: Grid },
                     { key: 'week', label: t('page.week'), icon: List },
                     { key: 'day', label: t('page.day'), icon: Clock },
-                    { key: 'list', label: t('page.agenda'), icon: CalendarIcon },
                   ] as { key: CalendarViewMode; label: string; icon: typeof Grid }[]
                 ).map(({ key, label, icon: Icon }) => (
                   <button
@@ -588,6 +675,109 @@ function CalendarPageContent() {
                   </button>
                 ))}
               </div>
+              <div className="relative" ref={connectionsDropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setShowConnections(!showConnections)}
+                  className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-blue-300 hover:text-blue-600"
+                >
+                  <Link2 className="h-4 w-4" />
+                  Connections ({connections.length})
+                </button>
+                {showConnections && (
+                  <div className="absolute right-0 top-full z-[9999] mt-2 w-80 rounded-lg border border-slate-200 bg-white shadow-xl">
+                    <div className="p-4">
+                      <h3 className="mb-3 text-sm font-semibold text-slate-900">
+                        Calendar Connections
+                      </h3>
+                      {connectionsLoading ? (
+                        <div className="flex items-center justify-center py-4">
+                          <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+                        </div>
+                      ) : connections.length === 0 ? (
+                        <div className="space-y-3 py-2">
+                          <div className="flex items-center gap-2 text-sm text-slate-500">
+                            <CloudOff className="h-4 w-4" />
+                            No connections
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleConnectProvider('google')}
+                            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+                          >
+                            Connect Google Calendar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleConnectProvider('outlook')}
+                            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+                          >
+                            Connect Outlook Calendar
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {connections.map((connection) => (
+                            <div
+                              key={connection.id}
+                              className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-3"
+                            >
+                              <div className="flex items-center gap-2">
+                                <Link2 className="h-4 w-4 text-slate-400" />
+                                <div>
+                                  <p className="text-sm font-medium text-slate-900">
+                                    {connection.provider === 'google' ? 'Google' : 'Outlook'}
+                                  </p>
+                                  <p className="text-xs text-slate-500">{connection.provider_email}</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => handleSync(connection.id)}
+                                  disabled={syncingConnectionId === connection.id}
+                                  className="rounded p-1.5 text-slate-400 transition hover:bg-slate-200 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+                                  title="Sync calendar"
+                                >
+                                  {syncingConnectionId === connection.id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <RefreshCcw className="h-4 w-4" />
+                                  )}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDisconnect(connection.id)}
+                                  className="rounded p-1.5 text-slate-400 transition hover:bg-red-100 hover:text-red-600"
+                                  title="Disconnect"
+                                >
+                                  <CloudOff className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                          <div className="mt-3 space-y-2 border-t border-slate-200 pt-3">
+                            <button
+                              type="button"
+                              onClick={() => handleConnectProvider('google')}
+                              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+                            >
+                              Connect Google Calendar
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleConnectProvider('outlook')}
+                              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+                            >
+                              Connect Outlook Calendar
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
               <button
                 type="button"
                 onClick={() => openCreateModal()}
@@ -600,27 +790,7 @@ function CalendarPageContent() {
           </div>
         </div>
 
-        <div className="mx-auto flex w-full max-w-[1400px] flex-1 gap-6 overflow-hidden px-4 pb-6 pt-4 lg:px-6">
-          <div className="hidden w-80 flex-shrink-0 lg:block">
-            <div className="h-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-              <CalendarSidebar
-                isOpen
-                onClose={() => setSidebarOpen(false)}
-                events={filteredEvents}
-                onEventClick={handleEventClick}
-                filters={filters}
-                onFiltersChange={setFilters}
-                onCreateEvent={() => openCreateModal()}
-                connections={connections}
-                onConnectProvider={handleConnectProvider}
-                onDisconnect={handleDisconnect}
-                onSync={handleSync}
-                loadingConnections={connectionsLoading}
-                syncingConnectionId={syncingConnectionId}
-              />
-            </div>
-          </div>
-
+        <div className="mx-auto flex w-full max-w-[1400px] flex-1 overflow-hidden px-4 pb-6 pt-4 lg:px-6">
           <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <CalendarView
               currentDate={currentDate}
@@ -630,29 +800,12 @@ function CalendarPageContent() {
               events={filteredEvents}
               onRangeSelect={handleRangeSelect}
               onEventClick={handleEventClick}
+              onEventDrop={handleEventDrop}
               loading={loading}
               canCreateEvents
             />
           </div>
         </div>
-
-        {sidebarOpen && (
-          <CalendarSidebar
-            isOpen={sidebarOpen}
-            onClose={() => setSidebarOpen(false)}
-            events={filteredEvents}
-            onEventClick={handleEventClick}
-            filters={filters}
-            onFiltersChange={setFilters}
-            onCreateEvent={() => openCreateModal()}
-            connections={connections}
-            onConnectProvider={handleConnectProvider}
-            onDisconnect={handleDisconnect}
-            onSync={handleSync}
-            loadingConnections={connectionsLoading}
-            syncingConnectionId={syncingConnectionId}
-          />
-        )}
 
         <EventModal
           isOpen={modalOpen}

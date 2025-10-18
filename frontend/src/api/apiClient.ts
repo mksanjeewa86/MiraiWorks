@@ -14,9 +14,10 @@ export const setAuthHandler = (handler: typeof authHandlerRef) => {
 };
 
 // Helper function to get auth token
+// Check both localStorage and sessionStorage for tokens
 const getAuthToken = (): string | null => {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('accessToken');
+    return localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
   }
   return null;
 };

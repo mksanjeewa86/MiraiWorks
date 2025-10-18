@@ -4,11 +4,9 @@ import { useMemo } from 'react';
 import clsx from 'clsx';
 import {
   CalendarDays,
-  CircleCheck,
   CloudOff,
   Link2,
   Loader2,
-  PlugZap,
   RefreshCcw,
   Search,
   X,
@@ -359,13 +357,6 @@ export default function CalendarSidebar({
               loadingConnections={loadingConnections}
               syncingConnectionId={syncingConnectionId}
             />
-
-            <div className="border-t border-slate-200 bg-slate-50/50 rounded-lg px-4 py-3 text-xs text-slate-400">
-              <div className="flex items-center gap-2">
-                <CircleCheck className="h-4 w-4" />
-                Calendar sync keeps interviews, tasks, and external events aligned.
-              </div>
-            </div>
           </div>
         </div>
       </aside>

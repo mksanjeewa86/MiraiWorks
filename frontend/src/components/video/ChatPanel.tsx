@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChatMessage } from '@/types/video';
-import Button from '../ui/button';
+import { Button } from '../ui/Button';
 import Input from '../ui/input';
 import {
   PaperAirplaneIcon,

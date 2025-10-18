@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 
-export default function AppLayout({ children, pageTitle, pageDescription }: AppLayoutProps) {
+export default function AppLayout({ children, pageTitle, pageDescription, noPadding }: AppLayoutProps) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(true); // Start with true for desktop
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
@@ -61,10 +61,10 @@ export default function AppLayout({ children, pageTitle, pageDescription }: AppL
   const finalPageDescription = pageDescription || pathPageInfo.description;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="h-screen bg-gray-50 dark:bg-gray-950 flex flex-col overflow-hidden">
       <Topbar pageTitle={finalPageTitle} pageDescription={finalPageDescription} />
 
-      <div className="flex">
+      <div className="flex flex-1 overflow-hidden">
         <Sidebar
           isOpen={sidebarOpen}
           isCollapsed={sidebarCollapsed}
@@ -75,11 +75,11 @@ export default function AppLayout({ children, pageTitle, pageDescription }: AppL
 
         <main
           className={`
-          flex-1 min-h-screen transition-all duration-300
+          flex-1 h-full transition-all duration-300 overflow-hidden
           ${!isMobile && !sidebarCollapsed ? 'lg:ml-64' : !isMobile && sidebarCollapsed ? 'lg:ml-16' : 'ml-0'}
         `}
         >
-          <div className="px-6 pb-6">{children}</div>
+          <div className={noPadding ? 'h-full' : 'px-6 pb-6 h-full overflow-auto'}>{children}</div>
         </main>
       </div>
     </div>

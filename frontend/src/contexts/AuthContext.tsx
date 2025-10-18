@@ -118,8 +118,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Force logout without API call (used by API interceptor)
   const forceLogout = () => {
+    // Clear tokens from both storage types
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
+    localStorage.removeItem('rememberMe');
+    localStorage.removeItem('tokenVersion');
+    sessionStorage.removeItem('accessToken');
+    sessionStorage.removeItem('refreshToken');
+    sessionStorage.removeItem('rememberMe');
+    sessionStorage.removeItem('tokenVersion');
     dispatch({ type: 'LOGOUT' });
 
     // Redirect to login page using Next.js router
@@ -129,18 +136,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const refreshAuth = async (silent: boolean = false) => {
-    const refreshToken = localStorage.getItem('refreshToken');
+    // Check both storage types for refresh token
+    const refreshToken = localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken');
     if (!refreshToken) {
       throw new Error('No refresh token available');
     }
 
+    // Determine which storage to use based on where we found the refresh token
+    const useLocalStorage = !!localStorage.getItem('refreshToken');
+    const storage = useLocalStorage ? localStorage : sessionStorage;
+
     try {
       const response = await authApi.refreshToken(refreshToken);
 
-      // Store new tokens
-      localStorage.setItem('accessToken', response.data!.access_token);
+      // Store new tokens in the same storage type
+      storage.setItem('accessToken', response.data!.access_token);
       if (response.data!.refresh_token) {
-        localStorage.setItem('refreshToken', response.data!.refresh_token);
+        storage.setItem('refreshToken', response.data!.refresh_token);
       }
 
       // If user data is not included in refresh response, fetch it separately
@@ -162,24 +174,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Check if this is a 401 error
       const is401 = error?.response?.status === 401;
 
-      // Only log if not silent mode
-      if (!silent) {
-        // Only clear tokens if it's truly a session expiration (401)
-        // But DON'T automatically logout or redirect - let the user stay logged in
-        if (is401) {
-          // Log the issue but don't force logout
-          console.warn('Token refresh failed - tokens may be expired');
+      // If 401, clear all tokens and force logout (token is invalid)
+      if (is401) {
+        console.warn('[AuthContext] Refresh token invalid (401), clearing storage and forcing logout');
 
-          // Show a gentle warning instead of forcing logout
-          toast.warning('Your session may have expired. You may need to log in again to access some features.', {
+        // Clear all storage
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('rememberMe');
+        localStorage.removeItem('tokenVersion');
+        sessionStorage.removeItem('accessToken');
+        sessionStorage.removeItem('refreshToken');
+        sessionStorage.removeItem('rememberMe');
+        sessionStorage.removeItem('tokenVersion');
+
+        // Dispatch logout
+        dispatch({ type: 'LOGOUT' });
+
+        // Only show toast and redirect if not in silent mode
+        if (!silent) {
+          toast.error('Your session has expired. Please log in again.', {
             duration: 5000,
           });
 
-          // Don't clear tokens or logout - let the user decide when to logout
-          // This prevents automatic logout which is disruptive to user experience
-        } else {
-          // Network or other error - don't logout, just log the error
-          console.error('Token refresh failed (non-auth error):', error);
+          // Redirect to login page
+          if (typeof window !== 'undefined') {
+            router.replace(ROUTES.AUTH.LOGIN);
+          }
+        }
+      } else {
+        // Network or other error - just log it
+        if (!silent) {
+          console.error('[AuthContext] Token refresh failed (non-auth error):', error);
         }
       }
 
@@ -211,15 +237,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           dispatch({ type: 'SET_LOADING', payload: true });
         }
 
-        const token = localStorage.getItem('accessToken');
-        const refreshToken = localStorage.getItem('refreshToken');
+        // TOKEN VERSION CHECK: Clear old tokens from before remember_me migration
+        // Migration date: 2025-10-17
+        const tokenVersion = localStorage.getItem('tokenVersion') || sessionStorage.getItem('tokenVersion');
+        const CURRENT_TOKEN_VERSION = '2.0'; // Updated for remember_me feature
+
+        if (!tokenVersion || tokenVersion !== CURRENT_TOKEN_VERSION) {
+          console.warn('[AuthContext] Old token version detected, clearing all tokens');
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('rememberMe');
+          sessionStorage.removeItem('accessToken');
+          sessionStorage.removeItem('refreshToken');
+          sessionStorage.removeItem('rememberMe');
+
+          if (isMounted) {
+            dispatch({ type: 'LOGOUT' });
+          }
+          return;
+        }
+
+        // Check both localStorage and sessionStorage for tokens
+        const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+        const refreshToken = localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken');
+
+        console.log('[AuthContext] initAuth - tokens found:', {
+          hasAccessToken: !!token,
+          hasRefreshToken: !!refreshToken,
+          tokenVersion,
+          fromLocalStorage: !!localStorage.getItem('accessToken'),
+          fromSessionStorage: !!sessionStorage.getItem('accessToken')
+        });
 
         if (token && refreshToken) {
-          // Try to verify current token first by calling /me endpoint
+          // Skip token validation, just try to use the access token
+          // If it fails, the API client will handle token refresh automatically
           try {
+            console.log('[AuthContext] Verifying access token with /me endpoint');
             const userResponse = await authApi.me(token);
 
-            // Token is valid, set auth state without refreshing
+            // Token is valid, set auth state
+            console.log('[AuthContext] Access token is valid, user authenticated');
             if (isMounted) {
               dispatch({
                 type: 'AUTH_SUCCESS',
@@ -227,30 +285,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   user: userResponse.data!,
                   access_token: token,
                   refresh_token: refreshToken,
-                  expires_in: 3600, // Default 1 hour for existing tokens
+                  expires_in: 3600,
                 },
               });
             }
           } catch (verifyError) {
-            if (!isMounted) return;
+            // Access token invalid, clear everything and require re-login
+            console.warn('[AuthContext] Access token invalid, clearing storage');
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('rememberMe');
+            localStorage.removeItem('tokenVersion');
+            sessionStorage.removeItem('accessToken');
+            sessionStorage.removeItem('refreshToken');
+            sessionStorage.removeItem('rememberMe');
+            sessionStorage.removeItem('tokenVersion');
 
-            // Current token invalid, try refresh
-            try {
-              await refreshAuth();
-              if (isMounted) {
-                // refreshAuth already dispatches AUTH_SUCCESS which sets isLoading to false
-              }
-            } catch (refreshError) {
-              if (!isMounted) return;
-
-              // Both tokens invalid, clear auth completely
-              localStorage.removeItem('accessToken');
-              localStorage.removeItem('refreshToken');
+            if (isMounted) {
               dispatch({ type: 'LOGOUT' });
             }
           }
         } else {
           // No tokens found, ensure clean state
+          console.log('[AuthContext] No tokens found in storage');
           if (isMounted) {
             dispatch({ type: 'LOGOUT' });
           }
@@ -259,9 +316,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!isMounted) return;
 
         // Any unexpected error, clear auth
-        console.error('Auth initialization error:', error);
+        console.error('[AuthContext] Auth initialization error:', error);
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
+        localStorage.removeItem('rememberMe');
+        localStorage.removeItem('tokenVersion');
+        sessionStorage.removeItem('accessToken');
+        sessionStorage.removeItem('refreshToken');
+        sessionStorage.removeItem('rememberMe');
+        sessionStorage.removeItem('tokenVersion');
         dispatch({ type: 'LOGOUT' });
       } finally {
         isInitializing = false;
@@ -295,9 +358,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Store tokens for successful login
-      localStorage.setItem('accessToken', response.data!.access_token);
-      localStorage.setItem('refreshToken', response.data!.refresh_token);
+      // Store tokens based on rememberMe preference
+      // If rememberMe is true, use localStorage (persists across sessions)
+      // If rememberMe is false, use sessionStorage (cleared when browser closes)
+      const storage = credentials.rememberMe ? localStorage : sessionStorage;
+      storage.setItem('accessToken', response.data!.access_token);
+      storage.setItem('refreshToken', response.data!.refresh_token);
+      storage.setItem('tokenVersion', '2.0'); // Set token version for future validation
+
+      // Also store the rememberMe preference itself
+      if (credentials.rememberMe) {
+        localStorage.setItem('rememberMe', 'true');
+      } else {
+        sessionStorage.setItem('rememberMe', 'false');
+        // Clear any existing localStorage tokens
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('rememberMe');
+        localStorage.removeItem('tokenVersion');
+      }
 
       dispatch({ type: 'AUTH_SUCCESS', payload: response.data! });
     } catch (error: unknown) {
@@ -374,12 +453,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
-    // Get refresh token before clearing storage
-    const refreshToken = state.refreshToken || localStorage.getItem('refreshToken');
+    // Get refresh token before clearing storage (check both storage types)
+    const refreshToken = state.refreshToken || localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken');
 
-    // Clear local storage first
+    // Clear both storage types
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
+    localStorage.removeItem('rememberMe');
+    localStorage.removeItem('tokenVersion');
+    sessionStorage.removeItem('accessToken');
+    sessionStorage.removeItem('refreshToken');
+    sessionStorage.removeItem('rememberMe');
+    sessionStorage.removeItem('tokenVersion');
 
     // Dispatch logout to clear auth state
     dispatch({ type: 'LOGOUT' });

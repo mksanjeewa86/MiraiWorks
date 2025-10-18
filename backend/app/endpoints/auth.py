@@ -144,8 +144,8 @@ async def login(
 
     # Create tokens without 2FA
     logger.info("Creating login tokens", user_id=user.id, component="auth")
-    tokens = await auth_service.create_login_tokens(db, user)
-    logger.info("Login successful", user_id=user.id, email=user.email, component="auth")
+    tokens = await auth_service.create_login_tokens(db, user, remember_me=login_data.rememberMe)
+    logger.info("Login successful", user_id=user.id, email=user.email, remember_me=login_data.rememberMe, component="auth")
 
     return LoginResponse(
         access_token=tokens["access_token"],
@@ -395,8 +395,22 @@ async def refresh_token(
     refresh_data: RefreshTokenRequest, db: AsyncSession = Depends(get_db)
 ):
     """Refresh access token using refresh token."""
+    # Debug logging
+    token_preview = refresh_data.refresh_token[:10] + "..." if len(refresh_data.refresh_token) > 10 else refresh_data.refresh_token
+    logger.info(
+        "Refresh token request",
+        token_preview=token_preview,
+        token_length=len(refresh_data.refresh_token),
+        component="auth"
+    )
+
     user = await auth_service.verify_refresh_token(db, refresh_data.refresh_token)
     if not user:
+        logger.warning(
+            "Refresh token verification failed",
+            token_preview=token_preview,
+            component="auth"
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired refresh token",

@@ -11,6 +11,11 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react', '@headlessui/react'],
   },
+  // Allow cross-origin requests in development from network IPs
+  allowedDevOrigins: [
+    'http://192.168.150.156:3000',
+    'http://localhost:3000',
+  ],
   async headers() {
     return [
       {

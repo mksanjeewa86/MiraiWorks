@@ -2,7 +2,7 @@ import { type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode } f
 
 // Button Component Types
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'destructive' | 'default';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'destructive' | 'default' | 'warning' | 'info';
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
   leftIcon?: ReactNode;

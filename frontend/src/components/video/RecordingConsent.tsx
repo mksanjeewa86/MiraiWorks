@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import Button from '../ui/button';
-import Card from '../ui/card';
+import { Button } from '../ui/Button';
+import { Card } from '../ui/card';
 import { VideoCameraIcon, MicrophoneIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
 import type { RecordingConsentProps } from '@/types/components';
 

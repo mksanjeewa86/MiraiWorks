@@ -19,7 +19,7 @@ export const useNotifications = () => {
 export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({ children }) => {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const { user, accessToken } = useAuth();
+  const { user, accessToken, isLoading } = useAuth();
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Show toast notification
@@ -105,6 +105,11 @@ export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({ ch
 
   // Polling for real-time notifications
   useEffect(() => {
+    // Wait for auth initialization to complete
+    if (isLoading) {
+      return;
+    }
+
     if (!user || !accessToken) {
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
@@ -212,18 +217,23 @@ export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({ ch
         pollingIntervalRef.current = null;
       }
     };
-  }, [user, accessToken, refreshUnreadCount]);
+  }, [user, accessToken, isLoading, refreshUnreadCount]);
 
   // Load initial data when user logs in
   useEffect(() => {
-    if (user) {
+    // Wait for auth initialization to complete before fetching notifications
+    if (isLoading) {
+      return; // Don't fetch while auth is still initializing
+    }
+
+    if (user && accessToken) {
       refreshNotifications();
       refreshUnreadCount();
     } else {
       setNotifications([]);
       setUnreadCount(0);
     }
-  }, [user, refreshNotifications, refreshUnreadCount]);
+  }, [user, accessToken, isLoading, refreshNotifications, refreshUnreadCount]);
 
   const value: NotificationsContextType = {
     notifications,

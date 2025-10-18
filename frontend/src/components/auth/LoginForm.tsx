@@ -20,6 +20,11 @@ export default function LoginForm({ onSuccess, onForgotPassword }: LoginFormProp
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+      rememberMe: false,
+    },
   });
 
   const onSubmit = async (data: LoginFormData) => {
@@ -123,7 +128,18 @@ export default function LoginForm({ onSuccess, onForgotPassword }: LoginFormProp
         )}
       </div>
 
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center">
+          <input
+            id="rememberMe"
+            type="checkbox"
+            {...register('rememberMe')}
+            className="h-4 w-4 rounded border-gray-300 text-brand-primary focus:ring-brand-primary"
+          />
+          <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+            Remember me
+          </label>
+        </div>
         <div className="text-sm">
           <button
             type="button"

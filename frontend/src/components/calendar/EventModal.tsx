@@ -22,6 +22,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  ConfirmDialog,
 } from '@/components/ui';
 import { Button } from '@/components/ui';
 import { Input } from '@/components/ui';
@@ -53,18 +54,15 @@ export default function EventModal({
   const [attendeeInput, setAttendeeInput] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const eventId = event?.id ?? '';
   const isTodoEvent = eventId.startsWith('todo-');
   const isInterviewEvent = eventId.startsWith('interview-');
-  const isCalendarEvent = /^\d+$/.test(eventId);
+  // Calendar events can be pure numeric IDs like "12" or prefixed like "event-12"
+  const isCalendarEvent = /^\d+$/.test(eventId) || /^event-\d+$/.test(eventId);
   const canDeleteEvent = !isCreateMode && !!event && (isCalendarEvent || isTodoEvent);
-  const deleteHelperMessage =
-    !isCreateMode && event && !canDeleteEvent
-      ? isInterviewEvent
-        ? 'Interviews must be cancelled from the interview workflow.'
-        : 'This event cannot be deleted from this view.'
-      : null;
 
   const handleClose = () => {
     if (!loading) {
@@ -78,10 +76,28 @@ export default function EventModal({
     return Number.isNaN(date.getTime()) ? null : date;
   };
 
+  // Convert a Date object to local datetime string format for datetime-local input
+  const toLocalDatetimeString = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
+  // Convert a Date object to local date string format for date input
+  const toLocalDateString = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const safeDateToLocalString = useCallback(
     (dateString: string | null | undefined, fallback: Date = new Date()): string => {
       const date = safeParseDate(dateString);
-      return (date || fallback).toISOString().slice(0, 16);
+      return toLocalDatetimeString(date || fallback);
     },
     []
   );
@@ -92,33 +108,28 @@ export default function EventModal({
     }
 
     if (isCreateMode) {
-      const now = new Date();
-      const baseStart = selectedRange
-        ? new Date(selectedRange.start)
-        : selectedDate
-          ? new Date(selectedDate)
-          : now;
-      const safeStart = Number.isNaN(baseStart.getTime()) ? now : baseStart;
+      // Use selectedRange.start or selectedDate if available, otherwise current time
+      let startTime: Date;
 
-      const computedEnd = (() => {
-        if (selectedRange) {
-          const maybeEnd = new Date(selectedRange.end);
-          if (!Number.isNaN(maybeEnd.getTime())) {
-            return maybeEnd;
-          }
-        }
-        const fallback = new Date(safeStart);
-        fallback.setHours(fallback.getHours() + 1);
-        return fallback;
-      })();
+      if (selectedRange?.start) {
+        startTime = new Date(selectedRange.start);
+      } else if (selectedDate) {
+        startTime = new Date(selectedDate);
+      } else {
+        startTime = new Date();
+      }
+
+      const endTime = selectedRange?.end
+        ? new Date(selectedRange.end)
+        : new Date(startTime.getTime() + 60 * 60 * 1000);
 
       setFormData({
         title: '',
         description: '',
         location: '',
-        startDatetime: safeStart.toISOString().slice(0, 16),
-        endDatetime: computedEnd.toISOString().slice(0, 16),
-        isAllDay: Boolean(selectedRange?.allDay),
+        startDatetime: toLocalDatetimeString(startTime),
+        endDatetime: toLocalDatetimeString(endTime),
+        isAllDay: selectedRange?.allDay || false,
         attendees: [],
         status: 'tentative',
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
@@ -152,10 +163,11 @@ export default function EventModal({
     }
 
     if (!formData.startDatetime) {
-      newErrors.startDatetime = 'Start time is required';
+      newErrors.startDatetime = formData.isAllDay ? 'Start date is required' : 'Start time is required';
     }
 
-    if (!formData.endDatetime) {
+    // End datetime is optional for all-day events
+    if (!formData.isAllDay && !formData.endDatetime) {
       newErrors.endDatetime = 'End time is required';
     }
 
@@ -163,7 +175,7 @@ export default function EventModal({
       const start = safeParseDate(formData.startDatetime);
       const end = safeParseDate(formData.endDatetime);
       if (start && end && end <= start) {
-        newErrors.endDatetime = 'End time must be after start time';
+        newErrors.endDatetime = formData.isAllDay ? 'End date must be after start date' : 'End time must be after start time';
       }
     }
 
@@ -180,12 +192,18 @@ export default function EventModal({
 
     setLoading(true);
     try {
+      const startDate = new Date(formData.startDatetime);
+      // For all-day events without end date, use start date as end date
+      const endDate = formData.endDatetime
+        ? new Date(formData.endDatetime)
+        : new Date(startDate);
+
       const eventData: Partial<CalendarEvent> = {
         title: formData.title.trim(),
         description: formData.description.trim() || undefined,
         location: formData.location.trim() || undefined,
-        startDatetime: formData.startDatetime,
-        endDatetime: formData.endDatetime,
+        startDatetime: startDate.toISOString(),
+        endDatetime: endDate.toISOString(),
         isAllDay: formData.isAllDay,
         attendees: formData.attendees,
         status: formData.status,
@@ -197,23 +215,28 @@ export default function EventModal({
       };
 
       await onSave(eventData);
+      setLoading(false);
     } catch (error) {
       console.error('Error saving event:', error);
-    } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async () => {
-    if (event && window.confirm('Are you sure you want to delete this event?')) {
-      setLoading(true);
-      try {
-        await onDelete(event);
-      } catch (error) {
-        console.error('Error deleting event:', error);
-      } finally {
-        setLoading(false);
-      }
+  const handleDelete = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!event) return;
+
+    setDeleting(true);
+    try {
+      await onDelete(event);
+      setShowDeleteConfirm(false);
+    } catch (error) {
+      console.error('Error deleting event:', error);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -253,7 +276,7 @@ export default function EventModal({
       ...prev,
       title: template.name,
       location: template.location,
-      endDatetime: end.toISOString().slice(0, 16),
+      endDatetime: toLocalDatetimeString(end),
     }));
   };
 
@@ -331,30 +354,48 @@ export default function EventModal({
                   error={errors.title}
                 />
 
-                <div className="grid gap-4 md:grid-cols-2">
+                {formData.isAllDay ? (
                   <Input
-                    type="datetime-local"
-                    label="Starts"
-                    value={formData.startDatetime}
+                    type="date"
+                    label="Date"
+                    value={formData.startDatetime ? formData.startDatetime.split('T')[0] : ''}
                     onChange={(event) =>
-                      setFormData((prev) => ({ ...prev, startDatetime: event.target.value }))
+                      setFormData((prev) => ({
+                        ...prev,
+                        startDatetime: `${event.target.value}T00:00`,
+                        endDatetime: `${event.target.value}T23:59`, // Set end to same day
+                      }))
                     }
                     leftIcon={<CalendarClock className="h-4 w-4" />}
                     error={errors.startDatetime}
                     required
                   />
-                  <Input
-                    type="datetime-local"
-                    label="Ends"
-                    value={formData.endDatetime}
-                    onChange={(event) =>
-                      setFormData((prev) => ({ ...prev, endDatetime: event.target.value }))
-                    }
-                    leftIcon={<CalendarRange className="h-4 w-4" />}
-                    error={errors.endDatetime}
-                    required
-                  />
-                </div>
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <Input
+                      type="datetime-local"
+                      label="Starts"
+                      value={formData.startDatetime}
+                      onChange={(event) =>
+                        setFormData((prev) => ({ ...prev, startDatetime: event.target.value }))
+                      }
+                      leftIcon={<CalendarClock className="h-4 w-4" />}
+                      error={errors.startDatetime}
+                      required
+                    />
+                    <Input
+                      type="datetime-local"
+                      label="Ends"
+                      value={formData.endDatetime}
+                      onChange={(event) =>
+                        setFormData((prev) => ({ ...prev, endDatetime: event.target.value }))
+                      }
+                      leftIcon={<CalendarRange className="h-4 w-4" />}
+                      error={errors.endDatetime}
+                      required
+                    />
+                  </div>
+                )}
 
                 <div className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3">
@@ -494,9 +535,6 @@ export default function EventModal({
                     Delete event
                   </Button>
                 )}
-                {!isCreateMode && event && deleteHelperMessage && (
-                  <p className="text-xs text-slate-500">{deleteHelperMessage}</p>
-                )}
               </div>
               <div className="flex items-center gap-3">
                 <Button
@@ -521,6 +559,18 @@ export default function EventModal({
           </DialogFooter>
         </form>
       </DialogContent>
+
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={confirmDelete}
+        title="Delete Event"
+        description="Are you sure you want to delete this event? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        loading={deleting}
+      />
     </Dialog>
   );
 }

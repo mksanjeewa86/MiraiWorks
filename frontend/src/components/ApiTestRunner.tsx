@@ -74,6 +74,7 @@ const ApiTestRunner: React.FC = () => {
       const response = await authApi.login({
         email: 'admin@miraiworks.com',
         password: 'admin123',
+        rememberMe: false,
       });
       if (response.data && response.data.access_token) {
         setAccessToken(response.data.access_token);

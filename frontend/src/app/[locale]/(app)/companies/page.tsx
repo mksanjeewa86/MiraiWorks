@@ -980,17 +980,25 @@ function CompaniesPageContent() {
 
         {/* Subscription Requests Tab Content */}
         {activeTab === 'subscription-requests' && (
-          <div className="space-y-6">
+          <div
+            className="space-y-4 overflow-y-auto pr-2"
+            style={{ height: 'calc(100vh - 220px)' }}
+          >
             {subscriptionRequests.length === 0 ? (
-              <Card className="p-8 text-center">
-                <CreditCard className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  {t('subscriptionRequests.noPending.title')}
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  {t('subscriptionRequests.noPending.message')}
-                </p>
-              </Card>
+              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-indigo-950/30 dark:via-purple-950/30 dark:to-pink-950/30 p-12 text-center border border-indigo-100 dark:border-indigo-900/50">
+                <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+                <div className="relative">
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 mb-6 shadow-xl shadow-indigo-500/30">
+                    <CreditCard className="h-10 w-10 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3 bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
+                    {t('subscriptionRequests.noPending.title')}
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 text-lg">
+                    {t('subscriptionRequests.noPending.message')}
+                  </p>
+                </div>
+              </div>
             ) : (
               subscriptionRequests.map((request) => {
                 const isUpgrade =
@@ -998,86 +1006,159 @@ function CompaniesPageContent() {
                   parseFloat(request.current_plan?.price_monthly?.toString() || '0');
 
                 return (
-                  <Card key={request.id} className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
+                  <div
+                    key={request.id}
+                    className="relative overflow-hidden rounded-3xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg hover:border-indigo-300 dark:hover:border-indigo-600 transition-colors duration-200"
+                  >
+                    {/* Status Badge */}
+                    <div className="absolute top-3 right-3">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-semibold shadow-lg shadow-amber-500/50">
+                        <Clock className="h-3 w-3" />
+                        Pending Review
+                      </span>
+                    </div>
+
+                    <div className="p-4">
+                      {/* Header Section */}
+                      <div className="flex items-start gap-3 mb-3">
+                        {/* Icon */}
+                        <div className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center shadow-lg ${
+                          isUpgrade
+                            ? 'bg-gradient-to-br from-emerald-400 to-teal-500 shadow-emerald-500/50'
+                            : 'bg-gradient-to-br from-blue-400 to-indigo-500 shadow-blue-500/50'
+                        }`}>
                           {isUpgrade ? (
-                            <ArrowUpRight className="h-5 w-5 text-green-600" />
+                            <ArrowUpRight className="h-5 w-5 text-white" />
                           ) : (
-                            <ArrowDownRight className="h-5 w-5 text-blue-600" />
+                            <ArrowDownRight className="h-5 w-5 text-white" />
                           )}
-                          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                            {request.current_plan?.display_name} → {request.requested_plan?.display_name}
-                          </h3>
                         </div>
 
-                        <div className="grid md:grid-cols-2 gap-4 mt-4">
-                          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                            <Building2 className="h-4 w-4" />
-                            <span>{request.company_name || 'Unknown Company'}</span>
+                        {/* Title Section */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide ${
+                              isUpgrade
+                                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                                : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                            }`}>
+                              {isUpgrade ? 'Upgrade' : 'Downgrade'}
+                            </span>
                           </div>
 
-                          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                            <Users className="h-4 w-4" />
-                            <span>{t('subscriptionRequests.requestedBy', { name: request.requester_name || 'Unknown User' })}</span>
-                          </div>
-
-                          <div className="text-sm text-gray-600 dark:text-gray-400">
-                            {new Date(request.created_at).toLocaleDateString('en-US', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
-                            })}
-                          </div>
+                          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
+                            {request.current_plan?.display_name}
+                            <span className="mx-2 text-gray-400">→</span>
+                            <span className="bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
+                              {request.requested_plan?.display_name}
+                            </span>
+                          </h3>
 
                           {request.current_plan && request.requested_plan && (
-                            <div className="text-sm font-medium text-gray-900 dark:text-white">
-                              {formatPrice(request.current_plan.price_monthly)} → {formatPrice(request.requested_plan.price_monthly)}
+                            <div className="flex items-center gap-2 text-sm font-semibold">
+                              <span className="text-gray-500 line-through">
+                                {formatPrice(request.current_plan.price_monthly)}
+                              </span>
+                              <span className="text-indigo-600 dark:text-indigo-400">
+                                {formatPrice(request.requested_plan.price_monthly)}
+                              </span>
+                              <span className="text-xs text-gray-500">/month</span>
                             </div>
                           )}
                         </div>
                       </div>
-                    </div>
 
-                    {request.request_message && (
-                      <div className="bg-gray-50 dark:bg-gray-900/20 p-4 rounded-lg mb-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <MessageSquare className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                          <p className="text-sm font-medium text-gray-900 dark:text-white">{t('subscriptionRequests.requestMessage')}</p>
+                      {/* Info Grid */}
+                      <div className="grid md:grid-cols-3 gap-2 mb-3">
+                        <div className="flex items-center gap-2 p-2 rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 border border-gray-200 dark:border-gray-700">
+                          <div className="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center flex-shrink-0">
+                            <Building2 className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Company</p>
+                            <p className="text-xs font-semibold text-gray-900 dark:text-white truncate">
+                              {request.company_name || 'Unknown Company'}
+                            </p>
+                          </div>
                         </div>
-                        <p className="text-sm text-gray-700 dark:text-gray-300">
-                          {request.request_message}
-                        </p>
-                      </div>
-                    )}
 
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => {
-                          setSelectedRequest(request);
-                          setReviewAction('approved');
-                          setShowReviewModal(true);
-                        }}
-                        className="flex-1 bg-green-600 hover:bg-green-700"
-                      >
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                        {t('subscriptionRequests.approve')}
-                      </Button>
-                      <Button
-                        onClick={() => {
-                          setSelectedRequest(request);
-                          setReviewAction('rejected');
-                          setShowReviewModal(true);
-                        }}
-                        variant="outline"
-                        className="flex-1 text-red-600 border-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
-                      >
-                        <X className="h-4 w-4 mr-2" />
-                        {t('subscriptionRequests.reject')}
-                      </Button>
+                        <div className="flex items-center gap-2 p-2 rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 border border-gray-200 dark:border-gray-700">
+                          <div className="w-7 h-7 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
+                            <Users className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Requested By</p>
+                            <p className="text-xs font-semibold text-gray-900 dark:text-white truncate">
+                              {request.requester_name || 'Unknown User'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 p-2 rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 border border-gray-200 dark:border-gray-700">
+                          <div className="w-7 h-7 rounded-lg bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center flex-shrink-0">
+                            <Clock className="h-3.5 w-3.5 text-pink-600 dark:text-pink-400" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Date</p>
+                            <p className="text-xs font-semibold text-gray-900 dark:text-white truncate">
+                              {new Date(request.created_at).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Request Message */}
+                      {request.request_message && (
+                        <div className="mb-3 p-2.5 rounded-lg bg-gradient-to-br from-indigo-50/50 to-purple-50/50 dark:from-indigo-950/20 dark:to-purple-950/20 border border-indigo-100 dark:border-indigo-900/50">
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center">
+                              <MessageSquare className="h-3 w-3 text-white" />
+                            </div>
+                            <p className="text-xs font-bold text-indigo-900 dark:text-indigo-300">
+                              {t('subscriptionRequests.requestMessage')}
+                            </p>
+                          </div>
+                          <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed pl-8">
+                            {request.request_message}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            setSelectedRequest(request);
+                            setReviewAction('approved');
+                            setShowReviewModal(true);
+                          }}
+                          className="flex-1 px-3 py-2 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold shadow-lg shadow-emerald-500/50"
+                        >
+                          <div className="flex items-center justify-center gap-1.5">
+                            <CheckCircle className="h-3.5 w-3.5" />
+                            <span className="text-sm">{t('subscriptionRequests.approve')}</span>
+                          </div>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setSelectedRequest(request);
+                            setReviewAction('rejected');
+                            setShowReviewModal(true);
+                          }}
+                          className="flex-1 px-3 py-2 rounded-lg bg-white dark:bg-gray-800 border-2 border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 font-bold shadow-lg"
+                        >
+                          <div className="flex items-center justify-center gap-1.5">
+                            <X className="h-3.5 w-3.5" />
+                            <span className="text-sm">{t('subscriptionRequests.reject')}</span>
+                          </div>
+                        </button>
+                      </div>
                     </div>
-                  </Card>
+                  </div>
                 );
               })
             )}

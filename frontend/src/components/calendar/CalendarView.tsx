@@ -6,7 +6,8 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import listPlugin from '@fullcalendar/list';
-import type { CalendarApi, DateSelectArg, EventClickArg, DatesSetArg } from '@fullcalendar/core';
+import type { CalendarApi, DateSelectArg, EventClickArg, DatesSetArg, EventDropArg } from '@fullcalendar/core';
+import type { EventResizeDoneArg } from '@fullcalendar/interaction';
 import type { CalendarEvent } from '@/types/interview';
 import type { CalendarViewProps, CalendarViewMode } from '@/types/components';
 
@@ -84,6 +85,7 @@ export default function CalendarView({
   events,
   onRangeSelect,
   onEventClick,
+  onEventDrop,
   loading,
   canCreateEvents,
 }: CalendarViewProps) {
@@ -165,7 +167,7 @@ export default function CalendarView({
         onRangeSelect({
           start: selection.start,
           end: selection.end,
-          allDay: selection.allDay,
+          allDay: false, // Always false - let users check the box if they want all-day
         });
       }
     },
@@ -235,6 +237,83 @@ export default function CalendarView({
     [viewType, currentDate, onViewChange, onDateChange, events]
   );
 
+  const handleEventDrop = useCallback(
+    (dropInfo: EventDropArg) => {
+      if (!onEventDrop) return;
+
+      const rawEvent = dropInfo.event.extendedProps?.raw as CalendarEvent | undefined;
+      if (!rawEvent) return;
+
+      // Don't allow dragging holiday events or interview events
+      if (rawEvent.id?.startsWith('holiday-') || rawEvent.id?.startsWith('interview-')) {
+        dropInfo.revert();
+        return;
+      }
+
+      // Don't allow dragging past events
+      const eventStart = new Date(rawEvent.startDatetime);
+      const now = new Date();
+      if (eventStart < now) {
+        dropInfo.revert();
+        return;
+      }
+
+      const newStart = dropInfo.event.start || new Date();
+      const newEnd = dropInfo.event.end || new Date(newStart.getTime() + 60 * 60 * 1000);
+
+      // Don't allow dropping into the past
+      if (newStart < now) {
+        dropInfo.revert();
+        return;
+      }
+
+      onEventDrop(rawEvent, newStart, newEnd, dropInfo.event.allDay);
+    },
+    [onEventDrop]
+  );
+
+  const handleEventResize = useCallback(
+    (resizeInfo: EventResizeDoneArg) => {
+      if (!onEventDrop) return;
+
+      const rawEvent = resizeInfo.event.extendedProps?.raw as CalendarEvent | undefined;
+      if (!rawEvent) return;
+
+      // Don't allow resizing holiday events or interview events
+      if (rawEvent.id?.startsWith('holiday-') || rawEvent.id?.startsWith('interview-')) {
+        resizeInfo.revert();
+        return;
+      }
+
+      // Don't allow resizing past events
+      const eventStart = new Date(rawEvent.startDatetime);
+      const now = new Date();
+      if (eventStart < now) {
+        resizeInfo.revert();
+        return;
+      }
+
+      const newStart = resizeInfo.event.start || new Date();
+      const newEnd = resizeInfo.event.end || new Date(newStart.getTime() + 60 * 60 * 1000);
+
+      // Don't allow resizing into the past
+      if (newStart < now || newEnd < now) {
+        resizeInfo.revert();
+        return;
+      }
+
+      onEventDrop(rawEvent, newStart, newEnd, resizeInfo.event.allDay);
+    },
+    [onEventDrop]
+  );
+
+  const handleEventDidMount = useCallback((info: any) => {
+    // Add tooltip with full title on hover
+    if (info.event.title) {
+      info.el.setAttribute('title', info.event.title);
+    }
+  }, []);
+
   return (
     <div className="relative flex-1 overflow-hidden">
       {loading && (
@@ -262,8 +341,42 @@ export default function CalendarView({
           select={handleSelect}
           selectLongPressDelay={200}
           eventClick={handleEventClick}
+          eventDidMount={handleEventDidMount}
           datesSet={handleDatesSet}
+          editable={Boolean(onEventDrop)}
+          eventDrop={handleEventDrop}
+          eventResize={handleEventResize}
+          eventResizableFromStart
+          eventAllow={(dropLocation, draggedEvent) => {
+            if (!draggedEvent) return false;
+
+            // Prevent dragging holidays and interviews
+            const eventId = draggedEvent.id;
+            if (eventId?.startsWith('holiday-') || eventId?.startsWith('interview-')) {
+              return false;
+            }
+
+            // Prevent dragging/dropping to past
+            const eventStart = draggedEvent.start || new Date();
+            const dropStart = dropLocation.start || new Date();
+            const now = new Date();
+
+            if (eventStart < now || dropStart < now) {
+              return false;
+            }
+
+            return true;
+          }}
           eventOverlap
+          snapDuration="00:30:00"
+          slotDuration="00:30:00"
+          slotMinTime="00:00:00"
+          slotMaxTime="24:00:00"
+          forceEventDuration
+          eventConstraint={{
+            start: '00:00',
+            end: '24:00'
+          }}
           dayMaxEventRows={3}
           moreLinkClick="popover"
           moreLinkClassNames="text-xs text-blue-600 hover:text-blue-700 font-medium cursor-pointer bg-blue-50 hover:bg-blue-100 rounded px-1 py-0.5 transition-colors"
@@ -275,13 +388,8 @@ export default function CalendarView({
             minute: '2-digit',
             hour12: false,
           }}
-          eventTimeFormat={{
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false,
-          }}
+          displayEventTime={false}
           stickyHeaderDates
-          displayEventEnd
           eventDisplay="block"
           progressiveEventRendering
         />

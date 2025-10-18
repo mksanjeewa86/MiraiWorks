@@ -9,6 +9,7 @@ from app.utils.constants import CompanyType
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+    rememberMe: Optional[bool] = False
 
 
 class RegisterRequest(BaseModel):

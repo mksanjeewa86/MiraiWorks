@@ -38,6 +38,8 @@ function AddUserPageContent() {
   const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
   const [filteredCompanies, setFilteredCompanies] = useState<Company[]>([]);
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
+  const [companyHasAdmin, setCompanyHasAdmin] = useState(false);
+  const [checkingAdmin, setCheckingAdmin] = useState(false);
 
   // Get user's role
   const userRole = user?.roles?.[0]?.role?.name;
@@ -56,24 +58,41 @@ function AddUserPageContent() {
     }
   }, [companies, companySearch]);
 
-  // Get available roles based on user permissions
+  // Get super admin's company ID (the company where system_admin user belongs)
+  const getSuperAdminCompanyId = () => {
+    // Super admin's company is the one where the system_admin user belongs
+    // This company cannot have candidates
+    if (user?.roles?.[0]?.role?.name === 'system_admin') {
+      return user.company_id;
+    }
+    return null;
+  };
+
+  // Get available roles based on user permissions and selected company
   const getAvailableRoles = () => {
+    // Candidate role is not available on this page
+    // Candidates should be created from the Candidates page
+
     if (isSuperAdmin) {
-      return [
-        { value: 'candidate', label: 'Candidate' },
+      // System admin role is not available for creation
+      // Only one system admin exists in the system
+      const roles = [
         { value: 'member', label: 'Member' },
-        { value: 'admin', label: 'Company Admin' },
-        { value: 'system_admin', label: 'System Admin' },
       ];
+
+      // Company Admin role is NOT allowed if company already has an admin
+      if (!companyHasAdmin) {
+        roles.push({ value: 'admin', label: 'Company Admin' });
+      }
+
+      return roles;
     } else if (isCompanyAdmin) {
+      // Company admins can only create members
       return [
-        { value: 'candidate', label: 'Candidate' },
         { value: 'member', label: 'Member' },
-        { value: 'admin', label: 'Company Admin' },
       ];
     } else {
       return [
-        { value: 'candidate', label: 'Candidate' },
         { value: 'member', label: 'Member' },
       ];
     }
@@ -90,6 +109,70 @@ function AddUserPageContent() {
       }));
     }
   }, [user, isCompanyAdmin]);
+
+  // Auto-set role to member if it's the only available option
+  useEffect(() => {
+    if (formData.company_id) {
+      const availableRoles = getAvailableRoles();
+
+      // If only one role is available and it's not already set, auto-select it
+      if (availableRoles.length === 1 && !formData.role) {
+        setFormData((prev) => ({
+          ...prev,
+          role: availableRoles[0].value,
+        }));
+      }
+    }
+  }, [formData.company_id, companyHasAdmin]);
+
+  // Check if selected company already has an admin
+  useEffect(() => {
+    const checkCompanyAdmin = async () => {
+      if (!formData.company_id) {
+        setCompanyHasAdmin(false);
+        return;
+      }
+
+      const superAdminCompanyId = getSuperAdminCompanyId();
+      const selectedCompanyId = parseInt(formData.company_id);
+
+      // Super admin's company can have unlimited admins
+      if (superAdminCompanyId && selectedCompanyId === superAdminCompanyId) {
+        setCompanyHasAdmin(false);
+        return;
+      }
+
+      try {
+        setCheckingAdmin(true);
+        const response = await usersApi.getUsers({
+          company_id: selectedCompanyId,
+          is_admin: true,
+          size: 1, // We only need to know if at least one exists
+        });
+
+        // If total > 0, the company already has an admin
+        setCompanyHasAdmin((response.data?.total || 0) > 0);
+      } catch (err) {
+        console.error('Failed to check company admin:', err);
+        setCompanyHasAdmin(false);
+      } finally {
+        setCheckingAdmin(false);
+      }
+    };
+
+    checkCompanyAdmin();
+  }, [formData.company_id, user]);
+
+  // Clear admin role if company already has an admin
+  useEffect(() => {
+    // If company already has an admin and admin role is selected, clear the role
+    if (companyHasAdmin && formData.role === 'admin') {
+      setFormData((prev) => ({
+        ...prev,
+        role: '', // Clear role selection
+      }));
+    }
+  }, [formData.company_id, formData.role, companyHasAdmin]);
 
   // Load companies for the dropdown
   useEffect(() => {
@@ -400,74 +483,98 @@ function AddUserPageContent() {
               </div>
             )}
 
-            {/* User Role Selection (Only for Super Admin) */}
-            {isSuperAdmin && formData.company_id && (
-              <div className="relative">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  User Role <span className="text-red-500">*</span>
-                </label>
+            {/* User Role Selection (Only for Super Admin and when multiple roles available) */}
+            {isSuperAdmin && formData.company_id && (() => {
+              const availableRoles = getAvailableRoles();
+
+              // If only one role is available, show it as read-only info
+              if (availableRoles.length === 1) {
+                return (
+                  <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      User will be assigned the <strong className="text-gray-900 dark:text-white">{availableRoles[0].label}</strong> role
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                      To create candidate users, please use the Candidates page.
+                    </p>
+                  </div>
+                );
+              }
+
+              // If multiple roles available, show dropdown
+              return (
                 <div className="relative">
-                  {/* Select-like button */}
-                  <button
-                    type="button"
-                    onClick={() => setShowRoleDropdown(!showRoleDropdown)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-left flex items-center justify-between"
-                  >
-                    <span
-                      className={formData.role ? 'text-gray-900 dark:text-white' : 'text-gray-500'}
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    User Role <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    {/* Select-like button */}
+                    <button
+                      type="button"
+                      onClick={() => setShowRoleDropdown(!showRoleDropdown)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-left flex items-center justify-between"
                     >
-                      {formData.role
-                        ? getAvailableRoles().find((r) => r.value === formData.role)?.label ||
-                          'Select a role...'
-                        : 'Select a role...'}
-                    </span>
-                    <svg
-                      className="w-5 h-5 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
-                  </button>
+                      <span
+                        className={formData.role ? 'text-gray-900 dark:text-white' : 'text-gray-500'}
+                      >
+                        {formData.role
+                          ? availableRoles.find((r) => r.value === formData.role)?.label ||
+                            'Select a role...'
+                          : 'Select a role...'}
+                      </span>
+                      <svg
+                        className="w-5 h-5 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </button>
 
-                  {/* Dropdown */}
-                  {showRoleDropdown && (
-                    <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-hidden">
-                      <div className="max-h-48 overflow-y-auto">
-                        {getAvailableRoles().map((role) => (
-                          <button
-                            key={role.value}
-                            type="button"
-                            onClick={() => {
-                              setFormData((prev) => ({ ...prev, role: role.value }));
-                              setShowRoleDropdown(false);
-                            }}
-                            className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none"
-                          >
-                            <div className="font-medium">{role.label}</div>
-                          </button>
-                        ))}
+                    {/* Dropdown */}
+                    {showRoleDropdown && (
+                      <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-hidden">
+                        <div className="max-h-48 overflow-y-auto">
+                          {availableRoles.map((role) => (
+                            <button
+                              key={role.value}
+                              type="button"
+                              onClick={() => {
+                                setFormData((prev) => ({ ...prev, role: role.value }));
+                                setShowRoleDropdown(false);
+                              }}
+                              className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none"
+                            >
+                              <div className="font-medium">{role.label}</div>
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    )}
+                  </div>
+
+                  {/* Click outside to close dropdown */}
+                  {showRoleDropdown && (
+                    <div className="fixed inset-0 z-5" onClick={() => setShowRoleDropdown(false)} />
                   )}
+
+                  <div className="mt-2">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Role determines the user&apos;s permissions and access level
+                    </p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                      <strong>Note:</strong> To create candidate users, please use the Candidates page.
+                    </p>
+                  </div>
                 </div>
-
-                {/* Click outside to close dropdown */}
-                {showRoleDropdown && (
-                  <div className="fixed inset-0 z-5" onClick={() => setShowRoleDropdown(false)} />
-                )}
-
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Role determines the user&apos;s permissions and access level
-                </p>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Submit Buttons */}
             <div className="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">

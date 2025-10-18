@@ -189,6 +189,7 @@ export interface CalendarViewProps {
   events: import('@/types/interview').CalendarEvent[];
   onRangeSelect?: (range: SelectionRange) => void;
   onEventClick: (event: import('@/types/interview').CalendarEvent) => void;
+  onEventDrop?: (event: import('@/types/interview').CalendarEvent, newStart: Date, newEnd: Date, allDay: boolean) => void;
   loading?: boolean;
   canCreateEvents?: boolean;
 }
@@ -321,6 +322,7 @@ export interface AppLayoutProps {
   children: React.ReactNode;
   pageTitle?: string;
   pageDescription?: string;
+  noPadding?: boolean;
 }
 
 export interface NavItem {

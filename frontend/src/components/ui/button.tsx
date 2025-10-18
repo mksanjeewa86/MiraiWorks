@@ -11,6 +11,8 @@ const variantClasses = {
   danger: 'bg-red-600 text-white hover:bg-red-700',
   destructive: 'bg-red-600 text-white hover:bg-red-700',
   default: 'bg-white text-gray-900 border border-gray-300 hover:bg-gray-50',
+  warning: 'bg-yellow-600 text-white hover:bg-yellow-700',
+  info: 'bg-blue-600 text-white hover:bg-blue-700',
 };
 
 const sizeClasses = {
