@@ -1,6 +1,6 @@
 """CRUD operations for todo extension requests."""
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,14 +30,16 @@ class CRUDTodoExtensionRequest(CRUDBase[TodoExtensionRequest, dict, dict]):
         requested_by_id: int,
     ) -> TodoExtensionRequest:
         """Create a new extension request."""
+        now = get_utc_now()
         extension_request = TodoExtensionRequest(
             todo_id=todo.id,
             requested_by_id=requested_by_id,
             creator_id=todo.owner_id,
-            current_due_date=todo.due_date,
             requested_due_date=request_data.requested_due_date,
             reason=request_data.reason,
             status=ExtensionRequestStatus.PENDING.value,
+            created_at=now,
+            updated_at=now,
         )
 
         db.add(extension_request)
@@ -63,11 +65,19 @@ class CRUDTodoExtensionRequest(CRUDBase[TodoExtensionRequest, dict, dict]):
         request_obj.responded_at = get_utc_now()
         request_obj.responded_by_id = responded_by_id
 
-        # If approved, update the todo's due date
+        # If approved, update the todo's due datetime
         if response_data.status == ExtensionRequestStatus.APPROVED:
             todo = await db.get(Todo, request_obj.todo_id)
             if todo:
-                todo.due_date = request_obj.requested_due_date
+                # Use new_due_date if provided (for date change approval), otherwise use requested_due_date
+                requested_datetime = response_data.new_due_date if response_data.new_due_date else request_obj.requested_due_date
+
+                # Ensure timezone-aware (should already be UTC)
+                if requested_datetime.tzinfo is None:
+                    from datetime import UTC
+                    requested_datetime = requested_datetime.replace(tzinfo=UTC)
+
+                todo.due_datetime = requested_datetime
                 todo.updated_at = get_utc_now()
 
         await db.commit()
@@ -211,6 +221,20 @@ class CRUDTodoExtensionRequest(CRUDBase[TodoExtensionRequest, dict, dict]):
         result = await db.execute(query)
         return result.scalars().first()
 
+    async def get_any_request_for_todo(
+        self, db: AsyncSession, *, todo_id: int, requested_by_id: int
+    ) -> TodoExtensionRequest | None:
+        """Check if there's any extension request (any status) for this todo by this user."""
+        query = select(TodoExtensionRequest).where(
+            and_(
+                TodoExtensionRequest.todo_id == todo_id,
+                TodoExtensionRequest.requested_by_id == requested_by_id,
+            )
+        )
+
+        result = await db.execute(query)
+        return result.scalars().first()
+
     async def validate_extension_request(
         self,
         db: AsyncSession,
@@ -221,8 +245,8 @@ class CRUDTodoExtensionRequest(CRUDBase[TodoExtensionRequest, dict, dict]):
     ) -> TodoExtensionValidation:
         """Validate if an extension request can be made."""
 
-        # Check if todo has a due date
-        if not todo.due_date:
+        # Check if todo has a due datetime
+        if not todo.due_datetime:
             return TodoExtensionValidation(
                 can_request_extension=False, reason="Todo has no due date set"
             )
@@ -240,47 +264,70 @@ class CRUDTodoExtensionRequest(CRUDBase[TodoExtensionRequest, dict, dict]):
             )
 
         # Check if user is the assigned user
-        if todo.assigned_user_id != requested_by_id:
+        if todo.assignee_id != requested_by_id:
             return TodoExtensionValidation(
                 can_request_extension=False,
                 reason="Only assigned user can request extension",
             )
 
-        # Check if there's already a pending request
-        existing_request = await self.get_pending_request_for_todo(
+        # Check if there's already any extension request (pending, approved, or rejected)
+        # Only allow 1 extension request per todo per user, ever
+        existing_request = await self.get_any_request_for_todo(
             db, todo_id=todo.id, requested_by_id=requested_by_id
         )
         if existing_request:
+            if existing_request.status == ExtensionRequestStatus.PENDING.value:
+                return TodoExtensionValidation(
+                    can_request_extension=False,
+                    reason="You already have a pending extension request for this todo",
+                )
+            elif existing_request.status == ExtensionRequestStatus.APPROVED.value:
+                return TodoExtensionValidation(
+                    can_request_extension=False,
+                    reason="Extension request was already approved for this todo",
+                )
+            else:  # REJECTED
+                return TodoExtensionValidation(
+                    can_request_extension=False,
+                    reason="You have already used your extension request for this todo",
+                )
+
+        # Ensure both datetimes are timezone-aware for comparison
+        from datetime import UTC
+
+        current_due_datetime = todo.due_datetime
+        if current_due_datetime.tzinfo is None:
+            current_due_datetime = current_due_datetime.replace(tzinfo=UTC)
+
+        if requested_due_date.tzinfo is None:
+            requested_due_date = requested_due_date.replace(tzinfo=UTC)
+
+        # Check if requested datetime is after current due datetime
+        if requested_due_date <= current_due_datetime:
             return TodoExtensionValidation(
                 can_request_extension=False,
-                reason="There is already a pending extension request",
+                reason="Extension date must be after current due date and time",
             )
 
         # Check if requested date is within allowed range (3 days max)
-        max_allowed_date = todo.due_date + timedelta(days=3)
-        if requested_due_date > max_allowed_date:
+        max_allowed_datetime = current_due_datetime + timedelta(days=3)
+        if requested_due_date > max_allowed_datetime:
             return TodoExtensionValidation(
                 can_request_extension=False,
-                max_allowed_due_date=max_allowed_date,
+                max_allowed_due_date=max_allowed_datetime,
                 reason="Extension cannot exceed 3 days from current due date",
             )
 
         # Check if requested date is not in the past
-        if requested_due_date <= get_utc_now():
+        now = get_utc_now()
+        if requested_due_date < now:
             return TodoExtensionValidation(
                 can_request_extension=False,
                 reason="Extension date cannot be in the past",
             )
 
-        # Check if requested date is after current due date
-        if requested_due_date <= todo.due_date:
-            return TodoExtensionValidation(
-                can_request_extension=False,
-                reason="Extension date must be after current due date",
-            )
-
         return TodoExtensionValidation(
-            can_request_extension=True, max_allowed_due_date=max_allowed_date
+            can_request_extension=True, max_allowed_due_date=max_allowed_datetime
         )
 
     async def get_statistics_for_creator(

@@ -14,7 +14,6 @@ import type {
   TodoWithAssignedUser,
   AssignmentSubmission,
   AssignmentReview,
-  AssignmentStatus,
 } from '@/types/todo';
 import type { AssignmentWorkflowProps } from '@/types/components';
 
@@ -31,33 +30,11 @@ export default function AssignmentWorkflow({ todo, onUpdate }: AssignmentWorkflo
   }
 
   const isOwner = todo.owner_id === user?.id;
-  const isAssignee = todo.assigned_user_id === user?.id;
   const isDraft = todo.is_draft;
   const isPublished = todo.is_published;
   const canEditAssignee = todo.can_be_edited_by_assignee;
-  const assignmentStatus = todo.assignment_status;
-
-  const getStatusBadge = (status: AssignmentStatus | null | undefined) => {
-    if (!status) return null;
-
-    const statusConfig = {
-      not_started: { label: 'Not Started', color: 'gray' },
-      in_progress: { label: 'In Progress', color: 'blue' },
-      submitted: { label: 'Submitted', color: 'yellow' },
-      under_review: { label: 'Under Review', color: 'purple' },
-      approved: { label: 'Approved', color: 'green' },
-      rejected: { label: 'Rejected', color: 'red' },
-    };
-
-    const config = statusConfig[status];
-    if (!config) return null;
-
-    return (
-      <Badge variant={config.color as any} className="text-xs">
-        {config.label}
-      </Badge>
-    );
-  };
+  const isSubmitted = todo.submitted_at !== null && todo.submitted_at !== undefined;
+  const isReviewed = todo.reviewed_at !== null && todo.reviewed_at !== undefined;
 
   const handlePublish = async () => {
     if (!isOwner) return;
@@ -94,7 +71,7 @@ export default function AssignmentWorkflow({ todo, onUpdate }: AssignmentWorkflo
   };
 
   const handleSubmit = async () => {
-    if (!isAssignee || !canEditAssignee) return;
+    if (!isOwner || !canEditAssignee) return;
     setSubmitting(true);
     try {
       const submission: AssignmentSubmission = {
@@ -114,19 +91,19 @@ export default function AssignmentWorkflow({ todo, onUpdate }: AssignmentWorkflo
     }
   };
 
-  const handleReview = async (reviewStatus: 'approved' | 'rejected') => {
+  const handleReview = async (approved: boolean) => {
     if (!isOwner) return;
     setSubmitting(true);
     try {
       const review: AssignmentReview = {
-        assignment_status: reviewStatus,
+        approved,
         assessment: reviewNotes.trim() || undefined,
         score: typeof reviewScore === 'number' ? reviewScore : undefined,
       };
       await todosApi.reviewAssignment(todo.id, review);
       showToast({
         type: 'success',
-        title: `Assignment ${reviewStatus} successfully`,
+        title: `Assignment ${approved ? 'approved' : 'rejected'} successfully`,
       });
       setReviewNotes('');
       setReviewScore('');
@@ -148,7 +125,16 @@ export default function AssignmentWorkflow({ todo, onUpdate }: AssignmentWorkflo
           <Badge variant="primary" className="text-xs">
             Assignment
           </Badge>
-          {getStatusBadge(assignmentStatus)}
+          {isSubmitted && !isReviewed && (
+            <Badge variant="warning" className="text-xs">
+              Awaiting Review
+            </Badge>
+          )}
+          {isReviewed && (
+            <Badge variant="success" className="text-xs">
+              Reviewed
+            </Badge>
+          )}
         </div>
 
         {/* Owner Controls */}
@@ -189,15 +175,15 @@ export default function AssignmentWorkflow({ todo, onUpdate }: AssignmentWorkflo
             <div>
               <p className="font-medium">Draft Assignment</p>
               <p className="text-xs mt-1">
-                This assignment is not visible to the assignee or viewers. Publish it when ready.
+                This assignment is in draft mode. Publish it when ready.
               </p>
             </div>
           </div>
         </div>
       )}
 
-      {/* Assignee Submission */}
-      {isAssignee && canEditAssignee && assignmentStatus !== 'submitted' && isPublished && (
+      {/* Owner Submission */}
+      {isOwner && canEditAssignee && !isSubmitted && isPublished && (
         <div className="space-y-3">
           <h4 className="text-sm font-medium text-slate-700">Submit Assignment</h4>
           <Textarea
@@ -215,7 +201,7 @@ export default function AssignmentWorkflow({ todo, onUpdate }: AssignmentWorkflo
       )}
 
       {/* Owner Review Section */}
-      {isOwner && assignmentStatus && ['submitted', 'under_review'].includes(assignmentStatus) && (
+      {isOwner && isSubmitted && !isReviewed && (
         <div className="space-y-3">
           <h4 className="text-sm font-medium text-slate-700">Review Assignment</h4>
 
@@ -244,7 +230,7 @@ export default function AssignmentWorkflow({ todo, onUpdate }: AssignmentWorkflo
             <Button
               size="sm"
               variant="outline"
-              onClick={() => handleReview('approved')}
+              onClick={() => handleReview(true)}
               disabled={submitting}
               className="flex-1 text-green-700 border-green-300 hover:bg-green-50"
             >
@@ -254,7 +240,7 @@ export default function AssignmentWorkflow({ todo, onUpdate }: AssignmentWorkflo
             <Button
               size="sm"
               variant="outline"
-              onClick={() => handleReview('rejected')}
+              onClick={() => handleReview(false)}
               disabled={submitting}
               className="flex-1 text-red-700 border-red-300 hover:bg-red-50"
             >
@@ -266,27 +252,13 @@ export default function AssignmentWorkflow({ todo, onUpdate }: AssignmentWorkflo
       )}
 
       {/* Assignment Result Display */}
-      {assignmentStatus && ['approved', 'rejected'].includes(assignmentStatus) && (
-        <div
-          className={`rounded border p-3 text-sm ${
-            assignmentStatus === 'approved'
-              ? 'border-green-200 bg-green-50 text-green-800'
-              : 'border-red-200 bg-red-50 text-red-800'
-          }`}
-        >
+      {isReviewed && todo.assignment_assessment && (
+        <div className="rounded border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
           <div className="flex items-start gap-2">
-            {assignmentStatus === 'approved' ? (
-              <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-            ) : (
-              <XCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-            )}
+            <MessageSquare className="h-4 w-4 mt-0.5 flex-shrink-0" />
             <div>
-              <p className="font-medium">
-                Assignment {assignmentStatus === 'approved' ? 'Approved' : 'Rejected'}
-              </p>
-              {todo.assignment_assessment && (
-                <p className="text-xs mt-1">{todo.assignment_assessment}</p>
-              )}
+              <p className="font-medium">Review Feedback</p>
+              <p className="text-xs mt-1">{todo.assignment_assessment}</p>
               {todo.assignment_score !== null && todo.assignment_score !== undefined && (
                 <p className="text-xs mt-1 font-medium">Score: {todo.assignment_score}/100</p>
               )}

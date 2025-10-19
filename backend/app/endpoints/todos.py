@@ -10,14 +10,10 @@ from app.dependencies import get_current_active_user
 from app.models.todo import Todo
 from app.models.user import User
 from app.schemas.todo import (
-    AssignableUser,
-    TodoAssignmentUpdate,
     TodoCreate,
     TodoListResponse,
     TodoRead,
     TodoUpdate,
-    TodoViewersUpdate,
-    TodoWithAssignedUser,
 )
 from app.services.todo_permissions import TodoPermissionService
 from app.utils.constants import TodoStatus
@@ -28,7 +24,7 @@ router = APIRouter()
 async def _get_todo_or_404(
     db: AsyncSession, *, todo_id: int, current_user: User, allow_deleted: bool = True
 ) -> Todo:
-    todo_obj = await todo_crud.get_with_assigned_user(db, todo_id=todo_id)
+    todo_obj = await todo_crud.get(db, id=todo_id)
     if not todo_obj:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Todo not found"
@@ -78,41 +74,6 @@ async def list_todos(
     return TodoListResponse(items=todos, total=total)
 
 
-@router.put(API_ROUTES.TODOS.VIEWERS, response_model=TodoRead)
-async def update_todo_viewers(
-    todo_id: int,
-    viewers_data: TodoViewersUpdate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
-):
-    """Update viewers for a todo."""
-    todo_obj = await _get_todo_or_404(
-        db, todo_id=todo_id, current_user=current_user, allow_deleted=False
-    )
-
-    # Check if user can assign this todo (only creator can manage viewers)
-    if not await TodoPermissionService.can_assign_todo(db, current_user.id, todo_obj):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to manage viewers for this todo",
-        )
-
-    # Validate viewer user IDs exist and are valid
-    for user_id in viewers_data.viewer_ids:
-        if not await TodoPermissionService.can_assign_to_user(
-            db, current_user.id, user_id
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Cannot add user {user_id} as viewer",
-            )
-
-    todo_obj = await todo_crud.update_viewers(
-        db, todo=todo_obj, viewers_data=viewers_data, updated_by=current_user.id
-    )
-    return todo_obj
-
-
 @router.get(API_ROUTES.TODOS.RECENT, response_model=list[TodoRead])
 async def get_recent_todos(
     limit: int = Query(5, ge=1, le=20),
@@ -133,8 +94,7 @@ async def create_todo(
     current_user: User = Depends(get_current_active_user),
 ):
     """Create a new todo for the current user."""
-    # Use create_with_viewers to handle viewer_ids
-    todo_obj = await todo_crud.create_with_viewers(
+    todo_obj = await todo_crud.create_for_user(
         db, owner_id=current_user.id, created_by=current_user.id, obj_in=todo_in
     )
     return todo_obj
@@ -253,65 +213,6 @@ async def restore_todo(
     return todo_obj
 
 
-# Assignment-related endpoints
-@router.get(API_ROUTES.TODOS.ASSIGNABLE_USERS, response_model=list[AssignableUser])
-async def get_assignable_users(
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
-):
-    """Get list of users that can be assigned todos by the current user."""
-    users = await todo_crud.get_assignable_users(db, assigner_id=current_user.id)
-    return users
-
-
-@router.get(API_ROUTES.TODOS.DETAILS, response_model=TodoWithAssignedUser)
-async def get_todo_with_assigned_user(
-    todo_id: int,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
-):
-    """Get todo details including assigned user information."""
-    todo_obj = await _get_todo_or_404(
-        db, todo_id=todo_id, current_user=current_user, allow_deleted=False
-    )
-    return todo_obj
-
-
-@router.put(API_ROUTES.TODOS.ASSIGN, response_model=TodoRead)
-async def assign_todo(
-    todo_id: int,
-    assignment_data: TodoAssignmentUpdate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
-):
-    """Assign a todo to a user with visibility settings."""
-    todo_obj = await _get_todo_or_404(
-        db, todo_id=todo_id, current_user=current_user, allow_deleted=False
-    )
-
-    # Check if user can assign this todo
-    if not await TodoPermissionService.can_assign_todo(db, current_user.id, todo_obj):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to assign this todo",
-        )
-
-    # If assigning to someone, validate they can be assigned
-    if assignment_data.assigned_user_id:
-        if not await TodoPermissionService.can_assign_to_user(
-            db, current_user.id, assignment_data.assigned_user_id
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot assign todo to this user",
-            )
-
-    todo_obj = await todo_crud.assign_todo(
-        db, todo=todo_obj, assignment_data=assignment_data, assigned_by=current_user.id
-    )
-    return todo_obj
-
-
 @router.get(API_ROUTES.TODOS.ASSIGNED, response_model=TodoListResponse)
 async def list_assigned_todos(
     include_completed: bool = Query(True, description="Include completed todos"),
@@ -320,12 +221,17 @@ async def list_assigned_todos(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    """List todos assigned to the current user."""
-    todos, total = await todo_crud.list_assigned_todos(
+    """List todos assigned to the current user (where user is assignee)."""
+    todos, total = await todo_crud.get_user_assignments(
         db,
-        assigned_user_id=current_user.id,
-        include_completed=include_completed,
+        user_id=current_user.id,
         limit=limit,
         offset=offset,
     )
+
+    # Filter by include_completed
+    if not include_completed:
+        todos = [t for t in todos if t.status != TodoStatus.COMPLETED.value]
+        total = len(todos)
+
     return TodoListResponse(items=todos, total=total)

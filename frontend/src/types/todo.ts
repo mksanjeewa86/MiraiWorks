@@ -2,25 +2,19 @@
 export type TodoVisibility = 'private' | 'public' | 'viewer';
 export type TodoType = 'regular' | 'assignment';
 export type TodoPublishStatus = 'draft' | 'published';
-export type AssignmentStatus =
-  | 'not_started'
-  | 'in_progress'
-  | 'submitted'
-  | 'under_review'
-  | 'approved'
-  | 'rejected';
+export type TodoPriority = 'low' | 'mid' | 'high';
+export type VisibilityStatus = 'visible' | 'hidden';
 
 export interface Todo {
   id: number;
   owner_id: number;
-  assigned_user_id?: number | null;
   title: string;
   description?: string | null;
   notes?: string | null;
   status: TodoStatus;
-  priority?: string | null;
-  visibility: TodoVisibility;
-  due_date?: string | null;
+  priority?: TodoPriority | null;
+  // Due datetime in UTC (ISO 8601 string with timezone)
+  due_datetime?: string | null;
   completed_at?: string | null;
   expired_at?: string | null;
   is_deleted: boolean;
@@ -31,7 +25,8 @@ export interface Todo {
   // Assignment workflow fields
   todo_type?: TodoType;
   publish_status?: TodoPublishStatus;
-  assignment_status?: AssignmentStatus | null;
+  assignee_id?: number | null;
+  visibility_status?: VisibilityStatus | null;
   assignment_assessment?: string | null;
   assignment_score?: number | null;
   submitted_at?: string | null;
@@ -52,14 +47,14 @@ export interface TodoPayload {
   title: string;
   description?: string | null;
   notes?: string | null;
-  priority?: string | null;
-  due_date?: string | null;
+  priority?: TodoPriority | null;
+  // Due datetime in UTC (ISO 8601 string with timezone)
+  due_datetime?: string | null;
   status?: TodoStatus;
-  assigned_user_id?: number | null;
-  visibility?: TodoVisibility;
-  viewer_ids?: number[];
   todo_type?: TodoType;
   publish_status?: TodoPublishStatus;
+  assignee_id?: number | null;
+  visibility_status?: VisibilityStatus | null;
 }
 
 export interface TodoListParams {
@@ -92,8 +87,10 @@ export interface TaskFormState {
   title: string;
   description: string;
   notes: string;
-  dueDate: string;
-  priority: string;
+  // Due datetime in local timezone (will be converted to UTC for API)
+  dueDate: string;  // Date part in YYYY-MM-DD format
+  dueTime?: string;  // Time part in HH:MM format
+  priority: TodoPriority;
 }
 
 export interface TaskModalProps {
@@ -102,6 +99,11 @@ export interface TaskModalProps {
   onSuccess: (todo?: any) => void;
   editingTodo?: Todo | null;
   workflowContext?: boolean;
+  onComplete?: (todo: Todo) => void;
+  onReopen?: (todo: Todo) => void;
+  onDelete?: (todo: Todo) => void;
+  onRestore?: (todo: Todo) => void;
+  onRequestExtension?: (todo: Todo) => void;
 }
 
 // Assignment-related types
@@ -144,6 +146,8 @@ export interface TodoPermissions {
   canAssign: boolean;
   canChangeStatus: boolean;
   canAddAttachments: boolean;
+  isOwner: boolean;
+  isAssignee: boolean;
 }
 
 // Assignment component props
@@ -161,7 +165,7 @@ export interface AssignmentSubmission {
 }
 
 export interface AssignmentReview {
-  assignment_status: 'approved' | 'rejected';
+  approved: boolean;
   assessment?: string;
   score?: number;
 }
@@ -195,6 +199,7 @@ export interface TodoExtensionRequestCreate {
 export interface TodoExtensionRequestResponse {
   status: ExtensionRequestStatus;
   response_reason?: string;
+  new_due_date?: string; // ISO datetime string for date change approval
 }
 
 export interface TodoExtensionRequest {
@@ -202,7 +207,6 @@ export interface TodoExtensionRequest {
   todo_id: number;
   requested_by_id: number;
   creator_id: number;
-  current_due_date: string;
   requested_due_date: string;
   reason: string;
   status: ExtensionRequestStatus;
@@ -215,6 +219,7 @@ export interface TodoExtensionRequest {
   requested_by: AssignableUser;
   creator: AssignableUser;
   responded_by?: AssignableUser;
+  todo: Todo;
 }
 
 export interface TodoExtensionRequestList {

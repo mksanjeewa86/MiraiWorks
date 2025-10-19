@@ -5,22 +5,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.crud.base import CRUDBase
-from app.crud.todo_viewer import todo_viewer
 from app.models.todo import Todo
-from app.models.todo_viewer import TodoViewer
 from app.models.user import User
 from app.schemas.todo import (
-    TodoAssignmentUpdate,
     TodoCreate,
     TodoUpdate,
-    TodoViewersUpdate,
 )
 from app.services.todo_permissions import TodoPermissionService
 from app.utils.constants import (
-    AssignmentStatus,
     TodoPublishStatus,
     TodoStatus,
-    TodoVisibility,
 )
 from app.utils.datetime_utils import get_utc_now
 
@@ -45,21 +39,39 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         return result.scalars().all()
 
     async def auto_mark_expired(self, db: AsyncSession, owner_id: int) -> None:
-        """Automatically mark overdue todos as expired."""
-        now = get_utc_now()
-        await db.execute(
-            update(Todo)
-            .where(
+        """Automatically mark overdue todos as expired.
+
+        NOTE: With separate due_date and due_time fields, expiration checking
+        is now handled by the Todo model's is_expired property which properly
+        combines date and time. This method will be deprecated in favor of
+        checking is_expired property when loading todos.
+
+        IMPORTANT: This method does NOT commit the changes. The calling code
+        is responsible for committing the transaction.
+        """
+        # Load todos and check expiration via the model property
+        result = await db.execute(
+            select(Todo).where(
                 Todo.owner_id == owner_id,
-                Todo.due_date.isnot(None),
+                Todo.due_datetime.isnot(None),
                 Todo.status.notin_(
                     [TodoStatus.COMPLETED.value, TodoStatus.EXPIRED.value]
                 ),
-                Todo.due_date < now,
+                Todo.is_deleted == False,
             )
-            .values(status=TodoStatus.EXPIRED.value, expired_at=now)
         )
-        await db.commit()
+        todos = result.scalars().all()
+
+        now = get_utc_now()
+        for todo in todos:
+            if todo.is_expired:  # Uses model property
+                todo.status = TodoStatus.EXPIRED.value
+                todo.expired_at = now
+                db.add(todo)
+
+        # Flush changes to database but don't commit
+        # This allows the changes to be visible in the same transaction
+        await db.flush()
 
     async def list_for_user(
         self,
@@ -72,27 +84,13 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         limit: int = 100,
         offset: int = 0,
     ) -> tuple[list[Todo], int]:
-        await self.auto_mark_expired(db, user_id)
-
-        # Build query to include todos where user is owner OR assigned
-        # BUT exclude draft assignments if user is not the owner
-        query: Select = (
-            select(Todo)
-            .options(selectinload(Todo.assigned_user))
-            .where(
-                (Todo.owner_id == user_id)
-                | (
-                    (Todo.assigned_user_id == user_id)
-                    & (Todo.publish_status == TodoPublishStatus.PUBLISHED.value)
-                )
-            )
-        )
+        # Build query to include todos where user is owner
+        query: Select = select(Todo).where(Todo.owner_id == user_id)
 
         # Filter by deleted status
         if not include_deleted:
             # Only show non-deleted todos
-            query = query.where(Todo.is_deleted is False)
-        # If include_deleted is True, don't filter - show all todos
+            query = query.where(Todo.is_deleted == False)
 
         if status:
             query = query.where(Todo.status == status)
@@ -101,10 +99,10 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
 
         total_query = select(func.count()).select_from(query.subquery())
         total_result = await db.execute(total_query)
-        total_result.scalar() or 0
+        total = total_result.scalar() or 0
 
         query = query.order_by(
-            Todo.due_date.is_(None), Todo.due_date.asc(), Todo.created_at.desc()
+            Todo.due_datetime.is_(None), Todo.due_datetime.asc(), Todo.created_at.desc()
         )
         query = query.offset(offset).limit(limit)
 
@@ -121,10 +119,9 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
     async def list_recent(
         self, db: AsyncSession, *, owner_id: int, limit: int = 5
     ) -> list[Todo]:
-        await self.auto_mark_expired(db, owner_id)
         result = await db.execute(
             select(Todo)
-            .where(Todo.owner_id == owner_id, Todo.is_deleted is False)
+            .where(Todo.owner_id == owner_id, Todo.is_deleted == False)
             .order_by(Todo.updated_at.desc())
             .limit(limit)
         )
@@ -139,9 +136,23 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         data["created_by"] = created_by
         data["last_updated_by"] = created_by
 
-        if data.get("due_date") and data["due_date"] < get_utc_now():
-            data["status"] = TodoStatus.EXPIRED.value
-            data["expired_at"] = get_utc_now()
+        # For assignment type todos, if assignee_id is not specified, assign to owner
+        if data.get("todo_type") == "assignment" and not data.get("assignee_id"):
+            data["assignee_id"] = owner_id
+
+        # Check if todo is expired (due_date is in the past)
+        if data.get("due_date"):
+            from datetime import UTC, datetime as dt_module, time as time_type
+
+            # Combine due_date and due_time (or use end of day if no time)
+            due_time = data.get("due_time") or time_type(23, 59, 59)
+            due_datetime = dt_module.combine(data["due_date"], due_time)
+            if due_datetime.tzinfo is None:
+                due_datetime = due_datetime.replace(tzinfo=UTC)
+
+            if due_datetime < get_utc_now():
+                data["status"] = TodoStatus.EXPIRED.value
+                data["expired_at"] = get_utc_now()
 
         db_obj = Todo(**data)
         db.add(db_obj)
@@ -205,140 +216,11 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         await db.refresh(todo)
         return todo
 
-    async def get_with_assigned_user(
-        self, db: AsyncSession, *, todo_id: int
-    ) -> Todo | None:
-        """Get todo with assigned user and viewers information, excluding soft-deleted."""
-        result = await db.execute(
-            select(Todo)
-            .options(
-                selectinload(Todo.assigned_user),
-                selectinload(Todo.viewers).selectinload(TodoViewer.user),
-            )
-            .where(Todo.id == todo_id, Todo.is_deleted == False)
-        )
-        return result.scalars().first()
-
-    async def assign_todo(
-        self,
-        db: AsyncSession,
-        *,
-        todo: Todo,
-        assignment_data: TodoAssignmentUpdate,
-        assigned_by: int,
-    ) -> Todo:
-        """Assign a todo to a user with visibility settings."""
-        update_data = assignment_data.model_dump(exclude_unset=True)
-        update_data["last_updated_by"] = assigned_by
-
-        # If assigning to someone, set default visibility to PUBLIC
-        if update_data.get("assigned_user_id") and not update_data.get("visibility"):
-            update_data["visibility"] = TodoVisibility.PUBLIC.value
-
-        # If unassigning, set visibility to PRIVATE
-        if update_data.get("assigned_user_id") is None:
-            update_data["visibility"] = TodoVisibility.PRIVATE.value
-
-        return await super().update(db, db_obj=todo, obj_in=update_data)
-
     async def get_assignable_users(
         self, db: AsyncSession, *, assigner_id: int
     ) -> list[User]:
         """Get users that can be assigned todos by the assigner."""
         return await TodoPermissionService.get_assignable_users(db, assigner_id)
-
-    async def list_assigned_todos(
-        self,
-        db: AsyncSession,
-        *,
-        assigned_user_id: int,
-        include_completed: bool = True,
-        limit: int = 100,
-        offset: int = 0,
-    ) -> tuple[list[Todo], int]:
-        """List todos assigned to a specific user."""
-        query: Select = (
-            select(Todo)
-            .options(selectinload(Todo.owner), selectinload(Todo.assigned_user))
-            .where(
-                Todo.assigned_user_id == assigned_user_id,
-                Todo.is_deleted is False,
-                Todo.visibility.in_(
-                    [TodoVisibility.PUBLIC.value, TodoVisibility.VIEWER.value]
-                ),
-            )
-        )
-
-        if not include_completed:
-            query = query.where(Todo.status != TodoStatus.COMPLETED.value)
-
-        total_query = select(func.count()).select_from(query.subquery())
-        total_result = await db.execute(total_query)
-        total = total_result.scalar() or 0
-
-        query = query.order_by(
-            Todo.due_date.is_(None), Todo.due_date.asc(), Todo.created_at.desc()
-        )
-        query = query.offset(offset).limit(limit)
-
-        result = await db.execute(query)
-        todos = result.scalars().all()
-        return todos, total
-
-    async def update_viewers(
-        self,
-        db: AsyncSession,
-        *,
-        todo: Todo,
-        viewers_data: TodoViewersUpdate,
-        updated_by: int,
-    ) -> Todo:
-        """Update viewers for a todo."""
-        # Update viewers
-        await todo_viewer.add_viewers(
-            db, todo_id=todo.id, viewer_ids=viewers_data.viewer_ids, added_by=updated_by
-        )
-
-        # Update last_updated_by
-        todo.last_updated_by = updated_by
-        db.add(todo)
-        await db.commit()
-        await db.refresh(todo)
-
-        return todo
-
-    async def create_with_viewers(
-        self, db: AsyncSession, *, owner_id: int, created_by: int, obj_in: TodoCreate
-    ) -> Todo:
-        """Create a todo with viewers."""
-        # Extract viewer_ids from the input
-        viewer_ids = obj_in.viewer_ids or []
-        obj_data = obj_in.model_dump(exclude={"viewer_ids"})
-
-        # Create the todo first
-        obj_data.setdefault("status", TodoStatus.PENDING.value)
-        obj_data["owner_id"] = owner_id
-        obj_data["created_by"] = created_by
-        obj_data["last_updated_by"] = created_by
-
-        if obj_data.get("due_date") and obj_data["due_date"] < get_utc_now():
-            obj_data["status"] = TodoStatus.EXPIRED.value
-            obj_data["expired_at"] = get_utc_now()
-
-        db_obj = Todo(**obj_data)
-        db.add(db_obj)
-        await db.commit()
-        await db.refresh(db_obj)
-
-        # Add viewers if any
-        if viewer_ids:
-            await todo_viewer.add_viewers(
-                db, todo_id=db_obj.id, viewer_ids=viewer_ids, added_by=created_by
-            )
-            # Refresh to get viewers
-            await db.refresh(db_obj)
-
-        return db_obj
 
     async def create_with_owner(
         self, db: AsyncSession, *, owner_id: int, obj_in: TodoCreate
@@ -377,7 +259,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         self, db: AsyncSession, *, todo: Todo, submitted_by: int, notes: str = None
     ) -> Todo:
         """Submit assignment for review."""
-        if todo.is_assignment and todo.assigned_user_id == submitted_by:
+        if todo.is_assignment and todo.owner_id == submitted_by:
             todo.submit_assignment()
             todo.last_updated_by = submitted_by
             if notes:
@@ -409,15 +291,15 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         *,
         todo: Todo,
         reviewer_id: int,
-        assignment_status: str,
+        approved: bool,
         assessment: str = None,
         score: int = None,
     ) -> Todo:
         """Review and assess an assignment."""
         if todo.is_assignment and todo.owner_id == reviewer_id:
-            if assignment_status == AssignmentStatus.APPROVED.value:
+            if approved:
                 todo.approve_assignment(reviewer_id, assessment, score)
-            elif assignment_status == AssignmentStatus.REJECTED.value:
+            else:
                 todo.reject_assignment(reviewer_id, assessment, score)
 
             todo.last_updated_by = reviewer_id
@@ -432,17 +314,12 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         """Get assignments that need review by the reviewer."""
         result = await db.execute(
             select(Todo)
-            .options(selectinload(Todo.assigned_user))
             .where(
                 Todo.owner_id == reviewer_id,
                 Todo.todo_type == "assignment",
-                Todo.assignment_status.in_(
-                    [
-                        AssignmentStatus.SUBMITTED.value,
-                        AssignmentStatus.UNDER_REVIEW.value,
-                    ]
-                ),
-                Todo.is_deleted is False,
+                Todo.submitted_at.isnot(None),
+                Todo.reviewed_at.is_(None),  # Not yet reviewed
+                Todo.is_deleted == False,
             )
             .order_by(Todo.submitted_at.asc())
         )
@@ -453,39 +330,32 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         db: AsyncSession,
         *,
         user_id: int,
-        assignment_status: str = None,
+        visibility_status: str = None,
         limit: int = 100,
         offset: int = 0,
     ) -> tuple[list[Todo], int]:
-        """Get assignments for a user (either as assignee or viewer)."""
-        # Get assignments where user is assigned or is a viewer
+        """Get assignments for a user (where user is assignee)."""
+        # Get assignments where user is assignee
         query: Select = (
             select(Todo)
-            .options(
-                selectinload(Todo.owner),
-                selectinload(Todo.assigned_user),
-                selectinload(Todo.viewers).selectinload(TodoViewer.user),
-            )
+            .options(selectinload(Todo.owner))
             .where(
                 Todo.todo_type == "assignment",
                 Todo.publish_status == TodoPublishStatus.PUBLISHED.value,
-                Todo.is_deleted is False,
-                (
-                    (Todo.assigned_user_id == user_id)
-                    | (Todo.viewers.any(TodoViewer.user_id == user_id))
-                ),
+                Todo.is_deleted == False,
+                Todo.assignee_id == user_id,
             )
         )
 
-        if assignment_status:
-            query = query.where(Todo.assignment_status == assignment_status)
+        if visibility_status:
+            query = query.where(Todo.visibility_status == visibility_status)
 
         total_query = select(func.count()).select_from(query.subquery())
         total_result = await db.execute(total_query)
         total = total_result.scalar() or 0
 
         query = query.order_by(
-            Todo.due_date.is_(None), Todo.due_date.asc(), Todo.created_at.desc()
+            Todo.due_datetime.is_(None), Todo.due_datetime.asc(), Todo.created_at.desc()
         )
         query = query.offset(offset).limit(limit)
 

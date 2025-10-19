@@ -877,7 +877,7 @@ class TestTodoManagementPermissionMatrix:
             description=f"Description for {title}",
             owner_id=creator_id,  # Use owner_id instead of creator_id
             created_by=creator_id,  # Set created_by
-            assigned_user_id=assignee_id,  # Use assigned_user_id instead of assignee_id
+            assignee_id=assignee_id,  # Use assignee_id for assignment
             due_date=get_utc_now() + timedelta(days=7),
             priority="medium",
             status="pending",

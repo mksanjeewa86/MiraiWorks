@@ -1,16 +1,16 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
 from app.utils.constants import (
-    AssignmentStatus,
+    VisibilityStatus,
+    TodoPriority,
     TodoPublishStatus,
     TodoStatus,
     TodoType,
-    TodoVisibility,
 )
 
 
@@ -18,34 +18,29 @@ class TodoBase(BaseModel):
     title: str = Field(..., max_length=255)
     description: Optional[str] = None
     notes: Optional[str] = None
-    priority: Optional[str] = Field(default=None, max_length=20)
-    due_date: Optional[datetime] = None
+    priority: Optional[str] = Field(default=TodoPriority.MID.value)
+    # Due datetime in UTC (will be converted from user's local timezone on input)
+    due_datetime: Optional[datetime] = None
     status: Optional[str] = Field(default=TodoStatus.PENDING.value)
-    assigned_user_id: Optional[int] = None
-    visibility: Optional[str] = Field(default=TodoVisibility.PRIVATE.value)
-    viewer_ids: list[int] | None = None
     workflow_id: Optional[int] = None
 
     # Assignment workflow fields
     todo_type: Optional[str] = Field(default=TodoType.REGULAR.value)
     publish_status: Optional[str] = Field(default=TodoPublishStatus.PUBLISHED.value)
-    assignment_status: Optional[str] = None
+    assignee_id: Optional[int] = None
+    visibility_status: Optional[str] = None
     assignment_assessment: Optional[str] = None
     assignment_score: Optional[int] = None
 
-    @field_validator("due_date", mode="before")
+    @field_validator("priority")
     @classmethod
-    def ensure_timezone(cls, value: Optional[datetime]) -> Optional[datetime]:
+    def validate_priority(cls, value: Optional[str]) -> Optional[str]:
         if value is None:
-            return value
-        if isinstance(value, str):
-            try:
-                value = datetime.fromisoformat(value)
-            except ValueError as exc:
-                raise ValueError("Invalid datetime format for due_date") from exc
-        if value.tzinfo is None:
-            return value.replace(tzinfo=UTC)
-        return value.astimezone(UTC)
+            return TodoPriority.MID.value
+        allowed = {priority.value for priority in TodoPriority}
+        if value not in allowed:
+            raise ValueError(f"Priority must be one of: {', '.join(sorted(allowed))}")
+        return value
 
     @field_validator("status")
     @classmethod
@@ -55,16 +50,6 @@ class TodoBase(BaseModel):
         allowed = {status.value for status in TodoStatus}
         if value not in allowed:
             raise ValueError(f"Status must be one of: {', '.join(sorted(allowed))}")
-        return value
-
-    @field_validator("visibility")
-    @classmethod
-    def validate_visibility(cls, value: Optional[str]) -> str:
-        if value is None:
-            return TodoVisibility.PRIVATE.value
-        allowed = {visibility.value for visibility in TodoVisibility}
-        if value not in allowed:
-            raise ValueError(f"Visibility must be one of: {', '.join(sorted(allowed))}")
         return value
 
     @field_validator("title")
@@ -96,15 +81,15 @@ class TodoBase(BaseModel):
             )
         return value
 
-    @field_validator("assignment_status")
+    @field_validator("visibility_status")
     @classmethod
-    def validate_assignment_status(cls, value: Optional[str]) -> Optional[str]:
+    def validate_visibility_status(cls, value: Optional[str]) -> Optional[str]:
         if value is None:
             return value
-        allowed = {status.value for status in AssignmentStatus}
+        allowed = {status.value for status in VisibilityStatus}
         if value not in allowed:
             raise ValueError(
-                f"Assignment status must be one of: {', '.join(sorted(allowed))}"
+                f"Visibility status must be one of: {', '.join(sorted(allowed))}"
             )
         return value
 
@@ -117,33 +102,28 @@ class TodoUpdate(BaseModel):
     title: Optional[str] = Field(default=None, max_length=255)
     description: Optional[str] = None
     notes: Optional[str] = None
-    priority: Optional[str] = Field(default=None, max_length=20)
-    due_date: Optional[datetime] = None
+    priority: Optional[str] = None
+    # Due datetime in UTC (will be converted from user's local timezone on input)
+    due_datetime: Optional[datetime] = None
     status: Optional[str] = None
-    assigned_user_id: Optional[int] = None
-    visibility: Optional[str] = None
-    viewer_ids: list[int] | None = None
 
     # Assignment workflow fields
     todo_type: Optional[str] = None
     publish_status: Optional[str] = None
-    assignment_status: Optional[str] = None
+    assignee_id: Optional[int] = None
+    visibility_status: Optional[str] = None
     assignment_assessment: Optional[str] = None
     assignment_score: Optional[int] = None
 
-    @field_validator("due_date", mode="before")
+    @field_validator("priority")
     @classmethod
-    def ensure_timezone(cls, value: Optional[datetime]) -> Optional[datetime]:
+    def validate_priority(cls, value: Optional[str]) -> Optional[str]:
         if value is None:
             return value
-        if isinstance(value, str):
-            try:
-                value = datetime.fromisoformat(value)
-            except ValueError as exc:
-                raise ValueError("Invalid datetime format for due_date") from exc
-        if value.tzinfo is None:
-            return value.replace(tzinfo=UTC)
-        return value.astimezone(UTC)
+        allowed = {priority.value for priority in TodoPriority}
+        if value not in allowed:
+            raise ValueError(f"Priority must be one of: {', '.join(sorted(allowed))}")
+        return value
 
     @field_validator("title")
     @classmethod
@@ -162,32 +142,21 @@ class TodoUpdate(BaseModel):
             raise ValueError(f"Status must be one of: {', '.join(sorted(allowed))}")
         return value
 
-    @field_validator("visibility")
-    @classmethod
-    def validate_visibility(cls, value: Optional[str]) -> Optional[str]:
-        if value is None:
-            return value
-        allowed = {visibility.value for visibility in TodoVisibility}
-        if value not in allowed:
-            raise ValueError(f"Visibility must be one of: {', '.join(sorted(allowed))}")
-        return value
-
 
 class TodoRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
     owner_id: int
-    created_by: Optional[int] = None  # Add created_by field
-    last_updated_by: Optional[int] = None  # Add last_updated_by field
-    assigned_user_id: Optional[int] = None
+    created_by: Optional[int] = None
+    last_updated_by: Optional[int] = None
     title: str
     description: Optional[str] = None
     notes: Optional[str] = None
     status: str
     priority: Optional[str] = None
-    visibility: str
-    due_date: Optional[datetime] = None
+    # Due datetime stored in UTC, serialized with timezone info
+    due_datetime: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     expired_at: Optional[datetime] = None
     is_deleted: bool
@@ -199,12 +168,24 @@ class TodoRead(BaseModel):
     # Assignment workflow fields
     todo_type: str
     publish_status: str
-    assignment_status: Optional[str] = None
+    assignee_id: Optional[int] = None
+    visibility_status: Optional[str] = None
     assignment_assessment: Optional[str] = None
     assignment_score: Optional[int] = None
     submitted_at: Optional[datetime] = None
     reviewed_at: Optional[datetime] = None
     reviewed_by: Optional[int] = None
+
+    @field_serializer('due_datetime', 'completed_at', 'expired_at', 'deleted_at', 'created_at', 'updated_at', 'submitted_at', 'reviewed_at')
+    def serialize_datetime(self, dt: Optional[datetime], _info) -> Optional[str]:
+        """Ensure datetime fields are serialized with UTC timezone information."""
+        if dt is None:
+            return None
+        # If datetime is naive, assume it's UTC and add timezone
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        # Serialize to ISO format
+        return dt.isoformat()
 
 
 class TodoListResponse(BaseModel):
@@ -224,62 +205,6 @@ class TodoStatusUpdate(BaseModel):
         return value
 
 
-class TodoAssignmentUpdate(BaseModel):
-    assigned_user_id: Optional[int] = None
-    visibility: Optional[str] = None
-
-    @field_validator("visibility")
-    @classmethod
-    def validate_visibility(cls, value: Optional[str]) -> Optional[str]:
-        if value is None:
-            return value
-        allowed = {visibility.value for visibility in TodoVisibility}
-        if value not in allowed:
-            raise ValueError(f"Visibility must be one of: {', '.join(sorted(allowed))}")
-        return value
-
-
-class AssignableUser(BaseModel):
-    """User that can be assigned to todos."""
-
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    email: str
-    first_name: str
-    last_name: str
-    is_active: bool
-
-    @property
-    def full_name(self) -> str:
-        return f"{self.first_name} {self.last_name}"
-
-
-class TodoViewer(BaseModel):
-    """Todo viewer information."""
-
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    user_id: int
-    todo_id: int
-    added_at: datetime
-    user: AssignableUser
-
-
-class TodoViewersUpdate(BaseModel):
-    """Update viewers for a todo."""
-
-    viewer_ids: list[int]
-
-
-class TodoWithAssignedUser(TodoRead):
-    """Todo with assigned user information."""
-
-    assigned_user: Optional[AssignableUser] = None
-    viewers: list[TodoViewer] | None = None
-
-
 class TodoExtensionValidation(BaseModel):
     """Validation response for todo extension requests."""
 
@@ -289,6 +214,17 @@ class TodoExtensionValidation(BaseModel):
     max_allowed_due_date: Optional[datetime] = None
     days_extension_allowed: int = 3
     reason: Optional[str] = None  # Reason why extension cannot be requested
+
+    @field_serializer('max_allowed_due_date')
+    def serialize_datetime(self, dt: Optional[datetime], _info) -> Optional[str]:
+        """Ensure datetime fields are serialized with UTC timezone information."""
+        if dt is None:
+            return None
+        # If datetime is naive, assume it's UTC and add timezone
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        # Serialize to ISO format
+        return dt.isoformat()
 
 
 # Assignment workflow schemas
@@ -317,19 +253,9 @@ class AssignmentSubmission(BaseModel):
 class AssignmentReview(BaseModel):
     """Review an assignment and provide assessment."""
 
-    assignment_status: str
+    approved: bool
     assessment: Optional[str] = None
     score: Optional[int] = Field(default=None, ge=0, le=100)
-
-    @field_validator("assignment_status")
-    @classmethod
-    def validate_assignment_status(cls, value: str) -> str:
-        allowed = {AssignmentStatus.APPROVED.value, AssignmentStatus.REJECTED.value}
-        if value not in allowed:
-            raise ValueError(
-                "Assignment status for review must be either 'approved' or 'rejected'"
-            )
-        return value
 
 
 class AssignmentWorkflowResponse(BaseModel):
@@ -338,3 +264,13 @@ class AssignmentWorkflowResponse(BaseModel):
     success: bool
     message: str
     todo: Optional[TodoRead] = None
+
+
+class UserInfo(BaseModel):
+    """Basic user information for relationships."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    email: str
+    full_name: str

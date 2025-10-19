@@ -11,6 +11,7 @@ from app.crud.todo_attachment import todo_attachment
 from app.database import get_db
 from app.dependencies import get_current_active_user
 from app.models.user import User
+from app.services.todo_permissions import TodoPermissionService
 from app.schemas.todo_attachment import (
     AttachmentStats,
     BulkDeleteRequest,
@@ -56,8 +57,12 @@ async def upload_todo_attachment(
     if not db_todo:
         raise HTTPException(status_code=404, detail="Todo not found")
 
-    # Check if user owns the todo or created it
-    if db_todo.owner_id != current_user.id and db_todo.created_by != current_user.id:
+    # Check if user can view this todo (owner or assignee)
+    if not await TodoPermissionService.can_view_todo(db, current_user.id, db_todo):
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+
+    # Check if user can add attachments (only owner)
+    if not await TodoPermissionService.can_add_attachments(db, current_user.id, db_todo):
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
     # Save file using storage service
@@ -115,7 +120,8 @@ async def get_todo_attachments(
     if not db_todo:
         raise HTTPException(status_code=404, detail="Todo not found")
 
-    if db_todo.owner_id != current_user.id and db_todo.created_by != current_user.id:
+    # Check if user can view this todo (owner or assignee)
+    if not await TodoPermissionService.can_view_todo(db, current_user.id, db_todo):
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
     # Get attachments
@@ -152,7 +158,8 @@ async def get_attachment_details(
     if not db_todo:
         raise HTTPException(status_code=404, detail="Todo not found")
 
-    if db_todo.owner_id != current_user.id and db_todo.created_by != current_user.id:
+    # Check if user can view this todo (owner or assignee)
+    if not await TodoPermissionService.can_view_todo(db, current_user.id, db_todo):
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
     # Get attachment
@@ -178,7 +185,8 @@ async def download_attachment(
     if not db_todo:
         raise HTTPException(status_code=404, detail="Todo not found")
 
-    if db_todo.owner_id != current_user.id and db_todo.created_by != current_user.id:
+    # Check if user can view this todo (owner or assignee)
+    if not await TodoPermissionService.can_view_todo(db, current_user.id, db_todo):
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
     # Get attachment
@@ -213,7 +221,8 @@ async def preview_attachment(
     if not db_todo:
         raise HTTPException(status_code=404, detail="Todo not found")
 
-    if db_todo.owner_id != current_user.id and db_todo.created_by != current_user.id:
+    # Check if user can view this todo (owner or assignee)
+    if not await TodoPermissionService.can_view_todo(db, current_user.id, db_todo):
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
     # Get attachment
@@ -265,7 +274,8 @@ async def update_attachment(
     if not db_todo:
         raise HTTPException(status_code=404, detail="Todo not found")
 
-    if db_todo.owner_id != current_user.id and db_todo.created_by != current_user.id:
+    # Check if user can edit this todo (only owner)
+    if not await TodoPermissionService.can_edit_todo(db, current_user.id, db_todo):
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
     # Update attachment
@@ -298,7 +308,17 @@ async def delete_attachment(
     if not db_todo:
         raise HTTPException(status_code=404, detail="Todo not found")
 
-    if db_todo.owner_id != current_user.id and db_todo.created_by != current_user.id:
+    # Get attachment to check uploader
+    db_attachment = await todo_attachment.get_attachment_by_id(
+        db, attachment_id=attachment_id, todo_id=todo_id
+    )
+    if not db_attachment:
+        raise HTTPException(status_code=404, detail="Attachment not found")
+
+    # Check if user can delete this attachment (owner or uploader)
+    if not await TodoPermissionService.can_delete_attachment(
+        db, current_user.id, db_todo, db_attachment.uploaded_by
+    ):
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
     # Delete attachment
@@ -326,7 +346,8 @@ async def bulk_delete_attachments(
     if not db_todo:
         raise HTTPException(status_code=404, detail="Todo not found")
 
-    if db_todo.owner_id != current_user.id and db_todo.created_by != current_user.id:
+    # Check if user can edit this todo (only owner)
+    if not await TodoPermissionService.can_edit_todo(db, current_user.id, db_todo):
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
     # Delete attachments
@@ -357,7 +378,8 @@ async def get_attachment_stats(
     if not db_todo:
         raise HTTPException(status_code=404, detail="Todo not found")
 
-    if db_todo.owner_id != current_user.id and db_todo.created_by != current_user.id:
+    # Check if user can view this todo (owner or assignee)
+    if not await TodoPermissionService.can_view_todo(db, current_user.id, db_todo):
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
     # Get stats

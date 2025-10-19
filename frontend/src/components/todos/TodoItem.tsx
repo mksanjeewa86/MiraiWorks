@@ -7,13 +7,9 @@ import {
   TrashIcon,
   CalendarIcon,
   ExclamationTriangleIcon,
-  UserIcon,
-  EyeIcon,
-  PencilSquareIcon,
-  LockClosedIcon,
 } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleIconSolid } from '@heroicons/react/24/solid';
-import type { Todo, TodoWithAssignedUser, TodoItemProps } from '@/types/todo';
+import type { Todo, TodoItemProps } from '@/types/todo';
 import { formatFileSize } from '@/types/todo-attachment';
 import useTodoPermissions from '@/hooks/useTodoPermissions';
 
@@ -30,22 +26,34 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   const permissions = useTodoPermissions(todo);
 
   const isCompleted = todo.status === 'completed';
-  const isOverdue = todo.due_date && new Date(todo.due_date) < new Date() && !isCompleted;
-  const assignedUser = 'assigned_user' in todo ? todo.assigned_user : null;
 
-  const formatDueDate = (dateString: string) => {
-    const date = new Date(dateString);
+  // Check if task is overdue
+  const isOverdue = React.useMemo(() => {
+    if (!todo.due_datetime || isCompleted) return false;
+
     const now = new Date();
+    const dueDateTime = new Date(todo.due_datetime);
+
+    return dueDateTime < now;
+  }, [todo.due_datetime, isCompleted]);
+
+  const formatDueDate = (datetimeString: string) => {
+    const date = new Date(datetimeString);
+    const now = new Date();
+
     const diffTime = date.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) return 'Due today';
-    if (diffDays === 1) return 'Due tomorrow';
-    if (diffDays === -1) return 'Due yesterday';
-    if (diffDays < 0) return `Overdue by ${Math.abs(diffDays)} days`;
-    if (diffDays <= 7) return `Due in ${diffDays} days`;
+    const dateStr = date.toLocaleDateString();
+    const timeStr = ` at ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
 
-    return date.toLocaleDateString();
+    if (diffDays === 0) return `Due today${timeStr}`;
+    if (diffDays === 1) return `Due tomorrow${timeStr}`;
+    if (diffDays === -1) return `Due yesterday${timeStr}`;
+    if (diffDays < 0) return `Overdue by ${Math.abs(diffDays)} days`;
+    if (diffDays <= 7) return `Due in ${diffDays} days${timeStr}`;
+
+    return `${dateStr}${timeStr}`;
   };
 
   const getPriorityColor = (priority?: string) => {
@@ -54,34 +62,13 @@ export const TodoItem: React.FC<TodoItemProps> = ({
     switch (priority.toLowerCase()) {
       case 'high':
         return 'bg-red-100 text-red-700';
+      case 'mid':
       case 'medium':
         return 'bg-yellow-100 text-yellow-700';
       case 'low':
         return 'bg-green-100 text-green-700';
       default:
         return 'bg-gray-100 text-gray-600';
-    }
-  };
-
-  const getVisibilityIcon = () => {
-    switch (todo.visibility) {
-      case 'public':
-        return <PencilSquareIcon className="h-3 w-3 text-green-600" />;
-      case 'viewer':
-        return <EyeIcon className="h-3 w-3 text-blue-600" />;
-      default:
-        return <LockClosedIcon className="h-3 w-3 text-gray-500" />;
-    }
-  };
-
-  const getVisibilityLabel = () => {
-    switch (todo.visibility) {
-      case 'public':
-        return 'Full Access';
-      case 'viewer':
-        return 'View Only';
-      default:
-        return 'Private';
     }
   };
 
@@ -145,28 +132,8 @@ export const TodoItem: React.FC<TodoItemProps> = ({
 
           {/* Meta Information */}
           <div className="mt-2 flex items-center space-x-4 text-xs text-gray-500">
-            {/* Assignment Status */}
-            {assignedUser && (
-              <div className="flex items-center space-x-1">
-                <UserIcon className="h-3 w-3" />
-                <span className="text-blue-600 font-medium">
-                  {assignedUser.first_name} {assignedUser.last_name}
-                </span>
-                <div className="flex items-center space-x-1 ml-1">
-                  {getVisibilityIcon()}
-                  <span className="text-xs" title={getVisibilityLabel()}>
-                    {todo.visibility === 'public'
-                      ? 'Full'
-                      : todo.visibility === 'viewer'
-                        ? 'View'
-                        : 'Private'}
-                  </span>
-                </div>
-              </div>
-            )}
-
             {/* Due Date */}
-            {todo.due_date && (
+            {todo.due_datetime && (
               <div
                 className={`
                 flex items-center space-x-1
@@ -178,7 +145,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
                 ) : (
                   <CalendarIcon className="h-3 w-3" />
                 )}
-                <span>{formatDueDate(todo.due_date)}</span>
+                <span>{formatDueDate(todo.due_datetime)}</span>
               </div>
             )}
 

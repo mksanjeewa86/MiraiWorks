@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import {
   CheckCircle2,
@@ -17,6 +18,8 @@ import {
   Sun,
   Search,
   CalendarRange,
+  FileText,
+  X,
 } from 'lucide-react';
 
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
@@ -29,10 +32,14 @@ import { LoadingSpinner } from '@/components/ui';
 import { ConfirmationModal } from '@/components/ui';
 import TaskModal from '@/components/todos/TaskModal';
 import ExtensionRequestModal from '@/components/todos/ExtensionRequestModal';
+import ExtensionApproveDialog from '@/components/todos/ExtensionApproveDialog';
+import ExtensionRejectDialog from '@/components/todos/ExtensionRejectDialog';
+import ExtensionChangeDateDialog from '@/components/todos/ExtensionChangeDateDialog';
 import { useToast } from '@/contexts/ToastContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { todosApi } from '@/api/todos';
-import type { Todo, ViewFilter, TodoItemProps } from '@/types/todo';
+import { todoExtensionsApi } from '@/api/todo-extensions';
+import type { Todo, ViewFilter, TodoItemProps, TodoExtensionRequest } from '@/types/todo';
 
 function formatDisplayDate(input?: string | null, noDueDateText?: string): string {
   if (!input) return noDueDateText || 'No due date';
@@ -43,9 +50,25 @@ function formatDisplayDate(input?: string | null, noDueDateText?: string): strin
 
 function formatRelativeTime(input?: string | null, t?: ReturnType<typeof useTranslations<'todos'>>): string {
   if (!input) return '';
-  const date = new Date(input);
+
+  // Parse date in local timezone by appending local time if only date is provided
+  let date: Date;
+  if (input.includes('T')) {
+    // Full datetime string
+    date = new Date(input);
+  } else {
+    // Date-only string - treat as local date at midnight
+    const [year, month, day] = input.split('-').map(Number);
+    date = new Date(year, month - 1, day);
+  }
+
   if (Number.isNaN(date.getTime())) return '';
-  const diff = date.getTime() - Date.now();
+
+  // Compare dates at midnight local time
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const dueDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const diff = dueDate.getTime() - today.getTime();
   const days = Math.round(diff / (1000 * 60 * 60 * 24));
 
   if (!t) {
@@ -79,25 +102,51 @@ function TodoItem({
   onRequestExtension,
   t,
 }: TodoItemProps & { onRequestExtension?: (todo: Todo) => void; t: ReturnType<typeof useTranslations<'todos'>> }) {
+  const { user } = useAuth();
   const isProcessing = loadingId === todo.id;
   const showExpired = todo.status === 'expired' || todo.is_expired;
-  const showCompleteAction = !todo.is_deleted && todo.status !== 'completed';
-  const showReopenAction = !todo.is_deleted && (todo.status === 'completed' || showExpired);
   const isCompleted = todo.status === 'completed';
   const isDeleted = todo.is_deleted;
 
-  // Check if user can request extension (assignee with due date, not completed/deleted)
-  const canRequestExtension =
-    !isDeleted && !isCompleted && todo.due_date && todo.assigned_user_id && onRequestExtension;
+  // Check if current user is owner or assignee
+  const isOwner = user && todo.owner_id === user.id;
+  const isAssignee = user && todo.assignee_id === user.id;
+
+  // Import utility for formatting UTC datetime in local timezone
+  const formatDueDate = (dueDatetime?: string | null): string => {
+    if (!dueDatetime) return '';
+
+    // Parse UTC datetime and convert to local timezone
+    const date = new Date(dueDatetime);
+    if (Number.isNaN(date.getTime())) return '';
+
+    // Format date part in local timezone
+    const formattedDate = date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+
+    // Format time part in local timezone (24-hour format)
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    return `${formattedDate} at ${hours}:${minutes}`;
+  };
+
+  // Different card styles based on assignment status
+  const isAssignment = todo.todo_type === 'assignment';
 
   // Modern color scheme
   const cardColors = isDeleted
-    ? 'bg-gray-50 border-gray-200 dark:bg-gray-900/50 dark:border-gray-700'
+    ? 'bg-gray-50 border-gray-300 dark:bg-gray-900/50 dark:border-gray-700'
     : showExpired
-      ? 'bg-rose-50 border-rose-200 dark:bg-rose-900/10 dark:border-rose-800'
+      ? 'bg-rose-50 border-rose-300 dark:bg-rose-900/10 dark:border-rose-800'
       : isCompleted
-        ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-900/10 dark:border-emerald-800'
-        : 'bg-white border-slate-200 dark:bg-slate-800/50 dark:border-slate-700';
+        ? 'bg-emerald-50 border-emerald-300 dark:bg-emerald-900/10 dark:border-emerald-800'
+        : isAssignment
+          ? 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-300 dark:from-purple-900/10 dark:to-pink-900/10 dark:border-purple-700'
+          : 'bg-white border-slate-200 dark:bg-slate-800/50 dark:border-slate-700';
 
   const iconColors = isDeleted
     ? 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
@@ -105,77 +154,139 @@ function TodoItem({
       ? 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400'
       : isCompleted
         ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'
-        : 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400';
+        : isAssignment
+          ? 'bg-gradient-to-br from-purple-100 to-pink-100 text-purple-600 dark:from-purple-900/30 dark:to-pink-900/30 dark:text-purple-400'
+          : 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400';
+
+  const assignmentBadgeColors = isAssignee
+    ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
+    : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white';
 
   return (
     <div
-      className={`group relative overflow-hidden rounded-lg border ${cardColors} shadow-sm hover:shadow-md transition-all duration-200`}
+      className={`group relative overflow-hidden rounded-xl border-2 ${cardColors} shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col h-full`}
     >
-      {/* Compact header with icon and title */}
-      <div className="flex items-start gap-3 p-4">
-        <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg ${iconColors}`}>
+      {/* Assignment indicator ribbon - only show for assignees */}
+      {isAssignment && isAssignee && (
+        <div className="absolute top-0 right-0 z-10">
+          <div className={`${assignmentBadgeColors} px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-bl-lg shadow-md`}>
+            Assigned to You
+          </div>
+        </div>
+      )}
+
+      {/* Header with icon and title - flex-1 to push footer down */}
+      <div className="flex items-start gap-3 p-4 pb-3 flex-1">
+        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl ${iconColors} shadow-sm`}>
           {isDeleted ? (
-            <Trash2 className="h-5 w-5" />
+            <Trash2 className="h-6 w-6" />
           ) : isCompleted ? (
-            <CheckCircle2 className="h-5 w-5" />
+            <CheckCircle2 className="h-6 w-6" />
           ) : showExpired ? (
-            <AlertCircle className="h-5 w-5" />
+            <AlertCircle className="h-6 w-6" />
           ) : (
-            <ClipboardList className="h-5 w-5" />
+            <ClipboardList className="h-6 w-6" />
           )}
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-2">
+          {/* Title - adjusted spacing for assignment ribbon */}
+          <div className={`mb-2 min-h-[3rem] ${isAssignment && isAssignee ? 'pr-20' : ''}`}>
             <h3
-              className={`text-base font-semibold leading-snug line-clamp-2 ${
+              className={`text-base font-bold leading-snug line-clamp-2 ${
                 isDeleted ? 'line-through opacity-60' : ''
               }`}
-              style={{ color: 'var(--text-primary)' }}
+              style={{
+                color: 'var(--text-primary)',
+                minHeight: '3rem',
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden'
+              }}
             >
               {todo.title}
             </h3>
-            {todo.priority && (
-              <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 whitespace-nowrap">
-                <ListCheck className="h-3 w-3" />
-                {todo.priority}
+          </div>
+
+          {/* Priority badge - after title */}
+          {todo.priority && (
+            <div className="mb-2">
+              <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 whitespace-nowrap shadow-sm">
+                <ListCheck className="h-3.5 w-3.5" />
+                {todo.priority.toUpperCase()}
+              </span>
+            </div>
+          )}
+
+          {/* Status badges */}
+          <div className="flex flex-wrap items-center gap-1.5 mb-2">
+            {isDeleted && (
+              <span className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                <Trash2 className="h-3.5 w-3.5" /> {t('badges.deleted')}
+              </span>
+            )}
+            {showExpired && !isDeleted && (
+              <span className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold bg-rose-200 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300">
+                <AlertCircle className="h-3.5 w-3.5" /> {t('badges.overdue')}
+              </span>
+            )}
+            {isCompleted && todo.completed_at && (
+              <span className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold bg-emerald-200 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">
+                <CheckCircle2 className="h-3.5 w-3.5" /> Completed {new Date(todo.completed_at).toLocaleDateString()}
               </span>
             )}
           </div>
 
-          {/* Status badges */}
-          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-            {isDeleted && (
-              <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
-                <Trash2 className="h-3 w-3" /> {t('badges.deleted')}
-              </span>
-            )}
-            {showExpired && !isDeleted && (
-              <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300">
-                <AlertCircle className="h-3 w-3" /> {t('badges.overdue')}
-              </span>
-            )}
-            {isCompleted && todo.completed_at && (
-              <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
-                <CheckCircle2 className="h-3 w-3" /> {new Date(todo.completed_at).toLocaleDateString()}
-              </span>
-            )}
-            {todo.due_date && (
-              <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium ${
+          {/* Due date - prominent display */}
+          <div className="mb-2 min-h-[3.5rem]">
+            {todo.due_datetime ? (
+              <div className={`flex items-center gap-2 rounded-lg px-3 py-2 h-full ${
                 showExpired
-                  ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300'
-                  : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
+                  ? 'bg-rose-100 border border-rose-300 dark:bg-rose-900/20 dark:border-rose-800'
+                  : isCompleted
+                    ? 'bg-emerald-100 border border-emerald-300 dark:bg-emerald-900/20 dark:border-emerald-800'
+                    : 'bg-blue-100 border border-blue-300 dark:bg-blue-900/20 dark:border-blue-800'
               }`}>
-                <Clock className="h-3 w-3" />
-                {formatRelativeTime(todo.due_date, t)}
-              </span>
+                <CalendarRange className={`h-4 w-4 flex-shrink-0 ${
+                  showExpired
+                    ? 'text-rose-600 dark:text-rose-400'
+                    : isCompleted
+                      ? 'text-emerald-600 dark:text-emerald-400'
+                      : 'text-blue-600 dark:text-blue-400'
+                }`} />
+                <div className="flex-1 min-w-0">
+                  <div className={`text-xs font-semibold truncate ${
+                    showExpired
+                      ? 'text-rose-700 dark:text-rose-300'
+                      : isCompleted
+                        ? 'text-emerald-700 dark:text-emerald-300'
+                        : 'text-blue-700 dark:text-blue-300'
+                  }`}>
+                    {formatDueDate(todo.due_datetime)}
+                  </div>
+                  <div className={`text-[10px] font-medium ${
+                    showExpired
+                      ? 'text-rose-600 dark:text-rose-400'
+                      : isCompleted
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : 'text-blue-600 dark:text-blue-400'
+                  }`}>
+                    {formatRelativeTime(todo.due_datetime, t)}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-full rounded-lg px-3 py-2 bg-gray-100 border border-gray-200 dark:bg-gray-800/50 dark:border-gray-700">
+                <span className="text-xs text-gray-500 dark:text-gray-400">No due date</span>
+              </div>
             )}
           </div>
 
           {/* Description */}
           {todo.description && (
             <p
-              className={`mt-2 text-sm leading-relaxed line-clamp-2 ${
+              className={`text-sm leading-relaxed line-clamp-2 ${
                 isDeleted ? 'opacity-50' : 'opacity-75'
               }`}
               style={{ color: 'var(--text-secondary)' }}
@@ -186,9 +297,9 @@ function TodoItem({
 
           {/* Notes - compact */}
           {todo.notes && (
-            <div className="mt-2 rounded-md bg-amber-50 border border-amber-200 p-2 dark:bg-amber-900/20 dark:border-amber-800/50">
-              <div className="flex items-center gap-1.5 text-xs font-medium text-amber-700 dark:text-amber-300">
-                <StickyNote className="h-3 w-3" />
+            <div className="mt-2 rounded-lg bg-amber-50 border border-amber-300 p-2.5 dark:bg-amber-900/20 dark:border-amber-800/50 shadow-sm">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-700 dark:text-amber-300">
+                <StickyNote className="h-3.5 w-3.5" />
                 <span>{t('labels.notes')}</span>
               </div>
               <p className="mt-1 text-xs leading-relaxed text-amber-800 dark:text-amber-200 line-clamp-2">
@@ -199,82 +310,17 @@ function TodoItem({
         </div>
       </div>
 
-      {/* Compact action buttons */}
-      <div className="border-t border-slate-100 dark:border-slate-700/50 bg-slate-50/50 dark:bg-slate-800/30 px-4 py-2">
-        {isDeleted ? (
-          <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="primary"
-              className="flex-1 h-8 text-xs"
-              loading={isProcessing}
-              onClick={() => onRestore?.(todo)}
-              leftIcon={<RotateCcw className="h-3.5 w-3.5" />}
-            >
-              {t('actions.restore')}
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="flex-1 h-8 text-xs"
-              onClick={() => onEdit(todo)}
-              leftIcon={<ClipboardList className="h-3.5 w-3.5" />}
-            >
-              {t('actions.view')}
-            </Button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-1.5">
-            {showCompleteAction && (
-              <Button
-                size="sm"
-                variant="primary"
-                className="flex-1 h-8 text-xs"
-                loading={isProcessing}
-                onClick={() => onComplete?.(todo)}
-                leftIcon={<CheckCircle2 className="h-3.5 w-3.5" />}
-              >
-                {t('actions.finish')}
-              </Button>
-            )}
-            {showReopenAction && (
-              <Button
-                size="sm"
-                variant="outline"
-                className="flex-1 h-8 text-xs"
-                loading={isProcessing}
-                onClick={() => onReopen?.(todo)}
-                leftIcon={<RotateCcw className="h-3.5 w-3.5" />}
-              >
-                {t('actions.reopen')}
-              </Button>
-            )}
-            {canRequestExtension && (
-              <Button
-                size="sm"
-                variant="ghost"
-                className="px-2 h-8 text-orange-600 hover:bg-orange-100 dark:text-orange-400 dark:hover:bg-orange-900/30"
-                onClick={() => onRequestExtension(todo)}
-                leftIcon={<CalendarRange className="h-3.5 w-3.5" />}
-              />
-            )}
-            <Button
-              size="sm"
-              variant="ghost"
-              className="px-2 h-8"
-              onClick={() => onEdit(todo)}
-              leftIcon={<ClipboardList className="h-3.5 w-3.5" />}
-            />
-            <Button
-              size="sm"
-              variant="ghost"
-              className="px-2 h-8 text-rose-600 hover:bg-rose-100 dark:text-rose-400 dark:hover:bg-rose-900/30"
-              loading={isProcessing}
-              onClick={() => onDelete(todo)}
-              leftIcon={<Trash2 className="h-3.5 w-3.5" />}
-            />
-          </div>
-        )}
+      {/* View button footer - flex-shrink-0 to keep at bottom */}
+      <div className="border-t border-slate-200 dark:border-slate-700/50 bg-gradient-to-r from-slate-50 to-slate-100/50 dark:from-slate-800/30 dark:to-slate-900/30 px-4 py-3 flex-shrink-0 mt-auto">
+        <Button
+          size="sm"
+          variant="outline"
+          className="w-full h-9 text-sm font-semibold border-2 bg-white/80 border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-slate-400 dark:bg-slate-800/50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:border-slate-500 shadow-sm transition-all"
+          onClick={() => onEdit(todo)}
+          leftIcon={<ClipboardList className="h-4 w-4" />}
+        >
+          {t('actions.view')}
+        </Button>
       </div>
     </div>
   );
@@ -282,8 +328,14 @@ function TodoItem({
 
 function TodosPageContent() {
   const t = useTranslations('todos');
+  const searchParams = useSearchParams();
   const { showToast } = useToast();
   const { user } = useAuth();
+
+  // Tab state
+  const [activeTab, setActiveTab] = useState<'todos' | 'extension-requests'>('todos');
+
+  // Todos state
   const [todos, setTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
@@ -296,6 +348,15 @@ function TodosPageContent() {
     isOpen: boolean;
     todo: Todo | null;
   }>({ isOpen: false, todo: null });
+
+  // Extension requests state
+  const [extensionRequests, setExtensionRequests] = useState<TodoExtensionRequest[]>([]);
+  const [extensionRequestsLoading, setExtensionRequestsLoading] = useState(false);
+  const [reviewingRequest, setReviewingRequest] = useState<TodoExtensionRequest | null>(null);
+  const [approveDialogOpen, setApproveDialogOpen] = useState(false);
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [changeDateDialogOpen, setChangeDateDialogOpen] = useState(false);
+  const [extensionActionLoading, setExtensionActionLoading] = useState(false);
 
   // Confirmation modal state
   const [confirmationModal, setConfirmationModal] = useState<{
@@ -311,12 +372,26 @@ function TodosPageContent() {
   const loadTodos = useCallback(async () => {
     setLoading(true);
     try {
-      const listResponse = await todosApi.list({
-        includeCompleted: true,
-        includeDeleted: true, // Always load all todos, filter client-side
-        limit: 200,
-      });
-      setTodos(listResponse.items);
+      // Fetch both owned todos and assigned todos
+      const [ownedResponse, assignedResponse] = await Promise.all([
+        todosApi.list({
+          includeCompleted: true,
+          includeDeleted: true, // Always load all todos, filter client-side
+          limit: 200,
+        }),
+        todosApi.listAssignedTodos({
+          includeCompleted: true,
+          limit: 200,
+        }),
+      ]);
+
+      // Combine and deduplicate todos by ID
+      const allTodos = [...ownedResponse.items, ...assignedResponse.items];
+      const uniqueTodos = Array.from(
+        new Map(allTodos.map(todo => [todo.id, todo])).values()
+      );
+
+      setTodos(uniqueTodos);
       setError(null);
     } catch (err) {
       console.error(err);
@@ -327,9 +402,43 @@ function TodosPageContent() {
     }
   }, [showToast, t]);
 
+  const loadExtensionRequests = useCallback(async () => {
+    setExtensionRequestsLoading(true);
+    try {
+      const response = await todoExtensionsApi.listRequestsToReview({
+        status: 'pending',
+        limit: 100,
+      });
+      setExtensionRequests(response.items || []);
+    } catch (err) {
+      console.error(err);
+      showToast({ type: 'error', title: 'Failed to load extension requests' });
+    } finally {
+      setExtensionRequestsLoading(false);
+    }
+  }, [showToast]);
+
   useEffect(() => {
     void loadTodos();
-  }, [loadTodos]);
+    void loadExtensionRequests(); // Load extension requests on mount for badge count
+  }, [loadTodos, loadExtensionRequests]);
+
+  // Check URL for edit parameter and open modal automatically
+  useEffect(() => {
+    const editId = searchParams?.get('edit');
+    if (editId && todos.length > 0) {
+      const todoId = parseInt(editId, 10);
+      if (!isNaN(todoId)) {
+        const todoToEdit = todos.find(t => t.id === todoId);
+        if (todoToEdit) {
+          setEditingTodo(todoToEdit);
+          setIsModalOpen(true);
+          // Clear the URL parameter after opening the modal
+          window.history.replaceState({}, '', '/todos');
+        }
+      }
+    }
+  }, [searchParams, todos]);
 
   const stats = useMemo(() => {
     const nonDeletedTodos = todos.filter((todo) => !todo.is_deleted);
@@ -370,24 +479,36 @@ function TodosPageContent() {
   const deletedTodos = useMemo(() => todos.filter((todo) => todo.is_deleted), [todos]);
 
   const dueTodayCount = useMemo(() => {
-    const today = new Date();
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const todayString = today.toDateString();
+
     return activeTodos.filter((todo) => {
-      if (!todo.due_date) return false;
-      const due = new Date(todo.due_date);
+      if (!todo.due_datetime) return false;
+
+      // Parse UTC datetime and convert to local timezone
+      const due = new Date(todo.due_datetime);
       if (Number.isNaN(due.getTime())) return false;
+
       return due.toDateString() === todayString;
     }).length;
   }, [activeTodos]);
 
   const upcomingCount = useMemo(() => {
     const now = new Date();
-    const inSevenDays = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const inSevenDays = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+
     return activeTodos.filter((todo) => {
-      if (!todo.due_date) return false;
-      const due = new Date(todo.due_date);
+      if (!todo.due_datetime) return false;
+
+      // Parse UTC datetime and convert to local timezone
+      const due = new Date(todo.due_datetime);
       if (Number.isNaN(due.getTime())) return false;
-      return due > now && due <= inSevenDays;
+
+      // Compare at date level (midnight)
+      const dueDate = new Date(due.getFullYear(), due.getMonth(), due.getDate());
+      return dueDate > today && dueDate <= inSevenDays;
     }).length;
   }, [activeTodos]);
 
@@ -410,13 +531,21 @@ function TodosPageContent() {
       return 0;
     };
 
+    // Helper to parse UTC datetime
+    const parseDatetime = (datetimeStr?: string | null): number => {
+      if (!datetimeStr) return Number.POSITIVE_INFINITY;
+
+      const date = new Date(datetimeStr);
+      return Number.isNaN(date.getTime()) ? Number.POSITIVE_INFINITY : date.getTime();
+    };
+
     const result = [...baseList];
     result.sort((a, b) => {
       const weightDiff = viewFilter === 'all' ? getStatusWeight(a) - getStatusWeight(b) : 0;
       if (weightDiff !== 0) return weightDiff;
 
-      const dateA = a.due_date ? new Date(a.due_date).getTime() : Number.POSITIVE_INFINITY;
-      const dateB = b.due_date ? new Date(b.due_date).getTime() : Number.POSITIVE_INFINITY;
+      const dateA = parseDatetime(a.due_datetime);
+      const dateB = parseDatetime(b.due_datetime);
       return dateA - dateB;
     });
 
@@ -586,14 +715,104 @@ function TodosPageContent() {
   };
 
   const handleRequestExtension = (todo: Todo) => {
-    // Check if current user is the assignee
-    if (user && todo.assigned_user_id === user.id) {
+    // Check if current user is the owner or assignee
+    const isOwner = user && todo.owner_id === user.id;
+    const isAssignee = user && todo.assignee_id === user.id;
+
+    if (user && (isOwner || isAssignee)) {
       setExtensionRequestModal({ isOpen: true, todo });
     } else {
       showToast({
         type: 'error',
-        title: t('toasts.extensionOnlyAssignee'),
+        title: t('toasts.extensionOnlyOwner'),
       });
+    }
+  };
+
+  const handleApproveRequest = (request: TodoExtensionRequest) => {
+    setReviewingRequest(request);
+    setApproveDialogOpen(true);
+  };
+
+  const handleChangeDate = (request: TodoExtensionRequest) => {
+    setReviewingRequest(request);
+    setChangeDateDialogOpen(true);
+  };
+
+  const handleRejectRequest = (request: TodoExtensionRequest) => {
+    setReviewingRequest(request);
+    setRejectDialogOpen(true);
+  };
+
+  const executeApprove = async () => {
+    if (!reviewingRequest) return;
+
+    setExtensionActionLoading(true);
+    try {
+      await todoExtensionsApi.respondToExtensionRequest(reviewingRequest.id, {
+        status: 'approved',
+      });
+      showToast({ type: 'success', title: 'Extension request approved' });
+      await loadExtensionRequests();
+      await loadTodos();
+      setApproveDialogOpen(false);
+      setReviewingRequest(null);
+    } catch (err) {
+      console.error(err);
+      showToast({ type: 'error', title: 'Failed to approve extension request' });
+    } finally {
+      setExtensionActionLoading(false);
+    }
+  };
+
+  const executeReject = async (reason: string) => {
+    if (!reviewingRequest) return;
+
+    setExtensionActionLoading(true);
+    try {
+      await todoExtensionsApi.respondToExtensionRequest(reviewingRequest.id, {
+        status: 'rejected',
+        response_reason: reason,
+      });
+      showToast({ type: 'error', title: 'Extension request rejected' });
+      await loadExtensionRequests();
+      await loadTodos();
+      setRejectDialogOpen(false);
+      setReviewingRequest(null);
+    } catch (err) {
+      console.error(err);
+      showToast({ type: 'error', title: 'Failed to reject extension request' });
+    } finally {
+      setExtensionActionLoading(false);
+    }
+  };
+
+  const executeChangeDate = async (newDate: string, newTime: string, reason?: string) => {
+    if (!reviewingRequest) return;
+
+    setExtensionActionLoading(true);
+    try {
+      // Combine date and time into ISO datetime string and convert to UTC
+      // User enters in local timezone, we need to send UTC to backend
+      const localDateTime = `${newDate}T${newTime}:00`;
+      const localDate = new Date(localDateTime);
+      const newDueDateTime = localDate.toISOString(); // Converts to UTC ISO format
+
+      await todoExtensionsApi.respondToExtensionRequest(reviewingRequest.id, {
+        status: 'approved',
+        response_reason: reason || `Date changed to ${newDate} ${newTime}`,
+        new_due_date: newDueDateTime,
+      });
+      showToast({ type: 'success', title: 'Extension approved with modified date' });
+      await loadExtensionRequests();
+      await loadTodos();
+      setChangeDateDialogOpen(false);
+      setReviewingRequest(null);
+    } catch (err) {
+      console.error(err);
+      showToast({ type: 'error', title: 'Failed to approve extension request' });
+    } finally {
+      setExtensionActionLoading(false);
     }
   };
 
@@ -755,6 +974,11 @@ function TodosPageContent() {
         onClose={() => setIsModalOpen(false)}
         onSuccess={handleModalSuccess}
         editingTodo={editingTodo}
+        onComplete={handleComplete}
+        onReopen={handleReopen}
+        onDelete={handleDelete}
+        onRestore={handleRestore}
+        onRequestExtension={handleRequestExtension}
       />
 
       <ConfirmationModal
@@ -779,6 +1003,39 @@ function TodosPageContent() {
           }}
         />
       )}
+
+      <ExtensionApproveDialog
+        isOpen={approveDialogOpen}
+        onClose={() => {
+          setApproveDialogOpen(false);
+          setReviewingRequest(null);
+        }}
+        onConfirm={executeApprove}
+        request={reviewingRequest}
+        loading={extensionActionLoading}
+      />
+
+      <ExtensionRejectDialog
+        isOpen={rejectDialogOpen}
+        onClose={() => {
+          setRejectDialogOpen(false);
+          setReviewingRequest(null);
+        }}
+        onConfirm={executeReject}
+        request={reviewingRequest}
+        loading={extensionActionLoading}
+      />
+
+      <ExtensionChangeDateDialog
+        isOpen={changeDateDialogOpen}
+        onClose={() => {
+          setChangeDateDialogOpen(false);
+          setReviewingRequest(null);
+        }}
+        onConfirm={executeChangeDate}
+        request={reviewingRequest}
+        loading={extensionActionLoading}
+      />
 
       <div className="space-y-6 px-4 py-4 md:px-8 lg:px-12">
         <div className="relative overflow-hidden rounded-2xl border border-gray-200/80 bg-white/80 shadow-md dark:border-gray-800/70 dark:bg-gray-900/70">
@@ -846,11 +1103,57 @@ function TodosPageContent() {
           </div>
         )}
 
+        {/* Tab Navigation */}
+        <div className="mb-6">
+          <div className="border-b border-gray-200 dark:border-gray-700">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('todos')}
+                className={`
+                  py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                  ${activeTab === 'todos'
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                  }
+                `}
+              >
+                <div className="flex items-center gap-2">
+                  <ClipboardList className="h-5 w-5" />
+                  Todos
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab('extension-requests')}
+                className={`
+                  py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                  ${activeTab === 'extension-requests'
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                  }
+                `}
+              >
+                <div className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Extension Requests
+                  {extensionRequests.length > 0 && (
+                    <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                      {extensionRequests.length}
+                    </span>
+                  )}
+                </div>
+              </button>
+            </nav>
+          </div>
+        </div>
+
         <div className="max-w-5xl mx-auto">
-          <Card
-            className="space-y-6 border border-gray-200/80 bg-white/80 backdrop-blur-sm dark:border-gray-800/70 dark:bg-gray-900/70"
-            shadow="md"
-          >
+          {/* Todos Tab */}
+          {activeTab === 'todos' && (
+            <>
+              <Card
+                className="space-y-6 border border-gray-200/80 bg-white/80 backdrop-blur-sm dark:border-gray-800/70 dark:bg-gray-900/70"
+                shadow="md"
+              >
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <h2 className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>
@@ -909,7 +1212,7 @@ function TodosPageContent() {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 auto-rows-fr">
                   {filteredTodos.map((todo) => (
                     <TodoItem
                       key={todo.id}
@@ -954,6 +1257,137 @@ function TodosPageContent() {
               </Button>
             </div>
           </Card>
+            </>
+          )}
+
+          {/* Extension Requests Tab */}
+          {activeTab === 'extension-requests' && (
+            <Card
+              className="space-y-6 border border-gray-200/80 bg-white/80 backdrop-blur-sm dark:border-gray-800/70 dark:bg-gray-900/70"
+              shadow="md"
+            >
+              <div>
+                <h2 className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>
+                  Extension Requests
+                </h2>
+                <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
+                  Review and respond to extension requests from your team
+                </p>
+              </div>
+
+              {extensionRequestsLoading ? (
+                <div className="flex items-center justify-center h-40">
+                  <LoadingSpinner className="w-8 h-8" />
+                </div>
+              ) : extensionRequests.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-300 bg-white/70 p-10 text-center dark:border-gray-700 dark:bg-gray-900/60">
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                    <FileText className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    No Extension Requests
+                  </h3>
+                  <p className="mt-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    You have no pending extension requests to review
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {extensionRequests.map((request) => (
+                    <div
+                      key={request.id}
+                      className="rounded-xl border-2 border-slate-200 bg-white p-4 shadow-sm hover:shadow-lg transition-all duration-300 dark:border-slate-700 dark:bg-slate-800/50"
+                    >
+                      <div className="space-y-3">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                              {request.todo.title}
+                            </h3>
+                            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                              Requested by: {request.requested_by.full_name}
+                            </p>
+                          </div>
+                          <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 whitespace-nowrap shadow-sm">
+                            Pending
+                          </span>
+                        </div>
+
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div className="rounded-lg bg-slate-50 p-3 dark:bg-slate-900/50">
+                            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                              Current Due Date
+                            </p>
+                            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 mt-1">
+                              {(() => {
+                                // Use actual todo's due datetime, convert from UTC to local
+                                if (!request.todo.due_datetime) return 'No due date';
+                                const date = new Date(request.todo.due_datetime);
+                                if (Number.isNaN(date.getTime())) return 'Invalid date';
+
+                                const formatted = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                                const hours = String(date.getHours()).padStart(2, '0');
+                                const minutes = String(date.getMinutes()).padStart(2, '0');
+                                return `${formatted} at ${hours}:${minutes}`;
+                              })()}
+                            </p>
+                          </div>
+                          <div className="rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
+                            <p className="text-xs font-medium text-blue-700 dark:text-blue-400">
+                              Requested Due Date
+                            </p>
+                            <p className="text-sm font-semibold text-blue-900 dark:text-blue-100 mt-1">
+                              {new Date(request.requested_due_date).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+
+                        {request.reason && (
+                          <div className="rounded-lg bg-amber-50 border border-amber-300 p-3 dark:bg-amber-900/20 dark:border-amber-800/50">
+                            <p className="text-xs font-semibold text-amber-700 dark:text-amber-300 mb-1">
+                              Reason
+                            </p>
+                            <p className="text-sm text-amber-900 dark:text-amber-100">
+                              {request.reason}
+                            </p>
+                          </div>
+                        )}
+
+                        <div className="flex gap-2 pt-2">
+                          <Button
+                            size="sm"
+                            className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                            leftIcon={<CheckCircle2 className="h-4 w-4" />}
+                            onClick={() => handleApproveRequest(request)}
+                          >
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1 border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400"
+                            leftIcon={<CalendarRange className="h-4 w-4" />}
+                            onClick={() => handleChangeDate(request)}
+                          >
+                            Change Date
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1 border-red-500 text-red-600 hover:bg-red-50 dark:border-red-400 dark:text-red-400"
+                            leftIcon={<X className="h-4 w-4" />}
+                            onClick={() => handleRejectRequest(request)}
+                          >
+                            Reject
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          )}
         </div>
       </div>
     </AppLayout>

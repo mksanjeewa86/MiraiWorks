@@ -65,7 +65,6 @@ from app.models.system_update import SystemUpdate
 from app.models.todo import Todo
 from app.models.todo_attachment import TodoAttachment
 from app.models.todo_extension_request import TodoExtensionRequest
-from app.models.todo_viewer import TodoViewer
 from app.models.user import User
 from app.models.user_connection import UserConnection
 from app.models.user_settings import UserSettings
@@ -122,7 +121,6 @@ __all__ = [
     "Todo",
     "TodoAttachment",
     "TodoExtensionRequest",
-    "TodoViewer",
     "VideoCall",
     "CallParticipant",
     "RecordingConsent",

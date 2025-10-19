@@ -32,7 +32,6 @@ class TodoExtensionRequest(BaseModel):
     )
 
     # Extension details
-    current_due_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     requested_due_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     reason: Mapped[str] = mapped_column(Text, nullable=False)
 

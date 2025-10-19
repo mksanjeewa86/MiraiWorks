@@ -86,7 +86,7 @@ async def seed_todo_data(
         {
             "owner_id": recruiter_user_id,
             "created_by": admin_user_id,
-            "assigned_user_id": recruiter_user_id,
+            "assignee_id": recruiter_user_id,
             "title": "Follow up with Backend Developer Candidates",
             "description": "Send follow-up emails to candidates from last week's interviews",
             "status": TodoStatus.IN_PROGRESS.value,
@@ -120,7 +120,7 @@ async def seed_todo_data(
         {
             "owner_id": hr_manager_user_id,
             "created_by": admin_user_id,
-            "assigned_user_id": hr_manager_user_id,
+            "assignee_id": hr_manager_user_id,
             "title": "Review Employee Handbook",
             "description": "Annual review of employee handbook for compliance updates",
             "status": TodoStatus.IN_PROGRESS.value,
@@ -166,7 +166,7 @@ async def seed_todo_data(
         {
             "owner_id": admin_user_id,
             "created_by": admin_user_id,
-            "assigned_user_id": recruiter_user_id,
+            "assignee_id": recruiter_user_id,
             "title": "Plan Q1 Hiring Strategy",
             "description": "Collaborate on hiring goals and resource allocation for Q1",
             "notes": "Include budget considerations and team expansion plans",

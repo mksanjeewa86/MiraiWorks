@@ -175,6 +175,7 @@ jobs:
         path: |
           backend/pytest-results.xml
           backend/coverage.xml
+          backend/pytest-output.log
         retention-days: 30
 
     - name: Upload coverage HTML report
@@ -201,6 +202,33 @@ jobs:
       run: |
         echo "## 🧪 Test Results Summary" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
+
+        # Parse test results from pytest output
+        if [ -f backend/pytest-output.log ]; then
+          echo "### Test Execution Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Extract test counts
+          collected=$(grep "collected" backend/pytest-output.log | head -1 | awk '{print $2}')
+          passed=$(grep -E "passed|failed|skipped" backend/pytest-output.log | tail -1 | grep -oP '\d+(?= passed)' || echo "0")
+          failed=$(grep -E "passed|failed|skipped" backend/pytest-output.log | tail -1 | grep -oP '\d+(?= failed)' || echo "0")
+          skipped=$(grep -E "passed|failed|skipped" backend/pytest-output.log | tail -1 | grep -oP '\d+(?= skipped)' || echo "0")
+
+          echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Tests Collected | $collected |" >> $GITHUB_STEP_SUMMARY
+          echo "| ✅ Passed | $passed |" >> $GITHUB_STEP_SUMMARY
+          echo "| ❌ Failed | $failed |" >> $GITHUB_STEP_SUMMARY
+          echo "| ⏭️ Skipped | $skipped |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Exit Code** | ${{ steps.pytest-run.outputs.exit_code }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.pytest-run.outputs.exit_code }}" != "0" ]; then
+            echo "⚠️ **WARNING: Tests failed!** Exit code: ${{ steps.pytest-run.outputs.exit_code }}" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+        fi
+
         if [ -f backend/coverage.xml ]; then
           coverage_percent=$(python -c "import xml.etree.ElementTree as ET; tree = ET.parse('backend/coverage.xml'); root = tree.getroot(); coverage = root.attrib.get('line-rate', '0'); print(f'{float(coverage)*100:.1f}%')" 2>/dev/null || echo "Unknown")
           echo "📊 **Code Coverage**: $coverage_percent" >> $GITHUB_STEP_SUMMARY
@@ -210,6 +238,7 @@ jobs:
         echo "- Test results (JUnit XML)" >> $GITHUB_STEP_SUMMARY
         echo "- Coverage report (XML + HTML)" >> $GITHUB_STEP_SUMMARY
         echo "- Detailed logs and traces" >> $GITHUB_STEP_SUMMARY
+        echo "- Full pytest output log" >> $GITHUB_STEP_SUMMARY
 
   # Separate job for test fixtures diagnosis (when tests fail)
   diagnose-fixtures:

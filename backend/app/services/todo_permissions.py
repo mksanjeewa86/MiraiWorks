@@ -4,12 +4,11 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.crud.todo_viewer import todo_viewer
 from app.models.role import Role, UserRole
 from app.models.todo import Todo
 from app.models.todo_extension_request import TodoExtensionRequest
 from app.models.user import User
-from app.utils.constants import TodoStatus, TodoVisibility
+from app.utils.constants import TodoStatus
 from app.utils.constants import UserRole as UserRoleEnum
 
 
@@ -60,19 +59,14 @@ class TodoPermissionService:
     @staticmethod
     async def can_view_todo(db: AsyncSession, user_id: int, todo: Todo) -> bool:
         """Check if user can view a todo."""
-        # Creator (owner) can always view
+        # Owner can always view
         if todo.owner_id == user_id:
             return True
 
-        # Assigned user can view if visibility allows (PUBLIC or VIEWER)
-        if todo.assigned_user_id == user_id:
-            return todo.visibility in [
-                TodoVisibility.PUBLIC.value,
-                TodoVisibility.VIEWER.value,
-            ]
-
-        # Check if user is in viewers list
-        if await todo_viewer.is_viewer(db, todo_id=todo.id, user_id=user_id):
+        # Assignee can view if published and not hidden
+        if (todo.todo_type == 'assignment' and
+            todo.assignee_id == user_id and
+            todo.publish_status == 'published'):
             return True
 
         return False
@@ -80,18 +74,8 @@ class TodoPermissionService:
     @staticmethod
     async def can_edit_todo(db: AsyncSession, user_id: int, todo: Todo) -> bool:
         """Check if user can edit a todo."""
-        # Creator (owner) can always edit
-        if todo.owner_id == user_id:
-            return True
-
-        # Assignee can edit if visibility is PUBLIC (not VIEWER)
-        if (
-            todo.assigned_user_id == user_id
-            and todo.visibility == TodoVisibility.PUBLIC.value
-        ):
-            return True
-
-        return False
+        # Only the owner can edit
+        return todo.owner_id == user_id
 
     @staticmethod
     async def can_delete_todo(db: AsyncSession, user_id: int, todo: Todo) -> bool:
@@ -102,15 +86,12 @@ class TodoPermissionService:
     @staticmethod
     async def can_change_status(db: AsyncSession, user_id: int, todo: Todo) -> bool:
         """Check if user can change todo status."""
-        # Creator (owner) can always change status
+        # Owner can always change status
         if todo.owner_id == user_id:
             return True
 
-        # Assignee can change status if visibility is PUBLIC (not VIEWER)
-        if (
-            todo.assigned_user_id == user_id
-            and todo.visibility == TodoVisibility.PUBLIC.value
-        ):
+        # Assignee can change status (complete/reopen) for assignments
+        if todo.todo_type == 'assignment' and todo.assignee_id == user_id:
             return True
 
         return False
@@ -118,15 +99,27 @@ class TodoPermissionService:
     @staticmethod
     async def can_add_attachments(db: AsyncSession, user_id: int, todo: Todo) -> bool:
         """Check if user can add attachments to a todo."""
-        # Creator (owner) can always add attachments
+        # Owner can always add attachments
         if todo.owner_id == user_id:
             return True
 
-        # Assignee can add attachments if visibility is PUBLIC (not VIEWER)
-        if (
-            todo.assigned_user_id == user_id
-            and todo.visibility == TodoVisibility.PUBLIC.value
-        ):
+        # Assignee can add attachments to assignments
+        if todo.todo_type == 'assignment' and todo.assignee_id == user_id:
+            return True
+
+        return False
+
+    @staticmethod
+    async def can_delete_attachment(
+        db: AsyncSession, user_id: int, todo: Todo, attachment_uploader_id: int
+    ) -> bool:
+        """Check if user can delete an attachment."""
+        # Owner can delete any attachment
+        if todo.owner_id == user_id:
+            return True
+
+        # User can delete their own attachments
+        if attachment_uploader_id == user_id:
             return True
 
         return False
@@ -199,20 +192,16 @@ class TodoPermissionService:
     @staticmethod
     async def can_request_extension(db: AsyncSession, user_id: int, todo: Todo) -> bool:
         """Check if user can request due date extension for a todo."""
-        # Must be assigned user
-        if todo.assigned_user_id != user_id:
+        # Owner or assignee can request extension
+        if todo.owner_id != user_id and todo.assignee_id != user_id:
             return False
 
-        # Todo must have a due date
-        if not todo.due_date:
+        # Todo must have a due datetime
+        if not todo.due_datetime:
             return False
 
         # Todo must not be completed or deleted
         if todo.status == TodoStatus.COMPLETED.value or todo.is_deleted:
-            return False
-
-        # Must have PUBLIC visibility (not just VIEWER)
-        if todo.visibility != TodoVisibility.PUBLIC.value:
             return False
 
         return True
@@ -236,12 +225,6 @@ class TodoPermissionService:
 
         # Requester can view their own requests
         if extension_request.requested_by_id == user_id:
-            return True
-
-        # Check if user is a viewer of the todo
-        if await todo_viewer.is_viewer(
-            db, todo_id=extension_request.todo_id, user_id=user_id
-        ):
             return True
 
         return False

@@ -1,14 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import {
-  AlertCircle,
-  CalendarClock,
-  CalendarRange,
-  CheckCircle2,
-  Hourglass,
-  X,
-} from 'lucide-react';
+import { AlertCircle, ArrowDown, Calendar, CalendarRange, Clock, X } from 'lucide-react';
 import {
   Dialog,
   DialogClose,
@@ -21,20 +14,31 @@ import {
 import { Button } from '@/components/ui';
 import { Input } from '@/components/ui';
 import { Textarea } from '@/components/ui';
-import { Badge } from '@/components/ui';
 import { addDays, format, parseISO } from 'date-fns';
 import { todoExtensionsApi } from '@/api/todo-extensions';
-import type { ExtensionRequestModalProps, TodoExtensionValidation } from '@/types/todo';
+import type { ExtensionRequestModalProps } from '@/types/todo';
 
 const formatDateForInput = (value: Date | string) => {
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) return '';
   const offset = date.getTimezoneOffset();
   const local = new Date(date.getTime() - offset * 60_000);
-  return local.toISOString().slice(0, 16);
+  return local.toISOString().slice(0, 10); // Date only (YYYY-MM-DD)
 };
 
-const toISO = (value: string) => (value ? new Date(value).toISOString() : '');
+const formatTimeForInput = (value: Date | string) => {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const offset = date.getTimezoneOffset();
+  const local = new Date(date.getTime() - offset * 60_000);
+  return local.toISOString().slice(11, 16); // Time only (HH:mm)
+};
+
+const combineDateTime = (dateStr: string, timeStr: string): string => {
+  if (!dateStr) return '';
+  const time = timeStr || '23:59'; // Default to end of day if no time
+  return new Date(`${dateStr}T${time}:00`).toISOString();
+};
 
 const ExtensionRequestModal = ({
   isOpen,
@@ -42,65 +46,70 @@ const ExtensionRequestModal = ({
   todo,
   onSuccess,
 }: ExtensionRequestModalProps) => {
-  const [requestedDate, setRequestedDate] = useState('');
+  const [newDate, setNewDate] = useState('');
+  const [newTime, setNewTime] = useState('');
   const [reason, setReason] = useState('');
-  const [validation, setValidation] = useState<TodoExtensionValidation | null>(null);
-  const [isValidating, setIsValidating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const currentDueDate = todo.due_date ? parseISO(todo.due_date) : null;
+  // Memoize currentDueDate to prevent unnecessary re-renders
+  const currentDueDate = useMemo(
+    () => (todo.due_datetime ? parseISO(todo.due_datetime) : null),
+    [todo.due_datetime]
+  );
 
+  const currentDateStr = useMemo(
+    () => (currentDueDate ? formatDateForInput(currentDueDate) : ''),
+    [currentDueDate]
+  );
+
+  const currentTimeStr = useMemo(
+    () => (currentDueDate ? formatTimeForInput(currentDueDate) : ''),
+    [currentDueDate]
+  );
+
+  // Initialize form when modal opens
   useEffect(() => {
     if (!isOpen || !currentDueDate) return;
     const tomorrow = addDays(currentDueDate, 1);
-    setRequestedDate(formatDateForInput(tomorrow));
+    setNewDate(formatDateForInput(tomorrow));
+    setNewTime(formatTimeForInput(currentDueDate)); // Keep same time as current
     setReason('');
-    setValidation(null);
     setError(null);
   }, [isOpen, currentDueDate]);
-
-  useEffect(() => {
-    if (!isOpen || !requestedDate || !currentDueDate) return;
-
-    const runValidation = async () => {
-      setIsValidating(true);
-      setError(null);
-      try {
-        const payload = await todoExtensionsApi.validateExtensionRequest(
-          todo.id,
-          toISO(requestedDate)
-        );
-        setValidation(payload);
-      } catch (err: any) {
-        const message = err?.response?.data?.detail || 'Unable to validate this extension';
-        setError(message);
-        setValidation(null);
-      } finally {
-        setIsValidating(false);
-      }
-    };
-
-    runValidation();
-  }, [isOpen, requestedDate, currentDueDate, todo.id]);
 
   const handleClose = () => {
     if (isSubmitting) return;
     setError(null);
-    setValidation(null);
     setReason('');
-    setRequestedDate('');
+    setNewDate('');
+    setNewTime('');
     onClose();
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!validation?.can_request_extension) {
-      setError(validation?.reason || 'Extension request is not valid');
-      return;
+
+    // Validate that new date is after current date
+    if (newDate && currentDateStr) {
+      const newDateTime = new Date(`${newDate}T${newTime || '00:00'}:00`);
+      const currentDateTime = new Date(`${currentDateStr}T${currentTimeStr}:00`);
+
+      if (newDateTime <= currentDateTime) {
+        setError('Extension date must be after the current due date');
+        return;
+      }
+
+      // Check max 3 days extension
+      const maxDate = addDays(currentDateTime, 3);
+      if (newDateTime > maxDate) {
+        setError(`Extension cannot exceed 3 days. Maximum: ${format(maxDate, 'MMM dd, yyyy')}`);
+        return;
+      }
     }
+
     if (reason.trim().length < 10) {
-      setError('Please share a short explanation (at least 10 characters).');
+      setError('Please provide a reason (at least 10 characters)');
       return;
     }
 
@@ -109,7 +118,7 @@ const ExtensionRequestModal = ({
 
     try {
       await todoExtensionsApi.createExtensionRequest(todo.id, {
-        requested_due_date: toISO(requestedDate),
+        requested_due_date: combineDateTime(newDate, newTime),
         reason: reason.trim(),
       });
       onSuccess();
@@ -124,11 +133,17 @@ const ExtensionRequestModal = ({
 
   const maxAllowedDate = useMemo(() => {
     if (!currentDueDate) return null;
-    if (validation?.max_allowed_due_date) {
-      return parseISO(validation.max_allowed_due_date);
-    }
     return addDays(currentDueDate, 3);
-  }, [currentDueDate, validation?.max_allowed_due_date]);
+  }, [currentDueDate]);
+
+  // Check if form is valid for submission
+  const isFormValid = useMemo(() => {
+    return (
+      newDate.length > 0 &&
+      newTime.length > 0 &&
+      reason.trim().length >= 10
+    );
+  }, [newDate, newTime, reason]);
 
   if (!currentDueDate) {
     return null;
@@ -138,27 +153,24 @@ const ExtensionRequestModal = ({
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent
         closeButton={false}
-        className="flex flex-col max-h-[90vh] w-full max-w-3xl md:max-w-2xl overflow-hidden rounded-3xl border border-slate-200 bg-white text-slate-900 shadow-[0_30px_70px_-20px_rgba(15,23,42,0.2)]"
+        className="flex flex-col max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-3xl border border-slate-200 bg-white text-slate-900 shadow-[0_30px_70px_-20px_rgba(15,23,42,0.2)]"
       >
         <DialogHeader className="flex-shrink-0 px-6 pt-6">
           <div className="flex items-start justify-between gap-4">
-            <div className="space-y-3">
+            <div className="space-y-2">
               <div className="flex items-center gap-3">
                 <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-cyan-100 text-cyan-600">
                   <CalendarRange className="h-5 w-5" />
                 </span>
                 <div>
                   <DialogTitle className="text-lg font-semibold text-slate-900">
-                    Request an extension
+                    Request Extension
                   </DialogTitle>
                   <DialogDescription className="text-sm text-slate-500">
-                    Propose a new due date and let the task owner know why you need more time.
+                    Propose a new due date and explain why you need more time
                   </DialogDescription>
                 </div>
               </div>
-              <Badge className="w-fit bg-cyan-100 text-cyan-700 ring-1 ring-inset ring-cyan-200">
-                Current due {format(currentDueDate, "MMM dd, yyyy 'at' h:mm a")}
-              </Badge>
             </div>
             <DialogClose className="rounded-full border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
               <X className="h-4 w-4" />
@@ -169,56 +181,70 @@ const ExtensionRequestModal = ({
         <form onSubmit={handleSubmit} className="flex flex-1 flex-col overflow-hidden">
           <div className="flex-1 overflow-y-auto space-y-6 px-6 pb-6">
             <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-6">
-              <div className="grid gap-4 md:grid-cols-2">
-                <Input
-                  type="datetime-local"
-                  label="New due date"
-                  value={requestedDate}
-                  onChange={(event) => setRequestedDate(event.target.value)}
-                  min={formatDateForInput(addDays(currentDueDate, 1))}
-                  max={maxAllowedDate ? formatDateForInput(maxAllowedDate) : undefined}
-                  required
-                  leftIcon={<CalendarClock className="h-4 w-4" />}
-                  helperText={
-                    maxAllowedDate
-                      ? `Maximum extension: ${format(maxAllowedDate, 'MMM dd, yyyy')}`
-                      : undefined
-                  }
-                />
-                <div className="space-y-2">
-                  <span className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                    <Hourglass className="h-4 w-4 text-slate-400" />
-                    Validation status
-                  </span>
-                  <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm">
-                    {isValidating && (
-                      <div className="flex items-center gap-2 text-cyan-700">
-                        <Hourglass className="h-4 w-4 animate-spin" />
-                        Checking allowed extension window...
-                      </div>
-                    )}
-                    {!isValidating && validation?.can_request_extension && (
-                      <div className="flex items-center gap-2 text-emerald-600">
-                        <CheckCircle2 className="h-4 w-4" />
-                        Extension request looks good.
-                      </div>
-                    )}
-                    {!isValidating && validation && !validation.can_request_extension && (
-                      <div className="flex items-center gap-2 text-amber-600">
-                        <AlertCircle className="h-4 w-4" />
-                        {validation.reason}
-                      </div>
-                    )}
-                    {!isValidating && !validation && (
-                      <span className="text-slate-500">Select a new date to validate.</span>
-                    )}
-                  </div>
+              {/* Current Due Date (Read-only) */}
+              <div className="space-y-3">
+                <label className="text-sm font-medium text-slate-700">
+                  Current Due Date & Time
+                </label>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <Input
+                    type="date"
+                    value={currentDateStr}
+                    disabled
+                    leftIcon={<Calendar className="h-4 w-4" />}
+                    className="bg-slate-100"
+                  />
+                  <Input
+                    type="time"
+                    value={currentTimeStr}
+                    disabled
+                    leftIcon={<Clock className="h-4 w-4" />}
+                    className="bg-slate-100"
+                  />
                 </div>
               </div>
 
+              {/* Down Arrow */}
+              <div className="flex justify-center">
+                <div className="rounded-full bg-cyan-100 p-2">
+                  <ArrowDown className="h-5 w-5 text-cyan-600" />
+                </div>
+              </div>
+
+              {/* New Due Date */}
+              <div className="space-y-3">
+                <label className="text-sm font-medium text-slate-700">
+                  New Due Date & Time <span className="text-red-500">*</span>
+                </label>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <Input
+                    type="date"
+                    value={newDate}
+                    onChange={(e) => setNewDate(e.target.value)}
+                    min={formatDateForInput(addDays(currentDueDate, 1))}
+                    max={maxAllowedDate ? formatDateForInput(maxAllowedDate) : undefined}
+                    required
+                    leftIcon={<Calendar className="h-4 w-4" />}
+                    helperText={
+                      maxAllowedDate
+                        ? `Max: ${format(maxAllowedDate, 'MMM dd, yyyy')}`
+                        : undefined
+                    }
+                  />
+                  <Input
+                    type="time"
+                    value={newTime}
+                    onChange={(e) => setNewTime(e.target.value)}
+                    required
+                    leftIcon={<Clock className="h-4 w-4" />}
+                  />
+                </div>
+              </div>
+
+              {/* Reason */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700">
-                  Why do you need more time?
+                  Reason <span className="text-red-500">*</span>
                 </label>
                 <Textarea
                   value={reason}
@@ -227,7 +253,7 @@ const ExtensionRequestModal = ({
                   minLength={10}
                   maxLength={1000}
                   required
-                  placeholder="Share context so reviewers understand the request..."
+                  placeholder="Explain why you need more time..."
                   className="border border-slate-300 bg-white text-slate-900 focus-visible:ring-cyan-500"
                 />
                 <p className="text-xs text-slate-500">
@@ -243,6 +269,7 @@ const ExtensionRequestModal = ({
               )}
             </div>
           </div>
+
           <DialogFooter className="flex-shrink-0 gap-3 border-t border-slate-200 bg-white px-6 py-4">
             <Button
               type="button"
@@ -256,16 +283,11 @@ const ExtensionRequestModal = ({
             <Button
               type="submit"
               loading={isSubmitting}
-              disabled={
-                isSubmitting ||
-                isValidating ||
-                !validation?.can_request_extension ||
-                reason.trim().length < 10
-              }
+              disabled={isSubmitting || !isFormValid}
               leftIcon={<CalendarRange className="h-4 w-4" />}
               className="min-w-[170px] bg-cyan-600 text-white shadow-lg shadow-cyan-500/30 hover:bg-cyan-600/90 disabled:opacity-60"
             >
-              Submit request
+              Submit Request
             </Button>
           </DialogFooter>
         </form>

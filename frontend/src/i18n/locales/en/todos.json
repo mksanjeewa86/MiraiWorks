@@ -30,6 +30,7 @@
     "finish": "Finish",
     "reopen": "Reopen",
     "extend": "Extend",
+    "requestExtension": "Request Extension",
     "edit": "Edit",
     "delete": "Delete"
   },
@@ -113,7 +114,7 @@
     "restored": "Todo restored",
     "restoreError": "Failed to restore todo",
     "extensionSubmitted": "Extension request submitted",
-    "extensionOnlyAssignee": "Only the assigned user can request an extension"
+    "extensionOnlyOwner": "Only the owner can request an extension"
   },
   "createTask": {
     "title": "Create a task",

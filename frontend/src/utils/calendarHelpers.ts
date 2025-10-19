@@ -149,7 +149,7 @@ export const todoToCalendarEvent = (todo: Todo): CalendarEvent => {
   };
 
   // For todos, we'll create an all-day event on the due date
-  const dueDate = safeParseDate(todo.due_date);
+  const dueDate = safeParseDate(todo.due_datetime);
   if (!dueDate) {
     // If due date is invalid, return a placeholder event
     return {
@@ -213,7 +213,7 @@ export const mergeCalendarAndInterviews = (
     .map(interviewToCalendarEvent);
 
   const todoEvents = safeTodos
-    .filter((todo) => todo.due_date) // Only show todos with due dates
+    .filter((todo) => todo.due_datetime) // Only show todos with due dates
     .map(todoToCalendarEvent);
 
   return [...safeCalendarEvents, ...interviewEvents, ...todoEvents];

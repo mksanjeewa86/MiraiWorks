@@ -100,7 +100,7 @@ class ExamTodoService:
         todo_data = {
             "owner_id": candidate_id,
             "created_by": created_by_id,
-            "assigned_user_id": candidate_id,
+            "assignee_id": candidate_id,
             "workflow_id": workflow_node_execution.workflow_id,
             "title": f"Complete Exam: {exam.title}",
             "description": exam.description or f"You have been assigned the {exam.title} exam.",

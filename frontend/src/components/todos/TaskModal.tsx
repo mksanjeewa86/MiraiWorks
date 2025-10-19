@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   CalendarClock,
   ClipboardList,
@@ -12,6 +12,12 @@ import {
   Eye,
   Download,
   Trash2,
+  Info,
+  ChevronDown,
+  CheckCircle2,
+  RotateCcw,
+  Clock,
+  RefreshCw,
 } from 'lucide-react';
 import {
   Dialog,
@@ -30,42 +36,32 @@ import { useToast } from '@/contexts/ToastContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { todosApi } from '@/api/todos';
 import { todoAttachmentAPI } from '@/api/todo-attachments';
-import UserAssignment from './UserAssignment';
+import { userConnectionsApi } from '@/api/userConnections';
+import { todoExtensionsApi } from '@/api/todo-extensions';
 import AssignmentWorkflow from './AssignmentWorkflow';
 import { getTodoPermissions } from '@/utils/todoPermissions';
+import { utcToLocalDateTimeParts, localDateTimePartsToUTC } from '@/utils/dateTimeUtils';
 import type {
-  AssignableUser,
   TaskFormState,
   TaskModalProps,
   Todo,
-  TodoAssignmentUpdate,
   TodoPayload,
   TodoWithAssignedUser,
-  TodoViewersUpdate,
   TodoType,
   TodoPublishStatus,
+  VisibilityStatus,
 } from '@/types/todo';
 import type { TodoAttachment } from '@/types/todo-attachment';
+import type { ConnectedUser } from '@/types';
 
 const initialFormState: TaskFormState = {
   title: '',
   description: '',
   notes: '',
   dueDate: '',
-  priority: '',
+  dueTime: '',
+  priority: 'mid',
 };
-
-const formatDateForInput = (value?: string | null) => {
-  if (!value) return '';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '';
-  const offset = date.getTimezoneOffset();
-  const local = new Date(date.getTime() - offset * 60_000);
-  return local.toISOString().slice(0, 16);
-};
-
-const toISOStringIfPresent = (value?: string) =>
-  value && value.trim() ? new Date(value).toISOString() : undefined;
 
 export default function TaskModal({
   isOpen,
@@ -73,94 +69,174 @@ export default function TaskModal({
   onSuccess,
   editingTodo,
   workflowContext = false,
+  onComplete,
+  onReopen,
+  onDelete,
+  onRestore,
+  onRequestExtension,
 }: TaskModalProps) {
   const { showToast } = useToast();
   const { user } = useAuth();
   const [formState, setFormState] = useState<TaskFormState>(initialFormState);
   const [submitting, setSubmitting] = useState(false);
-  const [assignableUsers, setAssignableUsers] = useState<AssignableUser[]>([]);
-  const [loadingUsers, setLoadingUsers] = useState(false);
-  const [assignment, setAssignment] = useState<TodoAssignmentUpdate>({});
-  const [viewers, setViewers] = useState<number[]>([]);
   const [attachments, setAttachments] = useState<TodoAttachment[]>([]);
   const [loadingAttachments, setLoadingAttachments] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [todoType, setTodoType] = useState<TodoType>('regular');
   const [publishStatus, setPublishStatus] = useState<TodoPublishStatus>('published');
+  const [assigneeId, setAssigneeId] = useState<number | null>(null);
+  const [visibilityStatus, setVisibilityStatus] = useState<VisibilityStatus>('visible');
+  const [connectedUsers, setConnectedUsers] = useState<ConnectedUser[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [assigneeSearch, setAssigneeSearch] = useState('');
+  const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false);
+  const [showTaskTypeDropdown, setShowTaskTypeDropdown] = useState(false);
+  const [showVisibilityDropdown, setShowVisibilityDropdown] = useState(false);
+  const [validationMessage, setValidationMessage] = useState<string | null>(null);
+  const [showValidationDialog, setShowValidationDialog] = useState(false);
+
+  const assigneeDropdownRef = useRef<HTMLDivElement>(null);
+  const taskTypeDropdownRef = useRef<HTMLDivElement>(null);
+  const visibilityDropdownRef = useRef<HTMLDivElement>(null);
 
   const isEditing = Boolean(editingTodo);
   const permissions = editingTodo ? getTodoPermissions(editingTodo as Todo, user) : null;
-  // Always allow assignment during creation, check permissions only when editing
-  const canAssign = !isEditing || (permissions?.canAssign ?? false);
+  const isAssignee = permissions?.isAssignee || false;
+  const canEditAllFields = !isAssignee; // Assignees can only edit notes
 
-  useEffect(() => {
-    // Only load users if modal is open, assignment is allowed, and user is authenticated
-    if (isOpen && canAssign && user) {
-      const loadUsers = async () => {
-        setLoadingUsers(true);
-        try {
-          const users = await todosApi.getAssignableUsers();
-          setAssignableUsers(users);
-        } catch (error: any) {
-          console.error('Failed to load assignable users', {
-            error,
-            status: error?.response?.status,
-            data: error?.response?.data,
-            message: error?.message,
-          });
-          const errorMessage =
-            error?.response?.status === 401
-              ? 'Authentication required to load teammates'
-              : 'Unable to load teammates for assignment';
-          showToast({ type: 'error', title: errorMessage });
-        } finally {
-          setLoadingUsers(false);
-        }
-      };
+  // Check if we're within 1 day before due datetime (for extension request)
+  const isWithinExtensionWindow = (dueDatetime?: string | null) => {
+    if (!dueDatetime) return false;
+    const due = new Date(dueDatetime);
+    if (Number.isNaN(due.getTime())) return false;
 
-      loadUsers();
-    } else {
-      // Clear users if conditions not met
-      if (!user) {
-        setAssignableUsers([]);
-        setLoadingUsers(false);
-      }
-    }
-  }, [isOpen, canAssign, user, showToast]);
+    const now = new Date();
+    const oneDayBeforeDue = new Date(due);
+    oneDayBeforeDue.setDate(due.getDate() - 1);
+    return now >= oneDayBeforeDue && now < due;
+  };
 
   useEffect(() => {
     if (!isOpen) return;
 
     if (editingTodo) {
+      // Convert UTC datetime to local date and time parts for form inputs
+      const { date, time } = utcToLocalDateTimeParts(editingTodo.due_datetime);
+
       setFormState({
         title: editingTodo.title,
         description: editingTodo.description ?? '',
         notes: editingTodo.notes ?? '',
-        dueDate: formatDateForInput(editingTodo.due_date),
-        priority: editingTodo.priority ?? '',
+        dueDate: date,
+        dueTime: time,
+        priority: editingTodo.priority ?? 'mid',
       });
-      setAssignment({
-        assigned_user_id: editingTodo.assigned_user_id,
-        visibility: editingTodo.visibility,
-      });
-      // Load viewers from existing todo
-      const todoWithViewers = editingTodo as TodoWithAssignedUser;
-      setViewers(todoWithViewers.viewers?.map((v) => v.user_id) || []);
       // Set assignment workflow fields
       setTodoType(editingTodo.todo_type || 'regular');
       setPublishStatus(editingTodo.publish_status || 'published');
+      setAssigneeId(editingTodo.assignee_id || null);
+      setVisibilityStatus(editingTodo.visibility_status || 'visible');
+      setAssigneeSearch(''); // Reset search, will be set after users load
       // Load attachments for existing todo
       loadAttachments(editingTodo.id);
+
+      // Fetch connected users if this is an assignment
+      if (editingTodo.todo_type === 'assignment') {
+        fetchConnectedUsers();
+      }
     } else {
       setFormState(initialFormState);
-      setAssignment({});
-      setViewers([]);
       setAttachments([]);
       setPendingFiles([]);
       setTodoType('regular');
       setPublishStatus('published');
+      setAssigneeId(null);
+      setVisibilityStatus('visible');
+      setAssigneeSearch('');
+      setShowAssigneeDropdown(false);
     }
   }, [isOpen, editingTodo]);
+
+  // Fetch connected users when todo type is assignment
+  useEffect(() => {
+    if (todoType === 'assignment' && connectedUsers.length === 0) {
+      fetchConnectedUsers();
+    }
+  }, [todoType]);
+
+  // Set assignee search value after users are loaded
+  useEffect(() => {
+    if (connectedUsers.length > 0 && assigneeId && !assigneeSearch) {
+      const assignee = connectedUsers.find(u => u.id === assigneeId);
+      if (assignee) {
+        setAssigneeSearch(assignee.full_name || `${assignee.first_name} ${assignee.last_name}`);
+      }
+    }
+  }, [connectedUsers, assigneeId, assigneeSearch]);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        assigneeDropdownRef.current &&
+        !assigneeDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowAssigneeDropdown(false);
+      }
+      if (
+        taskTypeDropdownRef.current &&
+        !taskTypeDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowTaskTypeDropdown(false);
+      }
+      if (
+        visibilityDropdownRef.current &&
+        !visibilityDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowVisibilityDropdown(false);
+      }
+    };
+
+    if (showAssigneeDropdown || showTaskTypeDropdown || showVisibilityDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showAssigneeDropdown, showTaskTypeDropdown, showVisibilityDropdown]);
+
+  const fetchConnectedUsers = async () => {
+    setLoadingUsers(true);
+    try {
+      const response = await userConnectionsApi.getMyConnections();
+      if (response.success && response.data) {
+        setConnectedUsers(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch connected users:', error);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  // Filter connected users by search term
+  const filteredUsers = connectedUsers.filter((user) => {
+    const fullName = user.full_name || `${user.first_name} ${user.last_name}`;
+    return fullName.toLowerCase().includes(assigneeSearch.toLowerCase());
+  });
+
+  // Handle assignee selection
+  const handleSelectAssignee = (user: ConnectedUser | null) => {
+    if (user) {
+      setAssigneeId(user.id);
+      setAssigneeSearch(user.full_name || `${user.first_name} ${user.last_name}`);
+    } else {
+      setAssigneeId(null);
+      setAssigneeSearch('');
+    }
+    setShowAssigneeDropdown(false);
+  };
 
   const handleInputChange =
     (field: keyof TaskFormState) =>
@@ -172,12 +248,8 @@ export default function TaskModal({
     setFormState((prev) => ({ ...prev, dueDate: event.target.value }));
   };
 
-  const handleAssignmentChange = (assignmentData: TodoAssignmentUpdate) => {
-    setAssignment(assignmentData);
-  };
-
-  const handleViewersChange = (viewersData: TodoViewersUpdate) => {
-    setViewers(viewersData.viewer_ids || []);
+  const handleTimeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setFormState((prev) => ({ ...prev, dueTime: event.target.value }));
   };
 
   // Load attachments for existing todo
@@ -315,6 +387,43 @@ export default function TaskModal({
     }
   };
 
+  // Check validation before opening extension request modal
+  const handleRequestExtension = async (todo: Todo) => {
+    if (!todo.due_datetime) return;
+
+    try {
+      // Parse the current due datetime (in UTC)
+      const dueDate = new Date(todo.due_datetime);
+      if (Number.isNaN(dueDate.getTime())) return;
+
+      // Calculate tomorrow at the same time (default requested date)
+      const tomorrow = new Date(dueDate);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      // Call validation endpoint
+      const validation = await todoExtensionsApi.validateExtensionRequest(
+        todo.id,
+        tomorrow.toISOString()
+      );
+
+      if (!validation.can_request_extension) {
+        // Show validation message in dialog
+        setValidationMessage(validation.reason || 'Cannot request extension for this todo');
+        setShowValidationDialog(true);
+      } else {
+        // Open the extension request modal
+        if (onRequestExtension) {
+          onRequestExtension(todo);
+          handleClose();
+        }
+      }
+    } catch (error: any) {
+      console.error('Failed to validate extension request:', error);
+      const message = error?.response?.data?.detail || 'Failed to check extension eligibility';
+      showToast({ type: 'error', title: message });
+    }
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -324,23 +433,42 @@ export default function TaskModal({
       return;
     }
 
-    const payload: TodoPayload = {
+    // Convert local date and time to UTC ISO string for API
+    const dueDatetime = localDateTimePartsToUTC(formState.dueDate, formState.dueTime);
+
+    // If assignee, only allow updating notes
+    const updatePayload: Partial<TodoPayload> = isAssignee
+      ? {
+          notes: formState.notes.trim() || undefined,
+        }
+      : {
+          title: trimmedTitle,
+          description: formState.description.trim() || undefined,
+          notes: formState.notes.trim() || undefined,
+          priority: formState.priority || undefined,
+          due_datetime: dueDatetime || undefined,
+          todo_type: todoType,
+          publish_status: publishStatus,
+          assignee_id: todoType === 'assignment' ? assigneeId : undefined,
+          visibility_status: todoType === 'assignment' ? visibilityStatus : undefined,
+        };
+
+    // Full payload for creation (never called by assignees)
+    const createPayload: TodoPayload = {
       title: trimmedTitle,
       description: formState.description.trim() || undefined,
       notes: formState.notes.trim() || undefined,
-      priority: formState.priority.trim() || undefined,
-      due_date: toISOStringIfPresent(formState.dueDate),
+      priority: formState.priority || undefined,
+      due_datetime: dueDatetime || undefined,
       todo_type: todoType,
       publish_status: publishStatus,
-      ...(canAssign && {
-        assigned_user_id: assignment.assigned_user_id,
-        visibility: assignment.visibility,
-      }),
+      assignee_id: todoType === 'assignment' ? assigneeId : undefined,
+      visibility_status: todoType === 'assignment' ? visibilityStatus : undefined,
     };
 
     // If in workflow context, just return the payload without saving to DB
     if (workflowContext) {
-      onSuccess(payload);
+      onSuccess(isEditing ? updatePayload : createPayload);
       onClose();
       return;
     }
@@ -349,33 +477,11 @@ export default function TaskModal({
 
     try {
       if (isEditing && editingTodo) {
-        await todosApi.update(editingTodo.id, payload);
-        if (canAssign && editingTodo.id && (assignment.assigned_user_id || assignment.visibility)) {
-          await todosApi.assignTodo(editingTodo.id, {
-            assigned_user_id: assignment.assigned_user_id,
-            visibility: assignment.visibility,
-          });
-        }
-        if (canAssign && editingTodo.id && viewers.length >= 0) {
-          await todosApi.updateViewers(editingTodo.id, {
-            viewer_ids: viewers,
-          });
-        }
+        await todosApi.update(editingTodo.id, updatePayload);
         onSuccess();
         showToast({ type: 'success', title: 'Task updated' });
       } else {
-        const created = await todosApi.create(payload);
-        if (canAssign && assignment.assigned_user_id) {
-          await todosApi.assignTodo(created.id, {
-            assigned_user_id: assignment.assigned_user_id,
-            visibility: assignment.visibility ?? 'private',
-          });
-        }
-        if (canAssign && viewers.length > 0) {
-          await todosApi.updateViewers(created.id, {
-            viewer_ids: viewers,
-          });
-        }
+        const created = await todosApi.create(createPayload);
 
         // Upload pending files after todo creation
         await uploadPendingFiles(created.id);
@@ -413,7 +519,9 @@ export default function TaskModal({
                   </DialogTitle>
                   <DialogDescription className="text-sm text-slate-500">
                     {isEditing
-                      ? 'Update the details, assignees, or due date for this work item.'
+                      ? isAssignee
+                        ? 'View task details and update your progress notes.'
+                        : 'Update the details, assignees, or due date for this work item.'
                       : 'Capture what needs to happen next and who should own it.'}
                   </DialogDescription>
                 </div>
@@ -435,71 +543,261 @@ export default function TaskModal({
                   value={formState.title}
                   onChange={handleInputChange('title')}
                   required
+                  disabled={isAssignee}
                 />
 
-                {/* Assignment Workflow Controls */}
+                {/* Assignment Workflow Controls - Only show for owners */}
+                {canEditAllFields && (
                 <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-700">Task Type</label>
-                    <select
-                      value={todoType}
-                      onChange={(e) => setTodoType(e.target.value as TodoType)}
-                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    >
-                      <option value="regular">Regular Task</option>
-                      <option value="assignment">Assignment</option>
-                    </select>
+                  <div className="space-y-2" ref={taskTypeDropdownRef}>
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm font-medium text-slate-700">Task Type</label>
+                      <div className="group relative">
+                        <Info className="h-4 w-4 text-slate-400 hover:text-blue-600 cursor-help transition-colors" />
+                        <div className="invisible group-hover:visible absolute left-0 top-6 z-[99999] w-72 rounded-lg bg-slate-900 p-4 text-xs text-white shadow-2xl">
+                          <div className="space-y-3">
+                            <div>
+                              <div className="font-semibold text-blue-300 mb-1">Regular Task</div>
+                              <div className="text-slate-300">
+                                A personal task visible only to you. Cannot be assigned to others.
+                              </div>
+                            </div>
+                            <div className="border-t border-slate-700 pt-2">
+                              <div className="font-semibold text-green-300 mb-1">Assignment</div>
+                              <div className="text-slate-300">
+                                A task that can be assigned to team members with controlled visibility and tracking.
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setShowTaskTypeDropdown(!showTaskTypeDropdown)}
+                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 pr-8 text-sm text-slate-900 text-left focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 flex items-center justify-between"
+                      >
+                        <span>{todoType === 'regular' ? 'Regular Task' : 'Assignment'}</span>
+                        <ChevronDown className="h-4 w-4 text-slate-400 absolute right-2" />
+                      </button>
+                      {showTaskTypeDropdown && (
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-300 rounded-lg shadow-xl z-50">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTodoType('regular');
+                              setShowTaskTypeDropdown(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-50 transition-colors ${
+                              todoType === 'regular' ? 'bg-blue-100 text-blue-900' : 'text-slate-900'
+                            }`}
+                          >
+                            Regular Task
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTodoType('assignment');
+                              setShowTaskTypeDropdown(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-50 transition-colors ${
+                              todoType === 'assignment' ? 'bg-blue-100 text-blue-900' : 'text-slate-900'
+                            }`}
+                          >
+                            Assignment
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {todoType === 'assignment' && (
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-700">
-                        Assignment Status
-                      </label>
-                      <select
-                        value={publishStatus}
-                        onChange={(e) => setPublishStatus(e.target.value as TodoPublishStatus)}
-                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      >
-                        <option value="draft">Draft (Not visible to assignee)</option>
-                        <option value="published">Published (Visible to assignee)</option>
-                      </select>
+                    <div className="space-y-2" ref={visibilityDropdownRef}>
+                      <div className="flex items-center gap-2">
+                        <label className="text-sm font-medium text-slate-700">
+                          Visibility Status
+                        </label>
+                        <div className="group relative">
+                          <Info className="h-4 w-4 text-slate-400 hover:text-blue-600 cursor-help transition-colors" />
+                          <div className="invisible group-hover:visible absolute right-0 top-6 z-[99999] w-72 rounded-lg bg-slate-900 p-4 text-xs text-white shadow-2xl">
+                            <div className="space-y-3">
+                              <div>
+                                <div className="font-semibold text-green-300 mb-1">Visible</div>
+                                <div className="text-slate-300">
+                                  The assignee can view and work on this task. They will see it in their todo list.
+                                </div>
+                              </div>
+                              <div className="border-t border-slate-700 pt-2">
+                                <div className="font-semibold text-amber-300 mb-1">Hidden</div>
+                                <div className="text-slate-300">
+                                  The task is hidden from the assignee's view. Useful for drafts or tasks not ready to be worked on.
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setShowVisibilityDropdown(!showVisibilityDropdown)}
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 pr-8 text-sm text-slate-900 text-left focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 flex items-center justify-between"
+                        >
+                          <span>{visibilityStatus === 'visible' ? 'Visible' : 'Hidden'}</span>
+                          <ChevronDown className="h-4 w-4 text-slate-400 absolute right-2" />
+                        </button>
+                        {showVisibilityDropdown && (
+                          <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-300 rounded-lg shadow-xl z-50">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setVisibilityStatus('visible');
+                                setShowVisibilityDropdown(false);
+                              }}
+                              className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-50 transition-colors ${
+                                visibilityStatus === 'visible' ? 'bg-blue-100 text-blue-900' : 'text-slate-900'
+                              }`}
+                            >
+                              Visible
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setVisibilityStatus('hidden');
+                                setShowVisibilityDropdown(false);
+                              }}
+                              className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-50 transition-colors ${
+                                visibilityStatus === 'hidden' ? 'bg-blue-100 text-blue-900' : 'text-slate-900'
+                              }`}
+                            >
+                              Hidden
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
+                )}
 
-                <div className="grid gap-4 md:grid-cols-2">
+                {/* Assignee Selection - Only show for assignment type and owners */}
+                {canEditAllFields && todoType === 'assignment' && (
+                  <div className="space-y-2 relative" ref={assigneeDropdownRef}>
+                    <label className="text-sm font-medium text-slate-700">
+                      Assign to
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={assigneeSearch}
+                        onChange={(e) => {
+                          setAssigneeSearch(e.target.value);
+                          setShowAssigneeDropdown(true);
+                        }}
+                        onFocus={() => setShowAssigneeDropdown(true)}
+                        placeholder={loadingUsers ? 'Loading...' : 'Search users...'}
+                        disabled={loadingUsers}
+                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-slate-100 disabled:cursor-not-allowed"
+                      />
+                      {showAssigneeDropdown && (
+                        <div className="absolute top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border border-slate-300 rounded-lg shadow-2xl z-[9999]">
+                          {filteredUsers.length > 0 ? (
+                            <>
+                              {filteredUsers.map((user) => (
+                                <button
+                                  key={user.id}
+                                  type="button"
+                                  onClick={() => handleSelectAssignee(user)}
+                                  className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-50 transition-colors ${
+                                    assigneeId === user.id ? 'bg-blue-100 text-blue-900' : 'text-slate-900'
+                                  }`}
+                                >
+                                  <div className="font-medium">
+                                    {user.full_name || `${user.first_name} ${user.last_name}`}
+                                  </div>
+                                  <div className="text-xs text-slate-500">{user.email}</div>
+                                </button>
+                              ))}
+                            </>
+                          ) : (
+                            <div className="px-3 py-4 text-sm text-slate-500 text-center">
+                              {loadingUsers ? 'Loading users...' : assigneeSearch ? 'No users found' : 'No connected users'}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    {!loadingUsers && connectedUsers.length === 0 && !showAssigneeDropdown && (
+                      <p className="text-xs text-slate-500">
+                        No connected users. Assignment will default to you.
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <div className="grid gap-4 md:grid-cols-3">
                   <Input
-                    type="datetime-local"
+                    type="date"
                     label="Due date"
                     value={formState.dueDate}
                     onChange={handleDateChange}
                     leftIcon={<CalendarClock className="h-4 w-4" />}
-                    helperText="Use your local time zone"
+                    disabled={isAssignee}
                   />
                   <Input
-                    label="Priority"
-                    placeholder="High, Medium, Low, or custom"
-                    value={formState.priority}
-                    onChange={handleInputChange('priority')}
-                    leftIcon={<MinusCircle className="h-4 w-4" />}
+                    type="time"
+                    label="Due time (optional)"
+                    value={formState.dueTime}
+                    onChange={handleTimeChange}
+                    leftIcon={<CalendarClock className="h-4 w-4" />}
+                    disabled={isAssignee}
                   />
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700">Priority</label>
+                    <select
+                      value={formState.priority}
+                      onChange={(e) => setFormState((prev) => ({ ...prev, priority: e.target.value as any }))}
+                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-500"
+                      disabled={isAssignee}
+                    >
+                      <option value="low">Low</option>
+                      <option value="mid">Mid</option>
+                      <option value="high">High</option>
+                    </select>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">Description</label>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-slate-700">Description</label>
+                    {isAssignee && (
+                      <div className="group relative">
+                        <Info className="h-4 w-4 text-slate-400 hover:text-blue-600 cursor-help transition-colors" />
+                        <div className="invisible group-hover:visible absolute left-0 top-6 z-[99999] w-64 rounded-lg bg-slate-900 p-3 text-xs text-white shadow-2xl">
+                          <div className="font-semibold text-amber-300 mb-1">Read-Only Field</div>
+                          <div className="text-slate-300">
+                            This field is read-only for assignees. You can view and scroll through the content but cannot edit it. Use the Notes field below to add your updates.
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   <Textarea
                     placeholder="Outline context, expectations, or acceptance criteria."
                     rows={4}
                     value={formState.description}
                     onChange={handleInputChange('description')}
                     className="border border-slate-300 bg-white text-slate-900 focus-visible:ring-blue-500"
+                    readOnly={isAssignee}
                   />
                 </div>
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium text-slate-700">Notes</label>
+                    <label className="text-sm font-medium text-slate-700">
+                      Notes {isAssignee && <span className="text-xs text-slate-500">(you can edit)</span>}
+                    </label>
                     <div className="flex items-center gap-2">
                       <input
                         type="file"
@@ -600,8 +898,8 @@ export default function TaskModal({
                                     <Download className="h-3 w-3" />
                                   </button>
 
-                                  {/* Delete button - only when editing */}
-                                  {isEditing && (
+                                  {/* Delete button - only when editing and user uploaded it or is owner */}
+                                  {isEditing && (canEditAllFields || attachment.uploaded_by === user?.id) && (
                                     <button
                                       type="button"
                                       onClick={() => handleDeleteFile(attachment)}
@@ -655,44 +953,6 @@ export default function TaskModal({
                 </div>
               </div>
 
-              {canAssign && (
-                <div className="rounded-2xl border border-blue-200 bg-blue-50 p-6">
-                  <div className="mb-4 flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-semibold text-blue-800">Assignment</h3>
-                      <p className="text-xs text-blue-600">
-                        Choose who should own this task and its visibility.
-                      </p>
-                    </div>
-                    <Badge className="bg-blue-100 text-blue-700 ring-1 ring-inset ring-blue-200">
-                      Teammate access
-                    </Badge>
-                  </div>
-                  <UserAssignment
-                    todo={
-                      {
-                        ...formState,
-                        assigned_user_id: assignment.assigned_user_id,
-                        visibility: assignment.visibility || 'private',
-                        viewers: viewers.map((viewerId) => ({
-                          id: viewerId,
-                          user_id: viewerId,
-                          user: assignableUsers.find((u) => u.id === viewerId) || {
-                            id: viewerId,
-                            first_name: 'Loading...',
-                            last_name: '',
-                            email: '',
-                          },
-                        })),
-                      } as any
-                    }
-                    assignableUsers={assignableUsers}
-                    onAssign={handleAssignmentChange}
-                    onUpdateViewers={handleViewersChange}
-                    isLoading={loadingUsers || submitting}
-                  />
-                </div>
-              )}
 
               {/* Assignment Workflow - Only show for existing assignments */}
               {isEditing && editingTodo && editingTodo.is_assignment && (
@@ -704,32 +964,161 @@ export default function TaskModal({
             </div>
           </div>
           <DialogFooter className="flex-shrink-0 gap-3 border-t border-slate-200 bg-white px-6 py-4">
-            <Button
-              type="button"
-              variant="ghost"
-              disabled={submitting}
-              onClick={handleClose}
-              className="min-w-[120px] border border-slate-300 bg-white text-slate-600 hover:bg-slate-100"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              loading={submitting}
-              leftIcon={
-                isEditing ? <Save className="h-4 w-4" /> : <PlusCircle className="h-4 w-4" />
-              }
-              className="min-w-[160px] bg-blue-600 text-white shadow-lg shadow-blue-500/30 hover:bg-blue-600/90"
-            >
-              {workflowContext
-                ? 'Save & Return to Workflow'
-                : isEditing
-                  ? 'Save changes'
-                  : 'Create task'}
-            </Button>
+            <div className="flex items-center justify-between w-full">
+              {/* Action buttons - only show when editing */}
+              {isEditing && editingTodo && (
+                <div className="flex items-center gap-2">
+                  {editingTodo.is_deleted ? (
+                    // Restore button for deleted todos
+                    onRestore && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => {
+                          onRestore(editingTodo as Todo);
+                          handleClose();
+                        }}
+                        className="border border-green-300 bg-green-50 text-green-700 hover:bg-green-100"
+                        leftIcon={<RefreshCw className="h-4 w-4" />}
+                      >
+                        Restore
+                      </Button>
+                    )
+                  ) : (
+                    <>
+                      {/* Complete button - show when todo is not completed and user can change status */}
+                      {editingTodo.status !== 'completed' && permissions?.canChangeStatus && onComplete && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          onClick={() => {
+                            onComplete(editingTodo as Todo);
+                            handleClose();
+                          }}
+                          className="border border-green-300 bg-green-50 text-green-700 hover:bg-green-100"
+                          leftIcon={<CheckCircle2 className="h-4 w-4" />}
+                        >
+                          Complete
+                        </Button>
+                      )}
+
+                      {/* Reopen button - show when todo is completed and user can change status */}
+                      {editingTodo.status === 'completed' && permissions?.canChangeStatus && onReopen && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          onClick={() => {
+                            onReopen(editingTodo as Todo);
+                            handleClose();
+                          }}
+                          className="border border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100"
+                          leftIcon={<RotateCcw className="h-4 w-4" />}
+                        >
+                          Reopen
+                        </Button>
+                      )}
+
+                      {/* Request Extension button - only for assignees in assignments, within 1 day before due datetime */}
+                      {isAssignee &&
+                       editingTodo.todo_type === 'assignment' &&
+                       editingTodo.status !== 'completed' &&
+                       editingTodo.due_datetime &&
+                       !editingTodo.is_expired &&
+                       isWithinExtensionWindow(editingTodo.due_datetime) &&
+                       onRequestExtension && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          onClick={() => handleRequestExtension(editingTodo as Todo)}
+                          className="border border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                          leftIcon={<Clock className="h-4 w-4" />}
+                        >
+                          Request Extension
+                        </Button>
+                      )}
+
+                      {/* Delete button - show when user is owner */}
+                      {permissions?.canDelete && onDelete && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          onClick={() => {
+                            onDelete(editingTodo as Todo);
+                            handleClose();
+                          }}
+                          className="border border-red-300 bg-red-50 text-red-700 hover:bg-red-100"
+                          leftIcon={<Trash2 className="h-4 w-4" />}
+                        >
+                          Delete
+                        </Button>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* Cancel and Save buttons */}
+              <div className="flex items-center gap-3 ml-auto">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={submitting}
+                  onClick={handleClose}
+                  className="min-w-[120px] border border-slate-300 bg-white text-slate-600 hover:bg-slate-100"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  loading={submitting}
+                  leftIcon={
+                    isEditing ? <Save className="h-4 w-4" /> : <PlusCircle className="h-4 w-4" />
+                  }
+                  className="min-w-[160px] bg-blue-600 text-white shadow-lg shadow-blue-500/30 hover:bg-blue-600/90"
+                >
+                  {workflowContext
+                    ? 'Save & Return to Workflow'
+                    : isEditing
+                      ? 'Save changes'
+                      : 'Create task'}
+                </Button>
+              </div>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>
+
+      {/* Validation Dialog - show message when extension request is not allowed */}
+      {showValidationDialog && (
+        <Dialog open={showValidationDialog} onOpenChange={setShowValidationDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+                  <Info className="h-6 w-6" />
+                </div>
+                <div className="flex-1">
+                  <DialogTitle className="text-lg font-semibold text-slate-900">
+                    Extension Request Not Available
+                  </DialogTitle>
+                  <DialogDescription className="mt-2 text-sm text-slate-600">
+                    {validationMessage}
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+            <DialogFooter className="mt-6">
+              <Button
+                type="button"
+                onClick={() => setShowValidationDialog(false)}
+                className="flex-1 sm:flex-none"
+              >
+                OK
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </Dialog>
   );
 }

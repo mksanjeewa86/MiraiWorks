@@ -402,7 +402,7 @@ class WorkflowEngineService:
 
         todo_data = {
             "owner_id": candidate_proc.assigned_recruiter_id or execution.assigned_to,
-            "assigned_user_id": candidate_proc.candidate_id,
+            "assignee_id": candidate_proc.candidate_id,
             "created_by": execution.assigned_to or candidate_proc.assigned_recruiter_id,
             "title": node.title,
             "description": node.description,

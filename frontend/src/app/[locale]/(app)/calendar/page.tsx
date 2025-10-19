@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import { addDays, addMonths, addWeeks, endOfWeek, format, startOfWeek } from 'date-fns';
 import {
@@ -20,13 +21,16 @@ import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import CalendarView from '@/components/calendar/CalendarView';
 import EventModal from '@/components/calendar/EventModal';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { calendarApi } from '@/api/calendar';
 import { interviewsApi } from '@/api/interviews';
+import { todosApi } from '@/api/todos';
 import { useAuth } from '@/contexts/AuthContext';
 import type { CalendarEvent, Interview } from '@/types/interview';
 import type { CalendarConnection, CalendarProvider } from '@/types/calendar';
 import type { SelectionRange } from '@/types/calendar';
 import type { CalendarFilters, CalendarViewMode } from '@/types/components';
+import type { Todo } from '@/types/todo';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 
@@ -177,6 +181,78 @@ const mapInterviewToEvent = (interview: Interview): CalendarEvent | null => {
   };
 };
 
+const mapTodoToEvent = (todo: Todo, currentUserId: number | null): CalendarEvent | null => {
+  // Only show todos with due dates
+  if (!todo.due_datetime) {
+    return null;
+  }
+
+  // Filter logic: show todo only if:
+  // 1. No assignee (private todo - show in creator's calendar), OR
+  // 2. Current user is the assignee
+  const hasAssignee = todo.assignee_id !== null && todo.assignee_id !== undefined;
+  const isAssignedToMe = hasAssignee && todo.assignee_id === currentUserId;
+  const isMyPrivateTodo = !hasAssignee && todo.owner_id === currentUserId;
+
+  // Only show if it's my private todo or assigned to me
+  if (!isMyPrivateTodo && !isAssignedToMe) {
+    return null;
+  }
+
+  // Parse due_datetime (UTC ISO string from backend)
+  const dueDatetime = toDateOrNull(todo.due_datetime);
+  if (!dueDatetime) {
+    return null;
+  }
+
+  let start: Date;
+  let end: Date;
+  let isAllDay: boolean;
+
+  // Check if time is midnight (00:00:00) - treat as all-day event
+  const hours = dueDatetime.getHours();
+  const minutes = dueDatetime.getMinutes();
+  const seconds = dueDatetime.getSeconds();
+
+  if (hours === 0 && minutes === 0 && seconds === 0) {
+    // All-day event (midnight time indicates no specific time)
+    start = new Date(dueDatetime);
+    start.setHours(0, 0, 0, 0);
+    end = new Date(start);
+    end.setDate(end.getDate() + 1);
+    end.setHours(0, 0, 0, 0);
+    isAllDay = true;
+  } else {
+    // Has specific time - create timed event
+    // Browser automatically converts UTC to local time
+    start = new Date(dueDatetime);
+
+    // End time is 1 hour after start
+    end = new Date(start.getTime() + 60 * 60 * 1000);
+    isAllDay = false;
+  }
+
+  return {
+    id: `todo-${todo.id}`,
+    title: `📋 ${todo.title}`,
+    description: todo.description ?? '',
+    location: '',
+    startDatetime: start.toISOString(),
+    endDatetime: end.toISOString(),
+    timezone: 'UTC',
+    isAllDay,
+    isRecurring: false,
+    organizerEmail: '',
+    organizerName: '',
+    meetingUrl: '',
+    attendees: [],
+    status: todo.status === 'completed' ? 'confirmed' : 'tentative',
+    type: 'todo',
+    createdAt: todo.created_at ?? new Date().toISOString(),
+    updatedAt: todo.updated_at ?? new Date().toISOString(),
+  };
+};
+
 const computeRangeForView = (
   reference: Date,
   view: CalendarViewMode
@@ -206,6 +282,7 @@ const computeRangeForView = (
 
 function CalendarPageContent() {
   const { user } = useAuth();
+  const router = useRouter();
   const t = useTranslations('calendar');
   const userId = user?.id ?? null;
   const userCompanyId = user?.company_id ?? null;
@@ -224,6 +301,10 @@ function CalendarPageContent() {
   const [connectionsLoading, setConnectionsLoading] = useState(false);
   const [syncingConnectionId, setSyncingConnectionId] = useState<number | null>(null);
   const [showConnections, setShowConnections] = useState(false);
+  const [todoConfirmDialog, setTodoConfirmDialog] = useState<{ isOpen: boolean; todoId: number | null }>({
+    isOpen: false,
+    todoId: null,
+  });
 
   const goToToday = useCallback(() => {
     setCurrentDate(new Date());
@@ -344,6 +425,53 @@ function CalendarPageContent() {
         console.warn('Failed to load interview events', error);
       }
 
+      // Load todos with due dates
+      try {
+        if (userId) {
+          // Fetch both owned todos and assigned todos (excluding completed todos)
+          const [ownedTodosResponse, assignedTodosResponse] = await Promise.all([
+            todosApi.list({ includeCompleted: false }),
+            todosApi.listAssignedTodos({ includeCompleted: false })
+          ]);
+
+          // Combine owned and assigned todos, removing duplicates by id
+          const allTodos = [...(ownedTodosResponse?.items ?? []), ...(assignedTodosResponse?.items ?? [])];
+          const uniqueTodos = Array.from(
+            new Map(allTodos.map(todo => [todo.id, todo])).values()
+          );
+
+          const todos = uniqueTodos;
+
+          // Filter todos that have due dates within the current view range
+          const todosWithDueDates = todos.filter((todo) => {
+            if (!todo.due_datetime) return false;
+            const dueDatetime = toDateOrNull(todo.due_datetime);
+            if (!dueDatetime) return false;
+
+            // Normalize dates to start of day for comparison
+            const dueDatetimeDay = new Date(dueDatetime);
+            dueDatetimeDay.setHours(0, 0, 0, 0);
+
+            const startDay = new Date(start);
+            startDay.setHours(0, 0, 0, 0);
+
+            const endDay = new Date(end);
+            endDay.setHours(23, 59, 59, 999);
+
+            // Include todos within the view range
+            return dueDatetimeDay >= startDay && dueDatetimeDay <= endDay;
+          });
+
+          const todoEvents = todosWithDueDates
+            .map((todo) => mapTodoToEvent(todo, userId))
+            .filter((entry): entry is CalendarEvent => Boolean(entry));
+
+          combined.push(...todoEvents);
+        }
+      } catch (error) {
+        console.warn('Failed to load todo events', error);
+      }
+
       combined.sort(
         (a, b) => new Date(a.startDatetime).getTime() - new Date(b.startDatetime).getTime()
       );
@@ -409,12 +537,23 @@ function CalendarPageContent() {
   const openCreateModal = useCallback((range?: SelectionRange) => {
     let start: Date;
     let end: Date;
+    const now = new Date();
 
     if (range?.start) {
       // If a date range is provided (user clicked on a date)
-      // Use the clicked date but with current time
-      const now = new Date();
       const clickedDate = new Date(range.start);
+
+      // Check if the clicked date is in the past (before today)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const clickedDay = new Date(clickedDate);
+      clickedDay.setHours(0, 0, 0, 0);
+
+      if (clickedDay < today) {
+        // Prevent creating events in past days
+        toast.error(t('errors.cannotCreateEventInPast') || 'Cannot create events in the past');
+        return;
+      }
 
       // Set the clicked date with current time
       start = new Date(
@@ -439,7 +578,7 @@ function CalendarPageContent() {
     setSelectedDate(start);
     setSelectedRange({ start, end, allDay: false });
     setModalOpen(true);
-  }, []);
+  }, [t]);
 
   const handleRangeSelect = useCallback(
     (range: SelectionRange) => {
@@ -452,6 +591,15 @@ function CalendarPageContent() {
     // Don't open modal for holiday events
     if (event.id?.startsWith('holiday-')) {
       return;
+    }
+
+    // Check if this is a todo event
+    if (event.id?.startsWith('todo-')) {
+      const todoId = parseInt(event.id.replace('todo-', ''), 10);
+      if (!isNaN(todoId)) {
+        setTodoConfirmDialog({ isOpen: true, todoId });
+        return;
+      }
     }
 
     setIsCreateMode(false);
@@ -616,42 +764,187 @@ function CalendarPageContent() {
       noPadding={true}
     >
       <div className="flex h-full flex-col bg-slate-100/80 overflow-hidden">
-        <div className="flex-shrink-0 border-b border-slate-200 bg-white/90 backdrop-blur overflow-visible relative z-[40]">
-          <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between gap-4 px-4 py-4 lg:px-6 overflow-visible">
-            <div className="flex flex-1 items-center gap-3">
+        {/* Modern Top Bar */}
+        <div className="flex-shrink-0 border-b border-slate-200 bg-white/95 backdrop-blur-sm shadow-sm overflow-visible relative z-10">
+          <div className="mx-auto w-full max-w-[1400px] px-4 py-3 lg:px-6">
+            {/* Top Row: Title and Action Buttons */}
+            <div className="flex items-center justify-between gap-4 mb-3">
+              {/* Left: Page Title */}
               <div>
-                <h1 className="text-xl font-semibold text-slate-900">{t('page.title')}</h1>
-                <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+                  {t('page.title')}
+                </h1>
+              </div>
+
+              {/* Right: Action Buttons */}
+              <div className="flex items-center gap-2">
+                {/* Connections Dropdown */}
+                <div className="relative" ref={connectionsDropdownRef}>
+                  <button
+                    type="button"
+                    onClick={() => setShowConnections(!showConnections)}
+                    className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                  >
+                    <Link2 className="h-4 w-4" />
+                    <span className="hidden sm:inline">Connections</span>
+                    <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-700">
+                      {connections.length}
+                    </span>
+                  </button>
+
+                  {/* Connections Dropdown Panel */}
+                  {showConnections && (
+                    <div className="absolute right-0 top-full z-20 mt-2 w-80 rounded-xl border border-slate-200 bg-white shadow-2xl">
+                      <div className="p-4">
+                        <h3 className="mb-3 text-sm font-bold text-slate-900">
+                          Calendar Connections
+                        </h3>
+                        {connectionsLoading ? (
+                          <div className="flex items-center justify-center py-6">
+                            <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+                          </div>
+                        ) : connections.length === 0 ? (
+                          <div className="space-y-3 py-2">
+                            <div className="flex items-center gap-2 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
+                              <CloudOff className="h-4 w-4 text-slate-400" />
+                              <span>No calendar connections</span>
+                            </div>
+                            <div className="space-y-2 pt-2">
+                              <button
+                                type="button"
+                                onClick={() => handleConnectProvider('google')}
+                                className="w-full rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:from-blue-600 hover:to-blue-700 hover:shadow-md"
+                              >
+                                Connect Google Calendar
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleConnectProvider('outlook')}
+                                className="w-full rounded-lg bg-gradient-to-r from-indigo-500 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:from-indigo-600 hover:to-indigo-700 hover:shadow-md"
+                              >
+                                Connect Outlook Calendar
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            {connections.map((connection) => (
+                              <div
+                                key={connection.id}
+                                className="flex items-center justify-between rounded-lg border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-3 transition-all hover:border-slate-300 hover:shadow-sm"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
+                                    <Link2 className="h-4 w-4 text-blue-600" />
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-semibold text-slate-900">
+                                      {connection.provider === 'google' ? 'Google Calendar' : 'Outlook Calendar'}
+                                    </p>
+                                    <p className="text-xs text-slate-500">{connection.provider_email}</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSync(connection.id)}
+                                    disabled={syncingConnectionId === connection.id}
+                                    className="rounded-lg p-2 text-slate-400 transition-all hover:bg-blue-50 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+                                    title="Sync calendar"
+                                  >
+                                    {syncingConnectionId === connection.id ? (
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                      <RefreshCcw className="h-4 w-4" />
+                                    )}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDisconnect(connection.id)}
+                                    className="rounded-lg p-2 text-slate-400 transition-all hover:bg-red-50 hover:text-red-600"
+                                    title="Disconnect"
+                                  >
+                                    <CloudOff className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                            <div className="mt-3 space-y-2 border-t border-slate-200 pt-3">
+                              <button
+                                type="button"
+                                onClick={() => handleConnectProvider('google')}
+                                className="w-full rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 transition-all hover:bg-blue-100 hover:border-blue-300"
+                              >
+                                + Connect Google Calendar
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleConnectProvider('outlook')}
+                                className="w-full rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-700 transition-all hover:bg-indigo-100 hover:border-indigo-300"
+                              >
+                                + Connect Outlook Calendar
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* New Event Button */}
+                <button
+                  type="button"
+                  onClick={() => openCreateModal()}
+                  className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-2 text-sm font-semibold text-white shadow-md transition-all hover:from-blue-700 hover:to-blue-800 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span className="hidden sm:inline">{t('form.newEvent')}</span>
+                  <span className="sm:hidden">New</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Bottom Row: Navigation and View Controls */}
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              {/* Left: Date Navigation */}
+              <div className="flex items-center gap-3">
+                {/* Today Button */}
+                <button
+                  type="button"
+                  onClick={goToToday}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition-all hover:bg-slate-50 hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                >
+                  <RotateCw className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">{t('navigation.today')}</span>
+                </button>
+
+                {/* Navigation Controls */}
+                <div className="flex items-center gap-1 rounded-lg border border-slate-300 bg-white p-1 shadow-sm">
                   <button
                     type="button"
                     onClick={navigatePrev}
-                    className="inline-flex items-center justify-center rounded-full p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                    className="inline-flex items-center justify-center rounded-md p-1.5 text-slate-600 transition-all hover:bg-slate-100 hover:text-slate-900"
                     aria-label={t('navigation.previous')}
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>
-                  <p className="text-xs text-slate-500 min-w-0 flex-1 text-center">{headerLabel}</p>
+                  <div className="px-3 min-w-[200px] text-center">
+                    <p className="text-sm font-semibold text-slate-900">{headerLabel}</p>
+                  </div>
                   <button
                     type="button"
                     onClick={navigateNext}
-                    className="inline-flex items-center justify-center rounded-full p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                    className="inline-flex items-center justify-center rounded-md p-1.5 text-slate-600 transition-all hover:bg-slate-100 hover:text-slate-900"
                     aria-label={t('navigation.next')}
                   >
                     <ChevronRight className="h-4 w-4" />
                   </button>
                 </div>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={goToToday}
-                className="hidden items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-blue-300 hover:text-blue-600 lg:inline-flex"
-              >
-                <RotateCw className="h-4 w-4" />
-                {t('navigation.today')}
-              </button>
-              <div className="hidden rounded-full border border-slate-200 bg-slate-50 p-1 text-xs font-semibold text-slate-500 lg:flex">
+
+              {/* Right: View Toggle */}
+              <div className="flex items-center gap-1 rounded-lg border border-slate-300 bg-slate-50 p-1 shadow-sm">
                 {(
                   [
                     { key: 'month', label: t('page.month'), icon: Grid },
@@ -664,128 +957,17 @@ function CalendarPageContent() {
                     type="button"
                     onClick={() => setViewType(key)}
                     className={clsx(
-                      'inline-flex items-center gap-1 rounded-full px-3 py-1.5 transition',
+                      'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all',
                       viewType === key
-                        ? 'bg-white text-blue-600 shadow-sm'
-                        : 'text-slate-500 hover:text-blue-600'
+                        ? 'bg-white text-blue-600 shadow-sm ring-1 ring-blue-100'
+                        : 'text-slate-600 hover:bg-white/50 hover:text-slate-900'
                     )}
                   >
-                    <Icon className="h-3.5 w-3.5" />
-                    {label}
+                    <Icon className="h-4 w-4" />
+                    <span className="hidden sm:inline">{label}</span>
                   </button>
                 ))}
               </div>
-              <div className="relative" ref={connectionsDropdownRef}>
-                <button
-                  type="button"
-                  onClick={() => setShowConnections(!showConnections)}
-                  className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-blue-300 hover:text-blue-600"
-                >
-                  <Link2 className="h-4 w-4" />
-                  Connections ({connections.length})
-                </button>
-                {showConnections && (
-                  <div className="absolute right-0 top-full z-[9999] mt-2 w-80 rounded-lg border border-slate-200 bg-white shadow-xl">
-                    <div className="p-4">
-                      <h3 className="mb-3 text-sm font-semibold text-slate-900">
-                        Calendar Connections
-                      </h3>
-                      {connectionsLoading ? (
-                        <div className="flex items-center justify-center py-4">
-                          <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
-                        </div>
-                      ) : connections.length === 0 ? (
-                        <div className="space-y-3 py-2">
-                          <div className="flex items-center gap-2 text-sm text-slate-500">
-                            <CloudOff className="h-4 w-4" />
-                            No connections
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => handleConnectProvider('google')}
-                            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
-                          >
-                            Connect Google Calendar
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleConnectProvider('outlook')}
-                            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
-                          >
-                            Connect Outlook Calendar
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          {connections.map((connection) => (
-                            <div
-                              key={connection.id}
-                              className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-3"
-                            >
-                              <div className="flex items-center gap-2">
-                                <Link2 className="h-4 w-4 text-slate-400" />
-                                <div>
-                                  <p className="text-sm font-medium text-slate-900">
-                                    {connection.provider === 'google' ? 'Google' : 'Outlook'}
-                                  </p>
-                                  <p className="text-xs text-slate-500">{connection.provider_email}</p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <button
-                                  type="button"
-                                  onClick={() => handleSync(connection.id)}
-                                  disabled={syncingConnectionId === connection.id}
-                                  className="rounded p-1.5 text-slate-400 transition hover:bg-slate-200 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
-                                  title="Sync calendar"
-                                >
-                                  {syncingConnectionId === connection.id ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                  ) : (
-                                    <RefreshCcw className="h-4 w-4" />
-                                  )}
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleDisconnect(connection.id)}
-                                  className="rounded p-1.5 text-slate-400 transition hover:bg-red-100 hover:text-red-600"
-                                  title="Disconnect"
-                                >
-                                  <CloudOff className="h-4 w-4" />
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-                          <div className="mt-3 space-y-2 border-t border-slate-200 pt-3">
-                            <button
-                              type="button"
-                              onClick={() => handleConnectProvider('google')}
-                              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
-                            >
-                              Connect Google Calendar
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleConnectProvider('outlook')}
-                              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
-                            >
-                              Connect Outlook Calendar
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={() => openCreateModal()}
-                className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
-              >
-                <Plus className="h-4 w-4" />
-                {t('form.newEvent')}
-              </button>
             </div>
           </div>
         </div>
@@ -816,6 +998,22 @@ function CalendarPageContent() {
           isCreateMode={isCreateMode}
           onSave={handleSaveEvent}
           onDelete={handleDeleteEvent}
+        />
+
+        <ConfirmDialog
+          isOpen={todoConfirmDialog.isOpen}
+          onClose={() => setTodoConfirmDialog({ isOpen: false, todoId: null })}
+          onConfirm={() => {
+            if (todoConfirmDialog.todoId) {
+              router.push(`/todos?edit=${todoConfirmDialog.todoId}`);
+            }
+            setTodoConfirmDialog({ isOpen: false, todoId: null });
+          }}
+          title="Open Todo Details?"
+          description="You can view or edit the complete details of this todo on the Todos page."
+          confirmText="Open Todo"
+          cancelText="Cancel"
+          variant="info"
         />
       </div>
     </AppLayout>

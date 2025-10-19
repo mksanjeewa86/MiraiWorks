@@ -68,7 +68,8 @@ class TodoAttachmentAPI {
       xhr.open('POST', `${API_CONFIG.BASE_URL}${API_ENDPOINTS.TODOS.ATTACHMENTS.UPLOAD(todoId)}`);
 
       // Add authorization header if available
-      const token = localStorage.getItem('accessToken');
+      // Check both localStorage and sessionStorage for tokens
+      const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
       if (token) {
         xhr.setRequestHeader('Authorization', `Bearer ${token}`);
       }
@@ -109,7 +110,8 @@ class TodoAttachmentAPI {
    * Download an attachment file
    */
   async downloadFile(todoId: number, attachmentId: number): Promise<void> {
-    const token = localStorage.getItem('accessToken');
+    // Check both localStorage and sessionStorage for tokens
+    const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
     const headers: Record<string, string> = {};
 
     if (token) {
@@ -152,7 +154,8 @@ class TodoAttachmentAPI {
    * Get preview URL for supported file types
    */
   async getPreviewUrl(todoId: number, attachmentId: number): Promise<string> {
-    const token = localStorage.getItem('accessToken');
+    // Check both localStorage and sessionStorage for tokens
+    const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
     const authParam = token ? `?token=${encodeURIComponent(token)}` : '';
     return `${API_CONFIG.BASE_URL}${API_ENDPOINTS.TODOS.ATTACHMENTS.PREVIEW(todoId, attachmentId)}${authParam}`;
   }
@@ -171,7 +174,8 @@ class TodoAttachmentAPI {
     }
 
     // Use fetch directly for FormData to avoid JSON serialization
-    const token = localStorage.getItem('accessToken');
+    // Check both localStorage and sessionStorage for tokens
+    const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
     const headers: Record<string, string> = {};
 
     if (token) {

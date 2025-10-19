@@ -21,7 +21,8 @@ const initialFormState: TaskFormState = {
   description: '',
   notes: '',
   dueDate: '',
-  priority: '',
+  dueTime: '',
+  priority: 'mid',
 };
 
 function formatDateForInput(input?: string | null): string {
@@ -30,7 +31,16 @@ function formatDateForInput(input?: string | null): string {
   if (Number.isNaN(date.getTime())) return '';
   const off = date.getTimezoneOffset();
   const local = new Date(date.getTime() - off * 60_000);
-  return local.toISOString().slice(0, 16);
+  return local.toISOString().slice(0, 10); // YYYY-MM-DD
+}
+
+function formatTimeForInput(input?: string | null): string {
+  if (!input) return '';
+  const date = new Date(input);
+  if (Number.isNaN(date.getTime())) return '';
+  const off = date.getTimezoneOffset();
+  const local = new Date(date.getTime() - off * 60_000);
+  return local.toISOString().slice(11, 16); // HH:mm
 }
 
 export default function TaskModalWithAttachments({
@@ -58,8 +68,9 @@ export default function TaskModalWithAttachments({
           title: editingTodo.title,
           description: editingTodo.description ?? '',
           notes: editingTodo.notes ?? '',
-          dueDate: formatDateForInput(editingTodo.due_date),
-          priority: editingTodo.priority ?? '',
+          dueDate: formatDateForInput(editingTodo.due_datetime),
+          dueTime: formatTimeForInput(editingTodo.due_datetime),
+          priority: editingTodo.priority ?? 'mid',
         });
         // Load attachments for existing todo
         loadAttachments(editingTodo.id);
@@ -105,12 +116,19 @@ export default function TaskModalWithAttachments({
       return;
     }
 
+    // Combine date and time into due_datetime (ISO format with timezone)
+    let dueDatetime: string | undefined = undefined;
+    if (formState.dueDate) {
+      const timeStr = formState.dueTime || '23:59'; // Default to end of day if no time
+      dueDatetime = new Date(`${formState.dueDate}T${timeStr}:00`).toISOString();
+    }
+
     const payload: TodoPayload = {
       title: trimmedTitle,
       description: formState.description.trim() || undefined,
       notes: formState.notes.trim() || undefined,
-      priority: formState.priority.trim() || undefined,
-      due_date: formState.dueDate ? new Date(formState.dueDate).toISOString() : undefined,
+      priority: formState.priority || undefined,
+      due_datetime: dueDatetime,
     };
 
     setSubmitting(true);

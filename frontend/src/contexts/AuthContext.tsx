@@ -176,8 +176,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // If 401, clear all tokens and force logout (token is invalid)
       if (is401) {
-        console.warn('[AuthContext] Refresh token invalid (401), clearing storage and forcing logout');
-
         // Clear all storage
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
@@ -243,7 +241,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const CURRENT_TOKEN_VERSION = '2.0'; // Updated for remember_me feature
 
         if (!tokenVersion || tokenVersion !== CURRENT_TOKEN_VERSION) {
-          console.warn('[AuthContext] Old token version detected, clearing all tokens');
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
           localStorage.removeItem('rememberMe');
@@ -261,23 +258,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
         const refreshToken = localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken');
 
-        console.log('[AuthContext] initAuth - tokens found:', {
-          hasAccessToken: !!token,
-          hasRefreshToken: !!refreshToken,
-          tokenVersion,
-          fromLocalStorage: !!localStorage.getItem('accessToken'),
-          fromSessionStorage: !!sessionStorage.getItem('accessToken')
-        });
-
         if (token && refreshToken) {
           // Skip token validation, just try to use the access token
           // If it fails, the API client will handle token refresh automatically
           try {
-            console.log('[AuthContext] Verifying access token with /me endpoint');
             const userResponse = await authApi.me(token);
 
             // Token is valid, set auth state
-            console.log('[AuthContext] Access token is valid, user authenticated');
             if (isMounted) {
               dispatch({
                 type: 'AUTH_SUCCESS',
@@ -307,7 +294,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         } else {
           // No tokens found, ensure clean state
-          console.log('[AuthContext] No tokens found in storage');
           if (isMounted) {
             dispatch({ type: 'LOGOUT' });
           }
@@ -316,7 +302,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!isMounted) return;
 
         // Any unexpected error, clear auth
-        console.error('[AuthContext] Auth initialization error:', error);
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('rememberMe');

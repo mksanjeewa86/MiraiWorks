@@ -92,6 +92,12 @@ class TodoStatus(str, Enum):
     EXPIRED = "expired"
 
 
+class TodoPriority(str, Enum):
+    LOW = "low"
+    MID = "mid"
+    HIGH = "high"
+
+
 class TodoVisibility(str, Enum):
     PRIVATE = "private"  # Only owner can see
     PUBLIC = "public"  # Assigned user can see and interact
@@ -109,13 +115,9 @@ class TodoPublishStatus(str, Enum):
     PUBLISHED = "published"  # Visible to assignee/viewers
 
 
-class AssignmentStatus(str, Enum):
-    NOT_STARTED = "not_started"
-    IN_PROGRESS = "in_progress"
-    SUBMITTED = "submitted"
-    UNDER_REVIEW = "under_review"
-    APPROVED = "approved"
-    REJECTED = "rejected"
+class VisibilityStatus(str, Enum):
+    VISIBLE = "visible"  # Todo is visible to assignees/viewers
+    HIDDEN = "hidden"  # Todo is hidden from assignees/viewers
 
 
 class ExtensionRequestStatus(str, Enum):

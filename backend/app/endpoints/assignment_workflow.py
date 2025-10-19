@@ -14,7 +14,6 @@ from app.schemas.todo import (
     AssignmentWorkflowResponse,
     TodoListResponse,
     TodoRead,
-    TodoViewersUpdate,
 )
 from app.services.todo_permissions import TodoPermissionService
 
@@ -25,7 +24,7 @@ async def _get_todo_or_404(
     db: AsyncSession, *, todo_id: int, current_user: User, allow_deleted: bool = True
 ):
     """Get todo or raise 404 if not found or not accessible."""
-    todo_obj = await todo_crud.get_with_assigned_user(db, todo_id=todo_id)
+    todo_obj = await todo_crud.get(db, id=todo_id)
     if not todo_obj:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Todo not found"
@@ -41,31 +40,6 @@ async def _get_todo_or_404(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Todo not found"
         )
-    return todo_obj
-
-
-@router.put(API_ROUTES.TODOS.VIEWERS, response_model=TodoRead)
-async def update_todo_viewers(
-    todo_id: int,
-    viewers_data: TodoViewersUpdate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
-):
-    """Update viewers for a todo."""
-    todo_obj = await _get_todo_or_404(
-        db, todo_id=todo_id, current_user=current_user, allow_deleted=False
-    )
-
-    # Check if user can assign this todo (same permission for viewers)
-    if not await TodoPermissionService.can_assign_todo(db, current_user.id, todo_obj):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to update viewers for this todo",
-        )
-
-    todo_obj = await todo_crud.update_viewers(
-        db, todo=todo_obj, viewers_data=viewers_data, updated_by=current_user.id
-    )
     return todo_obj
 
 
@@ -160,11 +134,11 @@ async def submit_assignment(
         db, todo_id=todo_id, current_user=current_user, allow_deleted=False
     )
 
-    # Check if user is assigned to this todo
-    if todo_obj.assigned_user_id != current_user.id:
+    # Check if user is the owner of this todo
+    if todo_obj.owner_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only the assigned user can submit assignments",
+            detail="Only the owner can submit assignments",
         )
 
     # Check if it's an assignment and can be edited

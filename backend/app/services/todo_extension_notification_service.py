@@ -4,7 +4,6 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.crud.todo_viewer import todo_viewer
 from app.models.todo_extension_request import TodoExtensionRequest
 from app.services.email_service import email_service
 from app.services.notification_service import NotificationService
@@ -30,9 +29,6 @@ class TodoExtensionNotificationService:
             # Send email to creator
             await self._send_extension_request_email(db, extension_request)
 
-            # Notify viewers (they should be aware but can't respond)
-            await self._notify_viewers_of_extension_request(db, extension_request)
-
         except Exception as e:
             logger.error(f"Error sending extension request notifications: {e}")
 
@@ -47,9 +43,6 @@ class TodoExtensionNotificationService:
             # Send email to requester
             await self._send_extension_response_email(db, extension_request)
 
-            # Notify viewers about the decision
-            await self._notify_viewers_of_extension_response(db, extension_request)
-
         except Exception as e:
             logger.error(f"Error sending extension response notifications: {e}")
 
@@ -59,20 +52,22 @@ class TodoExtensionNotificationService:
         """Send in-app notification to creator about extension request."""
         requester_name = f"{extension_request.requested_by.first_name} {extension_request.requested_by.last_name}"
 
+        # Get current due datetime from todo
+        current_due_date_str = extension_request.todo.due_datetime.strftime('%Y-%m-%d') if extension_request.todo.due_datetime else "No due date"
+
         await self.notification_service.create_notification(
             db,
             user_id=extension_request.creator_id,
             notification_type=NotificationType.TODO_EXTENSION_REQUEST.value,
             title=f"Extension Request for Todo: {extension_request.todo.title}",
             message=f"{requester_name} has requested to extend the due date from "
-            f"{extension_request.current_due_date.strftime('%Y-%m-%d')} to "
+            f"{current_due_date_str} to "
             f"{extension_request.requested_due_date.strftime('%Y-%m-%d')}",
             payload={
                 "extension_request_id": extension_request.id,
                 "todo_id": extension_request.todo_id,
                 "requester_id": extension_request.requested_by_id,
                 "requester_name": requester_name,
-                "current_due_date": extension_request.current_due_date.isoformat(),
                 "requested_due_date": extension_request.requested_due_date.isoformat(),
                 "reason": extension_request.reason,
                 "action_url": f"/todos/{extension_request.todo_id}/extensions/{extension_request.id}",
@@ -123,70 +118,6 @@ class TodoExtensionNotificationService:
             },
         )
 
-    async def _notify_viewers_of_extension_request(
-        self, db: AsyncSession, extension_request: TodoExtensionRequest
-    ) -> None:
-        """Notify viewers about new extension request."""
-        viewers = await todo_viewer.get_viewers_for_todo(
-            db, todo_id=extension_request.todo_id
-        )
-
-        requester_name = f"{extension_request.requested_by.first_name} {extension_request.requested_by.last_name}"
-
-        for viewer in viewers:
-            await self.notification_service.create_notification(
-                db,
-                user_id=viewer.user_id,
-                notification_type=NotificationType.TODO_EXTENSION_REQUEST.value,
-                title=f"Extension Request for Todo: {extension_request.todo.title}",
-                message=f"{requester_name} has requested to extend the due date. "
-                f"This is for your information only.",
-                payload={
-                    "extension_request_id": extension_request.id,
-                    "todo_id": extension_request.todo_id,
-                    "requester_name": requester_name,
-                    "is_viewer_notification": True,
-                    "action_url": f"/todos/{extension_request.todo_id}",
-                },
-            )
-
-    async def _notify_viewers_of_extension_response(
-        self, db: AsyncSession, extension_request: TodoExtensionRequest
-    ) -> None:
-        """Notify viewers about extension request response."""
-        viewers = await todo_viewer.get_viewers_for_todo(
-            db, todo_id=extension_request.todo_id
-        )
-
-        status_text = (
-            "approved"
-            if extension_request.status == ExtensionRequestStatus.APPROVED.value
-            else "rejected"
-        )
-        requester_name = f"{extension_request.requested_by.first_name} {extension_request.requested_by.last_name}"
-
-        message = f"Extension request by {requester_name} has been {status_text}"
-        if extension_request.status == ExtensionRequestStatus.APPROVED.value:
-            message += f". New due date: {extension_request.requested_due_date.strftime('%Y-%m-%d')}"
-
-        for viewer in viewers:
-            await self.notification_service.create_notification(
-                db,
-                user_id=viewer.user_id,
-                notification_type=NotificationType.TODO_EXTENSION_APPROVED.value
-                if extension_request.status == ExtensionRequestStatus.APPROVED.value
-                else NotificationType.TODO_EXTENSION_REJECTED.value,
-                title=f"Extension Request Update: {extension_request.todo.title}",
-                message=message,
-                payload={
-                    "extension_request_id": extension_request.id,
-                    "todo_id": extension_request.todo_id,
-                    "status": extension_request.status,
-                    "is_viewer_notification": True,
-                    "action_url": f"/todos/{extension_request.todo_id}",
-                },
-            )
-
     async def _send_extension_request_email(
         self, db: AsyncSession, extension_request: TodoExtensionRequest
     ) -> None:
@@ -195,6 +126,12 @@ class TodoExtensionNotificationService:
             requester_name = f"{extension_request.requested_by.first_name} {extension_request.requested_by.last_name}"
 
             subject = f"Todo Extension Request: {extension_request.todo.title}"
+
+            # Get current due datetime from todo
+            from datetime import datetime
+            current_due_str = "No due date"
+            if extension_request.todo.due_datetime:
+                current_due_str = extension_request.todo.due_datetime.strftime('%B %d, %Y at %I:%M %p')
 
             # Create email content
             email_content = f"""
@@ -206,7 +143,7 @@ class TodoExtensionNotificationService:
                 <h3>{extension_request.todo.title}</h3>
                 {f'<p><strong>Description:</strong> {extension_request.todo.description}</p>' if extension_request.todo.description else ''}
 
-                <p><strong>Current Due Date:</strong> {extension_request.current_due_date.strftime('%B %d, %Y at %I:%M %p')}</p>
+                <p><strong>Current Due Date:</strong> {current_due_str}</p>
                 <p><strong>Requested Due Date:</strong> {extension_request.requested_due_date.strftime('%B %d, %Y at %I:%M %p')}</p>
 
                 <h4>Reason for Extension:</h4>
@@ -247,6 +184,12 @@ class TodoExtensionNotificationService:
                 f"Todo Extension Request {status_text}: {extension_request.todo.title}"
             )
 
+            # Get original due date from todo
+            from datetime import datetime
+            original_due_str = "No due date"
+            if extension_request.todo.due_datetime:
+                original_due_str = extension_request.todo.due_datetime.strftime('%B %d, %Y at %I:%M %p')
+
             # Create email content
             email_content = f"""
             <h2>Todo Extension Request {status_text}</h2>
@@ -257,7 +200,7 @@ class TodoExtensionNotificationService:
                 <h3>{extension_request.todo.title}</h3>
                 {f'<p><strong>Description:</strong> {extension_request.todo.description}</p>' if extension_request.todo.description else ''}
 
-                <p><strong>Original Due Date:</strong> {extension_request.current_due_date.strftime('%B %d, %Y at %I:%M %p')}</p>
+                <p><strong>Original Due Date:</strong> {original_due_str}</p>
                 <p><strong>Requested Due Date:</strong> {extension_request.requested_due_date.strftime('%B %d, %Y at %I:%M %p')}</p>
 
                 {f'<p><strong>New Due Date:</strong> {extension_request.requested_due_date.strftime("%B %d, %Y at %I:%M %p")}</p>' if extension_request.status == ExtensionRequestStatus.APPROVED.value else ''}

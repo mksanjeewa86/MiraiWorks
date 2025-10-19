@@ -3,23 +3,22 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, Boolean, Date, DateTime, ForeignKey, Integer, String, Text, Time
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import BaseModel
 from app.utils.constants import (
-    AssignmentStatus,
+    VisibilityStatus,
+    TodoPriority,
     TodoPublishStatus,
     TodoStatus,
     TodoType,
-    TodoVisibility,
 )
 from app.utils.datetime_utils import get_utc_now
 
 if TYPE_CHECKING:
     from app.models.exam import Exam
     from app.models.todo_extension_request import TodoExtensionRequest
-    from app.models.todo_viewer import TodoViewer
     from app.models.user import User
     from app.models.workflow import Workflow
 
@@ -34,9 +33,6 @@ class Todo(BaseModel):
     )
     last_updated_by: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
-    )
-    assigned_user_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
     )
 
     # Workflow relationship
@@ -53,9 +49,8 @@ class Todo(BaseModel):
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default=TodoStatus.PENDING.value, index=True
     )
-    priority: Mapped[str | None] = mapped_column(String(20), nullable=True)
-    visibility: Mapped[str] = mapped_column(
-        String(20), nullable=False, default=TodoVisibility.PRIVATE.value, index=True
+    priority: Mapped[str | None] = mapped_column(
+        String(20), nullable=True, default=TodoPriority.MID.value
     )
 
     # Todo type and publishing
@@ -70,7 +65,10 @@ class Todo(BaseModel):
     )
 
     # Assignment specific fields
-    assignment_status: Mapped[str | None] = mapped_column(
+    assignee_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    visibility_status: Mapped[str | None] = mapped_column(
         String(20), nullable=True, index=True
     )
     assignment_assessment: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -105,8 +103,9 @@ class Todo(BaseModel):
     deleted_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    due_date: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
+    # Store due datetime in UTC
+    due_datetime: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, index=True
     )
     completed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
@@ -122,17 +121,14 @@ class Todo(BaseModel):
     updater: Mapped[User | None] = relationship(
         "User", foreign_keys=[last_updated_by], backref="updated_todos"
     )
-    assigned_user: Mapped[User | None] = relationship(
-        "User", foreign_keys=[assigned_user_id], backref="assigned_todos"
+    assignee: Mapped[User | None] = relationship(
+        "User", foreign_keys=[assignee_id], backref="assigned_todos"
     )
     reviewer: Mapped[User | None] = relationship(
         "User", foreign_keys=[reviewed_by], backref="reviewed_todos"
     )
     workflow: Mapped[Optional[Workflow]] = relationship(
         "Workflow", foreign_keys=[workflow_id]
-    )
-    viewers: Mapped[list[TodoViewer]] = relationship(
-        "TodoViewer", back_populates="todo", cascade="all, delete-orphan"
     )
     extension_requests: Mapped[list[TodoExtensionRequest]] = relationship(
         "TodoExtensionRequest", back_populates="todo", cascade="all, delete-orphan"
@@ -148,17 +144,19 @@ class Todo(BaseModel):
 
     @property
     def is_expired(self) -> bool:
+        """Check if todo is expired based on due datetime (stored in UTC)."""
+        from datetime import timezone
+
         if self.status == TodoStatus.COMPLETED.value:
             return False
         if self.expired_at:
             return True
-        if self.due_date:
-            # Handle timezone-naive datetimes by treating them as UTC
-            due_date_aware = self.due_date
-            if due_date_aware.tzinfo is None:
-                from datetime import UTC
-                due_date_aware = due_date_aware.replace(tzinfo=UTC)
-            return due_date_aware < get_utc_now()
+        if self.due_datetime:
+            # Ensure due_datetime is timezone-aware (MySQL returns naive datetimes)
+            due_dt = self.due_datetime
+            if due_dt.tzinfo is None:
+                due_dt = due_dt.replace(tzinfo=timezone.utc)
+            return due_dt < get_utc_now()
         return False
 
     def mark_completed(self) -> None:
@@ -206,25 +204,21 @@ class Todo(BaseModel):
     def submit_assignment(self) -> None:
         """Mark assignment as submitted"""
         if self.is_assignment:
-            self.assignment_status = AssignmentStatus.SUBMITTED.value
             self.submitted_at = get_utc_now()
             self.status = TodoStatus.COMPLETED.value
             self.completed_at = get_utc_now()
 
     def start_review(self) -> None:
         """Start review process for assignment"""
-        if (
-            self.is_assignment
-            and self.assignment_status == AssignmentStatus.SUBMITTED.value
-        ):
-            self.assignment_status = AssignmentStatus.UNDER_REVIEW.value
+        if self.is_assignment and self.submitted_at:
+            # Review process can start after submission
+            pass
 
     def approve_assignment(
         self, reviewer_id: int, assessment: str = None, score: int = None
     ) -> None:
         """Mark assignment as approved"""
         if self.is_assignment:
-            self.assignment_status = AssignmentStatus.APPROVED.value
             self.reviewed_at = get_utc_now()
             self.reviewed_by = reviewer_id
             if assessment:
@@ -237,7 +231,6 @@ class Todo(BaseModel):
     ) -> None:
         """Mark assignment as rejected"""
         if self.is_assignment:
-            self.assignment_status = AssignmentStatus.REJECTED.value
             self.reviewed_at = get_utc_now()
             self.reviewed_by = reviewer_id
             if assessment:
@@ -250,9 +243,18 @@ class Todo(BaseModel):
         """Check if assignee can edit the todo"""
         if not self.is_assignment:
             return True
-        return self.assignment_status not in [
-            AssignmentStatus.SUBMITTED.value,
-            AssignmentStatus.UNDER_REVIEW.value,
-            AssignmentStatus.APPROVED.value,
-            AssignmentStatus.REJECTED.value,
-        ]
+        # Assignee can edit until submission
+        return self.submitted_at is None
+
+    def set_visible(self) -> None:
+        """Make todo visible to assignee"""
+        self.visibility_status = VisibilityStatus.VISIBLE.value
+
+    def set_hidden(self) -> None:
+        """Hide todo from assignee"""
+        self.visibility_status = VisibilityStatus.HIDDEN.value
+
+    @property
+    def is_visible_to_assignee(self) -> bool:
+        """Check if todo is visible to assignee"""
+        return self.visibility_status == VisibilityStatus.VISIBLE.value

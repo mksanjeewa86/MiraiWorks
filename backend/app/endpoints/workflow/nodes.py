@@ -227,7 +227,7 @@ async def _create_todo_integration(
         description=integration.description or node.description,
         priority=integration.priority,
         due_date=due_date,
-        assigned_user_id=integration.assigned_to,
+        assignee_id=integration.assigned_to,
         todo_type=todo_type,
         visibility=(
             TodoVisibility.PUBLIC.value

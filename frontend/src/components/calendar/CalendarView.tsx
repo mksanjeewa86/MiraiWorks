@@ -46,6 +46,44 @@ const getEventPalette = (event: CalendarEvent | undefined) => {
     };
   }
 
+  // All-day events get a distinct green color scheme
+  if (event.isAllDay) {
+    // All-day holiday events
+    if (event.id?.startsWith('holiday-')) {
+      return {
+        backgroundColor: '#dc2626',
+        borderColor: '#b91c1c',
+        textColor: '#ffffff',
+      };
+    }
+
+    // All-day interview events
+    if (event.id?.startsWith('interview-')) {
+      return {
+        backgroundColor: '#9333ea',
+        borderColor: '#7e22ce',
+        textColor: '#ffffff',
+      };
+    }
+
+    // All-day todo events - amber/orange color scheme
+    if (event.id?.startsWith('todo-')) {
+      return {
+        backgroundColor: '#f59e0b',
+        borderColor: '#d97706',
+        textColor: '#ffffff',
+      };
+    }
+
+    // Regular all-day events - teal/emerald color scheme
+    return {
+      backgroundColor: '#10b981',
+      borderColor: '#059669',
+      textColor: '#ffffff',
+    };
+  }
+
+  // Regular timed events
   if (event.id?.startsWith('holiday-')) {
     return {
       backgroundColor: '#dc2626',
@@ -62,10 +100,11 @@ const getEventPalette = (event: CalendarEvent | undefined) => {
     };
   }
 
+  // Timed todo events - amber/orange color scheme (lighter than all-day)
   if (event.id?.startsWith('todo-')) {
     return {
-      backgroundColor: '#0ea5e9',
-      borderColor: '#0284c7',
+      backgroundColor: '#fb923c',
+      borderColor: '#f97316',
       textColor: '#ffffff',
     };
   }
@@ -340,6 +379,14 @@ export default function CalendarView({
           selectMirror
           select={handleSelect}
           selectLongPressDelay={200}
+          selectAllow={(selectInfo) => {
+            // Prevent selecting dates in the past
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const selectedDay = new Date(selectInfo.start);
+            selectedDay.setHours(0, 0, 0, 0);
+            return selectedDay >= today;
+          }}
           eventClick={handleEventClick}
           eventDidMount={handleEventDidMount}
           datesSet={handleDatesSet}
