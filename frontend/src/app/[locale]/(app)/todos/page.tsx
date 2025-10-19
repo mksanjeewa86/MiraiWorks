@@ -209,28 +209,28 @@ function TodoItem({
             </h3>
           </div>
 
-          {/* Priority badge - after title */}
-          {todo.priority && (
-            <div className="mb-2">
+          {/* Status chips - all in one flex line */}
+          <div className="flex flex-wrap items-center gap-1.5 mb-2">
+            {/* Priority badge */}
+            {todo.priority && (
               <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 whitespace-nowrap shadow-sm">
                 <ListCheck className="h-3.5 w-3.5" />
                 {todo.priority.toUpperCase()}
               </span>
-            </div>
-          )}
-
-          {/* Status badges */}
-          <div className="flex flex-wrap items-center gap-1.5 mb-2">
+            )}
+            {/* Deleted badge */}
             {isDeleted && (
               <span className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
                 <Trash2 className="h-3.5 w-3.5" /> {t('badges.deleted')}
               </span>
             )}
+            {/* Overdue badge */}
             {showExpired && !isDeleted && (
               <span className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold bg-rose-200 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300">
                 <AlertCircle className="h-3.5 w-3.5" /> {t('badges.overdue')}
               </span>
             )}
+            {/* Completed badge */}
             {isCompleted && todo.completed_at && (
               <span className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold bg-emerald-200 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">
                 <CheckCircle2 className="h-3.5 w-3.5" /> Completed {new Date(todo.completed_at).toLocaleDateString()}
@@ -283,30 +283,6 @@ function TodoItem({
             )}
           </div>
 
-          {/* Description */}
-          {todo.description && (
-            <p
-              className={`text-sm leading-relaxed line-clamp-2 ${
-                isDeleted ? 'opacity-50' : 'opacity-75'
-              }`}
-              style={{ color: 'var(--text-secondary)' }}
-            >
-              {todo.description}
-            </p>
-          )}
-
-          {/* Notes - compact */}
-          {todo.notes && (
-            <div className="mt-2 rounded-lg bg-amber-50 border border-amber-300 p-2.5 dark:bg-amber-900/20 dark:border-amber-800/50 shadow-sm">
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-700 dark:text-amber-300">
-                <StickyNote className="h-3.5 w-3.5" />
-                <span>{t('labels.notes')}</span>
-              </div>
-              <p className="mt-1 text-xs leading-relaxed text-amber-800 dark:text-amber-200 line-clamp-2">
-                {todo.notes}
-              </p>
-            </div>
-          )}
         </div>
       </div>
 
@@ -331,6 +307,11 @@ function TodosPageContent() {
   const searchParams = useSearchParams();
   const { showToast } = useToast();
   const { user } = useAuth();
+
+  // Check if user is a candidate (candidates don't see extension requests)
+  const isCandidate = user?.roles?.some(userRole =>
+    userRole.role.name.toLowerCase() === 'candidate'
+  ) ?? false;
 
   // Tab state
   const [activeTab, setActiveTab] = useState<'todos' | 'extension-requests'>('todos');
@@ -1122,26 +1103,29 @@ function TodosPageContent() {
                   Todos
                 </div>
               </button>
-              <button
-                onClick={() => setActiveTab('extension-requests')}
-                className={`
-                  py-4 px-1 border-b-2 font-medium text-sm transition-colors
-                  ${activeTab === 'extension-requests'
-                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-                  }
-                `}
-              >
-                <div className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Extension Requests
-                  {extensionRequests.length > 0 && (
-                    <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
-                      {extensionRequests.length}
-                    </span>
-                  )}
-                </div>
-              </button>
+              {/* Hide Extension Requests tab for candidates */}
+              {!isCandidate && (
+                <button
+                  onClick={() => setActiveTab('extension-requests')}
+                  className={`
+                    py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                    ${activeTab === 'extension-requests'
+                      ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                    }
+                  `}
+                >
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Extension Requests
+                    {extensionRequests.length > 0 && (
+                      <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                        {extensionRequests.length}
+                      </span>
+                    )}
+                  </div>
+                </button>
+              )}
             </nav>
           </div>
         </div>

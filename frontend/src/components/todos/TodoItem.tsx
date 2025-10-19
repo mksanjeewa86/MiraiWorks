@@ -131,29 +131,20 @@ export const TodoItem: React.FC<TodoItemProps> = ({
           )}
 
           {/* Meta Information */}
-          <div className="mt-2 flex items-center space-x-4 text-xs text-gray-500">
-            {/* Due Date */}
-            {todo.due_datetime && (
-              <div
-                className={`
-                flex items-center space-x-1
-                ${isOverdue ? 'text-red-600' : ''}
-              `}
-              >
-                {isOverdue ? (
-                  <ExclamationTriangleIcon className="h-3 w-3" />
-                ) : (
-                  <CalendarIcon className="h-3 w-3" />
-                )}
-                <span>{formatDueDate(todo.due_datetime)}</span>
-              </div>
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+            {/* Overdue Badge */}
+            {isOverdue && (
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-red-100 text-red-700 font-medium">
+                <ExclamationTriangleIcon className="h-3 w-3" />
+                Overdue
+              </span>
             )}
 
-            {/* Priority */}
+            {/* Priority Badge */}
             {todo.priority && (
               <span
                 className={`
-                px-2 py-1 rounded-full text-xs font-medium
+                inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
                 ${getPriorityColor(todo.priority)}
               `}
               >
@@ -161,35 +152,38 @@ export const TodoItem: React.FC<TodoItemProps> = ({
               </span>
             )}
 
+            {/* Due Date */}
+            {todo.due_datetime && (
+              <span
+                className={`
+                inline-flex items-center gap-1 px-2 py-1 rounded-full
+                ${isOverdue ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-700'}
+              `}
+              >
+                <CalendarIcon className="h-3 w-3" />
+                {formatDueDate(todo.due_datetime)}
+              </span>
+            )}
+
             {/* Attachments */}
             {attachmentCount > 0 && (
               <button
                 onClick={() => onViewAttachments?.(todo)}
-                className="flex items-center space-x-1 hover:text-blue-600 transition-colors"
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
               >
                 <PaperClipIcon className="h-3 w-3" />
                 <span>
                   {attachmentCount} file{attachmentCount !== 1 ? 's' : ''}
-                  {totalAttachmentSize > 0 && (
-                    <span className="text-gray-400"> • {formatFileSize(totalAttachmentSize)}</span>
-                  )}
                 </span>
               </button>
             )}
 
             {/* Created Date */}
-            <div className="flex items-center space-x-1">
+            <span className="inline-flex items-center gap-1 text-gray-500">
               <ClockIcon className="h-3 w-3" />
-              <span>{new Date(todo.created_at).toLocaleDateString()}</span>
-            </div>
+              {new Date(todo.created_at).toLocaleDateString()}
+            </span>
           </div>
-
-          {/* Notes Preview */}
-          {todo.notes && (
-            <div className="mt-2 p-2 bg-gray-50 rounded text-xs text-gray-600">
-              <span className="font-medium">Note:</span> {todo.notes}
-            </div>
-          )}
         </div>
 
         {/* Actions */}
