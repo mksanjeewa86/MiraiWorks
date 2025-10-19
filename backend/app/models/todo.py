@@ -19,6 +19,7 @@ from app.utils.datetime_utils import get_utc_now
 if TYPE_CHECKING:
     from app.models.exam import Exam
     from app.models.todo_extension_request import TodoExtensionRequest
+    from app.models.todo_viewer import TodoViewer
     from app.models.user import User
     from app.models.workflow import Workflow
 
@@ -137,6 +138,9 @@ class Todo(BaseModel):
         "Exam", foreign_keys=[exam_id], backref="todos"
     )
     # exam_assignment relationship is created by backref from ExamAssignment.todo
+    viewers: Mapped[list[TodoViewer]] = relationship(
+        "TodoViewer", back_populates="todo", cascade="all, delete-orphan"
+    )
 
     @property
     def is_completed(self) -> bool:

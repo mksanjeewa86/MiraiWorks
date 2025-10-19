@@ -464,7 +464,13 @@ export const API_ENDPOINTS = {
     RECENT: '/api/todos/recent',
     REOPEN: (id: number | string) => `/api/todos/${id}/reopen`,
     RESTORE: (id: number | string) => `/api/todos/${id}/restore`,
-    VIEWERS: (id: number | string) => `/api/todos/${id}/viewers`,
+    VIEWABLE: '/api/todos/viewable',
+    VIEWERS: {
+      ADD: (todoId: number | string) => `/api/todos/${todoId}/viewers`,
+      LIST: (todoId: number | string) => `/api/todos/${todoId}/viewers`,
+      REMOVE: (todoId: number | string, viewerUserId: number | string) =>
+        `/api/todos/${todoId}/viewers/${viewerUserId}`,
+    },
   },
 
   // User endpoints

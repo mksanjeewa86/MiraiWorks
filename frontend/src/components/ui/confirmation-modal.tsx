@@ -27,9 +27,9 @@ const ConfirmationModal: React.FC<ConfirmationModalPropsExtended> = ({
     : 'bg-blue-600 hover:bg-blue-700 text-white';
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      {/* Backdrop */}
-      <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={onClose} />
+    <div className="fixed inset-0 z-[100] overflow-y-auto">
+      {/* Backdrop - transparent */}
+      <div className="fixed inset-0 bg-transparent transition-opacity" onClick={onClose} />
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">

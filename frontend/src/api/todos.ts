@@ -8,7 +8,6 @@ import type {
   AssignableUser,
   TodoWithAssignedUser,
   TodoAssignmentUpdate,
-  TodoViewersUpdate,
   AssignmentSubmission,
   AssignmentReview,
   AssignmentWorkflowResponse,
@@ -114,11 +113,6 @@ export const todosApi = {
     const url = query ? `${API_ENDPOINTS.TODOS.ASSIGNED}?${query}` : API_ENDPOINTS.TODOS.ASSIGNED;
     const response = await apiClient.get<TodoListResponse>(url);
     return response.data as TodoListResponse;
-  },
-
-  async updateViewers(id: number, viewers: TodoViewersUpdate): Promise<Todo> {
-    const response = await apiClient.put<Todo>(API_ENDPOINTS.TODOS.VIEWERS(id), viewers);
-    return response.data as Todo;
   },
 
   // Assignment workflow methods

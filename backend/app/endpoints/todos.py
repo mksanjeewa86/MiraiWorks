@@ -15,7 +15,13 @@ from app.schemas.todo import (
     TodoRead,
     TodoUpdate,
 )
+from app.schemas.todo_viewer import (
+    TodoViewerCreate,
+    TodoViewerListResponse,
+    TodoViewerRead,
+)
 from app.services.todo_permissions import TodoPermissionService
+from app.services.todo_viewer_service import todo_viewer_service
 from app.utils.constants import TodoStatus
 
 router = APIRouter()
@@ -235,3 +241,95 @@ async def list_assigned_todos(
         total = len(todos)
 
     return TodoListResponse(items=todos, total=total)
+
+
+# =============================================================================
+# Viewer Management Endpoints
+# =============================================================================
+
+
+@router.get(API_ROUTES.TODOS.VIEWABLE_TODOS, response_model=TodoListResponse)
+async def list_viewable_todos(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """List all todos that the current user can view as a viewer."""
+    todos = await todo_viewer_service.get_viewable_todos_for_user(db, current_user.id)
+    return TodoListResponse(items=todos, total=len(todos))
+
+
+@router.get(API_ROUTES.TODOS.VIEWER_LIST, response_model=TodoViewerListResponse)
+async def get_todo_viewers(
+    todo_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Get list of viewers for a todo (creator only)."""
+    try:
+        viewers = await todo_viewer_service.get_viewers(
+            db, current_user_id=current_user.id, todo_id=todo_id
+        )
+        return viewers
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail=str(e)
+        ) from e
+
+
+@router.post(
+    API_ROUTES.TODOS.VIEWER_ADD,
+    response_model=TodoViewerRead,
+    status_code=status.HTTP_201_CREATED,
+)
+async def add_viewer_to_todo(
+    todo_id: int,
+    viewer_in: TodoViewerCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Add a viewer to a todo (creator only)."""
+    try:
+        viewer = await todo_viewer_service.add_viewer(
+            db,
+            current_user_id=current_user.id,
+            todo_id=todo_id,
+            viewer_user_id=viewer_in.user_id,
+        )
+        return viewer
+    except ValueError as e:
+        if "not found" in str(e):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=str(e)
+            ) from e
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail=str(e)
+        ) from e
+
+
+@router.delete(API_ROUTES.TODOS.VIEWER_REMOVE, status_code=status.HTTP_204_NO_CONTENT)
+async def remove_viewer_from_todo(
+    todo_id: int,
+    viewer_user_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Remove a viewer from a todo (creator only)."""
+    try:
+        success = await todo_viewer_service.remove_viewer(
+            db,
+            current_user_id=current_user.id,
+            todo_id=todo_id,
+            viewer_user_id=viewer_user_id,
+        )
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Viewer not found"
+            )
+    except ValueError as e:
+        if "not found" in str(e):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=str(e)
+            ) from e
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail=str(e)
+        ) from e

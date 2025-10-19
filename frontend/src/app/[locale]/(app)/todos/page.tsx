@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   ClipboardList,
   Clock,
+  Eye,
   ListCheck,
   Plus,
   RotateCcw,
@@ -39,6 +40,7 @@ import { useToast } from '@/contexts/ToastContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { todosApi } from '@/api/todos';
 import { todoExtensionsApi } from '@/api/todo-extensions';
+import { todoViewersApi } from '@/api/todo-viewers';
 import type { Todo, ViewFilter, TodoItemProps, TodoExtensionRequest } from '@/types/todo';
 
 function formatDisplayDate(input?: string | null, noDueDateText?: string): string {
@@ -108,9 +110,10 @@ function TodoItem({
   const isCompleted = todo.status === 'completed';
   const isDeleted = todo.is_deleted;
 
-  // Check if current user is owner or assignee
+  // Check if current user is owner, assignee, or viewer
   const isOwner = user && todo.owner_id === user.id;
   const isAssignee = user && todo.assignee_id === user.id;
+  const isViewerOnly = (todo as any).isViewerOnly === true;
 
   // Import utility for formatting UTC datetime in local timezone
   const formatDueDate = (dueDatetime?: string | null): string => {
@@ -167,10 +170,20 @@ function TodoItem({
       className={`group relative overflow-hidden rounded-xl border-2 ${cardColors} shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col h-full`}
     >
       {/* Assignment indicator ribbon - only show for assignees */}
-      {isAssignment && isAssignee && (
+      {isAssignment && isAssignee && !isViewerOnly && (
         <div className="absolute top-0 right-0 z-10">
           <div className={`${assignmentBadgeColors} px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-bl-lg shadow-md`}>
             Assigned to You
+          </div>
+        </div>
+      )}
+
+      {/* Shared ribbon - only show for viewer-only todos */}
+      {isViewerOnly && (
+        <div className="absolute top-0 right-0 z-10">
+          <div className="bg-gradient-to-r from-teal-500 to-cyan-500 text-white px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-bl-lg shadow-md flex items-center gap-1">
+            <Eye className="h-3 w-3" />
+            Shared
           </div>
         </div>
       )}
@@ -353,8 +366,8 @@ function TodosPageContent() {
   const loadTodos = useCallback(async () => {
     setLoading(true);
     try {
-      // Fetch both owned todos and assigned todos
-      const [ownedResponse, assignedResponse] = await Promise.all([
+      // Fetch owned todos, assigned todos, and viewable todos (where user is a viewer)
+      const [ownedResponse, assignedResponse, viewableResponse] = await Promise.all([
         todosApi.list({
           includeCompleted: true,
           includeDeleted: true, // Always load all todos, filter client-side
@@ -364,10 +377,17 @@ function TodosPageContent() {
           includeCompleted: true,
           limit: 200,
         }),
+        todoViewersApi.listViewableTodos().catch(() => ({ items: [], total: 0 })), // Gracefully handle if viewer feature not available
       ]);
 
       // Combine and deduplicate todos by ID
-      const allTodos = [...ownedResponse.items, ...assignedResponse.items];
+      // Mark viewable todos with a flag so we can show the "Shared" ribbon
+      const viewableTodos = viewableResponse.items.map((todo: Todo) => ({
+        ...todo,
+        isViewerOnly: true, // Add flag to identify viewer-only todos
+      }));
+
+      const allTodos = [...ownedResponse.items, ...assignedResponse.items, ...viewableTodos];
       const uniqueTodos = Array.from(
         new Map(allTodos.map(todo => [todo.id, todo])).values()
       );
@@ -659,6 +679,7 @@ function TodosPageContent() {
       await todosApi.complete(todo.id);
       showToast({ type: 'success', title: t('toasts.completed') });
       await loadTodos();
+      setIsModalOpen(false); // Close the TaskModal after successful completion
     } catch (err) {
       console.error(err);
       showToast({
@@ -803,6 +824,7 @@ function TodosPageContent() {
       await todosApi.remove(todo.id);
       showToast({ type: 'success', title: t('toasts.deleted') });
       await loadTodos();
+      setIsModalOpen(false); // Close the TaskModal after successful deletion
     } catch (err) {
       console.error(err);
       showToast({

@@ -59,6 +59,9 @@ class TodoPermissionService:
     @staticmethod
     async def can_view_todo(db: AsyncSession, user_id: int, todo: Todo) -> bool:
         """Check if user can view a todo."""
+        # Import here to avoid circular import
+        from app.services.todo_viewer_service import todo_viewer_service
+
         # Owner can always view
         if todo.owner_id == user_id:
             return True
@@ -67,6 +70,10 @@ class TodoPermissionService:
         if (todo.todo_type == 'assignment' and
             todo.assignee_id == user_id and
             todo.publish_status == 'published'):
+            return True
+
+        # Viewer can view if published and not deleted
+        if await todo_viewer_service.can_view_as_viewer(db, user_id, todo):
             return True
 
         return False

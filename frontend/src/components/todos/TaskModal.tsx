@@ -27,6 +27,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  ConfirmationModal,
 } from '@/components/ui';
 import { Button } from '@/components/ui';
 import { Input } from '@/components/ui';
@@ -38,7 +39,9 @@ import { todosApi } from '@/api/todos';
 import { todoAttachmentAPI } from '@/api/todo-attachments';
 import { userConnectionsApi } from '@/api/userConnections';
 import { todoExtensionsApi } from '@/api/todo-extensions';
+import { todoViewersApi } from '@/api/todo-viewers';
 import AssignmentWorkflow from './AssignmentWorkflow';
+import TodoViewerManager from './TodoViewerManager';
 import { getTodoPermissions } from '@/utils/todoPermissions';
 import { utcToLocalDateTimeParts, localDateTimePartsToUTC } from '@/utils/dateTimeUtils';
 import type {
@@ -92,17 +95,27 @@ export default function TaskModal({
   const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false);
   const [showTaskTypeDropdown, setShowTaskTypeDropdown] = useState(false);
   const [showVisibilityDropdown, setShowVisibilityDropdown] = useState(false);
+  const [showPriorityDropdown, setShowPriorityDropdown] = useState(false);
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
   const [showValidationDialog, setShowValidationDialog] = useState(false);
+  const [viewerRemoveConfirm, setViewerRemoveConfirm] = useState<{
+    userId: number;
+    userName: string;
+    refetchFn: () => Promise<void>;
+  } | null>(null);
+  const [attachmentDeleteConfirm, setAttachmentDeleteConfirm] = useState<TodoAttachment | null>(null);
 
   const assigneeDropdownRef = useRef<HTMLDivElement>(null);
   const taskTypeDropdownRef = useRef<HTMLDivElement>(null);
   const visibilityDropdownRef = useRef<HTMLDivElement>(null);
+  const priorityDropdownRef = useRef<HTMLDivElement>(null);
 
   const isEditing = Boolean(editingTodo);
   const permissions = editingTodo ? getTodoPermissions(editingTodo as Todo, user) : null;
   const isAssignee = permissions?.isAssignee || false;
-  const canEditAllFields = !isAssignee; // Assignees can only edit notes
+  // Check if this is a viewer-only todo
+  const isViewerOnly = editingTodo && (editingTodo as any).isViewerOnly === true;
+  const canEditAllFields = !isAssignee && !isViewerOnly; // Assignees and viewers can only view
 
   // Check if we're within 1 day before due datetime (for extension request)
   const isWithinExtensionWindow = (dueDatetime?: string | null) => {
@@ -195,16 +208,22 @@ export default function TaskModal({
       ) {
         setShowVisibilityDropdown(false);
       }
+      if (
+        priorityDropdownRef.current &&
+        !priorityDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowPriorityDropdown(false);
+      }
     };
 
-    if (showAssigneeDropdown || showTaskTypeDropdown || showVisibilityDropdown) {
+    if (showAssigneeDropdown || showTaskTypeDropdown || showVisibilityDropdown || showPriorityDropdown) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showAssigneeDropdown, showTaskTypeDropdown, showVisibilityDropdown]);
+  }, [showAssigneeDropdown, showTaskTypeDropdown, showVisibilityDropdown, showPriorityDropdown]);
 
   const fetchConnectedUsers = async () => {
     setLoadingUsers(true);
@@ -368,13 +387,18 @@ export default function TaskModal({
     }
   };
 
-  const handleDeleteFile = async (attachment: TodoAttachment) => {
-    if (!editingTodo?.id) return;
+  const handleDeleteFile = (attachment: TodoAttachment) => {
+    setAttachmentDeleteConfirm(attachment);
+  };
+
+  const confirmDeleteAttachment = async () => {
+    if (!attachmentDeleteConfirm || !editingTodo?.id) return;
 
     try {
-      await todoAttachmentAPI.deleteAttachment(editingTodo.id, attachment.id);
-      handleAttachmentDeleted(attachment.id);
+      await todoAttachmentAPI.deleteAttachment(editingTodo.id, attachmentDeleteConfirm.id);
+      handleAttachmentDeleted(attachmentDeleteConfirm.id);
       showToast({ type: 'success', title: 'File deleted successfully' });
+      setAttachmentDeleteConfirm(null);
     } catch (error) {
       console.error('Failed to delete attachment:', error);
       showToast({ type: 'error', title: 'Failed to delete file' });
@@ -388,6 +412,28 @@ export default function TaskModal({
   };
 
   // Check validation before opening extension request modal
+  const handleViewerRemove = (userId: number, userName: string, refetchFn: () => Promise<void>) => {
+    setViewerRemoveConfirm({ userId, userName, refetchFn });
+  };
+
+  const confirmViewerRemove = async () => {
+    if (!viewerRemoveConfirm || !editingTodo) return;
+
+    try {
+      await todoViewersApi.removeViewer(editingTodo.id, viewerRemoveConfirm.userId);
+      showToast({ type: 'success', title: 'Viewer removed successfully' });
+      // Refresh the viewers list
+      await viewerRemoveConfirm.refetchFn();
+      setViewerRemoveConfirm(null);
+    } catch (err) {
+      console.error(err);
+      showToast({
+        type: 'error',
+        title: err instanceof Error ? err.message : 'Failed to remove viewer',
+      });
+    }
+  };
+
   const handleRequestExtension = async (todo: Todo) => {
     if (!todo.due_datetime) return;
 
@@ -519,7 +565,9 @@ export default function TaskModal({
                   </DialogTitle>
                   <DialogDescription className="text-sm text-slate-500">
                     {isEditing
-                      ? isAssignee
+                      ? isViewerOnly
+                        ? 'You have view-only access to this task. All fields are read-only.'
+                        : isAssignee
                         ? 'View task details and update your progress notes.'
                         : 'Update the details, assignees, or due date for this work item.'
                       : 'Capture what needs to happen next and who should own it.'}
@@ -537,14 +585,29 @@ export default function TaskModal({
           <div className="flex-1 overflow-y-auto px-6 py-6 min-h-0">
             <div className="space-y-8">
               <div className="grid gap-6 rounded-2xl border border-slate-200 bg-slate-50 p-6">
-                <Input
-                  label="Title"
-                  placeholder="Give the task a clear, action-oriented name"
-                  value={formState.title}
-                  onChange={handleInputChange('title')}
-                  required
-                  disabled={isAssignee}
-                />
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-slate-700">Title <span className="text-red-500">*</span></label>
+                    {isViewerOnly && (
+                      <div className="group relative">
+                        <Info className="h-4 w-4 text-slate-400 hover:text-blue-600 cursor-help transition-colors" />
+                        <div className="invisible group-hover:visible absolute left-0 top-6 z-[99999] w-64 rounded-lg bg-slate-900 p-3 text-xs text-white shadow-2xl">
+                          <div className="font-semibold text-amber-300 mb-1">Read-Only Field</div>
+                          <div className="text-slate-300">
+                            This field is read-only. You have view-only access to this task.
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <Input
+                    placeholder="Give the task a clear, action-oriented name"
+                    value={formState.title}
+                    onChange={handleInputChange('title')}
+                    required
+                    disabled={!!(isAssignee || isViewerOnly)}
+                  />
+                </div>
 
                 {/* Assignment Workflow Controls - Only show for owners */}
                 {canEditAllFields && (
@@ -737,47 +800,133 @@ export default function TaskModal({
                 )}
 
                 <div className="grid gap-4 md:grid-cols-3">
-                  <Input
-                    type="date"
-                    label="Due date"
-                    value={formState.dueDate}
-                    onChange={handleDateChange}
-                    leftIcon={<CalendarClock className="h-4 w-4" />}
-                    disabled={isAssignee}
-                  />
-                  <Input
-                    type="time"
-                    label="Due time (optional)"
-                    value={formState.dueTime}
-                    onChange={handleTimeChange}
-                    leftIcon={<CalendarClock className="h-4 w-4" />}
-                    disabled={isAssignee}
-                  />
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-700">Priority</label>
-                    <select
-                      value={formState.priority}
-                      onChange={(e) => setFormState((prev) => ({ ...prev, priority: e.target.value as any }))}
-                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-500"
-                      disabled={isAssignee}
-                    >
-                      <option value="low">Low</option>
-                      <option value="mid">Mid</option>
-                      <option value="high">High</option>
-                    </select>
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm font-medium text-slate-700">Due date</label>
+                      {isViewerOnly && (
+                        <div className="group relative">
+                          <Info className="h-4 w-4 text-slate-400 hover:text-blue-600 cursor-help transition-colors" />
+                          <div className="invisible group-hover:visible absolute left-0 top-6 z-[99999] w-64 rounded-lg bg-slate-900 p-3 text-xs text-white shadow-2xl">
+                            <div className="font-semibold text-amber-300 mb-1">Read-Only Field</div>
+                            <div className="text-slate-300">
+                              This field is read-only. You have view-only access to this task.
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <Input
+                      type="date"
+                      value={formState.dueDate}
+                      onChange={handleDateChange}
+                      leftIcon={<CalendarClock className="h-4 w-4" />}
+                      disabled={!!(isAssignee || isViewerOnly)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm font-medium text-slate-700">Due time (optional)</label>
+                      {isViewerOnly && (
+                        <div className="group relative">
+                          <Info className="h-4 w-4 text-slate-400 hover:text-blue-600 cursor-help transition-colors" />
+                          <div className="invisible group-hover:visible absolute left-0 top-6 z-[99999] w-64 rounded-lg bg-slate-900 p-3 text-xs text-white shadow-2xl">
+                            <div className="font-semibold text-amber-300 mb-1">Read-Only Field</div>
+                            <div className="text-slate-300">
+                              This field is read-only. You have view-only access to this task.
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <Input
+                      type="time"
+                      value={formState.dueTime}
+                      onChange={handleTimeChange}
+                      leftIcon={<CalendarClock className="h-4 w-4" />}
+                      disabled={!!(isAssignee || isViewerOnly)}
+                    />
+                  </div>
+                  <div className="space-y-2" ref={priorityDropdownRef}>
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm font-medium text-slate-700">Priority</label>
+                      {isViewerOnly && (
+                        <div className="group relative">
+                          <Info className="h-4 w-4 text-slate-400 hover:text-blue-600 cursor-help transition-colors" />
+                          <div className="invisible group-hover:visible absolute right-0 top-6 z-[99999] w-64 rounded-lg bg-slate-900 p-3 text-xs text-white shadow-2xl">
+                            <div className="font-semibold text-amber-300 mb-1">Read-Only Field</div>
+                            <div className="text-slate-300">
+                              This field is read-only. You have view-only access to this task.
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="relative" ref={priorityDropdownRef}>
+                      <button
+                        type="button"
+                        onClick={() => !isAssignee && !isViewerOnly && setShowPriorityDropdown(!showPriorityDropdown)}
+                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 pr-8 text-sm text-slate-900 text-left focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 flex items-center justify-between disabled:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-500"
+                        disabled={!!(isAssignee || isViewerOnly)}
+                      >
+                        <span className="capitalize">{formState.priority}</span>
+                        <ChevronDown className="h-4 w-4 text-slate-400 absolute right-2" />
+                      </button>
+                      {showPriorityDropdown && !isAssignee && !isViewerOnly && (
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-300 rounded-lg shadow-xl z-50">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormState((prev) => ({ ...prev, priority: 'low' }));
+                              setShowPriorityDropdown(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-50 transition-colors ${
+                              formState.priority === 'low' ? 'bg-blue-100 text-blue-900' : 'text-slate-900'
+                            }`}
+                          >
+                            Low
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormState((prev) => ({ ...prev, priority: 'mid' }));
+                              setShowPriorityDropdown(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-50 transition-colors ${
+                              formState.priority === 'mid' ? 'bg-blue-100 text-blue-900' : 'text-slate-900'
+                            }`}
+                          >
+                            Mid
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormState((prev) => ({ ...prev, priority: 'high' }));
+                              setShowPriorityDropdown(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-50 transition-colors ${
+                              formState.priority === 'high' ? 'bg-blue-100 text-blue-900' : 'text-slate-900'
+                            }`}
+                          >
+                            High
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <label className="text-sm font-medium text-slate-700">Description</label>
-                    {isAssignee && (
+                    {(isAssignee || isViewerOnly) && (
                       <div className="group relative">
                         <Info className="h-4 w-4 text-slate-400 hover:text-blue-600 cursor-help transition-colors" />
                         <div className="invisible group-hover:visible absolute left-0 top-6 z-[99999] w-64 rounded-lg bg-slate-900 p-3 text-xs text-white shadow-2xl">
                           <div className="font-semibold text-amber-300 mb-1">Read-Only Field</div>
                           <div className="text-slate-300">
-                            This field is read-only for assignees. You can view and scroll through the content but cannot edit it. Use the Notes field below to add your updates.
+                            {isViewerOnly
+                              ? 'This field is read-only. You have view-only access to this task.'
+                              : 'This field is read-only for assignees. You can view and scroll through the content but cannot edit it. Use the Notes field below to add your updates.'}
                           </div>
                         </div>
                       </div>
@@ -789,15 +938,29 @@ export default function TaskModal({
                     value={formState.description}
                     onChange={handleInputChange('description')}
                     className="border border-slate-300 bg-white text-slate-900 focus-visible:ring-blue-500"
-                    readOnly={isAssignee}
+                    readOnly={isAssignee || isViewerOnly || undefined}
                   />
                 </div>
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium text-slate-700">
-                      Notes {isAssignee && <span className="text-xs text-slate-500">(you can edit)</span>}
-                    </label>
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm font-medium text-slate-700">
+                        Notes {isAssignee && !isViewerOnly && <span className="text-xs text-slate-500">(you can edit)</span>}
+                      </label>
+                      {isViewerOnly && (
+                        <div className="group relative">
+                          <Info className="h-4 w-4 text-slate-400 hover:text-blue-600 cursor-help transition-colors" />
+                          <div className="invisible group-hover:visible absolute left-0 top-6 z-[99999] w-64 rounded-lg bg-slate-900 p-3 text-xs text-white shadow-2xl">
+                            <div className="font-semibold text-amber-300 mb-1">Read-Only Field</div>
+                            <div className="text-slate-300">
+                              This field is read-only. You have view-only access to this task.
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    {!isViewerOnly && (
                     <div className="flex items-center gap-2">
                       <input
                         type="file"
@@ -839,6 +1002,7 @@ export default function TaskModal({
                         <span>Attach files</span>
                       </label>
                     </div>
+                    )}
                   </div>
                   <Textarea
                     placeholder="Add quick reminders, meeting notes, or links."
@@ -846,6 +1010,7 @@ export default function TaskModal({
                     value={formState.notes}
                     onChange={handleInputChange('notes')}
                     className="border border-slate-300 bg-white text-slate-900 focus-visible:ring-blue-500"
+                    readOnly={isViewerOnly || undefined}
                   />
 
                   {/* Display attached files directly below Notes */}
@@ -898,8 +1063,8 @@ export default function TaskModal({
                                     <Download className="h-3 w-3" />
                                   </button>
 
-                                  {/* Delete button - only when editing and user uploaded it or is owner */}
-                                  {isEditing && (canEditAllFields || attachment.uploaded_by === user?.id) && (
+                                  {/* Delete button - only when editing and user uploaded it or is owner, not for viewers */}
+                                  {isEditing && !isViewerOnly && (canEditAllFields || attachment.uploaded_by === user?.id) && (
                                     <button
                                       type="button"
                                       onClick={() => handleDeleteFile(attachment)}
@@ -961,12 +1126,25 @@ export default function TaskModal({
                   onUpdate={onSuccess}
                 />
               )}
+
+              {/* Viewer Management - Only show for existing todos when user is creator */}
+              {isEditing && editingTodo && permissions?.isOwner && (
+                <div className="mt-6">
+                  <TodoViewerManager
+                    todoId={editingTodo.id}
+                    isCreator={permissions.isOwner}
+                    availableUsers={connectedUsers}
+                    assigneeId={editingTodo.assignee_id}
+                    onRemoveViewer={handleViewerRemove}
+                  />
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter className="flex-shrink-0 gap-3 border-t border-slate-200 bg-white px-6 py-4">
             <div className="flex items-center justify-between w-full">
-              {/* Action buttons - only show when editing */}
-              {isEditing && editingTodo && (
+              {/* Action buttons - only show when editing and not viewer-only */}
+              {isEditing && editingTodo && !isViewerOnly && (
                 <div className="flex items-center gap-2">
                   {editingTodo.is_deleted ? (
                     // Restore button for deleted todos
@@ -993,7 +1171,6 @@ export default function TaskModal({
                           variant="ghost"
                           onClick={() => {
                             onComplete(editingTodo as Todo);
-                            handleClose();
                           }}
                           className="border border-green-300 bg-green-50 text-green-700 hover:bg-green-100"
                           leftIcon={<CheckCircle2 className="h-4 w-4" />}
@@ -1044,7 +1221,6 @@ export default function TaskModal({
                           variant="ghost"
                           onClick={() => {
                             onDelete(editingTodo as Todo);
-                            handleClose();
                           }}
                           className="border border-red-300 bg-red-50 text-red-700 hover:bg-red-100"
                           leftIcon={<Trash2 className="h-4 w-4" />}
@@ -1057,7 +1233,7 @@ export default function TaskModal({
                 </div>
               )}
 
-              {/* Cancel and Save buttons */}
+              {/* Cancel and Save buttons - hide Save for viewer-only */}
               <div className="flex items-center gap-3 ml-auto">
                 <Button
                   type="button"
@@ -1066,8 +1242,9 @@ export default function TaskModal({
                   onClick={handleClose}
                   className="min-w-[120px] border border-slate-300 bg-white text-slate-600 hover:bg-slate-100"
                 >
-                  Cancel
+                  {isViewerOnly ? 'Close' : 'Cancel'}
                 </Button>
+                {!isViewerOnly && (
                 <Button
                   type="submit"
                   loading={submitting}
@@ -1082,6 +1259,7 @@ export default function TaskModal({
                       ? 'Save changes'
                       : 'Create task'}
                 </Button>
+                )}
               </div>
             </div>
           </DialogFooter>
@@ -1119,6 +1297,32 @@ export default function TaskModal({
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Viewer Remove Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={!!viewerRemoveConfirm}
+        onClose={() => setViewerRemoveConfirm(null)}
+        onConfirm={confirmViewerRemove}
+        title="Remove Viewer"
+        message={`Are you sure you want to remove ${viewerRemoveConfirm?.userName} as a viewer? They will no longer be able to view this todo.`}
+        confirmText="Remove"
+        cancelText="Cancel"
+        dangerous={true}
+        icon={<Trash2 className="h-6 w-6 text-red-600" />}
+      />
+
+      {/* Attachment Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={!!attachmentDeleteConfirm}
+        onClose={() => setAttachmentDeleteConfirm(null)}
+        onConfirm={confirmDeleteAttachment}
+        title="Delete Attachment"
+        message={`Are you sure you want to delete "${attachmentDeleteConfirm?.original_filename}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        dangerous={true}
+        icon={<Trash2 className="h-6 w-6 text-red-600" />}
+      />
     </Dialog>
   );
 }

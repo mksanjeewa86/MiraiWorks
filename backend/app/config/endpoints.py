@@ -810,7 +810,12 @@ class TodoRoutes:
     RECENT = "/recent"
     REOPEN = "/{todo_id}/reopen"
     RESTORE = "/{todo_id}/restore"
-    VIEWERS = "/{todo_id}/viewers"
+
+    # Viewer management
+    VIEWER_ADD = "/{todo_id}/viewers"
+    VIEWER_LIST = "/{todo_id}/viewers"
+    VIEWER_REMOVE = "/{todo_id}/viewers/{viewer_user_id}"
+    VIEWABLE_TODOS = "/viewable"
 
 
 class UserConnectionRoutes:

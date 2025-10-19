@@ -93,6 +93,13 @@ export interface ConnectedUser {
   is_active: boolean;
 }
 
+// Basic user info (for relationships)
+export interface UserInfo {
+  id: number;
+  email: string;
+  full_name: string;
+}
+
 // ============================================================================
 // USER FORMS & STATE
 // ============================================================================
