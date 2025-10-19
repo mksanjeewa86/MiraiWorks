@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import Cropper from 'react-easy-crop';
 import { X, Crop } from 'lucide-react';
 import { Button } from './Button';
+import { useToast } from '@/hooks/useToast';
 
 interface ImageCropModalProps {
   isOpen: boolean;
@@ -31,6 +32,7 @@ export default function ImageCropModal({
   cropShape = 'round',
   title = 'Crop Profile Photo',
 }: ImageCropModalProps) {
+  const toast = useToast();
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<CropArea | null>(null);
@@ -141,7 +143,7 @@ export default function ImageCropModal({
       onClose();
     } catch (error) {
       console.error('Error cropping image:', error);
-      alert('Failed to crop image. Please try again.');
+      toast.error('Failed to crop image. Please try again.');
     } finally {
       setIsCropping(false);
     }

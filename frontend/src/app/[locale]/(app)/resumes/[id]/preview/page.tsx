@@ -26,11 +26,13 @@ import { Resume, ResumeFormat } from '@/types/resume';
 import { resumesApi } from '@/api/resumes';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { ROUTES } from '@/routes/config';
+import { useToast } from '@/hooks/useToast';
 
 function PreviewResumePageContent() {
   const router = useRouter();
   const params = useParams();
   const resumeId = params.id as string;
+  const toast = useToast();
 
   const [loading, setLoading] = useState(true);
   const [resume, setResume] = useState<Resume | null>(null);
@@ -110,7 +112,7 @@ function PreviewResumePageContent() {
       }
     } catch (error) {
       console.error('Error fetching resume:', error);
-      alert('Failed to load resume. Please try again.');
+      toast.error('Failed to load resume. Please try again.');
       router.push(ROUTES.RESUMES.BASE);
     }
   };
@@ -131,7 +133,7 @@ function PreviewResumePageContent() {
 
   const handleDownloadPdf = async () => {
     if (!resume?.can_download_pdf) {
-      alert('PDF download is not available for this resume.');
+      toast.warning('PDF download is not available for this resume.');
       return;
     }
 
@@ -151,10 +153,10 @@ function PreviewResumePageContent() {
       link.click();
       document.body.removeChild(link);
 
-      alert('PDF downloaded successfully.');
+      toast.success('PDF downloaded successfully.');
     } catch (error) {
       console.error('Error downloading PDF:', error);
-      alert('Failed to download PDF. Please try again.');
+      toast.error('Failed to download PDF. Please try again.');
     } finally {
       setGeneratingPdf(false);
     }
@@ -181,7 +183,7 @@ function PreviewResumePageContent() {
           }
         } catch (error) {
           console.error('Error making resume public:', error);
-          alert('Failed to make resume public. Please try again.');
+          toast.error('Failed to make resume public. Please try again.');
         }
       }
     } else if (resume.public_url_slug) {
@@ -194,7 +196,7 @@ function PreviewResumePageContent() {
 
     try {
       await navigator.clipboard.writeText(shareUrl);
-      alert('Share link copied to clipboard!');
+      toast.success('Share link copied to clipboard!');
     } catch (error) {
       console.error('Error copying link:', error);
       // Fallback for older browsers
@@ -204,7 +206,7 @@ function PreviewResumePageContent() {
       textArea.select();
       document.execCommand('copy');
       document.body.removeChild(textArea);
-      alert('Share link copied to clipboard!');
+      toast.success('Share link copied to clipboard!');
     }
   };
 

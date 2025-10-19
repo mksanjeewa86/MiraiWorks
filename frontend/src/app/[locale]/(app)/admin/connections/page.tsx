@@ -3,8 +3,10 @@
 import { useEffect, useState } from 'react';
 import { companyConnectionsApi } from '@/api';
 import type { CompanyConnection } from '@/types/company-connection';
+import { useToast } from '@/hooks/useToast';
 
 export default function ConnectionsManagementPage() {
+  const toast = useToast();
   const [connections, setConnections] = useState<CompanyConnection[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,12 +41,12 @@ export default function ConnectionsManagementPage() {
       const response = await companyConnectionsApi.deactivateConnection(connectionId);
       if (response.success) {
         await loadConnections();
-        alert('Connection deactivated successfully');
+        toast.success('Connection deactivated successfully');
       } else {
-        alert(response.message || 'Failed to deactivate connection');
+        toast.error(response.message || 'Failed to deactivate connection');
       }
     } catch (err) {
-      alert('An error occurred while deactivating connection');
+      toast.error('An error occurred while deactivating connection');
     }
   };
 
@@ -53,12 +55,12 @@ export default function ConnectionsManagementPage() {
       const response = await companyConnectionsApi.activateConnection(connectionId);
       if (response.success) {
         await loadConnections();
-        alert('Connection activated successfully');
+        toast.success('Connection activated successfully');
       } else {
-        alert(response.message || 'Failed to activate connection');
+        toast.error(response.message || 'Failed to activate connection');
       }
     } catch (err) {
-      alert('An error occurred while activating connection');
+      toast.error('An error occurred while activating connection');
     }
   };
 

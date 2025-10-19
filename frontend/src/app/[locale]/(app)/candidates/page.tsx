@@ -24,9 +24,11 @@ import ProfilePreviewModal from '@/components/profile/ProfilePreviewModal';
 import { candidatesApi } from '@/api/candidates';
 import type { Candidate, CandidateApiFilters } from '@/types/candidate';
 import { ROUTES } from '@/routes/config';
+import { useToast } from '@/hooks/useToast';
 
 function CandidatesPageContent() {
   const t = useTranslations('candidates');
+  const toast = useToast();
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -319,7 +321,7 @@ function CandidatesPageContent() {
 
   const handleBulkExport = () => {
     // In a real app, this would trigger a CSV/PDF export
-    alert(t('messages.exportAlert'));
+    toast.info(t('messages.exportAlert'));
   };
 
   if (loading) {

@@ -1018,59 +1018,53 @@ function TodosPageContent() {
         loading={extensionActionLoading}
       />
 
-      <div className="space-y-6 px-4 py-4 md:px-8 lg:px-12">
-        <div className="relative overflow-hidden rounded-2xl border border-gray-200/80 bg-white/80 shadow-md dark:border-gray-800/70 dark:bg-gray-900/70">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-transparent dark:from-blue-500/15 dark:via-purple-500/20" />
-          <div className="relative z-10 flex flex-col gap-6 p-6 lg:flex-row lg:items-center lg:justify-between">
-            <div className="max-w-2xl space-y-3">
-              <span className="inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-600 dark:bg-gray-900/70 dark:text-blue-300">
-                <Sparkles className="h-4 w-4" /> {t('page.focusMode')}
-              </span>
-              <div>
-                <h1
-                  className="text-3xl font-bold tracking-tight"
-                  style={{ color: 'var(--text-primary)' }}
-                >
-                  {t('page.title')}
-                </h1>
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <Button
-                  leftIcon={<Plus className="h-4 w-4" />}
-                  onClick={handleOpenModal}
-                  className="shadow-md"
-                >
-                  {t('page.addNewTask')}
-                </Button>
-                <div
-                  className="flex items-center gap-2 text-sm"
-                  style={{ color: 'var(--text-muted)' }}
-                >
-                  <CalendarCheck className="h-4 w-4" />
-                  {heroMeta}
+      <div className="space-y-4 px-4 py-3 md:px-6 lg:px-8">
+        {/* Compact Focus Mode Header */}
+        <div className="rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <div className="p-4">
+            {/* Top row: Title and Action */}
+            <div className="flex items-center justify-between gap-4 mb-3">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700">
+                  <Sparkles className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                    {t('page.title')}
+                  </h1>
+                  <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    <CalendarCheck className="h-3.5 w-3.5" />
+                    {heroMeta}
+                  </div>
                 </div>
               </div>
+              <Button
+                leftIcon={<Plus className="h-4 w-4" />}
+                onClick={handleOpenModal}
+                size="sm"
+              >
+                {t('page.addNewTask')}
+              </Button>
             </div>
-            <div className="grid w-full max-w-xl grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-4">
+
+            {/* Stats row - compact grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {statHighlights.map((stat) => (
                 <div
                   key={stat.label}
-                  className="rounded-xl border border-gray-200/70 bg-white/70 p-3 shadow-sm dark:border-gray-800/60 dark:bg-gray-900/60"
+                  className="flex items-center gap-2 rounded-md border border-gray-100 bg-gray-50 p-2.5 dark:border-gray-800 dark:bg-gray-800/50"
                 >
-                  <div
-                    className={`mb-2 inline-flex h-8 w-8 items-center justify-center rounded-lg ${stat.accentClass}`}
-                  >
+                  <div className={`flex items-center justify-center w-8 h-8 rounded ${stat.accentClass}`}>
                     {stat.icon}
                   </div>
-                  <p
-                    className="text-xs font-medium uppercase tracking-wide"
-                    style={{ color: 'var(--text-muted)' }}
-                  >
-                    {stat.label}
-                  </p>
-                  <p className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>
-                    {stat.value}
-                  </p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-gray-600 dark:text-gray-400 truncate">
+                      {stat.label}
+                    </p>
+                    <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
+                      {stat.value}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -1084,49 +1078,43 @@ function TodosPageContent() {
           </div>
         )}
 
-        {/* Tab Navigation */}
-        <div className="mb-6">
-          <div className="border-b border-gray-200 dark:border-gray-700">
-            <nav className="-mb-px flex space-x-8">
+        {/* Tab Navigation - Modern pill design */}
+        <div className="mb-4">
+          <div className="inline-flex items-center gap-1 p-1 bg-gray-100 rounded-lg dark:bg-gray-800">
+            <button
+              onClick={() => setActiveTab('todos')}
+              className={`
+                inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium
+                ${activeTab === 'todos'
+                  ? 'bg-white text-blue-600 shadow-sm dark:bg-gray-900 dark:text-blue-400'
+                  : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
+                }
+              `}
+            >
+              <ClipboardList className="h-4 w-4" />
+              Todos
+            </button>
+            {/* Hide Extension Requests tab for candidates */}
+            {!isCandidate && (
               <button
-                onClick={() => setActiveTab('todos')}
+                onClick={() => setActiveTab('extension-requests')}
                 className={`
-                  py-4 px-1 border-b-2 font-medium text-sm transition-colors
-                  ${activeTab === 'todos'
-                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                  inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium
+                  ${activeTab === 'extension-requests'
+                    ? 'bg-white text-blue-600 shadow-sm dark:bg-gray-900 dark:text-blue-400'
+                    : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
                   }
                 `}
               >
-                <div className="flex items-center gap-2">
-                  <ClipboardList className="h-5 w-5" />
-                  Todos
-                </div>
+                <FileText className="h-4 w-4" />
+                Extension Requests
+                {extensionRequests.length > 0 && (
+                  <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white bg-red-500 rounded-full">
+                    {extensionRequests.length}
+                  </span>
+                )}
               </button>
-              {/* Hide Extension Requests tab for candidates */}
-              {!isCandidate && (
-                <button
-                  onClick={() => setActiveTab('extension-requests')}
-                  className={`
-                    py-4 px-1 border-b-2 font-medium text-sm transition-colors
-                    ${activeTab === 'extension-requests'
-                      ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-                    }
-                  `}
-                >
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Extension Requests
-                    {extensionRequests.length > 0 && (
-                      <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
-                        {extensionRequests.length}
-                      </span>
-                    )}
-                  </div>
-                </button>
-              )}
-            </nav>
+            )}
           </div>
         </div>
 

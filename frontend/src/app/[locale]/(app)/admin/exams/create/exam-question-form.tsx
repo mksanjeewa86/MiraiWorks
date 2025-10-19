@@ -25,6 +25,7 @@ import {
   RadioGroupItem,
 } from '@/components/ui';
 import { Plus, Trash2, Save, X } from 'lucide-react';
+import { useToast } from '@/hooks/useToast';
 
 const QuestionType = {
   MULTIPLE_CHOICE: 'multiple_choice',
@@ -36,6 +37,7 @@ const QuestionType = {
 } as const;
 
 export function ExamQuestionForm({ question, onSave, onCancel }: ExamQuestionFormProps) {
+  const toast = useToast();
   const [formData, setFormData] = useState<QuestionFormData>(question);
   const [newOption, setNewOption] = useState('');
   const [newTag, setNewTag] = useState('');
@@ -150,7 +152,7 @@ export function ExamQuestionForm({ question, onSave, onCancel }: ExamQuestionFor
   const handleSave = () => {
     // Validation
     if (!formData.question_text.trim()) {
-      alert('Question text is required');
+      toast.warning('Question text is required');
       return;
     }
 
@@ -160,11 +162,11 @@ export function ExamQuestionForm({ question, onSave, onCancel }: ExamQuestionFor
       )
     ) {
       if (Object.keys(formData.options).length < 2) {
-        alert('At least 2 options are required');
+        toast.warning('At least 2 options are required');
         return;
       }
       if (formData.correct_answers.length === 0) {
-        alert('At least one correct answer must be selected');
+        toast.warning('At least one correct answer must be selected');
         return;
       }
     }

@@ -22,10 +22,12 @@ import {
 } from 'lucide-react';
 import { resumesApi } from '@/api/resumes';
 import type { Resume, Education, Skill } from '@/types';
+import { useToast } from '@/hooks/useToast';
 
 function ResumePreviewContent() {
   const searchParams = useSearchParams();
   const resumeId = searchParams?.get('id');
+  const toast = useToast();
 
   const [resume, setResume] = useState<Resume | null>(null);
   const [loading, setLoading] = useState(true);
@@ -70,10 +72,10 @@ function ResumePreviewContent() {
 
     try {
       // In a real implementation, this would generate/download a PDF
-      alert('Download functionality would be implemented here');
+      toast.info('Download functionality would be implemented here');
     } catch (err) {
       console.error('Failed to download resume:', err);
-      alert('Failed to download resume');
+      toast.error('Failed to download resume');
     }
   };
 

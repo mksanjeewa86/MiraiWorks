@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { privacyApi, PrivacySettingsUpdate } from '@/api/privacy';
 import { useTranslations } from 'next-intl';
+import { useToast } from '@/hooks/useToast';
 
 interface SectionPrivacyToggleProps {
   sectionKey: 'show_work_experience' | 'show_education' | 'show_skills' | 'show_certifications' | 'show_projects' | 'show_resume';
@@ -17,6 +18,7 @@ export default function SectionPrivacyToggle({
   readOnly = false
 }: SectionPrivacyToggleProps) {
   const t = useTranslations('profile');
+  const toast = useToast();
   const [isVisible, setIsVisible] = useState(true);
   const [loading, setLoading] = useState(false);
 
@@ -53,7 +55,7 @@ export default function SectionPrivacyToggle({
       console.error('Failed to update privacy settings:', err);
       console.error('Error details:', err);
       // Revert the UI state on error
-      alert('Failed to update privacy settings. Please try again.');
+      toast.error('Failed to update privacy settings. Please try again.');
     } finally {
       setLoading(false);
     }

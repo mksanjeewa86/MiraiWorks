@@ -3,12 +3,14 @@ import { PuzzlePieceIcon, PlayIcon, ArrowPathIcon } from '@heroicons/react/24/ou
 import { mbtiApi } from '@/api/mbti';
 import type { MBTITestProgress } from '@/types/mbti';
 import type { MBTITestButtonProps } from '@/types/components';
+import { useToast } from '@/hooks/useToast';
 
 const MBTITestButton: React.FC<MBTITestButtonProps> = ({
   onStartTest,
   className = '',
   language = 'ja',
 }) => {
+  const toast = useToast();
   const [progress, setProgress] = useState<MBTITestProgress | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -48,7 +50,7 @@ const MBTITestButton: React.FC<MBTITestButtonProps> = ({
       onStartTest();
     } catch (error) {
       console.error('Failed to start MBTI test:', error);
-      alert(
+      toast.error(
         language === 'ja'
           ? 'テストの開始に失敗しました。しばらく時間をおいて再度お試しください。'
           : 'Failed to start test. Please try again later.'

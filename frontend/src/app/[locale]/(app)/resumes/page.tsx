@@ -24,8 +24,10 @@ import { resumesApi } from '@/api/resumes';
 import { Resume, ResumeFormat } from '@/types/resume';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { ROUTES } from '@/routes/config';
+import { useToast } from '@/hooks/useToast';
 
 function ResumesPageContent() {
+  const toast = useToast();
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -122,14 +124,14 @@ function ResumesPageContent() {
         setResumes((prev) => prev.filter((r) => r.id !== resumeId));
       } catch (err) {
         console.error('Failed to delete resume:', err);
-        alert('Failed to delete resume');
+        toast.error('Failed to delete resume');
       }
     }
   };
 
   const handleDownloadPdf = async (resume: Resume) => {
     if (!resume.can_download_pdf) {
-      alert('PDF download is not available for this resume.');
+      toast.warning('PDF download is not available for this resume.');
       return;
     }
 
@@ -149,10 +151,10 @@ function ResumesPageContent() {
       link.click();
       document.body.removeChild(link);
 
-      alert('PDF downloaded successfully.');
+      toast.success('PDF downloaded successfully.');
     } catch (error) {
       console.error('Error downloading PDF:', error);
-      alert('Failed to download PDF. Please try again.');
+      toast.error('Failed to download PDF. Please try again.');
     } finally {
       setGeneratingPdf(null);
     }
@@ -163,17 +165,17 @@ function ResumesPageContent() {
       const response = await resumesApi.togglePublic(resume.id);
       if (response.data) {
         setResumes(resumes.map((r) => (r.id === resume.id ? response.data! : r)));
-        alert(`Resume is now ${response.data.is_public ? 'public' : 'private'}.`);
+        toast.success(`Resume is now ${response.data.is_public ? 'public' : 'private'}.`);
       }
     } catch (error) {
       console.error('Error toggling public status:', error);
-      alert('Failed to update resume visibility. Please try again.');
+      toast.error('Failed to update resume visibility. Please try again.');
     }
   };
 
   const handleCopyShareLink = async (resume: Resume) => {
     if (!resume.is_public || !resume.public_url_slug) {
-      alert('This resume must be public to generate a share link.');
+      toast.warning('This resume must be public to generate a share link.');
       return;
     }
 
@@ -181,7 +183,7 @@ function ResumesPageContent() {
 
     try {
       await navigator.clipboard.writeText(shareUrl);
-      alert('Share link copied to clipboard!');
+      toast.success('Share link copied to clipboard!');
     } catch (error) {
       console.error('Error copying link:', error);
       // Fallback for older browsers
@@ -191,7 +193,7 @@ function ResumesPageContent() {
       textArea.select();
       document.execCommand('copy');
       document.body.removeChild(textArea);
-      alert('Share link copied to clipboard!');
+      toast.success('Share link copied to clipboard!');
     }
   };
 

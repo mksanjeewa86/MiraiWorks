@@ -22,11 +22,13 @@ import {
 import { resumesApi } from '@/api/resumes';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { ROUTES } from '@/routes/config';
+import { useToast } from '@/hooks/useToast';
 
 function EditResumePageContent() {
   const router = useRouter();
   const params = useParams();
   const resumeId = params.id as string;
+  const toast = useToast();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -55,7 +57,7 @@ function EditResumePageContent() {
       }
     } catch (error) {
       console.error('Error fetching resume:', error);
-      alert('Failed to load resume. Please try again.');
+      toast.error('Failed to load resume. Please try again.');
       router.push(ROUTES.RESUMES.BASE);
     } finally {
       setLoading(false);
@@ -82,12 +84,12 @@ function EditResumePageContent() {
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
         // 5MB limit
-        alert('Photo size must be less than 5MB');
+        toast.warning('Photo size must be less than 5MB');
         return;
       }
 
       if (!file.type.startsWith('image/')) {
-        alert('Please select a valid image file');
+        toast.warning('Please select a valid image file');
         return;
       }
 
@@ -118,7 +120,7 @@ function EditResumePageContent() {
     e.preventDefault();
 
     if (!resume || !resume.title.trim() || !resume.full_name?.trim()) {
-      alert('Please fill in the required fields: Title and Full Name');
+      toast.warning('Please fill in the required fields: Title and Full Name');
       return;
     }
 
@@ -137,11 +139,11 @@ function EditResumePageContent() {
         }
       }
 
-      alert('Resume updated successfully!');
+      toast.success('Resume updated successfully!');
       router.push(ROUTES.RESUMES.BASE);
     } catch (error) {
       console.error('Error updating resume:', error);
-      alert('Failed to update resume. Please try again.');
+      toast.error('Failed to update resume. Please try again.');
     } finally {
       setSaving(false);
     }

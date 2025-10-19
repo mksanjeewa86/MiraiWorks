@@ -8,11 +8,13 @@ import { Download, Eye, Calendar, User, Globe, Share2, ExternalLink } from 'luci
 import { ResumeFormat } from '@/types/resume';
 import { resumesApi } from '@/api/resumes';
 import { ROUTES } from '@/routes/config';
+import { useToast } from '@/hooks/useToast';
 
 function PublicResumePageContent() {
   const params = useParams();
   const router = useRouter();
   const slug = params.slug as string;
+  const toast = useToast();
 
   const [loading, setLoading] = useState(true);
   const [resume, setResume] = useState<PublicResumeInfo | null>(null);
@@ -58,7 +60,7 @@ function PublicResumePageContent() {
 
   const handleDownloadPdf = async () => {
     if (!resume?.can_download_pdf) {
-      alert('PDF download is not available for this resume.');
+      toast.warning('PDF download is not available for this resume.');
       return;
     }
 
@@ -76,7 +78,7 @@ function PublicResumePageContent() {
       document.body.removeChild(link);
     } catch (error) {
       console.error('Error downloading PDF:', error);
-      alert('Failed to download PDF. Please try again.');
+      toast.error('Failed to download PDF. Please try again.');
     } finally {
       setGeneratingPdf(false);
     }
@@ -87,7 +89,7 @@ function PublicResumePageContent() {
 
     try {
       await navigator.clipboard.writeText(currentUrl);
-      alert('Resume link copied to clipboard!');
+      toast.success('Resume link copied to clipboard!');
     } catch (error) {
       console.error('Error copying link:', error);
       // Fallback for older browsers
@@ -97,7 +99,7 @@ function PublicResumePageContent() {
       textArea.select();
       document.execCommand('copy');
       document.body.removeChild(textArea);
-      alert('Resume link copied to clipboard!');
+      toast.success('Resume link copied to clipboard!');
     }
   };
 

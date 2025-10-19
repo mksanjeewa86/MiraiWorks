@@ -2,8 +2,10 @@
 
 import { useState } from 'react';
 import { ROUTES } from '@/routes/config';
+import { useToast } from '@/hooks/useToast';
 
 export default function ContactPage() {
+  const toast = useToast();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -15,7 +17,7 @@ export default function ContactPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Handle form submission
-    alert("Thank you for your message! We'll get back to you soon.");
+    toast.success("Thank you for your message! We'll get back to you soon.");
   };
 
   const handleChange = (

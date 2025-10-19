@@ -12,6 +12,7 @@ import { resumesApi } from '@/api/resumes';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { PREFECTURES } from '@/utils/prefectures';
 import { ROUTES } from '@/routes/config';
+import { useToast } from '@/hooks/useToast';
 
 // Common nationalities
 const NATIONALITIES = [
@@ -33,6 +34,7 @@ const NATIONALITIES = [
 
 function CreateResumePageContent() {
   const router = useRouter();
+  const toast = useToast();
   const [loading, setLoading] = useState(false);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -76,12 +78,12 @@ function CreateResumePageContent() {
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
         // 5MB limit
-        alert('Photo size must be less than 5MB');
+        toast.warning('Photo size must be less than 5MB');
         return;
       }
 
       if (!file.type.startsWith('image/')) {
-        alert('Please select a valid image file');
+        toast.warning('Please select a valid image file');
         return;
       }
 
@@ -228,7 +230,7 @@ function CreateResumePageContent() {
     e.preventDefault();
 
     if (!formData.title.trim() || !formData.last_name.trim() || !formData.first_name.trim()) {
-      alert('Please fill in the required fields: Title, Last Name, and First Name');
+      toast.warning('Please fill in the required fields: Title, Last Name, and First Name');
       return;
     }
 
@@ -321,7 +323,7 @@ function CreateResumePageContent() {
       router.push(ROUTES.RESUMES.BASE);
     } catch (error) {
       console.error('Error creating resume:', error);
-      alert('Failed to create resume. Please try again.');
+      toast.error('Failed to create resume. Please try again.');
     } finally {
       setLoading(false);
     }

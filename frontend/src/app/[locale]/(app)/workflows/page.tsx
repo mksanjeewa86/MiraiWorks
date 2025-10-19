@@ -5,6 +5,7 @@ import type { CSSProperties } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/useToast';
 import { recruitmentWorkflowsApi, workflowIntegrationService } from '@/api/workflows';
 import type {
   RecruitmentProcess,
@@ -50,6 +51,7 @@ import {
 
 function RecruitmentWorkflowsPageContent() {
   const { user, isLoading: authLoading } = useAuth();
+  const toast = useToast();
   const [processes, setProcesses] = useState<RecruitmentProcess[]>([]);
   const [filteredProcesses, setFilteredProcesses] = useState<RecruitmentProcess[]>([]);
   const [loading, setLoading] = useState(true);
@@ -248,11 +250,11 @@ function RecruitmentWorkflowsPageContent() {
         setProcesses((prev) =>
           prev.map((p) => (p.id === process.id ? { ...p, status: newStatus } : p))
         );
-        alert(`Changed ${process.name} status to: ${newStatus}`);
+        toast.success(`Changed ${process.name} status to: ${newStatus}`);
       }
     } catch (err) {
       console.error('Failed to update process status:', err);
-      alert('Failed to update workflow status');
+      toast.error('Failed to update workflow status');
     }
   };
 
@@ -269,11 +271,11 @@ function RecruitmentWorkflowsPageContent() {
       if (response.success) {
         // Remove the archived process from the list
         setProcesses((prev) => prev.filter((p) => p.id !== process.id));
-        alert(`Archived workflow: ${process.name}`);
+        toast.success(`Archived workflow: ${process.name}`);
       }
     } catch (err) {
       console.error('Failed to archive process:', err);
-      alert('Failed to archive workflow');
+      toast.error('Failed to archive workflow');
     }
   };
 
@@ -308,7 +310,7 @@ function RecruitmentWorkflowsPageContent() {
       }
     } catch (err) {
       console.error('Failed to create workflow:', err);
-      alert('Failed to create workflow: ' + (err instanceof Error ? err.message : 'Unknown error'));
+      toast.error('Failed to create workflow: ' + (err instanceof Error ? err.message : 'Unknown error'));
     }
   };
 
@@ -896,6 +898,7 @@ function ViewWorkflowModal({ isOpen, onClose, process, onEdit }: ViewWorkflowMod
 
 // Linear Workflow Editor Modal
 function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEditorModalProps) {
+  const toast = useToast();
   const [steps, setSteps] = useState<LinearWorkflowStep[]>([]);
   const [selectedStep, setSelectedStep] = useState<LinearWorkflowStep | null>(null);
   const [showStepPanel, setShowStepPanel] = useState(false);
@@ -1032,7 +1035,7 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
           }
         } catch (error) {
           console.error('Failed to load interview:', error);
-          alert('Failed to load interview for editing');
+          toast.error('Failed to load interview for editing');
         }
       } else {
         // Create new interview from step
@@ -1048,7 +1051,7 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
           setIsTodoModalOpen(true);
         } catch (error) {
           console.error('Failed to load todo:', error);
-          alert('Failed to load todo for editing');
+          toast.error('Failed to load todo for editing');
         }
       } else {
         // Create new todo from step
@@ -1081,7 +1084,7 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
       }
     } catch (error) {
       console.error('Failed to add candidate:', error);
-      alert('Failed to add candidate');
+      toast.error('Failed to add candidate');
     }
   };
 
@@ -1107,7 +1110,7 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
       // await recruitmentWorkflowsApi.addViewer(process.id, viewerId, viewerRole);
     } catch (error) {
       console.error('Failed to add viewer:', error);
-      alert('Failed to add viewer');
+      toast.error('Failed to add viewer');
     }
   };
 
@@ -1330,11 +1333,11 @@ function WorkflowEditorModal({ isOpen, onClose, process, onSave }: WorkflowEdito
         successMessage += `\n\n💡 Check /interviews and /todos pages to see them!`;
       }
 
-      alert(successMessage);
+      toast.success(successMessage);
     } catch (error) {
       console.error('Failed to save workflow:', error);
-      alert(
-        '❌ Failed to save workflow: ' + (error instanceof Error ? error.message : 'Unknown error')
+      toast.error(
+        'Failed to save workflow: ' + (error instanceof Error ? error.message : 'Unknown error')
       );
     }
   };
