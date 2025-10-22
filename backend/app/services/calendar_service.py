@@ -87,8 +87,12 @@ class CalendarService:
                         conflicts_count=len(conflicts),
                     )
 
-            event = await calendar_event.create_with_creator(
-                db, obj_in=event_in, creator_id=creator_id
+            # Create event with attendees
+            event = await calendar_event.create_with_attendees(
+                db,
+                obj_in=event_in,
+                creator_id=creator_id,
+                attendee_emails=event_in.attendees if event_in.attendees else None,
             )
 
             logger.info(
@@ -144,6 +148,18 @@ class CalendarService:
             updated_event = await calendar_event.update(
                 db, db_obj=existing_event, obj_in=event_in
             )
+
+            # Update attendees if provided
+            if event_in.attendees is not None:
+                await calendar_event.update_attendees(
+                    db, event_id=event_id, attendee_emails=event_in.attendees
+                )
+
+            # Always reload event with relationships to avoid lazy loading issues
+            updated_event = await calendar_event.get_with_relationships(
+                db, event_id=event_id
+            )
+
             logger.info("Calendar event updated", event_id=event_id, user_id=user_id)
             return CalendarEventInfo.model_validate(updated_event)
 
@@ -209,7 +225,7 @@ class CalendarService:
         try:
             result = {"internal_events": [], "external_events": [], "holidays": []}
 
-            # Get internal calendar events
+            # Get internal calendar events (created by user)
             internal_events = await calendar_event.get_by_date_range(
                 db, start_date=start_date, end_date=end_date, creator_id=user_id
             )
@@ -229,6 +245,29 @@ class CalendarService:
                         "type": event.event_type,
                         "status": event.status,
                         "source": "internal",
+                    }
+                )
+
+            # Get accepted invitation events (where user is an attendee)
+            accepted_invitations = await calendar_event.get_accepted_invitations_by_date_range(
+                db, user_id=user_id, start_date=start_date, end_date=end_date
+            )
+
+            for event in accepted_invitations:
+                result["internal_events"].append(
+                    {
+                        "id": f"event-{event.id}",
+                        "title": event.title,
+                        "description": event.description,
+                        "start": event.start_datetime.isoformat(),
+                        "end": event.end_datetime.isoformat()
+                        if event.end_datetime
+                        else None,
+                        "allDay": event.is_all_day,
+                        "location": event.location,
+                        "type": event.event_type,
+                        "status": event.status,
+                        "source": "invitation",
                     }
                 )
 

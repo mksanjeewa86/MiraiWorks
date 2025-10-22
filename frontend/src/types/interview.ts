@@ -88,6 +88,13 @@ export interface CalendarIntegration {
   createdAt: string;
 }
 
+export interface AttendeeInfo {
+  id: number;
+  user_id: number;
+  email: string;
+  response_status: 'pending' | 'accepted' | 'declined';
+}
+
 export interface CalendarEvent {
   id: string;
   title: string;
@@ -101,7 +108,7 @@ export interface CalendarEvent {
   organizerEmail?: string;
   organizerName?: string;
   meetingUrl?: string;
-  attendees: string[];
+  attendees: string[] | AttendeeInfo[];
   status?: string;
   type?: string;
   createdAt: string;

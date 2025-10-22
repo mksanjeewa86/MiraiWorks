@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import { addDays, addMonths, addWeeks, endOfWeek, format, startOfWeek } from 'date-fns';
 import {
+  Bell,
+  Check,
   ChevronLeft,
   ChevronRight,
   Clock,
@@ -13,9 +15,12 @@ import {
   Link2,
   List,
   Loader2,
+  Mail,
+  MailCheck,
   Plus,
   RefreshCcw,
   RotateCw,
+  X as XIcon,
 } from 'lucide-react';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
@@ -27,7 +32,7 @@ import { interviewsApi } from '@/api/interviews';
 import { todosApi } from '@/api/todos';
 import { useAuth } from '@/contexts/AuthContext';
 import type { CalendarEvent, Interview } from '@/types/interview';
-import type { CalendarConnection, CalendarProvider } from '@/types/calendar';
+import type { CalendarConnection, CalendarEventInfo, CalendarProvider } from '@/types/calendar';
 import type { SelectionRange } from '@/types/calendar';
 import type { CalendarFilters, CalendarViewMode } from '@/types/components';
 import type { Todo } from '@/types/todo';
@@ -53,11 +58,18 @@ const toDateOrNull = (value: unknown): Date | null => {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
 
-const toStringArray = (value: unknown): string[] => {
+const normalizeAttendees = (value: unknown): string[] | import('@/types/interview').AttendeeInfo[] => {
   if (!Array.isArray(value)) {
     return [];
   }
 
+  // Check if array contains AttendeeInfo objects
+  if (value.length > 0 && value[0] && typeof value[0] === 'object' && 'response_status' in value[0]) {
+    // Return as AttendeeInfo[] - preserve the full objects
+    return value as import('@/types/interview').AttendeeInfo[];
+  }
+
+  // Otherwise convert to string array
   return value
     .map((item) => {
       if (typeof item === 'string') {
@@ -132,7 +144,7 @@ const normalizeCalendarEvent = (raw: Record<string, unknown>): CalendarEvent | n
         : typeof raw?.meeting_url === 'string'
           ? (raw.meeting_url as string)
           : '',
-    attendees: toStringArray(attendeesRaw),
+    attendees: normalizeAttendees(attendeesRaw),
     status: typeof raw?.status === 'string' ? (raw.status as string) : 'tentative',
     type: 'calendar',
     createdAt:
@@ -287,6 +299,7 @@ function CalendarPageContent() {
   const userId = user?.id ?? null;
   const userCompanyId = user?.company_id ?? null;
   const connectionsDropdownRef = useRef<HTMLDivElement>(null);
+  const invitationsDropdownRef = useRef<HTMLDivElement>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewType, setViewType] = useState<CalendarViewMode>('month');
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -301,6 +314,16 @@ function CalendarPageContent() {
   const [connectionsLoading, setConnectionsLoading] = useState(false);
   const [syncingConnectionId, setSyncingConnectionId] = useState<number | null>(null);
   const [showConnections, setShowConnections] = useState(false);
+  const [pendingInvitations, setPendingInvitations] = useState<CalendarEventInfo[]>([]);
+  const [invitationsLoading, setInvitationsLoading] = useState(false);
+  const [showInvitations, setShowInvitations] = useState(false);
+  const [processingInvitation, setProcessingInvitation] = useState<number | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    invitationId: number | null;
+    action: 'accept' | 'reject' | null;
+    eventTitle: string;
+  }>({ isOpen: false, invitationId: null, action: null, eventTitle: '' });
   const [todoConfirmDialog, setTodoConfirmDialog] = useState<{ isOpen: boolean; todoId: number | null }>({
     isOpen: false,
     todoId: null,
@@ -353,6 +376,19 @@ function CalendarPageContent() {
       setConnectionsLoading(false);
     }
   }, [t]);
+
+  const loadPendingInvitations = useCallback(async () => {
+    try {
+      setInvitationsLoading(true);
+      const response = await calendarApi.getPendingInvitations();
+      setPendingInvitations(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      console.error('Failed to load pending invitations', error);
+      toast.error('Failed to load pending invitations');
+    } finally {
+      setInvitationsLoading(false);
+    }
+  }, []);
 
   const loadEvents = useCallback(async () => {
     try {
@@ -493,6 +529,10 @@ function CalendarPageContent() {
   }, [loadConnections]);
 
   useEffect(() => {
+    void loadPendingInvitations();
+  }, [loadPendingInvitations]);
+
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
         connectionsDropdownRef.current &&
@@ -500,16 +540,22 @@ function CalendarPageContent() {
       ) {
         setShowConnections(false);
       }
+      if (
+        invitationsDropdownRef.current &&
+        !invitationsDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowInvitations(false);
+      }
     };
 
-    if (showConnections) {
+    if (showConnections || showInvitations) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showConnections]);
+  }, [showConnections, showInvitations]);
 
   const filteredEvents = useMemo(() => {
     const searchTerm = filters.search.trim().toLowerCase();
@@ -587,7 +633,7 @@ function CalendarPageContent() {
     [openCreateModal]
   );
 
-  const handleEventClick = useCallback((event: CalendarEvent) => {
+  const handleEventClick = useCallback(async (event: CalendarEvent) => {
     // Don't open modal for holiday events
     if (event.id?.startsWith('holiday-')) {
       return;
@@ -602,6 +648,27 @@ function CalendarPageContent() {
       }
     }
 
+    // For internal calendar events, fetch full details including attendees
+    const isInternalEvent = /^\d+$/.test(event.id) || /^event-\d+$/.test(event.id);
+    if (isInternalEvent) {
+      try {
+        const numericId = event.id.replace(/^event-/, '');
+        const response = await calendarApi.getEvent(Number(numericId));
+        if (response.success && response.data) {
+          setIsCreateMode(false);
+          setSelectedEvent(response.data);
+          setSelectedDate(toDateOrNull(response.data.startDatetime));
+          setSelectedRange(undefined);
+          setModalOpen(true);
+          return;
+        }
+      } catch (error) {
+        console.error('Failed to fetch event details', error);
+        // Fall through to use the event data we already have
+      }
+    }
+
+    // For external events or if fetch failed, use the event data we have
     setIsCreateMode(false);
     setSelectedEvent(event);
     setSelectedDate(toDateOrNull(event.startDatetime));
@@ -616,11 +683,12 @@ function CalendarPageContent() {
         toast.success(t('notifications.eventCreated'));
       } else if (selectedEvent) {
         // Check if the event is editable (numeric ID or starts with "event-" followed by number)
-        const isInternalEvent = /^\d+$/.test(selectedEvent.id) || /^event-\d+$/.test(selectedEvent.id);
+        const eventIdStr = String(selectedEvent.id);
+        const isInternalEvent = /^\d+$/.test(eventIdStr) || /^event-\d+$/.test(eventIdStr);
 
         if (isInternalEvent) {
           // Extract numeric ID from formats like "12" or "event-12"
-          const numericId = selectedEvent.id.replace(/^event-/, '');
+          const numericId = eventIdStr.replace(/^event-/, '');
           await calendarApi.updateEvent(Number(numericId), eventData);
           toast.success(t('notifications.eventUpdated'));
         } else {
@@ -742,6 +810,38 @@ function CalendarPageContent() {
       toast.error(t('errors.failedToSyncCalendar'));
     } finally {
       setSyncingConnectionId(null);
+    }
+  };
+
+  const handleAcceptInvitation = (invitationId: number, eventTitle: string) => {
+    setConfirmDialog({ isOpen: true, invitationId, action: 'accept', eventTitle });
+  };
+
+  const handleRejectInvitation = (invitationId: number, eventTitle: string) => {
+    setConfirmDialog({ isOpen: true, invitationId, action: 'reject', eventTitle });
+  };
+
+  const confirmInvitationAction = async () => {
+    if (!confirmDialog.invitationId || !confirmDialog.action) return;
+
+    try {
+      setProcessingInvitation(confirmDialog.invitationId);
+
+      if (confirmDialog.action === 'accept') {
+        await calendarApi.acceptInvitation(confirmDialog.invitationId);
+        toast.success('Invitation accepted successfully');
+      } else {
+        await calendarApi.rejectInvitation(confirmDialog.invitationId);
+        toast.success('Invitation rejected');
+      }
+
+      await Promise.all([loadPendingInvitations(), loadEvents()]);
+      setConfirmDialog({ isOpen: false, invitationId: null, action: null, eventTitle: '' });
+    } catch (error) {
+      console.error('Failed to process invitation', error);
+      toast.error('Failed to process invitation');
+    } finally {
+      setProcessingInvitation(null);
     }
   };
 
@@ -892,6 +992,107 @@ function CalendarPageContent() {
                   )}
                 </div>
 
+                {/* Pending Invitations Dropdown - Only show if there are pending invitations */}
+                {pendingInvitations.length > 0 && (
+                  <div className="relative" ref={invitationsDropdownRef}>
+                    <button
+                      type="button"
+                      onClick={() => setShowInvitations(!showInvitations)}
+                      className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all hover:border-orange-400 hover:bg-orange-50 hover:text-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
+                    >
+                      <MailCheck className="h-4 w-4" />
+                      <span className="hidden sm:inline">Invitations</span>
+                      <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-semibold rounded-full bg-orange-100 text-orange-700">
+                        {pendingInvitations.length}
+                      </span>
+                    </button>
+
+                  {/* Invitations Dropdown Panel */}
+                  {showInvitations && (
+                    <div className="absolute right-0 top-full z-20 mt-2 w-96 rounded-xl border border-slate-200 bg-white shadow-2xl">
+                      <div className="p-4">
+                        <h3 className="mb-3 text-sm font-bold text-slate-900">
+                          Pending Invitations
+                        </h3>
+                        {invitationsLoading ? (
+                          <div className="flex items-center justify-center py-6">
+                            <Loader2 className="h-6 w-6 animate-spin text-orange-500" />
+                          </div>
+                        ) : pendingInvitations.length === 0 ? (
+                          <div className="flex items-center gap-2 rounded-lg bg-slate-50 p-4 text-sm text-slate-600">
+                            <Bell className="h-4 w-4 text-slate-400" />
+                            <span>No pending invitations</span>
+                          </div>
+                        ) : (
+                          <div className="space-y-2 max-h-96 overflow-y-auto">
+                            {pendingInvitations.map((invitation) => (
+                              <div
+                                key={invitation.id}
+                                className="flex flex-col gap-2 rounded-lg border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-3 transition-all hover:border-slate-300 hover:shadow-sm"
+                              >
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <p className="text-sm font-semibold text-slate-900">
+                                      {invitation.title}
+                                    </p>
+                                    <p className="text-xs text-slate-500 mt-1">
+                                      {new Date(invitation.start_datetime).toLocaleString('en-US', {
+                                        month: 'short',
+                                        day: 'numeric',
+                                        year: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                      })}
+                                    </p>
+                                    {invitation.description && (
+                                      <p className="text-xs text-slate-600 mt-1 line-clamp-2">
+                                        {invitation.description}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleAcceptInvitation(invitation.id, invitation.title)}
+                                    disabled={processingInvitation === invitation.id}
+                                    className="flex-1 rounded-lg bg-gradient-to-r from-green-500 to-green-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition-all hover:from-green-600 hover:to-green-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 flex items-center justify-center gap-1"
+                                  >
+                                    {processingInvitation === invitation.id ? (
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                    ) : (
+                                      <>
+                                        <Check className="h-3 w-3" />
+                                        <span>Accept</span>
+                                      </>
+                                    )}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRejectInvitation(invitation.id, invitation.title)}
+                                    disabled={processingInvitation === invitation.id}
+                                    className="flex-1 rounded-lg bg-gradient-to-r from-red-500 to-red-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition-all hover:from-red-600 hover:to-red-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 flex items-center justify-center gap-1"
+                                  >
+                                    {processingInvitation === invitation.id ? (
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                    ) : (
+                                      <>
+                                        <XIcon className="h-3 w-3" />
+                                        <span>Reject</span>
+                                      </>
+                                    )}
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  </div>
+                )}
+
                 {/* New Event Button */}
                 <button
                   type="button"
@@ -1014,6 +1215,21 @@ function CalendarPageContent() {
           confirmText="Open Todo"
           cancelText="Cancel"
           variant="info"
+        />
+
+        <ConfirmDialog
+          isOpen={confirmDialog.isOpen}
+          onClose={() => setConfirmDialog({ isOpen: false, invitationId: null, action: null, eventTitle: '' })}
+          onConfirm={confirmInvitationAction}
+          title={confirmDialog.action === 'accept' ? 'Accept Invitation?' : 'Reject Invitation?'}
+          description={
+            confirmDialog.action === 'accept'
+              ? `Are you sure you want to accept the invitation to "${confirmDialog.eventTitle}"? The event will be added to your calendar.`
+              : `Are you sure you want to reject the invitation to "${confirmDialog.eventTitle}"?`
+          }
+          confirmText={confirmDialog.action === 'accept' ? 'Accept' : 'Reject'}
+          cancelText="Cancel"
+          variant={confirmDialog.action === 'accept' ? 'info' : 'danger'}
         />
       </div>
     </AppLayout>

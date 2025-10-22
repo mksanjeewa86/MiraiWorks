@@ -663,10 +663,10 @@ async def get_calendar_event(
 ):
     """Get a specific calendar event."""
     try:
-        # Get event from database
+        # Get event from database with relationships
         from app.crud.calendar_event import calendar_event
 
-        event = await calendar_event.get(db, id=event_id)
+        event = await calendar_event.get_with_relationships(db, event_id=event_id)
 
         if not event:
             raise HTTPException(
@@ -674,7 +674,13 @@ async def get_calendar_event(
             )
 
         # Check if user has permission to view this event
-        if event.creator_id != current_user.id:
+        # User can view if they are the creator or an attendee
+        is_creator = event.creator_id == current_user.id
+        is_attendee = any(
+            attendee.user_id == current_user.id for attendee in event.attendees
+        )
+
+        if not (is_creator or is_attendee):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Not authorized to view this event",
@@ -859,4 +865,93 @@ async def search_events(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to search events",
+        )
+
+
+# ==================== EVENT INVITATIONS ENDPOINTS ====================
+
+
+@router.get(API_ROUTES.CALENDAR.INVITATIONS_PENDING, response_model=list[CalendarEventInfo])
+async def get_pending_invitations(
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get pending calendar event invitations for the current user."""
+    try:
+        from app.crud.calendar_event import calendar_event
+
+        events = await calendar_event.get_pending_invitations(db, user_id=current_user.id)
+        return [CalendarEventInfo.model_validate(event) for event in events]
+
+    except Exception as e:
+        logger.error(f"Failed to get pending invitations: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve pending invitations",
+        )
+
+
+@router.post(API_ROUTES.CALENDAR.INVITATIONS_ACCEPT)
+async def accept_invitation(
+    invitation_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Accept a calendar event invitation."""
+    try:
+        from app.crud.calendar_event import calendar_event
+
+        success = await calendar_event.update_invitation_status(
+            db, event_id=invitation_id, user_id=current_user.id, status="accepted"
+        )
+
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Invitation not found",
+            )
+
+        logger.info(f"User {current_user.id} accepted invitation for event {invitation_id}")
+        return {"message": "Invitation accepted successfully"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to accept invitation: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to accept invitation",
+        )
+
+
+@router.post(API_ROUTES.CALENDAR.INVITATIONS_REJECT)
+async def reject_invitation(
+    invitation_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Reject a calendar event invitation."""
+    try:
+        from app.crud.calendar_event import calendar_event
+
+        success = await calendar_event.update_invitation_status(
+            db, event_id=invitation_id, user_id=current_user.id, status="declined"
+        )
+
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Invitation not found",
+            )
+
+        logger.info(f"User {current_user.id} rejected invitation for event {invitation_id}")
+        return {"message": "Invitation rejected successfully"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to reject invitation: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to reject invitation",
         )

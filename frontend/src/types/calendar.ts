@@ -1,3 +1,5 @@
+import type { AttendeeInfo } from './interview';
+
 export interface CalendarConnection {
   id: number;
   provider: 'google' | 'outlook';
@@ -69,6 +71,7 @@ export interface CalendarEventBase {
   status?: EventStatus;
   recurrence_rule?: string;
   timezone?: string;
+  attendees?: string[];
 }
 
 export type CalendarEventCreate = CalendarEventBase;
@@ -84,9 +87,10 @@ export interface CalendarEventUpdate {
   status?: EventStatus;
   recurrence_rule?: string;
   timezone?: string;
+  attendees?: string[];
 }
 
-export interface CalendarEventInfo extends CalendarEventBase {
+export interface CalendarEventInfo extends Omit<CalendarEventBase, 'attendees'> {
   id: number;
   creator_id?: number;
   created_at: string;
@@ -94,6 +98,7 @@ export interface CalendarEventInfo extends CalendarEventBase {
   parent_event_id?: number;
   is_recurring: boolean;
   is_instance: boolean;
+  attendees?: AttendeeInfo[];
 }
 
 export interface CalendarEventListResponse {

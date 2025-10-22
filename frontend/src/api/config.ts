@@ -159,6 +159,11 @@ export const API_ENDPOINTS = {
     CONSOLIDATED: '/api/calendar/consolidated',
     EVENT_BY_ID: (id: string | number) => `/api/calendar/events/${id}`,
     EVENTS: '/api/calendar/events',
+    INVITATIONS: {
+      ACCEPT: (invitationId: number) => `/api/calendar/invitations/${invitationId}/accept`,
+      PENDING: '/api/calendar/invitations/pending',
+      REJECT: (invitationId: number) => `/api/calendar/invitations/${invitationId}/reject`,
+    },
     RANGE: '/api/calendar/events/range',
     SEARCH: '/api/calendar/events/search',
     UPCOMING: '/api/calendar/events/upcoming',

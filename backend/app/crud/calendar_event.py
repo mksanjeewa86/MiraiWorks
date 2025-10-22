@@ -24,6 +24,9 @@ class CRUDCalendarEvent(
         """Get calendar events by creator"""
         result = await db.execute(
             select(CalendarEvent)
+            .options(
+                selectinload(CalendarEvent.attendees)
+            )
             .where(CalendarEvent.creator_id == creator_id)
             .order_by(CalendarEvent.start_datetime)
             .offset(skip)
@@ -81,6 +84,9 @@ class CRUDCalendarEvent(
 
         result = await db.execute(
             select(CalendarEvent)
+            .options(
+                selectinload(CalendarEvent.attendees)
+            )
             .where(and_(*conditions))
             .order_by(CalendarEvent.start_datetime)
         )
@@ -121,6 +127,9 @@ class CRUDCalendarEvent(
 
         result = await db.execute(
             select(CalendarEvent)
+            .options(
+                selectinload(CalendarEvent.attendees)
+            )
             .where(and_(*conditions))
             .order_by(CalendarEvent.start_datetime)
             .limit(limit)
@@ -144,6 +153,9 @@ class CRUDCalendarEvent(
 
         result = await db.execute(
             select(CalendarEvent)
+            .options(
+                selectinload(CalendarEvent.attendees)
+            )
             .where(and_(*conditions))
             .order_by(CalendarEvent.start_datetime)
             .offset(skip)
@@ -168,6 +180,9 @@ class CRUDCalendarEvent(
 
         result = await db.execute(
             select(CalendarEvent)
+            .options(
+                selectinload(CalendarEvent.attendees)
+            )
             .where(and_(*conditions))
             .order_by(CalendarEvent.start_datetime)
             .offset(skip)
@@ -326,6 +341,9 @@ class CRUDCalendarEvent(
 
         result = await db.execute(
             select(CalendarEvent)
+            .options(
+                selectinload(CalendarEvent.attendees)
+            )
             .where(and_(*conditions))
             .order_by(CalendarEvent.start_datetime)
             .offset(skip)
@@ -343,10 +361,198 @@ class CRUDCalendarEvent(
                 selectinload(CalendarEvent.creator),
                 selectinload(CalendarEvent.parent_event),
                 selectinload(CalendarEvent.child_events),
+                selectinload(CalendarEvent.attendees),
             )
             .where(CalendarEvent.id == event_id)
         )
         return result.scalar_one_or_none()
+
+    async def create_with_attendees(
+        self,
+        db: AsyncSession,
+        *,
+        obj_in: CalendarEventCreate,
+        creator_id: int,
+        attendee_emails: list[str] | None = None,
+    ) -> CalendarEvent:
+        """Create calendar event with creator and attendees"""
+        from app.models.calendar_event_attendee import CalendarEventAttendee
+        from app.models.user import User
+
+        # Create the event
+        obj_in_data = obj_in.model_dump(exclude={"attendees"})
+        obj_in_data["creator_id"] = creator_id
+
+        db_obj = CalendarEvent(**obj_in_data)
+        db.add(db_obj)
+        await db.flush()  # Flush to get the ID
+
+        # Add attendees if provided
+        if attendee_emails:
+            for email in attendee_emails:
+                # Try to find user by email
+                user_result = await db.execute(
+                    select(User).where(User.email == email)
+                )
+                user = user_result.scalar_one_or_none()
+
+                attendee = CalendarEventAttendee(
+                    event_id=db_obj.id,
+                    user_id=user.id if user else creator_id,  # Default to creator if user not found
+                    email=email,
+                    response_status="pending",
+                )
+                db.add(attendee)
+
+        await db.commit()
+        await db.refresh(db_obj)
+
+        # Load attendees relationship
+        await db.refresh(db_obj, ["attendees"])
+        return db_obj
+
+    async def update_attendees(
+        self,
+        db: AsyncSession,
+        *,
+        event_id: int,
+        attendee_emails: list[str],
+    ) -> None:
+        """Update event attendees (replace all)"""
+        from app.models.calendar_event_attendee import CalendarEventAttendee
+        from app.models.user import User
+
+        # Delete existing attendees
+        await db.execute(
+            CalendarEventAttendee.__table__.delete().where(
+                CalendarEventAttendee.event_id == event_id
+            )
+        )
+
+        # Add new attendees
+        for email in attendee_emails:
+            # Try to find user by email
+            user_result = await db.execute(
+                select(User).where(User.email == email)
+            )
+            user = user_result.scalar_one_or_none()
+
+            # Get event to get creator_id
+            event_result = await db.execute(
+                select(CalendarEvent).where(CalendarEvent.id == event_id)
+            )
+            event = event_result.scalar_one_or_none()
+
+            if event:
+                attendee = CalendarEventAttendee(
+                    event_id=event_id,
+                    user_id=user.id if user else event.creator_id,
+                    email=email,
+                    response_status="pending",
+                )
+                db.add(attendee)
+
+        await db.commit()
+
+    async def get_pending_invitations(
+        self, db: AsyncSession, *, user_id: int
+    ) -> list[CalendarEvent]:
+        """Get calendar events where user has pending invitations"""
+        from app.models.calendar_event_attendee import CalendarEventAttendee
+
+        result = await db.execute(
+            select(CalendarEvent)
+            .join(CalendarEventAttendee, CalendarEvent.id == CalendarEventAttendee.event_id)
+            .where(
+                and_(
+                    CalendarEventAttendee.user_id == user_id,
+                    CalendarEventAttendee.response_status == "pending",
+                )
+            )
+            .options(
+                selectinload(CalendarEvent.creator),
+                selectinload(CalendarEvent.attendees),
+            )
+            .order_by(CalendarEvent.start_datetime)
+        )
+        return result.scalars().all()
+
+    async def get_accepted_invitations_by_date_range(
+        self,
+        db: AsyncSession,
+        *,
+        user_id: int,
+        start_date: datetime,
+        end_date: datetime,
+    ) -> list[CalendarEvent]:
+        """Get calendar events where user has accepted invitations within a date range"""
+        from app.models.calendar_event_attendee import CalendarEventAttendee
+
+        result = await db.execute(
+            select(CalendarEvent)
+            .join(CalendarEventAttendee, CalendarEvent.id == CalendarEventAttendee.event_id)
+            .where(
+                and_(
+                    CalendarEventAttendee.user_id == user_id,
+                    CalendarEventAttendee.response_status == "accepted",
+                    or_(
+                        # Event starts within range
+                        and_(
+                            CalendarEvent.start_datetime >= start_date,
+                            CalendarEvent.start_datetime <= end_date,
+                        ),
+                        # Event ends within range
+                        and_(
+                            CalendarEvent.end_datetime.is_not(None),
+                            CalendarEvent.end_datetime >= start_date,
+                            CalendarEvent.end_datetime <= end_date,
+                        ),
+                        # Event spans the entire range
+                        and_(
+                            CalendarEvent.start_datetime <= start_date,
+                            or_(
+                                CalendarEvent.end_datetime >= end_date,
+                                CalendarEvent.end_datetime.is_(None),
+                            ),
+                        ),
+                    ),
+                )
+            )
+            .options(
+                selectinload(CalendarEvent.creator),
+                selectinload(CalendarEvent.attendees),
+            )
+            .order_by(CalendarEvent.start_datetime)
+        )
+        return result.scalars().all()
+
+    async def update_invitation_status(
+        self,
+        db: AsyncSession,
+        *,
+        event_id: int,
+        user_id: int,
+        status: str,
+    ) -> bool:
+        """Update attendee's response status for an event invitation"""
+        from app.models.calendar_event_attendee import CalendarEventAttendee
+
+        result = await db.execute(
+            select(CalendarEventAttendee).where(
+                and_(
+                    CalendarEventAttendee.event_id == event_id,
+                    CalendarEventAttendee.user_id == user_id,
+                )
+            )
+        )
+        attendee = result.scalar_one_or_none()
+
+        if not attendee:
+            return False
+
+        attendee.response_status = status
+        await db.commit()
+        return True
 
 
 calendar_event = CRUDCalendarEvent(CalendarEvent)

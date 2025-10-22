@@ -426,28 +426,28 @@ function UsersPageContent() {
 
   return (
     <AppLayout>
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto px-4 py-6">
         {error && (
-          <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded flex items-center justify-between">
+          <div className="mb-4 bg-red-50/80 backdrop-blur-sm dark:bg-red-900/20 border border-red-200/60 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg shadow-sm flex items-center justify-between" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
             <div className="flex items-center">
               <AlertTriangle className="h-4 w-4 mr-2" />
               {error}
             </div>
-            <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700">
+            <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700 transition-colors duration-200">
               <X className="h-4 w-4" />
             </button>
           </div>
         )}
 
         {successMessage && (
-          <div className="mb-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded flex items-center justify-between">
+          <div className="mb-4 bg-green-50/80 backdrop-blur-sm dark:bg-green-900/20 border border-green-200/60 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded-lg shadow-sm flex items-center justify-between" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
             <div className="flex items-center">
               <CheckCircle className="h-4 w-4 mr-2" />
               {successMessage}
             </div>
             <button
               onClick={() => setSuccessMessage(null)}
-              className="text-green-500 hover:text-green-700"
+              className="text-green-500 hover:text-green-700 transition-colors duration-200"
             >
               <X className="h-4 w-4" />
             </button>
@@ -458,7 +458,8 @@ function UsersPageContent() {
           <div className="flex items-center justify-end mb-6 mt-6 min-h-[56px]">
             <Link
               href={ROUTES.USERS.ADD}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+              className="bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 shadow-md hover:shadow-lg flex items-center space-x-2 transition-all duration-200 font-medium border border-blue-700/40"
+              style={{ fontFamily: 'Segoe UI, sans-serif' }}
             >
               <Plus className="h-4 w-4" />
               <span>Add User</span>
@@ -467,7 +468,7 @@ function UsersPageContent() {
         )}
 
         {selectedUsers.size > 0 && (
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6 mt-6 min-h-[56px]">
+          <div className="bg-blue-50/80 backdrop-blur-sm dark:bg-blue-900/20 border border-blue-200/60 dark:border-blue-800 rounded-xl p-4 mb-6 mt-6 min-h-[56px] shadow-sm" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <span className="text-blue-700 dark:text-blue-300 font-medium">
@@ -475,7 +476,7 @@ function UsersPageContent() {
                 </span>
                 <button
                   onClick={() => setSelectedUsers(new Set())}
-                  className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 text-sm"
+                  className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 text-sm transition-colors duration-200"
                 >
                   Clear selection
                 </button>
@@ -491,7 +492,8 @@ function UsersPageContent() {
                       {hasSuspendedUsers && (
                         <button
                           onClick={handleBulkUnsuspend}
-                          className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 flex items-center space-x-1"
+                          className="bg-green-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-green-700 shadow-sm hover:shadow-md flex items-center space-x-1 transition-all duration-200"
+                          style={{ fontFamily: 'Segoe UI, sans-serif' }}
                         >
                           <Power className="h-3 w-3" />
                           <span>Unsuspend</span>
@@ -500,7 +502,8 @@ function UsersPageContent() {
                       {hasActiveUsers && (
                         <button
                           onClick={handleBulkSuspend}
-                          className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 flex items-center space-x-1"
+                          className="bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-red-700 shadow-sm hover:shadow-md flex items-center space-x-1 transition-all duration-200"
+                          style={{ fontFamily: 'Segoe UI, sans-serif' }}
                         >
                           <PowerOff className="h-3 w-3" />
                           <span>Suspend</span>
@@ -511,21 +514,24 @@ function UsersPageContent() {
                 })()}
                 <button
                   onClick={handleBulkResetPassword}
-                  className="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700 flex items-center space-x-1"
+                  className="bg-purple-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-purple-700 shadow-sm hover:shadow-md flex items-center space-x-1 transition-all duration-200"
+                  style={{ fontFamily: 'Segoe UI, sans-serif' }}
                 >
                   <Key className="h-3 w-3" />
                   <span>Reset Passwords</span>
                 </button>
                 <button
                   onClick={handleBulkResendActivation}
-                  className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 flex items-center space-x-1"
+                  className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-blue-700 shadow-sm hover:shadow-md flex items-center space-x-1 transition-all duration-200"
+                  style={{ fontFamily: 'Segoe UI, sans-serif' }}
                 >
                   <RefreshCw className="h-3 w-3" />
                   <span>Resend Activation</span>
                 </button>
                 <button
                   onClick={handleBulkDelete}
-                  className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 flex items-center space-x-1"
+                  className="bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-red-700 shadow-sm hover:shadow-md flex items-center space-x-1 transition-all duration-200"
+                  style={{ fontFamily: 'Segoe UI, sans-serif' }}
                 >
                   <Trash2 className="h-3 w-3" />
                   <span>Delete</span>
@@ -535,7 +541,7 @@ function UsersPageContent() {
           </div>
         )}
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 mb-6">
+        <div className="bg-white/70 backdrop-blur-xl dark:bg-gray-800 rounded-xl border border-gray-200/60 dark:border-gray-700 p-5 mb-6 shadow-lg" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
           <div className="flex flex-wrap gap-4 items-center">
             <div className="flex-1 min-w-64">
               <div className="relative">
@@ -547,7 +553,8 @@ function UsersPageContent() {
                   value={searchTerm}
                   onChange={handleSearchChange}
                   onKeyDown={handleSearchKeyDown}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300/60 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/60 dark:bg-gray-700 dark:text-white bg-white/80 backdrop-blur-sm shadow-sm transition-all duration-200"
+                  style={{ fontFamily: 'Segoe UI, sans-serif' }}
                 />
               </div>
             </div>
@@ -556,12 +563,13 @@ function UsersPageContent() {
               <select
                 value={filters.status_filter || ''}
                 onChange={handleStatusFilter}
-                className="w-full px-3 py-2 pr-8 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white appearance-none bg-white"
+                className="w-full px-3 py-2.5 pr-8 border border-gray-300/60 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/60 dark:bg-gray-700 dark:text-white appearance-none bg-white/80 backdrop-blur-sm shadow-sm transition-all duration-200"
                 style={{
                   backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                   backgroundPosition: 'right 12px center',
                   backgroundRepeat: 'no-repeat',
                   backgroundSize: '16px',
+                  fontFamily: 'Segoe UI, sans-serif',
                 }}
               >
                 <option value="">All Status</option>
@@ -576,12 +584,13 @@ function UsersPageContent() {
               <select
                 value={filters.role || ''}
                 onChange={handleRoleFilter}
-                className="w-full px-3 py-2 pr-8 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white appearance-none bg-white"
+                className="w-full px-3 py-2.5 pr-8 border border-gray-300/60 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/60 dark:bg-gray-700 dark:text-white appearance-none bg-white/80 backdrop-blur-sm shadow-sm transition-all duration-200"
                 style={{
                   backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                   backgroundPosition: 'right 12px center',
                   backgroundRepeat: 'no-repeat',
                   backgroundSize: '16px',
+                  fontFamily: 'Segoe UI, sans-serif',
                 }}
               >
                 <option value="">All Roles</option>
@@ -605,11 +614,12 @@ function UsersPageContent() {
                       page: 1,
                     }))
                   }
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500/40 border-gray-300 rounded transition-all duration-200"
                 />
                 <label
                   htmlFor="include_deleted"
                   className="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  style={{ fontFamily: 'Segoe UI, sans-serif' }}
                 >
                   Include deleted users
                 </label>
@@ -618,11 +628,11 @@ function UsersPageContent() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="bg-white/70 backdrop-blur-xl dark:bg-gray-800 rounded-xl border border-gray-200/60 dark:border-gray-700 overflow-hidden shadow-lg" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
           {users.length === 0 ? (
             <div className="p-8 text-center">
               <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                 No users found
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
@@ -630,7 +640,7 @@ function UsersPageContent() {
               </p>
               <Link
                 href={ROUTES.USERS.ADD}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 inline-flex items-center space-x-2"
+                className="bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 shadow-md hover:shadow-lg inline-flex items-center space-x-2 transition-all duration-200 font-medium border border-blue-700/40"
               >
                 <Plus className="h-4 w-4" />
                 <span>Add User</span>
@@ -812,7 +822,8 @@ function UsersPageContent() {
                           {user.is_deleted ? (
                             <button
                               onClick={() => setViewingUser(user)}
-                              className="bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-700 flex items-center space-x-1"
+                              className="bg-gray-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-gray-700 shadow-sm hover:shadow-md flex items-center space-x-1 transition-all duration-200"
+                              style={{ fontFamily: 'Segoe UI, sans-serif' }}
                             >
                               <Users className="h-3 w-3" />
                               <span>Details</span>
@@ -820,7 +831,8 @@ function UsersPageContent() {
                           ) : (
                             <Link
                               href={ROUTES.USERS.EDIT(user.id)}
-                              className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 flex items-center space-x-1"
+                              className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-blue-700 shadow-sm hover:shadow-md flex items-center space-x-1 transition-all duration-200"
+                              style={{ fontFamily: 'Segoe UI, sans-serif' }}
                             >
                               <Edit className="h-3 w-3" />
                               <span>Edit</span>
@@ -836,28 +848,28 @@ function UsersPageContent() {
           )}
 
           {pagination.pages > 1 && (
-            <div className="bg-white dark:bg-gray-800 px-4 py-3 border-t border-gray-200 dark:border-gray-700">
+            <div className="bg-white/70 backdrop-blur-xl dark:bg-gray-800 px-5 py-4 border-t border-gray-200/60 dark:border-gray-700" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
               <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-700 dark:text-gray-300">
+                <div className="text-sm text-gray-700 dark:text-gray-300 font-medium">
                   Showing {(pagination.page - 1) * pagination.size + 1} to{' '}
                   {Math.min(pagination.page * pagination.size, pagination.total)} of{' '}
                   {pagination.total} results
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-3">
                   <button
                     onClick={() => handlePageChange(pagination.page - 1)}
                     disabled={pagination.page <= 1}
-                    className="px-3 py-1 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300"
+                    className="px-4 py-2 text-sm bg-white/80 backdrop-blur-sm dark:bg-gray-800 border border-gray-300/60 dark:border-gray-600 rounded-lg hover:bg-gray-50/80 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
                   >
                     Previous
                   </button>
-                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                  <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">
                     Page {pagination.page} of {pagination.pages}
                   </span>
                   <button
                     onClick={() => handlePageChange(pagination.page + 1)}
                     disabled={pagination.page >= pagination.pages}
-                    className="px-3 py-1 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300"
+                    className="px-4 py-2 text-sm bg-white/80 backdrop-blur-sm dark:bg-gray-800 border border-gray-300/60 dark:border-gray-600 rounded-lg hover:bg-gray-50/80 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
                   >
                     Next
                   </button>
@@ -880,21 +892,21 @@ function UsersPageContent() {
 
         {/* User Details Modal */}
         {viewingUser && (
-          <div className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-3xl border border-slate-200 dark:border-gray-700 shadow-[0_30px_80px_-20px_rgba(15,23,42,0.2)] max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="fixed inset-0 bg-black/20 backdrop-blur-md flex items-center justify-center z-50 p-4" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
+            <div className="bg-white/90 backdrop-blur-xl dark:bg-gray-800/90 rounded-2xl border border-gray-200/60 dark:border-gray-700 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
               {/* Header */}
               <div className="flex-shrink-0 px-6 pt-6">
                 <div className="flex items-start justify-between gap-4">
                   <div className="space-y-3">
                     <div className="flex items-center gap-3">
-                      <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                      <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-blue-50/80 backdrop-blur-sm text-blue-600 shadow-sm">
                         <Users className="h-5 w-5" />
                       </span>
                       <div>
-                        <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                           User Details
                         </h2>
-                        <p className="text-sm text-slate-500 dark:text-gray-400">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
                           View information about this user
                         </p>
                       </div>
@@ -902,7 +914,7 @@ function UsersPageContent() {
                   </div>
                   <button
                     onClick={() => setViewingUser(null)}
-                    className="rounded-lg border border-slate-200 dark:border-gray-600 p-2 text-slate-500 dark:text-gray-400 transition hover:bg-slate-100 dark:hover:bg-gray-700 hover:text-slate-700 dark:hover:text-gray-200"
+                    className="rounded-lg border border-gray-200/60 dark:border-gray-600 p-2 text-gray-500 dark:text-gray-400 transition-all duration-200 hover:bg-gray-100/80 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-200 shadow-sm hover:shadow-md"
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -913,42 +925,42 @@ function UsersPageContent() {
               <div className="flex-1 overflow-y-auto px-6 py-6 min-h-0">
                 <div className="space-y-6">
                   {/* Basic Information Section */}
-                  <div className="rounded-2xl border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-gray-900/20 p-6">
-                    <h3 className="text-sm font-semibold text-slate-700 dark:text-gray-300 mb-4">
+                  <div className="rounded-xl border border-gray-200/60 dark:border-gray-700 bg-gray-50/50 backdrop-blur-sm dark:bg-gray-900/20 p-6 shadow-sm">
+                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">
                       Basic Information
                     </h3>
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-slate-500 dark:text-gray-400">
+                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">
                           Name
                         </label>
-                        <p className="mt-1 text-slate-900 dark:text-white">
+                        <p className="mt-1 text-gray-900 dark:text-white">
                           {viewingUser.first_name} {viewingUser.last_name}
                         </p>
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-slate-500 dark:text-gray-400">
+                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">
                           Email
                         </label>
-                        <p className="mt-1 text-slate-900 dark:text-white">{viewingUser.email}</p>
+                        <p className="mt-1 text-gray-900 dark:text-white">{viewingUser.email}</p>
                       </div>
 
                       {viewingUser.phone && (
                         <div>
-                          <label className="block text-sm font-medium text-slate-500 dark:text-gray-400">
+                          <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">
                             Phone
                           </label>
-                          <p className="mt-1 text-slate-900 dark:text-white">{viewingUser.phone}</p>
+                          <p className="mt-1 text-gray-900 dark:text-white">{viewingUser.phone}</p>
                         </div>
                       )}
 
                       {viewingUser.company_name && (
                         <div>
-                          <label className="block text-sm font-medium text-slate-500 dark:text-gray-400">
+                          <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">
                             Company
                           </label>
-                          <p className="mt-1 text-slate-900 dark:text-white">
+                          <p className="mt-1 text-gray-900 dark:text-white">
                             {viewingUser.company_name}
                           </p>
                         </div>
@@ -957,13 +969,13 @@ function UsersPageContent() {
                   </div>
 
                   {/* Roles & Permissions Section */}
-                  <div className="rounded-2xl border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-gray-900/20 p-6">
-                    <h3 className="text-sm font-semibold text-slate-700 dark:text-gray-300 mb-4">
+                  <div className="rounded-xl border border-gray-200/60 dark:border-gray-700 bg-gray-50/50 backdrop-blur-sm dark:bg-gray-900/20 p-6 shadow-sm">
+                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">
                       Roles & Permissions
                     </h3>
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-slate-500 dark:text-gray-400">
+                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">
                           Roles
                         </label>
                         <div className="mt-1 flex flex-wrap gap-2">
@@ -986,7 +998,7 @@ function UsersPageContent() {
 
                       {viewingUser.require_2fa && (
                         <div>
-                          <label className="block text-sm font-medium text-slate-500 dark:text-gray-400">
+                          <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">
                             Security
                           </label>
                           <div className="mt-1">
@@ -1001,13 +1013,13 @@ function UsersPageContent() {
                   </div>
 
                   {/* Status Section */}
-                  <div className="rounded-2xl border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-gray-900/20 p-6">
-                    <h3 className="text-sm font-semibold text-slate-700 dark:text-gray-300 mb-4">
+                  <div className="rounded-xl border border-gray-200/60 dark:border-gray-700 bg-gray-50/50 backdrop-blur-sm dark:bg-gray-900/20 p-6 shadow-sm">
+                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">
                       Status
                     </h3>
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-slate-500 dark:text-gray-400">
+                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">
                           Account Status
                         </label>
                         <div className="mt-1 flex flex-wrap gap-2">
@@ -1026,10 +1038,10 @@ function UsersPageContent() {
 
                       {viewingUser.deleted_at && (
                         <div>
-                          <label className="block text-sm font-medium text-slate-500 dark:text-gray-400">
+                          <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">
                             Deleted At
                           </label>
-                          <p className="mt-1 text-slate-900 dark:text-white">
+                          <p className="mt-1 text-gray-900 dark:text-white">
                             {new Date(viewingUser.deleted_at).toLocaleString()}
                           </p>
                         </div>
@@ -1040,10 +1052,11 @@ function UsersPageContent() {
               </div>
 
               {/* Footer */}
-              <div className="flex-shrink-0 gap-3 border-t border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-6 py-4 flex justify-end">
+              <div className="flex-shrink-0 gap-3 border-t border-gray-200/60 dark:border-gray-700 bg-white/90 backdrop-blur-xl dark:bg-gray-800/90 px-6 py-4 flex justify-end">
                 <button
                   onClick={() => setViewingUser(null)}
-                  className="min-w-[120px] border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-gray-600 px-4 py-2 rounded-lg transition"
+                  className="min-w-[120px] border border-gray-300/60 dark:border-gray-600 bg-white/80 backdrop-blur-sm dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50/80 dark:hover:bg-gray-600 px-5 py-2.5 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md font-medium"
+                  style={{ fontFamily: 'Segoe UI, sans-serif' }}
                 >
                   Close
                 </button>

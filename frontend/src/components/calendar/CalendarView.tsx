@@ -283,24 +283,17 @@ export default function CalendarView({
       const rawEvent = dropInfo.event.extendedProps?.raw as CalendarEvent | undefined;
       if (!rawEvent) return;
 
-      // Don't allow dragging holiday events or interview events
-      if (rawEvent.id?.startsWith('holiday-') || rawEvent.id?.startsWith('interview-')) {
-        dropInfo.revert();
-        return;
-      }
-
-      // Don't allow dragging past events
-      const eventStart = new Date(rawEvent.startDatetime);
-      const now = new Date();
-      if (eventStart < now) {
+      // Don't allow dragging holiday events or interview events (check by type, not ID prefix)
+      if (rawEvent.type === 'holiday' || rawEvent.type === 'interview') {
         dropInfo.revert();
         return;
       }
 
       const newStart = dropInfo.event.start || new Date();
       const newEnd = dropInfo.event.end || new Date(newStart.getTime() + 60 * 60 * 1000);
+      const now = new Date();
 
-      // Don't allow dropping into the past
+      // Only prevent dropping into the past (allow dragging any event forward in time)
       if (newStart < now) {
         dropInfo.revert();
         return;
@@ -318,24 +311,17 @@ export default function CalendarView({
       const rawEvent = resizeInfo.event.extendedProps?.raw as CalendarEvent | undefined;
       if (!rawEvent) return;
 
-      // Don't allow resizing holiday events or interview events
-      if (rawEvent.id?.startsWith('holiday-') || rawEvent.id?.startsWith('interview-')) {
-        resizeInfo.revert();
-        return;
-      }
-
-      // Don't allow resizing past events
-      const eventStart = new Date(rawEvent.startDatetime);
-      const now = new Date();
-      if (eventStart < now) {
+      // Don't allow resizing holiday events or interview events (check by type, not ID prefix)
+      if (rawEvent.type === 'holiday' || rawEvent.type === 'interview') {
         resizeInfo.revert();
         return;
       }
 
       const newStart = resizeInfo.event.start || new Date();
       const newEnd = resizeInfo.event.end || new Date(newStart.getTime() + 60 * 60 * 1000);
+      const now = new Date();
 
-      // Don't allow resizing into the past
+      // Only prevent resizing into the past (allow resizing any event forward in time)
       if (newStart < now || newEnd < now) {
         resizeInfo.revert();
         return;
@@ -397,18 +383,17 @@ export default function CalendarView({
           eventAllow={(dropLocation, draggedEvent) => {
             if (!draggedEvent) return false;
 
-            // Prevent dragging holidays and interviews
-            const eventId = draggedEvent.id;
-            if (eventId?.startsWith('holiday-') || eventId?.startsWith('interview-')) {
+            // Prevent dragging holidays and interviews (check by type, not ID prefix)
+            const rawEvent = draggedEvent.extendedProps?.raw as CalendarEvent | undefined;
+            if (rawEvent?.type === 'holiday' || rawEvent?.type === 'interview') {
               return false;
             }
 
-            // Prevent dragging/dropping to past
-            const eventStart = draggedEvent.start || new Date();
+            // Only prevent dropping to past (allow dragging any event forward)
             const dropStart = dropLocation.start || new Date();
             const now = new Date();
 
-            if (eventStart < now || dropStart < now) {
+            if (dropStart < now) {
               return false;
             }
 

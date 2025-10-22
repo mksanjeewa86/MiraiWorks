@@ -13,7 +13,7 @@ import type {
   CalendarEventBulkResponse,
   ConsolidatedCalendarData,
 } from '@/types';
-import type { CalendarEvent } from '@/types/interview';
+import type { CalendarEvent, AttendeeInfo } from '@/types/interview';
 
 // Helper to build query strings
 const buildQueryString = (filters?: Record<string, string | undefined>): string => {
@@ -48,6 +48,16 @@ export const calendarApi = {
   },
 
   async createEvent(eventData: Partial<CalendarEvent>): Promise<ApiResponse<CalendarEvent>> {
+    // Normalize attendees - extract emails if they're AttendeeInfo objects
+    let attendeeEmails: string[] | undefined = undefined;
+    if (eventData.attendees && eventData.attendees.length > 0) {
+      if (typeof eventData.attendees[0] === 'string') {
+        attendeeEmails = eventData.attendees as string[];
+      } else {
+        attendeeEmails = (eventData.attendees as AttendeeInfo[]).map((a) => a.email);
+      }
+    }
+
     // Transform the data from old format to new format
     const transformedData: CalendarEventCreate = {
       title: eventData.title || '',
@@ -57,6 +67,7 @@ export const calendarApi = {
       is_all_day: eventData.isAllDay || false,
       location: eventData.location || undefined,
       timezone: eventData.timezone || 'UTC',
+      attendees: attendeeEmails,
     };
 
     const response = await apiClient.post<CalendarEventInfo>(
@@ -76,7 +87,7 @@ export const calendarApi = {
       isAllDay: response.data.is_all_day || false,
       isRecurring: response.data.is_recurring || false,
       organizerEmail: response.data.creator_id?.toString(),
-      attendees: [],
+      attendees: (response.data.attendees || []) as AttendeeInfo[],
       status: response.data.status || 'confirmed',
       createdAt: response.data.created_at,
       updatedAt: response.data.updated_at,
@@ -89,6 +100,18 @@ export const calendarApi = {
     id: number,
     eventData: Partial<CalendarEvent>
   ): Promise<ApiResponse<CalendarEvent>> {
+    // Normalize attendees - extract emails if they're AttendeeInfo objects
+    let attendeeEmails: string[] | undefined = undefined;
+    if (eventData.attendees !== undefined) {
+      if (eventData.attendees.length === 0) {
+        attendeeEmails = [];
+      } else if (typeof eventData.attendees[0] === 'string') {
+        attendeeEmails = eventData.attendees as string[];
+      } else {
+        attendeeEmails = (eventData.attendees as AttendeeInfo[]).map((a) => a.email);
+      }
+    }
+
     // Transform the data from old format to new format
     const transformedData: CalendarEventUpdate = {
       title: eventData.title,
@@ -98,6 +121,7 @@ export const calendarApi = {
       is_all_day: eventData.isAllDay,
       location: eventData.location,
       timezone: eventData.timezone,
+      attendees: attendeeEmails,
     };
 
     const response = await apiClient.put<CalendarEventInfo>(
@@ -117,7 +141,7 @@ export const calendarApi = {
       isAllDay: response.data.is_all_day || false,
       isRecurring: response.data.is_recurring || false,
       organizerEmail: response.data.creator_id?.toString(),
-      attendees: [],
+      attendees: (response.data.attendees || []) as AttendeeInfo[],
       status: response.data.status || 'confirmed',
       createdAt: response.data.created_at,
       updatedAt: response.data.updated_at,
@@ -305,6 +329,29 @@ export const calendarApi = {
 
     const response = await apiClient.get<ConsolidatedCalendarData>(
       `${API_ENDPOINTS.CALENDAR.CONSOLIDATED}?${params.toString()}`
+    );
+    return { data: response.data, success: true };
+  },
+
+  // ==================== INVITATIONS ====================
+
+  async getPendingInvitations(): Promise<ApiResponse<CalendarEventInfo[]>> {
+    const response = await apiClient.get<CalendarEventInfo[]>(
+      API_ENDPOINTS.CALENDAR.INVITATIONS.PENDING
+    );
+    return { data: response.data, success: true };
+  },
+
+  async acceptInvitation(invitationId: number): Promise<ApiResponse<{ message: string }>> {
+    const response = await apiClient.post<{ message: string }>(
+      API_ENDPOINTS.CALENDAR.INVITATIONS.ACCEPT(invitationId)
+    );
+    return { data: response.data, success: true };
+  },
+
+  async rejectInvitation(invitationId: number): Promise<ApiResponse<{ message: string }>> {
+    const response = await apiClient.post<{ message: string }>(
+      API_ENDPOINTS.CALENDAR.INVITATIONS.REJECT(invitationId)
     );
     return { data: response.data, success: true };
   },

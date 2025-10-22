@@ -266,6 +266,11 @@ class CalendarRoutes:
     EVENTS_SEARCH = "/events/search"
     EVENTS_UPCOMING = "/events/upcoming"
 
+    # Event invitations - Attendee invitation management
+    INVITATIONS_ACCEPT = "/invitations/{invitation_id}/accept"
+    INVITATIONS_PENDING = "/invitations/pending"
+    INVITATIONS_REJECT = "/invitations/{invitation_id}/reject"
+
     # OAuth - Authentication flows for calendar providers
     GOOGLE_OAUTH_CALLBACK = "/oauth/google/callback"
     GOOGLE_OAUTH_START = "/oauth/google/start"

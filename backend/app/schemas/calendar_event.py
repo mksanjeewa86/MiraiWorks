@@ -63,7 +63,7 @@ class CalendarEventBase(BaseModel):
 class CalendarEventCreate(CalendarEventBase):
     """Schema for creating a new calendar event."""
 
-    pass
+    attendees: Optional[list[str]] = Field(default=None)
 
 
 class CalendarEventUpdate(BaseModel):
@@ -79,6 +79,7 @@ class CalendarEventUpdate(BaseModel):
     status: Optional[EventStatus] = None
     recurrence_rule: Optional[str] = Field(None, max_length=255)
     timezone: Optional[str] = Field(None, max_length=50)
+    attendees: Optional[list[str]] = None
 
     @field_validator("end_datetime")
     @classmethod
@@ -103,6 +104,17 @@ class CalendarEventUpdate(BaseModel):
         return v
 
 
+class AttendeeInfo(BaseModel):
+    """Schema for calendar event attendee information."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    user_id: int
+    email: str
+    response_status: str = "pending"
+
+
 class CalendarEventInfo(CalendarEventBase):
     """Schema for calendar event responses."""
 
@@ -113,6 +125,7 @@ class CalendarEventInfo(CalendarEventBase):
     parent_event_id: Optional[int] = None
     is_recurring: bool = False
     is_instance: bool = False
+    attendees: Optional[list[AttendeeInfo]] = Field(default_factory=list)
 
     @field_serializer('start_datetime', 'end_datetime', 'created_at', 'updated_at')
     def serialize_datetime(self, dt: Optional[datetime], _info) -> Optional[str]:

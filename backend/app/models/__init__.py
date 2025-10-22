@@ -5,6 +5,7 @@ from app.models.auth import OauthAccount, PasswordResetRequest, RefreshToken
 from app.models.blocked_company import BlockedCompany
 from app.models.calendar_connection import CalendarConnection
 from app.models.calendar_event import CalendarEvent
+from app.models.calendar_event_attendee import CalendarEventAttendee
 from app.models.calendar_integration import ExternalCalendarAccount, SyncedEvent
 from app.models.candidate_workflow import CandidateWorkflow
 from app.models.certification import ProfileCertification
@@ -132,6 +133,7 @@ __all__ = [
     "SyncedEvent",
     "CalendarConnection",
     "CalendarEvent",
+    "CalendarEventAttendee",
     "Exam",
     "ExamQuestion",
     "ExamSession",

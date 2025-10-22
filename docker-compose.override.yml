@@ -12,8 +12,8 @@ services:
       - WATCHFILES_FORCE_POLLING=true
       # Increase watcher timeout to handle Windows Docker startup delays
       - WATCHFILES_RUST_TIMEOUT=10000
-    # Override CMD for development with auto-reload
-    # Note: If you still see watchfiles errors on first startup, just restart the backend container
+    # Override CMD for development without auto-reload (to avoid Windows Docker file watching issues)
+    # If you need hot reload, add --reload flag and restart container if you see errors
     command:
       - uvicorn
       - app.main:app
@@ -21,17 +21,10 @@ services:
       - 0.0.0.0
       - --port
       - "8000"
-      - --reload
-      - --reload-include
-      - "*.py"
-      - --reload-dir
-      - /app/app
       - --log-level
       - debug
       - --use-colors
       - --access-log
-      - --reload-delay
-      - "3"
     # Enable code mounting for development (comment out for production)
     volumes:
       - ./backend:/app

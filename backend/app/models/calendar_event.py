@@ -25,6 +25,11 @@ class CalendarEvent(BaseModel):
 
     # Relationships
     creator = relationship("User", back_populates="calendar_events")
+    attendees = relationship(
+        "CalendarEventAttendee",
+        back_populates="event",
+        cascade="all, delete-orphan",
+    )
     parent_event = relationship(
         "CalendarEvent",
         remote_side="calendar_events.c.id",
