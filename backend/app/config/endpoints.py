@@ -819,6 +819,7 @@ class TodoRoutes:
     # Viewer management
     VIEWER_ADD = "/{todo_id}/viewers"
     VIEWER_LIST = "/{todo_id}/viewers"
+    VIEWER_MEMO = "/{todo_id}/viewer-memo"
     VIEWER_REMOVE = "/{todo_id}/viewers/{viewer_user_id}"
     VIEWABLE_TODOS = "/viewable"
 

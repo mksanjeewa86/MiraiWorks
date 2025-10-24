@@ -19,7 +19,8 @@ import type { TodoAttachment, TodoAttachmentList } from '@/types/todo-attachment
 const initialFormState: TaskFormState = {
   title: '',
   description: '',
-  notes: '',
+  assignee_memo: '',
+  viewer_memo: '',
   dueDate: '',
   dueTime: '',
   priority: 'mid',
@@ -67,7 +68,8 @@ export default function TaskModalWithAttachments({
         setFormState({
           title: editingTodo.title,
           description: editingTodo.description ?? '',
-          notes: editingTodo.notes ?? '',
+          assignee_memo: editingTodo.assignee_memo ?? '',
+          viewer_memo: editingTodo.viewer_memo ?? '',
           dueDate: formatDateForInput(editingTodo.due_datetime),
           dueTime: formatTimeForInput(editingTodo.due_datetime),
           priority: editingTodo.priority ?? 'mid',
@@ -126,7 +128,7 @@ export default function TaskModalWithAttachments({
     const payload: TodoPayload = {
       title: trimmedTitle,
       description: formState.description.trim() || undefined,
-      notes: formState.notes.trim() || undefined,
+      assignee_memo: formState.assignee_memo.trim() || undefined,
       priority: formState.priority || undefined,
       due_datetime: dueDatetime,
     };
@@ -303,11 +305,11 @@ export default function TaskModalWithAttachments({
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Notes
+                    Assignee Memo
                   </label>
                   <textarea
-                    value={formState.notes}
-                    onChange={handleInputChange('notes')}
+                    value={formState.assignee_memo}
+                    onChange={handleInputChange('assignee_memo')}
                     placeholder="Quick reminders or additional notes..."
                     rows={3}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none"

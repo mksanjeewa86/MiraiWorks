@@ -85,6 +85,19 @@ class TodoPermissionService:
         return todo.owner_id == user_id
 
     @staticmethod
+    async def can_edit_assignee_memo(db: AsyncSession, user_id: int, todo: Todo) -> bool:
+        """Check if user can edit the assignee_memo field."""
+        # Owner can always edit
+        if todo.owner_id == user_id:
+            return True
+
+        # Assignee can edit their own memo for assignments
+        if todo.todo_type == 'assignment' and todo.assignee_id == user_id:
+            return True
+
+        return False
+
+    @staticmethod
     async def can_delete_todo(db: AsyncSession, user_id: int, todo: Todo) -> bool:
         """Check if user can delete a todo."""
         # Only the creator (owner) can delete todos

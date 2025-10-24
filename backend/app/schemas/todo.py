@@ -17,7 +17,7 @@ from app.utils.constants import (
 class TodoBase(BaseModel):
     title: str = Field(..., max_length=255)
     description: Optional[str] = None
-    notes: Optional[str] = None
+    assignee_memo: Optional[str] = None
     priority: Optional[str] = Field(default=TodoPriority.MID.value)
     # Due datetime in UTC (will be converted from user's local timezone on input)
     due_datetime: Optional[datetime] = None
@@ -101,7 +101,7 @@ class TodoCreate(TodoBase):
 class TodoUpdate(BaseModel):
     title: Optional[str] = Field(default=None, max_length=255)
     description: Optional[str] = None
-    notes: Optional[str] = None
+    assignee_memo: Optional[str] = None
     priority: Optional[str] = None
     # Due datetime in UTC (will be converted from user's local timezone on input)
     due_datetime: Optional[datetime] = None
@@ -152,7 +152,8 @@ class TodoRead(BaseModel):
     last_updated_by: Optional[int] = None
     title: str
     description: Optional[str] = None
-    notes: Optional[str] = None
+    assignee_memo: Optional[str] = None
+    viewer_memo: Optional[str] = None  # Private memo for current viewer
     status: str
     priority: Optional[str] = None
     # Due datetime stored in UTC, serialized with timezone info
@@ -247,7 +248,7 @@ class TodoPublishUpdate(BaseModel):
 class AssignmentSubmission(BaseModel):
     """Submit an assignment for review."""
 
-    notes: Optional[str] = None  # Optional submission notes
+    assignee_memo: Optional[str] = None  # Optional submission notes
 
 
 class AssignmentReview(BaseModel):

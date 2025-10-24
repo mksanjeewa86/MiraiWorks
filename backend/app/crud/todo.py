@@ -6,6 +6,7 @@ from sqlalchemy.orm import selectinload
 
 from app.crud.base import CRUDBase
 from app.models.todo import Todo
+from app.models.todo_viewer_memo import TodoViewerMemo
 from app.models.user import User
 from app.schemas.todo import (
     TodoCreate,
@@ -169,6 +170,18 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         updated_by: int,
     ) -> Todo:
         update_data = obj_in.model_dump(exclude_unset=True)
+
+        # Field-level permission checks
+        # description can only be edited by creator
+        if 'description' in update_data:
+            if db_obj.created_by != updated_by:
+                update_data.pop('description')
+
+        # assignee_memo can only be edited by assignee
+        if 'assignee_memo' in update_data:
+            if db_obj.assignee_id != updated_by:
+                update_data.pop('assignee_memo')
+
         if update_data.get("status") == TodoStatus.COMPLETED.value:
             update_data.setdefault("completed_at", get_utc_now())
             update_data.pop("expired_at", None)
@@ -256,18 +269,15 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         return todo
 
     async def submit_assignment(
-        self, db: AsyncSession, *, todo: Todo, submitted_by: int, notes: str = None
+        self, db: AsyncSession, *, todo: Todo, submitted_by: int, assignee_memo: str = None
     ) -> Todo:
         """Submit assignment for review."""
-        if todo.is_assignment and todo.owner_id == submitted_by:
+        if todo.is_assignment and todo.assignee_id == submitted_by:
             todo.submit_assignment()
             todo.last_updated_by = submitted_by
-            if notes:
-                # Add notes to existing notes if any
-                if todo.notes:
-                    todo.notes = f"{todo.notes}\n\n**Submission Notes:**\n{notes}"
-                else:
-                    todo.notes = f"**Submission Notes:**\n{notes}"
+            if assignee_memo:
+                # Update assignee memo
+                todo.assignee_memo = assignee_memo
             db.add(todo)
             await db.commit()
             await db.refresh(todo)
@@ -362,6 +372,27 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         result = await db.execute(query)
         assignments = result.scalars().all()
         return assignments, total
+
+    async def attach_viewer_memo(
+        self, db: AsyncSession, *, todo: Todo, user_id: int
+    ) -> Todo:
+        """Attach viewer memo for the current user to the todo object."""
+        # Query for viewer memo
+        result = await db.execute(
+            select(TodoViewerMemo).where(
+                TodoViewerMemo.todo_id == todo.id,
+                TodoViewerMemo.user_id == user_id
+            )
+        )
+        viewer_memo_obj = result.scalar_one_or_none()
+
+        # Attach as a temporary attribute (not persisted to DB)
+        if viewer_memo_obj:
+            todo.viewer_memo = viewer_memo_obj.memo
+        else:
+            todo.viewer_memo = None
+
+        return todo
 
 
 todo = CRUDTodo(Todo)

@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import BigInteger, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
@@ -52,10 +52,24 @@ class TodoAttachment(Base):
         nullable=False,
     )
 
+    # Soft delete fields
+    is_deleted: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, index=True
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    deleted_by: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+
     # Relationships
     todo: Mapped[Todo] = relationship("Todo", backref="attachments")
     uploader: Mapped[User | None] = relationship(
         "User", foreign_keys=[uploaded_by], backref="uploaded_attachments"
+    )
+    deleter: Mapped[User | None] = relationship(
+        "User", foreign_keys=[deleted_by], backref="deleted_attachments"
     )
 
     @property

@@ -473,6 +473,7 @@ export const API_ENDPOINTS = {
     VIEWERS: {
       ADD: (todoId: number | string) => `/api/todos/${todoId}/viewers`,
       LIST: (todoId: number | string) => `/api/todos/${todoId}/viewers`,
+      MEMO: (todoId: number | string) => `/api/todos/${todoId}/viewer-memo`,
       REMOVE: (todoId: number | string, viewerUserId: number | string) =>
         `/api/todos/${todoId}/viewers/${viewerUserId}`,
     },

@@ -60,7 +60,8 @@ import type { ConnectedUser } from '@/types';
 const initialFormState: TaskFormState = {
   title: '',
   description: '',
-  notes: '',
+  assignee_memo: '',
+  viewer_memo: '',
   dueDate: '',
   dueTime: '',
   priority: 'mid',
@@ -139,7 +140,8 @@ export default function TaskModal({
       setFormState({
         title: editingTodo.title,
         description: editingTodo.description ?? '',
-        notes: editingTodo.notes ?? '',
+        assignee_memo: editingTodo.assignee_memo ?? '',
+        viewer_memo: editingTodo.viewer_memo ?? '',
         dueDate: date,
         dueTime: time,
         priority: editingTodo.priority ?? 'mid',
@@ -482,15 +484,15 @@ export default function TaskModal({
     // Convert local date and time to UTC ISO string for API
     const dueDatetime = localDateTimePartsToUTC(formState.dueDate, formState.dueTime);
 
-    // If assignee, only allow updating notes
+    // If assignee, only allow updating assignee_memo
     const updatePayload: Partial<TodoPayload> = isAssignee
       ? {
-          notes: formState.notes.trim() || undefined,
+          assignee_memo: formState.assignee_memo.trim() || undefined,
         }
       : {
           title: trimmedTitle,
           description: formState.description.trim() || undefined,
-          notes: formState.notes.trim() || undefined,
+          assignee_memo: formState.assignee_memo.trim() || undefined,
           priority: formState.priority || undefined,
           due_datetime: dueDatetime || undefined,
           todo_type: todoType,
@@ -503,7 +505,7 @@ export default function TaskModal({
     const createPayload: TodoPayload = {
       title: trimmedTitle,
       description: formState.description.trim() || undefined,
-      notes: formState.notes.trim() || undefined,
+      assignee_memo: formState.assignee_memo.trim() || undefined,
       priority: formState.priority || undefined,
       due_datetime: dueDatetime || undefined,
       todo_type: todoType,
@@ -523,9 +525,28 @@ export default function TaskModal({
 
     try {
       if (isEditing && editingTodo) {
-        await todosApi.update(editingTodo.id, updatePayload);
-        onSuccess();
-        showToast({ type: 'success', title: 'Task updated' });
+        // If viewer-only, only update their private memo
+        if (isViewerOnly) {
+          // Viewer can only update their private memo
+          await todosApi.updateViewerMemo(editingTodo.id, {
+            memo: formState.viewer_memo.trim() || null,
+          });
+          onSuccess();
+          showToast({ type: 'success', title: 'Your private notes updated' });
+        } else {
+          // Update the main todo
+          await todosApi.update(editingTodo.id, updatePayload);
+
+          // Update viewer memo separately (if changed)
+          if (formState.viewer_memo !== (editingTodo.viewer_memo ?? '')) {
+            await todosApi.updateViewerMemo(editingTodo.id, {
+              memo: formState.viewer_memo.trim() || null,
+            });
+          }
+
+          onSuccess();
+          showToast({ type: 'success', title: 'Task updated' });
+        }
       } else {
         const created = await todosApi.create(createPayload);
 
@@ -959,8 +980,19 @@ export default function TaskModal({
                           </div>
                         </div>
                       )}
+                      {!isViewerOnly && !isAssignee && isEditing && editingTodo?.assignee_id && (
+                        <div className="group relative">
+                          <Info className="h-4 w-4 text-slate-400 hover:text-blue-600 cursor-help transition-colors" />
+                          <div className="invisible group-hover:visible absolute left-0 top-6 z-[99999] w-64 rounded-lg bg-slate-900 p-3 text-xs text-white shadow-2xl">
+                            <div className="font-semibold text-amber-300 mb-1">Read-Only Field</div>
+                            <div className="text-slate-300">
+                              This field is read-only for creators. Only the assignee can edit their notes. You can view the content to track their progress.
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    {!isViewerOnly && (
+                    {!isViewerOnly && !(isEditing && editingTodo?.assignee_id && !isAssignee) && (
                     <div className="flex items-center gap-2">
                       <input
                         type="file"
@@ -1007,10 +1039,10 @@ export default function TaskModal({
                   <Textarea
                     placeholder="Add quick reminders, meeting notes, or links."
                     rows={3}
-                    value={formState.notes}
-                    onChange={handleInputChange('notes')}
+                    value={formState.assignee_memo}
+                    onChange={handleInputChange('assignee_memo')}
                     className="border border-slate-300 bg-white text-slate-900 focus-visible:ring-blue-500"
-                    readOnly={isViewerOnly || undefined}
+                    readOnly={isViewerOnly || (!isAssignee && isEditing && !!editingTodo?.assignee_id)}
                   />
 
                   {/* Display attached files directly below Notes */}
@@ -1116,6 +1148,34 @@ export default function TaskModal({
                     </div>
                   )}
                 </div>
+
+                {/* Viewer Private Notes - shown for all users on existing todos */}
+                {isEditing && editingTodo && (
+                  <div className="space-y-2 mt-4 pt-4 border-t border-slate-200">
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm font-medium text-slate-700">
+                        My Private Notes
+                      </label>
+                      <div className="group relative">
+                        <Info className="h-4 w-4 text-slate-400 hover:text-blue-600 cursor-help transition-colors" />
+                        <div className="invisible group-hover:visible absolute left-0 top-6 z-[99999] w-64 rounded-lg bg-slate-900 p-3 text-xs text-white shadow-2xl">
+                          <div className="font-semibold text-blue-300 mb-1">Private Notes</div>
+                          <div className="text-slate-300">
+                            These notes are completely private and only visible to you. Use them to track your own thoughts, reminders, or follow-ups about this task.
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <Textarea
+                      placeholder="Add your private notes here. Only you can see these notes."
+                      rows={3}
+                      value={formState.viewer_memo}
+                      onChange={handleInputChange('viewer_memo')}
+                      className="border border-slate-300 bg-blue-50 text-slate-900 focus-visible:ring-blue-500"
+                      readOnly={false}
+                    />
+                  </div>
+                )}
               </div>
 
 
@@ -1233,7 +1293,7 @@ export default function TaskModal({
                 </div>
               )}
 
-              {/* Cancel and Save buttons - hide Save for viewer-only */}
+              {/* Cancel and Save buttons */}
               <div className="flex items-center gap-3 ml-auto">
                 <Button
                   type="button"
@@ -1242,9 +1302,8 @@ export default function TaskModal({
                   onClick={handleClose}
                   className="min-w-[120px] border border-slate-300 bg-white text-slate-600 hover:bg-slate-100"
                 >
-                  {isViewerOnly ? 'Close' : 'Cancel'}
+                  Cancel
                 </Button>
-                {!isViewerOnly && (
                 <Button
                   type="submit"
                   loading={submitting}
@@ -1253,13 +1312,14 @@ export default function TaskModal({
                   }
                   className="min-w-[160px] bg-blue-600 text-white shadow-lg shadow-blue-500/30 hover:bg-blue-600/90"
                 >
-                  {workflowContext
+                  {isViewerOnly
+                    ? 'Save my notes'
+                    : workflowContext
                     ? 'Save & Return to Workflow'
                     : isEditing
                       ? 'Save changes'
                       : 'Create task'}
                 </Button>
-                )}
               </div>
             </div>
           </DialogFooter>

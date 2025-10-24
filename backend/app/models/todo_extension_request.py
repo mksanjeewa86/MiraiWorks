@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import BaseModel
@@ -50,6 +50,17 @@ class TodoExtensionRequest(BaseModel):
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
 
+    # Soft delete fields
+    is_deleted: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, index=True
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    deleted_by: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+
     # Relationships
     todo: Mapped[Todo] = relationship("Todo", back_populates="extension_requests")
     requested_by: Mapped[User] = relationship(
@@ -60,6 +71,9 @@ class TodoExtensionRequest(BaseModel):
     )
     responded_by: Mapped[User | None] = relationship(
         "User", foreign_keys=[responded_by_id], back_populates="extension_responses"
+    )
+    deleter: Mapped[User | None] = relationship(
+        "User", foreign_keys=[deleted_by], backref="deleted_extension_requests"
     )
 
     def __repr__(self) -> str:

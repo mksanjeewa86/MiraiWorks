@@ -10,7 +10,8 @@ export interface Todo {
   owner_id: number;
   title: string;
   description?: string | null;
-  notes?: string | null;
+  assignee_memo?: string | null;
+  viewer_memo?: string | null;
   status: TodoStatus;
   priority?: TodoPriority | null;
   // Due datetime in UTC (ISO 8601 string with timezone)
@@ -46,7 +47,7 @@ export interface TodoListResponse {
 export interface TodoPayload {
   title: string;
   description?: string | null;
-  notes?: string | null;
+  assignee_memo?: string | null;
   priority?: TodoPriority | null;
   // Due datetime in UTC (ISO 8601 string with timezone)
   due_datetime?: string | null;
@@ -86,7 +87,8 @@ export interface TodoItemProps {
 export interface TaskFormState {
   title: string;
   description: string;
-  notes: string;
+  assignee_memo: string;
+  viewer_memo: string;
   // Due datetime in local timezone (will be converted to UTC for API)
   dueDate: string;  // Date part in YYYY-MM-DD format
   dueTime?: string;  // Time part in HH:MM format

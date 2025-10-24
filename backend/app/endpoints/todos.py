@@ -20,6 +20,11 @@ from app.schemas.todo_viewer import (
     TodoViewerListResponse,
     TodoViewerRead,
 )
+from app.schemas.todo_viewer_memo import (
+    TodoViewerMemoRead,
+    TodoViewerMemoUpdate,
+)
+from app.crud.todo_viewer_memo import todo_viewer_memo
 from app.services.todo_permissions import TodoPermissionService
 from app.services.todo_viewer_service import todo_viewer_service
 from app.utils.constants import TodoStatus
@@ -77,6 +82,11 @@ async def list_todos(
         limit=limit,
         offset=offset,
     )
+
+    # Attach viewer memos to todos
+    for todo_item in todos:
+        await todo_crud.attach_viewer_memo(db, todo=todo_item, user_id=current_user.id)
+
     return TodoListResponse(items=todos, total=total)
 
 
@@ -88,6 +98,11 @@ async def get_recent_todos(
 ):
     """Return the most recently updated todos for the current user."""
     todos = await todo_crud.list_recent(db, owner_id=current_user.id, limit=limit)
+
+    # Attach viewer memos to todos
+    for todo_item in todos:
+        await todo_crud.attach_viewer_memo(db, todo=todo_item, user_id=current_user.id)
+
     return todos
 
 
@@ -118,16 +133,41 @@ async def update_todo(
         db, todo_id=todo_id, current_user=current_user, allow_deleted=False
     )
 
-    # Check if user can edit this todo
-    if not await TodoPermissionService.can_edit_todo(db, current_user.id, todo_obj):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to edit this todo",
-        )
+    # Check what fields are being updated
+    update_data = todo_in.model_dump(exclude_unset=True)
+    is_only_assignee_memo = (
+        len(update_data) == 1 and "assignee_memo" in update_data
+    )
+
+    # Permission check
+    if is_only_assignee_memo:
+        # If only updating assignee_memo, check assignee_memo-specific permission
+        if not await TodoPermissionService.can_edit_assignee_memo(db, current_user.id, todo_obj):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to edit the assignee memo",
+            )
+    else:
+        # For any other field updates, require full edit permission (owner only)
+        if not await TodoPermissionService.can_edit_todo(db, current_user.id, todo_obj):
+            # If user is assignee trying to edit more than just memo
+            if todo_obj.assignee_id == current_user.id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Assignees can only edit their assignee memo",
+                )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to edit this todo",
+            )
 
     todo_obj = await todo_crud.update_todo(
         db, db_obj=todo_obj, obj_in=todo_in, updated_by=current_user.id
     )
+
+    # Attach viewer memo
+    await todo_crud.attach_viewer_memo(db, todo=todo_obj, user_id=current_user.id)
+
     return todo_obj
 
 
@@ -240,6 +280,10 @@ async def list_assigned_todos(
         todos = [t for t in todos if t.status != TodoStatus.COMPLETED.value]
         total = len(todos)
 
+    # Attach viewer memos to todos
+    for todo_item in todos:
+        await todo_crud.attach_viewer_memo(db, todo=todo_item, user_id=current_user.id)
+
     return TodoListResponse(items=todos, total=total)
 
 
@@ -255,6 +299,11 @@ async def list_viewable_todos(
 ):
     """List all todos that the current user can view as a viewer."""
     todos = await todo_viewer_service.get_viewable_todos_for_user(db, current_user.id)
+
+    # Attach viewer memos to todos
+    for todo_item in todos:
+        await todo_crud.attach_viewer_memo(db, todo=todo_item, user_id=current_user.id)
+
     return TodoListResponse(items=todos, total=len(todos))
 
 
@@ -274,6 +323,27 @@ async def get_todo_viewers(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail=str(e)
         ) from e
+
+
+@router.put(API_ROUTES.TODOS.VIEWER_MEMO, response_model=TodoViewerMemoRead)
+async def update_viewer_memo(
+    todo_id: int,
+    memo_in: TodoViewerMemoUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Update viewer memo for the current user on a specific todo."""
+    # Verify user can view this todo
+    todo_obj = await _get_todo_or_404(
+        db, todo_id=todo_id, current_user=current_user, allow_deleted=False
+    )
+
+    # Create or update viewer memo
+    viewer_memo = await todo_viewer_memo.create_or_update(
+        db, todo_id=todo_id, user_id=current_user.id, memo=memo_in.memo
+    )
+
+    return viewer_memo
 
 
 @router.post(

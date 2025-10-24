@@ -175,7 +175,7 @@ class NotificationService:
 
         result = await db.execute(
             select(func.count(Notification.id)).where(
-                and_(Notification.user_id == user_id, Notification.is_read is False)
+                and_(Notification.user_id == user_id, Notification.is_read == 0)
             )
         )
         return result.scalar() or 0

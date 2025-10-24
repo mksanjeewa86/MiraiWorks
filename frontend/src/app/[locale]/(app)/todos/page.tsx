@@ -558,7 +558,8 @@ function TodosPageContent() {
       return (
         todo.title.toLowerCase().includes(trimmed) ||
         (todo.description?.toLowerCase().includes(trimmed) ?? false) ||
-        (todo.notes?.toLowerCase().includes(trimmed) ?? false) ||
+        (todo.assignee_memo?.toLowerCase().includes(trimmed) ?? false) ||
+        (todo.viewer_memo?.toLowerCase().includes(trimmed) ?? false) ||
         (todo.priority?.toLowerCase().includes(trimmed) ?? false)
       );
     });

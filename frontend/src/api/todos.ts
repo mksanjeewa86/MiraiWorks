@@ -12,6 +12,7 @@ import type {
   AssignmentReview,
   AssignmentWorkflowResponse,
 } from '@/types/todo';
+import type { TodoViewerMemo, TodoViewerMemoUpdate } from '@/types/todo-viewer-memo';
 
 export const todosApi = {
   async list(params: TodoListParams = {}): Promise<TodoListResponse> {
@@ -155,5 +156,14 @@ export const todosApi = {
   async getAssignmentsForReview(): Promise<Todo[]> {
     const response = await apiClient.get<Todo[]>(API_ENDPOINTS.ASSIGNMENTS.PENDING_REVIEW);
     return response.data as Todo[];
+  },
+
+  // Viewer memo methods
+  async updateViewerMemo(todoId: number, memo: TodoViewerMemoUpdate): Promise<TodoViewerMemo> {
+    const response = await apiClient.put<TodoViewerMemo>(
+      API_ENDPOINTS.TODOS.VIEWERS.MEMO(todoId),
+      memo
+    );
+    return response.data as TodoViewerMemo;
   },
 };
