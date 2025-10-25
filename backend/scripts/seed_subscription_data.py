@@ -5,6 +5,7 @@ Initializes the subscription system with Basic and Premium plans and their featu
 Usage:
     python scripts/seed_subscription_data.py
 """
+
 import asyncio
 import sys
 from pathlib import Path

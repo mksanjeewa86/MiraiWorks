@@ -198,5 +198,5 @@ class RecurrencePattern(BaseModel):
     def validate_frequency(cls, v):
         allowed = ["DAILY", "WEEKLY", "MONTHLY", "YEARLY"]
         if v.upper() not in allowed:
-            raise ValueError(f'frequency must be one of: {", ".join(allowed)}')
+            raise ValueError(f"frequency must be one of: {', '.join(allowed)}")
         return v.upper()

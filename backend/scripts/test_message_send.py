@@ -1,4 +1,5 @@
 """Test message sending validation."""
+
 import asyncio
 
 from app.database import AsyncSessionLocal

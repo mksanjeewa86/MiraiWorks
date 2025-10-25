@@ -1,4 +1,5 @@
 """Test GET messages API endpoint."""
+
 import asyncio
 
 from app.database import AsyncSessionLocal

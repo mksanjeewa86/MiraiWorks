@@ -57,7 +57,7 @@ class FileStorageService:
         if file_size > self.MAX_FILE_SIZE:
             validation_result["valid"] = False
             validation_result["errors"].append(
-                f"File size {file_size / (1024*1024):.2f}MB exceeds 25MB limit"
+                f"File size {file_size / (1024 * 1024):.2f}MB exceeds 25MB limit"
             )
 
         if file_size == 0:

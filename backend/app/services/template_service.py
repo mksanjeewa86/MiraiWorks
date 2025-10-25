@@ -171,7 +171,7 @@ class TemplateService:
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{resume.full_name or 'Resume'} - {resume.title}</title>
+    <title>{resume.full_name or "Resume"} - {resume.title}</title>
     <style>
         {css_styles}
     </style>

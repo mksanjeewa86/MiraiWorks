@@ -3,6 +3,7 @@
 Quick test runner script for MiraiWorks backend
 Optimized for fast database testing with persistent connection
 """
+
 import os
 import subprocess
 import sys

@@ -1,6 +1,5 @@
 """Todo permission service for role-based access control."""
 
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 

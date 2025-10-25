@@ -2,6 +2,7 @@
 Direct SQL migration script to merge due_date and due_time into due_datetime
 This bypasses Alembic and applies the schema changes directly.
 """
+
 import os
 
 from sqlalchemy import create_engine, inspect, text

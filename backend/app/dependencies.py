@@ -80,7 +80,7 @@ async def get_current_user(
 
 
 async def get_current_active_user(
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> User:
     """Get current active user."""
     if not current_user.is_active:
@@ -171,7 +171,7 @@ async def get_client_ip(request) -> str:
 
 
 async def get_current_user_with_company(
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ) -> User:
     """Get current user and ensure they have a company."""
     if not current_user.company_id:

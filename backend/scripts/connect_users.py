@@ -1,4 +1,5 @@
 """Script to connect admin and candidate users."""
+
 import asyncio
 
 from sqlalchemy import select

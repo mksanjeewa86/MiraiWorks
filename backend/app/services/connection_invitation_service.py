@@ -1,6 +1,5 @@
 """Connection invitation service for managing connection requests."""
 
-
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 

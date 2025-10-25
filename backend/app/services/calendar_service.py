@@ -555,9 +555,10 @@ class CalendarService:
             "redirect_uri": self.google_redirect_uri,
         }
 
-        async with aiohttp.ClientSession() as session, session.post(
-            self.google_token_url, data=data
-        ) as response:
+        async with (
+            aiohttp.ClientSession() as session,
+            session.post(self.google_token_url, data=data) as response,
+        ):
             if response.status != 200:
                 error_text = await response.text()
                 raise ValueError(
@@ -575,9 +576,10 @@ class CalendarService:
             "redirect_uri": self.outlook_redirect_uri,
         }
 
-        async with aiohttp.ClientSession() as session, session.post(
-            self.outlook_token_url, data=data
-        ) as response:
+        async with (
+            aiohttp.ClientSession() as session,
+            session.post(self.outlook_token_url, data=data) as response,
+        ):
             if response.status != 200:
                 error_text = await response.text()
                 raise ValueError(
@@ -589,9 +591,12 @@ class CalendarService:
         """Get Google user profile"""
         headers = {"Authorization": f"Bearer {access_token}"}
 
-        async with aiohttp.ClientSession() as session, session.get(
-            "https://www.googleapis.com/oauth2/v2/userinfo", headers=headers
-        ) as response:
+        async with (
+            aiohttp.ClientSession() as session,
+            session.get(
+                "https://www.googleapis.com/oauth2/v2/userinfo", headers=headers
+            ) as response,
+        ):
             if response.status != 200:
                 error_text = await response.text()
                 raise ValueError(f"Failed to get Google profile: {error_text}")
@@ -601,9 +606,12 @@ class CalendarService:
         """Get Outlook user profile"""
         headers = {"Authorization": f"Bearer {access_token}"}
 
-        async with aiohttp.ClientSession() as session, session.get(
-            "https://graph.microsoft.com/v1.0/me", headers=headers
-        ) as response:
+        async with (
+            aiohttp.ClientSession() as session,
+            session.get(
+                "https://graph.microsoft.com/v1.0/me", headers=headers
+            ) as response,
+        ):
             if response.status != 200:
                 error_text = await response.text()
                 raise ValueError(f"Failed to get Outlook profile: {error_text}")

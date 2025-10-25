@@ -184,7 +184,7 @@ class InterviewsListRequest(BaseModel):
     def validate_status(cls, v):
         if v and v not in [status.value for status in InterviewStatus]:
             raise ValueError(
-                f'Invalid status. Must be one of: {", ".join([s.value for s in InterviewStatus])}'
+                f"Invalid status. Must be one of: {', '.join([s.value for s in InterviewStatus])}"
             )
         return v
 

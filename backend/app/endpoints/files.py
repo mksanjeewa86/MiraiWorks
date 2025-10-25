@@ -366,7 +366,7 @@ async def download_file(
             # Set appropriate media type
             media_type = "application/octet-stream"
             if file_ext in ["jpg", "jpeg", "png", "gif", "webp"]:
-                media_type = f'image/{file_ext.replace("jpg", "jpeg")}'
+                media_type = f"image/{file_ext.replace('jpg', 'jpeg')}"
             elif file_ext in ["heic", "heif"]:
                 media_type = "image/heic"
             elif file_ext in ["pdf"]:

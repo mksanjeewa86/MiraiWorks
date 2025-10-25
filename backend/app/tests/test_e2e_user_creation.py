@@ -119,9 +119,9 @@ async def test_company_admin_user_creation_e2e_flow(
         and bool(frontend_form_data["company_id"])
         and bool(frontend_form_data["role"])
     )
-    assert (
-        not is_form_valid_empty
-    ), "Form should be invalid when required fields are empty"
+    assert not is_form_valid_empty, (
+        "Form should be invalid when required fields are empty"
+    )
 
     # Simulate user filling in the form
     frontend_form_data["first_name"] = "John"
@@ -136,9 +136,9 @@ async def test_company_admin_user_creation_e2e_flow(
         and bool(frontend_form_data["company_id"])
         and bool(frontend_form_data["role"])
     )
-    assert (
-        is_form_valid_filled
-    ), "Form should be valid when all required fields are filled"
+    assert is_form_valid_filled, (
+        "Form should be valid when all required fields are filled"
+    )
 
     # Step 6: Test backend API with frontend data
 

@@ -207,7 +207,7 @@ async def preview_template(
             <!DOCTYPE html>
             <html>
             <head>
-                <title>Text Preview: {preview['subject']}</title>
+                <title>Text Preview: {preview["subject"]}</title>
                 <style>
                     body {{ font-family: monospace; padding: 20px; background: #f5f5f5; }}
                     .container {{ background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
@@ -217,9 +217,9 @@ async def preview_template(
             <body>
                 <div class="container">
                     <h2>📄 Text Version</h2>
-                    <p><strong>Subject:</strong> {preview['subject']}</p>
+                    <p><strong>Subject:</strong> {preview["subject"]}</p>
                     <hr>
-                    <pre>{preview['text_body']}</pre>
+                    <pre>{preview["text_body"]}</pre>
                 </div>
             </body>
             </html>
@@ -229,7 +229,7 @@ async def preview_template(
             <!DOCTYPE html>
             <html>
             <head>
-                <title>Email Preview: {preview['subject']}</title>
+                <title>Email Preview: {preview["subject"]}</title>
                 <style>
                     body {{ margin: 0; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f5f5f5; }}
                     .preview-header {{ background: white; padding: 15px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }}
@@ -239,11 +239,11 @@ async def preview_template(
             <body>
                 <div class="preview-header">
                     <h2 style="margin: 0 0 10px 0; color: #333;">📧 Email Preview</h2>
-                    <p style="margin: 0; color: #666;"><strong>Subject:</strong> {preview['subject']}</p>
-                    <p style="margin: 5px 0 0 0; color: #666;"><strong>Template:</strong> {preview['template_path']}</p>
+                    <p style="margin: 0; color: #666;"><strong>Subject:</strong> {preview["subject"]}</p>
+                    <p style="margin: 5px 0 0 0; color: #666;"><strong>Template:</strong> {preview["template_path"]}</p>
                 </div>
                 <div class="email-preview">
-                    {preview['html_body']}
+                    {preview["html_body"]}
                 </div>
             </body>
             </html>
@@ -314,7 +314,7 @@ async def preview_all_templates():
             html += f"""
             <div class="template-section">
                 <h2 class="template-header">
-                    {template_path.replace('/', ' / ').title()}
+                    {template_path.replace("/", " / ").title()}
                 </h2>
                 <div class="template-preview">
             """
@@ -322,15 +322,15 @@ async def preview_all_templates():
             if "error" in preview:
                 html += f"""
                     <div class="error">
-                        <strong>Error:</strong> {preview['error']}
+                        <strong>Error:</strong> {preview["error"]}
                     </div>
                 """
             else:
                 html += f"""
                     <div style="padding: 15px; border-bottom: 1px solid #dee2e6; background: #f8f9fa;">
-                        <strong>Subject:</strong> {preview['subject']}
+                        <strong>Subject:</strong> {preview["subject"]}
                     </div>
-                    {preview['html_body']}
+                    {preview["html_body"]}
                 """
 
             html += """

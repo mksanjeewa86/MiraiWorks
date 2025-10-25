@@ -81,9 +81,12 @@ class TestPositionEndpoints:
     @pytest.mark.asyncio
     async def test_get_position_by_id_success(self, client: AsyncClient):
         """Test successful position retrieval by ID."""
-        with patch("app.crud.position.position.get") as mock_get, patch(
-            "app.crud.position.position.increment_position_view_count"
-        ) as mock_increment:
+        with (
+            patch("app.crud.position.position.get") as mock_get,
+            patch(
+                "app.crud.position.position.increment_position_view_count"
+            ) as mock_increment,
+        ):
             mock_position = Position(
                 id=1, title="Test Position", status="published", company_id=1
             )
@@ -101,9 +104,12 @@ class TestPositionEndpoints:
     @pytest.mark.asyncio
     async def test_get_position_by_slug_success(self, client: AsyncClient):
         """Test successful position retrieval by slug."""
-        with patch("app.crud.position.position.get_by_slug") as mock_get, patch(
-            "app.crud.position.position.increment_position_view_count"
-        ) as mock_increment:
+        with (
+            patch("app.crud.position.position.get_by_slug") as mock_get,
+            patch(
+                "app.crud.position.position.increment_position_view_count"
+            ) as mock_increment,
+        ):
             mock_position = Position(
                 id=1,
                 title="Test Position",
@@ -126,9 +132,10 @@ class TestPositionEndpoints:
         self, client: AsyncClient, auth_headers: dict, position_update_data: dict
     ):
         """Test successful position update."""
-        with patch("app.crud.position.position.get") as mock_get, patch(
-            "app.crud.position.position.update"
-        ) as mock_update:
+        with (
+            patch("app.crud.position.position.get") as mock_get,
+            patch("app.crud.position.position.update") as mock_update,
+        ):
             existing_position = Position(id=1, title="Old Title", company_id=1)
             updated_position = Position(
                 id=1, title="Updated Senior Software Engineer", company_id=1
@@ -215,9 +222,10 @@ class TestPositionEndpoints:
         """Test successful position status update."""
         status_data = {"status": "published"}
 
-        with patch("app.crud.position.position.get") as mock_get, patch(
-            "app.crud.position.position.update"
-        ) as mock_update:
+        with (
+            patch("app.crud.position.position.get") as mock_get,
+            patch("app.crud.position.position.update") as mock_update,
+        ):
             existing_position = Position(
                 id=1, title="Test Position", status="draft", company_id=1
             )

@@ -1,6 +1,5 @@
 """Profile views API endpoints."""
 
-
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 

@@ -1,6 +1,5 @@
 """Connection invitation API endpoints."""
 
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession

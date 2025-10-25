@@ -1,4 +1,5 @@
 """Test the /api/user/connections/my-connections endpoint."""
+
 import asyncio
 
 from app.database import AsyncSessionLocal

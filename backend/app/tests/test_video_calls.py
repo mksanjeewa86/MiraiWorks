@@ -2,6 +2,7 @@
 """
 Test script to verify video call functionality
 """
+
 import asyncio
 import os
 import sys

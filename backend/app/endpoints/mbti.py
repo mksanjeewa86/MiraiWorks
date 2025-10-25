@@ -1,6 +1,5 @@
 """API endpoints for MBTI personality test."""
 
-
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 

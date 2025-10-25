@@ -1,6 +1,7 @@
 """
 Logging middleware for structured request/response logging.
 """
+
 import time
 import uuid
 from collections.abc import Callable

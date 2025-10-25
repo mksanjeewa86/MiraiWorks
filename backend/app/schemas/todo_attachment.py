@@ -40,7 +40,7 @@ class TodoAttachmentCreate(TodoAttachmentBase):
         max_size = 25 * 1024 * 1024  # 25MB in bytes
         if v > max_size:
             raise ValueError(
-                f"File size must be less than 25MB (got {v / (1024*1024):.2f}MB)"
+                f"File size must be less than 25MB (got {v / (1024 * 1024):.2f}MB)"
             )
         return v
 

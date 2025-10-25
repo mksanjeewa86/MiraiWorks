@@ -57,9 +57,9 @@ class TestFiles:
         import re
 
         uuid_pattern = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
-        assert re.search(
-            uuid_pattern, data["s3_key"]
-        ), f"UUID pattern not found in {data['s3_key']}"
+        assert re.search(uuid_pattern, data["s3_key"]), (
+            f"UUID pattern not found in {data['s3_key']}"
+        )
 
     @pytest.mark.asyncio
     async def test_upload_file_unauthorized(self, client: AsyncClient):
@@ -438,9 +438,9 @@ class TestFiles:
         ]
 
         for filename in invalid_files:
-            assert not is_allowed_file(
-                filename
-            ), f"File {filename} should not be allowed"
+            assert not is_allowed_file(filename), (
+                f"File {filename} should not be allowed"
+            )
 
     @pytest.mark.asyncio
     @patch("app.services.storage_service.get_storage_service")
@@ -510,8 +510,8 @@ class TestFiles:
         from app.endpoints.files import MAX_FILE_SIZE
 
         # Verify the file size limit is reasonable
-        assert 10 * 1024 * 1024 == MAX_FILE_SIZE  # 10MB
-        assert 0 < MAX_FILE_SIZE
+        assert MAX_FILE_SIZE == 10 * 1024 * 1024  # 10MB
+        assert MAX_FILE_SIZE > 0
 
     @pytest.mark.asyncio
     async def test_allowed_extensions_coverage(self):
@@ -581,11 +581,14 @@ class TestFiles:
         await message_service.send_message(db_session, sender.id, message_data)
 
         # Test that sender can download the file
-        with patch(
-            "app.services.storage_service.get_storage_service"
-        ) as mock_storage_service, patch(
-            "app.services.local_storage_service.get_local_storage_service"
-        ) as mock_local_storage:
+        with (
+            patch(
+                "app.services.storage_service.get_storage_service"
+            ) as mock_storage_service,
+            patch(
+                "app.services.local_storage_service.get_local_storage_service"
+            ) as mock_local_storage,
+        ):
             # Mock MinIO storage service to fail (no connection)
             mock_minio = Mock()
             mock_minio.file_exists = Mock(side_effect=Exception("MinIO not available"))
@@ -646,11 +649,14 @@ class TestFiles:
         await message_service.send_message(db_session, sender.id, message_data)
 
         # Test that recipient can download the file
-        with patch(
-            "app.services.storage_service.get_storage_service"
-        ) as mock_storage_service, patch(
-            "app.services.local_storage_service.get_local_storage_service"
-        ) as mock_local_storage:
+        with (
+            patch(
+                "app.services.storage_service.get_storage_service"
+            ) as mock_storage_service,
+            patch(
+                "app.services.local_storage_service.get_local_storage_service"
+            ) as mock_local_storage,
+        ):
             # Mock MinIO storage service to fail (no connection)
             mock_minio = Mock()
             mock_minio.file_exists = Mock(side_effect=Exception("MinIO not available"))
@@ -717,11 +723,14 @@ class TestFiles:
         await message_service.send_message(db_session, test_user.id, message_data)
 
         # Mock storage services to simulate file system behavior
-        with patch(
-            "app.services.storage_service.get_storage_service"
-        ) as mock_storage_service, patch(
-            "app.services.local_storage_service.get_local_storage_service"
-        ) as mock_local_storage:
+        with (
+            patch(
+                "app.services.storage_service.get_storage_service"
+            ) as mock_storage_service,
+            patch(
+                "app.services.local_storage_service.get_local_storage_service"
+            ) as mock_local_storage,
+        ):
             # Mock MinIO storage service to fail (no connection)
             mock_minio = Mock()
             mock_minio.file_exists = Mock(side_effect=Exception("MinIO not available"))
@@ -738,9 +747,10 @@ class TestFiles:
             _mock_full_path = Path("/tmp/uploads") / download_path
 
             # Mock path.exists() to return True and patch the FileResponse import
-            with patch.object(Path, "exists", return_value=True), patch(
-                "fastapi.responses.FileResponse"
-            ) as mock_file_response:
+            with (
+                patch.object(Path, "exists", return_value=True),
+                patch("fastapi.responses.FileResponse") as mock_file_response,
+            ):
                 # Mock FileResponse to return a proper response
                 from fastapi.responses import Response
 
@@ -761,11 +771,11 @@ class TestFiles:
 
                 # Both users should have permission (either 200 for successful download or other non-403 status)
                 # The key is that neither should get 403 (Forbidden)
-                assert (
-                    sender_download.status_code != 403
-                ), f"Sender should have access, got {sender_download.status_code}"
-                assert (
-                    recipient_download.status_code != 403
-                ), f"Recipient should have access, got {recipient_download.status_code}"
+                assert sender_download.status_code != 403, (
+                    f"Sender should have access, got {sender_download.status_code}"
+                )
+                assert recipient_download.status_code != 403, (
+                    f"Recipient should have access, got {recipient_download.status_code}"
+                )
 
                 # Since permission checks passed, the downloads should succeed

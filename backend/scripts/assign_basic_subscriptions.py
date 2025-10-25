@@ -2,6 +2,7 @@
 Assign Basic plan to all companies without an active subscription.
 This script should be run once to fix existing companies.
 """
+
 import asyncio
 import sys
 from pathlib import Path

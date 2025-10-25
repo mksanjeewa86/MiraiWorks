@@ -1,6 +1,7 @@
 """
 Test script to verify the exam endpoint works correctly.
 """
+
 import asyncio
 
 from sqlalchemy import select

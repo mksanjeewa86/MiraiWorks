@@ -566,8 +566,8 @@ class TestResumeComprehensive:
         # Create 5 resumes
         for i in range(5):
             data = sample_resume_data.copy()
-            data["title"] = f"Resume {i+1}"
-            data["email"] = f"user{i+1}@example.com"
+            data["title"] = f"Resume {i + 1}"
+            data["email"] = f"user{i + 1}@example.com"
 
             resume_data = ResumeCreate(**data)
             resume = await resume_service.create_resume(db, resume_data, test_user.id)

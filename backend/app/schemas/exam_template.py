@@ -1,4 +1,5 @@
 """Exam template schemas."""
+
 from datetime import datetime
 from typing import Any
 

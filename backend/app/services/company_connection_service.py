@@ -1,6 +1,5 @@
 """Service for company-based connections."""
 
-
 from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload

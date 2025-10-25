@@ -1,4 +1,5 @@
 """Test if admin@miraiworks.com can message recruiter@innovatelab.jp."""
+
 import asyncio
 
 from app.database import AsyncSessionLocal

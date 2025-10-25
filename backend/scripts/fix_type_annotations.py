@@ -2,6 +2,7 @@
 
 Replaces `type | None` syntax with `Optional[type]` to ensure compatibility.
 """
+
 import re
 from pathlib import Path
 

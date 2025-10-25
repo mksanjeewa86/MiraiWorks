@@ -147,10 +147,10 @@ class TodoExtensionNotificationService:
 
             <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 15px 0;">
                 <h3>{extension_request.todo.title}</h3>
-                {f'<p><strong>Description:</strong> {extension_request.todo.description}</p>' if extension_request.todo.description else ''}
+                {f"<p><strong>Description:</strong> {extension_request.todo.description}</p>" if extension_request.todo.description else ""}
 
                 <p><strong>Current Due Date:</strong> {current_due_str}</p>
-                <p><strong>Requested Due Date:</strong> {extension_request.requested_due_date.strftime('%B %d, %Y at %I:%M %p')}</p>
+                <p><strong>Requested Due Date:</strong> {extension_request.requested_due_date.strftime("%B %d, %Y at %I:%M %p")}</p>
 
                 <h4>Reason for Extension:</h4>
                 <p style="font-style: italic;">{extension_request.reason}</p>
@@ -191,12 +191,33 @@ class TodoExtensionNotificationService:
             )
 
             # Get original due date from todo
-
             original_due_str = "No due date"
             if extension_request.todo.due_datetime:
                 original_due_str = extension_request.todo.due_datetime.strftime(
                     "%B %d, %Y at %I:%M %p"
                 )
+
+            # Format requested due date
+            requested_due_str = extension_request.requested_due_date.strftime(
+                "%B %d, %Y at %I:%M %p"
+            )
+
+            # Prepare conditional sections
+            description_section = (
+                f"<p><strong>Description:</strong> {extension_request.todo.description}</p>"
+                if extension_request.todo.description
+                else ""
+            )
+            new_due_section = (
+                f"<p><strong>New Due Date:</strong> {requested_due_str}</p>"
+                if extension_request.status == ExtensionRequestStatus.APPROVED.value
+                else ""
+            )
+            response_section = (
+                f"<h4>Response from {creator_name}:</h4><p style='font-style: italic;'>{extension_request.response_reason}</p>"
+                if extension_request.response_reason
+                else ""
+            )
 
             # Create email content
             email_content = f"""
@@ -206,14 +227,14 @@ class TodoExtensionNotificationService:
 
             <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 15px 0;">
                 <h3>{extension_request.todo.title}</h3>
-                {f'<p><strong>Description:</strong> {extension_request.todo.description}</p>' if extension_request.todo.description else ''}
+                {description_section}
 
                 <p><strong>Original Due Date:</strong> {original_due_str}</p>
-                <p><strong>Requested Due Date:</strong> {extension_request.requested_due_date.strftime('%B %d, %Y at %I:%M %p')}</p>
+                <p><strong>Requested Due Date:</strong> {requested_due_str}</p>
 
-                {f'<p><strong>New Due Date:</strong> {extension_request.requested_due_date.strftime("%B %d, %Y at %I:%M %p")}</p>' if extension_request.status == ExtensionRequestStatus.APPROVED.value else ''}
+                {new_due_section}
 
-                {f'<h4>Response from {creator_name}:</h4><p style="font-style: italic;">{extension_request.response_reason}</p>' if extension_request.response_reason else ''}
+                {response_section}
             </div>
 
             <p>

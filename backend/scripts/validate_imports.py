@@ -3,6 +3,7 @@
 Comprehensive import validation script for MiraiWorks backend.
 Detects unused imports, missing imports, and wrong imports.
 """
+
 import argparse
 import ast
 import importlib
@@ -219,7 +220,7 @@ class ImportValidator:
             return
 
         print("\n🔍 Import Validation Results")
-        print(f"{'='*50}")
+        print(f"{'=' * 50}")
 
         # Summary
         print("📊 Summary:")

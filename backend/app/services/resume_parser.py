@@ -623,7 +623,7 @@ class ResumeParser:
         max_size = 10 * 1024 * 1024  # 10MB
         if file_size > max_size:
             raise ValueError(
-                f"File size too large. Maximum size: {max_size / (1024*1024):.1f}MB"
+                f"File size too large. Maximum size: {max_size / (1024 * 1024):.1f}MB"
             )
 
         # Check content type

@@ -1,4 +1,5 @@
 """Email service for exam notifications."""
+
 import logging
 from datetime import datetime
 
@@ -85,21 +86,21 @@ class ExamEmailService:
                             <div class="detail-row">
                                 <span class="detail-label">Type:</span> {exam.exam_type}
                             </div>
-                            {f'<div class="detail-row"><span class="detail-label">Due Date:</span> {due_date.strftime("%Y-%m-%d %H:%M")}</div>' if due_date else ''}
-                            {f'<div class="detail-row"><span class="detail-label">Time Limit:</span> {exam.time_limit_minutes} minutes</div>' if exam.time_limit_minutes else ''}
+                            {f'<div class="detail-row"><span class="detail-label">Due Date:</span> {due_date.strftime("%Y-%m-%d %H:%M")}</div>' if due_date else ""}
+                            {f'<div class="detail-row"><span class="detail-label">Time Limit:</span> {exam.time_limit_minutes} minutes</div>' if exam.time_limit_minutes else ""}
                             <div class="detail-row">
                                 <span class="detail-label">Max Attempts:</span> {exam.max_attempts}
                             </div>
-                            {f'<div class="detail-row"><span class="detail-label">Passing Score:</span> {exam.passing_score}%</div>' if exam.passing_score else ''}
+                            {f'<div class="detail-row"><span class="detail-label">Passing Score:</span> {exam.passing_score}%</div>' if exam.passing_score else ""}
                         </div>
 
-                        {f'<div style="background-color: #FEF3C7; padding: 15px; border-radius: 5px; margin: 15px 0;"><p style="margin: 0;"><strong>Instructions:</strong><br>{exam.instructions}</p></div>' if exam.instructions else ''}
+                        {f'<div style="background-color: #FEF3C7; padding: 15px; border-radius: 5px; margin: 15px 0;"><p style="margin: 0;"><strong>Instructions:</strong><br>{exam.instructions}</p></div>' if exam.instructions else ""}
 
                         <div style="text-align: center;">
-                            <a href="{exam_url or '#'}" class="button">Start Exam</a>
+                            <a href="{exam_url or "#"}" class="button">Start Exam</a>
                         </div>
 
-                        {f'<p style="color: #6B7280; font-size: 14px;">Assigned by: {assigned_by.full_name}</p>' if assigned_by else ''}
+                        {f'<p style="color: #6B7280; font-size: 14px;">Assigned by: {assigned_by.full_name}</p>' if assigned_by else ""}
 
                         <p>Good luck!</p>
                     </div>
@@ -193,14 +194,14 @@ MiraiWorks Recruitment System
 
                         <div style="background-color: white; padding: 15px; border-radius: 5px; margin: 15px 0;">
                             <p><strong>Exam:</strong> {exam.title}</p>
-                            <p><strong>Due Date:</strong> {due_date.strftime('%Y-%m-%d %H:%M')}</p>
+                            <p><strong>Due Date:</strong> {due_date.strftime("%Y-%m-%d %H:%M")}</p>
                             <p><strong>Time Remaining:</strong> {days_remaining} days, {hours_remaining} hours</p>
                         </div>
 
                         <p>Please complete the exam before the due date to avoid missing the deadline.</p>
 
                         <div style="text-align: center; margin: 20px 0;">
-                            <a href="{exam_url or '#'}" style="display: inline-block; padding: 12px 30px; background-color: #F59E0B; color: white; text-decoration: none; border-radius: 5px;">
+                            <a href="{exam_url or "#"}" style="display: inline-block; padding: 12px 30px; background-color: #F59E0B; color: white; text-decoration: none; border-radius: 5px;">
                                 Start Exam Now
                             </a>
                         </div>
@@ -222,7 +223,7 @@ Dear {candidate.full_name},
 This is a reminder that you have an exam due soon!
 
 Exam: {exam.title}
-Due Date: {due_date.strftime('%Y-%m-%d %H:%M')}
+Due Date: {due_date.strftime("%Y-%m-%d %H:%M")}
 Time Remaining: {days_remaining} days, {hours_remaining} hours
 
 Please complete the exam before the due date.
@@ -265,7 +266,7 @@ MiraiWorks Recruitment System
                 result_section = f"""
                 <div style="background-color: {result_color}; color: white; padding: 20px; border-radius: 5px; text-align: center; margin: 20px 0;">
                     <h2 style="margin: 0 0 10px 0;">Your Score: {score:.1f}%</h2>
-                    {f'<p style="margin: 0; font-size: 18px;">{result_text}</p>' if passed is not None else ''}
+                    {f'<p style="margin: 0; font-size: 18px;">{result_text}</p>' if passed is not None else ""}
                 </div>
                 """
 
@@ -285,12 +286,12 @@ MiraiWorks Recruitment System
 
                         <div style="background-color: white; padding: 15px; border-radius: 5px; margin: 15px 0;">
                             <p><strong>Exam:</strong> {exam.title}</p>
-                            <p><strong>Completion Date:</strong> {get_utc_now().strftime('%Y-%m-%d %H:%M')}</p>
+                            <p><strong>Completion Date:</strong> {get_utc_now().strftime("%Y-%m-%d %H:%M")}</p>
                         </div>
 
                         {result_section}
 
-                        {f'<div style="text-align: center; margin: 20px 0;"><a href="{results_url}" style="display: inline-block; padding: 12px 30px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 5px;">View Detailed Results</a></div>' if exam.show_results_immediately and results_url else '<p>Results will be available soon.</p>'}
+                        {f'<div style="text-align: center; margin: 20px 0;"><a href="{results_url}" style="display: inline-block; padding: 12px 30px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 5px;">View Detailed Results</a></div>' if exam.show_results_immediately and results_url else "<p>Results will be available soon.</p>"}
 
                         <p>Thank you for completing the exam!</p>
                     </div>
@@ -311,7 +312,7 @@ Dear {candidate.full_name},
 Congratulations! You have successfully completed the exam.
 
 Exam: {exam.title}
-Completion Date: {get_utc_now().strftime('%Y-%m-%d %H:%M')}
+Completion Date: {get_utc_now().strftime("%Y-%m-%d %H:%M")}
 {f"Your Score: {score:.1f}%" if exam.show_score and score is not None else ""}
 {f"Result: {'PASSED' if passed else 'NOT PASSED'}" if passed is not None else ""}
 

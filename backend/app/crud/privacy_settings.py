@@ -1,6 +1,5 @@
 """CRUD operations for privacy settings - Section-specific profile visibility controls"""
 
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 

@@ -1,4 +1,5 @@
 """Exam template models."""
+
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (

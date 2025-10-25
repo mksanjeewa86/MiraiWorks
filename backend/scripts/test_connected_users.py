@@ -1,4 +1,5 @@
 """Test that get_connected_users works with single connection record."""
+
 import asyncio
 
 from app.database import AsyncSessionLocal

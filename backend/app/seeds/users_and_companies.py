@@ -465,9 +465,9 @@ async def seed_auth_data(db):
             if super_admin_user:
                 user_data["created_by"] = super_admin_user.id
             else:
-                user_data[
-                    "created_by"
-                ] = None  # Fallback if system admin not created yet
+                user_data["created_by"] = (
+                    None  # Fallback if system admin not created yet
+                )
 
         user = User(**user_data)
         db.add(user)

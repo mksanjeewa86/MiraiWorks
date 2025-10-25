@@ -1,4 +1,5 @@
 """Exam results export service."""
+
 import io
 import logging
 

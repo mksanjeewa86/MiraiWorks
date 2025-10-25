@@ -598,9 +598,9 @@ async def get_auth_headers_for_user(client, user):
         json={"email": user.email, "password": password},
     )
 
-    assert (
-        response.status_code == 200
-    ), f"Login failed for user {user.email}: {response.text}"
+    assert response.status_code == 200, (
+        f"Login failed for user {user.email}: {response.text}"
+    )
     token_data = response.json()
     return {"Authorization": f"Bearer {token_data['access_token']}"}
 

@@ -1,4 +1,5 @@
 """Reset test database to match current models."""
+
 import asyncio
 import sys
 from pathlib import Path

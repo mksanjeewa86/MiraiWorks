@@ -1,4 +1,5 @@
 """Test that single bidirectional connection record works correctly."""
+
 import asyncio
 
 from app.database import AsyncSessionLocal

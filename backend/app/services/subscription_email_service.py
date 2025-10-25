@@ -2,6 +2,7 @@
 Subscription Email Service
 Handles email notifications for subscription-related events
 """
+
 import logging
 
 from app.config import settings

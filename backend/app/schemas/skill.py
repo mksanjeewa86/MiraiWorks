@@ -1,6 +1,5 @@
 """Skill schemas for API validation and serialization."""
 
-
 from pydantic import BaseModel, Field
 
 

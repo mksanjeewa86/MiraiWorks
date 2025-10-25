@@ -2,6 +2,7 @@
 Placeholder for sample messages, interviews, and jobs data.
 This file was missing and needed for imports to work.
 """
+
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession

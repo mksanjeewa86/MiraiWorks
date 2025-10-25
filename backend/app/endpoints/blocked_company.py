@@ -4,7 +4,6 @@ Blocked Company Endpoints
 API endpoints for managing candidate's blocked company list.
 """
 
-
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 

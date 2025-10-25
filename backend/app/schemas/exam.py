@@ -319,9 +319,9 @@ class ExamResultSummary(BaseModel):
 
     session: ExamSessionInfo
     answers: list[ExamAnswerInfo]
-    questions: list[
-        ExamQuestionInfo
-    ] | None = None  # Include if showing correct answers
+    questions: list[ExamQuestionInfo] | None = (
+        None  # Include if showing correct answers
+    )
     monitoring_events: list[ExamMonitoringEventInfo] | None = None
 
 

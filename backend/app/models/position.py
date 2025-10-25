@@ -155,9 +155,9 @@ class Position(BaseModel):
         def format_salary(amount_cents: int) -> str:
             amount = amount_cents / 100
             if amount >= 1000000:
-                return f"{amount/1000000:.1f}M"
+                return f"{amount / 1000000:.1f}M"
             elif amount >= 1000:
-                return f"{amount/1000:.0f}K"
+                return f"{amount / 1000:.0f}K"
             else:
                 return f"{amount:.0f}"
 

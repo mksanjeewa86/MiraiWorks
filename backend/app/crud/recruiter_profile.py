@@ -1,6 +1,5 @@
 """CRUD operations for recruiter profiles"""
 
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
