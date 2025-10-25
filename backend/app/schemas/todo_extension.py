@@ -29,7 +29,6 @@ class TodoExtensionRequestCreate(BaseModel):
         if value is None:
             return value
         if isinstance(value, str):
-
             value = datetime.fromisoformat(value)
         if isinstance(value, datetime):
             if value.tzinfo is None:
@@ -67,7 +66,6 @@ class TodoExtensionRequestResponse(BaseModel):
         if value is None:
             return value
         if isinstance(value, str):
-
             value = datetime.fromisoformat(value)
         if isinstance(value, datetime):
             if value.tzinfo is None:

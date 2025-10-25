@@ -3,6 +3,15 @@ target-version = "py311"
 line-length = 88
 indent-width = 4
 
+# Exclude directories from linting and formatting
+exclude = [
+    "alembic/",
+    "alembic/versions/",
+    ".git",
+    ".venv",
+    "__pycache__",
+]
+
 [lint]
 # Enable pycodestyle (`E`) and Pyflakes (`F`) codes by default.
 # Plus additional rules for better code quality
