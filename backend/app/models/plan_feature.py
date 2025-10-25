@@ -13,22 +13,29 @@ class PlanFeature(Base):
     When a feature is added to a plan, all companies subscribed to that plan
     immediately get access to that feature.
     """
+
     __tablename__ = "plan_features"
     __table_args__ = (
-        UniqueConstraint('plan_id', 'feature_id', name='uq_plan_feature'),
+        UniqueConstraint("plan_id", "feature_id", name="uq_plan_feature"),
     )
 
     id = Column(Integer, primary_key=True, index=True)
 
     # Foreign keys
-    plan_id = Column(Integer, ForeignKey("subscription_plans.id"), nullable=False, index=True)
+    plan_id = Column(
+        Integer, ForeignKey("subscription_plans.id"), nullable=False, index=True
+    )
     feature_id = Column(Integer, ForeignKey("features.id"), nullable=False, index=True)
 
     # Audit trail
-    added_by = Column(Integer, ForeignKey("users.id"), nullable=True)  # System admin who added this feature
+    added_by = Column(
+        Integer, ForeignKey("users.id"), nullable=True
+    )  # System admin who added this feature
 
     # Timestamps
-    added_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    added_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
 
     # Relationships
     plan = relationship("SubscriptionPlan", back_populates="plan_features")

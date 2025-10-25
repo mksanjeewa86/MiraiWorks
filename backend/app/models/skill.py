@@ -19,10 +19,14 @@ class ProfileSkill(BaseModel):
 
     # Skill Information
     skill_name = Column(String(100), nullable=False)
-    category = Column(String(50), nullable=True)  # Technical, Soft, Language, Tool, etc.
+    category = Column(
+        String(50), nullable=True
+    )  # Technical, Soft, Language, Tool, etc.
 
     # Proficiency Level
-    proficiency_level = Column(String(50), nullable=True)  # Beginner, Intermediate, Advanced, Expert
+    proficiency_level = Column(
+        String(50), nullable=True
+    )  # Beginner, Intermediate, Advanced, Expert
 
     # Years of Experience (optional)
     years_of_experience = Column(Integer, nullable=True)

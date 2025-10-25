@@ -1,5 +1,6 @@
 """Test GET messages API endpoint."""
 import asyncio
+
 from app.database import AsyncSessionLocal
 from app.services.message_service import message_service
 
@@ -10,15 +11,12 @@ async def test_get_messages():
         print("=" * 60)
         print("GET Messages API Test")
         print("=" * 60)
-        print(f"User 124 (admin@miraiworks.com) → User 129 (recruiter@innovatelab.jp)")
+        print("User 124 (admin@miraiworks.com) → User 129 (recruiter@innovatelab.jp)")
         print("=" * 60)
 
         # Get messages
         messages = await message_service.get_messages_with_user(
-            db=db,
-            current_user_id=124,
-            other_user_id=129,
-            limit=50
+            db=db, current_user_id=124, other_user_id=129, limit=50
         )
 
         print(f"\nFound {len(messages)} messages:\n")

@@ -61,7 +61,11 @@ class CompanyConnection(BaseModel):
 
     # Connection metadata
     is_active: Mapped[bool] = mapped_column(
-        Boolean, default=True, nullable=False, index=True, comment="Whether connection is active"
+        Boolean,
+        default=True,
+        nullable=False,
+        index=True,
+        comment="Whether connection is active",
     )
     connection_type: Mapped[str] = mapped_column(
         String(50),
@@ -120,8 +124,12 @@ class CompanyConnection(BaseModel):
 
     # Constraints
     __table_args__ = (
-        UniqueConstraint("source_user_id", "target_company_id", name="unique_user_company_connection"),
-        UniqueConstraint("source_company_id", "target_company_id", name="unique_company_connection"),
+        UniqueConstraint(
+            "source_user_id", "target_company_id", name="unique_user_company_connection"
+        ),
+        UniqueConstraint(
+            "source_company_id", "target_company_id", name="unique_company_connection"
+        ),
     )
 
     def __repr__(self) -> str:

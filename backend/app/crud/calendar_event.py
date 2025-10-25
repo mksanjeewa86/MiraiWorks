@@ -24,9 +24,7 @@ class CRUDCalendarEvent(
         """Get calendar events by creator"""
         result = await db.execute(
             select(CalendarEvent)
-            .options(
-                selectinload(CalendarEvent.attendees)
-            )
+            .options(selectinload(CalendarEvent.attendees))
             .where(CalendarEvent.creator_id == creator_id)
             .order_by(CalendarEvent.start_datetime)
             .offset(skip)
@@ -84,9 +82,7 @@ class CRUDCalendarEvent(
 
         result = await db.execute(
             select(CalendarEvent)
-            .options(
-                selectinload(CalendarEvent.attendees)
-            )
+            .options(selectinload(CalendarEvent.attendees))
             .where(and_(*conditions))
             .order_by(CalendarEvent.start_datetime)
         )
@@ -127,9 +123,7 @@ class CRUDCalendarEvent(
 
         result = await db.execute(
             select(CalendarEvent)
-            .options(
-                selectinload(CalendarEvent.attendees)
-            )
+            .options(selectinload(CalendarEvent.attendees))
             .where(and_(*conditions))
             .order_by(CalendarEvent.start_datetime)
             .limit(limit)
@@ -153,9 +147,7 @@ class CRUDCalendarEvent(
 
         result = await db.execute(
             select(CalendarEvent)
-            .options(
-                selectinload(CalendarEvent.attendees)
-            )
+            .options(selectinload(CalendarEvent.attendees))
             .where(and_(*conditions))
             .order_by(CalendarEvent.start_datetime)
             .offset(skip)
@@ -180,9 +172,7 @@ class CRUDCalendarEvent(
 
         result = await db.execute(
             select(CalendarEvent)
-            .options(
-                selectinload(CalendarEvent.attendees)
-            )
+            .options(selectinload(CalendarEvent.attendees))
             .where(and_(*conditions))
             .order_by(CalendarEvent.start_datetime)
             .offset(skip)
@@ -341,9 +331,7 @@ class CRUDCalendarEvent(
 
         result = await db.execute(
             select(CalendarEvent)
-            .options(
-                selectinload(CalendarEvent.attendees)
-            )
+            .options(selectinload(CalendarEvent.attendees))
             .where(and_(*conditions))
             .order_by(CalendarEvent.start_datetime)
             .offset(skip)
@@ -391,14 +379,14 @@ class CRUDCalendarEvent(
         if attendee_emails:
             for email in attendee_emails:
                 # Try to find user by email
-                user_result = await db.execute(
-                    select(User).where(User.email == email)
-                )
+                user_result = await db.execute(select(User).where(User.email == email))
                 user = user_result.scalar_one_or_none()
 
                 attendee = CalendarEventAttendee(
                     event_id=db_obj.id,
-                    user_id=user.id if user else creator_id,  # Default to creator if user not found
+                    user_id=user.id
+                    if user
+                    else creator_id,  # Default to creator if user not found
                     email=email,
                     response_status="pending",
                 )
@@ -432,9 +420,7 @@ class CRUDCalendarEvent(
         # Add new attendees
         for email in attendee_emails:
             # Try to find user by email
-            user_result = await db.execute(
-                select(User).where(User.email == email)
-            )
+            user_result = await db.execute(select(User).where(User.email == email))
             user = user_result.scalar_one_or_none()
 
             # Get event to get creator_id
@@ -462,7 +448,10 @@ class CRUDCalendarEvent(
 
         result = await db.execute(
             select(CalendarEvent)
-            .join(CalendarEventAttendee, CalendarEvent.id == CalendarEventAttendee.event_id)
+            .join(
+                CalendarEventAttendee,
+                CalendarEvent.id == CalendarEventAttendee.event_id,
+            )
             .where(
                 and_(
                     CalendarEventAttendee.user_id == user_id,
@@ -490,7 +479,10 @@ class CRUDCalendarEvent(
 
         result = await db.execute(
             select(CalendarEvent)
-            .join(CalendarEventAttendee, CalendarEvent.id == CalendarEventAttendee.event_id)
+            .join(
+                CalendarEventAttendee,
+                CalendarEvent.id == CalendarEventAttendee.event_id,
+            )
             .where(
                 and_(
                     CalendarEventAttendee.user_id == user_id,

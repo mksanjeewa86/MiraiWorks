@@ -1,8 +1,9 @@
 """Test message sending validation."""
 import asyncio
+
 from app.database import AsyncSessionLocal
-from app.services.message_service import message_service
 from app.schemas.message import MessageCreate
+from app.services.message_service import message_service
 
 
 async def test_message_send():
@@ -11,33 +12,31 @@ async def test_message_send():
         print("=" * 60)
         print("Message Send Test")
         print("=" * 60)
-        print(f"Sender: User 124 (admin@miraiworks.com)")
-        print(f"Recipient: User 129 (recruiter@innovatelab.jp)")
+        print("Sender: User 124 (admin@miraiworks.com)")
+        print("Recipient: User 129 (recruiter@innovatelab.jp)")
         print("=" * 60)
 
         # Create test message data
         message_data = MessageCreate(
             recipient_id=129,
             content="Test message from admin to recruiter",
-            type="text"
+            type="text",
         )
 
         try:
             # Try to send message
             message = await message_service.send_message(
-                db=db,
-                sender_id=124,
-                message_data=message_data
+                db=db, sender_id=124, message_data=message_data
             )
 
-            print(f"[SUCCESS] Message sent successfully!")
+            print("[SUCCESS] Message sent successfully!")
             print(f"Message ID: {message.id}")
             print(f"Content: {message.content}")
             print("=" * 60)
             return True
 
         except Exception as e:
-            print(f"[FAILED] Message send failed!")
+            print("[FAILED] Message send failed!")
             print(f"Error: {str(e)}")
             print(f"Error type: {type(e).__name__}")
             print("=" * 60)

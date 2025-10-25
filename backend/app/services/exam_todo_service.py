@@ -69,7 +69,9 @@ class ExamTodoService:
         due_date = None
         if exam_config.get("due_date"):
             if isinstance(exam_config["due_date"], str):
-                due_date = datetime.fromisoformat(exam_config["due_date"].replace("Z", "+00:00"))
+                due_date = datetime.fromisoformat(
+                    exam_config["due_date"].replace("Z", "+00:00")
+                )
             else:
                 due_date = exam_config["due_date"]
 
@@ -103,7 +105,8 @@ class ExamTodoService:
             "assignee_id": candidate_id,
             "workflow_id": workflow_node_execution.workflow_id,
             "title": f"Complete Exam: {exam.title}",
-            "description": exam.description or f"You have been assigned the {exam.title} exam.",
+            "description": exam.description
+            or f"You have been assigned the {exam.title} exam.",
             "status": TodoStatus.PENDING.value,
             "todo_type": TodoType.EXAM.value,
             "due_date": due_date,

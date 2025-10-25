@@ -67,9 +67,11 @@ class TodoPermissionService:
             return True
 
         # Assignee can view if published and not hidden
-        if (todo.todo_type == 'assignment' and
-            todo.assignee_id == user_id and
-            todo.publish_status == 'published'):
+        if (
+            todo.todo_type == "assignment"
+            and todo.assignee_id == user_id
+            and todo.publish_status == "published"
+        ):
             return True
 
         # Viewer can view if published and not deleted
@@ -85,14 +87,16 @@ class TodoPermissionService:
         return todo.owner_id == user_id
 
     @staticmethod
-    async def can_edit_assignee_memo(db: AsyncSession, user_id: int, todo: Todo) -> bool:
+    async def can_edit_assignee_memo(
+        db: AsyncSession, user_id: int, todo: Todo
+    ) -> bool:
         """Check if user can edit the assignee_memo field."""
         # Owner can always edit
         if todo.owner_id == user_id:
             return True
 
         # Assignee can edit their own memo for assignments
-        if todo.todo_type == 'assignment' and todo.assignee_id == user_id:
+        if todo.todo_type == "assignment" and todo.assignee_id == user_id:
             return True
 
         return False
@@ -111,7 +115,7 @@ class TodoPermissionService:
             return True
 
         # Assignee can change status (complete/reopen) for assignments
-        if todo.todo_type == 'assignment' and todo.assignee_id == user_id:
+        if todo.todo_type == "assignment" and todo.assignee_id == user_id:
             return True
 
         return False
@@ -124,7 +128,7 @@ class TodoPermissionService:
             return True
 
         # Assignee can add attachments to assignments
-        if todo.todo_type == 'assignment' and todo.assignee_id == user_id:
+        if todo.todo_type == "assignment" and todo.assignee_id == user_id:
             return True
 
         return False

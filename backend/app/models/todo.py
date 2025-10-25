@@ -1,18 +1,26 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import JSON, Boolean, Date, DateTime, ForeignKey, Integer, String, Text, Time
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import BaseModel
 from app.utils.constants import (
-    VisibilityStatus,
     TodoPriority,
     TodoPublishStatus,
     TodoStatus,
     TodoType,
+    VisibilityStatus,
 )
 from app.utils.datetime_utils import get_utc_now
 
@@ -149,7 +157,6 @@ class Todo(BaseModel):
     @property
     def is_expired(self) -> bool:
         """Check if todo is expired based on due datetime (stored in UTC)."""
-        from datetime import timezone
 
         if self.status == TodoStatus.COMPLETED.value:
             return False
@@ -159,7 +166,7 @@ class Todo(BaseModel):
             # Ensure due_datetime is timezone-aware (MySQL returns naive datetimes)
             due_dt = self.due_datetime
             if due_dt.tzinfo is None:
-                due_dt = due_dt.replace(tzinfo=timezone.utc)
+                due_dt = due_dt.replace(tzinfo=UTC)
             return due_dt < get_utc_now()
         return False
 

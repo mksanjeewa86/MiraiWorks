@@ -4,7 +4,9 @@ Run after creating a global exam via UI.
 """
 
 import asyncio
-from sqlalchemy import select, text, func
+
+from sqlalchemy import select, text
+
 from app.database import AsyncSessionLocal
 from app.models.exam import Exam
 from app.models.user import User
@@ -19,21 +21,19 @@ async def verify_global_exam():
 
     async with AsyncSessionLocal() as db:
         # Get the most recent exam
-        result = await db.execute(
-            select(Exam)
-            .order_by(Exam.id.desc())
-            .limit(1)
-        )
+        result = await db.execute(select(Exam).order_by(Exam.id.desc()).limit(1))
         latest_exam = result.scalar_one_or_none()
 
         if not latest_exam:
             print("\n[ERROR] No exams found in database!")
             return False
 
-        print(f"\n[Latest Exam Created]")
+        print("\n[Latest Exam Created]")
         print(f"ID: {latest_exam.id}")
         print(f"Title: {latest_exam.title}")
-        print(f"Company ID: {latest_exam.company_id if latest_exam.company_id else 'NULL'}")
+        print(
+            f"Company ID: {latest_exam.company_id if latest_exam.company_id else 'NULL'}"
+        )
         print(f"Is Public: {latest_exam.is_public}")
         print(f"Created At: {latest_exam.created_at}")
 
@@ -51,12 +51,13 @@ async def verify_global_exam():
             if latest_exam.company_id is not None:
                 print(f"  - company_id = {latest_exam.company_id} (should be NULL)")
             if not latest_exam.is_public:
-                print(f"  - is_public = False (should be True)")
+                print("  - is_public = False (should be True)")
 
         # Get exam statistics
         print("\n[Database Statistics]")
         result = await db.execute(
-            text("""
+            text(
+                """
                 SELECT
                     exam_type,
                     COUNT(*) as count
@@ -71,7 +72,8 @@ async def verify_global_exam():
                 ) AS categorized_exams
                 GROUP BY exam_type
                 ORDER BY exam_type
-            """)
+            """
+            )
         )
 
         counts = result.fetchall()
@@ -84,20 +86,18 @@ async def verify_global_exam():
         # Check which users can see this exam
         print("\n[Visibility Test]")
         result = await db.execute(
-            select(User)
-            .where(User.email.in_([
-                'admin@miraiworks.com',
-                'admin@techcorp.jp'
-            ]))
+            select(User).where(
+                User.email.in_(["admin@miraiworks.com", "admin@techcorp.jp"])
+            )
         )
         users = result.scalars().all()
 
         for user in users:
             # Simulate visibility check
             can_see = (
-                latest_exam.company_id == user.company_id or  # Own company
-                (latest_exam.company_id is None and latest_exam.is_public) or  # Global
-                latest_exam.is_public  # Public
+                latest_exam.company_id == user.company_id  # Own company
+                or (latest_exam.company_id is None and latest_exam.is_public)  # Global
+                or latest_exam.is_public  # Public
             )
 
             status = "[CAN SEE]" if can_see else "[CANNOT SEE]"

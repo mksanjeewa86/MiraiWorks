@@ -22,7 +22,9 @@ class ProfileProject(BaseModel):
     description = Column(Text, nullable=True)
 
     # Role Information
-    role = Column(String(100), nullable=True)  # Developer, Designer, Project Manager, etc.
+    role = Column(
+        String(100), nullable=True
+    )  # Developer, Designer, Project Manager, etc.
 
     # Technologies Used (stored as comma-separated values for now)
     technologies = Column(Text, nullable=True)

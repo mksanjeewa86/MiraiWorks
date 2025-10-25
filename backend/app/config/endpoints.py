@@ -87,6 +87,7 @@ class EndpointPath:
 # Within each class, endpoint constants should also be alphabetically ordered.
 # =============================================================================
 
+
 class AdminRoutes:
     """
     Administrative endpoints for system management.
@@ -949,6 +950,7 @@ class WorkflowRoutes:
 #   2. Use in router decorator: @router.post(API_ROUTES.AUTH.LOGIN)
 #   3. Never hardcode endpoint strings directly
 # =============================================================================
+
 
 class API_ROUTES:
     """

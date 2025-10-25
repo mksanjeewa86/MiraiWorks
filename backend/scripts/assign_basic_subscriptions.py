@@ -10,7 +10,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db, init_db
 from app.models.company import Company
@@ -57,7 +56,9 @@ async def assign_basic_subscriptions():
                 existing_subscription = result.scalar_one_or_none()
 
                 if existing_subscription:
-                    print(f"[SKIP] {company.name} (ID: {company.id}) - already has subscription")
+                    print(
+                        f"[SKIP] {company.name} (ID: {company.id}) - already has subscription"
+                    )
                     skipped_count += 1
                     continue
 
@@ -79,12 +80,12 @@ async def assign_basic_subscriptions():
             # Commit all subscriptions
             await db.commit()
 
-            print("\n" + "="*60)
-            print(f"Summary:")
+            print("\n" + "=" * 60)
+            print("Summary:")
             print(f"   - Created: {created_count} subscriptions")
             print(f"   - Skipped: {skipped_count} companies (already had subscription)")
             print(f"   - Total: {len(companies)} companies")
-            print("="*60)
+            print("=" * 60)
 
         except Exception as e:
             print(f"[ERROR] {e}")

@@ -14,6 +14,7 @@ class Feature(BaseModel):
       - Sub-feature: "deactivate_user" (parent_feature_id = user_management.id)
       - Sub-feature: "suspend_user" (parent_feature_id = user_management.id)
     """
+
     __tablename__ = "features"
 
     # Feature identification
@@ -22,11 +23,17 @@ class Feature(BaseModel):
     description = Column(Text, nullable=True)
 
     # Hierarchical support
-    parent_feature_id = Column(Integer, ForeignKey("features.id"), nullable=True, index=True)
-    permission_key = Column(String(100), nullable=True, index=True)  # e.g., 'user_management.deactivate'
+    parent_feature_id = Column(
+        Integer, ForeignKey("features.id"), nullable=True, index=True
+    )
+    permission_key = Column(
+        String(100), nullable=True, index=True
+    )  # e.g., 'user_management.deactivate'
 
     # Feature categorization
-    category = Column(String(50), nullable=True, index=True)  # 'core', 'premium', 'integrations'
+    category = Column(
+        String(50), nullable=True, index=True
+    )  # 'core', 'premium', 'integrations'
 
     # Status
     is_active = Column(Boolean, nullable=False, default=True, index=True)
@@ -36,18 +43,16 @@ class Feature(BaseModel):
         "Feature",
         remote_side="features.c.id",
         back_populates="children",
-        foreign_keys=[parent_feature_id]
+        foreign_keys=[parent_feature_id],
     )
     children = relationship(
         "Feature",
         back_populates="parent",
         cascade="all, delete-orphan",
-        foreign_keys=[parent_feature_id]
+        foreign_keys=[parent_feature_id],
     )
     plan_features = relationship(
-        "PlanFeature",
-        back_populates="feature",
-        cascade="all, delete-orphan"
+        "PlanFeature", back_populates="feature", cascade="all, delete-orphan"
     )
 
     def __repr__(self):

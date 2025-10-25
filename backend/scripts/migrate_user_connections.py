@@ -18,12 +18,11 @@ Usage:
 
 import argparse
 import asyncio
-from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database import AsyncSessionLocal, engine, init_db
+from app.database import AsyncSessionLocal, init_db
 from app.models.company_connection import CompanyConnection
 from app.models.user import User
 from app.models.user_connection import UserConnection

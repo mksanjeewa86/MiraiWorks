@@ -265,13 +265,17 @@ async def create_company(
     plan_id = company_data.plan_id
     if not plan_id:
         # No plan specified - auto-assign Basic plan
-        basic_plan_query = select(SubscriptionPlan).where(SubscriptionPlan.name == "basic")
+        basic_plan_query = select(SubscriptionPlan).where(
+            SubscriptionPlan.name == "basic"
+        )
         basic_plan_result = await db.execute(basic_plan_query)
         basic_plan = basic_plan_result.scalar_one_or_none()
         if basic_plan:
             plan_id = basic_plan.id
         else:
-            logger.warning(f"Basic plan not found - company {company.id} created without subscription")
+            logger.warning(
+                f"Basic plan not found - company {company.id} created without subscription"
+            )
 
     if plan_id:
         # Calculate trial end date if trial subscription
@@ -292,7 +296,9 @@ async def create_company(
         db.add(subscription)
 
         plan_name = "trial" if company_data.is_trial else "paid"
-        logger.info(f"Assigned {plan_name} subscription (plan_id={plan_id}) to company {company.id} ({company_data.name})")
+        logger.info(
+            f"Assigned {plan_name} subscription (plan_id={plan_id}) to company {company.id} ({company_data.name})"
+        )
 
     await db.commit()
     await db.refresh(company)
@@ -450,23 +456,30 @@ async def get_my_company(
     if not current_user.company_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="You are not associated with any company"
+            detail="You are not associated with any company",
         )
 
     # Check if user is a company user (member or admin)
     user_roles = [user_role.role.name for user_role in current_user.user_roles]
     is_company_user = any(
-        role in [UserRoleEnum.MEMBER.value, UserRoleEnum.ADMIN.value, UserRoleEnum.SYSTEM_ADMIN.value]
+        role
+        in [
+            UserRoleEnum.MEMBER.value,
+            UserRoleEnum.ADMIN.value,
+            UserRoleEnum.SYSTEM_ADMIN.value,
+        ]
         for role in user_roles
     )
 
     if not is_company_user:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only company users can access company profile"
+            detail="Only company users can access company profile",
         )
 
-    company_data = await company_crud.company.get_with_counts(db, current_user.company_id)
+    company_data = await company_crud.company.get_with_counts(
+        db, current_user.company_id
+    )
 
     if not company_data:
         raise HTTPException(
@@ -508,7 +521,7 @@ async def update_my_company(
     if not current_user.company_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="You are not associated with any company"
+            detail="You are not associated with any company",
         )
 
     # Check if user is admin
@@ -521,7 +534,7 @@ async def update_my_company(
     if not is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only company admins can update company profile"
+            detail="Only company admins can update company profile",
         )
 
     company = await company_crud.company.get(db, current_user.company_id)

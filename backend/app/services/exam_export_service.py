@@ -117,15 +117,12 @@ class ExamExportService:
 
         if total_completed > 0:
             avg_score = (
-                sum(s.score for s in completed_sessions if s.score)
-                / total_completed
+                sum(s.score for s in completed_sessions if s.score) / total_completed
             )
             passed_sessions = [
                 s
                 for s in completed_sessions
-                if s.score
-                and exam.passing_score
-                and s.score >= exam.passing_score
+                if s.score and exam.passing_score and s.score >= exam.passing_score
             ]
             pass_rate = (
                 (len(passed_sessions) / total_completed * 100)
@@ -336,15 +333,12 @@ class ExamExportService:
 
         if total_completed > 0:
             avg_score = (
-                sum(s.score for s in completed_sessions if s.score)
-                / total_completed
+                sum(s.score for s in completed_sessions if s.score) / total_completed
             )
             passed_sessions = [
                 s
                 for s in completed_sessions
-                if s.score
-                and exam.passing_score
-                and s.score >= exam.passing_score
+                if s.score and exam.passing_score and s.score >= exam.passing_score
             ]
             pass_rate = (
                 (len(passed_sessions) / total_completed * 100)

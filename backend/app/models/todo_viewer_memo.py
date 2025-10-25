@@ -7,7 +7,6 @@ from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Text, UniqueConst
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import BaseModel
-from app.utils.datetime_utils import get_utc_now
 
 if TYPE_CHECKING:
     from app.models.todo import Todo
@@ -17,7 +16,7 @@ if TYPE_CHECKING:
 class TodoViewerMemo(BaseModel):
     __tablename__ = "todo_viewer_memos"
     __table_args__ = (
-        UniqueConstraint('todo_id', 'user_id', name='uq_todo_viewer_memo'),
+        UniqueConstraint("todo_id", "user_id", name="uq_todo_viewer_memo"),
     )
 
     todo_id: Mapped[int] = mapped_column(
@@ -41,7 +40,9 @@ class TodoViewerMemo(BaseModel):
 
     # Relationships
     todo: Mapped[Todo] = relationship("Todo", backref="viewer_memos")
-    user: Mapped[User] = relationship("User", foreign_keys=[user_id], backref="todo_viewer_memos")
+    user: Mapped[User] = relationship(
+        "User", foreign_keys=[user_id], backref="todo_viewer_memos"
+    )
     deleter: Mapped[User | None] = relationship(
         "User", foreign_keys=[deleted_by], backref="deleted_viewer_memos"
     )

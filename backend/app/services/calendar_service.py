@@ -249,8 +249,10 @@ class CalendarService:
                 )
 
             # Get accepted invitation events (where user is an attendee)
-            accepted_invitations = await calendar_event.get_accepted_invitations_by_date_range(
-                db, user_id=user_id, start_date=start_date, end_date=end_date
+            accepted_invitations = (
+                await calendar_event.get_accepted_invitations_by_date_range(
+                    db, user_id=user_id, start_date=start_date, end_date=end_date
+                )
             )
 
             for event in accepted_invitations:

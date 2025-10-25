@@ -4,7 +4,7 @@ Simple calendar API server that exactly matches frontend types.
 """
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import uvicorn
 from fastapi import FastAPI
@@ -100,7 +100,7 @@ async def create_event(event_data: EventCreate):
     print(f"POST /api/calendar/events - Received: {event_data}")
 
     event_id = str(uuid.uuid4())
-    now = datetime.now(timezone.utc).isoformat() + "Z"
+    now = datetime.now(UTC).isoformat() + "Z"
 
     # Convert to EventInfo format matching frontend exactly
     event_info = EventInfo(
@@ -135,7 +135,7 @@ async def update_event(event_id: str, event_data: EventCreate):
     # Find and update event
     for i, event in enumerate(events_storage):
         if event.id == event_id:
-            now = datetime.now(timezone.utc).isoformat() + "Z"
+            now = datetime.now(UTC).isoformat() + "Z"
             updated_event = EventInfo(
                 id=event_id,
                 title=event_data.title,

@@ -1,6 +1,6 @@
 """CRUD operations for todo extension requests."""
 
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -70,11 +70,16 @@ class CRUDTodoExtensionRequest(CRUDBase[TodoExtensionRequest, dict, dict]):
             todo = await db.get(Todo, request_obj.todo_id)
             if todo:
                 # Use new_due_date if provided (for date change approval), otherwise use requested_due_date
-                requested_datetime = response_data.new_due_date if response_data.new_due_date else request_obj.requested_due_date
+                requested_datetime = (
+                    response_data.new_due_date
+                    if response_data.new_due_date
+                    else request_obj.requested_due_date
+                )
 
                 # Ensure timezone-aware (should already be UTC)
                 if requested_datetime.tzinfo is None:
                     from datetime import UTC
+
                     requested_datetime = requested_datetime.replace(tzinfo=UTC)
 
                 todo.due_datetime = requested_datetime

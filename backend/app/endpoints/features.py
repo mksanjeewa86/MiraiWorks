@@ -76,7 +76,9 @@ async def get_feature(feature_id: int, db: AsyncSession = Depends(get_db)):
 
 
 @router.post(
-    API_ROUTES.FEATURES.BASE, response_model=FeatureInfo, status_code=status.HTTP_201_CREATED
+    API_ROUTES.FEATURES.BASE,
+    response_model=FeatureInfo,
+    status_code=status.HTTP_201_CREATED,
 )
 async def create_feature(
     feature_data: FeatureCreate,
@@ -138,9 +140,7 @@ async def update_feature(
                 status_code=400, detail="Feature cannot be its own parent"
             )
 
-    updated_feature = await feature_crud.update(
-        db, db_obj=feature, obj_in=feature_data
-    )
+    updated_feature = await feature_crud.update(db, db_obj=feature, obj_in=feature_data)
     return updated_feature
 
 
@@ -254,9 +254,7 @@ async def remove_feature_from_plan(
     )
 
     if not removed:
-        raise HTTPException(
-            status_code=404, detail="Feature not found in this plan"
-        )
+        raise HTTPException(status_code=404, detail="Feature not found in this plan")
 
 
 @router.get(API_ROUTES.FEATURES.SEARCH, response_model=list[FeatureInfo])

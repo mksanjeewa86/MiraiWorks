@@ -1,7 +1,7 @@
 """Pydantic schemas for profile views."""
 
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -9,8 +9,12 @@ from pydantic import BaseModel, Field
 class ProfileViewCreate(BaseModel):
     """Schema for creating a profile view."""
 
-    profile_user_id: int = Field(..., description="ID of the user whose profile was viewed")
-    view_duration: Optional[int] = Field(None, description="Duration of view in seconds")
+    profile_user_id: int = Field(
+        ..., description="ID of the user whose profile was viewed"
+    )
+    view_duration: Optional[int] = Field(
+        None, description="Duration of view in seconds"
+    )
     referrer: Optional[str] = Field(None, max_length=500, description="Referrer URL")
 
 
@@ -51,11 +55,11 @@ class ProfileViewStats(BaseModel):
 
     total_views: int = Field(..., description="Total number of profile views")
     unique_viewers: int = Field(..., description="Number of unique viewers")
-    views_by_company: List[CompanyViewCount] = Field(
+    views_by_company: list[CompanyViewCount] = Field(
         default_factory=list,
         description="Top companies viewing the profile",
     )
-    views_over_time: List[ViewOverTime] = Field(
+    views_over_time: list[ViewOverTime] = Field(
         default_factory=list,
         description="Views grouped by date",
     )

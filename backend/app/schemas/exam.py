@@ -414,7 +414,7 @@ class HybridExamCreate(BaseModel):
     )
 
     # Template selections (randomly select from question banks)
-    template_selections: list["TemplateQuestionSelection"] = Field(
+    template_selections: list[TemplateQuestionSelection] = Field(
         default_factory=list,
         description="Question bank selections for random question picking",
     )

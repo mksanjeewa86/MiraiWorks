@@ -14,15 +14,12 @@ import sys
 from datetime import datetime, timedelta
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.crud.calendar_event import calendar_event
 from app.database import AsyncSessionLocal
-from app.models.calendar_event import CalendarEvent
-from app.models.calendar_event_attendee import CalendarEventAttendee
 from app.models.user import User
 from app.schemas.calendar_event import CalendarEventCreate
 from app.services.calendar_service import calendar_service
-from app.crud.calendar_event import calendar_event
 
 
 async def test_attendee_status():
@@ -62,7 +59,7 @@ async def test_attendee_status():
             is_all_day=False,
             location="Test Location",
             timezone="UTC",
-            attendees=[attendee.email]
+            attendees=[attendee.email],
         )
 
         created_event = await calendar_service.create_event(
@@ -98,7 +95,9 @@ async def test_attendee_status():
             print(f"    Attendee ID: {att.id}")
 
             if att.response_status != "pending":
-                print(f"    ❌ Error: Initial status should be 'pending', got '{att.response_status}'")
+                print(
+                    f"    ❌ Error: Initial status should be 'pending', got '{att.response_status}'"
+                )
                 return False
 
         print("✓ All attendees have 'pending' status")
@@ -154,7 +153,9 @@ async def test_attendee_status():
 
             if att.email == attendee.email:
                 if att.response_status != "accepted":
-                    print(f"    ❌ Error: Status should be 'accepted', got '{att.response_status}'")
+                    print(
+                        f"    ❌ Error: Status should be 'accepted', got '{att.response_status}'"
+                    )
                     return False
                 print("    ✓ Status updated to 'accepted'")
 
@@ -167,7 +168,7 @@ async def test_attendee_status():
             db,
             user_id=attendee.id,
             start_date=start_time - timedelta(days=1),
-            end_date=end_time + timedelta(days=1)
+            end_date=end_time + timedelta(days=1),
         )
 
         print(f"✓ Found {len(accepted_events)} accepted invitation(s)")
@@ -176,7 +177,7 @@ async def test_attendee_status():
         for event in accepted_events:
             if event.id == created_event.id:
                 found_accepted = True
-                print(f"✓ Test event appears in accepted invitations")
+                print("✓ Test event appears in accepted invitations")
 
         if not found_accepted:
             print("❌ Error: Test event not in accepted invitations")
@@ -205,7 +206,9 @@ async def test_attendee_status():
         for att in declined_event.attendees:
             if att.email == attendee.email:
                 if att.response_status != "declined":
-                    print(f"    ❌ Error: Status should be 'declined', got '{att.response_status}'")
+                    print(
+                        f"    ❌ Error: Status should be 'declined', got '{att.response_status}'"
+                    )
                     return False
                 print("    ✓ Status updated to 'declined'")
 
@@ -230,5 +233,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n❌ Error: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)

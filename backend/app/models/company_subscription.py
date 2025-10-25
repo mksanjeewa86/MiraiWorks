@@ -10,23 +10,32 @@ class CompanySubscription(BaseModel):
     Company subscription to a plan.
     One company can only have one active subscription at a time.
     """
+
     __tablename__ = "company_subscriptions"
 
     # Foreign keys
-    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False, unique=True, index=True)
-    plan_id = Column(Integer, ForeignKey("subscription_plans.id"), nullable=False, index=True)
+    company_id = Column(
+        Integer, ForeignKey("companies.id"), nullable=False, unique=True, index=True
+    )
+    plan_id = Column(
+        Integer, ForeignKey("subscription_plans.id"), nullable=False, index=True
+    )
 
     # Subscription status
     is_active = Column(Boolean, nullable=False, default=True, index=True)
     is_trial = Column(Boolean, nullable=False, default=False)
 
     # Subscription period
-    start_date = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    start_date = Column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
     end_date = Column(DateTime(timezone=True), nullable=True)  # NULL = no expiration
     trial_end_date = Column(DateTime(timezone=True), nullable=True)
 
     # Billing
-    billing_cycle = Column(String(20), nullable=False, default='monthly')  # 'monthly', 'yearly'
+    billing_cycle = Column(
+        String(20), nullable=False, default="monthly"
+    )  # 'monthly', 'yearly'
     next_billing_date = Column(DateTime(timezone=True), nullable=True)
     auto_renew = Column(Boolean, nullable=False, default=True)
 

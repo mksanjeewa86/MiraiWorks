@@ -125,7 +125,9 @@ class CRUDSystemUpdate(CRUDBase[SystemUpdate, dict, dict]):
         obj_in["created_by_id"] = creator_id
         return await self.create(db, obj_in=obj_in)
 
-    async def deactivate(self, db: AsyncSession, update_id: int) -> Optional[SystemUpdate]:
+    async def deactivate(
+        self, db: AsyncSession, update_id: int
+    ) -> Optional[SystemUpdate]:
         """
         Deactivate a system update (soft delete).
 
@@ -141,7 +143,9 @@ class CRUDSystemUpdate(CRUDBase[SystemUpdate, dict, dict]):
             return await self.update(db, db_obj=update, obj_in={"is_active": False})
         return None
 
-    async def activate(self, db: AsyncSession, update_id: int) -> Optional[SystemUpdate]:
+    async def activate(
+        self, db: AsyncSession, update_id: int
+    ) -> Optional[SystemUpdate]:
         """
         Activate a previously deactivated system update.
 

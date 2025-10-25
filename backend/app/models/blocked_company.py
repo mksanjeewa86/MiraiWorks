@@ -28,13 +28,18 @@ class BlockedCompany(BaseModel):
     - Receiving job recommendations from these companies
     - Being matched with positions from these companies
     """
+
     __tablename__ = "blocked_companies"
 
     # Foreign key to user (candidate)
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
 
     # Company identifier - can be either company_id (if exists in system) or company_name (free text)
-    company_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("companies.id", ondelete="CASCADE"), nullable=True)
+    company_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("companies.id", ondelete="CASCADE"), nullable=True
+    )
     company_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # Optional reason for blocking (for user's reference)
@@ -50,9 +55,15 @@ class BlockedCompany(BaseModel):
         Index("ix_blocked_companies_company_id", "company_id"),
         Index("ix_blocked_companies_company_name", "company_name"),
         # Unique constraint to prevent duplicate blocks
-        Index("ix_blocked_companies_user_company", "user_id", "company_id", unique=True),
+        Index(
+            "ix_blocked_companies_user_company", "user_id", "company_id", unique=True
+        ),
     )
 
     def __repr__(self):
-        company_identifier = f"company_id={self.company_id}" if self.company_id else f"company_name={self.company_name}"
+        company_identifier = (
+            f"company_id={self.company_id}"
+            if self.company_id
+            else f"company_name={self.company_name}"
+        )
         return f"<BlockedCompany(user_id={self.user_id}, {company_identifier})>"

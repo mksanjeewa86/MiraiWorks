@@ -1,7 +1,7 @@
 """CRUD operations for profile views."""
 
 from datetime import timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from sqlalchemy import and_, desc, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -70,7 +70,7 @@ class CRUDProfileView:
         skip: int = 0,
         limit: int = 100,
         include_anonymous: bool = True,
-    ) -> List[ProfileView]:
+    ) -> list[ProfileView]:
         """
         Get all profile views for a specific user.
 
@@ -84,7 +84,9 @@ class CRUDProfileView:
         Returns:
             List of ProfileView instances
         """
-        query = select(ProfileView).where(ProfileView.profile_user_id == profile_user_id)
+        query = select(ProfileView).where(
+            ProfileView.profile_user_id == profile_user_id
+        )
 
         if not include_anonymous:
             query = query.where(ProfileView.viewer_user_id.isnot(None))
@@ -108,7 +110,7 @@ class CRUDProfileView:
         *,
         profile_user_id: int,
         days: Optional[int] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get aggregated statistics for profile views.
 
@@ -121,7 +123,9 @@ class CRUDProfileView:
             Dictionary with view statistics
         """
         # Base query
-        query = select(ProfileView).where(ProfileView.profile_user_id == profile_user_id)
+        query = select(ProfileView).where(
+            ProfileView.profile_user_id == profile_user_id
+        )
 
         # Filter by date range if specified
         if days:
@@ -155,12 +159,7 @@ class CRUDProfileView:
                 func.count(ProfileView.id).label("view_count"),
             )
             .join(Company, ProfileView.viewer_company_id == Company.id)
-            .where(
-                and_(
-                    base_filter,
-                    ProfileView.viewer_company_id.isnot(None)
-                )
-            )
+            .where(and_(base_filter, ProfileView.viewer_company_id.isnot(None)))
             .group_by(ProfileView.viewer_company_id, Company.name)
             .order_by(desc("view_count"))
             .limit(5)
@@ -204,7 +203,7 @@ class CRUDProfileView:
         profile_user_id: int,
         limit: int = 10,
         days: Optional[int] = 30,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get list of recent profile viewers with details.
 
@@ -292,7 +291,9 @@ class CRUDProfileView:
         Returns:
             Total view count
         """
-        query = select(func.count()).where(ProfileView.profile_user_id == profile_user_id)
+        query = select(func.count()).where(
+            ProfileView.profile_user_id == profile_user_id
+        )
 
         # Filter by date range if specified
         if days:

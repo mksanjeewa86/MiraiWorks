@@ -11,9 +11,15 @@ from pydantic import BaseModel, Field, field_validator
 class BlockedCompanyBase(BaseModel):
     """Base schema for BlockedCompany."""
 
-    company_id: Optional[int] = Field(None, description="ID of company to block (if exists in system)")
-    company_name: Optional[str] = Field(None, max_length=255, description="Name of company to block (free text)")
-    reason: Optional[str] = Field(None, max_length=500, description="Reason for blocking (optional)")
+    company_id: Optional[int] = Field(
+        None, description="ID of company to block (if exists in system)"
+    )
+    company_name: Optional[str] = Field(
+        None, max_length=255, description="Name of company to block (free text)"
+    )
+    reason: Optional[str] = Field(
+        None, max_length=500, description="Reason for blocking (optional)"
+    )
 
     @field_validator("company_name")
     @classmethod

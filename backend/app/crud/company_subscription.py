@@ -14,9 +14,7 @@ from app.schemas.subscription import (
 
 
 class CRUDCompanySubscription(
-    CRUDBase[
-        CompanySubscription, CompanySubscriptionCreate, CompanySubscriptionUpdate
-    ]
+    CRUDBase[CompanySubscription, CompanySubscriptionCreate, CompanySubscriptionUpdate]
 ):
     """CRUD operations for company subscriptions."""
 

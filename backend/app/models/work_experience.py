@@ -23,7 +23,9 @@ class ProfileWorkExperience(BaseModel):
 
     # Position Information
     position_title = Column(String(255), nullable=False)
-    employment_type = Column(String(50), nullable=True)  # Full-time, Part-time, Contract, etc.
+    employment_type = Column(
+        String(50), nullable=True
+    )  # Full-time, Part-time, Contract, etc.
     location = Column(String(255), nullable=True)
 
     # Duration

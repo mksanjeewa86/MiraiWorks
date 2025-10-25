@@ -11,16 +11,15 @@ This script tests:
 
 import asyncio
 import sys
+
 from sqlalchemy import select, text
-from sqlalchemy.ext.asyncio import AsyncSession
 
 # Add parent directory to path
-sys.path.insert(0, '.')
+sys.path.insert(0, ".")
 
-from app.database import AsyncSessionLocal
-from app.models.exam import Exam
-from app.models.user import User
 from app.crud.exam import exam as exam_crud
+from app.database import AsyncSessionLocal
+from app.models.user import User
 
 
 async def test_global_exam_workflow():
@@ -34,7 +33,8 @@ async def test_global_exam_workflow():
         # Step 1: Check current exam state
         print("\n[Step 1] Checking current exam state...")
         result = await db.execute(
-            text("""
+            text(
+                """
                 SELECT id, title, company_id, is_public,
                        CASE
                            WHEN company_id IS NULL AND is_public = true THEN 'GLOBAL'
@@ -44,20 +44,24 @@ async def test_global_exam_workflow():
                 FROM exams
                 ORDER BY id DESC
                 LIMIT 10
-            """)
+            """
+            )
         )
 
         exams = result.fetchall()
-        print(f"\nRecent exams in database:")
+        print("\nRecent exams in database:")
         print("-" * 80)
         for exam in exams:
-            company_str = 'NULL' if exam.company_id is None else str(exam.company_id)
-            title_str = (exam.title[:40] if exam.title else '')[:40]
-            print(f"ID:{exam.id:3d} | {title_str:40s} | Company:{company_str:>4s} | Public:{str(exam.is_public):5s} | Type:{exam.exam_visibility}")
+            company_str = "NULL" if exam.company_id is None else str(exam.company_id)
+            title_str = (exam.title[:40] if exam.title else "")[:40]
+            print(
+                f"ID:{exam.id:3d} | {title_str:40s} | Company:{company_str:>4s} | Public:{str(exam.is_public):5s} | Type:{exam.exam_visibility}"
+            )
 
         # Count by type
         result = await db.execute(
-            text("""
+            text(
+                """
                 SELECT
                     exam_type,
                     COUNT(*) as count
@@ -72,11 +76,12 @@ async def test_global_exam_workflow():
                 ) AS categorized_exams
                 GROUP BY exam_type
                 ORDER BY exam_type
-            """)
+            """
+            )
         )
 
         counts = result.fetchall()
-        print(f"\nExam count by type:")
+        print("\nExam count by type:")
         print("-" * 80)
         total = 0
         for row in counts:
@@ -87,26 +92,27 @@ async def test_global_exam_workflow():
         # Step 2: Check user roles
         print("\n[Step 2] Checking user roles...")
         result = await db.execute(
-            select(User).where(User.email.in_([
-                'admin@miraiworks.com',
-                'admin@techcorp.jp'
-            ]))
+            select(User).where(
+                User.email.in_(["admin@miraiworks.com", "admin@techcorp.jp"])
+            )
         )
         users = result.scalars().all()
 
-        print(f"\nUser details:")
+        print("\nUser details:")
         print("-" * 80)
         for user in users:
             roles = [role.role.name for role in user.user_roles]
-            company_id_str = str(user.company_id) if user.company_id else 'NULL'
-            print(f"{user.email:25s} | Company:{company_id_str:>4s} | Roles: {', '.join(roles)}")
+            company_id_str = str(user.company_id) if user.company_id else "NULL"
+            print(
+                f"{user.email:25s} | Company:{company_id_str:>4s} | Roles: {', '.join(roles)}"
+            )
 
         # Step 3: Test exam visibility for each user
         print("\n[Step 3] Testing exam visibility...")
 
         for user in users:
             roles = [role.role.name for role in user.user_roles]
-            is_system_admin = 'system_admin' in roles
+            is_system_admin = "system_admin" in roles
 
             print(f"\n  Checking visibility for: {user.email}")
             print(f"  Role: {', '.join(roles)}, Company: {user.company_id or 'NULL'}")
@@ -117,14 +123,16 @@ async def test_global_exam_workflow():
                 company_id=user.company_id,
                 include_public=True,
                 skip=0,
-                limit=100
+                limit=100,
             )
 
             print(f"  Visible exams: {len(exams)}")
 
             # Categorize visible exams
             global_exams = [e for e in exams if e.company_id is None and e.is_public]
-            public_exams = [e for e in exams if e.company_id is not None and e.is_public]
+            public_exams = [
+                e for e in exams if e.company_id is not None and e.is_public
+            ]
             private_exams = [e for e in exams if not e.is_public]
             own_company_exams = [e for e in exams if e.company_id == user.company_id]
 
@@ -135,18 +143,18 @@ async def test_global_exam_workflow():
 
             # Show breakdown
             if global_exams:
-                print(f"\n    Global exams visible:")
+                print("\n    Global exams visible:")
                 for exam in global_exams[:3]:  # Show first 3
                     print(f"      - {exam.title[:50]}")
             else:
-                print(f"\n    [WARNING] No global exams visible!")
+                print("\n    [WARNING] No global exams visible!")
 
         # Step 4: Recommendations
         print("\n" + "=" * 80)
         print("RECOMMENDATIONS")
         print("=" * 80)
 
-        global_count = sum(1 for row in counts if row.exam_type == 'GLOBAL')
+        global_count = sum(1 for row in counts if row.exam_type == "GLOBAL")
 
         if global_count == 0:
             print("\n[WARNING] NO GLOBAL EXAMS EXIST!")

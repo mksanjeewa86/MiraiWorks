@@ -115,7 +115,11 @@ async def test_login_with_remember_me_creates_30_day_token(
 
     response = await client.post(
         "/api/auth/login",
-        json={"email": test_user.email, "password": "testpassword123", "rememberMe": True},
+        json={
+            "email": test_user.email,
+            "password": "testpassword123",
+            "rememberMe": True,
+        },
     )
 
     assert response.status_code == 200
@@ -150,7 +154,11 @@ async def test_login_without_remember_me_creates_7_day_token(
 
     response = await client.post(
         "/api/auth/login",
-        json={"email": test_user.email, "password": "testpassword123", "rememberMe": False},
+        json={
+            "email": test_user.email,
+            "password": "testpassword123",
+            "rememberMe": False,
+        },
     )
 
     assert response.status_code == 200

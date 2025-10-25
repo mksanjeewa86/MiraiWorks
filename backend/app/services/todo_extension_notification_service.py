@@ -53,7 +53,11 @@ class TodoExtensionNotificationService:
         requester_name = f"{extension_request.requested_by.first_name} {extension_request.requested_by.last_name}"
 
         # Get current due datetime from todo
-        current_due_date_str = extension_request.todo.due_datetime.strftime('%Y-%m-%d') if extension_request.todo.due_datetime else "No due date"
+        current_due_date_str = (
+            extension_request.todo.due_datetime.strftime("%Y-%m-%d")
+            if extension_request.todo.due_datetime
+            else "No due date"
+        )
 
         await self.notification_service.create_notification(
             db,
@@ -128,10 +132,12 @@ class TodoExtensionNotificationService:
             subject = f"Todo Extension Request: {extension_request.todo.title}"
 
             # Get current due datetime from todo
-            from datetime import datetime
+
             current_due_str = "No due date"
             if extension_request.todo.due_datetime:
-                current_due_str = extension_request.todo.due_datetime.strftime('%B %d, %Y at %I:%M %p')
+                current_due_str = extension_request.todo.due_datetime.strftime(
+                    "%B %d, %Y at %I:%M %p"
+                )
 
             # Create email content
             email_content = f"""
@@ -185,10 +191,12 @@ class TodoExtensionNotificationService:
             )
 
             # Get original due date from todo
-            from datetime import datetime
+
             original_due_str = "No due date"
             if extension_request.todo.due_datetime:
-                original_due_str = extension_request.todo.due_datetime.strftime('%B %d, %Y at %I:%M %p')
+                original_due_str = extension_request.todo.due_datetime.strftime(
+                    "%B %d, %Y at %I:%M %p"
+                )
 
             # Create email content
             email_content = f"""

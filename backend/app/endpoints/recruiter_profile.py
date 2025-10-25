@@ -26,13 +26,16 @@ async def get_my_recruiter_profile(
     profile = await recruiter_profile_crud.get_by_user(db, user_id=current_user.id)
     if not profile:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Recruiter profile not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Recruiter profile not found"
         )
     return profile
 
 
-@router.post(API_ROUTES.RECRUITER_PROFILE.ME, response_model=RecruiterProfileInfo, status_code=status.HTTP_201_CREATED)
+@router.post(
+    API_ROUTES.RECRUITER_PROFILE.ME,
+    response_model=RecruiterProfileInfo,
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_my_recruiter_profile(
     profile_data: RecruiterProfileCreate,
     db: AsyncSession = Depends(get_db),
@@ -44,7 +47,7 @@ async def create_my_recruiter_profile(
     if existing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Recruiter profile already exists"
+            detail="Recruiter profile already exists",
         )
 
     profile = await recruiter_profile_crud.create_for_user(
@@ -65,8 +68,7 @@ async def update_my_recruiter_profile(
     )
     if not profile:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Recruiter profile not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Recruiter profile not found"
         )
     return profile
 
@@ -80,13 +82,14 @@ async def delete_my_recruiter_profile(
     success = await recruiter_profile_crud.delete_by_user(db, user_id=current_user.id)
     if not success:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Recruiter profile not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Recruiter profile not found"
         )
     return None
 
 
-@router.get(API_ROUTES.RECRUITER_PROFILE.BY_USER_ID, response_model=RecruiterProfileInfo)
+@router.get(
+    API_ROUTES.RECRUITER_PROFILE.BY_USER_ID, response_model=RecruiterProfileInfo
+)
 async def get_recruiter_profile_by_id(
     user_id: int,
     db: AsyncSession = Depends(get_db),
@@ -96,7 +99,6 @@ async def get_recruiter_profile_by_id(
     profile = await recruiter_profile_crud.get_by_user(db, user_id=user_id)
     if not profile:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Recruiter profile not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Recruiter profile not found"
         )
     return profile

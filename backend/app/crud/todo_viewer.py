@@ -45,9 +45,7 @@ class CRUDTodoViewer(CRUDBase[TodoViewer, TodoViewerCreate, TodoViewerCreate]):
         )
         return list(result.scalars().all())
 
-    async def is_viewer(
-        self, db: AsyncSession, *, todo_id: int, user_id: int
-    ) -> bool:
+    async def is_viewer(self, db: AsyncSession, *, todo_id: int, user_id: int) -> bool:
         """Check if user is a viewer of the todo."""
         viewer = await self.get_by_todo_and_user(db, todo_id=todo_id, user_id=user_id)
         return viewer is not None

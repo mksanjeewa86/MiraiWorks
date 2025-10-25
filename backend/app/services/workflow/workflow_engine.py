@@ -385,7 +385,9 @@ class WorkflowEngineService:
         )
 
         # Link todo to execution
-        await workflow_node_execution.link_todo(db, execution=execution, todo_id=todo.id)
+        await workflow_node_execution.link_todo(
+            db, execution=execution, todo_id=todo.id
+        )
 
     async def _create_regular_todo(
         self,
@@ -418,7 +420,9 @@ class WorkflowEngineService:
         todo = await todo_crud.create(db, obj_in=todo_data)
 
         # Link to execution
-        await workflow_node_execution.link_todo(db, execution=execution, todo_id=todo.id)
+        await workflow_node_execution.link_todo(
+            db, execution=execution, todo_id=todo.id
+        )
 
     async def validate_process(
         self, db: AsyncSession, workflow_id: int

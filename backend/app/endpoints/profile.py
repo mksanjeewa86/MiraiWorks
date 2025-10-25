@@ -93,12 +93,12 @@ async def update_work_experience(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Work experience not found",
         )
-    return await profile_crud.work_experience.update(
-        db, db_obj=experience, obj_in=data
-    )
+    return await profile_crud.work_experience.update(db, db_obj=experience, obj_in=data)
 
 
-@router.delete(API_ROUTES.PROFILE.WORK_EXPERIENCE_BY_ID, status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    API_ROUTES.PROFILE.WORK_EXPERIENCE_BY_ID, status_code=status.HTTP_204_NO_CONTENT
+)
 async def delete_work_experience(
     experience_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -130,7 +130,9 @@ async def get_educations(
 
 
 @router.post(
-    API_ROUTES.PROFILE.EDUCATION, response_model=EducationInfo, status_code=status.HTTP_201_CREATED
+    API_ROUTES.PROFILE.EDUCATION,
+    response_model=EducationInfo,
+    status_code=status.HTTP_201_CREATED,
 )
 async def create_education(
     data: EducationCreate,
@@ -180,7 +182,9 @@ async def update_education(
     return await profile_crud.education.update(db, db_obj=education, obj_in=data)
 
 
-@router.delete(API_ROUTES.PROFILE.EDUCATION_BY_ID, status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    API_ROUTES.PROFILE.EDUCATION_BY_ID, status_code=status.HTTP_204_NO_CONTENT
+)
 async def delete_education(
     education_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -216,7 +220,11 @@ async def get_skills(
     return await profile_crud.skill.get_by_user(db, user_id=current_user.id)
 
 
-@router.post(API_ROUTES.PROFILE.SKILLS, response_model=SkillInfo, status_code=status.HTTP_201_CREATED)
+@router.post(
+    API_ROUTES.PROFILE.SKILLS,
+    response_model=SkillInfo,
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_skill(
     data: SkillCreate,
     current_user: User = Depends(get_current_active_user),
@@ -351,7 +359,9 @@ async def update_certification(
     )
 
 
-@router.delete(API_ROUTES.PROFILE.CERTIFICATIONS_BY_ID, status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    API_ROUTES.PROFILE.CERTIFICATIONS_BY_ID, status_code=status.HTTP_204_NO_CONTENT
+)
 async def delete_certification(
     certification_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -383,7 +393,9 @@ async def get_projects(
 
 
 @router.post(
-    API_ROUTES.PROFILE.PROJECTS, response_model=ProjectInfo, status_code=status.HTTP_201_CREATED
+    API_ROUTES.PROFILE.PROJECTS,
+    response_model=ProjectInfo,
+    status_code=status.HTTP_201_CREATED,
 )
 async def create_project(
     data: ProjectCreate,
@@ -433,7 +445,9 @@ async def update_project(
     return await profile_crud.project.update(db, db_obj=project, obj_in=data)
 
 
-@router.delete(API_ROUTES.PROFILE.PROJECTS_BY_ID, status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    API_ROUTES.PROFILE.PROJECTS_BY_ID, status_code=status.HTTP_204_NO_CONTENT
+)
 async def delete_project(
     project_id: int,
     current_user: User = Depends(get_current_active_user),

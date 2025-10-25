@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
@@ -104,14 +104,14 @@ class EventInfo(BaseModel):
     created_at: datetime = Field(alias="createdAt")
     updated_at: datetime = Field(alias="updatedAt")
 
-    @field_serializer('start_datetime', 'end_datetime', 'created_at', 'updated_at')
+    @field_serializer("start_datetime", "end_datetime", "created_at", "updated_at")
     def serialize_datetime(self, dt: Optional[datetime], _info) -> Optional[str]:
         """Ensure datetime fields are serialized with UTC timezone information."""
         if dt is None:
             return None
         # If datetime is naive, assume it's UTC and add timezone
         if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
+            dt = dt.replace(tzinfo=UTC)
         # Serialize to ISO format with Z suffix
         return dt.isoformat()
 

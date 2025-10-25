@@ -83,7 +83,9 @@ async def get_my_connections(
     # Format response with computed fields
     response = []
     for user in connected_users:
-        user_roles = [role.role.name for role in user.user_roles] if user.user_roles else []
+        user_roles = (
+            [role.role.name for role in user.user_roles] if user.user_roles else []
+        )
         response.append(
             UserResponse(
                 id=user.id,
@@ -128,7 +130,9 @@ async def get_assignable_users(
     # Format response with computed fields
     response = []
     for user in connected_users:
-        user_roles = [role.role.name for role in user.user_roles] if user.user_roles else []
+        user_roles = (
+            [role.role.name for role in user.user_roles] if user.user_roles else []
+        )
         response.append(
             UserResponse(
                 id=user.id,

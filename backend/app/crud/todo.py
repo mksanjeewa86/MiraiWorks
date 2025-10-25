@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import Select, func, select, update
+from sqlalchemy import Select, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -143,7 +143,9 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
 
         # Check if todo is expired (due_date is in the past)
         if data.get("due_date"):
-            from datetime import UTC, datetime as dt_module, time as time_type
+            from datetime import UTC
+            from datetime import datetime as dt_module
+            from datetime import time as time_type
 
             # Combine due_date and due_time (or use end of day if no time)
             due_time = data.get("due_time") or time_type(23, 59, 59)
@@ -173,14 +175,14 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
 
         # Field-level permission checks
         # description can only be edited by creator
-        if 'description' in update_data:
+        if "description" in update_data:
             if db_obj.created_by != updated_by:
-                update_data.pop('description')
+                update_data.pop("description")
 
         # assignee_memo can only be edited by assignee
-        if 'assignee_memo' in update_data:
+        if "assignee_memo" in update_data:
             if db_obj.assignee_id != updated_by:
-                update_data.pop('assignee_memo')
+                update_data.pop("assignee_memo")
 
         if update_data.get("status") == TodoStatus.COMPLETED.value:
             update_data.setdefault("completed_at", get_utc_now())
@@ -269,7 +271,12 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         return todo
 
     async def submit_assignment(
-        self, db: AsyncSession, *, todo: Todo, submitted_by: int, assignee_memo: str = None
+        self,
+        db: AsyncSession,
+        *,
+        todo: Todo,
+        submitted_by: int,
+        assignee_memo: str = None,
     ) -> Todo:
         """Submit assignment for review."""
         if todo.is_assignment and todo.assignee_id == submitted_by:
@@ -380,8 +387,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         # Query for viewer memo
         result = await db.execute(
             select(TodoViewerMemo).where(
-                TodoViewerMemo.todo_id == todo.id,
-                TodoViewerMemo.user_id == user_id
+                TodoViewerMemo.todo_id == todo.id, TodoViewerMemo.user_id == user_id
             )
         )
         viewer_memo_obj = result.scalar_one_or_none()

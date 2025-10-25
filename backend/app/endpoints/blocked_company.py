@@ -4,7 +4,6 @@ Blocked Company Endpoints
 API endpoints for managing candidate's blocked company list.
 """
 
-from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -23,7 +22,7 @@ from app.schemas.blocked_company import (
 router = APIRouter()
 
 
-@router.get(API_ROUTES.BLOCKED_COMPANIES.BASE, response_model=List[BlockedCompanyInfo])
+@router.get(API_ROUTES.BLOCKED_COMPANIES.BASE, response_model=list[BlockedCompanyInfo])
 async def get_blocked_companies(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
@@ -127,7 +126,7 @@ async def delete_blocked_company(
 
 @router.get(
     API_ROUTES.BLOCKED_COMPANIES.SEARCH,
-    response_model=List[CompanySearchResult],
+    response_model=list[CompanySearchResult],
 )
 async def search_companies(
     q: str = Query(..., min_length=1, description="Search query"),

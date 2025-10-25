@@ -9,7 +9,6 @@ from sqlalchemy import Boolean, DateTime, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import BaseModel
-from app.utils.datetime_utils import get_utc_now
 
 if TYPE_CHECKING:
     from app.models.todo import Todo

@@ -37,7 +37,7 @@ class CRUDPlanChangeRequest(CRUDBase[PlanChangeRequest, dict, dict]):
         *,
         status: PlanChangeRequestStatus,
         skip: int = 0,
-        limit: int = 100
+        limit: int = 100,
     ) -> list[PlanChangeRequest]:
         """Get all plan change requests by status."""
         result = await db.execute(
@@ -88,7 +88,7 @@ class CRUDPlanChangeRequest(CRUDBase[PlanChangeRequest, dict, dict]):
         *,
         request_id: int,
         reviewed_by: int,
-        review_message: Optional[str] = None
+        review_message: Optional[str] = None,
     ) -> Optional[PlanChangeRequest]:
         """Approve a plan change request."""
         from app.utils.datetime_utils import get_utc_now
@@ -113,7 +113,7 @@ class CRUDPlanChangeRequest(CRUDBase[PlanChangeRequest, dict, dict]):
         *,
         request_id: int,
         reviewed_by: int,
-        review_message: Optional[str] = None
+        review_message: Optional[str] = None,
     ) -> Optional[PlanChangeRequest]:
         """Reject a plan change request."""
         from app.utils.datetime_utils import get_utc_now
@@ -133,10 +133,7 @@ class CRUDPlanChangeRequest(CRUDBase[PlanChangeRequest, dict, dict]):
         return request
 
     async def cancel_request(
-        self,
-        db: AsyncSession,
-        *,
-        request_id: int
+        self, db: AsyncSession, *, request_id: int
     ) -> Optional[PlanChangeRequest]:
         """Cancel a plan change request (user cancels their own request)."""
         from app.utils.datetime_utils import get_utc_now
@@ -163,7 +160,7 @@ class CRUDPlanChangeRequest(CRUDBase[PlanChangeRequest, dict, dict]):
         requested_plan_id: int,
         request_type: str,
         requested_by: int,
-        request_message: Optional[str] = None
+        request_message: Optional[str] = None,
     ) -> PlanChangeRequest:
         """Create a new plan change request."""
         from app.utils.constants import PlanChangeRequestType

@@ -123,7 +123,9 @@ class SubscriptionEmailService:
             )
 
             if success:
-                logger.info(f"Plan change approved notification sent to {requester_email}")
+                logger.info(
+                    f"Plan change approved notification sent to {requester_email}"
+                )
 
             return success
 
@@ -172,7 +174,9 @@ class SubscriptionEmailService:
             )
 
             if success:
-                logger.info(f"Plan change rejected notification sent to {requester_email}")
+                logger.info(
+                    f"Plan change rejected notification sent to {requester_email}"
+                )
 
             return success
 

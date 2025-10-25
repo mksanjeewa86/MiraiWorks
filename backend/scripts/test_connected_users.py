@@ -1,5 +1,6 @@
 """Test that get_connected_users works with single connection record."""
 import asyncio
+
 from app.database import AsyncSessionLocal
 from app.services.company_connection_service import company_connection_service
 
@@ -9,24 +10,22 @@ async def test_connected_users():
     async with AsyncSessionLocal() as db:
         # Get connected users for User 124 (Company 88)
         users_for_124 = await company_connection_service.get_connected_users(
-            db=db,
-            user_id=124
+            db=db, user_id=124
         )
 
         # Get connected users for User 129 (Company 90)
         users_for_129 = await company_connection_service.get_connected_users(
-            db=db,
-            user_id=129
+            db=db, user_id=129
         )
 
         print("=" * 60)
         print("Connected Users Test (Single Record)")
         print("=" * 60)
-        print(f"\nUser 124 (Company 88) connected users:")
+        print("\nUser 124 (Company 88) connected users:")
         for user in users_for_124:
             print(f"  - User {user.id}: {user.email} (Company {user.company_id})")
 
-        print(f"\nUser 129 (Company 90) connected users:")
+        print("\nUser 129 (Company 90) connected users:")
         for user in users_for_129:
             print(f"  - User {user.id}: {user.email} (Company {user.company_id})")
 

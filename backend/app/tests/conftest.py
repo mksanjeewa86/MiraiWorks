@@ -255,7 +255,9 @@ def setup_database_schema():
                         )
                     print("Database schema created")
                 else:
-                    print(f"Database schema already exists ({len(existing_tables)} tables)")
+                    print(
+                        f"Database schema already exists ({len(existing_tables)} tables)"
+                    )
 
         loop.run_until_complete(_setup())
 

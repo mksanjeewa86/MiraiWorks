@@ -86,7 +86,9 @@ async def create_features(db: AsyncSession):
     existing_features = result.scalars().all()
 
     if existing_features:
-        print(f"  Found {len(existing_features)} existing features. Skipping feature creation.")
+        print(
+            f"  Found {len(existing_features)} existing features. Skipping feature creation."
+        )
         return existing_features
 
     # Core features (available in all plans)
@@ -291,7 +293,9 @@ async def create_features(db: AsyncSession):
     db.add(question_banks)
 
     await db.commit()
-    print(f"  [OK] Created {len(core_features) + len(user_mgmt_subfeatures) + len(workflow_subfeatures) + len(exam_subfeatures) + 4} features")
+    print(
+        f"  [OK] Created {len(core_features) + len(user_mgmt_subfeatures) + len(workflow_subfeatures) + len(exam_subfeatures) + 4} features"
+    )
 
     # Return all features
     result = await db.execute(select(Feature))

@@ -65,8 +65,10 @@ class CRUDExam(CRUDBase[Exam, ExamCreate, ExamUpdate]):
                 query = query.where(
                     or_(
                         Exam.company_id == company_id,  # Own company's exams
-                        and_(Exam.company_id.is_(None), Exam.is_public == True),  # Global public exams
-                        Exam.is_public == True  # Any public exam
+                        and_(
+                            Exam.company_id.is_(None), Exam.is_public == True
+                        ),  # Global public exams
+                        Exam.is_public == True,  # Any public exam
                     )
                 )
             else:
@@ -725,11 +727,8 @@ class CRUDExamAssignment(
                 )
             )
             .order_by(
-                case(
-                    (ExamAssignment.due_date.is_(None), 1),
-                    else_=0
-                ),
-                ExamAssignment.due_date.asc()
+                case((ExamAssignment.due_date.is_(None), 1), else_=0),
+                ExamAssignment.due_date.asc(),
             )
         )
 

@@ -37,7 +37,10 @@ class QuestionBank(BaseModel):
         Boolean, nullable=False, default=False, index=True
     )  # True = global bank, False = company-specific
     company_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("companies.id", ondelete="SET NULL"), nullable=True, index=True
+        Integer,
+        ForeignKey("companies.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
     )  # NULL = global bank
 
     # Metadata

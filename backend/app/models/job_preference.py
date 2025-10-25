@@ -24,12 +24,18 @@ class JobPreference(BaseModel):
     # Salary Expectations
     desired_salary_min = Column(Integer, nullable=True)  # Minimum salary
     desired_salary_max = Column(Integer, nullable=True)  # Maximum salary
-    salary_currency = Column(String(10), default="USD", nullable=False)  # USD, JPY, EUR, etc.
-    salary_period = Column(String(20), default="yearly", nullable=False)  # yearly, monthly, hourly
+    salary_currency = Column(
+        String(10), default="USD", nullable=False
+    )  # USD, JPY, EUR, etc.
+    salary_period = Column(
+        String(20), default="yearly", nullable=False
+    )  # yearly, monthly, hourly
 
     # Location Preferences
     willing_to_relocate = Column(Boolean, default=False, nullable=False)
-    preferred_locations = Column(Text, nullable=True)  # Comma-separated list of locations
+    preferred_locations = Column(
+        Text, nullable=True
+    )  # Comma-separated list of locations
 
     # Work Mode Preferences (comma-separated: Remote, Hybrid, Onsite)
     work_mode_preferences = Column(Text, nullable=True)
@@ -46,7 +52,9 @@ class JobPreference(BaseModel):
     # Additional Preferences
     preferred_industries = Column(Text, nullable=True)  # Comma-separated
     preferred_company_sizes = Column(Text, nullable=True)  # Startup, SME, Enterprise
-    other_preferences = Column(Text, nullable=True)  # Free text for additional preferences
+    other_preferences = Column(
+        Text, nullable=True
+    )  # Free text for additional preferences
 
     # Relationships
     user = relationship("User", back_populates="job_preference")

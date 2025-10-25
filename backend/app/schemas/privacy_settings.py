@@ -17,16 +17,27 @@ class ProfileVisibility(str, Enum):
 
 class PrivacySettingsBase(BaseModel):
     """Base privacy settings schema with default values"""
-    profile_visibility: Optional[str] = Field(default="public", description="Profile visibility level")
-    searchable: Optional[bool] = Field(default=True, description="Allow profile to appear in searches")
+
+    profile_visibility: Optional[str] = Field(
+        default="public", description="Profile visibility level"
+    )
+    searchable: Optional[bool] = Field(
+        default=True, description="Allow profile to appear in searches"
+    )
     show_email: Optional[bool] = Field(default=False, description="Show email address")
     show_phone: Optional[bool] = Field(default=False, description="Show phone number")
-    show_work_experience: Optional[bool] = Field(default=True, description="Show work experience")
+    show_work_experience: Optional[bool] = Field(
+        default=True, description="Show work experience"
+    )
     show_education: Optional[bool] = Field(default=True, description="Show education")
     show_skills: Optional[bool] = Field(default=True, description="Show skills")
-    show_certifications: Optional[bool] = Field(default=True, description="Show certifications")
+    show_certifications: Optional[bool] = Field(
+        default=True, description="Show certifications"
+    )
     show_projects: Optional[bool] = Field(default=True, description="Show projects")
-    show_resume: Optional[bool] = Field(default=True, description="Allow resume download")
+    show_resume: Optional[bool] = Field(
+        default=True, description="Allow resume download"
+    )
 
 
 class PrivacySettingsUpdate(BaseModel):
@@ -38,6 +49,7 @@ class PrivacySettingsUpdate(BaseModel):
 
     Example: {"show_work_experience": false} updates only that field.
     """
+
     profile_visibility: Optional[str] = None
     searchable: Optional[bool] = None
     show_email: Optional[bool] = None
@@ -52,6 +64,7 @@ class PrivacySettingsUpdate(BaseModel):
 
 class PrivacySettingsInfo(PrivacySettingsBase):
     """Schema for privacy settings response"""
+
     id: int
     user_id: int
     created_at: datetime

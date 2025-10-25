@@ -14,9 +14,7 @@ class CRUDFeature(CRUDBase[Feature, FeatureCreate, FeatureUpdate]):
 
     async def get_by_name(self, db: AsyncSession, *, name: str) -> Optional[Feature]:
         """Get feature by name."""
-        result = await db.execute(
-            select(Feature).where(Feature.name == name)
-        )
+        result = await db.execute(select(Feature).where(Feature.name == name))
         return result.scalar_one_or_none()
 
     async def get_by_permission_key(
@@ -33,10 +31,7 @@ class CRUDFeature(CRUDBase[Feature, FeatureCreate, FeatureUpdate]):
     ) -> list[Feature]:
         """Get all active features."""
         result = await db.execute(
-            select(Feature)
-            .where(Feature.is_active == True)
-            .offset(skip)
-            .limit(limit)
+            select(Feature).where(Feature.is_active == True).offset(skip).limit(limit)
         )
         return result.scalars().all()
 
@@ -54,9 +49,7 @@ class CRUDFeature(CRUDBase[Feature, FeatureCreate, FeatureUpdate]):
         )
         return result.scalars().all()
 
-    async def get_children(
-        self, db: AsyncSession, *, parent_id: int
-    ) -> list[Feature]:
+    async def get_children(self, db: AsyncSession, *, parent_id: int) -> list[Feature]:
         """Get all child features of a parent feature."""
         result = await db.execute(
             select(Feature)
@@ -77,7 +70,9 @@ class CRUDFeature(CRUDBase[Feature, FeatureCreate, FeatureUpdate]):
         )
         return result.scalar_one_or_none()
 
-    async def get_hierarchical_tree(self, db: AsyncSession) -> list[FeatureWithChildren]:
+    async def get_hierarchical_tree(
+        self, db: AsyncSession
+    ) -> list[FeatureWithChildren]:
         """
         Get all features organized in hierarchical tree structure.
         Returns only root features with their children nested.

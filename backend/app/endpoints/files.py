@@ -237,7 +237,7 @@ async def upload_file(
         upload_category = "message-attachments"  # Default category
 
         # Check if this is likely a profile avatar (image file without message context)
-        if file.content_type and file.content_type.startswith('image/'):
+        if file.content_type and file.content_type.startswith("image/"):
             # For now, treat all image uploads as potential profile avatars
             # In the future, this could be determined by a request parameter
             upload_category = "profile-avatars"
@@ -308,7 +308,9 @@ async def download_file(
             )
 
         # Check if user has permission to access this file
-        has_permission = await check_file_access_permission(db, current_user.id, safe_key)
+        has_permission = await check_file_access_permission(
+            db, current_user.id, safe_key
+        )
         if not has_permission:
             logger.warning(f"User {current_user.id} denied access to file {safe_key}")
             raise HTTPException(
@@ -351,7 +353,9 @@ async def download_file(
         # We need to resolve it relative to the base_path
         full_file_path = _resolve_local_path(storage_service.base_path, safe_key)
 
-        logger.info(f"Attempting to serve file: base_path={storage_service.base_path}, safe_key={safe_key}, resolved_path={full_file_path}, exists={full_file_path.exists()}")
+        logger.info(
+            f"Attempting to serve file: base_path={storage_service.base_path}, safe_key={safe_key}, resolved_path={full_file_path}, exists={full_file_path.exists()}"
+        )
 
         # Check if file exists
         if full_file_path.exists():

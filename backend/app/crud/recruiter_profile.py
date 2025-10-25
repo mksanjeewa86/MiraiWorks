@@ -10,7 +10,9 @@ from app.models.recruiter_profile import RecruiterProfile
 from app.schemas.recruiter_profile import RecruiterProfileCreate, RecruiterProfileUpdate
 
 
-class CRUDRecruiterProfile(CRUDBase[RecruiterProfile, RecruiterProfileCreate, RecruiterProfileUpdate]):
+class CRUDRecruiterProfile(
+    CRUDBase[RecruiterProfile, RecruiterProfileCreate, RecruiterProfileUpdate]
+):
     """CRUD operations for recruiter profiles"""
 
     async def get_by_user(
@@ -26,21 +28,14 @@ class CRUDRecruiterProfile(CRUDBase[RecruiterProfile, RecruiterProfileCreate, Re
         self, db: AsyncSession, *, obj_in: RecruiterProfileCreate, user_id: int
     ) -> RecruiterProfile:
         """Create recruiter profile for a specific user"""
-        db_obj = RecruiterProfile(
-            user_id=user_id,
-            **obj_in.model_dump()
-        )
+        db_obj = RecruiterProfile(user_id=user_id, **obj_in.model_dump())
         db.add(db_obj)
         await db.commit()
         await db.refresh(db_obj)
         return db_obj
 
     async def update_by_user(
-        self,
-        db: AsyncSession,
-        *,
-        user_id: int,
-        obj_in: RecruiterProfileUpdate
+        self, db: AsyncSession, *, user_id: int, obj_in: RecruiterProfileUpdate
     ) -> Optional[RecruiterProfile]:
         """Update recruiter profile for a specific user"""
         db_obj = await self.get_by_user(db, user_id=user_id)
@@ -55,9 +50,7 @@ class CRUDRecruiterProfile(CRUDBase[RecruiterProfile, RecruiterProfileCreate, Re
         await db.refresh(db_obj)
         return db_obj
 
-    async def delete_by_user(
-        self, db: AsyncSession, *, user_id: int
-    ) -> bool:
+    async def delete_by_user(self, db: AsyncSession, *, user_id: int) -> bool:
         """Delete recruiter profile for a specific user"""
         db_obj = await self.get_by_user(db, user_id=user_id)
         if not db_obj:

@@ -144,8 +144,16 @@ async def login(
 
     # Create tokens without 2FA
     logger.info("Creating login tokens", user_id=user.id, component="auth")
-    tokens = await auth_service.create_login_tokens(db, user, remember_me=login_data.rememberMe)
-    logger.info("Login successful", user_id=user.id, email=user.email, remember_me=login_data.rememberMe, component="auth")
+    tokens = await auth_service.create_login_tokens(
+        db, user, remember_me=login_data.rememberMe
+    )
+    logger.info(
+        "Login successful",
+        user_id=user.id,
+        email=user.email,
+        remember_me=login_data.rememberMe,
+        component="auth",
+    )
 
     return LoginResponse(
         access_token=tokens["access_token"],
@@ -355,7 +363,9 @@ async def resend_2fa_code(
 
     # Rate limiting for resend attempts
     rate_key = f"2fa_resend:{client_ip}:{resend_data.user_id}"
-    if not await check_rate_limit(rate_key, limit=3, window=300):  # 3 attempts per 5 minutes
+    if not await check_rate_limit(
+        rate_key, limit=3, window=300
+    ):  # 3 attempts per 5 minutes
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Too many resend attempts. Please try again later.",
@@ -396,12 +406,16 @@ async def refresh_token(
 ):
     """Refresh access token using refresh token."""
     # Debug logging
-    token_preview = refresh_data.refresh_token[:10] + "..." if len(refresh_data.refresh_token) > 10 else refresh_data.refresh_token
+    token_preview = (
+        refresh_data.refresh_token[:10] + "..."
+        if len(refresh_data.refresh_token) > 10
+        else refresh_data.refresh_token
+    )
     logger.info(
         "Refresh token request",
         token_preview=token_preview,
         token_length=len(refresh_data.refresh_token),
-        component="auth"
+        component="auth",
     )
 
     user = await auth_service.verify_refresh_token(db, refresh_data.refresh_token)
@@ -409,7 +423,7 @@ async def refresh_token(
         logger.warning(
             "Refresh token verification failed",
             token_preview=token_preview,
-            component="auth"
+            component="auth",
         )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

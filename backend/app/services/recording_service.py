@@ -27,9 +27,7 @@ class RecordingService:
                 return None
 
             # Generate recording session
-            recording_id = (
-                f"rec_{video_call.room_id}_{int(get_utc_now().timestamp())}"
-            )
+            recording_id = f"rec_{video_call.room_id}_{int(get_utc_now().timestamp())}"
 
             # Start recording through video service
             recording_url = await video_service.start_recording(video_call.room_id)

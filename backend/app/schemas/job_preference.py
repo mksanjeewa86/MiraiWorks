@@ -27,7 +27,9 @@ class SalaryPeriod:
 class JobPreferenceBase(BaseModel):
     """Base job preference schema with common fields."""
 
-    desired_job_types: Optional[str] = None  # Comma-separated: Full-time, Part-time, etc.
+    desired_job_types: Optional[
+        str
+    ] = None  # Comma-separated: Full-time, Part-time, etc.
     desired_salary_min: Optional[int] = Field(None, ge=0)
     desired_salary_max: Optional[int] = Field(None, ge=0)
     salary_currency: str = Field(default="USD", max_length=10)

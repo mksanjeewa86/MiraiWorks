@@ -5,7 +5,7 @@ Provides internationalization support for English and Japanese
 
 import json
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Optional
 
 
 class Translator:
@@ -13,7 +13,7 @@ class Translator:
 
     def __init__(self):
         """Initialize the translator and load all translation files"""
-        self.translations: Dict[str, Dict[str, str]] = {}
+        self.translations: dict[str, dict[str, str]] = {}
         self._load_translations()
 
     def _load_translations(self):
@@ -27,9 +27,9 @@ class Translator:
         for locale_file in locale_dir.glob("*.json"):
             locale = locale_file.stem
             try:
-                with open(locale_file, "r", encoding="utf-8") as f:
+                with open(locale_file, encoding="utf-8") as f:
                     self.translations[locale] = json.load(f)
-            except (json.JSONDecodeError, IOError) as e:
+            except (OSError, json.JSONDecodeError) as e:
                 print(f"Warning: Failed to load translations for {locale}: {e}")
                 self.translations[locale] = {}
 

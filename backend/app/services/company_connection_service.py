@@ -53,7 +53,11 @@ class CompanyConnectionService:
             return False
 
         # Scenario 0: Both users in same company - automatically allowed
-        if user1.company_id and user2.company_id and user1.company_id == user2.company_id:
+        if (
+            user1.company_id
+            and user2.company_id
+            and user1.company_id == user2.company_id
+        ):
             return True
 
         # Check various connection scenarios
@@ -288,9 +292,7 @@ class CompanyConnectionService:
 
         return connection
 
-    async def get_connected_users(
-        self, db: AsyncSession, user_id: int
-    ) -> list[User]:
+    async def get_connected_users(self, db: AsyncSession, user_id: int) -> list[User]:
         """
         Get all users that the specified user can interact with.
 

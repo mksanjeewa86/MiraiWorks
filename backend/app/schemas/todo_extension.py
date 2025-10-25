@@ -1,6 +1,6 @@
 """Schemas for todo extension requests."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
@@ -29,14 +29,14 @@ class TodoExtensionRequestCreate(BaseModel):
         if value is None:
             return value
         if isinstance(value, str):
-            from datetime import UTC
+
             value = datetime.fromisoformat(value)
         if isinstance(value, datetime):
             if value.tzinfo is None:
                 # Assume UTC if naive
-                return value.replace(tzinfo=timezone.utc)
+                return value.replace(tzinfo=UTC)
             # Convert to UTC if timezone-aware
-            return value.astimezone(timezone.utc)
+            return value.astimezone(UTC)
         return value
 
     @field_validator("reason")
@@ -67,14 +67,14 @@ class TodoExtensionRequestResponse(BaseModel):
         if value is None:
             return value
         if isinstance(value, str):
-            from datetime import UTC
+
             value = datetime.fromisoformat(value)
         if isinstance(value, datetime):
             if value.tzinfo is None:
                 # Assume UTC if naive
-                return value.replace(tzinfo=timezone.utc)
+                return value.replace(tzinfo=UTC)
             # Convert to UTC if timezone-aware
-            return value.astimezone(timezone.utc)
+            return value.astimezone(UTC)
         return value
 
     @field_validator("status")
@@ -116,14 +116,14 @@ class TodoExtensionRequestRead(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    @field_serializer('requested_due_date', 'responded_at', 'created_at', 'updated_at')
+    @field_serializer("requested_due_date", "responded_at", "created_at", "updated_at")
     def serialize_datetime(self, dt: Optional[datetime], _info) -> Optional[str]:
         """Ensure datetime fields are serialized with UTC timezone information."""
         if dt is None:
             return None
         # If datetime is naive, assume it's UTC and add timezone
         if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
+            dt = dt.replace(tzinfo=UTC)
         # Serialize to ISO format
         return dt.isoformat()
 
@@ -164,13 +164,13 @@ class TodoExtensionNotification(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    @field_serializer('requested_due_date')
+    @field_serializer("requested_due_date")
     def serialize_datetime(self, dt: Optional[datetime], _info) -> Optional[str]:
         """Ensure datetime fields are serialized with UTC timezone information."""
         if dt is None:
             return None
         # If datetime is naive, assume it's UTC and add timezone
         if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
+            dt = dt.replace(tzinfo=UTC)
         # Serialize to ISO format
         return dt.isoformat()

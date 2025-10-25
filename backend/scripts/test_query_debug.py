@@ -1,6 +1,8 @@
 """Debug the messages query."""
 import asyncio
+
 from sqlalchemy import and_, or_, select
+
 from app.database import AsyncSessionLocal
 from app.models.message import Message
 
@@ -75,7 +77,9 @@ async def test_query():
         print(f"Found {len(simple_messages)} messages with simple query:\n")
 
         for msg in simple_messages:
-            print(f"  Message {msg.id}: sender={msg.sender_id}, recipient={msg.recipient_id}")
+            print(
+                f"  Message {msg.id}: sender={msg.sender_id}, recipient={msg.recipient_id}"
+            )
             print(f"    is_deleted_by_sender: {msg.is_deleted_by_sender}")
             print(f"    is_deleted_by_recipient: {msg.is_deleted_by_recipient}")
 

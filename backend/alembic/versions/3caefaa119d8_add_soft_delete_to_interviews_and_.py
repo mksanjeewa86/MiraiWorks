@@ -5,7 +5,8 @@ Revises: recruitment_workflow_001
 Create Date: 2025-10-01 23:34:06.759708
 
 """
-from typing import Sequence, Union
+from collections.abc import Sequence
+from typing import Union
 
 import sqlalchemy as sa
 
@@ -42,9 +43,7 @@ def upgrade() -> None:
         "workflows",
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
     )
-    op.create_index(
-        "ix_workflows_is_deleted", "workflows", ["is_deleted"]
-    )
+    op.create_index("ix_workflows_is_deleted", "workflows", ["is_deleted"])
 
 
 def downgrade() -> None:

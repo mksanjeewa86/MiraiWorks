@@ -89,7 +89,7 @@ class UserConnectionService:
             select(User)
             .options(
                 selectinload(User.company),
-                selectinload(User.user_roles).selectinload(UserRole.role)
+                selectinload(User.user_roles).selectinload(UserRole.role),
             )
             .where(
                 and_(

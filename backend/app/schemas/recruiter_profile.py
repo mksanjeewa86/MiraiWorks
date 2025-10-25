@@ -8,16 +8,27 @@ from pydantic import BaseModel, Field
 
 class RecruiterProfileBase(BaseModel):
     """Base schema for recruiter profile"""
+
     years_of_experience: Optional[int] = Field(None, ge=0, le=50)
-    specializations: Optional[str] = Field(None, max_length=500, description="Comma-separated specializations")
+    specializations: Optional[str] = Field(
+        None, max_length=500, description="Comma-separated specializations"
+    )
     bio: Optional[str] = Field(None, max_length=1000)
     company_description: Optional[str] = Field(None, max_length=1000)
 
     # Recruitment focus
-    industries: Optional[str] = Field(None, max_length=500, description="Comma-separated industries")
-    job_types: Optional[str] = Field(None, max_length=200, description="Comma-separated job types")
-    locations: Optional[str] = Field(None, max_length=500, description="Comma-separated locations")
-    experience_levels: Optional[str] = Field(None, max_length=200, description="Comma-separated experience levels")
+    industries: Optional[str] = Field(
+        None, max_length=500, description="Comma-separated industries"
+    )
+    job_types: Optional[str] = Field(
+        None, max_length=200, description="Comma-separated job types"
+    )
+    locations: Optional[str] = Field(
+        None, max_length=500, description="Comma-separated locations"
+    )
+    experience_levels: Optional[str] = Field(
+        None, max_length=200, description="Comma-separated experience levels"
+    )
 
     # Contact preferences
     calendar_link: Optional[str] = Field(None, max_length=500)
@@ -33,11 +44,13 @@ class RecruiterProfileBase(BaseModel):
 
 class RecruiterProfileCreate(RecruiterProfileBase):
     """Schema for creating recruiter profile"""
+
     pass
 
 
 class RecruiterProfileUpdate(BaseModel):
     """Schema for updating recruiter profile"""
+
     years_of_experience: Optional[int] = Field(None, ge=0, le=50)
     specializations: Optional[str] = Field(None, max_length=500)
     bio: Optional[str] = Field(None, max_length=1000)
@@ -60,6 +73,7 @@ class RecruiterProfileUpdate(BaseModel):
 
 class RecruiterProfileInfo(RecruiterProfileBase):
     """Schema for recruiter profile info (response)"""
+
     id: int
     user_id: int
     created_at: datetime
@@ -74,6 +88,7 @@ class EmployerProfileInfo(BaseModel):
     Schema for employer profile info (minimal)
     Employers don't have a separate table - just use User fields
     """
+
     user_id: int
     full_name: str
     email: str

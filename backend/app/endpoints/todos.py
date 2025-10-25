@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config.endpoints import API_ROUTES
 from app.crud.todo import todo as todo_crud
+from app.crud.todo_viewer_memo import todo_viewer_memo
 from app.database import get_db
 from app.dependencies import get_current_active_user
 from app.models.todo import Todo
@@ -24,7 +25,6 @@ from app.schemas.todo_viewer_memo import (
     TodoViewerMemoRead,
     TodoViewerMemoUpdate,
 )
-from app.crud.todo_viewer_memo import todo_viewer_memo
 from app.services.todo_permissions import TodoPermissionService
 from app.services.todo_viewer_service import todo_viewer_service
 from app.utils.constants import TodoStatus
@@ -135,14 +135,14 @@ async def update_todo(
 
     # Check what fields are being updated
     update_data = todo_in.model_dump(exclude_unset=True)
-    is_only_assignee_memo = (
-        len(update_data) == 1 and "assignee_memo" in update_data
-    )
+    is_only_assignee_memo = len(update_data) == 1 and "assignee_memo" in update_data
 
     # Permission check
     if is_only_assignee_memo:
         # If only updating assignee_memo, check assignee_memo-specific permission
-        if not await TodoPermissionService.can_edit_assignee_memo(db, current_user.id, todo_obj):
+        if not await TodoPermissionService.can_edit_assignee_memo(
+            db, current_user.id, todo_obj
+        ):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You don't have permission to edit the assignee memo",
@@ -320,9 +320,7 @@ async def get_todo_viewers(
         )
         return viewers
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail=str(e)
-        ) from e
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e)) from e
 
 
 @router.put(API_ROUTES.TODOS.VIEWER_MEMO, response_model=TodoViewerMemoRead)
@@ -371,9 +369,7 @@ async def add_viewer_to_todo(
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail=str(e)
             ) from e
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail=str(e)
-        ) from e
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e)) from e
 
 
 @router.delete(API_ROUTES.TODOS.VIEWER_REMOVE, status_code=status.HTTP_204_NO_CONTENT)
@@ -400,6 +396,4 @@ async def remove_viewer_from_todo(
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail=str(e)
             ) from e
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail=str(e)
-        ) from e
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e)) from e

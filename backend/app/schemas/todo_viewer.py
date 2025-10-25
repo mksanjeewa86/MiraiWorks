@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from pydantic import BaseModel, ConfigDict, field_serializer
 
@@ -34,14 +34,14 @@ class TodoViewerRead(BaseModel):
     added_by: int | None
     created_at: datetime
 
-    @field_serializer('created_at')
+    @field_serializer("created_at")
     def serialize_datetime(self, dt: datetime | None, _info) -> str | None:
         """Ensure datetime fields are serialized with UTC timezone information."""
         if dt is None:
             return None
         # If datetime is naive, assume it's UTC and add timezone
         if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
+            dt = dt.replace(tzinfo=UTC)
         # Serialize to ISO format
         return dt.isoformat()
 

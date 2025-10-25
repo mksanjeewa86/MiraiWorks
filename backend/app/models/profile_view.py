@@ -36,7 +36,9 @@ class ProfileView(Base):
     )
     viewer_ip = Column(String(45), nullable=True, comment="IP address of viewer")
     viewer_user_agent = Column(Text, nullable=True, comment="Browser/device info")
-    view_duration = Column(Integer, nullable=True, comment="Duration of view in seconds")
+    view_duration = Column(
+        Integer, nullable=True, comment="Duration of view in seconds"
+    )
     referrer = Column(String(500), nullable=True, comment="How they found the profile")
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
 

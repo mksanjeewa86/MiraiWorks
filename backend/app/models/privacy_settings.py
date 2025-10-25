@@ -21,14 +21,12 @@ class PrivacySettings(BaseModel):
         ForeignKey("users.id", ondelete="CASCADE"),
         unique=True,
         nullable=False,
-        index=True
+        index=True,
     )
 
     # Profile Visibility
     profile_visibility: Mapped[str] = mapped_column(
-        String(20),
-        default=ProfileVisibility.PUBLIC.value,
-        nullable=False
+        String(20), default=ProfileVisibility.PUBLIC.value, nullable=False
     )
 
     # Searchability
@@ -39,10 +37,14 @@ class PrivacySettings(BaseModel):
     show_phone: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     # Profile Section Visibility
-    show_work_experience: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    show_work_experience: Mapped[bool] = mapped_column(
+        Boolean, default=True, nullable=False
+    )
     show_education: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     show_skills: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    show_certifications: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    show_certifications: Mapped[bool] = mapped_column(
+        Boolean, default=True, nullable=False
+    )
     show_projects: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     show_resume: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 

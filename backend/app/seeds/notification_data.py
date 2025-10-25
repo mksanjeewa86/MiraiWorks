@@ -232,7 +232,7 @@ async def seed_notification_data(
             "payload": {
                 "sender": "Jane Smith",
                 "conversation_url": "/messages",
-                "preview": "Hi, I'd like to schedule a follow-up call..."
+                "preview": "Hi, I'd like to schedule a follow-up call...",
             },
             "is_read": False,
             "created_at": get_utc_now() - timedelta(minutes=15),
@@ -246,7 +246,7 @@ async def seed_notification_data(
                 "exam_id": 1,
                 "position": "Full Stack Developer",
                 "time_limit": "90 minutes",
-                "deadline": "2024-01-18T23:59:59Z"
+                "deadline": "2024-01-18T23:59:59Z",
             },
             "is_read": False,
             "created_at": get_utc_now() - timedelta(hours=5),
@@ -260,7 +260,7 @@ async def seed_notification_data(
                 "application_id": 3,
                 "position": "Senior React Developer",
                 "status": "Under Review",
-                "next_step": "Wait for interview invitation"
+                "next_step": "Wait for interview invitation",
             },
             "is_read": True,
             "created_at": get_utc_now() - timedelta(days=3),
@@ -275,7 +275,7 @@ async def seed_notification_data(
             "payload": {
                 "sender": "Michael Chen",
                 "conversation_url": "/messages",
-                "response": "accepted"
+                "response": "accepted",
             },
             "is_read": False,
             "created_at": get_utc_now() - timedelta(hours=2),
@@ -290,7 +290,7 @@ async def seed_notification_data(
                 "candidate_name": "Emma Wilson",
                 "position": "UX Designer",
                 "start_time": "2024-01-16T15:00:00Z",
-                "location": "Conference Room A"
+                "location": "Conference Room A",
             },
             "is_read": False,
             "created_at": get_utc_now() - timedelta(minutes=45),
@@ -306,7 +306,7 @@ async def seed_notification_data(
                 "position": "DevOps Engineer",
                 "resume_score": 95,
                 "skills_match": "Excellent",
-                "experience_years": 7
+                "experience_years": 7,
             },
             "is_read": False,
             "created_at": get_utc_now() - timedelta(hours=7),
@@ -319,7 +319,7 @@ async def seed_notification_data(
             "payload": {
                 "pending_feedback_count": 2,
                 "candidates": ["Alex Johnson", "Maria Garcia"],
-                "deadline": "Today 5:00 PM"
+                "deadline": "Today 5:00 PM",
             },
             "is_read": False,
             "created_at": get_utc_now() - timedelta(hours=3),
@@ -333,7 +333,7 @@ async def seed_notification_data(
             "payload": {
                 "backup_size": "2.4 GB",
                 "backup_time": "3 minutes 12 seconds",
-                "status": "success"
+                "status": "success",
             },
             "is_read": True,
             "created_at": get_utc_now() - timedelta(hours=10),
@@ -347,7 +347,7 @@ async def seed_notification_data(
             "payload": {
                 "current_usage": "85%",
                 "available_space": "75 GB",
-                "recommended_action": "Archive old files or increase storage"
+                "recommended_action": "Archive old files or increase storage",
             },
             "is_read": False,
             "created_at": get_utc_now() - timedelta(hours=4),
@@ -360,7 +360,7 @@ async def seed_notification_data(
             "payload": {
                 "feature": "Video Interviews",
                 "version": "2.5.0",
-                "documentation": "/docs/video-interviews"
+                "documentation": "/docs/video-interviews",
             },
             "is_read": False,
             "created_at": get_utc_now() - timedelta(hours=20),
@@ -375,7 +375,7 @@ async def seed_notification_data(
                 "sender": "Robert Kim",
                 "conversation_url": "/messages",
                 "request_type": "budget_approval",
-                "amount": "$150,000"
+                "amount": "$150,000",
             },
             "is_read": False,
             "created_at": get_utc_now() - timedelta(hours=6),
@@ -389,7 +389,7 @@ async def seed_notification_data(
                 "employee_count": 15,
                 "deadline": "2024-01-25",
                 "departments": ["Engineering", "Sales", "Marketing"],
-                "review_period": "Q4 2023"
+                "review_period": "Q4 2023",
             },
             "is_read": False,
             "created_at": get_utc_now() - timedelta(days=2),
@@ -403,7 +403,7 @@ async def seed_notification_data(
                 "employee_name": "Alice Thompson",
                 "rating": 4.5,
                 "department": "Marketing",
-                "feedback_summary": "Great experience overall, well organized"
+                "feedback_summary": "Great experience overall, well organized",
             },
             "is_read": True,
             "created_at": get_utc_now() - timedelta(days=1),
@@ -418,7 +418,7 @@ async def seed_notification_data(
             "payload": {
                 "view_count": 12,
                 "period": "This week",
-                "top_companies": ["TechCorp", "InnovateLabs", "DataSystems"]
+                "top_companies": ["TechCorp", "InnovateLabs", "DataSystems"],
             },
             "is_read": False,
             "created_at": get_utc_now() - timedelta(hours=16),
@@ -431,7 +431,7 @@ async def seed_notification_data(
             "payload": {
                 "completion_percentage": 75,
                 "missing_sections": ["Skills", "Certifications"],
-                "benefit": "Profiles with skills get 3x more views"
+                "benefit": "Profiles with skills get 3x more views",
             },
             "is_read": True,
             "created_at": get_utc_now() - timedelta(days=5),

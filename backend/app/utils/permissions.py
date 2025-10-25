@@ -160,6 +160,6 @@ def is_recruiter(user: User) -> bool:
     from app.utils.constants import CompanyType
 
     # Check if user has a company and if that company is of type 'recruiter'
-    if user.company and hasattr(user.company, 'type'):
+    if user.company and hasattr(user.company, "type"):
         return user.company.type == CompanyType.RECRUITER.value
     return False

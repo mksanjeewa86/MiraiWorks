@@ -871,7 +871,9 @@ async def search_events(
 # ==================== EVENT INVITATIONS ENDPOINTS ====================
 
 
-@router.get(API_ROUTES.CALENDAR.INVITATIONS_PENDING, response_model=list[CalendarEventInfo])
+@router.get(
+    API_ROUTES.CALENDAR.INVITATIONS_PENDING, response_model=list[CalendarEventInfo]
+)
 async def get_pending_invitations(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
@@ -880,7 +882,9 @@ async def get_pending_invitations(
     try:
         from app.crud.calendar_event import calendar_event
 
-        events = await calendar_event.get_pending_invitations(db, user_id=current_user.id)
+        events = await calendar_event.get_pending_invitations(
+            db, user_id=current_user.id
+        )
         return [CalendarEventInfo.model_validate(event) for event in events]
 
     except Exception as e:
@@ -911,7 +915,9 @@ async def accept_invitation(
                 detail="Invitation not found",
             )
 
-        logger.info(f"User {current_user.id} accepted invitation for event {invitation_id}")
+        logger.info(
+            f"User {current_user.id} accepted invitation for event {invitation_id}"
+        )
         return {"message": "Invitation accepted successfully"}
 
     except HTTPException:
@@ -944,7 +950,9 @@ async def reject_invitation(
                 detail="Invitation not found",
             )
 
-        logger.info(f"User {current_user.id} rejected invitation for event {invitation_id}")
+        logger.info(
+            f"User {current_user.id} rejected invitation for event {invitation_id}"
+        )
         return {"message": "Invitation rejected successfully"}
 
     except HTTPException:

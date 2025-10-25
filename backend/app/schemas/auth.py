@@ -18,7 +18,9 @@ class RegisterRequest(BaseModel):
     last_name: str
     phone: Optional[str] = None
     role: Optional[str] = "candidate"  # candidate, employer, recruiter
-    password: Optional[str] = None  # Optional - if not provided, system generates temp password
+    password: Optional[
+        str
+    ] = None  # Optional - if not provided, system generates temp password
     company_name: Optional[str] = None
     company_domain: Optional[str] = None
 
@@ -41,7 +43,9 @@ class RegisterRequest(BaseModel):
     @classmethod
     def validate_role(cls, v):
         if v and v not in ["candidate", "employer", "recruiter", "admin"]:
-            raise ValueError("Invalid role. Must be candidate, employer, recruiter, or admin")
+            raise ValueError(
+                "Invalid role. Must be candidate, employer, recruiter, or admin"
+            )
         return v or "candidate"
 
 

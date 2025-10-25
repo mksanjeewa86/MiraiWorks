@@ -1,8 +1,6 @@
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
-import type { Exam } from '@/types/exam';
-
 
 export default function CandidateDashboard() {
   const { user } = useAuth();

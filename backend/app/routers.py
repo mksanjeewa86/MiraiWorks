@@ -71,7 +71,9 @@ def include_routers(app: FastAPI) -> None:
         tags=["workflow-candidates"],
     )
     app.include_router(companies.router, prefix="/api/admin", tags=["companies"])
-    app.include_router(companies.router, prefix="/api/companies", tags=["companies-user"])
+    app.include_router(
+        companies.router, prefix="/api/companies", tags=["companies-user"]
+    )
     app.include_router(
         company_connections.router,
         prefix="/api/company-connections",
@@ -98,12 +100,20 @@ def include_routers(app: FastAPI) -> None:
         notifications.router, prefix="/api/notifications", tags=["notifications"]
     )
     app.include_router(positions.router, prefix="/api/positions", tags=["positions"])
-    app.include_router(privacy_settings.router, prefix="/api/privacy-settings", tags=["privacy-settings"])
+    app.include_router(
+        privacy_settings.router,
+        prefix="/api/privacy-settings",
+        tags=["privacy-settings"],
+    )
     app.include_router(profile.router, prefix="/api/profile", tags=["profile"])
     app.include_router(profile_views.router, prefix="/api", tags=["profile-views"])
     app.include_router(public.router, prefix="/api/public", tags=["public"])
     app.include_router(question_bank.router, prefix="/api", tags=["question-banks"])
-    app.include_router(recruiter_profile.router, prefix="/api/recruiter-profile", tags=["recruiter-profile"])
+    app.include_router(
+        recruiter_profile.router,
+        prefix="/api/recruiter-profile",
+        tags=["recruiter-profile"],
+    )
     app.include_router(resumes.router, prefix="/api/resumes", tags=["resumes"])
     app.include_router(subscription.router, prefix="/api", tags=["subscriptions"])
     app.include_router(

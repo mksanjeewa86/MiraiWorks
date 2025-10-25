@@ -1,6 +1,6 @@
 """Profile views API endpoints."""
 
-from typing import List, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,7 +20,9 @@ from app.schemas.profile_view import (
 router = APIRouter(prefix="/profile-views", tags=["profile-views"])
 
 
-@router.post(API_ROUTES.PROFILE_VIEWS.BASE, response_model=ProfileViewInfo, status_code=201)
+@router.post(
+    API_ROUTES.PROFILE_VIEWS.BASE, response_model=ProfileViewInfo, status_code=201
+)
 async def record_profile_view(
     *,
     db: AsyncSession = Depends(get_db),
@@ -76,7 +78,7 @@ async def record_profile_view(
     )
 
 
-@router.get(API_ROUTES.PROFILE_VIEWS.MY_VIEWS, response_model=List[ProfileViewInfo])
+@router.get(API_ROUTES.PROFILE_VIEWS.MY_VIEWS, response_model=list[ProfileViewInfo])
 async def get_my_profile_views(
     *,
     db: AsyncSession = Depends(get_db),
@@ -84,7 +86,7 @@ async def get_my_profile_views(
     skip: int = 0,
     limit: int = 100,
     include_anonymous: bool = True,
-) -> List[ProfileViewInfo]:
+) -> list[ProfileViewInfo]:
     """
     Get all profile views for the current user's profile.
 
@@ -139,14 +141,14 @@ async def get_profile_view_stats(
     return ProfileViewStats(**stats)
 
 
-@router.get(API_ROUTES.PROFILE_VIEWS.RECENT_VIEWERS, response_model=List[RecentViewer])
+@router.get(API_ROUTES.PROFILE_VIEWS.RECENT_VIEWERS, response_model=list[RecentViewer])
 async def get_recent_viewers(
     *,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
     limit: int = 10,
     days: Optional[int] = 30,
-) -> List[RecentViewer]:
+) -> list[RecentViewer]:
     """
     Get list of recent profile viewers with details.
 

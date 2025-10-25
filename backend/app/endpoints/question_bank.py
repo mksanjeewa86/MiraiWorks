@@ -65,7 +65,10 @@ async def create_question_bank(
     else:
         # Creating company bank - must be user's company
         if not is_system_admin:
-            if not current_user.company_id or bank_data.company_id != current_user.company_id:
+            if (
+                not current_user.company_id
+                or bank_data.company_id != current_user.company_id
+            ):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Can only create banks for your own company",
@@ -236,7 +239,9 @@ async def delete_question_bank(
 # Question Management
 
 
-@router.get(API_ROUTES.QUESTION_BANKS.QUESTIONS, response_model=list[QuestionBankItemInfo])
+@router.get(
+    API_ROUTES.QUESTION_BANKS.QUESTIONS, response_model=list[QuestionBankItemInfo]
+)
 async def get_bank_questions(
     bank_id: int,
     db: AsyncSession = Depends(get_db),
@@ -307,7 +312,9 @@ async def add_question_to_bank(
     return question
 
 
-@router.put(API_ROUTES.QUESTION_BANKS.QUESTION_BY_ID, response_model=QuestionBankItemInfo)
+@router.put(
+    API_ROUTES.QUESTION_BANKS.QUESTION_BY_ID, response_model=QuestionBankItemInfo
+)
 async def update_bank_question(
     question_id: int,
     question_data: QuestionBankItemUpdate,

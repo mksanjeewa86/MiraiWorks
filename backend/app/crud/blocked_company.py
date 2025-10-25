@@ -2,17 +2,17 @@
 CRUD operations for Blocked Companies
 """
 
-from typing import List, Optional
+from typing import Optional
 
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+
 from app.models import BlockedCompany, Company
 
 
 async def get_user_blocked_companies(
     db: AsyncSession, user_id: int
-) -> List[BlockedCompany]:
+) -> list[BlockedCompany]:
     """Get all blocked companies for a user."""
     result = await db.execute(
         select(BlockedCompany)
@@ -38,7 +38,10 @@ async def get_blocked_company_by_id(
 
 
 async def check_if_company_blocked(
-    db: AsyncSession, user_id: int, company_id: Optional[int] = None, company_name: Optional[str] = None
+    db: AsyncSession,
+    user_id: int,
+    company_id: Optional[int] = None,
+    company_name: Optional[str] = None,
 ) -> bool:
     """
     Check if a company is blocked by the user.
@@ -53,9 +56,7 @@ async def check_if_company_blocked(
     else:
         return False
 
-    result = await db.execute(
-        select(BlockedCompany).where(and_(*conditions))
-    )
+    result = await db.execute(select(BlockedCompany).where(and_(*conditions)))
     return result.scalar_one_or_none() is not None
 
 
@@ -100,30 +101,25 @@ async def delete_blocked_company(
 
 async def search_companies_for_blocking(
     db: AsyncSession, search_query: str, limit: int = 10
-) -> List[Company]:
+) -> list[Company]:
     """
     Search for companies by name for the blocking interface.
     Returns companies that match the search query.
     """
     result = await db.execute(
-        select(Company)
-        .where(Company.name.ilike(f"%{search_query}%"))
-        .limit(limit)
+        select(Company).where(Company.name.ilike(f"%{search_query}%")).limit(limit)
     )
     return list(result.scalars().all())
 
 
-async def get_blocked_company_ids_for_user(
-    db: AsyncSession, user_id: int
-) -> List[int]:
+async def get_blocked_company_ids_for_user(db: AsyncSession, user_id: int) -> list[int]:
     """
     Get list of blocked company IDs for a user.
     This is useful for filtering search results.
     Returns only company_ids (not company_names).
     """
     result = await db.execute(
-        select(BlockedCompany.company_id)
-        .where(
+        select(BlockedCompany.company_id).where(
             and_(
                 BlockedCompany.user_id == user_id,
                 BlockedCompany.company_id.isnot(None),
@@ -133,15 +129,12 @@ async def get_blocked_company_ids_for_user(
     return [row[0] for row in result.all() if row[0] is not None]
 
 
-async def get_users_who_blocked_company(
-    db: AsyncSession, company_id: int
-) -> List[int]:
+async def get_users_who_blocked_company(db: AsyncSession, company_id: int) -> list[int]:
     """
     Get list of user IDs who have blocked a specific company.
     This is useful for excluding candidates from search results.
     """
     result = await db.execute(
-        select(BlockedCompany.user_id)
-        .where(BlockedCompany.company_id == company_id)
+        select(BlockedCompany.user_id).where(BlockedCompany.company_id == company_id)
     )
     return [row[0] for row in result.all()]

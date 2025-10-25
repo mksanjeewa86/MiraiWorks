@@ -21,9 +21,7 @@ class TodoViewerService:
         return todo.owner_id == user_id or todo.created_by == user_id
 
     @staticmethod
-    async def can_view_viewers_list(
-        db: AsyncSession, user_id: int, todo: Todo
-    ) -> bool:
+    async def can_view_viewers_list(db: AsyncSession, user_id: int, todo: Todo) -> bool:
         """Check if user can view the list of viewers.
 
         Only the creator can see the viewers list.
@@ -37,9 +35,7 @@ class TodoViewerService:
         return await todo_viewer_crud.is_viewer(db, todo_id=todo_id, user_id=user_id)
 
     @staticmethod
-    async def can_view_as_viewer(
-        db: AsyncSession, user_id: int, todo: Todo
-    ) -> bool:
+    async def can_view_as_viewer(db: AsyncSession, user_id: int, todo: Todo) -> bool:
         """Check if user can view todo as a viewer.
 
         Viewers can only view if:
@@ -141,16 +137,12 @@ class TodoViewerService:
         viewers = await todo_viewer_crud.get_viewers_for_todo(db, todo_id=todo_id)
 
         # Convert to response schema
-        viewer_items = [
-            TodoViewerWithUser.model_validate(viewer) for viewer in viewers
-        ]
+        viewer_items = [TodoViewerWithUser.model_validate(viewer) for viewer in viewers]
 
         return TodoViewerListResponse(items=viewer_items, total=len(viewer_items))
 
     @staticmethod
-    async def get_viewable_todos_for_user(
-        db: AsyncSession, user_id: int
-    ) -> list[Todo]:
+    async def get_viewable_todos_for_user(db: AsyncSession, user_id: int) -> list[Todo]:
         """Get all todos that a user can view as a viewer."""
         viewer_records = await todo_viewer_crud.get_todos_for_viewer(
             db, user_id=user_id

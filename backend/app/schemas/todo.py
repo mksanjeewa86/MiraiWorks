@@ -1,16 +1,16 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
 from app.utils.constants import (
-    VisibilityStatus,
     TodoPriority,
     TodoPublishStatus,
     TodoStatus,
     TodoType,
+    VisibilityStatus,
 )
 
 
@@ -177,14 +177,23 @@ class TodoRead(BaseModel):
     reviewed_at: Optional[datetime] = None
     reviewed_by: Optional[int] = None
 
-    @field_serializer('due_datetime', 'completed_at', 'expired_at', 'deleted_at', 'created_at', 'updated_at', 'submitted_at', 'reviewed_at')
+    @field_serializer(
+        "due_datetime",
+        "completed_at",
+        "expired_at",
+        "deleted_at",
+        "created_at",
+        "updated_at",
+        "submitted_at",
+        "reviewed_at",
+    )
     def serialize_datetime(self, dt: Optional[datetime], _info) -> Optional[str]:
         """Ensure datetime fields are serialized with UTC timezone information."""
         if dt is None:
             return None
         # If datetime is naive, assume it's UTC and add timezone
         if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
+            dt = dt.replace(tzinfo=UTC)
         # Serialize to ISO format
         return dt.isoformat()
 
@@ -216,14 +225,14 @@ class TodoExtensionValidation(BaseModel):
     days_extension_allowed: int = 3
     reason: Optional[str] = None  # Reason why extension cannot be requested
 
-    @field_serializer('max_allowed_due_date')
+    @field_serializer("max_allowed_due_date")
     def serialize_datetime(self, dt: Optional[datetime], _info) -> Optional[str]:
         """Ensure datetime fields are serialized with UTC timezone information."""
         if dt is None:
             return None
         # If datetime is naive, assume it's UTC and add timezone
         if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
+            dt = dt.replace(tzinfo=UTC)
         # Serialize to ISO format
         return dt.isoformat()
 

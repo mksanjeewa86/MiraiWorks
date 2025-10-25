@@ -11,7 +11,6 @@ from app.crud.todo_attachment import todo_attachment
 from app.database import get_db
 from app.dependencies import get_current_active_user
 from app.models.user import User
-from app.services.todo_permissions import TodoPermissionService
 from app.schemas.todo_attachment import (
     AttachmentStats,
     BulkDeleteRequest,
@@ -22,6 +21,7 @@ from app.schemas.todo_attachment import (
     TodoAttachmentList,
 )
 from app.services.file_storage_service import file_storage_service
+from app.services.todo_permissions import TodoPermissionService
 
 router = APIRouter()
 
@@ -62,7 +62,9 @@ async def upload_todo_attachment(
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
     # Check if user can add attachments (only owner)
-    if not await TodoPermissionService.can_add_attachments(db, current_user.id, db_todo):
+    if not await TodoPermissionService.can_add_attachments(
+        db, current_user.id, db_todo
+    ):
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
     # Save file using storage service

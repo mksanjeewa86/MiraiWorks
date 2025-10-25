@@ -91,7 +91,9 @@ async def get_users(
 
     # Determine company filter based on permissions
     # Recruiters and company admins can only see users from their company
-    if (is_company_admin(current_user) or is_recruiter(current_user)) and not is_super_admin(current_user):
+    if (
+        is_company_admin(current_user) or is_recruiter(current_user)
+    ) and not is_super_admin(current_user):
         company_id = current_user.company_id
 
     users, total = await user_crud.user.get_users_paginated(
@@ -811,7 +813,11 @@ async def update_user(
         super_admin_company_id = super_admin_company_result.scalar_one_or_none()
 
         # Check if updating user to candidate in super admin's company
-        target_company_id = user_data.company_id if user_data.company_id is not None else user.company_id
+        target_company_id = (
+            user_data.company_id
+            if user_data.company_id is not None
+            else user.company_id
+        )
         if target_company_id == super_admin_company_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

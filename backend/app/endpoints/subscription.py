@@ -48,7 +48,9 @@ async def get_public_plans(db: AsyncSession = Depends(get_db)):
     return plans
 
 
-@router.get(API_ROUTES.SUBSCRIPTIONS.PLAN_BY_ID, response_model=SubscriptionPlanWithFeatures)
+@router.get(
+    API_ROUTES.SUBSCRIPTIONS.PLAN_BY_ID, response_model=SubscriptionPlanWithFeatures
+)
 async def get_plan_with_features(plan_id: int, db: AsyncSession = Depends(get_db)):
     """
     Get a subscription plan with its features.
@@ -71,7 +73,10 @@ async def get_plan_with_features(plan_id: int, db: AsyncSession = Depends(get_db
 # ============================================================================
 
 
-@router.get(API_ROUTES.SUBSCRIPTIONS.MY_SUBSCRIPTION, response_model=CompanySubscriptionWithFeatures)
+@router.get(
+    API_ROUTES.SUBSCRIPTIONS.MY_SUBSCRIPTION,
+    response_model=CompanySubscriptionWithFeatures,
+)
 async def get_my_subscription(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
@@ -103,14 +108,20 @@ async def get_my_subscription(
     )
 
     # Build subscription response, excluding 'plan' from dict to avoid duplicate
-    subscription_dict = {k: v for k, v in subscription.__dict__.items() if k != 'plan' and not k.startswith('_')}
+    subscription_dict = {
+        k: v
+        for k, v in subscription.__dict__.items()
+        if k != "plan" and not k.startswith("_")
+    }
 
-    return CompanySubscriptionWithFeatures(
-        **subscription_dict, plan=plan_with_features
-    )
+    return CompanySubscriptionWithFeatures(**subscription_dict, plan=plan_with_features)
 
 
-@router.post(API_ROUTES.SUBSCRIPTIONS.SUBSCRIBE, response_model=CompanySubscriptionInfo, status_code=201)
+@router.post(
+    API_ROUTES.SUBSCRIPTIONS.SUBSCRIBE,
+    response_model=CompanySubscriptionInfo,
+    status_code=201,
+)
 async def subscribe_to_plan(
     subscription_data: CompanySubscriptionCreate,
     db: AsyncSession = Depends(get_db),
@@ -149,7 +160,9 @@ async def subscribe_to_plan(
     return subscription
 
 
-@router.put(API_ROUTES.SUBSCRIPTIONS.UPDATE_SUBSCRIPTION, response_model=CompanySubscriptionInfo)
+@router.put(
+    API_ROUTES.SUBSCRIPTIONS.UPDATE_SUBSCRIPTION, response_model=CompanySubscriptionInfo
+)
 async def update_my_subscription(
     subscription_data: CompanySubscriptionUpdate,
     db: AsyncSession = Depends(get_db),
@@ -232,7 +245,9 @@ async def check_feature_access(
 
 
 @router.post(
-    API_ROUTES.SUBSCRIPTIONS.REQUEST_PLAN_CHANGE, response_model=PlanChangeRequestInfo, status_code=201
+    API_ROUTES.SUBSCRIPTIONS.REQUEST_PLAN_CHANGE,
+    response_model=PlanChangeRequestInfo,
+    status_code=201,
 )
 async def request_plan_change(
     request_data: PlanChangeRequestCreate,
@@ -261,7 +276,10 @@ async def request_plan_change(
     return change_request
 
 
-@router.get(API_ROUTES.SUBSCRIPTIONS.MY_PLAN_CHANGE_REQUESTS, response_model=list[PlanChangeRequestWithDetails])
+@router.get(
+    API_ROUTES.SUBSCRIPTIONS.MY_PLAN_CHANGE_REQUESTS,
+    response_model=list[PlanChangeRequestWithDetails],
+)
 async def get_my_plan_change_requests(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
@@ -285,7 +303,8 @@ async def get_my_plan_change_requests(
 
 
 @router.get(
-    API_ROUTES.SUBSCRIPTIONS.ALL_PLAN_CHANGE_REQUESTS, response_model=list[PlanChangeRequestWithDetails]
+    API_ROUTES.SUBSCRIPTIONS.ALL_PLAN_CHANGE_REQUESTS,
+    response_model=list[PlanChangeRequestWithDetails],
 )
 async def get_all_plan_change_requests(
     status: Optional[str] = None,
@@ -315,20 +334,20 @@ async def get_all_plan_change_requests(
     for req in requests:
         # Create a dict from the model, excluding relationship fields
         req_dict = {
-            'id': req.id,
-            'company_id': req.company_id,
-            'subscription_id': req.subscription_id,
-            'current_plan_id': req.current_plan_id,
-            'requested_plan_id': req.requested_plan_id,
-            'request_type': req.request_type,
-            'requested_by': req.requested_by,
-            'request_message': req.request_message,
-            'status': req.status,
-            'reviewed_by': req.reviewed_by,
-            'review_message': req.review_message,
-            'reviewed_at': req.reviewed_at,
-            'created_at': req.created_at,
-            'updated_at': req.updated_at,
+            "id": req.id,
+            "company_id": req.company_id,
+            "subscription_id": req.subscription_id,
+            "current_plan_id": req.current_plan_id,
+            "requested_plan_id": req.requested_plan_id,
+            "request_type": req.request_type,
+            "requested_by": req.requested_by,
+            "request_message": req.request_message,
+            "status": req.status,
+            "reviewed_by": req.reviewed_by,
+            "review_message": req.review_message,
+            "reviewed_at": req.reviewed_at,
+            "created_at": req.created_at,
+            "updated_at": req.updated_at,
         }
 
         results.append(
@@ -371,20 +390,20 @@ async def review_plan_change_request(
 
     # Create a dict from the model, excluding relationship fields
     req_dict = {
-        'id': reviewed_request.id,
-        'company_id': reviewed_request.company_id,
-        'subscription_id': reviewed_request.subscription_id,
-        'current_plan_id': reviewed_request.current_plan_id,
-        'requested_plan_id': reviewed_request.requested_plan_id,
-        'request_type': reviewed_request.request_type,
-        'requested_by': reviewed_request.requested_by,
-        'request_message': reviewed_request.request_message,
-        'status': reviewed_request.status,
-        'reviewed_by': reviewed_request.reviewed_by,
-        'review_message': reviewed_request.review_message,
-        'reviewed_at': reviewed_request.reviewed_at,
-        'created_at': reviewed_request.created_at,
-        'updated_at': reviewed_request.updated_at,
+        "id": reviewed_request.id,
+        "company_id": reviewed_request.company_id,
+        "subscription_id": reviewed_request.subscription_id,
+        "current_plan_id": reviewed_request.current_plan_id,
+        "requested_plan_id": reviewed_request.requested_plan_id,
+        "request_type": reviewed_request.request_type,
+        "requested_by": reviewed_request.requested_by,
+        "request_message": reviewed_request.request_message,
+        "status": reviewed_request.status,
+        "reviewed_by": reviewed_request.reviewed_by,
+        "review_message": reviewed_request.review_message,
+        "reviewed_at": reviewed_request.reviewed_at,
+        "created_at": reviewed_request.created_at,
+        "updated_at": reviewed_request.updated_at,
     }
 
     return PlanChangeRequestWithDetails(
@@ -395,9 +414,7 @@ async def review_plan_change_request(
             reviewed_request.company.name if reviewed_request.company else None
         ),
         requester_name=(
-            reviewed_request.requester.full_name
-            if reviewed_request.requester
-            else None
+            reviewed_request.requester.full_name if reviewed_request.requester else None
         ),
         reviewer_name=(
             reviewed_request.reviewer.full_name if reviewed_request.reviewer else None
@@ -428,20 +445,20 @@ async def cancel_plan_change_request(
 
     # Create a dict from the model, excluding relationship fields
     req_dict = {
-        'id': cancelled_request.id,
-        'company_id': cancelled_request.company_id,
-        'subscription_id': cancelled_request.subscription_id,
-        'current_plan_id': cancelled_request.current_plan_id,
-        'requested_plan_id': cancelled_request.requested_plan_id,
-        'request_type': cancelled_request.request_type,
-        'requested_by': cancelled_request.requested_by,
-        'request_message': cancelled_request.request_message,
-        'status': cancelled_request.status,
-        'reviewed_by': cancelled_request.reviewed_by,
-        'review_message': cancelled_request.review_message,
-        'reviewed_at': cancelled_request.reviewed_at,
-        'created_at': cancelled_request.created_at,
-        'updated_at': cancelled_request.updated_at,
+        "id": cancelled_request.id,
+        "company_id": cancelled_request.company_id,
+        "subscription_id": cancelled_request.subscription_id,
+        "current_plan_id": cancelled_request.current_plan_id,
+        "requested_plan_id": cancelled_request.requested_plan_id,
+        "request_type": cancelled_request.request_type,
+        "requested_by": cancelled_request.requested_by,
+        "request_message": cancelled_request.request_message,
+        "status": cancelled_request.status,
+        "reviewed_by": cancelled_request.reviewed_by,
+        "review_message": cancelled_request.review_message,
+        "reviewed_at": cancelled_request.reviewed_at,
+        "created_at": cancelled_request.created_at,
+        "updated_at": cancelled_request.updated_at,
     }
 
     return PlanChangeRequestWithDetails(

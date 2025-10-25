@@ -135,7 +135,9 @@ class ExamQuestion(BaseModel):
         Integer, ForeignKey("question_banks.id", ondelete="SET NULL"), nullable=True
     )  # If from question bank
     source_question_id = Column(
-        Integer, ForeignKey("question_bank_items.id", ondelete="SET NULL"), nullable=True
+        Integer,
+        ForeignKey("question_bank_items.id", ondelete="SET NULL"),
+        nullable=True,
     )  # Original question
 
     # Relationships
@@ -144,7 +146,11 @@ class ExamQuestion(BaseModel):
         "ExamAnswer", back_populates="question", cascade="all, delete-orphan"
     )
     source_bank = relationship("QuestionBank", foreign_keys=[source_bank_id])
-    source_question = relationship("QuestionBankItem", foreign_keys=[source_question_id], back_populates="used_in_exams")
+    source_question = relationship(
+        "QuestionBankItem",
+        foreign_keys=[source_question_id],
+        back_populates="used_in_exams",
+    )
 
     def __repr__(self):
         return f"<ExamQuestion(id={self.id}, exam_id={self.exam_id}, type='{self.question_type}')>"
@@ -279,7 +285,9 @@ class ExamAssignment(BaseModel):
     due_date = Column(DateTime(timezone=True), nullable=True)
     custom_time_limit_minutes = Column(Integer, nullable=True)  # Override exam default
     custom_max_attempts = Column(Integer, nullable=True)  # Override exam default
-    custom_is_randomized = Column(Boolean, nullable=True)  # Override exam default randomization
+    custom_is_randomized = Column(
+        Boolean, nullable=True
+    )  # Override exam default randomization
 
     # Status
     is_active = Column(Boolean, default=True)
@@ -305,7 +313,9 @@ class ExamAssignment(BaseModel):
     candidate = relationship("User", foreign_keys=[candidate_id])
     assigner = relationship("User", foreign_keys=[assigned_by])
     sessions = relationship("ExamSession", back_populates="assignment")
-    todo = relationship("Todo", foreign_keys=[todo_id], backref="exam_assignment", uselist=False)
+    todo = relationship(
+        "Todo", foreign_keys=[todo_id], backref="exam_assignment", uselist=False
+    )
     workflow_node_execution = relationship(
         "WorkflowNodeExecution", foreign_keys=[workflow_node_execution_id]
     )

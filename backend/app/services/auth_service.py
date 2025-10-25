@@ -103,7 +103,7 @@ class AuthService:
             user_id=user_id,
             token_hash=token_hash,
             expires_at=expires_at,
-            remember_me=remember_me
+            remember_me=remember_me,
         )
 
         db.add(refresh_token)

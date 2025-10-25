@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Optional
 
@@ -49,11 +49,11 @@ class CalendarEventBase(BaseModel):
     @classmethod
     def validate_start_datetime(cls, v):
         # Convert to timezone-aware datetime for comparison if needed
-        min_date = datetime(1900, 1, 1, tzinfo=timezone.utc)
-        max_date = datetime(2100, 12, 31, 23, 59, 59, tzinfo=timezone.utc)
+        min_date = datetime(1900, 1, 1, tzinfo=UTC)
+        max_date = datetime(2100, 12, 31, 23, 59, 59, tzinfo=UTC)
 
         # Make value timezone-aware if it's naive
-        v_aware = v if v.tzinfo is not None else v.replace(tzinfo=timezone.utc)
+        v_aware = v if v.tzinfo is not None else v.replace(tzinfo=UTC)
 
         if v_aware < min_date or v_aware > max_date:
             raise ValueError("start_datetime must be between 1900 and 2100")
@@ -93,11 +93,11 @@ class CalendarEventUpdate(BaseModel):
     def validate_start_datetime(cls, v):
         if v:
             # Convert to timezone-aware datetime for comparison if needed
-            min_date = datetime(1900, 1, 1, tzinfo=timezone.utc)
-            max_date = datetime(2100, 12, 31, 23, 59, 59, tzinfo=timezone.utc)
+            min_date = datetime(1900, 1, 1, tzinfo=UTC)
+            max_date = datetime(2100, 12, 31, 23, 59, 59, tzinfo=UTC)
 
             # Make value timezone-aware if it's naive
-            v_aware = v if v.tzinfo is not None else v.replace(tzinfo=timezone.utc)
+            v_aware = v if v.tzinfo is not None else v.replace(tzinfo=UTC)
 
             if v_aware < min_date or v_aware > max_date:
                 raise ValueError("start_datetime must be between 1900 and 2100")
@@ -127,14 +127,14 @@ class CalendarEventInfo(CalendarEventBase):
     is_instance: bool = False
     attendees: Optional[list[AttendeeInfo]] = Field(default_factory=list)
 
-    @field_serializer('start_datetime', 'end_datetime', 'created_at', 'updated_at')
+    @field_serializer("start_datetime", "end_datetime", "created_at", "updated_at")
     def serialize_datetime(self, dt: Optional[datetime], _info) -> Optional[str]:
         """Ensure datetime fields are serialized with UTC timezone information."""
         if dt is None:
             return None
         # If datetime is naive, assume it's UTC and add timezone
         if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
+            dt = dt.replace(tzinfo=UTC)
         # Serialize to ISO format with Z suffix
         return dt.isoformat()
 

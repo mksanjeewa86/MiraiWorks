@@ -8,15 +8,16 @@ from app.models.todo_viewer_memo import TodoViewerMemo
 from app.schemas.todo_viewer_memo import TodoViewerMemoCreate, TodoViewerMemoUpdate
 
 
-class CRUDTodoViewerMemo(CRUDBase[TodoViewerMemo, TodoViewerMemoCreate, TodoViewerMemoUpdate]):
+class CRUDTodoViewerMemo(
+    CRUDBase[TodoViewerMemo, TodoViewerMemoCreate, TodoViewerMemoUpdate]
+):
     async def get_by_todo_and_user(
         self, db: AsyncSession, *, todo_id: int, user_id: int
     ) -> Optional[TodoViewerMemo]:
         """Get viewer memo for specific todo and user."""
         result = await db.execute(
             select(TodoViewerMemo).where(
-                TodoViewerMemo.todo_id == todo_id,
-                TodoViewerMemo.user_id == user_id
+                TodoViewerMemo.todo_id == todo_id, TodoViewerMemo.user_id == user_id
             )
         )
         return result.scalar_one_or_none()
@@ -33,11 +34,7 @@ class CRUDTodoViewerMemo(CRUDBase[TodoViewerMemo, TodoViewerMemoCreate, TodoView
             await db.refresh(existing)
             return existing
         else:
-            db_obj = TodoViewerMemo(
-                todo_id=todo_id,
-                user_id=user_id,
-                memo=memo
-            )
+            db_obj = TodoViewerMemo(todo_id=todo_id, user_id=user_id, memo=memo)
             db.add(db_obj)
             await db.commit()
             await db.refresh(db_obj)

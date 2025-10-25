@@ -113,7 +113,11 @@ async def get_system_update(
     return result
 
 
-@router.post(API_ROUTES.SYSTEM_UPDATES.BASE, response_model=SystemUpdateInfo, status_code=status.HTTP_201_CREATED)
+@router.post(
+    API_ROUTES.SYSTEM_UPDATES.BASE,
+    response_model=SystemUpdateInfo,
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_system_update(
     update_in: SystemUpdateCreate,
     db: AsyncSession = Depends(get_db),

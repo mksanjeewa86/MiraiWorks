@@ -65,9 +65,7 @@ class CRUDPrivacySettings:
         await db.refresh(db_obj)
         return db_obj
 
-    async def get_or_create(
-        self, db: AsyncSession, user_id: int
-    ) -> PrivacySettings:
+    async def get_or_create(self, db: AsyncSession, user_id: int) -> PrivacySettings:
         """Get privacy settings or create with defaults if not exists"""
         db_obj = await self.get_by_user(db, user_id=user_id)
         if db_obj:

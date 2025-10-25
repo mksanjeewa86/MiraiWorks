@@ -86,7 +86,7 @@ class SubscriptionService:
         company_id: int,
         requested_plan_id: int,
         requested_by: int,
-        request_message: Optional[str] = None
+        request_message: Optional[str] = None,
     ):
         """
         Create a plan change request (upgrade or downgrade).
@@ -144,7 +144,9 @@ class SubscriptionService:
         try:
             # Get all system admin emails
             result = await db.execute(
-                select(User).where(User.role == UserRole.SYSTEM_ADMIN, User.is_active == True)
+                select(User).where(
+                    User.role == UserRole.SYSTEM_ADMIN, User.is_active == True
+                )
             )
             system_admins = result.scalars().all()
             admin_emails = [admin.email for admin in system_admins if admin.email]
@@ -167,7 +169,7 @@ class SubscriptionService:
         request_id: int,
         reviewer: User,
         status: PlanChangeRequestStatus,
-        review_message: Optional[str] = None
+        review_message: Optional[str] = None,
     ):
         """
         Review a plan change request (approve or reject).
@@ -248,11 +250,7 @@ class SubscriptionService:
         )
 
     async def cancel_plan_change_request(
-        self,
-        db: AsyncSession,
-        *,
-        request_id: int,
-        user_id: int
+        self, db: AsyncSession, *, request_id: int, user_id: int
     ):
         """
         Cancel a pending plan change request.
@@ -270,20 +268,17 @@ class SubscriptionService:
         if request.status != PlanChangeRequestStatus.PENDING:
             raise HTTPException(
                 status_code=400,
-                detail=f"Cannot cancel request with status: {request.status}"
+                detail=f"Cannot cancel request with status: {request.status}",
             )
 
         # Only the requester can cancel their own request
         if request.requested_by != user_id:
             raise HTTPException(
-                status_code=403,
-                detail="You can only cancel your own requests"
+                status_code=403, detail="You can only cancel your own requests"
             )
 
         # Update request status to cancelled
-        await plan_change_request_crud.cancel_request(
-            db, request_id=request_id
-        )
+        await plan_change_request_crud.cancel_request(db, request_id=request_id)
 
         return await plan_change_request_crud.get_with_details(
             db, request_id=request_id

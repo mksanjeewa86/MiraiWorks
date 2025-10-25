@@ -46,7 +46,10 @@ class CRUDWorkExperience(
         result = await db.execute(
             select(ProfileWorkExperience)
             .where(ProfileWorkExperience.user_id == user_id)
-            .order_by(ProfileWorkExperience.display_order, desc(ProfileWorkExperience.start_date))
+            .order_by(
+                ProfileWorkExperience.display_order,
+                desc(ProfileWorkExperience.start_date),
+            )
         )
         return result.scalars().all()
 
@@ -78,7 +81,9 @@ class CRUDEducation(CRUDBase[ProfileEducation, EducationCreate, EducationUpdate]
         await db.refresh(db_obj)
         return db_obj
 
-    async def get_by_user(self, db: AsyncSession, *, user_id: int) -> list[ProfileEducation]:
+    async def get_by_user(
+        self, db: AsyncSession, *, user_id: int
+    ) -> list[ProfileEducation]:
         """Get all education entries for a user, ordered by display order."""
         result = await db.execute(
             select(ProfileEducation)
@@ -115,12 +120,18 @@ class CRUDSkill(CRUDBase[ProfileSkill, SkillCreate, SkillUpdate]):
         await db.refresh(db_obj)
         return db_obj
 
-    async def get_by_user(self, db: AsyncSession, *, user_id: int) -> list[ProfileSkill]:
+    async def get_by_user(
+        self, db: AsyncSession, *, user_id: int
+    ) -> list[ProfileSkill]:
         """Get all skills for a user, ordered by display order and category."""
         result = await db.execute(
             select(ProfileSkill)
             .where(ProfileSkill.user_id == user_id)
-            .order_by(ProfileSkill.display_order, ProfileSkill.category, ProfileSkill.skill_name)
+            .order_by(
+                ProfileSkill.display_order,
+                ProfileSkill.category,
+                ProfileSkill.skill_name,
+            )
         )
         return result.scalars().all()
 
@@ -140,7 +151,9 @@ class CRUDSkill(CRUDBase[ProfileSkill, SkillCreate, SkillUpdate]):
     ) -> ProfileSkill | None:
         """Get a specific skill entry for a user."""
         result = await db.execute(
-            select(ProfileSkill).where(ProfileSkill.id == id, ProfileSkill.user_id == user_id)
+            select(ProfileSkill).where(
+                ProfileSkill.id == id, ProfileSkill.user_id == user_id
+            )
         )
         return result.scalar_one_or_none()
 
@@ -170,7 +183,10 @@ class CRUDCertification(
         result = await db.execute(
             select(ProfileCertification)
             .where(ProfileCertification.user_id == user_id)
-            .order_by(ProfileCertification.display_order, desc(ProfileCertification.issue_date))
+            .order_by(
+                ProfileCertification.display_order,
+                desc(ProfileCertification.issue_date),
+            )
         )
         return result.scalars().all()
 
@@ -202,7 +218,9 @@ class CRUDProject(CRUDBase[ProfileProject, ProjectCreate, ProjectUpdate]):
         await db.refresh(db_obj)
         return db_obj
 
-    async def get_by_user(self, db: AsyncSession, *, user_id: int) -> list[ProfileProject]:
+    async def get_by_user(
+        self, db: AsyncSession, *, user_id: int
+    ) -> list[ProfileProject]:
         """Get all projects for a user, ordered by display order."""
         result = await db.execute(
             select(ProfileProject)
@@ -216,7 +234,9 @@ class CRUDProject(CRUDBase[ProfileProject, ProjectCreate, ProjectUpdate]):
     ) -> ProfileProject | None:
         """Get a specific project entry for a user."""
         result = await db.execute(
-            select(ProfileProject).where(ProfileProject.id == id, ProfileProject.user_id == user_id)
+            select(ProfileProject).where(
+                ProfileProject.id == id, ProfileProject.user_id == user_id
+            )
         )
         return result.scalar_one_or_none()
 
@@ -248,9 +268,7 @@ class CRUDJobPreference(
         await db.refresh(db_obj)
         return db_obj
 
-    async def get_or_create(
-        self, db: AsyncSession, *, user_id: int
-    ) -> JobPreference:
+    async def get_or_create(self, db: AsyncSession, *, user_id: int) -> JobPreference:
         """Get existing job preference or create with defaults."""
         preference = await self.get_by_user(db, user_id=user_id)
         if not preference:

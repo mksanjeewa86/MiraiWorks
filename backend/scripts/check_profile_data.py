@@ -1,14 +1,16 @@
 """Script to check profile data distribution across users."""
 
 import asyncio
-from sqlalchemy import select, func
+
+from sqlalchemy import select
+
 from app.database import get_db
-from app.models.skill import ProfileSkill
-from app.models.work_experience import ProfileWorkExperience
-from app.models.education import ProfileEducation
 from app.models.certification import ProfileCertification
+from app.models.education import ProfileEducation
 from app.models.project import ProfileProject
+from app.models.skill import ProfileSkill
 from app.models.user import User
+from app.models.work_experience import ProfileWorkExperience
 
 
 async def check_profile_data():
@@ -40,7 +42,7 @@ async def check_profile_data():
                     user_id = record.user_id
                     user_counts[user_id] = user_counts.get(user_id, 0) + 1
 
-                print(f"   Distribution across users:")
+                print("   Distribution across users:")
                 for user_id, count in user_counts.items():
                     # Find user
                     user = next((u for u in users if u.id == user_id), None)

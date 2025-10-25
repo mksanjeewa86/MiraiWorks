@@ -1,5 +1,6 @@
 """Test that single bidirectional connection record works correctly."""
 import asyncio
+
 from app.database import AsyncSessionLocal
 from app.services.company_connection_service import company_connection_service
 
@@ -9,16 +10,12 @@ async def test_bidirectional_connection():
     async with AsyncSessionLocal() as db:
         # Test User 124 (Company 88) -> User 129 (Company 90)
         can_124_to_129 = await company_connection_service.can_users_interact(
-            db=db,
-            user1_id=124,
-            user2_id=129
+            db=db, user1_id=124, user2_id=129
         )
 
         # Test User 129 (Company 90) -> User 124 (Company 88)
         can_129_to_124 = await company_connection_service.can_users_interact(
-            db=db,
-            user1_id=129,
-            user2_id=124
+            db=db, user1_id=129, user2_id=124
         )
 
         print("=" * 60)

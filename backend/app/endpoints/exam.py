@@ -209,9 +209,7 @@ async def get_company_exams(
     company_id: int | None = Query(
         None, description="Filter by company (system admin only)"
     ),
-    include_global: bool = Query(
-        True, description="Include global and public exams"
-    ),
+    include_global: bool = Query(True, description="Include global and public exams"),
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
@@ -309,7 +307,7 @@ async def get_exam_details(
         if not can_view:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="You do not have permission to view this exam"
+                detail="You do not have permission to view this exam",
             )
 
     return exam
@@ -350,7 +348,7 @@ async def update_exam(
         if exam.company_id is None:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Global exams can only be edited by system admins. Clone the exam to customize it."
+                detail="Global exams can only be edited by system admins. Clone the exam to customize it.",
             )
 
         if not current_user.company_id or exam.company_id != current_user.company_id:
@@ -396,7 +394,7 @@ async def delete_exam(
         if exam.company_id is None:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Global exams can only be deleted by system admins"
+                detail="Global exams can only be deleted by system admins",
             )
 
         if not current_user.company_id or exam.company_id != current_user.company_id:
@@ -436,13 +434,13 @@ async def clone_exam(
     if source_exam.company_id == current_user.company_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot clone your own company's exam. Use duplicate instead."
+            detail="Cannot clone your own company's exam. Use duplicate instead.",
         )
 
     if not source_exam.is_public and source_exam.company_id is not None:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="This exam is not public and cannot be cloned"
+            detail="This exam is not public and cannot be cloned",
         )
 
     # Get all questions from source exam
@@ -503,7 +501,8 @@ async def clone_exam(
         return cloned_exam
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Failed to clone exam: {str(e)}"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Failed to clone exam: {str(e)}",
         )
 
 
@@ -582,7 +581,7 @@ async def add_exam_question(
     if exam.company_id is None:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Cannot add questions to global exams. Clone the exam first."
+            detail="Cannot add questions to global exams. Clone the exam first.",
         )
 
     if exam.company_id != current_user.company_id:
@@ -626,7 +625,7 @@ async def update_exam_question(
     if exam.company_id is None:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Cannot update questions in global exams"
+            detail="Cannot update questions in global exams",
         )
 
     if exam.company_id != current_user.company_id:
@@ -670,7 +669,7 @@ async def delete_exam_question(
     if exam.company_id is None:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Cannot delete questions from global exams"
+            detail="Cannot delete questions from global exams",
         )
 
     if exam.company_id != current_user.company_id:
@@ -724,7 +723,7 @@ async def create_exam_assignments(
     if not can_assign:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Cannot assign this exam. It is not public and does not belong to your company."
+            detail="Cannot assign this exam. It is not public and does not belong to your company.",
         )
 
     assignment_data.exam_id = exam_id

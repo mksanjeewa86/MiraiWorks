@@ -18,12 +18,11 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 os.environ.setdefault("ENVIRONMENT", "development")
 
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import AsyncSessionLocal
 from app.models.user import User
-from app.models.role import Role
 from app.seeds.notification_data import seed_notification_data
 
 
@@ -53,9 +52,9 @@ async def get_user_ids(db: AsyncSession) -> dict:
 
 async def main():
     """Main function to seed notification data."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("MiraiWorks - Notification Data Seeding")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
     try:
         async with AsyncSessionLocal() as db:
@@ -76,22 +75,23 @@ async def main():
             print("Seeding Notifications:")
             result = await seed_notification_data(db, auth_result)
 
-            print("\n" + "="*70)
+            print("\n" + "=" * 70)
             print("Notification Seeding Summary:")
-            print("="*70)
+            print("=" * 70)
             print(f"[OK] Total notifications created: {result['notifications']}")
             print(f"  - Unread: {result['unread']}")
             print(f"  - Read: {result['read']}")
             print("\nNotification Types:")
-            for notification_type, count in result['types'].items():
+            for notification_type, count in result["types"].items():
                 print(f"  - {notification_type.replace('_', ' ').title()}: {count}")
-            print("="*70 + "\n")
+            print("=" * 70 + "\n")
 
             print("[SUCCESS] Notification seeding completed successfully!\n")
 
     except Exception as e:
         print(f"\n[ERROR] Error during seeding: {str(e)}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 
