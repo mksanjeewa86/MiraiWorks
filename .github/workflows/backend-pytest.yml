@@ -140,8 +140,14 @@ jobs:
         fi
 
     - name: Quality Gate
-      if: failure()
+      if: always()
       run: |
-        echo "❌ Tests failed or coverage below 40%"
-        echo "To run tests locally: cd backend && pytest app/tests/"
-        exit 1
+        echo "=== Quality Gate Check ==="
+
+        if [ "${{ steps.pytest.outcome }}" != "success" ]; then
+          echo "❌ Tests failed or coverage below 40%"
+          echo "To run tests locally: cd backend && pytest app/tests/"
+          exit 1
+        else
+          echo "✅ All tests passed with sufficient coverage"
+        fi

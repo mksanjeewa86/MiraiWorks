@@ -138,17 +138,35 @@ jobs:
         retention-days: 30
 
     - name: Quality Gate
-      if: failure()
+      if: always()
       run: |
-        echo "❌ Frontend quality checks failed"
-        echo ""
-        echo "Failed checks:"
-        [ "${{ steps.typecheck.outcome }}" != "success" ] && echo "  - TypeScript type checking"
-        [ "${{ steps.lint.outcome }}" != "success" ] && echo "  - ESLint"
-        [ "${{ steps.build.outcome }}" != "success" ] && echo "  - Build"
-        echo ""
-        echo "To fix:"
-        echo "  - Types: cd frontend && npm run typecheck"
-        echo "  - Linting: cd frontend && npm run lint:fix"
-        echo "  - Build: cd frontend && npm run build"
-        exit 1
+        echo "=== Quality Gate Check ==="
+        FAILED=0
+
+        if [ "${{ steps.typecheck.outcome }}" != "success" ]; then
+          echo "❌ TypeScript type checking failed"
+          FAILED=1
+        fi
+
+        if [ "${{ steps.lint.outcome }}" != "success" ]; then
+          echo "❌ ESLint failed"
+          FAILED=1
+        fi
+
+        if [ "${{ steps.build.outcome }}" != "success" ]; then
+          echo "❌ Build failed"
+          FAILED=1
+        fi
+
+        if [ $FAILED -eq 1 ]; then
+          echo ""
+          echo "❌ Frontend quality checks failed"
+          echo ""
+          echo "To fix:"
+          echo "  - Types: cd frontend && npm run typecheck"
+          echo "  - Linting: cd frontend && npm run lint:fix"
+          echo "  - Build: cd frontend && npm run build"
+          exit 1
+        else
+          echo "✅ All frontend checks passed"
+        fi
