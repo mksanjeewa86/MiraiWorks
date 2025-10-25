@@ -141,10 +141,16 @@ jobs:
         if [ "${{ steps.typecheck.outcome }}" != "success" ]; then
           echo "❌ TypeScript type checking failed"
           echo ""
-          echo "Type errors (first 30 lines):"
+          echo "Type errors (first 100 lines):"
           if [ -f typecheck-report.txt ]; then
-            echo "📄 Found typecheck-report.txt ($(wc -l < typecheck-report.txt) lines)"
-            head -30 typecheck-report.txt
+            TOTAL_LINES=$(wc -l < typecheck-report.txt)
+            echo "📄 Found typecheck-report.txt ($TOTAL_LINES lines total)"
+            echo ""
+            head -100 typecheck-report.txt
+            if [ $TOTAL_LINES -gt 100 ]; then
+              echo ""
+              echo "... and $((TOTAL_LINES - 100)) more lines"
+            fi
           else
             echo "⚠️  typecheck-report.txt not found!"
           fi
@@ -155,10 +161,16 @@ jobs:
         if [ "${{ steps.lint.outcome }}" != "success" ]; then
           echo "❌ ESLint failed"
           echo ""
-          echo "Linting errors (first 30 lines):"
+          echo "Linting errors (first 100 lines):"
           if [ -f lint-report.txt ]; then
-            echo "📄 Found lint-report.txt ($(wc -l < lint-report.txt) lines)"
-            head -30 lint-report.txt
+            TOTAL_LINES=$(wc -l < lint-report.txt)
+            echo "📄 Found lint-report.txt ($TOTAL_LINES lines total)"
+            echo ""
+            head -100 lint-report.txt
+            if [ $TOTAL_LINES -gt 100 ]; then
+              echo ""
+              echo "... and $((TOTAL_LINES - 100)) more lines"
+            fi
           else
             echo "⚠️  lint-report.txt not found!"
           fi
@@ -169,10 +181,16 @@ jobs:
         if [ "${{ steps.build.outcome }}" != "success" ]; then
           echo "❌ Build failed"
           echo ""
-          echo "Build errors (last 30 lines):"
+          echo "Build errors (last 100 lines):"
           if [ -f build-report.txt ]; then
-            echo "📄 Found build-report.txt ($(wc -l < build-report.txt) lines)"
-            tail -30 build-report.txt
+            TOTAL_LINES=$(wc -l < build-report.txt)
+            echo "📄 Found build-report.txt ($TOTAL_LINES lines total)"
+            echo ""
+            tail -100 build-report.txt
+            if [ $TOTAL_LINES -gt 100 ]; then
+              echo ""
+              echo "... showing last 100 of $TOTAL_LINES lines"
+            fi
           else
             echo "⚠️  build-report.txt not found!"
           fi

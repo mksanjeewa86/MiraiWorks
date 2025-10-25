@@ -123,7 +123,14 @@ jobs:
           echo ""
           echo "Files needing formatting:"
           if [ -f format-report.txt ]; then
-            cat format-report.txt | grep "Would reformat:" | head -20
+            REFORMAT_COUNT=$(grep -c "Would reformat:" format-report.txt || echo "0")
+            echo "📄 $REFORMAT_COUNT files need formatting"
+            echo ""
+            grep "Would reformat:" format-report.txt | head -50
+            if [ $REFORMAT_COUNT -gt 50 ]; then
+              echo ""
+              echo "... and $((REFORMAT_COUNT - 50)) more files"
+            fi
           fi
           echo ""
           FAILED=1
@@ -132,10 +139,17 @@ jobs:
         if [ "${{ steps.lint.outcome }}" != "success" ]; then
           echo "❌ Linting failed"
           echo ""
-          echo "Linting errors (first 30):"
+          echo "Linting errors (first 100):"
           if [ -f lint-report.txt ]; then
-            echo "📄 Found lint-report.txt ($(wc -l < lint-report.txt) lines)"
-            head -30 lint-report.txt
+            TOTAL_LINES=$(wc -l < lint-report.txt)
+            echo "📄 Found lint-report.txt ($TOTAL_LINES lines total)"
+            echo ""
+            head -100 lint-report.txt
+            echo ""
+            if [ $TOTAL_LINES -gt 100 ]; then
+              echo "... and $((TOTAL_LINES - 100)) more errors"
+              echo "📥 Download full report from workflow artifacts"
+            fi
           else
             echo "⚠️  lint-report.txt not found!"
             echo "Checking for any .txt files:"
