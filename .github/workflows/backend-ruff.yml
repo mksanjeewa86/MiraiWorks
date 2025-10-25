@@ -1,0 +1,72 @@
+name: Backend - Ruff Quality
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/**/*.py'
+      - 'backend/ruff.toml'
+      - '.github/workflows/backend-ruff.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/**/*.py'
+      - 'backend/ruff.toml'
+      - '.github/workflows/backend-ruff.yml'
+
+jobs:
+  ruff:
+    name: Ruff Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install Ruff
+      run: pip install ruff
+
+    - name: Code Formatting Check
+      id: format
+      working-directory: ./backend
+      run: |
+        echo "Checking code formatting..."
+        ruff format --check --diff .
+        echo "Format check completed"
+
+    - name: Linting - All Rules
+      id: lint
+      working-directory: ./backend
+      run: |
+        echo "Running comprehensive linting..."
+        ruff check . --output-format=github
+        echo "Linting completed"
+
+    - name: Generate Statistics
+      if: always()
+      working-directory: ./backend
+      run: |
+        echo "## 🔍 Ruff Quality Report" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Summary" >> $GITHUB_STEP_SUMMARY
+        echo "| Check | Result |" >> $GITHUB_STEP_SUMMARY
+        echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| Format | ${{ steps.format.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Lint | ${{ steps.lint.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Statistics" >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+        ruff check . --statistics || true
+        echo '```' >> $GITHUB_STEP_SUMMARY
+
+    - name: Quality Gate
+      if: failure()
+      run: |
+        echo "❌ Ruff quality checks failed"
+        echo "To fix formatting: cd backend && ruff format ."
+        echo "To fix linting: cd backend && ruff check . --fix"
+        exit 1

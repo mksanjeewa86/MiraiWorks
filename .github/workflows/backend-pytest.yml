@@ -1,0 +1,136 @@
+name: Backend - Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-pytest.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-pytest.yml'
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Tests & Coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: changeme
+          MYSQL_DATABASE: miraiworks_test
+          MYSQL_USER: changeme
+          MYSQL_PASSWORD: changeme
+        ports:
+          - 3307:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -u changeme -pchangeme"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+        cache-dependency-path: 'backend/requirements.txt'
+
+    - name: Install Dependencies
+      working-directory: ./backend
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest-xdist pytest-benchmark
+
+    - name: Create Test Environment
+      working-directory: ./backend
+      run: |
+        cat > .env.test << EOF
+        ENVIRONMENT=test
+        SECRET_KEY=test-secret-key-for-pytest
+        DATABASE_URL=mysql+asyncmy://changeme:changeme@127.0.0.1:3307/miraiworks_test
+        REDIS_URL=redis://localhost:6379/0
+        EOF
+
+    - name: Run Tests
+      id: pytest
+      working-directory: ./backend
+      env:
+        PYTHONPATH: .
+        ENVIRONMENT: test
+      run: |
+        export PYTHONPATH=$PWD
+        python -m pytest app/tests/ \
+          --verbose \
+          --tb=short \
+          --strict-markers \
+          --asyncio-mode=auto \
+          --maxfail=5 \
+          --durations=10 \
+          --cov=app \
+          --cov-branch \
+          --cov-report=term-missing:skip-covered \
+          --cov-report=xml:coverage.xml \
+          --cov-report=html:htmlcov \
+          --cov-fail-under=40 \
+          --junit-xml=pytest-results.xml
+
+    - name: Upload Coverage Reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-reports
+        path: |
+          backend/coverage.xml
+          backend/htmlcov/
+          backend/pytest-results.xml
+        retention-days: 30
+
+    - name: Upload to Codecov
+      if: always()
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./backend/coverage.xml
+        flags: backend
+        fail_ci_if_error: false
+
+    - name: Generate Summary
+      if: always()
+      run: |
+        echo "## 🧪 Test Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Metric | Result |" >> $GITHUB_STEP_SUMMARY
+        echo "|--------|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| Tests | ${{ steps.pytest.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        if [ -f backend/coverage.xml ]; then
+          coverage=$(python -c "import xml.etree.ElementTree as ET; tree = ET.parse('backend/coverage.xml'); print(f\"{float(tree.getroot().attrib.get('line-rate', 0))*100:.1f}%\")" 2>/dev/null || echo "N/A")
+          echo "📊 **Coverage**: $coverage" >> $GITHUB_STEP_SUMMARY
+        fi
+
+    - name: Quality Gate
+      if: failure()
+      run: |
+        echo "❌ Tests failed or coverage below 40%"
+        echo "To run tests locally: cd backend && pytest app/tests/"
+        exit 1
