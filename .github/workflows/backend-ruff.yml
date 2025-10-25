@@ -121,25 +121,41 @@ jobs:
 
     - name: Quality Gate
       if: always()
+      working-directory: ./backend
       run: |
         echo "=== Quality Gate Check ==="
         FAILED=0
 
         if [ "${{ steps.format.outcome }}" != "success" ]; then
           echo "❌ Code formatting failed"
+          echo ""
+          echo "Files needing formatting:"
+          if [ -f format-report.txt ]; then
+            cat format-report.txt | grep "Would reformat:" | head -20
+          fi
+          echo ""
           FAILED=1
         fi
 
         if [ "${{ steps.lint.outcome }}" != "success" ]; then
           echo "❌ Linting failed"
+          echo ""
+          echo "Linting errors (first 30):"
+          if [ -f lint-report.txt ]; then
+            head -30 lint-report.txt
+          fi
+          echo ""
           FAILED=1
         fi
 
         if [ $FAILED -eq 1 ]; then
-          echo ""
           echo "❌ Ruff quality checks failed"
-          echo "To fix formatting: cd backend && ruff format ."
-          echo "To fix linting: cd backend && ruff check . --fix"
+          echo ""
+          echo "To fix:"
+          echo "  - Formatting: cd backend && ruff format ."
+          echo "  - Linting: cd backend && ruff check . --fix"
+          echo ""
+          echo "📥 Full error reports available in workflow artifacts"
           exit 1
         else
           echo "✅ All Ruff checks passed"
