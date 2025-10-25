@@ -283,7 +283,7 @@ async def activate_workflow(
         else:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)
-            )
+            ) from e
 
 
 @router.post(API_ROUTES.WORKFLOWS.ARCHIVE, response_model=WorkflowInfo)
@@ -639,4 +639,4 @@ async def apply_workflow_template(
         )
         return wf
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e

@@ -36,7 +36,7 @@ class FileStorageService:
             logger.error(f"Failed to create upload directory: {e}")
             raise HTTPException(
                 status_code=500, detail="Failed to initialize file storage"
-            )
+            ) from e
 
     def validate_file(self, file: UploadFile) -> dict:
         """Validate uploaded file against size and type constraints."""
@@ -153,7 +153,7 @@ class FileStorageService:
                     os.remove(full_path)
             raise HTTPException(
                 status_code=500, detail=f"Failed to save file: {str(e)}"
-            )
+            ) from e
 
     def delete_file(self, file_path: str) -> bool:
         """Delete a file from storage."""
@@ -167,7 +167,7 @@ class FileStorageService:
                     parent_dir = Path(file_path).parent
                     if parent_dir.exists() and not any(parent_dir.iterdir()):
                         parent_dir.rmdir()
-                except:
+                except Exception:
                     pass  # Ignore errors when cleaning up directories
 
                 return True
@@ -225,7 +225,7 @@ class FileStorageService:
                         size = os.path.getsize(file_path)
                         total_files += 1
                         total_size += size
-                    except:
+                    except Exception:
                         continue
 
             return {

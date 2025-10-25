@@ -212,7 +212,9 @@ class WorkflowNodeCreate(WorkflowNodeBase):
             elif node_type == NodeType.DECISION:
                 DecisionNodeConfig(**v)
         except Exception as e:
-            raise ValueError(f"Invalid config for node type {node_type}: {str(e)}")
+            raise ValueError(
+                f"Invalid config for node type {node_type}: {str(e)}"
+            ) from e
 
         return v
 

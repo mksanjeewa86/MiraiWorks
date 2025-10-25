@@ -332,7 +332,7 @@ class TestResumeServiceUnit:
         """Test resume creation with database error."""
         mock_db.commit.side_effect = Exception("Database error")
 
-        with pytest.raises(Exception):
+        with pytest.raises(Exception, match="Database error"):
             await resume_service.create_resume(mock_db, sample_resume_create_data, 1)
 
         mock_db.rollback.assert_called_once()
@@ -346,7 +346,7 @@ class TestResumeServiceUnit:
 
             update_data = ResumeUpdate(title="Updated Title")
 
-            with pytest.raises(Exception):
+            with pytest.raises(Exception, match="Database error"):
                 await resume_service.update_resume(mock_db, 1, 1, update_data)
 
             mock_db.rollback.assert_called_once()

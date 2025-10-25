@@ -73,7 +73,9 @@ async def upload_todo_attachment(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to save file: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to save file: {str(e)}"
+        ) from e
 
     # Create attachment record in database
     attachment_data = TodoAttachmentCreate(

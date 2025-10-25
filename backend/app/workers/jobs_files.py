@@ -32,7 +32,7 @@ def scan_uploaded_file(self, attachment_id: int):
 
         # Retry the task
         if self.request.retries < 3:
-            raise self.retry(countdown=60 * (self.request.retries + 1))
+            raise self.retry(countdown=60 * (self.request.retries + 1)) from exc
 
         # Final failure
         asyncio.run(_mark_scan_failed(attachment_id))

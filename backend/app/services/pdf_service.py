@@ -126,10 +126,10 @@ class PDFService:
 
                 return pdf_data
 
-        except ImportError:
+        except ImportError as e:
             raise RuntimeError(
                 "Playwright not installed. Install with: pip install playwright"
-            )
+            ) from e
         except Exception as e:
             logger.error(f"Playwright PDF conversion error: {str(e)}")
             raise
@@ -159,10 +159,10 @@ class PDFService:
             pdf_data = html_doc.write_pdf(stylesheets=[css_doc])
             return pdf_data
 
-        except ImportError:
+        except ImportError as e:
             raise RuntimeError(
                 "WeasyPrint not installed. Install with: pip install weasyprint"
-            )
+            ) from e
         except Exception as e:
             logger.error(f"WeasyPrint PDF conversion error: {str(e)}")
             raise

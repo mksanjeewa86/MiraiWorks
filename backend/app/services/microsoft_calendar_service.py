@@ -80,7 +80,7 @@ class MicrosoftCalendarService:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail="Calendar service temporarily unavailable",
-            )
+            ) from e
 
     async def get_user_info(self, access_token: str) -> dict[str, Any]:
         """Get user information from Microsoft Graph."""
@@ -104,7 +104,7 @@ class MicrosoftCalendarService:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail="Calendar service temporarily unavailable",
-            )
+            ) from e
 
     async def refresh_access_token(self, refresh_token: str) -> dict[str, Any]:
         """Refresh access token using refresh token."""
@@ -195,7 +195,7 @@ class MicrosoftCalendarService:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail="Calendar service temporarily unavailable",
-            )
+            ) from e
 
     async def get_events(
         self,
@@ -250,7 +250,7 @@ class MicrosoftCalendarService:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail="Calendar service temporarily unavailable",
-            )
+            ) from e
 
     async def create_event(
         self,
@@ -293,7 +293,7 @@ class MicrosoftCalendarService:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail="Calendar service temporarily unavailable",
-            )
+            ) from e
 
     async def update_event(
         self,
@@ -337,7 +337,7 @@ class MicrosoftCalendarService:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail="Calendar service temporarily unavailable",
-            )
+            ) from e
 
     async def delete_event(
         self,

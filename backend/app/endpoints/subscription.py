@@ -321,8 +321,8 @@ async def get_all_plan_change_requests(
             requests = await plan_change_request_crud.get_by_status(
                 db, status=status_enum
             )
-        except ValueError:
-            raise HTTPException(status_code=400, detail="Invalid status value")
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail="Invalid status value") from e
     else:
         # Get pending by default
         requests = await plan_change_request_crud.get_pending_requests(db)

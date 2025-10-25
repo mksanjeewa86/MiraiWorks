@@ -1060,7 +1060,7 @@ async def resend_activation_email(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to send activation email: {str(e)}",
-        )
+        ) from e
 
     return {"message": "Activation email sent successfully"}
 

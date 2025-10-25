@@ -163,7 +163,7 @@ async def check_file_access_permission(
                 decoded = urllib.parse.unquote(pattern)
                 if decoded != pattern:
                     file_conditions.append(Message.file_url.like(f"%{decoded}%"))
-            except:
+            except Exception:
                 pass
 
         # Check if this file is attached to any message where user is sender or recipient
@@ -280,7 +280,7 @@ async def upload_file(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error saving file - {type(e).__name__}: {str(e)}",
-        )
+        ) from e
 
 
 @router.get(API_ROUTES.FILES.DOWNLOAD)
@@ -403,7 +403,7 @@ async def download_file(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error downloading file",
-        )
+        ) from e
 
 
 @router.delete(API_ROUTES.FILES.DELETE)
@@ -447,7 +447,7 @@ async def delete_file(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error deleting file",
-        )
+        ) from e
 
     # Fall back to local storage deletion
     try:
@@ -468,7 +468,7 @@ async def delete_file(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error deleting file",
-        )
+        ) from e
 
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
@@ -524,10 +524,10 @@ async def serve_message_file(
     # Security check - ensure path doesn't escape upload directory
     try:
         full_file_path.resolve().relative_to(upload_base.resolve())
-    except ValueError:
+    except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Invalid file path"
-        )
+        ) from e
 
     # Determine media type
     import mimetypes

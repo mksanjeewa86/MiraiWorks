@@ -34,8 +34,8 @@ class EventCreate(BaseModel):
     def datetime_must_be_valid(cls, v):
         try:
             datetime.fromisoformat(v.replace("Z", "+00:00"))
-        except ValueError:
-            raise ValueError("Invalid datetime format")
+        except ValueError as e:
+            raise ValueError("Invalid datetime format") from e
         return v
 
 

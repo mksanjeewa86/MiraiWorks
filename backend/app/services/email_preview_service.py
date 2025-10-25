@@ -78,7 +78,9 @@ class EmailPreviewService:
                 "text_body": text_body,
             }
         except Exception as e:
-            raise ValueError(f"Failed to render template '{template_path}': {str(e)}")
+            raise ValueError(
+                f"Failed to render template '{template_path}': {str(e)}"
+            ) from e
 
     def preview_all_emails(self) -> dict[str, dict[str, str]]:
         """Generate previews for all available email templates."""

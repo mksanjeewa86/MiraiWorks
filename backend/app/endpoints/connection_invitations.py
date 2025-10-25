@@ -57,7 +57,9 @@ async def send_invitation(
         }
 
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        ) from e
 
 
 @router.post(API_ROUTES.CONNECTION_INVITATIONS.RESPOND)
@@ -80,7 +82,9 @@ async def respond_to_invitation(
         return result
 
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        ) from e
 
 
 @router.delete(API_ROUTES.CONNECTION_INVITATIONS.CANCEL)
@@ -100,7 +104,9 @@ async def cancel_invitation(
             return {"message": "Invitation cancelled successfully"}
 
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        ) from e
 
 
 @router.get(API_ROUTES.CONNECTION_INVITATIONS.SENT)
@@ -115,11 +121,11 @@ async def get_sent_invitations(
     if status_filter:
         try:
             invitation_status = InvitationStatus(status_filter)
-        except ValueError:
+        except ValueError as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Invalid status: {status_filter}",
-            )
+            ) from e
 
     invitations = await connection_invitation_service.get_sent_invitations(
         db=db, sender_id=current_user.id, status=invitation_status
@@ -140,11 +146,11 @@ async def get_received_invitations(
     if status_filter:
         try:
             invitation_status = InvitationStatus(status_filter)
-        except ValueError:
+        except ValueError as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Invalid status: {status_filter}",
-            )
+            ) from e
 
     invitations = await connection_invitation_service.get_received_invitations(
         db=db, receiver_id=current_user.id, status=invitation_status

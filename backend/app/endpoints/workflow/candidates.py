@@ -78,7 +78,7 @@ async def assign_candidate_to_workflow(
         )
         return candidate_wf
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e)) from e
 
 
 @router.post(
@@ -280,7 +280,7 @@ async def start_candidate_workflow(
         )
         return started_wf
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e)) from e
 
 
 @router.put(API_ROUTES.WORKFLOWS.CANDIDATE_STATUS, response_model=CandidateWorkflowInfo)

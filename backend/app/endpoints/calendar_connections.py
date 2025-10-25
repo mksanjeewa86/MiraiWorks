@@ -44,7 +44,7 @@ async def get_calendar_connections(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve calendar connections",
-        )
+        ) from e
 
 
 @router.get(
@@ -114,7 +114,7 @@ async def update_calendar_connection(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update calendar connection",
-        )
+        ) from e
 
 
 @router.delete(API_ROUTES.CALENDAR_CONNECTIONS.BY_ID)
@@ -164,7 +164,7 @@ async def delete_calendar_connection(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete calendar connection",
-        )
+        ) from e
 
 
 @router.get(API_ROUTES.CALENDAR_CONNECTIONS.AUTH_GOOGLE_URL)
@@ -182,7 +182,7 @@ async def get_google_auth_url(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to generate authorization URL",
-        )
+        ) from e
 
 
 @router.post(
@@ -219,7 +219,7 @@ async def google_auth_callback(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Failed to connect Google Calendar",
-        )
+        ) from e
 
 
 @router.get(API_ROUTES.CALENDAR_CONNECTIONS.AUTH_OUTLOOK_URL)
@@ -237,7 +237,7 @@ async def get_outlook_auth_url(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to generate authorization URL",
-        )
+        ) from e
 
 
 @router.post(
@@ -274,7 +274,7 @@ async def outlook_auth_callback(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Failed to connect Outlook Calendar",
-        )
+        ) from e
 
 
 @router.post(API_ROUTES.CALENDAR_CONNECTIONS.SYNC)
@@ -321,4 +321,4 @@ async def sync_calendar_connection(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to sync calendar",
-        )
+        ) from e

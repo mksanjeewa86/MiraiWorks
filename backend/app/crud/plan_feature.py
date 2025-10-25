@@ -30,11 +30,11 @@ class CRUDPlanFeature(CRUDBase[PlanFeature, dict, dict]):
             await db.commit()
             await db.refresh(plan_feature)
             return plan_feature
-        except IntegrityError:
+        except IntegrityError as e:
             await db.rollback()
             raise HTTPException(
                 status_code=400, detail="Feature already exists in this plan"
-            )
+            ) from e
 
     async def remove_feature_from_plan(
         self, db: AsyncSession, *, plan_id: int, feature_id: int

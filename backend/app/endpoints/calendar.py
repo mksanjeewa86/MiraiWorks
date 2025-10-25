@@ -48,7 +48,7 @@ async def start_google_oauth(
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(e)
-        )
+        ) from e
 
 
 @router.get(API_ROUTES.CALENDAR.GOOGLE_OAUTH_CALLBACK)
@@ -460,7 +460,7 @@ async def get_events(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve calendar events",
-        )
+        ) from e
 
     # Original implementation (commented out for testing):
     """
@@ -652,7 +652,9 @@ async def create_calendar_event(
         return event
     except Exception as e:
         logger.error(f"Failed to create calendar event: {e}")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        ) from e
 
 
 @router.get(API_ROUTES.CALENDAR.EVENT_BY_ID, response_model=CalendarEventInfo)
@@ -695,7 +697,7 @@ async def get_calendar_event(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve event",
-        )
+        ) from e
 
 
 @router.put(API_ROUTES.CALENDAR.EVENT_BY_ID, response_model=CalendarEventInfo)
@@ -722,13 +724,13 @@ async def update_calendar_event(
     except HTTPException:
         raise
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Failed to update calendar event {event_id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update event",
-        )
+        ) from e
 
 
 @router.delete(API_ROUTES.CALENDAR.EVENT_BY_ID)
@@ -754,13 +756,13 @@ async def delete_calendar_event(
     except HTTPException:
         raise
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Failed to delete calendar event {event_id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete event",
-        )
+        ) from e
 
 
 # ==================== ADDITIONAL CALENDAR ENDPOINTS ====================
@@ -797,7 +799,7 @@ async def get_events_in_range(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve events",
-        )
+        ) from e
 
 
 @router.get(API_ROUTES.CALENDAR.EVENTS_UPCOMING, response_model=list[CalendarEventInfo])
@@ -818,7 +820,7 @@ async def get_upcoming_events(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve upcoming events",
-        )
+        ) from e
 
 
 @router.post(API_ROUTES.CALENDAR.EVENTS_BULK, response_model=CalendarEventBulkResponse)
@@ -842,7 +844,9 @@ async def bulk_create_events(
 
     except Exception as e:
         logger.error(f"Failed to bulk create events: {e}")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        ) from e
 
 
 @router.get(API_ROUTES.CALENDAR.EVENTS_SEARCH)
@@ -865,7 +869,7 @@ async def search_events(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to search events",
-        )
+        ) from e
 
 
 # ==================== EVENT INVITATIONS ENDPOINTS ====================
@@ -892,7 +896,7 @@ async def get_pending_invitations(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve pending invitations",
-        )
+        ) from e
 
 
 @router.post(API_ROUTES.CALENDAR.INVITATIONS_ACCEPT)
@@ -927,7 +931,7 @@ async def accept_invitation(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to accept invitation",
-        )
+        ) from e
 
 
 @router.post(API_ROUTES.CALENDAR.INVITATIONS_REJECT)
@@ -962,4 +966,4 @@ async def reject_invitation(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to reject invitation",
-        )
+        ) from e

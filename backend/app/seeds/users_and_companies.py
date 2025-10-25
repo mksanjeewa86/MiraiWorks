@@ -452,7 +452,7 @@ async def seed_auth_data(db):
     users = []
     super_admin_user = None
 
-    for i, user_data in enumerate(users_data):
+    for _i, user_data in enumerate(users_data):
         user_role = user_data.pop("role")
 
         # Set created_by based on user type

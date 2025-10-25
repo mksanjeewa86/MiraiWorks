@@ -250,7 +250,7 @@ async def preview_template(
             """
 
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from e
 
 
 @router.get(API_ROUTES.EMAIL_PREVIEW.ALL, response_class=HTMLResponse)
@@ -348,7 +348,7 @@ async def preview_all_templates():
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Failed to generate previews: {str(e)}"
-        )
+        ) from e
 
 
 @router.get(API_ROUTES.EMAIL_PREVIEW.TEMPLATES)

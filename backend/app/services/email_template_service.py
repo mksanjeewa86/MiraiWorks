@@ -58,7 +58,7 @@ class EmailTemplateService:
             try:
                 return template.render(context)
             except Exception as e:
-                raise ValueError(f"Template rendering error: {e}")
+                raise ValueError(f"Template rendering error: {e}") from e
         else:
             # Fallback: Simple regex replacement for {{ variable }} patterns
             try:
@@ -69,7 +69,7 @@ class EmailTemplateService:
                     result = re.sub(pattern, str(value), result)
                 return result
             except Exception as e:
-                raise ValueError(f"Template rendering error: {e}")
+                raise ValueError(f"Template rendering error: {e}") from e
 
     def render_email_template(
         self,
@@ -132,9 +132,9 @@ class EmailTemplateService:
             return html_body, text_body
 
         except FileNotFoundError as e:
-            raise ValueError(f"Email template error: {e}")
+            raise ValueError(f"Email template error: {e}") from e
         except Exception as e:
-            raise ValueError(f"Error rendering email template: {e}")
+            raise ValueError(f"Error rendering email template: {e}") from e
 
 
 # Global instance

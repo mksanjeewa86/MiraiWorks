@@ -117,11 +117,11 @@ async def validate_extension_request(
         requested_date = datetime.fromisoformat(
             requested_due_date.replace("Z", "+00:00")
         )
-    except ValueError:
+    except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid date format. Use ISO format.",
-        )
+        ) from e
 
     # Get todo
     todo_obj = await todo_crud.get(db, id=todo_id)

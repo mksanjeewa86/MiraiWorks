@@ -121,7 +121,9 @@ async def create_exam(
         )
         return exam
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        ) from e
 
 
 @router.post(API_ROUTES.EXAMS.HYBRID, response_model=HybridExamResponse)
@@ -195,12 +197,14 @@ async def create_hybrid_exam(
             selection_rules=metadata["selection_rules"],
         )
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        ) from e
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create hybrid exam: {str(e)}",
-        )
+        ) from e
 
 
 @router.get(API_ROUTES.EXAMS.BASE, response_model=ExamListResponse)
@@ -503,7 +507,7 @@ async def clone_exam(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Failed to clone exam: {str(e)}",
-        )
+        ) from e
 
 
 @router.get(API_ROUTES.EXAMS.STATISTICS, response_model=dict[str, Any])
@@ -743,7 +747,7 @@ async def create_exam_assignments(
 
         # Send emails in background (don't block the response)
         base_url = "https://miraiworks.com"  # TODO: Get from config
-        for assignment, candidate in zip(assignments, candidates):
+        for assignment, candidate in zip(assignments, candidates, strict=True):
             try:
                 exam_url = f"{base_url}/exams/take/{exam_id}?assignment={assignment.id}"
                 await exam_email_service.send_exam_assignment_notification(
@@ -854,7 +858,9 @@ async def start_exam(
                     assignment_id=take_request.assignment_id,
                 )
         except ValueError as e:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+            ) from e
 
     # Start session if not already started
     if session.status == SessionStatus.NOT_STARTED:
@@ -939,7 +945,9 @@ async def submit_answer(
         )
         return answer
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        ) from e
 
 
 @router.post(API_ROUTES.EXAMS.SESSION_COMPLETE, response_model=ExamSessionInfo)
@@ -982,7 +990,9 @@ async def complete_exam(
 
         return session
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        ) from e
 
 
 @router.get(API_ROUTES.EXAMS.SESSION_RESULTS, response_model=ExamResultSummary)

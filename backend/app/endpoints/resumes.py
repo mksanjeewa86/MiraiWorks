@@ -59,7 +59,7 @@ async def create_resume(
         return resume
     except Exception as e:
         logger.error(f"Error creating resume: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to create resume")
+        raise HTTPException(status_code=500, detail="Failed to create resume") from e
 
 
 @router.get(API_ROUTES.RESUMES.BASE, response_model=ResumeListResponse)
@@ -80,8 +80,10 @@ async def list_resumes(
         if status:
             try:
                 status_enum = ResumeStatus(status.upper())
-            except ValueError:
-                raise HTTPException(status_code=400, detail=f"Invalid status: {status}")
+            except ValueError as e:
+                raise HTTPException(
+                    status_code=400, detail=f"Invalid status: {status}"
+                ) from e
 
         resumes = await resume_service.get_user_resumes(
             db, current_user.id, limit, offset, status_enum
@@ -96,7 +98,7 @@ async def list_resumes(
         )
     except Exception as e:
         logger.error(f"Error listing resumes: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to retrieve resumes")
+        raise HTTPException(status_code=500, detail="Failed to retrieve resumes") from e
 
 
 # Statistics and Analytics - MUST be before /{resume_id} routes
@@ -427,7 +429,7 @@ async def generate_pdf(
         )
     except Exception as e:
         logger.error(f"Error generating PDF: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to generate PDF")
+        raise HTTPException(status_code=500, detail="Failed to generate PDF") from e
 
 
 # Sharing functionality
@@ -493,7 +495,7 @@ async def view_shared_resume(
             return RedirectResponse(url=result["pdf_url"])
         except Exception as e:
             logger.error(f"Error generating shared PDF: {str(e)}")
-            raise HTTPException(status_code=500, detail="Failed to generate PDF")
+            raise HTTPException(status_code=500, detail="Failed to generate PDF") from e
     else:
         # Return HTML preview
         html_content = await pdf_service.get_resume_as_html(resume)
@@ -780,7 +782,7 @@ async def toggle_resume_public(
         logger.error(f"Error toggling resume visibility: {str(e)}")
         raise HTTPException(
             status_code=500, detail="Failed to update resume visibility"
-        )
+        ) from e
 
     if not updated_resume:
         raise HTTPException(
@@ -865,7 +867,7 @@ async def download_public_resume_pdf(slug: str, db: AsyncSession = Depends(get_d
         return RedirectResponse(url=result["pdf_url"])
     except Exception as e:
         logger.error(f"Error generating public PDF: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to generate PDF")
+        raise HTTPException(status_code=500, detail="Failed to generate PDF") from e
 
 
 # Email Integration Endpoints
@@ -902,7 +904,9 @@ async def send_resume_by_email(
         }
     except Exception as e:
         logger.error(f"Error sending resume email: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to send resume email")
+        raise HTTPException(
+            status_code=500, detail="Failed to send resume email"
+        ) from e
 
 
 # Message Attachment Endpoints
@@ -936,7 +940,7 @@ async def attach_resume_to_message(
         }
     except Exception as e:
         logger.error(f"Error attaching resume to message: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to attach resume")
+        raise HTTPException(status_code=500, detail="Failed to attach resume") from e
 
 
 @router.put(API_ROUTES.RESUMES.AUTO_ATTACH_SETTINGS)

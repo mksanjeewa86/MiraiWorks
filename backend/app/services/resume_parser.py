@@ -97,10 +97,10 @@ class ResumeParser:
 
                 return text_content
 
-            except ImportError:
+            except ImportError as e:
                 raise RuntimeError(
                     "No PDF parsing library available (PyPDF2 or pdfplumber)"
-                )
+                ) from e
         except Exception as e:
             logger.error(f"Error extracting PDF text: {str(e)}")
             raise
@@ -133,8 +133,8 @@ class ResumeParser:
                     "Legacy .doc format not supported. Please convert to .docx"
                 )
 
-        except ImportError:
-            raise RuntimeError("python-docx library not installed")
+        except ImportError as e:
+            raise RuntimeError("python-docx library not installed") from e
         except Exception as e:
             logger.error(f"Error extracting Word document text: {str(e)}")
             raise

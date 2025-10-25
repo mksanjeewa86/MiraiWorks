@@ -99,13 +99,13 @@ class StorageService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="File upload failed",
-            )
+            ) from e
         except Exception as e:
             logger.error(f"Upload failed: {e}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="File upload failed",
-            )
+            ) from e
 
     async def upload_file(
         self, file: UploadFile, user_id: int, folder: str = "attachments"
@@ -125,7 +125,7 @@ class StorageService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="File processing failed",
-            )
+            ) from e
 
     def get_presigned_url(
         self, s3_key: str, expires: timedelta = timedelta(hours=1), method: str = "GET"
@@ -144,7 +144,7 @@ class StorageService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to generate file URL",
-            )
+            ) from e
 
     def get_presigned_upload_url(
         self, s3_key: str, expires: timedelta = timedelta(minutes=15)
@@ -171,7 +171,7 @@ class StorageService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to generate upload URL",
-            )
+            ) from e
 
     def delete_file(self, s3_key: str) -> bool:
         """Delete file from S3."""

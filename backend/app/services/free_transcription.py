@@ -93,7 +93,7 @@ class FreeTranscriptionService:
             # Check if model exists, if not use small model
             try:
                 model = vosk.Model(model_path)
-            except:
+            except Exception:
                 # Fallback to small model
                 model = vosk.Model("vosk-model-small-en-us-0.15")
 
@@ -137,12 +137,12 @@ class FreeTranscriptionService:
                 # Try Google's free tier first
                 text = r.recognize_google(audio, language=lang_code)
                 return text
-            except:
+            except Exception:
                 # Fallback to offline recognition
                 try:
                     text = r.recognize_sphinx(audio, language=lang_code)
                     return text
-                except:
+                except Exception:
                     return None
 
         except Exception as e:

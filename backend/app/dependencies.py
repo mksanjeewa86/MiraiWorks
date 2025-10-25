@@ -51,8 +51,8 @@ async def get_current_user(
 
     try:
         user_id = int(user_id)
-    except (ValueError, TypeError):
-        raise credentials_exception
+    except (ValueError, TypeError) as e:
+        raise credentials_exception from e
 
     # Get user from database with explicit join
     result = await db.execute(

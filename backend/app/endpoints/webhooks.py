@@ -59,7 +59,7 @@ async def google_calendar_webhook(
 
     except Exception as e:
         logger.error(f"Error processing Google Calendar webhook: {str(e)}")
-        raise HTTPException(status_code=500, detail="Webhook processing failed")
+        raise HTTPException(status_code=500, detail="Webhook processing failed") from e
 
 
 @router.post(API_ROUTES.WEBHOOKS.MICROSOFT_CALENDAR)
@@ -82,8 +82,8 @@ async def microsoft_calendar_webhook(
         # Parse webhook payload
         try:
             payload = json.loads(body)
-        except json.JSONDecodeError:
-            raise HTTPException(status_code=400, detail="Invalid JSON payload")
+        except json.JSONDecodeError as e:
+            raise HTTPException(status_code=400, detail="Invalid JSON payload") from e
 
         # Process each notification
         notifications = payload.get("value", [])
@@ -111,7 +111,7 @@ async def microsoft_calendar_webhook(
 
     except Exception as e:
         logger.error(f"Error processing Microsoft Calendar webhook: {str(e)}")
-        raise HTTPException(status_code=500, detail="Webhook processing failed")
+        raise HTTPException(status_code=500, detail="Webhook processing failed") from e
 
 
 async def sync_google_calendar_events(

@@ -56,8 +56,9 @@ async def create_working_admin():
         except Exception as e:
             print(f"❌ Error: {e}")
             await db.rollback()
-        finally:
-            break
+
+        # Only process first db session
+        return
 
 
 if __name__ == "__main__":
