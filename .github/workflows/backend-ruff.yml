@@ -124,12 +124,12 @@ jobs:
           echo "Files needing formatting:"
           if [ -f format-report.txt ]; then
             REFORMAT_COUNT=$(grep -c "Would reformat:" format-report.txt || echo "0")
-            echo "📄 $REFORMAT_COUNT files need formatting"
+            echo "Found $REFORMAT_COUNT files need formatting"
             echo ""
             grep "Would reformat:" format-report.txt | head -50
             if [ $REFORMAT_COUNT -gt 50 ]; then
               echo ""
-              echo "... and $((REFORMAT_COUNT - 50)) more files"
+              echo "--- and $((REFORMAT_COUNT - 50)) more files"
             fi
           fi
           echo ""
@@ -142,16 +142,16 @@ jobs:
           echo "Linting errors (first 100):"
           if [ -f lint-report.txt ]; then
             TOTAL_LINES=$(wc -l < lint-report.txt)
-            echo "📄 Found lint-report.txt ($TOTAL_LINES lines total)"
+            echo "Found lint-report.txt ($TOTAL_LINES lines total)"
             echo ""
             head -100 lint-report.txt
             echo ""
             if [ $TOTAL_LINES -gt 100 ]; then
-              echo "... and $((TOTAL_LINES - 100)) more errors"
-              echo "📥 Download full report from workflow artifacts"
+              echo "--- and $((TOTAL_LINES - 100)) more errors"
+              echo "Download full report from workflow artifacts"
             fi
           else
-            echo "⚠️  lint-report.txt not found!"
+            echo "WARNING: lint-report.txt not found!"
             echo "Checking for any .txt files:"
             ls -la *.txt 2>/dev/null || echo "No .txt files found"
           fi
@@ -166,7 +166,7 @@ jobs:
           echo "  - Formatting: cd backend && ruff format ."
           echo "  - Linting: cd backend && ruff check . --fix"
           echo ""
-          echo "📥 Full error reports available in workflow artifacts"
+          echo "Full error reports available in workflow artifacts"
           exit 1
         else
           echo "✅ All Ruff checks passed"

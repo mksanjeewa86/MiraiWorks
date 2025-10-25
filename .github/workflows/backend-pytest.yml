@@ -145,19 +145,19 @@ jobs:
           echo "Test output (last 100 lines):"
           if [ -f pytest-output.txt ]; then
             TOTAL_LINES=$(wc -l < pytest-output.txt)
-            echo "📄 Found pytest-output.txt ($TOTAL_LINES lines total)"
+            echo "Found pytest-output.txt ($TOTAL_LINES lines total)"
             echo ""
             tail -100 pytest-output.txt
             if [ $TOTAL_LINES -gt 100 ]; then
               echo ""
-              echo "... showing last 100 of $TOTAL_LINES lines"
+              echo "--- showing last 100 of $TOTAL_LINES lines"
             fi
           else
-            echo "⚠️  pytest-output.txt not found!"
+            echo "WARNING: pytest-output.txt not found!"
           fi
           echo ""
           echo "To run tests locally: cd backend && pytest app/tests/"
-          echo "📥 Full test reports available in workflow artifacts"
+          echo "Full test reports available in workflow artifacts"
           exit 1
         else
           echo "✅ All tests passed with sufficient coverage"

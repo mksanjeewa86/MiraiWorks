@@ -144,15 +144,15 @@ jobs:
           echo "Type errors (first 100 lines):"
           if [ -f typecheck-report.txt ]; then
             TOTAL_LINES=$(wc -l < typecheck-report.txt)
-            echo "📄 Found typecheck-report.txt ($TOTAL_LINES lines total)"
+            echo "Found typecheck-report.txt ($TOTAL_LINES lines total)"
             echo ""
             head -100 typecheck-report.txt
             if [ $TOTAL_LINES -gt 100 ]; then
               echo ""
-              echo "... and $((TOTAL_LINES - 100)) more lines"
+              echo "--- and $((TOTAL_LINES - 100)) more lines"
             fi
           else
-            echo "⚠️  typecheck-report.txt not found!"
+            echo "WARNING: typecheck-report.txt not found!"
           fi
           echo ""
           FAILED=1
@@ -164,15 +164,15 @@ jobs:
           echo "Linting errors (first 100 lines):"
           if [ -f lint-report.txt ]; then
             TOTAL_LINES=$(wc -l < lint-report.txt)
-            echo "📄 Found lint-report.txt ($TOTAL_LINES lines total)"
+            echo "Found lint-report.txt ($TOTAL_LINES lines total)"
             echo ""
             head -100 lint-report.txt
             if [ $TOTAL_LINES -gt 100 ]; then
               echo ""
-              echo "... and $((TOTAL_LINES - 100)) more lines"
+              echo "--- and $((TOTAL_LINES - 100)) more lines"
             fi
           else
-            echo "⚠️  lint-report.txt not found!"
+            echo "WARNING: lint-report.txt not found!"
           fi
           echo ""
           FAILED=1
@@ -184,15 +184,15 @@ jobs:
           echo "Build errors (last 100 lines):"
           if [ -f build-report.txt ]; then
             TOTAL_LINES=$(wc -l < build-report.txt)
-            echo "📄 Found build-report.txt ($TOTAL_LINES lines total)"
+            echo "Found build-report.txt ($TOTAL_LINES lines total)"
             echo ""
             tail -100 build-report.txt
             if [ $TOTAL_LINES -gt 100 ]; then
               echo ""
-              echo "... showing last 100 of $TOTAL_LINES lines"
+              echo "--- showing last 100 of $TOTAL_LINES lines"
             fi
           else
-            echo "⚠️  build-report.txt not found!"
+            echo "WARNING: build-report.txt not found!"
           fi
           echo ""
           FAILED=1
