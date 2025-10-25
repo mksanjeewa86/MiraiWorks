@@ -10,6 +10,11 @@ norecursedirs = .git .tox dist build *.egg
 addopts =
     --strict-markers
     --strict-config
+    --ignore=app/models
+    --ignore=app/schemas
+    --ignore=app/crud
+    --ignore=app/endpoints
+    --ignore=app/services
     --verbosity=1
     --tb=short
     --maxfail=3
