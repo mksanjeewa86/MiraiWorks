@@ -3,16 +3,8 @@ name: Backend - Ruff Quality
 on:
   push:
     branches: [ main, develop ]
-    paths:
-      - 'backend/**/*.py'
-      - 'backend/ruff.toml'
-      - '.github/workflows/backend-ruff.yml'
   pull_request:
     branches: [ main, develop ]
-    paths:
-      - 'backend/**/*.py'
-      - 'backend/ruff.toml'
-      - '.github/workflows/backend-ruff.yml'
 
 jobs:
   ruff:
