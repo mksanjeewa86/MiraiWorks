@@ -84,7 +84,7 @@ jobs:
         PYTHONPATH: .
       run: |
         export PYTHONPATH=$PWD
-        python -c "from app.config import Settings; s = Settings(); print('Backend configuration class works')" > ../config-test.txt 2>&1
+        python -c "from app.config_settings import Settings; s = Settings(); print('Backend configuration class works')" > ../config-test.txt 2>&1
         CONFIG_EXIT=$?
         cat ../config-test.txt
         echo "exit_code=$CONFIG_EXIT" >> $GITHUB_OUTPUT
