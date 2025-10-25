@@ -468,11 +468,10 @@ class ResumeService:
                 return None
 
             # Check password if required
-            if share.password_protected:
-                if not password or not self._verify_password(
-                    password, share.password_hash
-                ):
-                    return None
+            if share.password_protected and (
+                not password or not self._verify_password(password, share.password_hash)
+            ):
+                return None
 
             # Increment view count
             share.view_count += 1

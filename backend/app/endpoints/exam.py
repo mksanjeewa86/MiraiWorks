@@ -81,13 +81,12 @@ async def create_exam(
         # System admin can:
         # 1. Create global exam (company_id = None, is_public must be True)
         # 2. Create exam for any specific company
-        if exam_data.company_id is None:
+        if exam_data.company_id is None and not exam_data.is_public:
             # Creating global exam - must be public
-            if not exam_data.is_public:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Global exams must be public",
-                )
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Global exams must be public",
+            )
         # else: creating for specific company - allowed
     else:
         # Company admin/recruiter restrictions

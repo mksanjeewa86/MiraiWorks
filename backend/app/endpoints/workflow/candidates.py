@@ -462,11 +462,9 @@ async def get_recruiter_workload(
     Get workload information for a recruiter.
     """
     # Check permissions - only employers, admins, or the recruiter themselves
-    if current_user.role == "recruiter" and current_user.id != recruiter_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
-        )
-    elif current_user.role not in ["employer", "admin", "recruiter"]:
+    if (current_user.role == "recruiter" and current_user.id != recruiter_id) or (
+        current_user.role not in ["employer", "admin", "recruiter"]
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
         )

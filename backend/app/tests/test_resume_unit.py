@@ -109,18 +109,20 @@ class TestResumeServiceUnit:
 
     async def test_update_resume_service(self, resume_service, mock_db, sample_resume):
         """Test resume update service method."""
-        with patch.object(resume_service, "get_resume", return_value=sample_resume):
-            with patch.object(
+        with (
+            patch.object(resume_service, "get_resume", return_value=sample_resume),
+            patch.object(
                 resume_service, "_generate_unique_slug", return_value="new-slug"
-            ):
-                update_data = ResumeUpdate(
-                    title="Updated Resume Title", professional_summary="Updated summary"
-                )
+            ),
+        ):
+            update_data = ResumeUpdate(
+                title="Updated Resume Title", professional_summary="Updated summary"
+            )
 
-                await resume_service.update_resume(mock_db, 1, 1, update_data)
+            await resume_service.update_resume(mock_db, 1, 1, update_data)
 
-                mock_db.commit.assert_called_once()
-                mock_db.refresh.assert_called_once_with(sample_resume)
+            mock_db.commit.assert_called_once()
+            mock_db.refresh.assert_called_once_with(sample_resume)
 
     async def test_delete_resume_service(self, resume_service, mock_db, sample_resume):
         """Test resume deletion service method."""
@@ -231,25 +233,27 @@ class TestResumeServiceUnit:
         self, resume_service, mock_db, sample_resume
     ):
         """Test adding work experience successfully."""
-        with patch.object(resume_service, "get_resume", return_value=sample_resume):
-            with patch("app.services.resume_service.WorkExperience") as MockWorkExp:
-                mock_exp_instance = MagicMock()
-                mock_exp_instance.id = 1
-                mock_exp_instance.company_name = "TechCorp"
-                MockWorkExp.return_value = mock_exp_instance
+        with (
+            patch.object(resume_service, "get_resume", return_value=sample_resume),
+            patch("app.services.resume_service.WorkExperience") as MockWorkExp,
+        ):
+            mock_exp_instance = MagicMock()
+            mock_exp_instance.id = 1
+            mock_exp_instance.company_name = "TechCorp"
+            MockWorkExp.return_value = mock_exp_instance
 
-                exp_data = WorkExperienceCreate(
-                    company_name="TechCorp",
-                    position_title="Software Engineer",
-                    start_date=datetime(2020, 1, 1),
-                    is_current=True,
-                    description="Development work",
-                )
+            exp_data = WorkExperienceCreate(
+                company_name="TechCorp",
+                position_title="Software Engineer",
+                start_date=datetime(2020, 1, 1),
+                is_current=True,
+                description="Development work",
+            )
 
-                await resume_service.add_work_experience(mock_db, 1, 1, exp_data)
+            await resume_service.add_work_experience(mock_db, 1, 1, exp_data)
 
-                mock_db.add.assert_called_once()
-                mock_db.commit.assert_called_once()
+            mock_db.add.assert_called_once()
+            mock_db.commit.assert_called_once()
 
     async def test_add_work_experience_invalid_resume(self, resume_service, mock_db):
         """Test adding work experience to non-existent resume."""
@@ -273,22 +277,24 @@ class TestResumeServiceUnit:
         self, resume_service, mock_db, sample_resume
     ):
         """Test creating share link successfully."""
-        with patch.object(resume_service, "get_resume", return_value=sample_resume):
-            with patch("app.services.resume_service.ResumeShare") as MockShare:
-                mock_share_instance = MagicMock()
-                MockShare.return_value = mock_share_instance
+        with (
+            patch.object(resume_service, "get_resume", return_value=sample_resume),
+            patch("app.services.resume_service.ResumeShare") as MockShare,
+        ):
+            mock_share_instance = MagicMock()
+            MockShare.return_value = mock_share_instance
 
-                result = await resume_service.create_share_link(
-                    mock_db,
-                    1,
-                    1,
-                    recipient_email="test@example.com",
-                    expires_in_days=30,
-                )
+            result = await resume_service.create_share_link(
+                mock_db,
+                1,
+                1,
+                recipient_email="test@example.com",
+                expires_in_days=30,
+            )
 
-                mock_db.add.assert_called_once()
-                mock_db.commit.assert_called_once()
-                assert len(result) == 32  # Share token length
+            mock_db.add.assert_called_once()
+            mock_db.commit.assert_called_once()
+            assert len(result) == 32  # Share token length
 
     async def test_get_shared_resume_success(
         self, resume_service, mock_db, sample_resume
@@ -359,64 +365,56 @@ class TestResumeServiceUnit:
         sample_resume = MagicMock()
         sample_resume.id = 1
 
-        with patch.object(resume_service, "create_resume", return_value=sample_resume):
-            with patch.object(
+        with (
+            patch.object(resume_service, "create_resume", return_value=sample_resume),
+            patch.object(
                 resume_service, "add_work_experience", return_value=MagicMock()
-            ):
-                with patch.object(
-                    resume_service, "add_education", return_value=MagicMock()
-                ):
-                    with patch.object(
-                        resume_service, "add_skill", return_value=MagicMock()
-                    ):
-                        with patch.object(
-                            resume_service, "update_resume", return_value=sample_resume
-                        ):
-                            with patch.object(
-                                resume_service,
-                                "create_share_link",
-                                return_value="share_token",
-                            ):
-                                # 1. Create resume
-                                resume_data = ResumeCreate(
-                                    title="Test Resume",
-                                    full_name="Test User",
-                                    email="test@example.com",
-                                )
-                                resume = await resume_service.create_resume(
-                                    mock_db, resume_data, 1
-                                )
+            ),
+            patch.object(resume_service, "add_education", return_value=MagicMock()),
+            patch.object(resume_service, "add_skill", return_value=MagicMock()),
+            patch.object(resume_service, "update_resume", return_value=sample_resume),
+            patch.object(
+                resume_service,
+                "create_share_link",
+                return_value="share_token",
+            ),
+        ):
+            # 1. Create resume
+            resume_data = ResumeCreate(
+                title="Test Resume",
+                full_name="Test User",
+                email="test@example.com",
+            )
+            resume = await resume_service.create_resume(mock_db, resume_data, 1)
 
-                                # 2. Add work experience
-                                exp_data = WorkExperienceCreate(
-                                    company_name="TechCorp",
-                                    position_title="Developer",
-                                    start_date=datetime(2020, 1, 1),
-                                    is_current=True,
-                                    description="Development work",
-                                )
-                                experience = await resume_service.add_work_experience(
-                                    mock_db, resume.id, 1, exp_data
-                                )
+            # 2. Add work experience
+            exp_data = WorkExperienceCreate(
+                company_name="TechCorp",
+                position_title="Developer",
+                start_date=datetime(2020, 1, 1),
+                is_current=True,
+                description="Development work",
+            )
+            experience = await resume_service.add_work_experience(
+                mock_db, resume.id, 1, exp_data
+            )
 
-                                # 3. Update resume status
-                                update_data = ResumeUpdate(
-                                    status=ResumeStatus.PUBLISHED
-                                )
-                                updated_resume = await resume_service.update_resume(
-                                    mock_db, resume.id, 1, update_data
-                                )
+            # 3. Update resume status
+            update_data = ResumeUpdate(status=ResumeStatus.PUBLISHED)
+            updated_resume = await resume_service.update_resume(
+                mock_db, resume.id, 1, update_data
+            )
 
-                                # 4. Create share link
-                                share_token = await resume_service.create_share_link(
-                                    mock_db, resume.id, 1, expires_in_days=30
-                                )
+            # 4. Create share link
+            share_token = await resume_service.create_share_link(
+                mock_db, resume.id, 1, expires_in_days=30
+            )
 
-                                # Verify all operations were called
-                                assert resume is not None
-                                assert experience is not None
-                                assert updated_resume is not None
-                                assert share_token == "share_token"
+            # Verify all operations were called
+            assert resume is not None
+            assert experience is not None
+            assert updated_resume is not None
+            assert share_token == "share_token"
 
     # === EDGE CASE TESTS ===
 
@@ -430,17 +428,19 @@ class TestResumeServiceUnit:
         original_resume.educations = []
         original_resume.skills = []
 
-        with patch.object(resume_service, "get_resume", return_value=original_resume):
-            with patch("app.services.resume_service.Resume") as MockResume:
-                mock_duplicate = MagicMock()
-                mock_duplicate.id = 2
-                MockResume.return_value = mock_duplicate
+        with (
+            patch.object(resume_service, "get_resume", return_value=original_resume),
+            patch("app.services.resume_service.Resume") as MockResume,
+        ):
+            mock_duplicate = MagicMock()
+            mock_duplicate.id = 2
+            MockResume.return_value = mock_duplicate
 
-                await resume_service.duplicate_resume(mock_db, 1, 1)
+            await resume_service.duplicate_resume(mock_db, 1, 1)
 
-                mock_db.add.assert_called()
-                mock_db.flush.assert_called_once()
-                mock_db.commit.assert_called_once()
+            mock_db.add.assert_called()
+            mock_db.flush.assert_called_once()
+            mock_db.commit.assert_called_once()
 
     async def test_send_resume_email_mock(self, resume_service, mock_db, sample_resume):
         """Test sending resume email (mock implementation)."""

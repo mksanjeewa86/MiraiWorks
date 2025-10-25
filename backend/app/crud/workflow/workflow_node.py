@@ -120,9 +120,12 @@ class CRUDWorkflowNode(CRUDBase[WorkflowNode, dict, dict]):
 
         next_nodes = []
         for connection in connections:
-            if connection.evaluate_condition(execution_result, execution_data):
-                if connection.target_node and connection.target_node.status == "active":
-                    next_nodes.append(connection.target_node)
+            if (
+                connection.evaluate_condition(execution_result, execution_data)
+                and connection.target_node
+                and connection.target_node.status == "active"
+            ):
+                next_nodes.append(connection.target_node)
 
         return next_nodes
 

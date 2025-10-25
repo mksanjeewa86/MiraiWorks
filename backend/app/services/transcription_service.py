@@ -207,12 +207,14 @@ class TranscriptionService:
                 "Content-Type": "application/json",
             }
 
-            async with aiohttp.ClientSession() as session:
-                async with session.post(url, json=payload, headers=headers) as response:
-                    if response.status == 200:
-                        result = await response.json()
-                        if result.get("results"):
-                            return result["results"][0]["alternatives"][0]["transcript"]
+            async with (
+                aiohttp.ClientSession() as session,
+                session.post(url, json=payload, headers=headers) as response,
+            ):
+                if response.status == 200:
+                    result = await response.json()
+                    if result.get("results"):
+                        return result["results"][0]["alternatives"][0]["transcript"]
 
             return None
 
@@ -238,11 +240,13 @@ class TranscriptionService:
             data.add_field("language", language)
             data.add_field("response_format", "json")
 
-            async with aiohttp.ClientSession() as session:
-                async with session.post(url, data=data, headers=headers) as response:
-                    if response.status == 200:
-                        result = await response.json()
-                        return result.get("text", "")
+            async with (
+                aiohttp.ClientSession() as session,
+                session.post(url, data=data, headers=headers) as response,
+            ):
+                if response.status == 200:
+                    result = await response.json()
+                    return result.get("text", "")
 
             return None
 

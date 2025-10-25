@@ -69,13 +69,12 @@ class TestRecruitmentWorkflowLogic:
 
     def _evaluate_condition(self, condition_type: str, result: str) -> bool:
         """Helper to evaluate connection conditions"""
-        if condition_type == "success":
-            return result in ["pass", "completed", "approved"]
-        elif condition_type == "failure":
-            return result in ["fail", "failed", "rejected"]
-        elif condition_type == "always":
-            return True
-        return False
+        conditions = {
+            "success": result in ["pass", "completed", "approved"],
+            "failure": result in ["fail", "failed", "rejected"],
+            "always": True,
+        }
+        return conditions.get(condition_type, False)
 
     def _evaluate_conditional_with_score(self, score: float, min_score: float) -> bool:
         """Helper to evaluate conditional with score"""

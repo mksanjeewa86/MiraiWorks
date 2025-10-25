@@ -57,12 +57,15 @@ async def create_position(
         )
 
     # If user is not admin, ensure they can only create positions for their company
-    if not current_user.is_admin and current_user.company_id:
-        if position_in.company_id != current_user.company_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Can only create positions for your own company",
-            )
+    if (
+        not current_user.is_admin
+        and current_user.company_id
+        and position_in.company_id != current_user.company_id
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Can only create positions for your own company",
+        )
 
     # Add posted_by field from current user
     position_data = position_in.model_dump()
@@ -349,12 +352,15 @@ async def update_position(
             detail="Can only update positions for your own company",
         )
 
-    if position_in.salary_min is not None and position_in.salary_max is not None:
-        if position_in.salary_max <= position_in.salary_min:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="salary_max must be greater than salary_min",
-            )
+    if (
+        position_in.salary_min is not None
+        and position_in.salary_max is not None
+        and position_in.salary_max <= position_in.salary_min
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="salary_max must be greater than salary_min",
+        )
 
     position = await position_crud.update(db=db, db_obj=position, obj_in=position_in)
     return position

@@ -249,15 +249,14 @@ class CRUDWorkflowNodeConnection(CRUDBase[WorkflowNodeConnection, dict, dict]):
 
         visited = set()
         for node in nodes:
-            if node.id not in visited:
-                if has_cycle(node.id, visited, set()):
-                    issues.append(
-                        {
-                            "type": "cycle_detected",
-                            "message": "Process contains cycles which may cause infinite loops",
-                        }
-                    )
-                    break
+            if node.id not in visited and has_cycle(node.id, visited, set()):
+                issues.append(
+                    {
+                        "type": "cycle_detected",
+                        "message": "Process contains cycles which may cause infinite loops",
+                    }
+                )
+                break
 
         # Check for unreachable nodes
         # Find start nodes (no incoming connections or sequence_order = 1)

@@ -106,11 +106,14 @@ async def get_exam_template(
         role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.user_roles
     )
 
-    if not is_system_admin:
-        if not template.is_public and template.company_id != current_user.company_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
-            )
+    if (
+        not is_system_admin
+        and not template.is_public
+        and template.company_id != current_user.company_id
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
+        )
 
     return template
 

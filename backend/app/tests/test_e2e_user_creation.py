@@ -14,7 +14,7 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import *  # Import all models to ensure table creation
+from app.models import *  # noqa: F403, F405  # Import all models to ensure table creation
 from app.services.auth_service import auth_service
 from app.utils.constants import UserRole as UserRoleEnum
 

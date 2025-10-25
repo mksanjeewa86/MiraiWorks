@@ -37,7 +37,7 @@ from app.database import Base, get_db
 from app.main import app
 
 # Import all models to ensure they are registered with SQLAlchemy
-from app.models import *  # Import all models
+from app.models import *  # noqa: F403, F405  # Import all models
 from app.services.auth_service import auth_service
 from app.utils.constants import CompanyType
 from app.utils.constants import UserRole as UserRoleEnum

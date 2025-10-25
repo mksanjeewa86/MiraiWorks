@@ -41,7 +41,7 @@ from app.database import Base, get_db
 from app.main import app
 
 # Import all models to ensure they are registered with SQLAlchemy
-from app.models import *  # Import all models
+from app.models import *  # noqa: F403, F405  # Import all models
 from app.services.auth_service import auth_service
 from app.utils.constants import CompanyType
 from app.utils.constants import UserRole as UserRoleEnum
@@ -369,10 +369,10 @@ async def db_session():
         yield session
     finally:
         if session:
-            try:
+            import contextlib
+
+            with contextlib.suppress(Exception):
                 await session.close()
-            except Exception:
-                pass  # Ignore close errors
 
 
 @pytest_asyncio.fixture

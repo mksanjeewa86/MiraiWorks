@@ -252,13 +252,11 @@ async def get_connection_by_id(
         )
 
     # Verify user has access to this connection
-    has_access = False
-    if connection.source_user_id == current_user.id:
-        has_access = True
-    elif connection.source_company_id == current_user.company_id:
-        has_access = True
-    elif connection.target_company_id == current_user.company_id:
-        has_access = True
+    has_access = (
+        connection.source_user_id == current_user.id
+        or connection.source_company_id == current_user.company_id
+        or connection.target_company_id == current_user.company_id
+    )
 
     if not has_access and not current_user.is_admin:
         raise HTTPException(
@@ -320,13 +318,11 @@ async def deactivate_connection(
         )
 
     # Verify user has permission to deactivate
-    has_permission = False
-    if connection.source_user_id == current_user.id:
-        has_permission = True
-    elif connection.source_company_id == current_user.company_id:
-        has_permission = True
-    elif current_user.is_admin:
-        has_permission = True
+    has_permission = (
+        connection.source_user_id == current_user.id
+        or connection.source_company_id == current_user.company_id
+        or current_user.is_admin
+    )
 
     if not has_permission:
         raise HTTPException(
@@ -409,12 +405,11 @@ async def activate_connection(
 
     # Verify user has permission to activate
     has_permission = False
-    if connection.source_user_id == current_user.id:
-        has_permission = True
-    elif connection.source_company_id == current_user.company_id:
-        has_permission = True
-    elif current_user.is_admin:
-        has_permission = True
+    has_permission = (
+        connection.source_user_id == current_user.id
+        or connection.source_company_id == current_user.company_id
+        or current_user.is_admin
+    )
 
     if not has_permission:
         raise HTTPException(

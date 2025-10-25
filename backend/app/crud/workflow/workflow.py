@@ -273,18 +273,17 @@ class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
                     )
                     db.add(cloned_node)
 
-        if clone_viewers:
+        if clone_viewers and source_process.viewers:
             # Load source viewers
-            if source_process.viewers:
-                for viewer in source_process.viewers:
-                    cloned_viewer = WorkflowViewer(
-                        process_id=cloned_process.id,
-                        user_id=viewer.user_id,
-                        role=viewer.role,
-                        permissions=viewer.permissions,
-                        added_by=created_by,
-                    )
-                    db.add(cloned_viewer)
+            for viewer in source_process.viewers:
+                cloned_viewer = WorkflowViewer(
+                    process_id=cloned_process.id,
+                    user_id=viewer.user_id,
+                    role=viewer.role,
+                    permissions=viewer.permissions,
+                    added_by=created_by,
+                )
+                db.add(cloned_viewer)
 
         await db.commit()
         await db.refresh(cloned_process)

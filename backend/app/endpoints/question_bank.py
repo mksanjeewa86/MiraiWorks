@@ -157,12 +157,13 @@ async def get_question_bank_detail(
         role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.user_roles
     )
 
-    if not is_system_admin:
+    if not is_system_admin and (
+        not bank.is_public and bank.company_id != current_user.company_id
+    ):
         # User must have access to this bank
-        if not bank.is_public and bank.company_id != current_user.company_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
-            )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
+        )
 
     return bank
 
@@ -191,12 +192,11 @@ async def update_question_bank(
         role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.user_roles
     )
 
-    if not is_system_admin:
+    if not is_system_admin and bank.company_id != current_user.company_id:
         # User can only update their company's banks
-        if bank.company_id != current_user.company_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
-            )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
+        )
 
     bank = await question_bank_crud.update(db=db, db_obj=bank, obj_in=bank_data)
     return bank
@@ -262,11 +262,14 @@ async def get_bank_questions(
         role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.user_roles
     )
 
-    if not is_system_admin:
-        if not bank.is_public and bank.company_id != current_user.company_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
-            )
+    if (
+        not is_system_admin
+        and not bank.is_public
+        and bank.company_id != current_user.company_id
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
+        )
 
     questions = await question_bank_item_crud.get_by_bank(db=db, bank_id=bank_id)
     return questions

@@ -555,14 +555,15 @@ class CalendarService:
             "redirect_uri": self.google_redirect_uri,
         }
 
-        async with aiohttp.ClientSession() as session:
-            async with session.post(self.google_token_url, data=data) as response:
-                if response.status != 200:
-                    error_text = await response.text()
-                    raise ValueError(
-                        f"Failed to exchange Google code for tokens: {error_text}"
-                    )
-                return await response.json()
+        async with aiohttp.ClientSession() as session, session.post(
+            self.google_token_url, data=data
+        ) as response:
+            if response.status != 200:
+                error_text = await response.text()
+                raise ValueError(
+                    f"Failed to exchange Google code for tokens: {error_text}"
+                )
+            return await response.json()
 
     async def _exchange_outlook_code_for_tokens(self, code: str) -> dict[str, Any]:
         """Exchange Outlook OAuth code for access tokens"""
@@ -574,14 +575,15 @@ class CalendarService:
             "redirect_uri": self.outlook_redirect_uri,
         }
 
-        async with aiohttp.ClientSession() as session:
-            async with session.post(self.outlook_token_url, data=data) as response:
-                if response.status != 200:
-                    error_text = await response.text()
-                    raise ValueError(
-                        f"Failed to exchange Outlook code for tokens: {error_text}"
-                    )
-                return await response.json()
+        async with aiohttp.ClientSession() as session, session.post(
+            self.outlook_token_url, data=data
+        ) as response:
+            if response.status != 200:
+                error_text = await response.text()
+                raise ValueError(
+                    f"Failed to exchange Outlook code for tokens: {error_text}"
+                )
+            return await response.json()
 
     async def _get_google_profile(self, access_token: str) -> dict[str, Any]:
         """Get Google user profile"""
@@ -613,17 +615,17 @@ class CalendarService:
             if connection.provider == "google" and connection.refresh_token:
                 # Revoke Google tokens
                 params = {"token": connection.refresh_token}
-                async with aiohttp.ClientSession() as session:
-                    async with session.post(
-                        self.google_revoke_url, params=params
-                    ) as response:
-                        if response.status not in [
-                            200,
-                            400,
-                        ]:  # 400 is returned if token is already invalid
-                            logger.warning(
-                                "Failed to revoke Google tokens", status=response.status
-                            )
+                async with (
+                    aiohttp.ClientSession() as session,
+                    session.post(self.google_revoke_url, params=params) as response,
+                ):
+                    if response.status not in [
+                        200,
+                        400,
+                    ]:  # 400 is returned if token is already invalid
+                        logger.warning(
+                            "Failed to revoke Google tokens", status=response.status
+                        )
             elif connection.provider == "outlook":
                 # Outlook doesn't have a direct revoke endpoint in common tenant
                 # The tokens will expire naturally

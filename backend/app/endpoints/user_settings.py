@@ -60,12 +60,16 @@ async def update_user_settings(
     update_data = settings_update.model_dump(exclude_unset=True)
 
     # Validate SMS notifications require a phone number
-    if "sms_notifications" in update_data and update_data["sms_notifications"]:
-        if not current_user.phone or not current_user.phone.strip():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="SMS notifications require a phone number. Please add your phone number in your profile first.",
-            )
+    if (
+        "sms_notifications" in update_data
+        and update_data["sms_notifications"]
+        and not current_user.phone
+        or not current_user.phone.strip()
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="SMS notifications require a phone number. Please add your phone number in your profile first.",
+        )
 
     # Separate UserSettings fields and User fields
     user_fields = {"require_2fa"}

@@ -283,24 +283,27 @@ async def create_user(
 
     # Check if company already has an admin (prevent duplicate company admins)
     # Exception: Super admin's company can have unlimited admins
-    if is_admin_user and user_data.company_id:
+    if (
+        is_admin_user
+        and user_data.company_id
+        and user_data.company_id != super_admin_company_id
+    ):
         # Super admin's company can have unlimited admins
-        if user_data.company_id != super_admin_company_id:
-            existing_admin_query = select(func.count(User.id)).where(
-                and_(
-                    User.company_id == user_data.company_id,
-                    User.is_admin is True,
-                    User.is_deleted is False,
-                )
+        existing_admin_query = select(func.count(User.id)).where(
+            and_(
+                User.company_id == user_data.company_id,
+                User.is_admin is True,
+                User.is_deleted is False,
             )
-            existing_admin_result = await db.execute(existing_admin_query)
-            existing_admin_count = existing_admin_result.scalar() or 0
+        )
+        existing_admin_result = await db.execute(existing_admin_query)
+        existing_admin_count = existing_admin_result.scalar() or 0
 
-            if existing_admin_count > 0:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="This company already has an admin user. Only one admin per company is allowed.",
-                )
+        if existing_admin_count > 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="This company already has an admin user. Only one admin per company is allowed.",
+            )
 
     # Auto-enable 2FA for admin users
     require_2fa = is_admin_user or user_data.require_2fa or False
@@ -428,10 +431,13 @@ async def bulk_delete_users(
             errors.append(f"User {user_id} not found")
             continue
 
-        if is_company_admin(current_user) and not is_super_admin(current_user):
-            if user.company_id != current_user.company_id:
-                errors.append(f"Cannot delete user {user_id} from other company")
-                continue
+        if (
+            is_company_admin(current_user)
+            and not is_super_admin(current_user)
+            and user.company_id != current_user.company_id
+        ):
+            errors.append(f"Cannot delete user {user_id} from other company")
+            continue
 
         valid_user_ids.append(user_id)
 
@@ -482,12 +488,15 @@ async def bulk_reset_passwords(
                 continue
 
             # Company admin can only reset passwords for users in their company
-            if is_company_admin(current_user) and not is_super_admin(current_user):
-                if user.company_id != current_user.company_id:
-                    errors.append(
-                        f"Cannot reset password for user {user_id} from other company"
-                    )
-                    continue
+            if (
+                is_company_admin(current_user)
+                and not is_super_admin(current_user)
+                and user.company_id != current_user.company_id
+            ):
+                errors.append(
+                    f"Cannot reset password for user {user_id} from other company"
+                )
+                continue
 
             # Generate new temporary password
             temp_password = "".join(
@@ -556,12 +565,15 @@ async def bulk_resend_activation(
                 continue
 
             # Company admin can only resend for users in their company
-            if is_company_admin(current_user) and not is_super_admin(current_user):
-                if user.company_id != current_user.company_id:
-                    errors.append(
-                        f"Cannot resend activation for user {user_id} from other company"
-                    )
-                    continue
+            if (
+                is_company_admin(current_user)
+                and not is_super_admin(current_user)
+                and user.company_id != current_user.company_id
+            ):
+                errors.append(
+                    f"Cannot resend activation for user {user_id} from other company"
+                )
+                continue
 
             # Check if user is already active
             if user.is_active:
@@ -624,10 +636,13 @@ async def bulk_suspend_users(
             errors.append(f"User {user_id} not found")
             continue
 
-        if is_company_admin(current_user) and not is_super_admin(current_user):
-            if user.company_id != current_user.company_id:
-                errors.append(f"Cannot suspend user {user_id} from other company")
-                continue
+        if (
+            is_company_admin(current_user)
+            and not is_super_admin(current_user)
+            and user.company_id != current_user.company_id
+        ):
+            errors.append(f"Cannot suspend user {user_id} from other company")
+            continue
 
         valid_user_ids.append(user_id)
 
@@ -672,10 +687,13 @@ async def bulk_unsuspend_users(
             errors.append(f"User {user_id} not found")
             continue
 
-        if is_company_admin(current_user) and not is_super_admin(current_user):
-            if user.company_id != current_user.company_id:
-                errors.append(f"Cannot unsuspend user {user_id} from other company")
-                continue
+        if (
+            is_company_admin(current_user)
+            and not is_super_admin(current_user)
+            and user.company_id != current_user.company_id
+        ):
+            errors.append(f"Cannot unsuspend user {user_id} from other company")
+            continue
 
         valid_user_ids.append(user_id)
 
@@ -706,19 +724,24 @@ async def get_user(
         )
 
     # Check permissions
-    if not (is_super_admin(current_user) or is_company_admin(current_user)):
-        if current_user.id != user_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not enough permissions to view this user",
-            )
+    if (
+        not (is_super_admin(current_user) or is_company_admin(current_user))
+        and current_user.id != user_id
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions to view this user",
+        )
 
-    if is_company_admin(current_user) and not is_super_admin(current_user):
-        if user.company_id != current_user.company_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Cannot view users from other companies",
-            )
+    if (
+        is_company_admin(current_user)
+        and not is_super_admin(current_user)
+        and user.company_id != current_user.company_id
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot view users from other companies",
+        )
 
     user_roles = [role.role.name for role in user.user_roles]
     return UserInfo(
@@ -786,12 +809,15 @@ async def update_user(
         )
 
     # NEW RESTRICTION 2: Only super admin can update users to company admin role
-    if user_data.roles is not None and UserRoleEnum.ADMIN in user_data.roles:
-        if not is_super_admin(current_user):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Only super admin can assign company admin role.",
-            )
+    if (
+        user_data.roles is not None
+        and UserRoleEnum.ADMIN in user_data.roles
+        and not is_super_admin(current_user)
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only super admin can assign company admin role.",
+        )
 
     # NEW RESTRICTION 3: Prevent updating to candidate role in super admin's company
     if user_data.roles is not None and UserRoleEnum.CANDIDATE in user_data.roles:
@@ -929,12 +955,15 @@ async def delete_user(
             detail="Not enough permissions to delete users",
         )
 
-    if is_company_admin(current_user) and not is_super_admin(current_user):
-        if user.company_id != current_user.company_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Cannot delete users from other companies",
-            )
+    if (
+        is_company_admin(current_user)
+        and not is_super_admin(current_user)
+        and user.company_id != current_user.company_id
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot delete users from other companies",
+        )
 
     if user_id == current_user.id:
         raise HTTPException(
@@ -972,12 +1001,15 @@ async def reset_user_password(
         )
 
     # Company admin can only reset passwords for users in their company
-    if is_company_admin(current_user) and not is_super_admin(current_user):
-        if user.company_id != current_user.company_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Cannot reset passwords for users from other companies",
-            )
+    if (
+        is_company_admin(current_user)
+        and not is_super_admin(current_user)
+        and user.company_id != current_user.company_id
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot reset passwords for users from other companies",
+        )
 
     # Generate new temporary password
     temp_password = "".join(
@@ -1030,12 +1062,15 @@ async def resend_activation_email(
         )
 
     # Company admin can only resend for users in their company
-    if is_company_admin(current_user) and not is_super_admin(current_user):
-        if user.company_id != current_user.company_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Cannot resend activation for users from other companies",
-            )
+    if (
+        is_company_admin(current_user)
+        and not is_super_admin(current_user)
+        and user.company_id != current_user.company_id
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot resend activation for users from other companies",
+        )
 
     # Check if user is already active
     if user.is_active:
@@ -1085,12 +1120,15 @@ async def suspend_user(
             detail="Not enough permissions to suspend users",
         )
 
-    if is_company_admin(current_user) and not is_super_admin(current_user):
-        if user.company_id != current_user.company_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Cannot suspend users from other companies",
-            )
+    if (
+        is_company_admin(current_user)
+        and not is_super_admin(current_user)
+        and user.company_id != current_user.company_id
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot suspend users from other companies",
+        )
 
     if user_id == current_user.id:
         raise HTTPException(
@@ -1127,12 +1165,15 @@ async def unsuspend_user(
             detail="Not enough permissions to unsuspend users",
         )
 
-    if is_company_admin(current_user) and not is_super_admin(current_user):
-        if user.company_id != current_user.company_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Cannot unsuspend users from other companies",
-            )
+    if (
+        is_company_admin(current_user)
+        and not is_super_admin(current_user)
+        and user.company_id != current_user.company_id
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot unsuspend users from other companies",
+        )
 
     if not user.is_suspended:
         raise HTTPException(
