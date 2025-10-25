@@ -108,9 +108,7 @@ class NodeIntegrationInterview(BaseModel):
     duration_minutes: int | None = Field(
         None, ge=15, le=480, description="Length of the interview in minutes"
     )
-    location: str | None = Field(
-        None, description="Interview location or meeting link"
-    )
+    location: str | None = Field(None, description="Interview location or meeting link")
     meeting_link: str | None = Field(None, description="Video meeting URL")
     interview_type: str | None = Field(
         None, description="Type of interview (video, phone, in_person)"
@@ -154,9 +152,7 @@ class NodeIntegrationTodo(BaseModel):
         None, description="Assignment type label (e.g. coding)"
     )
     category: str | None = Field(None, description="Optional category slug")
-    title: str | None = Field(
-        None, description="Override title for the generated todo"
-    )
+    title: str | None = Field(None, description="Override title for the generated todo")
     description: str | None = Field(
         None, description="Override description for the generated todo"
     )
@@ -168,9 +164,7 @@ class WorkflowNodeBase(BaseModel):
     node_type: NodeType = Field(..., description="Type of the node")
     title: str = Field(..., min_length=1, max_length=255, description="Node title")
     description: str | None = Field(None, description="Node description")
-    instructions: str | None = Field(
-        None, description="Instructions for participants"
-    )
+    instructions: str | None = Field(None, description="Instructions for participants")
     estimated_duration_minutes: int | None = Field(
         None, ge=5, le=1440, description="Estimated duration in minutes"
     )

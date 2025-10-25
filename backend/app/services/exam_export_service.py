@@ -281,9 +281,7 @@ class ExamExportService:
     def _create_summary_sheet(self, sheet, exam: Exam, sessions: list[ExamSession]):
         """Create summary sheet in Excel workbook."""
         # Header styling
-        PatternFill(
-            start_color="4F46E5", end_color="4F46E5", fill_type="solid"
-        )
+        PatternFill(start_color="4F46E5", end_color="4F46E5", fill_type="solid")
         Font(color="FFFFFF", bold=True, size=14)
 
         # Title

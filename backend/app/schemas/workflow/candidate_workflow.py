@@ -173,9 +173,7 @@ class CandidateWorkflowCompletion(BaseModel):
     """Schema for completing a candidate process"""
 
     final_result: FinalResult = Field(..., description="Final result of the process")
-    overall_score: float | None = Field(
-        None, ge=0, le=100, description="Overall score"
-    )
+    overall_score: float | None = Field(None, ge=0, le=100, description="Overall score")
     completion_notes: str | None = Field(
         None, max_length=1000, description="Completion notes"
     )

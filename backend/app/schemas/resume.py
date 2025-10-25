@@ -53,9 +53,7 @@ class ResumeBase(BaseModel):
     custom_css: str | None = None
 
     # Japanese-specific fields
-    furigana_name: str | None = Field(
-        None, max_length=100
-    )  # phonetic name (furigana)
+    furigana_name: str | None = Field(None, max_length=100)  # phonetic name (furigana)
     birth_date: datetime | None = None  # birth date
     gender: str | None = Field(None, max_length=10)  # gender
     nationality: str | None = Field(None, max_length=50)  # nationality

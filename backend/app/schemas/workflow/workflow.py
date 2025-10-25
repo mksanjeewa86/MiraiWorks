@@ -75,9 +75,7 @@ class WorkflowInfo(WorkflowBase):
     archived_at: datetime | None
 
     # Computed fields
-    node_count: int | None = Field(
-        None, description="Number of nodes in the process"
-    )
+    node_count: int | None = Field(None, description="Number of nodes in the process")
     active_candidate_count: int | None = Field(
         None, description="Number of active candidates"
     )
@@ -94,9 +92,7 @@ class WorkflowDetails(WorkflowInfo):
     viewers: list[WorkflowViewerInfo] = Field(default_factory=list)
 
     # Statistics
-    completion_rate: float | None = Field(
-        None, description="Process completion rate"
-    )
+    completion_rate: float | None = Field(None, description="Process completion rate")
     average_duration_days: float | None = Field(
         None, description="Average completion time in days"
     )
@@ -113,9 +109,7 @@ class ProcessActivation(BaseModel):
 class ProcessArchive(BaseModel):
     """Schema for archiving a process"""
 
-    reason: str | None = Field(
-        None, max_length=500, description="Reason for archiving"
-    )
+    reason: str | None = Field(None, max_length=500, description="Reason for archiving")
 
 
 class ProcessClone(BaseModel):

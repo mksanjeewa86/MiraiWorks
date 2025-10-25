@@ -11,9 +11,7 @@ class ProfileViewCreate(BaseModel):
     profile_user_id: int = Field(
         ..., description="ID of the user whose profile was viewed"
     )
-    view_duration: int | None = Field(
-        None, description="Duration of view in seconds"
-    )
+    view_duration: int | None = Field(None, description="Duration of view in seconds")
     referrer: str | None = Field(None, max_length=500, description="Referrer URL")
 
 

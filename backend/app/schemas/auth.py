@@ -18,7 +18,9 @@ class RegisterRequest(BaseModel):
     last_name: str
     phone: str | None = None
     role: str | None = "candidate"  # candidate, employer, recruiter
-    password: str | None = None  # Optional - if not provided, system generates temp password
+    password: str | None = (
+        None  # Optional - if not provided, system generates temp password
+    )
     company_name: str | None = None
     company_domain: str | None = None
 

@@ -10,9 +10,7 @@ class WorkflowNodeExecutionBase(BaseModel):
     """Base schema for node execution"""
 
     feedback: str | None = Field(None, description="Feedback for the execution")
-    assessor_notes: str | None = Field(
-        None, description="Internal notes from assessor"
-    )
+    assessor_notes: str | None = Field(None, description="Internal notes from assessor")
 
 
 class WorkflowNodeExecutionCreate(WorkflowNodeExecutionBase):
@@ -86,9 +84,7 @@ class WorkflowNodeExecutionSchedule(BaseModel):
     """Schema for scheduling a node execution"""
 
     due_date: datetime = Field(..., description="Due date for the execution")
-    assigned_to: int | None = Field(
-        None, description="User to assign the execution to"
-    )
+    assigned_to: int | None = Field(None, description="User to assign the execution to")
     send_notification: bool = Field(True, description="Whether to send notification")
     custom_instructions: str | None = Field(
         None, max_length=1000, description="Custom instructions"
@@ -140,18 +136,12 @@ class WorkflowNodeExecutionDetails(WorkflowNodeExecutionInfo):
 
     # Actor information
     assignee_name: str | None = Field(None, description="Name of assigned user")
-    completer_name: str | None = Field(
-        None, description="Name of user who completed"
-    )
+    completer_name: str | None = Field(None, description="Name of user who completed")
     reviewer_name: str | None = Field(None, description="Name of reviewer")
 
     # Linked resource information
-    interview_title: str | None = Field(
-        None, description="Title of linked interview"
-    )
-    interview_status: str | None = Field(
-        None, description="Status of linked interview"
-    )
+    interview_title: str | None = Field(None, description="Title of linked interview")
+    interview_status: str | None = Field(None, description="Status of linked interview")
     todo_title: str | None = Field(None, description="Title of linked todo")
     todo_status: str | None = Field(None, description="Status of linked todo")
 

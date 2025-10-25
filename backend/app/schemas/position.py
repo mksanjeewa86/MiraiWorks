@@ -393,9 +393,7 @@ class CompanyProfileBase(BaseModel):
     is_public: bool = True
     seo_title: str | None = Field(None, max_length=255)
     seo_description: str | None = Field(None, max_length=500)
-    custom_slug: str | None = Field(
-        None, max_length=100, pattern=r"^[a-zA-Z0-9-_]+$"
-    )
+    custom_slug: str | None = Field(None, max_length=100, pattern=r"^[a-zA-Z0-9-_]+$")
 
 
 class CompanyProfileCreate(CompanyProfileBase):

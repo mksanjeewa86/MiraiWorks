@@ -34,9 +34,7 @@ class PrivacySettingsBase(BaseModel):
         default=True, description="Show certifications"
     )
     show_projects: bool | None = Field(default=True, description="Show projects")
-    show_resume: bool | None = Field(
-        default=True, description="Allow resume download"
-    )
+    show_resume: bool | None = Field(default=True, description="Allow resume download")
 
 
 class PrivacySettingsUpdate(BaseModel):

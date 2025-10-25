@@ -1,4 +1,3 @@
-
 from pydantic import BaseModel, ConfigDict, EmailStr
 
 from app.utils.constants import CompanyType
