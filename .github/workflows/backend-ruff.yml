@@ -58,7 +58,7 @@ jobs:
       working-directory: ./backend
       run: |
         echo "## 🔍 Linting Errors (with file:line details):"
-        ruff check . --output-format=full 2>&1 | tee lint-report.txt
+        ruff check . --output-format=text 2>&1 | tee lint-report.txt
         LINT_EXIT=${PIPESTATUS[0]}
 
         echo ""
@@ -99,7 +99,7 @@ jobs:
         if [ "${{ steps.lint.outcome }}" != "success" ]; then
           echo "### ❌ Linting Issues (Top 30)" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          ruff check . --output-format=full 2>&1 | head -30 >> $GITHUB_STEP_SUMMARY || true
+          ruff check . --output-format=text 2>&1 | head -30 >> $GITHUB_STEP_SUMMARY || true
           echo '```' >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
         fi
