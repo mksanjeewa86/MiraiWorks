@@ -501,10 +501,7 @@ async def _check_interview_access(user: User, interview: Interview) -> bool:
         return True
 
     # Employer users have access to interviews with their company
-    if user.company_id == interview.employer_company_id:
-        return True
-
-    return False
+    return user.company_id == interview.employer_company_id
 
 
 # Video Call Integration Endpoints

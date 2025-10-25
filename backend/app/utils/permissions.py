@@ -77,10 +77,7 @@ def check_company_access(user: User, target_company_id: int | None) -> bool:
         return True
 
     # Users can only access their own company
-    if user.company_id != target_company_id:
-        return False
-
-    return True
+    return user.company_id == target_company_id
 
 
 def enforce_company_scoping(func):

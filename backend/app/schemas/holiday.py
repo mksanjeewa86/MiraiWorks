@@ -1,7 +1,9 @@
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date as date_type
+from datetime import datetime
 from enum import Enum
+from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -18,7 +20,7 @@ class HolidayBase(BaseModel):
 
     name: str = Field(..., min_length=1, max_length=255)
     name_en: str | None = Field(None, max_length=255)
-    date: date
+    date: date_type
     country: str = Field(default="JP")
     is_national: bool = Field(default=True)
     is_recurring: bool = Field(default=True)
@@ -28,7 +30,7 @@ class HolidayBase(BaseModel):
     @field_validator("date")
     @classmethod
     def validate_date(cls, v):
-        if v < date(1900, 1, 1) or v > date(2100, 12, 31):
+        if v < date_type(1900, 1, 1) or v > date_type(2100, 12, 31):
             raise ValueError("Date must be between 1900 and 2100")
         return v
 
@@ -40,7 +42,7 @@ class HolidayCreate(HolidayBase):
 class HolidayUpdate(BaseModel):
     name: str | None = Field(None, min_length=1, max_length=255)
     name_en: str | None = Field(None, max_length=255)
-    date: date | None = None
+    date: date_type | None = None
     country: str | None = None
     is_national: bool | None = None
     is_recurring: bool | None = None
@@ -50,7 +52,7 @@ class HolidayUpdate(BaseModel):
     @field_validator("date")
     @classmethod
     def validate_date(cls, v):
-        if v and (v < date(1900, 1, 1) or v > date(2100, 12, 31)):
+        if v and (v < date_type(1900, 1, 1) or v > date_type(2100, 12, 31)):
             raise ValueError("Date must be between 1900 and 2100")
         return v
 

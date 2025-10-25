@@ -478,11 +478,9 @@ class ResumeShare(BaseModel):
 
     def is_expired(self) -> bool:
         """Check if share is expired."""
-        if self.expires_at and self.expires_at < get_utc_now():
-            return True
-        if self.max_views and self.view_count >= self.max_views:
-            return True
-        return False
+        return (self.expires_at and self.expires_at < get_utc_now()) or (
+            self.max_views and self.view_count >= self.max_views
+        )
 
 
 class ResumeMessageAttachment(BaseModel):

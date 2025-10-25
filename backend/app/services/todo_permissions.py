@@ -75,10 +75,7 @@ class TodoPermissionService:
             return True
 
         # Viewer can view if published and not deleted
-        if await todo_viewer_service.can_view_as_viewer(db, user_id, todo):
-            return True
-
-        return False
+        return await todo_viewer_service.can_view_as_viewer(db, user_id, todo)
 
     @staticmethod
     async def can_edit_todo(db: AsyncSession, user_id: int, todo: Todo) -> bool:
@@ -96,10 +93,7 @@ class TodoPermissionService:
             return True
 
         # Assignee can edit their own memo for assignments
-        if todo.todo_type == "assignment" and todo.assignee_id == user_id:
-            return True
-
-        return False
+        return todo.todo_type == "assignment" and todo.assignee_id == user_id
 
     @staticmethod
     async def can_delete_todo(db: AsyncSession, user_id: int, todo: Todo) -> bool:
@@ -115,10 +109,7 @@ class TodoPermissionService:
             return True
 
         # Assignee can change status (complete/reopen) for assignments
-        if todo.todo_type == "assignment" and todo.assignee_id == user_id:
-            return True
-
-        return False
+        return todo.todo_type == "assignment" and todo.assignee_id == user_id
 
     @staticmethod
     async def can_add_attachments(db: AsyncSession, user_id: int, todo: Todo) -> bool:
@@ -128,10 +119,7 @@ class TodoPermissionService:
             return True
 
         # Assignee can add attachments to assignments
-        if todo.todo_type == "assignment" and todo.assignee_id == user_id:
-            return True
-
-        return False
+        return todo.todo_type == "assignment" and todo.assignee_id == user_id
 
     @staticmethod
     async def can_delete_attachment(
@@ -143,10 +131,7 @@ class TodoPermissionService:
             return True
 
         # User can delete their own attachments
-        if attachment_uploader_id == user_id:
-            return True
-
-        return False
+        return attachment_uploader_id == user_id
 
     @staticmethod
     async def can_assign_to_user(
@@ -225,10 +210,7 @@ class TodoPermissionService:
             return False
 
         # Todo must not be completed or deleted
-        if todo.status == TodoStatus.COMPLETED.value or todo.is_deleted:
-            return False
-
-        return True
+        return not (todo.status == TodoStatus.COMPLETED.value or todo.is_deleted)
 
     @staticmethod
     async def can_respond_to_extension(
@@ -248,7 +230,4 @@ class TodoPermissionService:
             return True
 
         # Requester can view their own requests
-        if extension_request.requested_by_id == user_id:
-            return True
-
-        return False
+        return extension_request.requested_by_id == user_id
