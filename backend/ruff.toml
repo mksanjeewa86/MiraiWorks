@@ -75,5 +75,5 @@ indent-style = "space"
 # Respect magic trailing commas.
 skip-magic-trailing-comma = false
 
-# Automatically detect the appropriate line ending.
-line-ending = "auto"
+# Use LF line endings for consistency with CI/CD (Linux)
+line-ending = "lf"
