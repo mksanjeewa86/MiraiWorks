@@ -6,7 +6,7 @@ from typing import List, Optional
 
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from sqlalchemy.orm import selectinload
 from app.models import BlockedCompany, Company
 
 
