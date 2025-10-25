@@ -36,7 +36,7 @@ jobs:
       working-directory: ./backend
       run: |
         echo "## 📝 Files Needing Formatting:" | tee format-report.txt
-        ruff format --check . | tee -a format-report.txt
+        ruff format --check . 2>&1 | tee -a format-report.txt
         FORMAT_EXIT=${PIPESTATUS[0]}
 
         echo ""
@@ -58,7 +58,7 @@ jobs:
       working-directory: ./backend
       run: |
         echo "## 🔍 Linting Errors (with file:line details):"
-        ruff check . --output-format=text | tee lint-report.txt
+        ruff check . --output-format=text 2>&1 | tee lint-report.txt
         LINT_EXIT=${PIPESTATUS[0]}
 
         echo ""
