@@ -37,7 +37,7 @@ jobs:
       run: |
         echo "## 📝 Files Needing Formatting:" | tee format-report.txt
         ruff format --check . | tee -a format-report.txt
-        FORMAT_EXIT=$?
+        FORMAT_EXIT=${PIPESTATUS[0]}
 
         echo ""
         echo "## 🔍 Formatting Diff Preview (first 50 lines):" | tee -a format-report.txt
@@ -49,6 +49,7 @@ jobs:
           echo "❌ Some files need formatting - see details above"
         fi
 
+        echo "Format exit code: $FORMAT_EXIT"
         exit $FORMAT_EXIT
 
     - name: Linting - All Rules
@@ -58,7 +59,7 @@ jobs:
       run: |
         echo "## 🔍 Linting Errors (with file:line details):"
         ruff check . --output-format=text | tee lint-report.txt
-        LINT_EXIT=$?
+        LINT_EXIT=${PIPESTATUS[0]}
 
         echo ""
         echo "## 📊 Error Summary by File:"
@@ -69,6 +70,8 @@ jobs:
         echo "## GitHub Annotations:"
         ruff check . --output-format=github || true
 
+        echo ""
+        echo "Lint exit code: $LINT_EXIT"
         exit $LINT_EXIT
 
     - name: Generate Detailed Report
