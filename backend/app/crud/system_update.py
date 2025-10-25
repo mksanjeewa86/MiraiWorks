@@ -2,7 +2,7 @@
 CRUD operations for SystemUpdate model.
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -37,7 +37,7 @@ class CRUDSystemUpdate(CRUDBase[SystemUpdate, dict, dict]):
         query = select(SystemUpdate).order_by(desc(SystemUpdate.created_at))
 
         if not include_inactive:
-            query = query.where(SystemUpdate.is_active == True)
+            query = query.where(SystemUpdate.is_active is True)
 
         query = query.offset(skip).limit(limit)
 
@@ -46,7 +46,7 @@ class CRUDSystemUpdate(CRUDBase[SystemUpdate, dict, dict]):
 
     async def get_with_creator(
         self, db: AsyncSession, update_id: int
-    ) -> Optional[SystemUpdate]:
+    ) -> SystemUpdate | None:
         """
         Get a system update with creator information loaded.
 
@@ -90,7 +90,7 @@ class CRUDSystemUpdate(CRUDBase[SystemUpdate, dict, dict]):
         query = select(SystemUpdate).order_by(desc(SystemUpdate.created_at))
 
         if not include_inactive:
-            query = query.where(SystemUpdate.is_active == True)
+            query = query.where(SystemUpdate.is_active is True)
 
         # Filter by tags - match if any tag in the list matches
         if tags:
@@ -127,7 +127,7 @@ class CRUDSystemUpdate(CRUDBase[SystemUpdate, dict, dict]):
 
     async def deactivate(
         self, db: AsyncSession, update_id: int
-    ) -> Optional[SystemUpdate]:
+    ) -> SystemUpdate | None:
         """
         Deactivate a system update (soft delete).
 
@@ -145,7 +145,7 @@ class CRUDSystemUpdate(CRUDBase[SystemUpdate, dict, dict]):
 
     async def activate(
         self, db: AsyncSession, update_id: int
-    ) -> Optional[SystemUpdate]:
+    ) -> SystemUpdate | None:
         """
         Activate a previously deactivated system update.
 

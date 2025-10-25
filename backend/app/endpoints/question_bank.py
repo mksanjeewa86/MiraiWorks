@@ -64,15 +64,14 @@ async def create_question_bank(
             )
     else:
         # Creating company bank - must be user's company
-        if not is_system_admin:
-            if (
-                not current_user.company_id
-                or bank_data.company_id != current_user.company_id
-            ):
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Can only create banks for your own company",
-                )
+        if not is_system_admin and (
+            not current_user.company_id
+            or bank_data.company_id != current_user.company_id
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Can only create banks for your own company",
+            )
 
     bank = await question_bank_crud.create_with_questions(
         db=db, bank_data=bank_data, created_by_id=current_user.id
@@ -226,11 +225,10 @@ async def delete_question_bank(
         role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.user_roles
     )
 
-    if not is_system_admin:
-        if bank.company_id != current_user.company_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
-            )
+    if not is_system_admin and bank.company_id != current_user.company_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
+        )
 
     await question_bank_crud.remove(db=db, id=bank_id)
     return {"message": "Question bank deleted successfully"}
@@ -298,11 +296,10 @@ async def add_question_to_bank(
         role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.user_roles
     )
 
-    if not is_system_admin:
-        if bank.company_id != current_user.company_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
-            )
+    if not is_system_admin and bank.company_id != current_user.company_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
+        )
 
     # Create question
     question_dict = question_data.model_dump()
@@ -344,11 +341,10 @@ async def update_bank_question(
         role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.user_roles
     )
 
-    if not is_system_admin:
-        if bank.company_id != current_user.company_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
-            )
+    if not is_system_admin and bank.company_id != current_user.company_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
+        )
 
     question = await question_bank_item_crud.update(
         db=db, db_obj=question, obj_in=question_data
@@ -385,11 +381,10 @@ async def delete_bank_question(
         role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.user_roles
     )
 
-    if not is_system_admin:
-        if bank.company_id != current_user.company_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
-            )
+    if not is_system_admin and bank.company_id != current_user.company_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
+        )
 
     await question_bank_item_crud.remove(db=db, id=question_id)
     return {"message": "Question deleted successfully"}

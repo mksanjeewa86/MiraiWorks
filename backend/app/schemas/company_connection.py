@@ -1,7 +1,6 @@
 """Pydantic schemas for company connections."""
 
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -33,8 +32,8 @@ class CompanyConnectionInfo(BaseModel):
 
     id: int
     source_type: str
-    source_user_id: Optional[int] = None
-    source_company_id: Optional[int] = None
+    source_user_id: int | None = None
+    source_company_id: int | None = None
     target_company_id: int
     is_active: bool
     connection_type: str
@@ -42,13 +41,13 @@ class CompanyConnectionInfo(BaseModel):
     can_view_profile: bool
     can_assign_tasks: bool
     creation_type: str
-    created_by: Optional[int] = None
+    created_by: int | None = None
     created_at: datetime
-    updated_at: Optional[datetime] = None
+    updated_at: datetime | None = None
 
     # Computed fields for display
-    source_display_name: Optional[str] = None
-    target_company_name: Optional[str] = None
+    source_display_name: str | None = None
+    target_company_name: str | None = None
 
     class Config:
         from_attributes = True
@@ -57,7 +56,7 @@ class CompanyConnectionInfo(BaseModel):
 class CompanyConnectionUpdate(BaseModel):
     """Schema for updating company connection permissions."""
 
-    connection_type: Optional[str] = Field(None, max_length=50)
-    can_message: Optional[bool] = None
-    can_view_profile: Optional[bool] = None
-    can_assign_tasks: Optional[bool] = None
+    connection_type: str | None = Field(None, max_length=50)
+    can_message: bool | None = None
+    can_view_profile: bool | None = None
+    can_assign_tasks: bool | None = None

@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -7,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 class TodoAttachmentBase(BaseModel):
     """Base schema for todo attachments."""
 
-    description: Optional[str] = Field(
+    description: str | None = Field(
         None, max_length=1000, description="Optional description for the attachment"
     )
 
@@ -27,10 +26,10 @@ class TodoAttachmentCreate(TodoAttachmentBase):
         ..., ge=1, le=26214400, description="File size in bytes (max 25MB)"
     )
     mime_type: str = Field(..., max_length=100, description="MIME type of the file")
-    file_extension: Optional[str] = Field(
+    file_extension: str | None = Field(
         None, max_length=10, description="File extension"
     )
-    uploaded_by: Optional[int] = Field(
+    uploaded_by: int | None = Field(
         None, description="ID of the user who uploaded the file"
     )
 
@@ -64,7 +63,7 @@ class TodoAttachmentCreate(TodoAttachmentBase):
 class TodoAttachmentUpdate(TodoAttachmentBase):
     """Schema for updating a todo attachment."""
 
-    description: Optional[str] = Field(None, max_length=1000)
+    description: str | None = Field(None, max_length=1000)
 
 
 class TodoAttachmentInfo(TodoAttachmentBase):
@@ -75,8 +74,8 @@ class TodoAttachmentInfo(TodoAttachmentBase):
     original_filename: str
     file_size: int
     mime_type: str
-    file_extension: Optional[str]
-    uploaded_by: Optional[int]
+    file_extension: str | None
+    uploaded_by: int | None
     uploaded_at: datetime
     updated_at: datetime
 
@@ -87,7 +86,7 @@ class TodoAttachmentInfo(TodoAttachmentBase):
     )
     file_icon: str = Field(..., description="Icon name for the file type")
     download_url: str = Field(..., description="URL to download the file")
-    preview_url: Optional[str] = Field(
+    preview_url: str | None = Field(
         None, description="URL to preview the file (if supported)"
     )
     is_image: bool = Field(..., description="Whether the file is an image")
@@ -146,7 +145,7 @@ class FileUploadResponse(BaseModel):
 class FileUploadRequest(BaseModel):
     """Schema for file upload request metadata."""
 
-    description: Optional[str] = Field(
+    description: str | None = Field(
         None, max_length=1000, description="Optional description for the file"
     )
 
@@ -159,7 +158,7 @@ class AttachmentStats(BaseModel):
     file_type_counts: dict[str, int] = Field(
         ..., description="Count of files by category"
     )
-    largest_file: Optional[TodoAttachmentInfo] = Field(
+    largest_file: TodoAttachmentInfo | None = Field(
         None, description="Information about the largest file"
     )
     recent_attachments: list[TodoAttachmentInfo] = Field(

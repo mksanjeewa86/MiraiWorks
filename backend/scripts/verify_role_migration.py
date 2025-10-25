@@ -70,7 +70,7 @@ async def verify_roles():
         user_roles_data = result.all()
 
         role_counts = {}
-        for role_id, user_id in user_roles_data:
+        for role_id, _user_id in user_roles_data:
             role_name = role_map.get(role_id, "unknown")
             role_counts[role_name] = role_counts.get(role_name, 0) + 1
 

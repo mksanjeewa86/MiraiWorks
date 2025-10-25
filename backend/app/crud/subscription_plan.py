@@ -1,4 +1,3 @@
-from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,7 +15,7 @@ class CRUDSubscriptionPlan(
 
     async def get_by_name(
         self, db: AsyncSession, *, name: str
-    ) -> Optional[SubscriptionPlan]:
+    ) -> SubscriptionPlan | None:
         """Get plan by name (e.g., 'basic', 'premium')."""
         result = await db.execute(
             select(SubscriptionPlan).where(SubscriptionPlan.name == name)
@@ -29,7 +28,7 @@ class CRUDSubscriptionPlan(
         """Get all active plans."""
         result = await db.execute(
             select(SubscriptionPlan)
-            .where(SubscriptionPlan.is_active == True)
+            .where(SubscriptionPlan.is_active is True)
             .order_by(SubscriptionPlan.display_order)
             .offset(skip)
             .limit(limit)
@@ -42,8 +41,8 @@ class CRUDSubscriptionPlan(
         """Get all public plans (shown on pricing page)."""
         result = await db.execute(
             select(SubscriptionPlan)
-            .where(SubscriptionPlan.is_active == True)
-            .where(SubscriptionPlan.is_public == True)
+            .where(SubscriptionPlan.is_active is True)
+            .where(SubscriptionPlan.is_public is True)
             .order_by(SubscriptionPlan.display_order)
             .offset(skip)
             .limit(limit)
@@ -52,7 +51,7 @@ class CRUDSubscriptionPlan(
 
     async def get_with_features(
         self, db: AsyncSession, *, plan_id: int
-    ) -> Optional[SubscriptionPlan]:
+    ) -> SubscriptionPlan | None:
         """Get plan with all its features loaded."""
         result = await db.execute(
             select(SubscriptionPlan)

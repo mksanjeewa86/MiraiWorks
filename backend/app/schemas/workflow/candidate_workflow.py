@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -10,7 +10,7 @@ from app.schemas.workflow.workflow_node_execution import WorkflowNodeExecutionIn
 class CandidateWorkflowBase(BaseModel):
     """Base schema for candidate process"""
 
-    notes: Optional[str] = Field(
+    notes: str | None = Field(
         None, description="General notes about the candidate's process"
     )
 
@@ -19,7 +19,7 @@ class CandidateWorkflowCreate(CandidateWorkflowBase):
     """Schema for creating a candidate process (assignment)"""
 
     candidate_id: int = Field(..., description="Candidate user ID")
-    assigned_recruiter_id: Optional[int] = Field(
+    assigned_recruiter_id: int | None = Field(
         None, description="Assigned recruiter user ID"
     )
     start_immediately: bool = Field(
@@ -30,8 +30,8 @@ class CandidateWorkflowCreate(CandidateWorkflowBase):
 class CandidateWorkflowUpdate(BaseModel):
     """Schema for updating a candidate process"""
 
-    notes: Optional[str] = None
-    assigned_recruiter_id: Optional[int] = None
+    notes: str | None = None
+    assigned_recruiter_id: int | None = None
 
 
 class CandidateWorkflowAssignment(BaseModel):
@@ -46,13 +46,13 @@ class CandidateWorkflowStatusChange(BaseModel):
     """Schema for changing candidate process status"""
 
     status: CandidateWorkflowStatus = Field(..., description="New status")
-    reason: Optional[str] = Field(
+    reason: str | None = Field(
         None, max_length=500, description="Reason for status change"
     )
-    final_result: Optional[FinalResult] = Field(
+    final_result: FinalResult | None = Field(
         None, description="Final result if completing/failing"
     )
-    overall_score: Optional[float] = Field(
+    overall_score: float | None = Field(
         None, ge=0, le=100, description="Overall score if completing"
     )
 
@@ -63,25 +63,25 @@ class CandidateWorkflowInfo(CandidateWorkflowBase):
     id: int
     candidate_id: int
     workflow_id: int
-    current_node_id: Optional[int]
+    current_node_id: int | None
     status: CandidateWorkflowStatus
-    assigned_recruiter_id: Optional[int]
-    assigned_at: Optional[datetime]
-    started_at: Optional[datetime]
-    completed_at: Optional[datetime]
-    failed_at: Optional[datetime]
-    withdrawn_at: Optional[datetime]
-    overall_score: Optional[float]
-    final_result: Optional[FinalResult]
+    assigned_recruiter_id: int | None
+    assigned_at: datetime | None
+    started_at: datetime | None
+    completed_at: datetime | None
+    failed_at: datetime | None
+    withdrawn_at: datetime | None
+    overall_score: float | None
+    final_result: FinalResult | None
     created_at: datetime
     updated_at: datetime
 
     # Computed fields
-    progress_percentage: Optional[float] = Field(
+    progress_percentage: float | None = Field(
         None, description="Progress as percentage"
     )
-    current_step_title: Optional[str] = Field(None, description="Title of current step")
-    days_in_process: Optional[int] = Field(
+    current_step_title: str | None = Field(None, description="Title of current step")
+    days_in_process: int | None = Field(
         None, description="Number of days in the process"
     )
 
@@ -109,7 +109,7 @@ class CandidateWorkflowDetails(CandidateWorkflowInfo):
     # Statistics
     completed_nodes: int = Field(0, description="Number of completed nodes")
     total_nodes: int = Field(0, description="Total number of nodes in process")
-    average_node_duration_days: Optional[float] = Field(
+    average_node_duration_days: float | None = Field(
         None, description="Average time per node in days"
     )
 
@@ -132,11 +132,11 @@ class TimelineItem(BaseModel):
     node_type: str
     sequence_order: int
     status: str
-    started_at: Optional[datetime]
-    completed_at: Optional[datetime]
-    result: Optional[str]
-    score: Optional[float]
-    feedback: Optional[str]
+    started_at: datetime | None
+    completed_at: datetime | None
+    result: str | None
+    score: float | None
+    feedback: str | None
     is_current: bool = Field(False, description="Whether this is the current step")
     is_completed: bool = Field(False, description="Whether this step is completed")
     can_access: bool = Field(
@@ -147,7 +147,7 @@ class TimelineItem(BaseModel):
 class CandidateWorkflowAdvance(BaseModel):
     """Schema for advancing a candidate to a specific node"""
 
-    target_node_id: Optional[int] = Field(
+    target_node_id: int | None = Field(
         None, description="Target node ID (None for completion)"
     )
     reason: str = Field(
@@ -164,7 +164,7 @@ class CandidateWorkflowStart(BaseModel):
     send_notification: bool = Field(
         True, description="Whether to send notification to candidate"
     )
-    custom_message: Optional[str] = Field(
+    custom_message: str | None = Field(
         None, max_length=1000, description="Custom welcome message"
     )
 
@@ -173,10 +173,10 @@ class CandidateWorkflowCompletion(BaseModel):
     """Schema for completing a candidate process"""
 
     final_result: FinalResult = Field(..., description="Final result of the process")
-    overall_score: Optional[float] = Field(
+    overall_score: float | None = Field(
         None, ge=0, le=100, description="Overall score"
     )
-    completion_notes: Optional[str] = Field(
+    completion_notes: str | None = Field(
         None, max_length=1000, description="Completion notes"
     )
     send_notification: bool = Field(True, description="Whether to notify the candidate")
@@ -188,7 +188,7 @@ class CandidateWorkflowFailure(BaseModel):
     failure_reason: str = Field(
         ..., min_length=1, max_length=500, description="Reason for failure"
     )
-    failed_at_node_id: Optional[int] = Field(
+    failed_at_node_id: int | None = Field(
         None, description="Node where failure occurred"
     )
     send_notification: bool = Field(True, description="Whether to notify the candidate")
@@ -197,7 +197,7 @@ class CandidateWorkflowFailure(BaseModel):
 class CandidateWorkflowWithdrawal(BaseModel):
     """Schema for withdrawing from a process"""
 
-    withdrawal_reason: Optional[str] = Field(
+    withdrawal_reason: str | None = Field(
         None, max_length=500, description="Reason for withdrawal"
     )
     initiated_by_candidate: bool = Field(
@@ -211,7 +211,7 @@ class BulkCandidateAssignment(BaseModel):
     candidate_ids: list[int] = Field(
         ..., min_items=1, description="List of candidate user IDs"
     )
-    assigned_recruiter_id: Optional[int] = Field(
+    assigned_recruiter_id: int | None = Field(
         None, description="Recruiter to assign to all candidates"
     )
     start_immediately: bool = Field(

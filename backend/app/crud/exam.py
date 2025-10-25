@@ -66,9 +66,9 @@ class CRUDExam(CRUDBase[Exam, ExamCreate, ExamUpdate]):
                     or_(
                         Exam.company_id == company_id,  # Own company's exams
                         and_(
-                            Exam.company_id.is_(None), Exam.is_public == True
+                            Exam.company_id.is_(None), Exam.is_public is True
                         ),  # Global public exams
-                        Exam.is_public == True,  # Any public exam
+                        Exam.is_public is True,  # Any public exam
                     )
                 )
             else:
@@ -165,7 +165,7 @@ class CRUDExam(CRUDBase[Exam, ExamCreate, ExamUpdate]):
         }
 
         # 1. Add custom questions
-        for i, custom_q in enumerate(hybrid_data.custom_questions):
+        for _i, custom_q in enumerate(hybrid_data.custom_questions):
             question_dict = custom_q.model_dump()
             question_dict["exam_id"] = exam.id
             question_dict["order_index"] = question_count

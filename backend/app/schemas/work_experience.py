@@ -1,7 +1,6 @@
 """Work Experience schemas for API validation and serialization."""
 
 from datetime import date
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -22,15 +21,15 @@ class WorkExperienceBase(BaseModel):
     """Base work experience schema with common fields."""
 
     company_name: str = Field(..., min_length=1, max_length=255)
-    company_logo_url: Optional[str] = Field(None, max_length=500)
+    company_logo_url: str | None = Field(None, max_length=500)
     position_title: str = Field(..., min_length=1, max_length=255)
-    employment_type: Optional[str] = Field(None, max_length=50)
-    location: Optional[str] = Field(None, max_length=255)
+    employment_type: str | None = Field(None, max_length=50)
+    location: str | None = Field(None, max_length=255)
     start_date: date
-    end_date: Optional[date] = None
+    end_date: date | None = None
     is_current: bool = False
-    description: Optional[str] = None
-    skills: Optional[str] = None  # Comma-separated skills
+    description: str | None = None
+    skills: str | None = None  # Comma-separated skills
     display_order: int = 0
 
 
@@ -45,17 +44,17 @@ class WorkExperienceCreate(WorkExperienceBase):
 class WorkExperienceUpdate(BaseModel):
     """Schema for updating an existing work experience entry."""
 
-    company_name: Optional[str] = Field(None, min_length=1, max_length=255)
-    company_logo_url: Optional[str] = Field(None, max_length=500)
-    position_title: Optional[str] = Field(None, min_length=1, max_length=255)
-    employment_type: Optional[str] = Field(None, max_length=50)
-    location: Optional[str] = Field(None, max_length=255)
-    start_date: Optional[date] = None
-    end_date: Optional[date] = None
-    is_current: Optional[bool] = None
-    description: Optional[str] = None
-    skills: Optional[str] = None
-    display_order: Optional[int] = None
+    company_name: str | None = Field(None, min_length=1, max_length=255)
+    company_logo_url: str | None = Field(None, max_length=500)
+    position_title: str | None = Field(None, min_length=1, max_length=255)
+    employment_type: str | None = Field(None, max_length=50)
+    location: str | None = Field(None, max_length=255)
+    start_date: date | None = None
+    end_date: date | None = None
+    is_current: bool | None = None
+    description: str | None = None
+    skills: str | None = None
+    display_order: int | None = None
 
 
 # Response schema (what API returns)

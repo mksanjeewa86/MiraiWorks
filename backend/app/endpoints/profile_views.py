@@ -1,6 +1,5 @@
 """Profile views API endpoints."""
 
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -28,7 +27,7 @@ async def record_profile_view(
     db: AsyncSession = Depends(get_db),
     profile_view_data: ProfileViewCreate,
     request: Request,
-    current_user: Optional[User] = Depends(get_current_active_user),
+    current_user: User | None = Depends(get_current_active_user),
 ) -> ProfileViewInfo:
     """
     Record a profile view.
@@ -121,7 +120,7 @@ async def get_profile_view_stats(
     *,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
-    days: Optional[int] = None,
+    days: int | None = None,
 ) -> ProfileViewStats:
     """
     Get aggregated statistics for the current user's profile views.
@@ -147,7 +146,7 @@ async def get_recent_viewers(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
     limit: int = 10,
-    days: Optional[int] = 30,
+    days: int | None = 30,
 ) -> list[RecentViewer]:
     """
     Get list of recent profile viewers with details.
@@ -174,7 +173,7 @@ async def get_profile_view_count(
     *,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
-    days: Optional[int] = None,
+    days: int | None = None,
 ) -> dict:
     """
     Get total view count for the current user's profile.

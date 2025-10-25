@@ -59,12 +59,12 @@ class CRUDQuestionBank(CRUDBase[QuestionBank, QuestionBankCreate, QuestionBankUp
             if company_id:
                 conditions.append(
                     or_(
-                        QuestionBank.is_public == True,
+                        QuestionBank.is_public is True,
                         QuestionBank.company_id == company_id,
                     )
                 )
             else:
-                conditions.append(QuestionBank.is_public == True)
+                conditions.append(QuestionBank.is_public is True)
         # System admins can see all banks
 
         # Additional filters

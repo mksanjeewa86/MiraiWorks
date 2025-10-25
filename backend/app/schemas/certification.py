@@ -1,7 +1,6 @@
 """Certification schemas for API validation and serialization."""
 
 from datetime import date
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -12,13 +11,13 @@ class CertificationBase(BaseModel):
 
     certification_name: str = Field(..., min_length=1, max_length=255)
     issuing_organization: str = Field(..., min_length=1, max_length=255)
-    issue_date: Optional[date] = None
-    expiry_date: Optional[date] = None
+    issue_date: date | None = None
+    expiry_date: date | None = None
     does_not_expire: bool = False
-    credential_id: Optional[str] = Field(None, max_length=255)
-    credential_url: Optional[str] = Field(None, max_length=500)
-    certificate_image_url: Optional[str] = Field(None, max_length=500)
-    description: Optional[str] = None
+    credential_id: str | None = Field(None, max_length=255)
+    credential_url: str | None = Field(None, max_length=500)
+    certificate_image_url: str | None = Field(None, max_length=500)
+    description: str | None = None
     display_order: int = 0
 
 
@@ -33,16 +32,16 @@ class CertificationCreate(CertificationBase):
 class CertificationUpdate(BaseModel):
     """Schema for updating an existing certification entry."""
 
-    certification_name: Optional[str] = Field(None, min_length=1, max_length=255)
-    issuing_organization: Optional[str] = Field(None, min_length=1, max_length=255)
-    issue_date: Optional[date] = None
-    expiry_date: Optional[date] = None
-    does_not_expire: Optional[bool] = None
-    credential_id: Optional[str] = Field(None, max_length=255)
-    credential_url: Optional[str] = Field(None, max_length=500)
-    certificate_image_url: Optional[str] = Field(None, max_length=500)
-    description: Optional[str] = None
-    display_order: Optional[int] = None
+    certification_name: str | None = Field(None, min_length=1, max_length=255)
+    issuing_organization: str | None = Field(None, min_length=1, max_length=255)
+    issue_date: date | None = None
+    expiry_date: date | None = None
+    does_not_expire: bool | None = None
+    credential_id: str | None = Field(None, max_length=255)
+    credential_url: str | None = Field(None, max_length=500)
+    certificate_image_url: str | None = Field(None, max_length=500)
+    description: str | None = None
+    display_order: int | None = None
 
 
 # Response schema (what API returns)

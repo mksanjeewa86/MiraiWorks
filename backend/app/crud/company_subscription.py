@@ -1,4 +1,3 @@
-from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,7 +19,7 @@ class CRUDCompanySubscription(
 
     async def get_by_company_id(
         self, db: AsyncSession, *, company_id: int
-    ) -> Optional[CompanySubscription]:
+    ) -> CompanySubscription | None:
         """Get subscription by company ID."""
         result = await db.execute(
             select(CompanySubscription)
@@ -31,19 +30,19 @@ class CRUDCompanySubscription(
 
     async def get_active_by_company_id(
         self, db: AsyncSession, *, company_id: int
-    ) -> Optional[CompanySubscription]:
+    ) -> CompanySubscription | None:
         """Get active subscription by company ID."""
         result = await db.execute(
             select(CompanySubscription)
             .where(CompanySubscription.company_id == company_id)
-            .where(CompanySubscription.is_active == True)
+            .where(CompanySubscription.is_active is True)
             .options(selectinload(CompanySubscription.plan))
         )
         return result.scalar_one_or_none()
 
     async def get_with_plan_features(
         self, db: AsyncSession, *, company_id: int
-    ) -> Optional[CompanySubscription]:
+    ) -> CompanySubscription | None:
         """Get subscription with plan and all features."""
         result = await db.execute(
             select(CompanySubscription)
@@ -75,7 +74,7 @@ class CRUDCompanySubscription(
         """Get all active subscriptions."""
         result = await db.execute(
             select(CompanySubscription)
-            .where(CompanySubscription.is_active == True)
+            .where(CompanySubscription.is_active is True)
             .options(
                 selectinload(CompanySubscription.company),
                 selectinload(CompanySubscription.plan),
@@ -91,8 +90,8 @@ class CRUDCompanySubscription(
         """Get all trial subscriptions."""
         result = await db.execute(
             select(CompanySubscription)
-            .where(CompanySubscription.is_trial == True)
-            .where(CompanySubscription.is_active == True)
+            .where(CompanySubscription.is_trial is True)
+            .where(CompanySubscription.is_active is True)
             .options(
                 selectinload(CompanySubscription.company),
                 selectinload(CompanySubscription.plan),
@@ -103,8 +102,8 @@ class CRUDCompanySubscription(
         return result.scalars().all()
 
     async def cancel_subscription(
-        self, db: AsyncSession, *, company_id: int, reason: Optional[str] = None
-    ) -> Optional[CompanySubscription]:
+        self, db: AsyncSession, *, company_id: int, reason: str | None = None
+    ) -> CompanySubscription | None:
         """Cancel a company's subscription."""
         from app.utils.datetime_utils import get_utc_now
 
@@ -123,7 +122,7 @@ class CRUDCompanySubscription(
 
     async def reactivate_subscription(
         self, db: AsyncSession, *, company_id: int
-    ) -> Optional[CompanySubscription]:
+    ) -> CompanySubscription | None:
         """Reactivate a cancelled subscription."""
         subscription = await self.get_by_company_id(db, company_id=company_id)
         if not subscription:

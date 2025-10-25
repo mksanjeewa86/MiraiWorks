@@ -6,7 +6,6 @@ Pydantic schemas for system-wide update announcements.
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -55,10 +54,10 @@ class SystemUpdateCreate(SystemUpdateBase):
 class SystemUpdateUpdate(BaseModel):
     """Schema for updating an existing system update."""
 
-    title: Optional[str] = Field(None, min_length=1, max_length=255)
-    message: Optional[str] = Field(None, min_length=1)
-    tags: Optional[list[SystemUpdateTag]] = None
-    is_active: Optional[bool] = None
+    title: str | None = Field(None, min_length=1, max_length=255)
+    message: str | None = Field(None, min_length=1)
+    tags: list[SystemUpdateTag] | None = None
+    is_active: bool | None = None
 
     @field_validator("tags")
     @classmethod
@@ -74,9 +73,9 @@ class SystemUpdateInfo(SystemUpdateBase):
 
     id: int
     is_active: bool
-    created_by_id: Optional[int] = None
+    created_by_id: int | None = None
     created_at: datetime
-    updated_at: Optional[datetime] = None
+    updated_at: datetime | None = None
 
     class Config:
         from_attributes = True
@@ -85,7 +84,7 @@ class SystemUpdateInfo(SystemUpdateBase):
 class SystemUpdateWithCreator(SystemUpdateInfo):
     """Schema for system update with creator information."""
 
-    created_by_name: Optional[str] = None
+    created_by_name: str | None = None
 
     class Config:
         from_attributes = True

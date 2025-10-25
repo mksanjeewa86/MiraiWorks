@@ -1,6 +1,5 @@
 """Service for company-based connections."""
 
-from typing import Optional
 
 from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -70,8 +69,8 @@ class CompanyConnectionService:
                     CompanyConnection.source_type == "company",
                     CompanyConnection.source_company_id == user1.company_id,
                     CompanyConnection.target_company_id == user2.company_id,
-                    CompanyConnection.is_active == True,
-                    CompanyConnection.can_message == True,
+                    CompanyConnection.is_active is True,
+                    CompanyConnection.can_message is True,
                 )
             )
             # Reverse direction
@@ -80,8 +79,8 @@ class CompanyConnectionService:
                     CompanyConnection.source_type == "company",
                     CompanyConnection.source_company_id == user2.company_id,
                     CompanyConnection.target_company_id == user1.company_id,
-                    CompanyConnection.is_active == True,
-                    CompanyConnection.can_message == True,
+                    CompanyConnection.is_active is True,
+                    CompanyConnection.can_message is True,
                 )
             )
 
@@ -92,8 +91,8 @@ class CompanyConnectionService:
                     CompanyConnection.source_type == "user",
                     CompanyConnection.source_user_id == user1_id,
                     CompanyConnection.target_company_id == user2.company_id,
-                    CompanyConnection.is_active == True,
-                    CompanyConnection.can_message == True,
+                    CompanyConnection.is_active is True,
+                    CompanyConnection.can_message is True,
                 )
             )
 
@@ -104,8 +103,8 @@ class CompanyConnectionService:
                     CompanyConnection.source_type == "user",
                     CompanyConnection.source_user_id == user2_id,
                     CompanyConnection.target_company_id == user1.company_id,
-                    CompanyConnection.is_active == True,
-                    CompanyConnection.can_message == True,
+                    CompanyConnection.is_active is True,
+                    CompanyConnection.can_message is True,
                 )
             )
 
@@ -332,8 +331,8 @@ class CompanyConnectionService:
                     and_(
                         CompanyConnection.source_type == "company",
                         CompanyConnection.source_company_id == user.company_id,
-                        CompanyConnection.is_active == True,
-                        CompanyConnection.can_message == True,
+                        CompanyConnection.is_active is True,
+                        CompanyConnection.can_message is True,
                     )
                 )
             )
@@ -345,8 +344,8 @@ class CompanyConnectionService:
                     and_(
                         CompanyConnection.source_type == "company",
                         CompanyConnection.target_company_id == user.company_id,
-                        CompanyConnection.is_active == True,
-                        CompanyConnection.can_message == True,
+                        CompanyConnection.is_active is True,
+                        CompanyConnection.can_message is True,
                     )
                 )
             )
@@ -358,8 +357,8 @@ class CompanyConnectionService:
                 and_(
                     CompanyConnection.source_type == "user",
                     CompanyConnection.source_user_id == user_id,
-                    CompanyConnection.is_active == True,
-                    CompanyConnection.can_message == True,
+                    CompanyConnection.is_active is True,
+                    CompanyConnection.can_message is True,
                 )
             )
         )
@@ -372,8 +371,8 @@ class CompanyConnectionService:
                     and_(
                         CompanyConnection.source_type == "user",
                         CompanyConnection.target_company_id == user.company_id,
-                        CompanyConnection.is_active == True,
-                        CompanyConnection.can_message == True,
+                        CompanyConnection.is_active is True,
+                        CompanyConnection.can_message is True,
                         CompanyConnection.source_user_id.isnot(None),
                     )
                 )
@@ -398,8 +397,8 @@ class CompanyConnectionService:
                 and_(
                     or_(*conditions),
                     User.id != user_id,  # Exclude self
-                    User.is_active == True,
-                    User.is_deleted == False,
+                    User.is_active is True,
+                    User.is_deleted is False,
                 )
             )
             .options(selectinload(User.company))
@@ -413,7 +412,7 @@ class CompanyConnectionService:
         source_type: str,
         source_id: int,
         target_company_id: int,
-    ) -> Optional[CompanyConnection]:
+    ) -> CompanyConnection | None:
         """
         Check if a specific connection exists.
 
@@ -433,7 +432,7 @@ class CompanyConnectionService:
                         CompanyConnection.source_type == "user",
                         CompanyConnection.source_user_id == source_id,
                         CompanyConnection.target_company_id == target_company_id,
-                        CompanyConnection.is_active == True,
+                        CompanyConnection.is_active is True,
                     )
                 )
             )
@@ -444,7 +443,7 @@ class CompanyConnectionService:
                         CompanyConnection.source_type == "company",
                         CompanyConnection.source_company_id == source_id,
                         CompanyConnection.target_company_id == target_company_id,
-                        CompanyConnection.is_active == True,
+                        CompanyConnection.is_active is True,
                     )
                 )
             )
@@ -455,7 +454,7 @@ class CompanyConnectionService:
 
     async def deactivate_connection(
         self, db: AsyncSession, connection_id: int
-    ) -> Optional[CompanyConnection]:
+    ) -> CompanyConnection | None:
         """
         Deactivate a connection.
 
@@ -484,7 +483,7 @@ class CompanyConnectionService:
 
     async def activate_connection(
         self, db: AsyncSession, connection_id: int
-    ) -> Optional[CompanyConnection]:
+    ) -> CompanyConnection | None:
         """
         Activate a connection.
 

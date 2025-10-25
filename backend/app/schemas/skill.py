@@ -1,6 +1,5 @@
 """Skill schemas for API validation and serialization."""
 
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -32,9 +31,9 @@ class SkillBase(BaseModel):
     """Base skill schema with common fields."""
 
     skill_name: str = Field(..., min_length=1, max_length=100)
-    category: Optional[str] = Field(None, max_length=50)
-    proficiency_level: Optional[str] = Field(None, max_length=50)
-    years_of_experience: Optional[int] = Field(None, ge=0, le=100)
+    category: str | None = Field(None, max_length=50)
+    proficiency_level: str | None = Field(None, max_length=50)
+    years_of_experience: int | None = Field(None, ge=0, le=100)
     endorsement_count: int = 0
     display_order: int = 0
 
@@ -50,12 +49,12 @@ class SkillCreate(SkillBase):
 class SkillUpdate(BaseModel):
     """Schema for updating an existing skill entry."""
 
-    skill_name: Optional[str] = Field(None, min_length=1, max_length=100)
-    category: Optional[str] = Field(None, max_length=50)
-    proficiency_level: Optional[str] = Field(None, max_length=50)
-    years_of_experience: Optional[int] = Field(None, ge=0, le=100)
-    endorsement_count: Optional[int] = Field(None, ge=0)
-    display_order: Optional[int] = None
+    skill_name: str | None = Field(None, min_length=1, max_length=100)
+    category: str | None = Field(None, max_length=50)
+    proficiency_level: str | None = Field(None, max_length=50)
+    years_of_experience: int | None = Field(None, ge=0, le=100)
+    endorsement_count: int | None = Field(None, ge=0)
+    display_order: int | None = None
 
 
 # Response schema (what API returns)

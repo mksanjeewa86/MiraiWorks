@@ -29,7 +29,7 @@ class MessageService:
         # Verify recipient exists and is active
         recipient = await db.execute(
             select(User).where(
-                User.id == message_data.recipient_id, User.is_active == True
+                User.id == message_data.recipient_id, User.is_active is True
             )
         )
         if not recipient.scalar_one_or_none():
@@ -97,12 +97,12 @@ class MessageService:
                     and_(
                         Message.sender_id == current_user_id,
                         Message.recipient_id == other_user_id,
-                        Message.is_deleted_by_sender == False,
+                        Message.is_deleted_by_sender is False,
                     ),
                     and_(
                         Message.sender_id == other_user_id,
                         Message.recipient_id == current_user_id,
-                        Message.is_deleted_by_recipient == False,
+                        Message.is_deleted_by_recipient is False,
                     ),
                 )
             )
@@ -202,12 +202,12 @@ class MessageService:
                         and_(
                             Message.sender_id == user_id,
                             Message.recipient_id == other_user_id,
-                            Message.is_deleted_by_sender == False,
+                            Message.is_deleted_by_sender is False,
                         ),
                         and_(
                             Message.sender_id == other_user_id,
                             Message.recipient_id == user_id,
-                            Message.is_deleted_by_recipient == False,
+                            Message.is_deleted_by_recipient is False,
                         ),
                     )
                 )
@@ -221,8 +221,8 @@ class MessageService:
                 select(func.count(Message.id)).where(
                     Message.sender_id == other_user_id,
                     Message.recipient_id == user_id,
-                    Message.is_read == False,
-                    Message.is_deleted_by_recipient == False,
+                    Message.is_read is False,
+                    Message.is_deleted_by_recipient is False,
                 )
             )
             unread_count = unread_result.scalar()
@@ -279,11 +279,11 @@ class MessageService:
                 or_(
                     and_(
                         Message.sender_id == user_id,
-                        Message.is_deleted_by_sender == False,
+                        Message.is_deleted_by_sender is False,
                     ),
                     and_(
                         Message.recipient_id == user_id,
-                        Message.is_deleted_by_recipient == False,
+                        Message.is_deleted_by_recipient is False,
                     ),
                 )
             )
@@ -327,7 +327,7 @@ class MessageService:
             select(Message).where(
                 Message.id.in_(message_ids),
                 Message.recipient_id == user_id,
-                Message.is_read == False,
+                Message.is_read is False,
             )
         )
         messages = result.scalars().all()
@@ -356,8 +356,8 @@ class MessageService:
             select(Message).where(
                 Message.sender_id == other_user_id,
                 Message.recipient_id == user_id,
-                Message.is_read == False,
-                Message.is_deleted_by_recipient == False,
+                Message.is_read is False,
+                Message.is_deleted_by_recipient is False,
             )
         )
         messages = result.scalars().all()

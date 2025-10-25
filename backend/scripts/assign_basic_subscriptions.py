@@ -51,7 +51,7 @@ async def assign_basic_subscriptions():
                 result = await db.execute(
                     select(CompanySubscription)
                     .where(CompanySubscription.company_id == company.id)
-                    .where(CompanySubscription.is_active == True)
+                    .where(CompanySubscription.is_active is True)
                 )
                 existing_subscription = result.scalar_one_or_none()
 

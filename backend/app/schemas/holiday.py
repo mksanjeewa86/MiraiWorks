@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -18,13 +17,13 @@ class HolidayBase(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     name: str = Field(..., min_length=1, max_length=255)
-    name_en: Optional[str] = Field(None, max_length=255)
+    name_en: str | None = Field(None, max_length=255)
     date: date
     country: str = Field(default="JP")
     is_national: bool = Field(default=True)
     is_recurring: bool = Field(default=True)
-    description: Optional[str] = Field(None, max_length=500)
-    description_en: Optional[str] = Field(None, max_length=500)
+    description: str | None = Field(None, max_length=500)
+    description_en: str | None = Field(None, max_length=500)
 
     @field_validator("date")
     @classmethod
@@ -39,14 +38,14 @@ class HolidayCreate(HolidayBase):
 
 
 class HolidayUpdate(BaseModel):
-    name: Optional[str] = Field(None, min_length=1, max_length=255)
-    name_en: Optional[str] = Field(None, max_length=255)
-    date: Optional[date] = None
-    country: Optional[str] = None
-    is_national: Optional[bool] = None
-    is_recurring: Optional[bool] = None
-    description: Optional[str] = Field(None, max_length=500)
-    description_en: Optional[str] = Field(None, max_length=500)
+    name: str | None = Field(None, min_length=1, max_length=255)
+    name_en: str | None = Field(None, max_length=255)
+    date: date | None = None
+    country: str | None = None
+    is_national: bool | None = None
+    is_recurring: bool | None = None
+    description: str | None = Field(None, max_length=500)
+    description_en: str | None = Field(None, max_length=500)
 
     @field_validator("date")
     @classmethod
@@ -66,17 +65,17 @@ class HolidayInfo(HolidayBase):
 class HolidayListResponse(BaseModel):
     holidays: list[HolidayInfo]
     total: int
-    year: Optional[int] = None
-    country: Optional[str] = None
+    year: int | None = None
+    country: str | None = None
 
 
 class HolidayQueryParams(BaseModel):
-    year: Optional[int] = Field(None, ge=1900, le=2100)
-    country: Optional[str] = Field(None)
-    month: Optional[int] = Field(None, ge=1, le=12)
-    is_national: Optional[bool] = Field(None)
-    date_from: Optional[date] = Field(None)
-    date_to: Optional[date] = Field(None)
+    year: int | None = Field(None, ge=1900, le=2100)
+    country: str | None = Field(None)
+    month: int | None = Field(None, ge=1, le=12)
+    is_national: bool | None = Field(None)
+    date_from: date | None = Field(None)
+    date_to: date | None = Field(None)
 
     @field_validator("date_to")
     @classmethod

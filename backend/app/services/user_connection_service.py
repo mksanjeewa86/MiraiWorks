@@ -65,7 +65,7 @@ class UserConnectionService:
                     UserConnection.user_id == user_id,
                     UserConnection.connected_user_id == user_id,
                 ),
-                UserConnection.is_active == True,
+                UserConnection.is_active is True,
             )
         )
 
@@ -94,8 +94,8 @@ class UserConnectionService:
             .where(
                 and_(
                     User.id.in_(connected_user_ids),
-                    User.is_active == True,
-                    User.is_deleted == False,
+                    User.is_active is True,
+                    User.is_deleted is False,
                 )
             )
         )

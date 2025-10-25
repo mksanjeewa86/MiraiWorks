@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
@@ -11,42 +11,42 @@ class InterviewCreate(BaseModel):
     recruiter_id: int
     employer_company_id: int
     title: str
-    description: Optional[str] = None
-    position_title: Optional[str] = None
+    description: str | None = None
+    position_title: str | None = None
     interview_type: str = "video"
-    status: Optional[str] = None
-    scheduled_start: Optional[datetime] = None
-    scheduled_end: Optional[datetime] = None
-    timezone: Optional[str] = "UTC"
-    location: Optional[str] = None
-    meeting_url: Optional[str] = None
-    video_call_type: Optional[str] = None
-    notes: Optional[str] = None
-    workflow_id: Optional[int] = None
+    status: str | None = None
+    scheduled_start: datetime | None = None
+    scheduled_end: datetime | None = None
+    timezone: str | None = "UTC"
+    location: str | None = None
+    meeting_url: str | None = None
+    video_call_type: str | None = None
+    notes: str | None = None
+    workflow_id: int | None = None
 
 
 class InterviewUpdate(BaseModel):
-    title: Optional[str] = None
-    description: Optional[str] = None
-    position_title: Optional[str] = None
-    interview_type: Optional[str] = None
-    location: Optional[str] = None
-    meeting_url: Optional[str] = None
-    video_call_type: Optional[str] = None
-    notes: Optional[str] = None
-    status: Optional[str] = None
-    scheduled_start: Optional[datetime] = None
-    scheduled_end: Optional[datetime] = None
-    timezone: Optional[str] = None
-    workflow_id: Optional[int] = None
+    title: str | None = None
+    description: str | None = None
+    position_title: str | None = None
+    interview_type: str | None = None
+    location: str | None = None
+    meeting_url: str | None = None
+    video_call_type: str | None = None
+    notes: str | None = None
+    status: str | None = None
+    scheduled_start: datetime | None = None
+    scheduled_end: datetime | None = None
+    timezone: str | None = None
+    workflow_id: int | None = None
 
 
 class ProposalCreate(BaseModel):
     start_datetime: datetime
     end_datetime: datetime
     timezone: str = "UTC"
-    location: Optional[str] = None
-    notes: Optional[str] = None
+    location: str | None = None
+    notes: str | None = None
 
     @field_validator("end_datetime")
     @classmethod
@@ -66,7 +66,7 @@ class ProposalCreate(BaseModel):
 
 class ProposalResponse(BaseModel):
     response: str  # "accepted" or "declined"
-    notes: Optional[str] = None
+    notes: str | None = None
 
     @field_validator("response")
     @classmethod
@@ -87,14 +87,14 @@ class ProposalInfo(BaseModel):
     start_datetime: datetime
     end_datetime: datetime
     timezone: str
-    location: Optional[str] = None
-    notes: Optional[str] = None
+    location: str | None = None
+    notes: str | None = None
     status: str
-    responded_by: Optional[int]
-    responder_name: Optional[str]
-    responded_at: Optional[datetime]
-    response_notes: Optional[str] = None
-    expires_at: Optional[datetime]
+    responded_by: int | None
+    responder_name: str | None
+    responded_at: datetime | None
+    response_notes: str | None = None
+    expires_at: datetime | None
     created_at: datetime
 
 
@@ -103,7 +103,7 @@ class ParticipantInfo(BaseModel):
     email: str
     full_name: str
     role: str
-    company_name: Optional[str] = None
+    company_name: str | None = None
 
 
 class InterviewInfo(BaseModel):
@@ -111,32 +111,32 @@ class InterviewInfo(BaseModel):
 
     id: int
     title: str
-    description: Optional[str] = None
-    position_title: Optional[str] = None
+    description: str | None = None
+    position_title: str | None = None
     status: str
     interview_type: str
 
     candidate: ParticipantInfo
     recruiter: ParticipantInfo
-    employer_company_name: Optional[str] = None
+    employer_company_name: str | None = None
 
-    scheduled_start: Optional[datetime] = None
-    scheduled_end: Optional[datetime] = None
-    timezone: Optional[str] = None
-    location: Optional[str] = None
-    meeting_url: Optional[str] = None
-    video_call_type: Optional[str] = None
-    duration_minutes: Optional[int] = None
+    scheduled_start: datetime | None = None
+    scheduled_end: datetime | None = None
+    timezone: str | None = None
+    location: str | None = None
+    meeting_url: str | None = None
+    video_call_type: str | None = None
+    duration_minutes: int | None = None
 
-    notes: Optional[str] = None
-    preparation_notes: Optional[str] = None
-    workflow_id: Optional[int] = None
-    created_by: Optional[int] = None
-    confirmed_by: Optional[int] = None
-    confirmed_at: Optional[datetime] = None
-    cancelled_by: Optional[int] = None
-    cancelled_at: Optional[datetime] = None
-    cancellation_reason: Optional[str] = None
+    notes: str | None = None
+    preparation_notes: str | None = None
+    workflow_id: int | None = None
+    created_by: int | None = None
+    confirmed_by: int | None = None
+    confirmed_at: datetime | None = None
+    cancelled_by: int | None = None
+    cancelled_at: datetime | None = None
+    cancellation_reason: str | None = None
 
     proposals: list[ProposalInfo] = []
     active_proposal_count: int = 0
@@ -146,7 +146,7 @@ class InterviewInfo(BaseModel):
 
 
 class InterviewCancel(BaseModel):
-    reason: Optional[str] = None
+    reason: str | None = None
 
     @field_validator("reason")
     @classmethod
@@ -159,7 +159,7 @@ class InterviewCancel(BaseModel):
 class InterviewReschedule(BaseModel):
     new_start: datetime
     new_end: datetime
-    reason: Optional[str] = None
+    reason: str | None = None
 
     @field_validator("new_end")
     @classmethod
@@ -170,12 +170,12 @@ class InterviewReschedule(BaseModel):
 
 
 class InterviewsListRequest(BaseModel):
-    status: Optional[str] = None
-    candidate_id: Optional[int] = None
-    recruiter_id: Optional[int] = None
-    employer_company_id: Optional[int] = None
-    start_date: Optional[datetime] = None
-    end_date: Optional[datetime] = None
+    status: str | None = None
+    candidate_id: int | None = None
+    recruiter_id: int | None = None
+    employer_company_id: int | None = None
+    start_date: datetime | None = None
+    end_date: datetime | None = None
     limit: int = 50
     offset: int = 0
 
@@ -208,7 +208,7 @@ class InterviewStats(BaseModel):
     by_type: dict[str, int]
     upcoming_count: int
     completed_count: int
-    average_duration_minutes: Optional[float]
+    average_duration_minutes: float | None
 
 
 class InterviewCalendarEvent(BaseModel):
@@ -220,16 +220,16 @@ class InterviewCalendarEvent(BaseModel):
     end: datetime
     status: str
     participants: list[str]  # Email addresses
-    location: Optional[str] = None
-    meeting_url: Optional[str] = None
+    location: str | None = None
+    meeting_url: str | None = None
 
 
 class CalendarIntegrationStatus(BaseModel):
     has_google_calendar: bool
     has_microsoft_calendar: bool
-    google_calendar_email: Optional[str]
-    microsoft_calendar_email: Optional[str]
-    last_sync_at: Optional[datetime]
+    google_calendar_email: str | None
+    microsoft_calendar_email: str | None
+    last_sync_at: datetime | None
     sync_enabled: bool
 
 

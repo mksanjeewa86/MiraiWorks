@@ -26,7 +26,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
     async def get(self, db: AsyncSession, id: int) -> Todo | None:
         """Get todo by id, excluding soft-deleted records."""
         result = await db.execute(
-            select(Todo).where(Todo.id == id, Todo.is_deleted == False)
+            select(Todo).where(Todo.id == id, Todo.is_deleted is False)
         )
         return result.scalar_one_or_none()
 
@@ -35,7 +35,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
     ) -> list[Todo]:
         """Get multiple todos, excluding soft-deleted records."""
         result = await db.execute(
-            select(Todo).where(Todo.is_deleted == False).offset(skip).limit(limit)
+            select(Todo).where(Todo.is_deleted is False).offset(skip).limit(limit)
         )
         return result.scalars().all()
 
@@ -58,7 +58,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
                 Todo.status.notin_(
                     [TodoStatus.COMPLETED.value, TodoStatus.EXPIRED.value]
                 ),
-                Todo.is_deleted == False,
+                Todo.is_deleted is False,
             )
         )
         todos = result.scalars().all()
@@ -91,7 +91,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         # Filter by deleted status
         if not include_deleted:
             # Only show non-deleted todos
-            query = query.where(Todo.is_deleted == False)
+            query = query.where(Todo.is_deleted is False)
 
         if status:
             query = query.where(Todo.status == status)
@@ -100,7 +100,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
 
         total_query = select(func.count()).select_from(query.subquery())
         total_result = await db.execute(total_query)
-        total = total_result.scalar() or 0
+        total_result.scalar() or 0
 
         query = query.order_by(
             Todo.due_datetime.is_(None), Todo.due_datetime.asc(), Todo.created_at.desc()
@@ -122,7 +122,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
     ) -> list[Todo]:
         result = await db.execute(
             select(Todo)
-            .where(Todo.owner_id == owner_id, Todo.is_deleted == False)
+            .where(Todo.owner_id == owner_id, Todo.is_deleted is False)
             .order_by(Todo.updated_at.desc())
             .limit(limit)
         )
@@ -175,14 +175,12 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
 
         # Field-level permission checks
         # description can only be edited by creator
-        if "description" in update_data:
-            if db_obj.created_by != updated_by:
-                update_data.pop("description")
+        if "description" in update_data and db_obj.created_by != updated_by:
+            update_data.pop("description")
 
         # assignee_memo can only be edited by assignee
-        if "assignee_memo" in update_data:
-            if db_obj.assignee_id != updated_by:
-                update_data.pop("assignee_memo")
+        if "assignee_memo" in update_data and db_obj.assignee_id != updated_by:
+            update_data.pop("assignee_memo")
 
         if update_data.get("status") == TodoStatus.COMPLETED.value:
             update_data.setdefault("completed_at", get_utc_now())
@@ -336,7 +334,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
                 Todo.todo_type == "assignment",
                 Todo.submitted_at.isnot(None),
                 Todo.reviewed_at.is_(None),  # Not yet reviewed
-                Todo.is_deleted == False,
+                Todo.is_deleted is False,
             )
             .order_by(Todo.submitted_at.asc())
         )
@@ -359,7 +357,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
             .where(
                 Todo.todo_type == "assignment",
                 Todo.publish_status == TodoPublishStatus.PUBLISHED.value,
-                Todo.is_deleted == False,
+                Todo.is_deleted is False,
                 Todo.assignee_id == user_id,
             )
         )

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -34,7 +34,7 @@ class InterviewNodeConfig(BaseModel):
     evaluation_criteria: list[str] = Field(
         default_factory=list, description="List of evaluation criteria"
     )
-    preparation_notes: Optional[str] = Field(
+    preparation_notes: str | None = Field(
         None, description="Notes for interview preparation"
     )
     scheduling_buffer_hours: int = Field(
@@ -58,7 +58,7 @@ class TodoNodeConfig(BaseModel):
     evaluation_rubric: list[str] = Field(
         default_factory=list, description="Evaluation criteria"
     )
-    file_size_limit_mb: Optional[int] = Field(
+    file_size_limit_mb: int | None = Field(
         10, ge=1, le=100, description="File size limit in MB"
     )
     allowed_file_types: list[str] = Field(
@@ -70,12 +70,12 @@ class AssessmentNodeConfig(BaseModel):
     """Configuration for assessment nodes"""
 
     assessment_type: str = Field(..., description="Type of assessment")
-    provider: Optional[str] = Field(None, description="Assessment provider")
+    provider: str | None = Field(None, description="Assessment provider")
     duration_minutes: int = Field(30, ge=10, le=240, description="Assessment duration")
-    passing_score: Optional[float] = Field(
+    passing_score: float | None = Field(
         None, ge=0, le=100, description="Minimum passing score"
     )
-    instructions: Optional[str] = Field(None, description="Special instructions")
+    instructions: str | None = Field(None, description="Special instructions")
 
 
 class DecisionNodeConfig(BaseModel):
@@ -96,26 +96,26 @@ class DecisionNodeConfig(BaseModel):
 class NodeIntegrationInterview(BaseModel):
     """Optional payload to create an interview alongside the node."""
 
-    candidate_id: Optional[int] = Field(
+    candidate_id: int | None = Field(
         None, description="Candidate user ID to associate with the new interview"
     )
-    recruiter_id: Optional[int] = Field(
+    recruiter_id: int | None = Field(
         None, description="Recruiter user ID who will own the interview"
     )
-    scheduled_at: Optional[datetime] = Field(
+    scheduled_at: datetime | None = Field(
         None, description="Planned start datetime for the interview"
     )
-    duration_minutes: Optional[int] = Field(
+    duration_minutes: int | None = Field(
         None, ge=15, le=480, description="Length of the interview in minutes"
     )
-    location: Optional[str] = Field(
+    location: str | None = Field(
         None, description="Interview location or meeting link"
     )
-    meeting_link: Optional[str] = Field(None, description="Video meeting URL")
-    interview_type: Optional[str] = Field(
+    meeting_link: str | None = Field(None, description="Video meeting URL")
+    interview_type: str | None = Field(
         None, description="Type of interview (video, phone, in_person)"
     )
-    notes: Optional[str] = Field(
+    notes: str | None = Field(
         None, description="Additional notes for interviewer or candidate"
     )
 
@@ -138,26 +138,26 @@ class NodeIntegrationInterview(BaseModel):
 class NodeIntegrationTodo(BaseModel):
     """Optional payload to create a todo/assignment alongside the node."""
 
-    assigned_to: Optional[int] = Field(
+    assigned_to: int | None = Field(
         None, description="User ID that should complete the todo"
     )
-    due_in_days: Optional[int] = Field(
+    due_in_days: int | None = Field(
         None, ge=1, le=60, description="Number of days until the todo is due"
     )
-    priority: Optional[str] = Field(
+    priority: str | None = Field(
         None, description="Todo priority (low, medium, high, urgent)"
     )
-    is_assignment: Optional[bool] = Field(
+    is_assignment: bool | None = Field(
         True, description="Whether the todo should be treated as an assignment"
     )
-    assignment_type: Optional[str] = Field(
+    assignment_type: str | None = Field(
         None, description="Assignment type label (e.g. coding)"
     )
-    category: Optional[str] = Field(None, description="Optional category slug")
-    title: Optional[str] = Field(
+    category: str | None = Field(None, description="Optional category slug")
+    title: str | None = Field(
         None, description="Override title for the generated todo"
     )
-    description: Optional[str] = Field(
+    description: str | None = Field(
         None, description="Override description for the generated todo"
     )
 
@@ -167,11 +167,11 @@ class WorkflowNodeBase(BaseModel):
 
     node_type: NodeType = Field(..., description="Type of the node")
     title: str = Field(..., min_length=1, max_length=255, description="Node title")
-    description: Optional[str] = Field(None, description="Node description")
-    instructions: Optional[str] = Field(
+    description: str | None = Field(None, description="Node description")
+    instructions: str | None = Field(
         None, description="Instructions for participants"
     )
-    estimated_duration_minutes: Optional[int] = Field(
+    estimated_duration_minutes: int | None = Field(
         None, ge=5, le=1440, description="Estimated duration in minutes"
     )
     is_required: bool = Field(True, description="Whether this node is required")
@@ -226,23 +226,23 @@ class WorkflowNodeCreate(WorkflowNodeBase):
 class WorkflowNodeCreateWithIntegration(WorkflowNodeCreate):
     """Schema for creating a node with optional interview/todo integration."""
 
-    create_interview: Optional[NodeIntegrationInterview] = Field(default=None)
-    create_todo: Optional[NodeIntegrationTodo] = Field(default=None)
+    create_interview: NodeIntegrationInterview | None = Field(default=None)
+    create_todo: NodeIntegrationTodo | None = Field(default=None)
 
 
 class WorkflowNodeUpdate(BaseModel):
     """Schema for updating a process node"""
 
-    title: Optional[str] = Field(None, min_length=1, max_length=255)
-    description: Optional[str] = None
-    instructions: Optional[str] = None
-    estimated_duration_minutes: Optional[int] = Field(None, ge=5, le=1440)
-    position: Optional[WorkflowNodePosition] = None
+    title: str | None = Field(None, min_length=1, max_length=255)
+    description: str | None = None
+    instructions: str | None = None
+    estimated_duration_minutes: int | None = Field(None, ge=5, le=1440)
+    position: WorkflowNodePosition | None = None
     config: dict[str, Any] | None = None
     requirements: list[str] | None = None
-    is_required: Optional[bool] = None
-    can_skip: Optional[bool] = None
-    auto_advance: Optional[bool] = None
+    is_required: bool | None = None
+    can_skip: bool | None = None
+    auto_advance: bool | None = None
 
     @field_validator("title")
     @classmethod
@@ -264,18 +264,18 @@ class WorkflowNodeInfo(WorkflowNodeBase):
     requirements: list[str] | None
     status: NodeStatus
     created_by: int
-    updated_by: Optional[int]
+    updated_by: int | None
     created_at: datetime
     updated_at: datetime
 
     # Computed fields
-    execution_count: Optional[int] = Field(
+    execution_count: int | None = Field(
         None, description="Number of executions for this node"
     )
-    completion_rate: Optional[float] = Field(
+    completion_rate: float | None = Field(
         None, description="Completion rate for this node"
     )
-    average_duration_minutes: Optional[float] = Field(
+    average_duration_minutes: float | None = Field(
         None, description="Average execution duration"
     )
 
@@ -303,8 +303,8 @@ class WorkflowNodeConnectionCreate(BaseModel):
     condition_config: dict[str, Any] | None = Field(
         default_factory=dict, description="Condition configuration"
     )
-    label: Optional[str] = Field(None, max_length=255, description="Connection label")
-    description: Optional[str] = Field(
+    label: str | None = Field(None, max_length=255, description="Connection label")
+    description: str | None = Field(
         None, max_length=500, description="Connection description"
     )
 
@@ -333,8 +333,8 @@ class WorkflowNodeConnectionInfo(BaseModel):
     target_node_id: int
     condition_type: str
     condition_config: dict[str, Any] | None
-    label: Optional[str]
-    description: Optional[str]
+    label: str | None
+    description: str | None
     created_at: datetime
 
     class Config:

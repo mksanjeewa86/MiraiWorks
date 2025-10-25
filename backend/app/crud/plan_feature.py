@@ -1,4 +1,3 @@
-from typing import Optional
 
 from fastapi import HTTPException
 from sqlalchemy import select
@@ -21,7 +20,7 @@ class CRUDPlanFeature(CRUDBase[PlanFeature, dict, dict]):
         *,
         plan_id: int,
         feature_id: int,
-        added_by: Optional[int] = None,
+        added_by: int | None = None,
     ) -> PlanFeature:
         """Add a feature to a plan."""
         try:

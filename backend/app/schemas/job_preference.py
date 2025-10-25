@@ -1,7 +1,6 @@
 """Job Preference schemas for API validation and serialization."""
 
 from datetime import date
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -27,22 +26,20 @@ class SalaryPeriod:
 class JobPreferenceBase(BaseModel):
     """Base job preference schema with common fields."""
 
-    desired_job_types: Optional[
-        str
-    ] = None  # Comma-separated: Full-time, Part-time, etc.
-    desired_salary_min: Optional[int] = Field(None, ge=0)
-    desired_salary_max: Optional[int] = Field(None, ge=0)
+    desired_job_types: str | None = None  # Comma-separated: Full-time, Part-time, etc.
+    desired_salary_min: int | None = Field(None, ge=0)
+    desired_salary_max: int | None = Field(None, ge=0)
     salary_currency: str = Field(default="USD", max_length=10)
     salary_period: str = Field(default="yearly", max_length=20)
     willing_to_relocate: bool = False
-    preferred_locations: Optional[str] = None  # Comma-separated
-    work_mode_preferences: Optional[str] = None  # Remote, Hybrid, Onsite
-    available_from: Optional[date] = None
-    notice_period_days: Optional[int] = Field(None, ge=0, le=365)
+    preferred_locations: str | None = None  # Comma-separated
+    work_mode_preferences: str | None = None  # Remote, Hybrid, Onsite
+    available_from: date | None = None
+    notice_period_days: int | None = Field(None, ge=0, le=365)
     job_search_status: str = Field(default="not_looking", max_length=50)
-    preferred_industries: Optional[str] = None  # Comma-separated
-    preferred_company_sizes: Optional[str] = None  # Startup, SME, Enterprise
-    other_preferences: Optional[str] = None
+    preferred_industries: str | None = None  # Comma-separated
+    preferred_company_sizes: str | None = None  # Startup, SME, Enterprise
+    other_preferences: str | None = None
 
 
 # Create schema (for POST requests)
@@ -56,20 +53,20 @@ class JobPreferenceCreate(JobPreferenceBase):
 class JobPreferenceUpdate(BaseModel):
     """Schema for updating an existing job preference."""
 
-    desired_job_types: Optional[str] = None
-    desired_salary_min: Optional[int] = Field(None, ge=0)
-    desired_salary_max: Optional[int] = Field(None, ge=0)
-    salary_currency: Optional[str] = Field(None, max_length=10)
-    salary_period: Optional[str] = Field(None, max_length=20)
-    willing_to_relocate: Optional[bool] = None
-    preferred_locations: Optional[str] = None
-    work_mode_preferences: Optional[str] = None
-    available_from: Optional[date] = None
-    notice_period_days: Optional[int] = Field(None, ge=0, le=365)
-    job_search_status: Optional[str] = Field(None, max_length=50)
-    preferred_industries: Optional[str] = None
-    preferred_company_sizes: Optional[str] = None
-    other_preferences: Optional[str] = None
+    desired_job_types: str | None = None
+    desired_salary_min: int | None = Field(None, ge=0)
+    desired_salary_max: int | None = Field(None, ge=0)
+    salary_currency: str | None = Field(None, max_length=10)
+    salary_period: str | None = Field(None, max_length=20)
+    willing_to_relocate: bool | None = None
+    preferred_locations: str | None = None
+    work_mode_preferences: str | None = None
+    available_from: date | None = None
+    notice_period_days: int | None = Field(None, ge=0, le=365)
+    job_search_status: str | None = Field(None, max_length=50)
+    preferred_industries: str | None = None
+    preferred_company_sizes: str | None = None
+    other_preferences: str | None = None
 
 
 # Response schema (what API returns)

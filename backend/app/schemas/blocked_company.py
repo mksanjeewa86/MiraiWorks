@@ -3,7 +3,6 @@ Pydantic schemas for Blocked Companies
 """
 
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -11,13 +10,13 @@ from pydantic import BaseModel, Field, field_validator
 class BlockedCompanyBase(BaseModel):
     """Base schema for BlockedCompany."""
 
-    company_id: Optional[int] = Field(
+    company_id: int | None = Field(
         None, description="ID of company to block (if exists in system)"
     )
-    company_name: Optional[str] = Field(
+    company_name: str | None = Field(
         None, max_length=255, description="Name of company to block (free text)"
     )
-    reason: Optional[str] = Field(
+    reason: str | None = Field(
         None, max_length=500, description="Reason for blocking (optional)"
     )
 
@@ -46,7 +45,7 @@ class BlockedCompanyCreate(BlockedCompanyBase):
 class BlockedCompanyUpdate(BaseModel):
     """Schema for updating a blocked company entry."""
 
-    reason: Optional[str] = Field(None, max_length=500)
+    reason: str | None = Field(None, max_length=500)
 
 
 class BlockedCompanyInfo(BlockedCompanyBase):

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     JSON,
@@ -136,13 +136,13 @@ class Todo(BaseModel):
     reviewer: Mapped[User | None] = relationship(
         "User", foreign_keys=[reviewed_by], backref="reviewed_todos"
     )
-    workflow: Mapped[Optional[Workflow]] = relationship(
+    workflow: Mapped[Workflow | None] = relationship(
         "Workflow", foreign_keys=[workflow_id]
     )
     extension_requests: Mapped[list[TodoExtensionRequest]] = relationship(
         "TodoExtensionRequest", back_populates="todo", cascade="all, delete-orphan"
     )
-    exam: Mapped[Optional[Exam]] = relationship(
+    exam: Mapped[Exam | None] = relationship(
         "Exam", foreign_keys=[exam_id], backref="todos"
     )
     # exam_assignment relationship is created by backref from ExamAssignment.todo

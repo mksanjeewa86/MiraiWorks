@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
@@ -29,42 +29,42 @@ def _normalize_enum(enum_cls, value, field_name: str):
 # Base schemas
 class ResumeBase(BaseModel):
     title: str = Field(..., min_length=1, max_length=200)
-    description: Optional[str] = None
+    description: str | None = None
 
     # Personal information
-    full_name: Optional[str] = Field(None, max_length=100)
-    email: Optional[str] = Field(None, max_length=255)
-    phone: Optional[str] = Field(None, max_length=20)
-    location: Optional[str] = Field(None, max_length=200)
-    website: Optional[str] = Field(None, max_length=500)
-    linkedin_url: Optional[str] = Field(None, max_length=500)
-    github_url: Optional[str] = Field(None, max_length=500)
+    full_name: str | None = Field(None, max_length=100)
+    email: str | None = Field(None, max_length=255)
+    phone: str | None = Field(None, max_length=20)
+    location: str | None = Field(None, max_length=200)
+    website: str | None = Field(None, max_length=500)
+    linkedin_url: str | None = Field(None, max_length=500)
+    github_url: str | None = Field(None, max_length=500)
 
     # Professional summary
-    professional_summary: Optional[str] = None
-    objective: Optional[str] = None
+    professional_summary: str | None = None
+    objective: str | None = None
 
     # Template and styling
-    template_id: Optional[str] = Field("modern", max_length=50)
-    resume_format: Optional[ResumeFormat] = ResumeFormat.INTERNATIONAL
-    resume_language: Optional[ResumeLanguage] = ResumeLanguage.ENGLISH
-    theme_color: Optional[str] = Field("#2563eb", pattern=r"^#[0-9A-Fa-f]{6}$")
-    font_family: Optional[str] = Field("Inter", max_length=50)
-    custom_css: Optional[str] = None
+    template_id: str | None = Field("modern", max_length=50)
+    resume_format: ResumeFormat | None = ResumeFormat.INTERNATIONAL
+    resume_language: ResumeLanguage | None = ResumeLanguage.ENGLISH
+    theme_color: str | None = Field("#2563eb", pattern=r"^#[0-9A-Fa-f]{6}$")
+    font_family: str | None = Field("Inter", max_length=50)
+    custom_css: str | None = None
 
     # Japanese-specific fields
-    furigana_name: Optional[str] = Field(
+    furigana_name: str | None = Field(
         None, max_length=100
     )  # phonetic name (furigana)
-    birth_date: Optional[datetime] = None  # birth date
-    gender: Optional[str] = Field(None, max_length=10)  # gender
-    nationality: Optional[str] = Field(None, max_length=50)  # nationality
-    marital_status: Optional[str] = Field(None, max_length=20)  # marital status
-    emergency_contact: Optional[dict] = None  # emergency contact info
-    photo_path: Optional[str] = Field(None, max_length=500)  # optional profile photo
+    birth_date: datetime | None = None  # birth date
+    gender: str | None = Field(None, max_length=10)  # gender
+    nationality: str | None = Field(None, max_length=50)  # nationality
+    marital_status: str | None = Field(None, max_length=20)  # marital status
+    emergency_contact: dict | None = None  # emergency contact info
+    photo_path: str | None = Field(None, max_length=500)  # optional profile photo
     # Public sharing
-    is_public: Optional[bool] = False
-    can_download_pdf: Optional[bool] = True
+    is_public: bool | None = False
+    can_download_pdf: bool | None = True
 
     @field_validator("email")
     @classmethod
@@ -82,8 +82,8 @@ class ResumeBase(BaseModel):
 
 
 class ResumeCreate(ResumeBase):
-    status: Optional[ResumeStatus] = ResumeStatus.DRAFT
-    visibility: Optional[ResumeVisibility] = ResumeVisibility.PRIVATE
+    status: ResumeStatus | None = ResumeStatus.DRAFT
+    visibility: ResumeVisibility | None = ResumeVisibility.PRIVATE
 
     @field_validator("status", mode="before")
     @classmethod
@@ -92,60 +92,60 @@ class ResumeCreate(ResumeBase):
 
 
 class ResumeUpdate(BaseModel):
-    title: Optional[str] = Field(None, min_length=1, max_length=200)
-    description: Optional[str] = None
-    full_name: Optional[str] = Field(None, max_length=100)
-    email: Optional[str] = Field(None, max_length=255)
-    phone: Optional[str] = Field(None, max_length=20)
-    location: Optional[str] = Field(None, max_length=200)
-    website: Optional[str] = Field(None, max_length=500)
-    linkedin_url: Optional[str] = Field(None, max_length=500)
-    github_url: Optional[str] = Field(None, max_length=500)
-    professional_summary: Optional[str] = None
-    objective: Optional[str] = None
-    template_id: Optional[str] = Field(None, max_length=50)
-    resume_format: Optional[ResumeFormat] = None
-    resume_language: Optional[ResumeLanguage] = None
-    theme_color: Optional[str] = Field(None, pattern=r"^#[0-9A-Fa-f]{6}$")
-    font_family: Optional[str] = Field(None, max_length=50)
-    custom_css: Optional[str] = None
+    title: str | None = Field(None, min_length=1, max_length=200)
+    description: str | None = None
+    full_name: str | None = Field(None, max_length=100)
+    email: str | None = Field(None, max_length=255)
+    phone: str | None = Field(None, max_length=20)
+    location: str | None = Field(None, max_length=200)
+    website: str | None = Field(None, max_length=500)
+    linkedin_url: str | None = Field(None, max_length=500)
+    github_url: str | None = Field(None, max_length=500)
+    professional_summary: str | None = None
+    objective: str | None = None
+    template_id: str | None = Field(None, max_length=50)
+    resume_format: ResumeFormat | None = None
+    resume_language: ResumeLanguage | None = None
+    theme_color: str | None = Field(None, pattern=r"^#[0-9A-Fa-f]{6}$")
+    font_family: str | None = Field(None, max_length=50)
+    custom_css: str | None = None
 
     # Japanese-specific fields
-    furigana_name: Optional[str] = Field(None, max_length=100)
-    birth_date: Optional[datetime] = None
-    gender: Optional[str] = Field(None, max_length=10)
-    nationality: Optional[str] = Field(None, max_length=50)
-    marital_status: Optional[str] = Field(None, max_length=20)
-    emergency_contact: Optional[dict] = None
-    photo_path: Optional[str] = Field(None, max_length=500)
+    furigana_name: str | None = Field(None, max_length=100)
+    birth_date: datetime | None = None
+    gender: str | None = Field(None, max_length=10)
+    nationality: str | None = Field(None, max_length=50)
+    marital_status: str | None = Field(None, max_length=20)
+    emergency_contact: dict | None = None
+    photo_path: str | None = Field(None, max_length=500)
 
     # Settings
-    status: Optional[ResumeStatus] = None
-    visibility: Optional[ResumeVisibility] = None
+    status: ResumeStatus | None = None
+    visibility: ResumeVisibility | None = None
 
     @field_validator("status", mode="before")
     @classmethod
     def _validate_update_status(cls, value):
         return _normalize_enum(ResumeStatus, value, "status")
 
-    is_primary: Optional[bool] = None
-    is_public: Optional[bool] = None
-    can_download_pdf: Optional[bool] = None
+    is_primary: bool | None = None
+    is_public: bool | None = None
+    can_download_pdf: bool | None = None
 
 
 # Work Experience schemas
 class WorkExperienceBase(BaseModel):
     company_name: str = Field(..., min_length=1, max_length=200)
     position_title: str = Field(..., min_length=1, max_length=200)
-    location: Optional[str] = Field(None, max_length=200)
-    company_website: Optional[str] = Field(None, max_length=500)
+    location: str | None = Field(None, max_length=200)
+    company_website: str | None = Field(None, max_length=500)
     start_date: datetime
-    end_date: Optional[datetime] = None
+    end_date: datetime | None = None
     is_current: bool = False
-    description: Optional[str] = None
+    description: str | None = None
     achievements: list[str] | None = []
     technologies: list[str] | None = []
-    display_order: Optional[int] = 0
+    display_order: int | None = 0
 
     @field_validator("end_date")
     @classmethod
@@ -168,18 +168,18 @@ class WorkExperienceCreate(WorkExperienceBase):
 
 
 class WorkExperienceUpdate(BaseModel):
-    company_name: Optional[str] = Field(None, min_length=1, max_length=200)
-    position_title: Optional[str] = Field(None, min_length=1, max_length=200)
-    location: Optional[str] = Field(None, max_length=200)
-    company_website: Optional[str] = Field(None, max_length=500)
-    start_date: Optional[datetime] = None
-    end_date: Optional[datetime] = None
-    is_current: Optional[bool] = None
-    description: Optional[str] = None
+    company_name: str | None = Field(None, min_length=1, max_length=200)
+    position_title: str | None = Field(None, min_length=1, max_length=200)
+    location: str | None = Field(None, max_length=200)
+    company_website: str | None = Field(None, max_length=500)
+    start_date: datetime | None = None
+    end_date: datetime | None = None
+    is_current: bool | None = None
+    description: str | None = None
     achievements: list[str] | None = None
     technologies: list[str] | None = None
-    display_order: Optional[int] = None
-    is_visible: Optional[bool] = None
+    display_order: int | None = None
+    is_visible: bool | None = None
 
 
 class WorkExperienceInfo(WorkExperienceBase):
@@ -196,16 +196,16 @@ class WorkExperienceInfo(WorkExperienceBase):
 class EducationBase(BaseModel):
     institution_name: str = Field(..., min_length=1, max_length=200)
     degree: str = Field(..., min_length=1, max_length=200)
-    field_of_study: Optional[str] = Field(None, max_length=200)
-    location: Optional[str] = Field(None, max_length=200)
+    field_of_study: str | None = Field(None, max_length=200)
+    location: str | None = Field(None, max_length=200)
     start_date: datetime
-    end_date: Optional[datetime] = None
+    end_date: datetime | None = None
     is_current: bool = False
-    gpa: Optional[str] = Field(None, max_length=10)
-    honors: Optional[str] = Field(None, max_length=200)
-    description: Optional[str] = None
+    gpa: str | None = Field(None, max_length=10)
+    honors: str | None = Field(None, max_length=200)
+    description: str | None = None
     courses: list[str] | None = []
-    display_order: Optional[int] = 0
+    display_order: int | None = 0
 
     @field_validator("end_date")
     @classmethod
@@ -221,19 +221,19 @@ class EducationCreate(EducationBase):
 
 
 class EducationUpdate(BaseModel):
-    institution_name: Optional[str] = Field(None, min_length=1, max_length=200)
-    degree: Optional[str] = Field(None, min_length=1, max_length=200)
-    field_of_study: Optional[str] = Field(None, max_length=200)
-    location: Optional[str] = Field(None, max_length=200)
-    start_date: Optional[datetime] = None
-    end_date: Optional[datetime] = None
-    is_current: Optional[bool] = None
-    gpa: Optional[str] = Field(None, max_length=10)
-    honors: Optional[str] = Field(None, max_length=200)
-    description: Optional[str] = None
+    institution_name: str | None = Field(None, min_length=1, max_length=200)
+    degree: str | None = Field(None, min_length=1, max_length=200)
+    field_of_study: str | None = Field(None, max_length=200)
+    location: str | None = Field(None, max_length=200)
+    start_date: datetime | None = None
+    end_date: datetime | None = None
+    is_current: bool | None = None
+    gpa: str | None = Field(None, max_length=10)
+    honors: str | None = Field(None, max_length=200)
+    description: str | None = None
     courses: list[str] | None = None
-    display_order: Optional[int] = None
-    is_visible: Optional[bool] = None
+    display_order: int | None = None
+    is_visible: bool | None = None
 
 
 class EducationInfo(EducationBase):
@@ -249,10 +249,10 @@ class EducationInfo(EducationBase):
 # Skill schemas
 class SkillBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
-    category: Optional[str] = Field(None, max_length=50)
-    proficiency_level: Optional[int] = Field(None, ge=1, le=10)
-    proficiency_label: Optional[str] = Field(None, max_length=20)
-    display_order: Optional[int] = 0
+    category: str | None = Field(None, max_length=50)
+    proficiency_level: int | None = Field(None, ge=1, le=10)
+    proficiency_label: str | None = Field(None, max_length=20)
+    display_order: int | None = 0
 
 
 class SkillCreate(SkillBase):
@@ -260,12 +260,12 @@ class SkillCreate(SkillBase):
 
 
 class SkillUpdate(BaseModel):
-    name: Optional[str] = Field(None, min_length=1, max_length=100)
-    category: Optional[str] = Field(None, max_length=50)
-    proficiency_level: Optional[int] = Field(None, ge=1, le=10)
-    proficiency_label: Optional[str] = Field(None, max_length=20)
-    display_order: Optional[int] = None
-    is_visible: Optional[bool] = None
+    name: str | None = Field(None, min_length=1, max_length=100)
+    category: str | None = Field(None, max_length=50)
+    proficiency_level: int | None = Field(None, ge=1, le=10)
+    proficiency_label: str | None = Field(None, max_length=20)
+    display_order: int | None = None
+    is_visible: bool | None = None
 
 
 class SkillInfo(SkillBase):
@@ -281,15 +281,15 @@ class SkillInfo(SkillBase):
 class ProjectBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=200)
     description: str = Field(..., min_length=1)
-    project_url: Optional[str] = Field(None, max_length=500)
-    github_url: Optional[str] = Field(None, max_length=500)
-    demo_url: Optional[str] = Field(None, max_length=500)
-    start_date: Optional[datetime] = None
-    end_date: Optional[datetime] = None
+    project_url: str | None = Field(None, max_length=500)
+    github_url: str | None = Field(None, max_length=500)
+    demo_url: str | None = Field(None, max_length=500)
+    start_date: datetime | None = None
+    end_date: datetime | None = None
     is_ongoing: bool = False
     technologies: list[str] | None = []
-    role: Optional[str] = Field(None, max_length=100)
-    display_order: Optional[int] = 0
+    role: str | None = Field(None, max_length=100)
+    display_order: int | None = 0
 
     @field_validator("end_date")
     @classmethod
@@ -305,18 +305,18 @@ class ProjectCreate(ProjectBase):
 
 
 class ProjectUpdate(BaseModel):
-    name: Optional[str] = Field(None, min_length=1, max_length=200)
-    description: Optional[str] = Field(None, min_length=1)
-    project_url: Optional[str] = Field(None, max_length=500)
-    github_url: Optional[str] = Field(None, max_length=500)
-    demo_url: Optional[str] = Field(None, max_length=500)
-    start_date: Optional[datetime] = None
-    end_date: Optional[datetime] = None
-    is_ongoing: Optional[bool] = None
+    name: str | None = Field(None, min_length=1, max_length=200)
+    description: str | None = Field(None, min_length=1)
+    project_url: str | None = Field(None, max_length=500)
+    github_url: str | None = Field(None, max_length=500)
+    demo_url: str | None = Field(None, max_length=500)
+    start_date: datetime | None = None
+    end_date: datetime | None = None
+    is_ongoing: bool | None = None
     technologies: list[str] | None = None
-    role: Optional[str] = Field(None, max_length=100)
-    display_order: Optional[int] = None
-    is_visible: Optional[bool] = None
+    role: str | None = Field(None, max_length=100)
+    display_order: int | None = None
+    is_visible: bool | None = None
 
 
 class ProjectInfo(ProjectBase):
@@ -333,13 +333,13 @@ class ProjectInfo(ProjectBase):
 class CertificationBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=200)
     issuing_organization: str = Field(..., min_length=1, max_length=200)
-    credential_id: Optional[str] = Field(None, max_length=100)
-    credential_url: Optional[str] = Field(None, max_length=500)
+    credential_id: str | None = Field(None, max_length=100)
+    credential_url: str | None = Field(None, max_length=500)
     issue_date: datetime
-    expiration_date: Optional[datetime] = None
+    expiration_date: datetime | None = None
     does_not_expire: bool = False
-    description: Optional[str] = None
-    display_order: Optional[int] = 0
+    description: str | None = None
+    display_order: int | None = 0
 
     @field_validator("expiration_date")
     @classmethod
@@ -355,16 +355,16 @@ class CertificationCreate(CertificationBase):
 
 
 class CertificationUpdate(BaseModel):
-    name: Optional[str] = Field(None, min_length=1, max_length=200)
-    issuing_organization: Optional[str] = Field(None, min_length=1, max_length=200)
-    credential_id: Optional[str] = Field(None, max_length=100)
-    credential_url: Optional[str] = Field(None, max_length=500)
-    issue_date: Optional[datetime] = None
-    expiration_date: Optional[datetime] = None
-    does_not_expire: Optional[bool] = None
-    description: Optional[str] = None
-    display_order: Optional[int] = None
-    is_visible: Optional[bool] = None
+    name: str | None = Field(None, min_length=1, max_length=200)
+    issuing_organization: str | None = Field(None, min_length=1, max_length=200)
+    credential_id: str | None = Field(None, max_length=100)
+    credential_url: str | None = Field(None, max_length=500)
+    issue_date: datetime | None = None
+    expiration_date: datetime | None = None
+    does_not_expire: bool | None = None
+    description: str | None = None
+    display_order: int | None = None
+    is_visible: bool | None = None
 
 
 class CertificationInfo(CertificationBase):
@@ -380,7 +380,7 @@ class CertificationInfo(CertificationBase):
 class LanguageBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=50)
     proficiency: str = Field(..., min_length=1, max_length=100)
-    display_order: Optional[int] = 0
+    display_order: int | None = 0
 
 
 class LanguageCreate(LanguageBase):
@@ -388,10 +388,10 @@ class LanguageCreate(LanguageBase):
 
 
 class LanguageUpdate(BaseModel):
-    name: Optional[str] = Field(None, min_length=1, max_length=50)
-    proficiency: Optional[str] = Field(None, min_length=1, max_length=100)
-    display_order: Optional[int] = None
-    is_visible: Optional[bool] = None
+    name: str | None = Field(None, min_length=1, max_length=50)
+    proficiency: str | None = Field(None, min_length=1, max_length=100)
+    display_order: int | None = None
+    is_visible: bool | None = None
 
 
 class LanguageInfo(LanguageBase):
@@ -406,12 +406,12 @@ class LanguageInfo(LanguageBase):
 # Reference schemas
 class ReferenceBase(BaseModel):
     full_name: str = Field(..., min_length=1, max_length=100)
-    position_title: Optional[str] = Field(None, max_length=100)
-    company_name: Optional[str] = Field(None, max_length=200)
-    email: Optional[str] = Field(None, max_length=255)
-    phone: Optional[str] = Field(None, max_length=20)
-    relationship: Optional[str] = Field(None, max_length=100)
-    display_order: Optional[int] = 0
+    position_title: str | None = Field(None, max_length=100)
+    company_name: str | None = Field(None, max_length=200)
+    email: str | None = Field(None, max_length=255)
+    phone: str | None = Field(None, max_length=20)
+    relationship: str | None = Field(None, max_length=100)
+    display_order: int | None = 0
 
     @field_validator("email")
     @classmethod
@@ -426,14 +426,14 @@ class ReferenceCreate(ReferenceBase):
 
 
 class ReferenceUpdate(BaseModel):
-    full_name: Optional[str] = Field(None, min_length=1, max_length=100)
-    position_title: Optional[str] = Field(None, max_length=100)
-    company_name: Optional[str] = Field(None, max_length=200)
-    email: Optional[str] = Field(None, max_length=255)
-    phone: Optional[str] = Field(None, max_length=20)
-    relationship: Optional[str] = Field(None, max_length=100)
-    display_order: Optional[int] = None
-    is_visible: Optional[bool] = None
+    full_name: str | None = Field(None, min_length=1, max_length=100)
+    position_title: str | None = Field(None, max_length=100)
+    company_name: str | None = Field(None, max_length=200)
+    email: str | None = Field(None, max_length=255)
+    phone: str | None = Field(None, max_length=20)
+    relationship: str | None = Field(None, max_length=100)
+    display_order: int | None = None
+    is_visible: bool | None = None
 
 
 class ReferenceInfo(ReferenceBase):
@@ -450,10 +450,10 @@ class ReferenceInfo(ReferenceBase):
 class SectionBase(BaseModel):
     section_type: SectionType
     title: str = Field(..., min_length=1, max_length=100)
-    content: Optional[str] = None
+    content: str | None = None
     is_visible: bool = True
     display_order: int = 0
-    custom_css: Optional[str] = None
+    custom_css: str | None = None
 
 
 class SectionCreate(SectionBase):
@@ -461,11 +461,11 @@ class SectionCreate(SectionBase):
 
 
 class SectionUpdate(BaseModel):
-    title: Optional[str] = Field(None, min_length=1, max_length=100)
-    content: Optional[str] = None
-    is_visible: Optional[bool] = None
-    display_order: Optional[int] = None
-    custom_css: Optional[str] = None
+    title: str | None = Field(None, min_length=1, max_length=100)
+    content: str | None = None
+    is_visible: bool | None = None
+    display_order: int | None = None
+    custom_css: str | None = None
 
 
 class SectionInfo(SectionBase):
@@ -490,28 +490,28 @@ class ResumeInfo(ResumeBase):
     is_primary: bool
     view_count: int
     download_count: int
-    last_viewed_at: Optional[datetime]
+    last_viewed_at: datetime | None
 
     # Enhanced sharing features
     is_public: bool
-    public_url_slug: Optional[str]
+    public_url_slug: str | None
     share_token: str
     can_download_pdf: bool
     can_edit: bool
     can_delete: bool
 
     # Japanese-specific fields
-    furigana_name: Optional[str]
-    birth_date: Optional[datetime]
-    gender: Optional[str]
-    nationality: Optional[str]
-    marital_status: Optional[str]
-    emergency_contact: Optional[dict]
-    photo_path: Optional[str]
+    furigana_name: str | None
+    birth_date: datetime | None
+    gender: str | None
+    nationality: str | None
+    marital_status: str | None
+    emergency_contact: dict | None
+    photo_path: str | None
 
     # File paths
-    pdf_file_path: Optional[str]
-    pdf_generated_at: Optional[datetime]
+    pdf_file_path: str | None
+    pdf_generated_at: datetime | None
 
     created_at: datetime
     updated_at: datetime
@@ -541,7 +541,7 @@ class ResumeInfo(ResumeBase):
 
 # List response schemas
 class ResumeListRequest(BaseModel):
-    status: Optional[ResumeStatus] = None
+    status: ResumeStatus | None = None
     limit: int = Field(10, ge=1, le=100)
     offset: int = Field(0, ge=0)
 
@@ -559,35 +559,35 @@ class ResumeTemplateInfo(BaseModel):
     id: int
     name: str
     display_name: str
-    description: Optional[str]
-    category: Optional[str]
+    description: str | None
+    category: str | None
     color_scheme: dict[str, Any] | None
     font_options: dict[str, Any] | None
     is_premium: bool
     usage_count: int
-    preview_image_url: Optional[str]
+    preview_image_url: str | None
 
 
 # Share schemas
 class ShareLinkCreate(BaseModel):
-    recipient_email: Optional[str] = Field(None, max_length=255)
-    password: Optional[str] = Field(None, min_length=4)
-    expires_in_days: Optional[int] = Field(None, ge=1, le=365)
-    max_views: Optional[int] = Field(None, ge=1)
+    recipient_email: str | None = Field(None, max_length=255)
+    password: str | None = Field(None, min_length=4)
+    expires_in_days: int | None = Field(None, ge=1, le=365)
+    max_views: int | None = Field(None, ge=1)
     allow_download: bool = True
     show_contact_info: bool = True
 
 
 class ShareLinkInfo(BaseModel):
     share_token: str
-    recipient_email: Optional[str]
+    recipient_email: str | None
     password_protected: bool
-    expires_at: Optional[datetime]
-    max_views: Optional[int]
+    expires_at: datetime | None
+    max_views: int | None
     view_count: int
     allow_download: bool
     show_contact_info: bool
-    last_viewed_at: Optional[datetime]
+    last_viewed_at: datetime | None
     created_at: datetime
 
 
@@ -598,7 +598,7 @@ class ResumeStats(BaseModel):
     by_visibility: dict[str, int]
     total_views: int
     total_downloads: int
-    most_viewed_resume: Optional[str]  # Resume title
+    most_viewed_resume: str | None  # Resume title
     recent_activity: int  # Views/downloads in last 30 days
 
 
@@ -621,7 +621,7 @@ class PDFGenerationRequest(BaseModel):
     resume_id: int
     format: str = Field("A4", pattern="^(A4|Letter)$")
     include_contact_info: bool = True
-    watermark: Optional[str] = None
+    watermark: str | None = None
 
 
 class PDFGenerationResponse(BaseModel):
@@ -638,10 +638,10 @@ class RirekishoData(BaseModel):
     education_history: list[dict] = Field([], description="Educational background")
     work_history: list[dict] = Field([], description="Work experience")
     qualifications: list[dict] = Field([], description="Licenses and certifications")
-    motivation: Optional[str] = Field(None, description="Motivation and self-PR")
-    commute_time: Optional[str] = Field(None, description="Commute time")
-    spouse: Optional[str] = Field(None, description="Spouse information")
-    dependents: Optional[str] = Field(None, description="Number of dependents")
+    motivation: str | None = Field(None, description="Motivation and self-PR")
+    commute_time: str | None = Field(None, description="Commute time")
+    spouse: str | None = Field(None, description="Spouse information")
+    dependents: str | None = Field(None, description="Number of dependents")
 
 
 class ShokumuKeirekishoData(BaseModel):
@@ -663,15 +663,15 @@ class PublicResumeInfo(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
     title: str
-    full_name: Optional[str]
-    professional_summary: Optional[str]
+    full_name: str | None
+    professional_summary: str | None
     resume_format: ResumeFormat
     resume_language: ResumeLanguage
     view_count: int
-    last_viewed_at: Optional[datetime]
+    last_viewed_at: datetime | None
     can_download_pdf: bool
-    theme_color: Optional[str]
-    font_family: Optional[str]
+    theme_color: str | None
+    font_family: str | None
 
     # Limited related data
     experiences: list[WorkExperienceInfo] = []
@@ -691,10 +691,10 @@ class EmailResumeRequest(BaseModel):
     """Request to send resume via email"""
 
     recipient_emails: list[str] = Field(..., min_length=1, max_length=10)
-    subject: Optional[str] = Field(None, max_length=200)
-    message: Optional[str] = Field(None, max_length=2000)
+    subject: str | None = Field(None, max_length=200)
+    message: str | None = Field(None, max_length=2000)
     include_pdf: bool = True
-    sender_name: Optional[str] = Field(None, max_length=100)
+    sender_name: str | None = Field(None, max_length=100)
 
     @field_validator("recipient_emails")
     @classmethod
@@ -717,11 +717,11 @@ class ResumePublicSettings(BaseModel):
     """Settings for public resume sharing"""
 
     is_public: bool
-    custom_slug: Optional[str] = Field(None, max_length=100)
+    custom_slug: str | None = Field(None, max_length=100)
     show_contact_info: bool = True
     allow_pdf_download: bool = True
     password_protect: bool = False
-    password: Optional[str] = Field(None, min_length=4)
+    password: str | None = Field(None, min_length=4)
 
 
 # Resume format templates

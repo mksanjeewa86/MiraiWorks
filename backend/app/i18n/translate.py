@@ -5,7 +5,6 @@ Provides internationalization support for English and Japanese
 
 import json
 from pathlib import Path
-from typing import Optional
 
 
 class Translator:
@@ -102,7 +101,7 @@ class Translator:
 translator = Translator()
 
 
-def get_locale_from_header(accept_language: Optional[str]) -> str:
+def get_locale_from_header(accept_language: str | None) -> str:
     """
     Extract locale from Accept-Language header
 

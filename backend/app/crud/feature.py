@@ -1,4 +1,3 @@
-from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,14 +11,14 @@ from app.schemas.subscription import FeatureCreate, FeatureUpdate, FeatureWithCh
 class CRUDFeature(CRUDBase[Feature, FeatureCreate, FeatureUpdate]):
     """CRUD operations for features with hierarchical support."""
 
-    async def get_by_name(self, db: AsyncSession, *, name: str) -> Optional[Feature]:
+    async def get_by_name(self, db: AsyncSession, *, name: str) -> Feature | None:
         """Get feature by name."""
         result = await db.execute(select(Feature).where(Feature.name == name))
         return result.scalar_one_or_none()
 
     async def get_by_permission_key(
         self, db: AsyncSession, *, permission_key: str
-    ) -> Optional[Feature]:
+    ) -> Feature | None:
         """Get feature by permission key."""
         result = await db.execute(
             select(Feature).where(Feature.permission_key == permission_key)
@@ -31,7 +30,7 @@ class CRUDFeature(CRUDBase[Feature, FeatureCreate, FeatureUpdate]):
     ) -> list[Feature]:
         """Get all active features."""
         result = await db.execute(
-            select(Feature).where(Feature.is_active == True).offset(skip).limit(limit)
+            select(Feature).where(Feature.is_active is True).offset(skip).limit(limit)
         )
         return result.scalars().all()
 
@@ -43,7 +42,7 @@ class CRUDFeature(CRUDBase[Feature, FeatureCreate, FeatureUpdate]):
         result = await db.execute(
             select(Feature)
             .where(Feature.parent_feature_id.is_(None))
-            .where(Feature.is_active == True)
+            .where(Feature.is_active is True)
             .options(selectinload(Feature.children))
             .order_by(Feature.display_name)
         )
@@ -54,14 +53,14 @@ class CRUDFeature(CRUDBase[Feature, FeatureCreate, FeatureUpdate]):
         result = await db.execute(
             select(Feature)
             .where(Feature.parent_feature_id == parent_id)
-            .where(Feature.is_active == True)
+            .where(Feature.is_active is True)
             .order_by(Feature.display_name)
         )
         return result.scalars().all()
 
     async def get_with_children(
         self, db: AsyncSession, *, feature_id: int
-    ) -> Optional[Feature]:
+    ) -> Feature | None:
         """Get feature with all its children loaded."""
         result = await db.execute(
             select(Feature)
@@ -80,13 +79,13 @@ class CRUDFeature(CRUDBase[Feature, FeatureCreate, FeatureUpdate]):
         # Get all active features
         result = await db.execute(
             select(Feature)
-            .where(Feature.is_active == True)
+            .where(Feature.is_active is True)
             .options(selectinload(Feature.children))
         )
         all_features = result.scalars().all()
 
         # Build a dictionary for quick lookup
-        feature_dict = {f.id: f for f in all_features}
+        {f.id: f for f in all_features}
 
         # Build hierarchical structure
         def build_tree(feature: Feature) -> FeatureWithChildren:
@@ -121,7 +120,7 @@ class CRUDFeature(CRUDBase[Feature, FeatureCreate, FeatureUpdate]):
         result = await db.execute(
             select(Feature)
             .where(Feature.category == category)
-            .where(Feature.is_active == True)
+            .where(Feature.is_active is True)
             .offset(skip)
             .limit(limit)
         )
@@ -138,7 +137,7 @@ class CRUDFeature(CRUDBase[Feature, FeatureCreate, FeatureUpdate]):
                 (Feature.name.ilike(search_pattern))
                 | (Feature.display_name.ilike(search_pattern))
             )
-            .where(Feature.is_active == True)
+            .where(Feature.is_active is True)
         )
         return result.scalars().all()
 

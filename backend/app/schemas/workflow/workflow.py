@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -13,9 +13,9 @@ class WorkflowBase(BaseModel):
     """Base schema for recruitment process"""
 
     name: str = Field(..., min_length=1, max_length=255, description="Process name")
-    description: Optional[str] = Field(None, description="Process description")
-    position_id: Optional[int] = Field(None, description="Associated position ID")
-    settings: Optional[dict[str, Any]] = Field(
+    description: str | None = Field(None, description="Process description")
+    position_id: int | None = Field(None, description="Associated position ID")
+    settings: dict[str, Any] | None = Field(
         default_factory=dict, description="Process settings"
     )
 
@@ -29,7 +29,7 @@ class WorkflowCreate(WorkflowBase):
     """Schema for creating a recruitment process"""
 
     is_template: bool = Field(False, description="Whether this is a template")
-    template_name: Optional[str] = Field(
+    template_name: str | None = Field(
         None, max_length=255, description="Template name if is_template=True"
     )
 
@@ -46,8 +46,8 @@ class WorkflowCreate(WorkflowBase):
 class WorkflowUpdate(BaseModel):
     """Schema for updating a recruitment process"""
 
-    name: Optional[str] = Field(None, min_length=1, max_length=255)
-    description: Optional[str] = None
+    name: str | None = Field(None, min_length=1, max_length=255)
+    description: str | None = None
     settings: dict[str, Any] | None = None
 
     @field_validator("name")
@@ -64,21 +64,21 @@ class WorkflowInfo(WorkflowBase):
     id: int
     employer_company_id: int
     created_by: int
-    updated_by: Optional[int]
+    updated_by: int | None
     status: ProcessStatus
     version: int
     is_template: bool
-    template_name: Optional[str]
+    template_name: str | None
     created_at: datetime
     updated_at: datetime
-    activated_at: Optional[datetime]
-    archived_at: Optional[datetime]
+    activated_at: datetime | None
+    archived_at: datetime | None
 
     # Computed fields
-    node_count: Optional[int] = Field(
+    node_count: int | None = Field(
         None, description="Number of nodes in the process"
     )
-    active_candidate_count: Optional[int] = Field(
+    active_candidate_count: int | None = Field(
         None, description="Number of active candidates"
     )
 
@@ -94,10 +94,10 @@ class WorkflowDetails(WorkflowInfo):
     viewers: list[WorkflowViewerInfo] = Field(default_factory=list)
 
     # Statistics
-    completion_rate: Optional[float] = Field(
+    completion_rate: float | None = Field(
         None, description="Process completion rate"
     )
-    average_duration_days: Optional[float] = Field(
+    average_duration_days: float | None = Field(
         None, description="Average completion time in days"
     )
 
@@ -113,7 +113,7 @@ class ProcessActivation(BaseModel):
 class ProcessArchive(BaseModel):
     """Schema for archiving a process"""
 
-    reason: Optional[str] = Field(
+    reason: str | None = Field(
         None, max_length=500, description="Reason for archiving"
     )
 
@@ -139,11 +139,11 @@ class ProcessTemplate(BaseModel):
     """Schema for creating a process template"""
 
     name: str = Field(..., min_length=1, max_length=255)
-    description: Optional[str] = None
-    category: Optional[str] = Field(
+    description: str | None = None
+    category: str | None = Field(
         None, max_length=100, description="Template category (e.g., engineering, sales)"
     )
-    industry: Optional[str] = Field(
+    industry: str | None = Field(
         None, max_length=100, description="Industry this template is for"
     )
     is_public: bool = Field(
@@ -161,7 +161,7 @@ class ProcessTemplateInfo(ProcessTemplate):
 
     id: int
     created_by: int
-    company_id: Optional[int]
+    company_id: int | None
     usage_count: int
     created_at: datetime
 

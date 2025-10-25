@@ -1,6 +1,5 @@
 """CRUD operations for privacy settings - Section-specific profile visibility controls"""
 
-from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,7 +18,7 @@ class CRUDPrivacySettings:
 
     async def get_by_user(
         self, db: AsyncSession, user_id: int
-    ) -> Optional[PrivacySettings]:
+    ) -> PrivacySettings | None:
         """Get privacy settings by user ID"""
         result = await db.execute(
             select(PrivacySettings).where(PrivacySettings.user_id == user_id)
@@ -40,7 +39,7 @@ class CRUDPrivacySettings:
 
     async def update_by_user(
         self, db: AsyncSession, user_id: int, obj_in: PrivacySettingsUpdate
-    ) -> Optional[PrivacySettings]:
+    ) -> PrivacySettings | None:
         """
         Update privacy settings for a user (supports partial updates).
 

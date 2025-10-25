@@ -1,4 +1,3 @@
-from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -66,7 +65,7 @@ class CRUDPlanChangeRequest(CRUDBase[PlanChangeRequest, dict, dict]):
 
     async def get_with_details(
         self, db: AsyncSession, *, request_id: int
-    ) -> Optional[PlanChangeRequest]:
+    ) -> PlanChangeRequest | None:
         """Get plan change request with all details."""
         result = await db.execute(
             select(PlanChangeRequest)
@@ -88,8 +87,8 @@ class CRUDPlanChangeRequest(CRUDBase[PlanChangeRequest, dict, dict]):
         *,
         request_id: int,
         reviewed_by: int,
-        review_message: Optional[str] = None,
-    ) -> Optional[PlanChangeRequest]:
+        review_message: str | None = None,
+    ) -> PlanChangeRequest | None:
         """Approve a plan change request."""
         from app.utils.datetime_utils import get_utc_now
 
@@ -113,8 +112,8 @@ class CRUDPlanChangeRequest(CRUDBase[PlanChangeRequest, dict, dict]):
         *,
         request_id: int,
         reviewed_by: int,
-        review_message: Optional[str] = None,
-    ) -> Optional[PlanChangeRequest]:
+        review_message: str | None = None,
+    ) -> PlanChangeRequest | None:
         """Reject a plan change request."""
         from app.utils.datetime_utils import get_utc_now
 
@@ -134,7 +133,7 @@ class CRUDPlanChangeRequest(CRUDBase[PlanChangeRequest, dict, dict]):
 
     async def cancel_request(
         self, db: AsyncSession, *, request_id: int
-    ) -> Optional[PlanChangeRequest]:
+    ) -> PlanChangeRequest | None:
         """Cancel a plan change request (user cancels their own request)."""
         from app.utils.datetime_utils import get_utc_now
 
@@ -160,7 +159,7 @@ class CRUDPlanChangeRequest(CRUDBase[PlanChangeRequest, dict, dict]):
         requested_plan_id: int,
         request_type: str,
         requested_by: int,
-        request_message: Optional[str] = None,
+        request_message: str | None = None,
     ) -> PlanChangeRequest:
         """Create a new plan change request."""
         from app.utils.constants import PlanChangeRequestType

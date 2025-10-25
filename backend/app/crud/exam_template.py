@@ -48,12 +48,12 @@ class CRUDExamTemplate(CRUDBase[ExamTemplate, ExamTemplateCreate, ExamTemplateUp
             if company_id:
                 conditions.append(
                     or_(
-                        ExamTemplate.is_public == True,
+                        ExamTemplate.is_public is True,
                         ExamTemplate.company_id == company_id,
                     )
                 )
             else:
-                conditions.append(ExamTemplate.is_public == True)
+                conditions.append(ExamTemplate.is_public is True)
         # System admins can see all templates
 
         # Additional filters

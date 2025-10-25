@@ -1,7 +1,6 @@
 """Pydantic schemas for profile views."""
 
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -12,10 +11,10 @@ class ProfileViewCreate(BaseModel):
     profile_user_id: int = Field(
         ..., description="ID of the user whose profile was viewed"
     )
-    view_duration: Optional[int] = Field(
+    view_duration: int | None = Field(
         None, description="Duration of view in seconds"
     )
-    referrer: Optional[str] = Field(None, max_length=500, description="Referrer URL")
+    referrer: str | None = Field(None, max_length=500, description="Referrer URL")
 
 
 class ProfileViewInfo(BaseModel):
@@ -23,12 +22,12 @@ class ProfileViewInfo(BaseModel):
 
     id: int
     profile_user_id: int
-    viewer_user_id: Optional[int] = None
-    viewer_company_id: Optional[int] = None
-    viewer_ip: Optional[str] = None
-    viewer_user_agent: Optional[str] = None
-    view_duration: Optional[int] = None
-    referrer: Optional[str] = None
+    viewer_user_id: int | None = None
+    viewer_company_id: int | None = None
+    viewer_ip: str | None = None
+    viewer_user_agent: str | None = None
+    view_duration: int | None = None
+    referrer: str | None = None
     created_at: datetime
 
     class Config:
@@ -72,8 +71,8 @@ class RecentViewer(BaseModel):
     first_name: str
     last_name: str
     email: str
-    company_id: Optional[int] = None
-    company_name: Optional[str] = None
+    company_id: int | None = None
+    company_name: str | None = None
     last_viewed: datetime
     view_count: int
 

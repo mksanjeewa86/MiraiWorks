@@ -1,7 +1,6 @@
 """Email service for exam notifications."""
 import logging
 from datetime import datetime
-from typing import Optional
 
 from app.models.exam import Exam
 from app.models.user import User
@@ -22,9 +21,9 @@ class ExamEmailService:
         candidate: User,
         exam: Exam,
         assignment_id: int,
-        due_date: Optional[datetime] = None,
-        assigned_by: Optional[User] = None,
-        exam_url: Optional[str] = None,
+        due_date: datetime | None = None,
+        assigned_by: User | None = None,
+        exam_url: str | None = None,
     ) -> bool:
         """
         Send exam assignment notification to candidate.
@@ -169,7 +168,7 @@ MiraiWorks Recruitment System
         candidate: User,
         exam: Exam,
         due_date: datetime,
-        exam_url: Optional[str] = None,
+        exam_url: str | None = None,
     ) -> bool:
         """Send exam reminder notification."""
         try:
@@ -250,9 +249,9 @@ MiraiWorks Recruitment System
         candidate: User,
         exam: Exam,
         session_id: int,
-        score: Optional[float] = None,
-        passed: Optional[bool] = None,
-        results_url: Optional[str] = None,
+        score: float | None = None,
+        passed: bool | None = None,
+        results_url: str | None = None,
     ) -> bool:
         """Send exam completion notification."""
         try:

@@ -314,7 +314,7 @@ async def verify_2fa(
             selectinload(User.company),
             selectinload(User.user_roles).selectinload(UserRoleModel.role),
         )
-        .where(User.id == verify_data.user_id, User.is_active == True)
+        .where(User.id == verify_data.user_id, User.is_active is True)
     )
 
     user = result.scalar_one_or_none()
@@ -373,7 +373,7 @@ async def resend_2fa_code(
 
     # Get user
     result = await db.execute(
-        select(User).where(User.id == resend_data.user_id, User.is_active == True)
+        select(User).where(User.id == resend_data.user_id, User.is_active is True)
     )
     user = result.scalar_one_or_none()
 
@@ -483,7 +483,7 @@ async def request_password_reset(
     result = await db.execute(
         select(User)
         .options(selectinload(User.company))
-        .where(User.email == reset_data.email, User.is_active == True)
+        .where(User.email == reset_data.email, User.is_active is True)
     )
 
     user = result.scalar_one_or_none()
@@ -515,8 +515,8 @@ async def request_password_reset(
             .join(UserRoleModel.role)
             .where(
                 User.company_id == user.company_id,
-                User.is_active == True,
-                User.is_admin == True,
+                User.is_active is True,
+                User.is_admin is True,
             )
         )
         company_admins = admin_result.scalars().all()
@@ -526,7 +526,7 @@ async def request_password_reset(
             select(User)
             .join(User.user_roles)
             .join(UserRoleModel.role)
-            .where(User.is_active == True, User.is_admin == True)
+            .where(User.is_active is True, User.is_admin is True)
         )
         company_admins = admin_result.scalars().all()
 

@@ -1,7 +1,6 @@
 """Schemas for MBTI personality test."""
 
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -62,17 +61,17 @@ class MBTITestResult(BaseModel):
     id: int
     user_id: int
     status: MBTITestStatus
-    mbti_type: Optional[str] = None
+    mbti_type: str | None = None
 
     # Dimension scores (0-100)
-    extraversion_introversion_score: Optional[int] = None
-    sensing_intuition_score: Optional[int] = None
-    thinking_feeling_score: Optional[int] = None
-    judging_perceiving_score: Optional[int] = None
+    extraversion_introversion_score: int | None = None
+    sensing_intuition_score: int | None = None
+    thinking_feeling_score: int | None = None
+    judging_perceiving_score: int | None = None
 
     # Timing
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
 
     # Audit
     created_at: datetime
@@ -110,9 +109,9 @@ class MBTITestProgress(BaseModel):
 
     status: MBTITestStatus
     completion_percentage: int
-    current_question: Optional[int] = None
+    current_question: int | None = None
     total_questions: int = 60
-    started_at: Optional[datetime] = None
+    started_at: datetime | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

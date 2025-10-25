@@ -177,12 +177,11 @@ async def create_user(
         )
 
     # NEW RESTRICTION 2: Only super admin can create company admins
-    if UserRoleEnum.ADMIN in user_data.roles:
-        if not is_super_admin(current_user):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Only super admin can create company admin users.",
-            )
+    if UserRoleEnum.ADMIN in user_data.roles and not is_super_admin(current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only super admin can create company admin users.",
+        )
 
     # NEW RESTRICTION 3: Prevent candidates in super admin's company
     # Get super admin's company

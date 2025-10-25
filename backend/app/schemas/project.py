@@ -1,7 +1,6 @@
 """Project schemas for API validation and serialization."""
 
 from datetime import date
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -11,14 +10,14 @@ class ProjectBase(BaseModel):
     """Base project schema with common fields."""
 
     project_name: str = Field(..., min_length=1, max_length=255)
-    description: Optional[str] = None
-    role: Optional[str] = Field(None, max_length=100)
-    technologies: Optional[str] = None  # Comma-separated list
-    project_url: Optional[str] = Field(None, max_length=500)
-    github_url: Optional[str] = Field(None, max_length=500)
-    image_urls: Optional[str] = None  # Comma-separated list of image URLs
-    start_date: Optional[date] = None
-    end_date: Optional[date] = None  # NULL if ongoing
+    description: str | None = None
+    role: str | None = Field(None, max_length=100)
+    technologies: str | None = None  # Comma-separated list
+    project_url: str | None = Field(None, max_length=500)
+    github_url: str | None = Field(None, max_length=500)
+    image_urls: str | None = None  # Comma-separated list of image URLs
+    start_date: date | None = None
+    end_date: date | None = None  # NULL if ongoing
     display_order: int = 0
 
 
@@ -33,16 +32,16 @@ class ProjectCreate(ProjectBase):
 class ProjectUpdate(BaseModel):
     """Schema for updating an existing project entry."""
 
-    project_name: Optional[str] = Field(None, min_length=1, max_length=255)
-    description: Optional[str] = None
-    role: Optional[str] = Field(None, max_length=100)
-    technologies: Optional[str] = None
-    project_url: Optional[str] = Field(None, max_length=500)
-    github_url: Optional[str] = Field(None, max_length=500)
-    image_urls: Optional[str] = None
-    start_date: Optional[date] = None
-    end_date: Optional[date] = None
-    display_order: Optional[int] = None
+    project_name: str | None = Field(None, min_length=1, max_length=255)
+    description: str | None = None
+    role: str | None = Field(None, max_length=100)
+    technologies: str | None = None
+    project_url: str | None = Field(None, max_length=500)
+    github_url: str | None = Field(None, max_length=500)
+    image_urls: str | None = None
+    start_date: date | None = None
+    end_date: date | None = None
+    display_order: int | None = None
 
 
 # Response schema (what API returns)

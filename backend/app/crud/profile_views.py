@@ -1,7 +1,7 @@
 """CRUD operations for profile views."""
 
 from datetime import timedelta
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy import and_, desc, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,12 +22,12 @@ class CRUDProfileView:
         db: AsyncSession,
         *,
         profile_user_id: int,
-        viewer_user_id: Optional[int] = None,
-        viewer_company_id: Optional[int] = None,
-        viewer_ip: Optional[str] = None,
-        viewer_user_agent: Optional[str] = None,
-        view_duration: Optional[int] = None,
-        referrer: Optional[str] = None,
+        viewer_user_id: int | None = None,
+        viewer_company_id: int | None = None,
+        viewer_ip: str | None = None,
+        viewer_user_agent: str | None = None,
+        view_duration: int | None = None,
+        referrer: str | None = None,
     ) -> ProfileView:
         """
         Record a new profile view.
@@ -109,7 +109,7 @@ class CRUDProfileView:
         db: AsyncSession,
         *,
         profile_user_id: int,
-        days: Optional[int] = None,
+        days: int | None = None,
     ) -> dict[str, Any]:
         """
         Get aggregated statistics for profile views.
@@ -202,7 +202,7 @@ class CRUDProfileView:
         *,
         profile_user_id: int,
         limit: int = 10,
-        days: Optional[int] = 30,
+        days: int | None = 30,
     ) -> list[dict[str, Any]]:
         """
         Get list of recent profile viewers with details.
@@ -278,7 +278,7 @@ class CRUDProfileView:
         db: AsyncSession,
         *,
         profile_user_id: int,
-        days: Optional[int] = None,
+        days: int | None = None,
     ) -> int:
         """
         Get total view count for a profile.

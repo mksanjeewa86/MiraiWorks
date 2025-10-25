@@ -1,7 +1,6 @@
 """Schemas for todo extension requests."""
 
 from datetime import UTC, datetime
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
@@ -52,10 +51,10 @@ class TodoExtensionRequestResponse(BaseModel):
     status: ExtensionRequestStatus = Field(
         ..., description="Response status (approved or rejected)"
     )
-    response_reason: Optional[str] = Field(
+    response_reason: str | None = Field(
         None, max_length=1000, description="Optional reason for the response"
     )
-    new_due_date: Optional[datetime] = Field(
+    new_due_date: datetime | None = Field(
         None, description="Optional new due date (for approval with date change)"
     )
 
@@ -100,22 +99,22 @@ class TodoExtensionRequestRead(BaseModel):
     requested_due_date: datetime
     reason: str
     status: ExtensionRequestStatus
-    response_reason: Optional[str] = None
-    responded_at: Optional[datetime] = None
-    responded_by_id: Optional[int] = None
+    response_reason: str | None = None
+    responded_at: datetime | None = None
+    responded_by_id: int | None = None
     created_at: datetime
     updated_at: datetime
 
     # Related objects
     requested_by: UserInfo
     creator: UserInfo
-    responded_by: Optional[UserInfo] = None
+    responded_by: UserInfo | None = None
     todo: TodoRead
 
     model_config = ConfigDict(from_attributes=True)
 
     @field_serializer("requested_due_date", "responded_at", "created_at", "updated_at")
-    def serialize_datetime(self, dt: Optional[datetime], _info) -> Optional[str]:
+    def serialize_datetime(self, dt: datetime | None, _info) -> str | None:
         """Ensure datetime fields are serialized with UTC timezone information."""
         if dt is None:
             return None
@@ -140,9 +139,9 @@ class TodoExtensionValidation(BaseModel):
     """Schema for validating extension request constraints."""
 
     can_request_extension: bool
-    max_allowed_due_date: Optional[datetime] = None
+    max_allowed_due_date: datetime | None = None
     days_extension_allowed: int = 3
-    reason: Optional[str] = None  # Reason why extension cannot be requested
+    reason: str | None = None  # Reason why extension cannot be requested
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -158,12 +157,12 @@ class TodoExtensionNotification(BaseModel):
     requested_due_date: datetime
     reason: str
     status: ExtensionRequestStatus
-    response_reason: Optional[str] = None
+    response_reason: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
     @field_serializer("requested_due_date")
-    def serialize_datetime(self, dt: Optional[datetime], _info) -> Optional[str]:
+    def serialize_datetime(self, dt: datetime | None, _info) -> str | None:
         """Ensure datetime fields are serialized with UTC timezone information."""
         if dt is None:
             return None

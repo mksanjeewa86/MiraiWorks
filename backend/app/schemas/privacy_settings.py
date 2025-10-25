@@ -2,7 +2,6 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -18,24 +17,24 @@ class ProfileVisibility(str, Enum):
 class PrivacySettingsBase(BaseModel):
     """Base privacy settings schema with default values"""
 
-    profile_visibility: Optional[str] = Field(
+    profile_visibility: str | None = Field(
         default="public", description="Profile visibility level"
     )
-    searchable: Optional[bool] = Field(
+    searchable: bool | None = Field(
         default=True, description="Allow profile to appear in searches"
     )
-    show_email: Optional[bool] = Field(default=False, description="Show email address")
-    show_phone: Optional[bool] = Field(default=False, description="Show phone number")
-    show_work_experience: Optional[bool] = Field(
+    show_email: bool | None = Field(default=False, description="Show email address")
+    show_phone: bool | None = Field(default=False, description="Show phone number")
+    show_work_experience: bool | None = Field(
         default=True, description="Show work experience"
     )
-    show_education: Optional[bool] = Field(default=True, description="Show education")
-    show_skills: Optional[bool] = Field(default=True, description="Show skills")
-    show_certifications: Optional[bool] = Field(
+    show_education: bool | None = Field(default=True, description="Show education")
+    show_skills: bool | None = Field(default=True, description="Show skills")
+    show_certifications: bool | None = Field(
         default=True, description="Show certifications"
     )
-    show_projects: Optional[bool] = Field(default=True, description="Show projects")
-    show_resume: Optional[bool] = Field(
+    show_projects: bool | None = Field(default=True, description="Show projects")
+    show_resume: bool | None = Field(
         default=True, description="Allow resume download"
     )
 
@@ -50,16 +49,16 @@ class PrivacySettingsUpdate(BaseModel):
     Example: {"show_work_experience": false} updates only that field.
     """
 
-    profile_visibility: Optional[str] = None
-    searchable: Optional[bool] = None
-    show_email: Optional[bool] = None
-    show_phone: Optional[bool] = None
-    show_work_experience: Optional[bool] = None
-    show_education: Optional[bool] = None
-    show_skills: Optional[bool] = None
-    show_certifications: Optional[bool] = None
-    show_projects: Optional[bool] = None
-    show_resume: Optional[bool] = None
+    profile_visibility: str | None = None
+    searchable: bool | None = None
+    show_email: bool | None = None
+    show_phone: bool | None = None
+    show_work_experience: bool | None = None
+    show_education: bool | None = None
+    show_skills: bool | None = None
+    show_certifications: bool | None = None
+    show_projects: bool | None = None
+    show_resume: bool | None = None
 
 
 class PrivacySettingsInfo(PrivacySettingsBase):

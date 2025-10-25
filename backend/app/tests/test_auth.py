@@ -123,7 +123,7 @@ async def test_login_with_remember_me_creates_30_day_token(
     )
 
     assert response.status_code == 200
-    refresh_token_value = response.json()["refresh_token"]
+    response.json()["refresh_token"]
 
     # Fetch the refresh token from database
     result = await db_session.execute(

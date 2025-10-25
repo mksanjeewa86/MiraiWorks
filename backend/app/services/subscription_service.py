@@ -1,4 +1,3 @@
-from typing import Optional
 
 from fastapi import HTTPException
 from sqlalchemy import select
@@ -20,7 +19,7 @@ class SubscriptionService:
 
     async def check_feature_access(
         self, db: AsyncSession, *, company_id: int, feature_name: str
-    ) -> tuple[bool, Optional[str]]:
+    ) -> tuple[bool, str | None]:
         """
         Check if a company has access to a specific feature.
 
@@ -47,7 +46,7 @@ class SubscriptionService:
 
     async def check_permission(
         self, db: AsyncSession, *, company_id: int, permission_key: str
-    ) -> tuple[bool, Optional[str]]:
+    ) -> tuple[bool, str | None]:
         """
         Check if a company has a specific permission (hierarchical).
 
@@ -86,7 +85,7 @@ class SubscriptionService:
         company_id: int,
         requested_plan_id: int,
         requested_by: int,
-        request_message: Optional[str] = None,
+        request_message: str | None = None,
     ):
         """
         Create a plan change request (upgrade or downgrade).
@@ -145,7 +144,7 @@ class SubscriptionService:
             # Get all system admin emails
             result = await db.execute(
                 select(User).where(
-                    User.role == UserRole.SYSTEM_ADMIN, User.is_active == True
+                    User.role == UserRole.SYSTEM_ADMIN, User.is_active is True
                 )
             )
             system_admins = result.scalars().all()
@@ -169,7 +168,7 @@ class SubscriptionService:
         request_id: int,
         reviewer: User,
         status: PlanChangeRequestStatus,
-        review_message: Optional[str] = None,
+        review_message: str | None = None,
     ):
         """
         Review a plan change request (approve or reject).

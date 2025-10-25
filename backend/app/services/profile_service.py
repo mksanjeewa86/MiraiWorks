@@ -98,7 +98,7 @@ class ProfileCompletenessCalculator:
             "missing_sections": missing_sections,
             "completed_sections": [
                 section
-                for section in ProfileCompletenessCalculator.WEIGHTS.keys()
+                for section in ProfileCompletenessCalculator.WEIGHTS
                 if section not in missing_sections
             ],
         }

@@ -1,7 +1,6 @@
 """Recruiter profile schemas"""
 
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -9,35 +8,35 @@ from pydantic import BaseModel, Field
 class RecruiterProfileBase(BaseModel):
     """Base schema for recruiter profile"""
 
-    years_of_experience: Optional[int] = Field(None, ge=0, le=50)
-    specializations: Optional[str] = Field(
+    years_of_experience: int | None = Field(None, ge=0, le=50)
+    specializations: str | None = Field(
         None, max_length=500, description="Comma-separated specializations"
     )
-    bio: Optional[str] = Field(None, max_length=1000)
-    company_description: Optional[str] = Field(None, max_length=1000)
+    bio: str | None = Field(None, max_length=1000)
+    company_description: str | None = Field(None, max_length=1000)
 
     # Recruitment focus
-    industries: Optional[str] = Field(
+    industries: str | None = Field(
         None, max_length=500, description="Comma-separated industries"
     )
-    job_types: Optional[str] = Field(
+    job_types: str | None = Field(
         None, max_length=200, description="Comma-separated job types"
     )
-    locations: Optional[str] = Field(
+    locations: str | None = Field(
         None, max_length=500, description="Comma-separated locations"
     )
-    experience_levels: Optional[str] = Field(
+    experience_levels: str | None = Field(
         None, max_length=200, description="Comma-separated experience levels"
     )
 
     # Contact preferences
-    calendar_link: Optional[str] = Field(None, max_length=500)
-    linkedin_url: Optional[str] = Field(None, max_length=500)
+    calendar_link: str | None = Field(None, max_length=500)
+    linkedin_url: str | None = Field(None, max_length=500)
 
     # Activity stats
-    jobs_posted: Optional[int] = Field(0, ge=0)
-    candidates_placed: Optional[int] = Field(0, ge=0)
-    active_openings: Optional[int] = Field(0, ge=0)
+    jobs_posted: int | None = Field(0, ge=0)
+    candidates_placed: int | None = Field(0, ge=0)
+    active_openings: int | None = Field(0, ge=0)
 
     display_order: int = Field(0, ge=0)
 
@@ -51,24 +50,24 @@ class RecruiterProfileCreate(RecruiterProfileBase):
 class RecruiterProfileUpdate(BaseModel):
     """Schema for updating recruiter profile"""
 
-    years_of_experience: Optional[int] = Field(None, ge=0, le=50)
-    specializations: Optional[str] = Field(None, max_length=500)
-    bio: Optional[str] = Field(None, max_length=1000)
-    company_description: Optional[str] = Field(None, max_length=1000)
+    years_of_experience: int | None = Field(None, ge=0, le=50)
+    specializations: str | None = Field(None, max_length=500)
+    bio: str | None = Field(None, max_length=1000)
+    company_description: str | None = Field(None, max_length=1000)
 
-    industries: Optional[str] = Field(None, max_length=500)
-    job_types: Optional[str] = Field(None, max_length=200)
-    locations: Optional[str] = Field(None, max_length=500)
-    experience_levels: Optional[str] = Field(None, max_length=200)
+    industries: str | None = Field(None, max_length=500)
+    job_types: str | None = Field(None, max_length=200)
+    locations: str | None = Field(None, max_length=500)
+    experience_levels: str | None = Field(None, max_length=200)
 
-    calendar_link: Optional[str] = Field(None, max_length=500)
-    linkedin_url: Optional[str] = Field(None, max_length=500)
+    calendar_link: str | None = Field(None, max_length=500)
+    linkedin_url: str | None = Field(None, max_length=500)
 
-    jobs_posted: Optional[int] = Field(None, ge=0)
-    candidates_placed: Optional[int] = Field(None, ge=0)
-    active_openings: Optional[int] = Field(None, ge=0)
+    jobs_posted: int | None = Field(None, ge=0)
+    candidates_placed: int | None = Field(None, ge=0)
+    active_openings: int | None = Field(None, ge=0)
 
-    display_order: Optional[int] = Field(None, ge=0)
+    display_order: int | None = Field(None, ge=0)
 
 
 class RecruiterProfileInfo(RecruiterProfileBase):
@@ -92,12 +91,12 @@ class EmployerProfileInfo(BaseModel):
     user_id: int
     full_name: str
     email: str
-    phone: Optional[str] = None
-    job_title: Optional[str] = None
-    bio: Optional[str] = None
-    company_name: Optional[str] = None
-    company_logo_url: Optional[str] = None
-    linkedin_url: Optional[str] = None
+    phone: str | None = None
+    job_title: str | None = None
+    bio: str | None = None
+    company_name: str | None = None
+    company_logo_url: str | None = None
+    linkedin_url: str | None = None
 
     class Config:
         from_attributes = True

@@ -1,6 +1,5 @@
 """CRUD operations for recruiter profiles"""
 
-from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,7 +16,7 @@ class CRUDRecruiterProfile(
 
     async def get_by_user(
         self, db: AsyncSession, *, user_id: int
-    ) -> Optional[RecruiterProfile]:
+    ) -> RecruiterProfile | None:
         """Get recruiter profile by user ID"""
         result = await db.execute(
             select(RecruiterProfile).where(RecruiterProfile.user_id == user_id)
@@ -36,7 +35,7 @@ class CRUDRecruiterProfile(
 
     async def update_by_user(
         self, db: AsyncSession, *, user_id: int, obj_in: RecruiterProfileUpdate
-    ) -> Optional[RecruiterProfile]:
+    ) -> RecruiterProfile | None:
         """Update recruiter profile for a specific user"""
         db_obj = await self.get_by_user(db, user_id=user_id)
         if not db_obj:

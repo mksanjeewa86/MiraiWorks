@@ -61,7 +61,7 @@ async def get_companies(
 
     # Handle logical deletion
     if not include_deleted:
-        conditions.append(Company.is_deleted == False)
+        conditions.append(Company.is_deleted is False)
 
     if search:
         search_term = f"%{search}%"

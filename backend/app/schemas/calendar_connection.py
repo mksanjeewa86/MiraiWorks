@@ -1,6 +1,5 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr
 
@@ -21,7 +20,7 @@ class CalendarConnectionStatus(str, Enum):
 class CalendarConnectionBase(BaseModel):
     provider: str
     provider_email: EmailStr
-    display_name: Optional[str] = None
+    display_name: str | None = None
     is_enabled: bool = True
     sync_events: bool = True
     sync_reminders: bool = True
@@ -30,21 +29,21 @@ class CalendarConnectionBase(BaseModel):
 
 class CalendarConnectionCreate(CalendarConnectionBase):
     access_token: str
-    refresh_token: Optional[str] = None
-    token_expires_at: Optional[datetime] = None
+    refresh_token: str | None = None
+    token_expires_at: datetime | None = None
     provider_account_id: str
     calendar_ids: list[str] | None = None
-    default_calendar_id: Optional[str] = None
+    default_calendar_id: str | None = None
 
 
 class CalendarConnectionUpdate(BaseModel):
-    display_name: Optional[str] = None
-    is_enabled: Optional[bool] = None
-    sync_events: Optional[bool] = None
-    sync_reminders: Optional[bool] = None
-    auto_create_meetings: Optional[bool] = None
+    display_name: str | None = None
+    is_enabled: bool | None = None
+    sync_events: bool | None = None
+    sync_reminders: bool | None = None
+    auto_create_meetings: bool | None = None
     calendar_ids: list[str] | None = None
-    default_calendar_id: Optional[str] = None
+    default_calendar_id: str | None = None
 
 
 class CalendarConnection(CalendarConnectionBase):
@@ -52,8 +51,8 @@ class CalendarConnection(CalendarConnectionBase):
     user_id: int
     provider_account_id: str
     status: str
-    last_sync_at: Optional[datetime] = None
-    sync_error: Optional[str] = None
+    last_sync_at: datetime | None = None
+    sync_error: str | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -66,14 +65,14 @@ class CalendarConnectionPublic(BaseModel):
     id: int
     provider: str
     provider_email: EmailStr
-    display_name: Optional[str]
+    display_name: str | None
     is_enabled: bool
     sync_events: bool
     sync_reminders: bool
     auto_create_meetings: bool
     status: str
-    last_sync_at: Optional[datetime]
-    sync_error: Optional[str]
+    last_sync_at: datetime | None
+    sync_error: str | None
     created_at: datetime
     updated_at: datetime
 
@@ -84,14 +83,14 @@ class GoogleCalendarAuth(BaseModel):
     """Google Calendar OAuth response"""
 
     code: str
-    state: Optional[str] = None
+    state: str | None = None
 
 
 class OutlookCalendarAuth(BaseModel):
     """Outlook Calendar OAuth response"""
 
     code: str
-    state: Optional[str] = None
+    state: str | None = None
 
 
 class CalendarConnectionResponse(BaseModel):

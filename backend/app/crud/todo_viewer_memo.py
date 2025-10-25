@@ -1,4 +1,3 @@
-from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,7 +12,7 @@ class CRUDTodoViewerMemo(
 ):
     async def get_by_todo_and_user(
         self, db: AsyncSession, *, todo_id: int, user_id: int
-    ) -> Optional[TodoViewerMemo]:
+    ) -> TodoViewerMemo | None:
         """Get viewer memo for specific todo and user."""
         result = await db.execute(
             select(TodoViewerMemo).where(
@@ -23,7 +22,7 @@ class CRUDTodoViewerMemo(
         return result.scalar_one_or_none()
 
     async def create_or_update(
-        self, db: AsyncSession, *, todo_id: int, user_id: int, memo: Optional[str]
+        self, db: AsyncSession, *, todo_id: int, user_id: int, memo: str | None
     ) -> TodoViewerMemo:
         """Create or update viewer memo."""
         existing = await self.get_by_todo_and_user(db, todo_id=todo_id, user_id=user_id)

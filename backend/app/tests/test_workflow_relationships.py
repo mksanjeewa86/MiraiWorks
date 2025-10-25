@@ -530,7 +530,7 @@ async def test_query_workflows_with_interview_count(
     # Query interviews linked to workflow
     result = await db_session.execute(
         select(Interview).where(
-            Interview.workflow_id == workflow.id, Interview.is_deleted == False
+            Interview.workflow_id == workflow.id, Interview.is_deleted is False
         )
     )
     interviews = result.scalars().all()
@@ -572,7 +572,7 @@ async def test_query_workflows_with_todo_count(
 
     # Query todos linked to workflow
     result = await db_session.execute(
-        select(Todo).where(Todo.workflow_id == workflow.id, Todo.is_deleted == False)
+        select(Todo).where(Todo.workflow_id == workflow.id, Todo.is_deleted is False)
     )
     todos = result.scalars().all()
 

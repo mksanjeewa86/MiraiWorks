@@ -112,7 +112,6 @@ async def test_global_exam_workflow():
 
         for user in users:
             roles = [role.role.name for role in user.user_roles]
-            is_system_admin = "system_admin" in roles
 
             print(f"\n  Checking visibility for: {user.email}")
             print(f"  Role: {', '.join(roles)}, Company: {user.company_id or 'NULL'}")

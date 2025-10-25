@@ -137,11 +137,10 @@ async def update_exam_template(
         role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.user_roles
     )
 
-    if not is_system_admin:
-        if template.company_id != current_user.company_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
-            )
+    if not is_system_admin and template.company_id != current_user.company_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
+        )
 
     # Update template
     updated_template = await exam_template_crud.update(
@@ -172,11 +171,10 @@ async def delete_exam_template(
         role.role.name == UserRole.SYSTEM_ADMIN for role in current_user.user_roles
     )
 
-    if not is_system_admin:
-        if template.company_id != current_user.company_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
-            )
+    if not is_system_admin and template.company_id != current_user.company_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
+        )
 
     # Delete template
     await exam_template_crud.remove(db=db, id=template_id)

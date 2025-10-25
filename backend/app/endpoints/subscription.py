@@ -1,4 +1,3 @@
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -307,7 +306,7 @@ async def get_my_plan_change_requests(
     response_model=list[PlanChangeRequestWithDetails],
 )
 async def get_all_plan_change_requests(
-    status: Optional[str] = None,
+    status: str | None = None,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):

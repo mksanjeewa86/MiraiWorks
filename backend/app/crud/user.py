@@ -57,7 +57,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             pass
         else:
             # When include_deleted is False (default), show only non-deleted users
-            query_conditions.append(User.is_deleted == False)
+            query_conditions.append(User.is_deleted is False)
 
         # Apply filters
         if company_id is not None:

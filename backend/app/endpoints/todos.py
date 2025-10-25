@@ -332,7 +332,7 @@ async def update_viewer_memo(
 ):
     """Update viewer memo for the current user on a specific todo."""
     # Verify user can view this todo
-    todo_obj = await _get_todo_or_404(
+    await _get_todo_or_404(
         db, todo_id=todo_id, current_user=current_user, allow_deleted=False
     )
 
