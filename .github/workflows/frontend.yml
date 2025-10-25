@@ -139,33 +139,62 @@ jobs:
 
     - name: Quality Gate
       if: always()
+      working-directory: ./frontend
       run: |
         echo "=== Quality Gate Check ==="
         FAILED=0
 
         if [ "${{ steps.typecheck.outcome }}" != "success" ]; then
           echo "❌ TypeScript type checking failed"
+          echo ""
+          echo "Type errors (first 30 lines):"
+          if [ -f typecheck-report.txt ]; then
+            echo "📄 Found typecheck-report.txt ($(wc -l < typecheck-report.txt) lines)"
+            head -30 typecheck-report.txt
+          else
+            echo "⚠️  typecheck-report.txt not found!"
+          fi
+          echo ""
           FAILED=1
         fi
 
         if [ "${{ steps.lint.outcome }}" != "success" ]; then
           echo "❌ ESLint failed"
+          echo ""
+          echo "Linting errors (first 30 lines):"
+          if [ -f lint-report.txt ]; then
+            echo "📄 Found lint-report.txt ($(wc -l < lint-report.txt) lines)"
+            head -30 lint-report.txt
+          else
+            echo "⚠️  lint-report.txt not found!"
+          fi
+          echo ""
           FAILED=1
         fi
 
         if [ "${{ steps.build.outcome }}" != "success" ]; then
           echo "❌ Build failed"
+          echo ""
+          echo "Build errors (last 30 lines):"
+          if [ -f build-report.txt ]; then
+            echo "📄 Found build-report.txt ($(wc -l < build-report.txt) lines)"
+            tail -30 build-report.txt
+          else
+            echo "⚠️  build-report.txt not found!"
+          fi
+          echo ""
           FAILED=1
         fi
 
         if [ $FAILED -eq 1 ]; then
-          echo ""
           echo "❌ Frontend quality checks failed"
           echo ""
           echo "To fix:"
           echo "  - Types: cd frontend && npm run typecheck"
           echo "  - Linting: cd frontend && npm run lint:fix"
           echo "  - Build: cd frontend && npm run build"
+          echo ""
+          echo "📥 Full error reports available in workflow artifacts"
           exit 1
         else
           echo "✅ All frontend checks passed"

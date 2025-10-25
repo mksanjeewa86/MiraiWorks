@@ -141,12 +141,23 @@ jobs:
 
     - name: Quality Gate
       if: always()
+      working-directory: ./backend
       run: |
         echo "=== Quality Gate Check ==="
 
         if [ "${{ steps.pytest.outcome }}" != "success" ]; then
           echo "❌ Tests failed or coverage below 40%"
+          echo ""
+          echo "Test output (last 50 lines):"
+          if [ -f pytest-output.txt ]; then
+            echo "📄 Found pytest-output.txt ($(wc -l < pytest-output.txt) lines)"
+            tail -50 pytest-output.txt
+          else
+            echo "⚠️  pytest-output.txt not found!"
+          fi
+          echo ""
           echo "To run tests locally: cd backend && pytest app/tests/"
+          echo "📥 Full test reports available in workflow artifacts"
           exit 1
         else
           echo "✅ All tests passed with sufficient coverage"
