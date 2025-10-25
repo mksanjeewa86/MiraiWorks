@@ -76,8 +76,8 @@ class HolidayQueryParams(BaseModel):
     country: str | None = Field(None)
     month: int | None = Field(None, ge=1, le=12)
     is_national: bool | None = Field(None)
-    date_from: date | None = Field(None)
-    date_to: date | None = Field(None)
+    date_from: date_type | None = Field(None)
+    date_to: date_type | None = Field(None)
 
     @field_validator("date_to")
     @classmethod
