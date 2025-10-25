@@ -511,7 +511,7 @@ class TestFiles:
 
         # Verify the file size limit is reasonable
         assert 10 * 1024 * 1024 == MAX_FILE_SIZE  # 10MB
-        assert MAX_FILE_SIZE > 0
+        assert 0 < MAX_FILE_SIZE
 
     @pytest.mark.asyncio
     async def test_allowed_extensions_coverage(self):

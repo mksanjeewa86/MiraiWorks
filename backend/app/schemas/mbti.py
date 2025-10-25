@@ -249,6 +249,6 @@ def get_mbti_type_info(mbti_type: str) -> MBTITypeInfo:
     """Get detailed information about an MBTI type."""
     try:
         type_enum = MBTIType(mbti_type)
-        return MBTI_TYPE_INFO.get(type_enum, None)
+        return MBTI_TYPE_INFO.get(type_enum)
     except ValueError:
         return None

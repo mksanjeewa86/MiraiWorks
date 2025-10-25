@@ -99,7 +99,7 @@ class AntivirusService:
             finally:
                 sock.close()
 
-        except socket.timeout:
+        except TimeoutError:
             return VirusStatus.ERROR, "Scan timeout"
         except ConnectionRefusedError:
             logger.error("Cannot connect to ClamAV daemon")
