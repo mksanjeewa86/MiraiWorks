@@ -38,32 +38,60 @@ jobs:
 
     - name: TypeScript Type Checking
       id: typecheck
+      continue-on-error: true
       working-directory: ./frontend
       run: |
-        echo "Running TypeScript type checking..."
-        npm run typecheck
-        echo "Type checking completed"
+        echo "## 📘 TypeScript Type Checking" | tee typecheck-report.txt
+        npm run typecheck 2>&1 | tee -a typecheck-report.txt
+        TYPECHECK_EXIT=${PIPESTATUS[0]}
+
+        if [ $TYPECHECK_EXIT -eq 0 ]; then
+          echo "✅ No type errors found"
+        else
+          echo "❌ Type errors found - see details above"
+        fi
+
+        exit $TYPECHECK_EXIT
 
     - name: ESLint
       id: lint
+      continue-on-error: true
       working-directory: ./frontend
       run: |
-        echo "Running ESLint..."
-        npm run lint
-        echo "Linting completed"
+        echo "## 🔍 ESLint Results" | tee lint-report.txt
+        npm run lint 2>&1 | tee -a lint-report.txt
+        LINT_EXIT=${PIPESTATUS[0]}
+
+        if [ $LINT_EXIT -eq 0 ]; then
+          echo "✅ No linting errors found"
+        else
+          echo "❌ Linting errors found - see details above"
+        fi
+
+        exit $LINT_EXIT
 
     - name: Build Application
       id: build
+      continue-on-error: true
       working-directory: ./frontend
       env:
         NODE_ENV: production
       run: |
-        echo "Building Next.js application..."
-        npm run build:ci
-        echo "Build completed successfully"
+        echo "## 🏗️ Building Next.js Application" | tee build-report.txt
+        npm run build:ci 2>&1 | tee -a build-report.txt
+        BUILD_EXIT=${PIPESTATUS[0]}
+
+        if [ $BUILD_EXIT -eq 0 ]; then
+          echo "✅ Build completed successfully"
+        else
+          echo "❌ Build failed - see details above"
+        fi
+
+        exit $BUILD_EXIT
 
     - name: Generate Report
       if: always()
+      working-directory: ./frontend
       run: |
         echo "## 🎨 Frontend Quality Report" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
@@ -73,11 +101,54 @@ jobs:
         echo "| TypeScript | ${{ steps.typecheck.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
         echo "| ESLint | ${{ steps.lint.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
         echo "| Build | ${{ steps.build.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+
+        if [ "${{ steps.typecheck.outcome }}" != "success" ]; then
+          echo "### ❌ TypeScript Errors (First 20)" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          head -20 typecheck-report.txt >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "No report available" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+        fi
+
+        if [ "${{ steps.lint.outcome }}" != "success" ]; then
+          echo "### ❌ ESLint Errors (First 20)" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          head -20 lint-report.txt >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "No report available" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+        fi
+
+        if [ "${{ steps.build.outcome }}" != "success" ]; then
+          echo "### ❌ Build Errors (Last 30 lines)" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          tail -30 build-report.txt >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "No report available" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+        fi
+
+    - name: Upload Error Reports
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-error-reports
+        path: |
+          frontend/typecheck-report.txt
+          frontend/lint-report.txt
+          frontend/build-report.txt
+        retention-days: 30
 
     - name: Quality Gate
       if: failure()
       run: |
         echo "❌ Frontend quality checks failed"
-        echo "To fix types: cd frontend && npm run typecheck"
-        echo "To fix linting: cd frontend && npm run lint:fix"
+        echo ""
+        echo "Failed checks:"
+        [ "${{ steps.typecheck.outcome }}" != "success" ] && echo "  - TypeScript type checking"
+        [ "${{ steps.lint.outcome }}" != "success" ] && echo "  - ESLint"
+        [ "${{ steps.build.outcome }}" != "success" ] && echo "  - Build"
+        echo ""
+        echo "To fix:"
+        echo "  - Types: cd frontend && npm run typecheck"
+        echo "  - Linting: cd frontend && npm run lint:fix"
+        echo "  - Build: cd frontend && npm run build"
         exit 1

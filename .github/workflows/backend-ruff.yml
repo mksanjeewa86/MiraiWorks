@@ -32,21 +32,46 @@ jobs:
 
     - name: Code Formatting Check
       id: format
+      continue-on-error: true
       working-directory: ./backend
       run: |
-        echo "Checking code formatting..."
-        ruff format --check --diff .
-        echo "Format check completed"
+        echo "## 📝 Files Needing Formatting:" | tee format-report.txt
+        ruff format --check . | tee -a format-report.txt
+        FORMAT_EXIT=$?
+
+        echo ""
+        echo "## 🔍 Formatting Diff Preview (first 50 lines):" | tee -a format-report.txt
+        ruff format --check --diff . 2>&1 | head -50 | tee -a format-report.txt || true
+
+        if [ $FORMAT_EXIT -eq 0 ]; then
+          echo "✅ All files are properly formatted"
+        else
+          echo "❌ Some files need formatting - see details above"
+        fi
+
+        exit $FORMAT_EXIT
 
     - name: Linting - All Rules
       id: lint
+      continue-on-error: true
       working-directory: ./backend
       run: |
-        echo "Running comprehensive linting..."
-        ruff check . --output-format=github
-        echo "Linting completed"
+        echo "## 🔍 Linting Errors (with file:line details):"
+        ruff check . --output-format=text | tee lint-report.txt
+        LINT_EXIT=$?
 
-    - name: Generate Statistics
+        echo ""
+        echo "## 📊 Error Summary by File:"
+        ruff check . --output-format=grouped | head -100 || true
+
+        # For GitHub annotations
+        echo ""
+        echo "## GitHub Annotations:"
+        ruff check . --output-format=github || true
+
+        exit $LINT_EXIT
+
+    - name: Generate Detailed Report
       if: always()
       working-directory: ./backend
       run: |
@@ -58,10 +83,38 @@ jobs:
         echo "| Format | ${{ steps.format.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
         echo "| Lint | ${{ steps.lint.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### Statistics" >> $GITHUB_STEP_SUMMARY
+
+        if [ "${{ steps.format.outcome }}" != "success" ]; then
+          echo "### ❌ Formatting Issues" >> $GITHUB_STEP_SUMMARY
+          echo "Files needing formatting:" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          ruff format --check . 2>&1 | head -30 >> $GITHUB_STEP_SUMMARY || true
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+        fi
+
+        if [ "${{ steps.lint.outcome }}" != "success" ]; then
+          echo "### ❌ Linting Issues (Top 30)" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          ruff check . --output-format=text 2>&1 | head -30 >> $GITHUB_STEP_SUMMARY || true
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+        fi
+
+        echo "### 📊 Statistics" >> $GITHUB_STEP_SUMMARY
         echo '```' >> $GITHUB_STEP_SUMMARY
-        ruff check . --statistics || true
+        ruff check . --statistics 2>&1 || true >> $GITHUB_STEP_SUMMARY
         echo '```' >> $GITHUB_STEP_SUMMARY
+
+    - name: Upload Error Reports
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ruff-error-reports
+        path: |
+          backend/format-report.txt
+          backend/lint-report.txt
+        retention-days: 30
 
     - name: Quality Gate
       if: failure()

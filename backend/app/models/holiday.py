@@ -1,7 +1,7 @@
 from sqlalchemy import Boolean, Column, Date, Integer, String
 
 from app.models.base import BaseModel
-
+from sqlalchemy.orm import relationship
 
 class Holiday(BaseModel):
     __tablename__ = "holidays"
