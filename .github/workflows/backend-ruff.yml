@@ -142,7 +142,12 @@ jobs:
           echo ""
           echo "Linting errors (first 30):"
           if [ -f lint-report.txt ]; then
+            echo "📄 Found lint-report.txt ($(wc -l < lint-report.txt) lines)"
             head -30 lint-report.txt
+          else
+            echo "⚠️  lint-report.txt not found!"
+            echo "Checking for any .txt files:"
+            ls -la *.txt 2>/dev/null || echo "No .txt files found"
           fi
           echo ""
           FAILED=1
