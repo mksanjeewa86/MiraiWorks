@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import Cropper from 'react-easy-crop';
 import { X, Crop } from 'lucide-react';
-import { Button } from './Button';
+import { Button } from './button';
 import { useToast } from '@/hooks/useToast';
 
 interface ImageCropModalProps {

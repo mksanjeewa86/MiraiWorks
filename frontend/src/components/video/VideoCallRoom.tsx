@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card } from '../ui/card';
-import { Button } from '../ui/Button';
+import { Button } from '../ui/button';
 import { VideoControls } from './VideoControls';
 import { ParticipantVideo } from './ParticipantVideo';
 import { TranscriptionPanel } from './TranscriptionPanel';
