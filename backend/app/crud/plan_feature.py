@@ -1,3 +1,5 @@
+from typing import Any
+
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -10,7 +12,7 @@ from app.models.plan_feature import PlanFeature
 from app.schemas.subscription import FeatureWithChildren
 
 
-class CRUDPlanFeature(CRUDBase[PlanFeature, dict, dict]):
+class CRUDPlanFeature(CRUDBase[PlanFeature, Any, Any]):
     """CRUD operations for plan-feature junction table."""
 
     async def add_feature_to_plan(
@@ -63,7 +65,7 @@ class CRUDPlanFeature(CRUDBase[PlanFeature, dict, dict]):
             .where(PlanFeature.plan_id == plan_id)
             .options(selectinload(PlanFeature.feature))
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_plan_features_hierarchical(
         self, db: AsyncSession, *, plan_id: int
@@ -154,7 +156,7 @@ class CRUDPlanFeature(CRUDBase[PlanFeature, dict, dict]):
             .where(PlanFeature.feature_id == feature_id)
             .options(selectinload(PlanFeature.plan))
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
 
 plan_feature = CRUDPlanFeature(PlanFeature)

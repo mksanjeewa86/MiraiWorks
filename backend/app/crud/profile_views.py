@@ -102,7 +102,7 @@ class CRUDProfileView:
         )
 
         result = await db.execute(query)
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_profile_views_stats(
         self,

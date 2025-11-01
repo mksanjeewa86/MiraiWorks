@@ -58,9 +58,7 @@ async def create_interview(
             detail="Employer company context required",
         )
 
-    recruiter_id = (
-        interview_data.recruiter_id or interview_data.interviewer_id or current_user.id
-    )
+    recruiter_id = interview_data.recruiter_id or current_user.id
 
     interview = await interview_service.create_interview(
         db=db,
@@ -85,6 +83,12 @@ async def create_interview(
     interview_with_relationships = await interview_crud.get_with_relationships(
         db, interview.id
     )
+
+    if not interview_with_relationships:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve created interview",
+        )
 
     return await _format_interview_response(db, interview_with_relationships)
 
@@ -111,7 +115,7 @@ async def get_interviews(
     total = await interview_crud.get_user_interviews_count(
         db=db,
         user_id=current_user.id,
-        status_filter=request.status,
+        status_filter=InterviewStatus(request.status) if request.status else None,
         start_date=request.start_date,
         end_date=request.end_date,
     )
@@ -305,6 +309,9 @@ async def get_interview_calendar_events(
 
     calendar_events = []
     for interview in interviews:
+        if not interview.scheduled_start:
+            continue
+
         participants = []
         if interview.candidate.email:
             participants.append(interview.candidate.email)
@@ -316,8 +323,7 @@ async def get_interview_calendar_events(
                 interview_id=interview.id,
                 title=interview.title,
                 start=interview.scheduled_start,
-                end=interview.scheduled_end
-                or (interview.scheduled_start + timedelta(hours=1)),
+                end=interview.scheduled_end or (interview.scheduled_start + timedelta(hours=1)),
                 status=interview.status,
                 participants=participants,
                 location=interview.location,

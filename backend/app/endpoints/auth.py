@@ -145,7 +145,7 @@ async def login(
     # Create tokens without 2FA
     logger.info("Creating login tokens", user_id=user.id, component="auth")
     tokens = await auth_service.create_login_tokens(
-        db, user, remember_me=login_data.rememberMe
+        db, user, remember_me=login_data.rememberMe or False
     )
     logger.info(
         "Login successful",
@@ -314,7 +314,7 @@ async def verify_2fa(
             selectinload(User.company),
             selectinload(User.user_roles).selectinload(UserRoleModel.role),
         )
-        .where(User.id == verify_data.user_id, User.is_active is True)
+        .where(User.id == verify_data.user_id, User.is_active)
     )
 
     user = result.scalar_one_or_none()
@@ -373,7 +373,7 @@ async def resend_2fa_code(
 
     # Get user
     result = await db.execute(
-        select(User).where(User.id == resend_data.user_id, User.is_active is True)
+        select(User).where(User.id == resend_data.user_id, User.is_active)
     )
     user = result.scalar_one_or_none()
 
@@ -483,7 +483,7 @@ async def request_password_reset(
     result = await db.execute(
         select(User)
         .options(selectinload(User.company))
-        .where(User.email == reset_data.email, User.is_active is True)
+        .where(User.email == reset_data.email, User.is_active)
     )
 
     user = result.scalar_one_or_none()
@@ -515,8 +515,8 @@ async def request_password_reset(
             .join(UserRoleModel.role)
             .where(
                 User.company_id == user.company_id,
-                User.is_active is True,
-                User.is_admin is True,
+                User.is_active,
+                User.is_admin,
             )
         )
         company_admins = admin_result.scalars().all()
@@ -526,7 +526,7 @@ async def request_password_reset(
             select(User)
             .join(User.user_roles)
             .join(UserRoleModel.role)
-            .where(User.is_active is True, User.is_admin is True)
+            .where(User.is_active, User.is_admin)
         )
         company_admins = admin_result.scalars().all()
 
@@ -571,7 +571,7 @@ async def approve_password_reset(
         .options(selectinload(PasswordResetRequest.user))
         .where(
             PasswordResetRequest.id == approve_data.request_id,
-            PasswordResetRequest.is_used is False,
+            ~PasswordResetRequest.is_used,
             PasswordResetRequest.expires_at > get_utc_now(),
         )
     )
@@ -691,7 +691,7 @@ async def get_password_reset_requests(
         select(PasswordResetRequest)
         .options(selectinload(PasswordResetRequest.user))
         .where(
-            PasswordResetRequest.is_used is False,
+            ~PasswordResetRequest.is_used,
             PasswordResetRequest.expires_at > get_utc_now(),
         )
     )
@@ -707,7 +707,7 @@ async def get_password_reset_requests(
 
     return [
         PasswordResetRequestInfo(
-            id=req.id,
+            id=req.id or 0,
             user_id=req.user_id,
             user_email=req.user.email,
             user_name=req.user.full_name,

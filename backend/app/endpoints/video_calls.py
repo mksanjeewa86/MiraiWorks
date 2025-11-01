@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import crud
 from app.config.endpoints import API_ROUTES
 from app.crud.user import user as user_crud
+from app.crud.video_call import video_call as video_call_crud
 from app.database import get_db
 from app.dependencies import get_current_active_user
 from app.models.user import User
@@ -47,7 +47,7 @@ async def schedule_video_call(
         )
 
     # Create video call
-    video_call = await crud.video_call.create_with_interviewer(
+    video_call = await video_call_crud.create_with_interviewer(
         db, obj_in=call_data, interviewer_id=current_user.id
     )
 
@@ -69,7 +69,7 @@ async def get_video_call_by_room(
     db: AsyncSession = Depends(get_db),
 ):
     """Get video call details by room ID (human-readable code)."""
-    video_call = await crud.video_call.get_by_room_id(db, room_id=room_id)
+    video_call = await video_call_crud.get_by_room_id(db, room_id=room_id)
 
     if not video_call:
         raise HTTPException(
@@ -96,7 +96,7 @@ async def get_video_call(
     db: AsyncSession = Depends(get_db),
 ):
     """Get video call details."""
-    video_call = await crud.video_call.get(db, id=call_id)
+    video_call = await video_call_crud.get(db, id=call_id)
 
     if not video_call:
         raise HTTPException(
@@ -123,7 +123,7 @@ async def join_video_call_by_room(
     db: AsyncSession = Depends(get_db),
 ):
     """Join a video call by room ID (human-readable code)."""
-    video_call = await crud.video_call.get_by_room_id(db, room_id=room_id)
+    video_call = await video_call_crud.get_by_room_id(db, room_id=room_id)
 
     if not video_call:
         raise HTTPException(
@@ -142,12 +142,12 @@ async def join_video_call_by_room(
 
     # Update call status to in_progress if it's the first participant
     if video_call.status == "scheduled":
-        await crud.video_call.update_call_status(
+        await video_call_crud.update_call_status(
             db, db_obj=video_call, status="in_progress", started_at=get_utc_now()
         )
 
     # Add participant
-    await crud.video_call.add_participant(
+    await video_call_crud.add_participant(
         db, video_call_id=video_call.id, user_id=current_user.id
     )
 
@@ -164,7 +164,7 @@ async def join_video_call(
     db: AsyncSession = Depends(get_db),
 ):
     """Join a video call."""
-    video_call = await crud.video_call.get(db, id=call_id)
+    video_call = await video_call_crud.get(db, id=call_id)
 
     if not video_call:
         raise HTTPException(
@@ -185,7 +185,7 @@ async def join_video_call(
     print(f"DEBUG: Video call status before check: {video_call.status}")
     if video_call.status == "scheduled":
         print("DEBUG: Updating video call status to in_progress")
-        await crud.video_call.update_call_status(
+        await video_call_crud.update_call_status(
             db, db_obj=video_call, status="in_progress", started_at=get_utc_now()
         )
         print(f"DEBUG: Video call status after update: {video_call.status}")
@@ -193,7 +193,7 @@ async def join_video_call(
         print("DEBUG: Video call status is not 'scheduled', no update needed")
 
     # Add participant
-    await crud.video_call.add_participant(
+    await video_call_crud.add_participant(
         db, video_call_id=call_id, user_id=current_user.id
     )
 
@@ -210,7 +210,7 @@ async def leave_video_call_by_room(
     db: AsyncSession = Depends(get_db),
 ):
     """Leave a video call by room ID - any participant can leave."""
-    video_call = await crud.video_call.get_by_room_id(db, room_id=room_id)
+    video_call = await video_call_crud.get_by_room_id(db, room_id=room_id)
 
     if not video_call:
         raise HTTPException(
@@ -228,18 +228,18 @@ async def leave_video_call_by_room(
         )
 
     # Update participant left time
-    await crud.video_call.update_participant_left(
+    await video_call_crud.update_participant_left(
         db, video_call_id=video_call.id, user_id=current_user.id
     )
 
     # Check if this was the last participant
-    active_participants = await crud.video_call.get_active_participants(
+    active_participants = await video_call_crud.get_active_participants(
         db, video_call_id=video_call.id
     )
 
     if len(active_participants) == 0:
         # Last participant left, end the call
-        video_call = await crud.video_call.update_call_status(
+        video_call = await video_call_crud.update_call_status(
             db, db_obj=video_call, status="completed", ended_at=get_utc_now()
         )
         return {
@@ -257,7 +257,7 @@ async def leave_video_call(
     db: AsyncSession = Depends(get_db),
 ):
     """Leave a video call - any participant can leave."""
-    video_call = await crud.video_call.get(db, id=call_id)
+    video_call = await video_call_crud.get(db, id=call_id)
 
     if not video_call:
         raise HTTPException(
@@ -275,18 +275,18 @@ async def leave_video_call(
         )
 
     # Update participant left time
-    await crud.video_call.update_participant_left(
+    await video_call_crud.update_participant_left(
         db, video_call_id=call_id, user_id=current_user.id
     )
 
     # Check if this was the last participant
-    active_participants = await crud.video_call.get_active_participants(
+    active_participants = await video_call_crud.get_active_participants(
         db, video_call_id=call_id
     )
 
     if len(active_participants) == 0:
         # Last participant left, end the call
-        video_call = await crud.video_call.update_call_status(
+        video_call = await video_call_crud.update_call_status(
             db, db_obj=video_call, status="completed", ended_at=get_utc_now()
         )
         return {
@@ -304,7 +304,7 @@ async def end_video_call(
     db: AsyncSession = Depends(get_db),
 ):
     """End a video call - only interviewer can force end."""
-    video_call = await crud.video_call.get(db, id=call_id)
+    video_call = await video_call_crud.get(db, id=call_id)
 
     if not video_call:
         raise HTTPException(
@@ -319,10 +319,10 @@ async def end_video_call(
         )
 
     # Update all participants left time
-    await crud.video_call.end_all_participants(db, video_call_id=call_id)
+    await video_call_crud.end_all_participants(db, video_call_id=call_id)
 
     # Update call status
-    video_call = await crud.video_call.update_call_status(
+    video_call = await video_call_crud.update_call_status(
         db, db_obj=video_call, status="completed", ended_at=get_utc_now()
     )
 
@@ -337,7 +337,7 @@ async def record_consent_by_room(
     db: AsyncSession = Depends(get_db),
 ):
     """Record user's consent for call recording by room ID."""
-    video_call = await crud.video_call.get_by_room_id(db, room_id=room_id)
+    video_call = await video_call_crud.get_by_room_id(db, room_id=room_id)
 
     if not video_call:
         raise HTTPException(
@@ -354,7 +354,7 @@ async def record_consent_by_room(
             detail="You are not a participant in this video call",
         )
 
-    consent = await crud.video_call.save_recording_consent(
+    consent = await video_call_crud.save_recording_consent(
         db,
         video_call_id=video_call.id,
         user_id=current_user.id,
@@ -372,7 +372,7 @@ async def record_consent(
     db: AsyncSession = Depends(get_db),
 ):
     """Record user's consent for call recording."""
-    video_call = await crud.video_call.get(db, id=call_id)
+    video_call = await video_call_crud.get(db, id=call_id)
 
     if not video_call:
         raise HTTPException(
@@ -389,7 +389,7 @@ async def record_consent(
             detail="You are not a participant in this video call",
         )
 
-    consent = await crud.video_call.save_recording_consent(
+    consent = await video_call_crud.save_recording_consent(
         db,
         video_call_id=call_id,
         user_id=current_user.id,
@@ -406,7 +406,7 @@ async def get_video_token(
     db: AsyncSession = Depends(get_db),
 ):
     """Get WebRTC token for joining the video call."""
-    video_call = await crud.video_call.get(db, id=call_id)
+    video_call = await video_call_crud.get(db, id=call_id)
 
     if not video_call:
         raise HTTPException(
@@ -440,7 +440,7 @@ async def get_call_transcript(
     db: AsyncSession = Depends(get_db),
 ):
     """Get transcript for a completed video call."""
-    video_call = await crud.video_call.get(db, id=call_id)
+    video_call = await video_call_crud.get(db, id=call_id)
 
     if not video_call:
         raise HTTPException(
@@ -457,7 +457,7 @@ async def get_call_transcript(
             detail="You don't have permission to access this transcript",
         )
 
-    transcript = await crud.video_call.get_call_transcription(db, video_call_id=call_id)
+    transcript = await video_call_crud.get_call_transcription(db, video_call_id=call_id)
 
     if not transcript:
         # Return empty transcript for calls that haven't started transcription yet
@@ -466,7 +466,7 @@ async def get_call_transcript(
             video_call_id=call_id,
             transcript_url=None,
             transcript_text=None,
-            language=video_call.transcription_language,
+            language=video_call.transcription_language or "ja",
             processing_status=TranscriptionStatus.PENDING,
             word_count=0,
             created_at=get_utc_now(),
@@ -487,7 +487,7 @@ async def save_transcript_segment(
     db: AsyncSession = Depends(get_db),
 ):
     """Save a real-time transcription segment during the call."""
-    video_call = await crud.video_call.get(db, id=call_id)
+    video_call = await video_call_crud.get(db, id=call_id)
 
     if not video_call:
         raise HTTPException(
@@ -511,7 +511,7 @@ async def save_transcript_segment(
             detail="Can only save segments during an active call",
         )
 
-    saved_segment = await crud.video_call.save_transcription_segment(
+    saved_segment = await video_call_crud.save_transcription_segment(
         db, video_call_id=call_id, segment_data=segment.model_dump()
     )
 
@@ -526,7 +526,7 @@ async def download_transcript(
     db: AsyncSession = Depends(get_db),
 ):
     """Download transcript in specified format (txt, pdf, srt)."""
-    video_call = await crud.video_call.get(db, id=call_id)
+    video_call = await video_call_crud.get(db, id=call_id)
 
     if not video_call:
         raise HTTPException(
@@ -543,12 +543,19 @@ async def download_transcript(
             detail="You don't have permission to download this transcript",
         )
 
-    transcript = await crud.video_call.get_call_transcription(db, video_call_id=call_id)
+    transcript = await video_call_crud.get_call_transcription(db, video_call_id=call_id)
 
     if not transcript or transcript.processing_status != "completed":
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Transcript not available for download",
+        )
+
+    # Ensure transcript has an ID (should always be true for database records)
+    if transcript.id is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Transcript record is invalid",
         )
 
     # Generate download URL using transcription service
@@ -567,7 +574,7 @@ async def list_video_calls(
     db: AsyncSession = Depends(get_db),
 ):
     """List video calls for the current user."""
-    video_calls = await crud.video_call.get_user_video_calls(
+    video_calls = await video_call_crud.get_user_video_calls(
         db, user_id=current_user.id, skip=skip, limit=limit
     )
     return video_calls

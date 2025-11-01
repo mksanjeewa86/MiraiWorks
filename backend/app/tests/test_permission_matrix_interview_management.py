@@ -939,6 +939,8 @@ class TestInterviewManagementPermissionMatrix:
                 response = await client.put(endpoint, json={"test": "data"})
             elif method == "DELETE":
                 response = await client.delete(endpoint)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
 
             assert response.status_code == 401, f"Failed for {method} {endpoint}"
 

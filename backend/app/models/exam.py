@@ -1,7 +1,8 @@
+from datetime import datetime
+
 from sqlalchemy import (
     JSON,
     Boolean,
-    Column,
     DateTime,
     Float,
     ForeignKey,
@@ -10,7 +11,7 @@ from sqlalchemy import (
     Text,
 )
 from sqlalchemy import Enum as SQLAlchemyEnum
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 from app.database import Base
@@ -22,53 +23,53 @@ class Exam(BaseModel):
     """Recruitment exam model."""
 
     __tablename__ = "exams"
-    title = Column(String(255), nullable=False)
-    description = Column(Text, nullable=True)
-    exam_type = Column(
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    exam_type: Mapped[ExamType] = mapped_column(
         SQLAlchemyEnum(ExamType), nullable=False, default=ExamType.CUSTOM
     )
-    status = Column(
+    status: Mapped[ExamStatus] = mapped_column(
         SQLAlchemyEnum(ExamStatus), nullable=False, default=ExamStatus.DRAFT
     )
 
     # Organization settings
-    company_id = Column(
+    company_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey("companies.id", ondelete="CASCADE"),
         nullable=True,  # NULL = global exam created by system admin
         index=True,
     )
-    is_public = Column(
+    is_public: Mapped[bool] = mapped_column(
         Boolean, default=False, nullable=False, index=True
     )  # True = available to all companies
-    created_by = Column(
+    created_by: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
 
     # Exam settings
-    time_limit_minutes = Column(Integer, nullable=True)  # null = no time limit
-    max_attempts = Column(Integer, default=1)  # Number of times candidate can take exam
-    passing_score = Column(Float, nullable=True)  # null = no passing score
-    is_randomized = Column(Boolean, default=False)  # Random question order
+    time_limit_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    max_attempts: Mapped[int | None] = mapped_column(Integer, default=1)
+    passing_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    is_randomized: Mapped[bool | None] = mapped_column(Boolean, default=False)
 
     # Web monitoring settings
-    allow_web_usage = Column(Boolean, default=True)
-    monitor_web_usage = Column(Boolean, default=False)
+    allow_web_usage: Mapped[bool | None] = mapped_column(Boolean, default=True)
+    monitor_web_usage: Mapped[bool | None] = mapped_column(Boolean, default=False)
 
     # Face recognition settings
-    require_face_verification = Column(Boolean, default=False)
-    face_check_interval_minutes = Column(Integer, default=5)  # How often to check face
+    require_face_verification: Mapped[bool | None] = mapped_column(Boolean, default=False)
+    face_check_interval_minutes: Mapped[int | None] = mapped_column(Integer, default=5)
 
     # Result settings
-    show_results_immediately = Column(Boolean, default=True)
-    show_correct_answers = Column(Boolean, default=False)
-    show_score = Column(Boolean, default=True)
+    show_results_immediately: Mapped[bool | None] = mapped_column(Boolean, default=True)
+    show_correct_answers: Mapped[bool | None] = mapped_column(Boolean, default=False)
+    show_score: Mapped[bool | None] = mapped_column(Boolean, default=True)
 
     # Metadata
-    instructions = Column(Text, nullable=True)  # Instructions for candidates
+    instructions: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Hybrid exam configuration
-    question_selection_rules = Column(
+    question_selection_rules: Mapped[dict | None] = mapped_column(
         JSON, nullable=True
     )  # Stores how exam was created (for audit/recreation)
     # Example: {"custom_count": 10, "template_selections": [{"bank_id": 5, "count": 20, "category": "verbal"}]}
@@ -96,45 +97,45 @@ class ExamQuestion(BaseModel):
     """Question within an exam."""
 
     __tablename__ = "exam_questions"
-    exam_id = Column(
+    exam_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("exams.id", ondelete="CASCADE"), nullable=False, index=True
     )
 
     # Question content
-    question_text = Column(Text, nullable=False)
-    question_type = Column(SQLAlchemyEnum(QuestionType), nullable=False)
-    order_index = Column(Integer, nullable=False, default=0)  # Order within exam
+    question_text: Mapped[str] = mapped_column(Text, nullable=False)
+    question_type: Mapped[QuestionType] = mapped_column(SQLAlchemyEnum(QuestionType), nullable=False)
+    order_index: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     # Question settings
-    points = Column(Float, default=1.0)  # Points for correct answer
-    time_limit_seconds = Column(Integer, nullable=True)  # Per-question time limit
-    is_required = Column(Boolean, default=True)
+    points: Mapped[float | None] = mapped_column(Float, default=1.0)
+    time_limit_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    is_required: Mapped[bool | None] = mapped_column(Boolean, default=True)
 
     # Multiple choice / Single choice options
-    options = Column(JSON, nullable=True)  # {"A": "Option 1", "B": "Option 2", ...}
-    correct_answers = Column(
+    options: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    correct_answers: Mapped[dict | None] = mapped_column(
         JSON, nullable=True
     )  # ["A", "B"] for multiple choice, ["A"] for single
 
     # Text input / Essay settings
-    max_length = Column(Integer, nullable=True)
-    min_length = Column(Integer, nullable=True)
+    max_length: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    min_length: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     # Rating settings
-    rating_scale = Column(Integer, nullable=True)  # 1-5, 1-10, etc.
+    rating_scale: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     # Additional metadata
-    explanation = Column(Text, nullable=True)  # Explanation of correct answer
-    tags = Column(JSON, nullable=True)  # ["skill", "logic", ...] for categorization
+    explanation: Mapped[str | None] = mapped_column(Text, nullable=True)
+    tags: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
     # Source tracking (for hybrid exams)
-    source_type = Column(
+    source_type: Mapped[str] = mapped_column(
         String(20), nullable=False, default="custom", index=True
     )  # "custom", "template", "question_bank"
-    source_bank_id = Column(
+    source_bank_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("question_banks.id", ondelete="SET NULL"), nullable=True
     )  # If from question bank
-    source_question_id = Column(
+    source_question_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey("question_bank_items.id", ondelete="SET NULL"),
         nullable=True,
@@ -160,52 +161,52 @@ class ExamSession(BaseModel):
     """Individual exam session for a candidate."""
 
     __tablename__ = "exam_sessions"
-    exam_id = Column(
+    exam_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("exams.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    candidate_id = Column(
+    candidate_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    assignment_id = Column(
+    assignment_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("exam_assignments.id", ondelete="SET NULL"), nullable=True
     )
 
     # Session info
-    status = Column(
+    status: Mapped[SessionStatus] = mapped_column(
         SQLAlchemyEnum(SessionStatus), nullable=False, default=SessionStatus.NOT_STARTED
     )
-    attempt_number = Column(Integer, default=1)
+    attempt_number: Mapped[int | None] = mapped_column(Integer, default=1)
 
     # Timing
-    started_at = Column(DateTime(timezone=True), nullable=True)
-    completed_at = Column(DateTime(timezone=True), nullable=True)
-    expires_at = Column(DateTime(timezone=True), nullable=True)
-    time_remaining_seconds = Column(Integer, nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    time_remaining_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     # Progress
-    current_question_index = Column(Integer, default=0)
-    total_questions = Column(Integer, nullable=False)
-    questions_answered = Column(Integer, default=0)
+    current_question_index: Mapped[int | None] = mapped_column(Integer, default=0)
+    total_questions: Mapped[int] = mapped_column(Integer, nullable=False)
+    questions_answered: Mapped[int | None] = mapped_column(Integer, default=0)
 
     # Results
-    score = Column(Float, nullable=True)  # Final score
-    max_score = Column(Float, nullable=True)  # Maximum possible score
-    percentage = Column(Float, nullable=True)  # Score as percentage
-    passed = Column(Boolean, nullable=True)  # Did candidate pass?
+    score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    max_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    percentage: Mapped[float | None] = mapped_column(Float, nullable=True)
+    passed: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
 
     # Monitoring data
-    web_usage_detected = Column(Boolean, default=False)
-    web_usage_count = Column(Integer, default=0)
-    face_verification_failed = Column(Boolean, default=False)
-    face_check_count = Column(Integer, default=0)
-    face_verification_data = Column(
+    web_usage_detected: Mapped[bool | None] = mapped_column(Boolean, default=False)
+    web_usage_count: Mapped[int | None] = mapped_column(Integer, default=0)
+    face_verification_failed: Mapped[bool | None] = mapped_column(Boolean, default=False)
+    face_check_count: Mapped[int | None] = mapped_column(Integer, default=0)
+    face_verification_data: Mapped[dict | None] = mapped_column(
         JSON, nullable=True
     )  # Face check timestamps and results
 
     # Browser/Environment info
-    user_agent = Column(Text, nullable=True)
-    ip_address = Column(String(45), nullable=True)
-    screen_resolution = Column(String(20), nullable=True)
+    user_agent: Mapped[str | None] = mapped_column(Text, nullable=True)
+    ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
+    screen_resolution: Mapped[str | None] = mapped_column(String(20), nullable=True)
 
     # Relationships
     exam = relationship("Exam", back_populates="sessions")
@@ -227,14 +228,14 @@ class ExamAnswer(Base):
 
     __tablename__ = "exam_answers"
 
-    id = Column(Integer, primary_key=True, index=True)
-    session_id = Column(
+    id: Mapped[int | None] = mapped_column(Integer, primary_key=True, index=True)
+    session_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("exam_sessions.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    question_id = Column(
+    question_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("exam_questions.id", ondelete="CASCADE"),
         nullable=False,
@@ -242,20 +243,20 @@ class ExamAnswer(Base):
     )
 
     # Answer data
-    answer_data = Column(
+    answer_data: Mapped[dict | None] = mapped_column(
         JSON, nullable=True
     )  # Flexible storage for different answer types
-    answer_text = Column(Text, nullable=True)  # For text/essay questions
-    selected_options = Column(JSON, nullable=True)  # For multiple choice: ["A", "B"]
+    answer_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    selected_options: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
     # Scoring
-    is_correct = Column(Boolean, nullable=True)  # Null for manual grading needed
-    points_earned = Column(Float, default=0.0)
-    points_possible = Column(Float, nullable=False)
+    is_correct: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    points_earned: Mapped[float | None] = mapped_column(Float, default=0.0)
+    points_possible: Mapped[float] = mapped_column(Float, nullable=False)
 
     # Timing
-    time_spent_seconds = Column(Integer, nullable=True)
-    answered_at = Column(
+    time_spent_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    answered_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 
@@ -271,37 +272,37 @@ class ExamAssignment(BaseModel):
     """Assignment of exam to specific candidates."""
 
     __tablename__ = "exam_assignments"
-    exam_id = Column(
+    exam_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("exams.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    candidate_id = Column(
+    candidate_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    assigned_by = Column(
+    assigned_by: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
 
     # Assignment settings (override exam defaults)
-    due_date = Column(DateTime(timezone=True), nullable=True)
-    custom_time_limit_minutes = Column(Integer, nullable=True)  # Override exam default
-    custom_max_attempts = Column(Integer, nullable=True)  # Override exam default
-    custom_is_randomized = Column(
+    due_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    custom_time_limit_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    custom_max_attempts: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    custom_is_randomized: Mapped[bool | None] = mapped_column(
         Boolean, nullable=True
     )  # Override exam default randomization
 
     # Status
-    is_active = Column(Boolean, default=True)
-    completed = Column(Boolean, default=False)
+    is_active: Mapped[bool | None] = mapped_column(Boolean, default=True)
+    completed: Mapped[bool | None] = mapped_column(Boolean, default=False)
 
     # Notifications
-    notification_sent = Column(Boolean, default=False)
-    reminder_sent = Column(Boolean, default=False)
+    notification_sent: Mapped[bool | None] = mapped_column(Boolean, default=False)
+    reminder_sent: Mapped[bool | None] = mapped_column(Boolean, default=False)
 
     # Workflow integration (for exam TODOs)
-    todo_id = Column(
+    todo_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("todos.id", ondelete="SET NULL"), nullable=True, index=True
     )
-    workflow_node_execution_id = Column(
+    workflow_node_execution_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey("workflow_node_executions.id", ondelete="SET NULL"),
         nullable=True,
@@ -329,21 +330,21 @@ class ExamMonitoringEvent(Base):
 
     __tablename__ = "exam_monitoring_events"
 
-    id = Column(Integer, primary_key=True, index=True)
-    session_id = Column(
+    id: Mapped[int | None] = mapped_column(Integer, primary_key=True, index=True)
+    session_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("exam_sessions.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
 
-    event_type = Column(
+    event_type: Mapped[str] = mapped_column(
         String(50), nullable=False
     )  # "web_usage", "face_check", "tab_switch", etc.
-    event_data = Column(JSON, nullable=True)  # Flexible data storage
-    severity = Column(String(20), default="info")  # "info", "warning", "critical"
+    event_data: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    severity: Mapped[str | None] = mapped_column(String(20), default="info")
 
-    timestamp = Column(
+    timestamp: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 

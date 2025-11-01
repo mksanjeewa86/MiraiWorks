@@ -119,8 +119,8 @@ def log_api_request(
     logger: FilteringBoundLogger,
     method: str,
     path: str,
-    user_id: int = None,
-    ip: str = None,
+    user_id: int | None = None,
+    ip: str | None = None,
 ) -> None:
     """Log API request with common fields."""
     logger.info("API request", method=method, path=path, user_id=user_id, ip=ip)
@@ -131,7 +131,7 @@ def log_api_response(
     method: str,
     path: str,
     status_code: int,
-    duration_ms: float = None,
+    duration_ms: float | None = None,
 ) -> None:
     """Log API response with common fields."""
     logger.info(
@@ -146,8 +146,8 @@ def log_api_response(
 def log_db_query(
     logger: FilteringBoundLogger,
     query: str,
-    duration_ms: float = None,
-    rows_affected: int = None,
+    duration_ms: float | None = None,
+    rows_affected: int | None = None,
 ) -> None:
     """Log database query with performance info."""
     logger.debug(
@@ -159,7 +159,7 @@ def log_db_query(
 
 
 def log_error(
-    logger: FilteringBoundLogger, error: Exception, context: str = None, **kwargs: Any
+    logger: FilteringBoundLogger, error: Exception, context: str | None = None, **kwargs: Any
 ) -> None:
     """Log error with context."""
     logger.error(

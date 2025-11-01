@@ -25,7 +25,7 @@ class CRUDHoliday(CRUDBase[Holiday, HolidayCreate, HolidayUpdate]):
             .where(and_(Holiday.year == year, Holiday.country == country))
             .order_by(Holiday.date)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_by_date_range(
         self, db: AsyncSession, *, date_from: date, date_to: date, country: str = "JP"
@@ -42,7 +42,7 @@ class CRUDHoliday(CRUDBase[Holiday, HolidayCreate, HolidayUpdate]):
             )
             .order_by(Holiday.date)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_by_month(
         self, db: AsyncSession, *, year: int, month: int, country: str = "JP"
@@ -59,7 +59,7 @@ class CRUDHoliday(CRUDBase[Holiday, HolidayCreate, HolidayUpdate]):
             )
             .order_by(Holiday.date)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_national_holidays(
         self, db: AsyncSession, *, year: int, country: str = "JP"
@@ -71,12 +71,12 @@ class CRUDHoliday(CRUDBase[Holiday, HolidayCreate, HolidayUpdate]):
                 and_(
                     Holiday.year == year,
                     Holiday.country == country,
-                    Holiday.is_national is True,
+                    Holiday.is_national,
                 )
             )
             .order_by(Holiday.date)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def check_is_holiday(
         self, db: AsyncSession, *, holiday_date: date, country: str = "JP"
@@ -99,7 +99,7 @@ class CRUDHoliday(CRUDBase[Holiday, HolidayCreate, HolidayUpdate]):
             .order_by(Holiday.date)
             .limit(limit)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def create_multiple(
         self, db: AsyncSession, *, holidays: list[HolidayCreate]

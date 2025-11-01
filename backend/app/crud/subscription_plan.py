@@ -27,12 +27,12 @@ class CRUDSubscriptionPlan(
         """Get all active plans."""
         result = await db.execute(
             select(SubscriptionPlan)
-            .where(SubscriptionPlan.is_active is True)
+            .where(SubscriptionPlan.is_active)
             .order_by(SubscriptionPlan.display_order)
             .offset(skip)
             .limit(limit)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_public_plans(
         self, db: AsyncSession, *, skip: int = 0, limit: int = 100
@@ -40,13 +40,13 @@ class CRUDSubscriptionPlan(
         """Get all public plans (shown on pricing page)."""
         result = await db.execute(
             select(SubscriptionPlan)
-            .where(SubscriptionPlan.is_active is True)
-            .where(SubscriptionPlan.is_public is True)
+            .where(SubscriptionPlan.is_active)
+            .where(SubscriptionPlan.is_public)
             .order_by(SubscriptionPlan.display_order)
             .offset(skip)
             .limit(limit)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_with_features(
         self, db: AsyncSession, *, plan_id: int

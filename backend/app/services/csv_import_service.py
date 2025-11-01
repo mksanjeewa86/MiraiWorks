@@ -47,19 +47,19 @@ class CSVImportService:
                 row_errors = []
 
                 # Email validation
-                if pd.isna(row["email"]) or not row["email"]:
+                if pd.isna(row["email"]) or not str(row["email"]).strip():  # type: ignore[operator]
                     row_errors.append("Email is required")
                 elif "@" not in str(row["email"]):
                     row_errors.append("Invalid email format")
 
                 # Name validation
-                if pd.isna(row["first_name"]) or not row["first_name"]:
+                if pd.isna(row["first_name"]) or not str(row["first_name"]).strip():  # type: ignore[operator]
                     row_errors.append("First name is required")
-                if pd.isna(row["last_name"]) or not row["last_name"]:
+                if pd.isna(row["last_name"]) or not str(row["last_name"]).strip():  # type: ignore[operator]
                     row_errors.append("Last name is required")
 
                 # Role validation
-                if pd.isna(row["role"]) or not row["role"]:
+                if pd.isna(row["role"]) or not str(row["role"]).strip():  # type: ignore[operator]
                     row_errors.append("Role is required")
                 else:
                     try:
@@ -71,7 +71,7 @@ class CSVImportService:
                         )
 
                 # Company ID validation (if provided)
-                if "company_id" in df.columns and not pd.isna(row["company_id"]):
+                if "company_id" in df.columns and not pd.isna(row["company_id"]):  # type: ignore[operator]
                     try:
                         int(row["company_id"])
                     except (ValueError, TypeError):
@@ -79,7 +79,7 @@ class CSVImportService:
 
                 # Boolean field validation
                 for bool_field in ["is_admin", "require_2fa"]:
-                    if bool_field in df.columns and not pd.isna(row[bool_field]):
+                    if bool_field in df.columns and not pd.isna(row[bool_field]):  # type: ignore[operator]
                         val = str(row[bool_field]).lower()
                         if val not in ["true", "false", "1", "0", "yes", "no"]:
                             row_errors.append(
@@ -87,13 +87,13 @@ class CSVImportService:
                             )
 
                 if row_errors:
-                    errors.append(f"Row {index + 2}: {'; '.join(row_errors)}")
+                    errors.append(f"Row {int(index) + 2}: {'; '.join(row_errors)}")  # type: ignore[arg-type]
 
             return len(errors) == 0, errors, df
 
         except Exception as e:
             errors.append(f"Failed to parse CSV: {str(e)}")
-            return False, errors, df
+            return False, errors, pd.DataFrame()
 
     def normalize_boolean(self, value: Any) -> bool:
         """Convert various boolean representations to bool."""
@@ -104,7 +104,7 @@ class CSVImportService:
         return str_val in ["true", "1", "yes", "y"]
 
     async def import_users_from_csv(
-        self, db: AsyncSession, csv_content: str, default_company_id: int = None
+        self, db: AsyncSession, csv_content: str, default_company_id: int | None = None
     ) -> dict[str, Any]:
         """Import users from CSV data."""
         # Validate CSV
@@ -135,13 +135,13 @@ class CSVImportService:
                 )
                 if existing_user.scalar_one_or_none():
                     failed_users.append(
-                        f"Row {index + 2}: User with email {row['email']} already exists"
+                        f"Row {int(index) + 2}: User with email {row['email']} already exists"  # type: ignore[arg-type]
                     )
                     continue
 
                 # Determine company_id
                 company_id = None
-                if "company_id" in df.columns and not pd.isna(row["company_id"]):
+                if "company_id" in df.columns and not pd.isna(row["company_id"]):  # type: ignore[operator]
                     company_id = int(row["company_id"])
                 elif default_company_id:
                     company_id = default_company_id
@@ -153,7 +153,7 @@ class CSVImportService:
                     )
                     if not company_result.scalar_one_or_none():
                         failed_users.append(
-                            f"Row {index + 2}: Company ID {company_id} does not exist"
+                            f"Row {int(index) + 2}: Company ID {company_id} does not exist"  # type: ignore[arg-type]
                         )
                         continue
 
@@ -163,11 +163,11 @@ class CSVImportService:
 
                 # Create user
                 user = User(
-                    email=row["email"].strip(),
-                    first_name=row["first_name"].strip(),
-                    last_name=row["last_name"].strip(),
-                    phone=row.get("phone", "").strip()
-                    if not pd.isna(row.get("phone", ""))
+                    email=str(row["email"]).strip(),  # type: ignore[attr-defined]
+                    first_name=str(row["first_name"]).strip(),  # type: ignore[attr-defined]
+                    last_name=str(row["last_name"]).strip(),  # type: ignore[attr-defined]
+                    phone=str(row.get("phone", "")).strip()  # type: ignore[attr-defined]
+                    if not pd.isna(row.get("phone", ""))  # type: ignore[operator]
                     else None,
                     company_id=company_id,
                     hashed_password=hashed_password,
@@ -180,7 +180,7 @@ class CSVImportService:
                 await db.flush()  # Get user ID
 
                 # Assign role
-                role_name = row["role"].strip()
+                role_name = str(row["role"]).strip()  # type: ignore[attr-defined]
                 if role_name in roles_map:
                     user_role = UserRole(
                         user_id=user.id, role_id=roles_map[role_name].id
@@ -208,8 +208,8 @@ class CSVImportService:
                 created_user_ids.append(user.id)
 
             except Exception as e:
-                logger.error(f"Failed to create user from row {index + 2}: {str(e)}")
-                failed_users.append(f"Row {index + 2}: {str(e)}")
+                logger.error(f"Failed to create user from row {int(index) + 2}: {str(e)}")  # type: ignore[arg-type]
+                failed_users.append(f"Row {int(index) + 2}: {str(e)}")  # type: ignore[arg-type]
                 continue
 
         # Commit all changes
@@ -251,7 +251,7 @@ class CSVImportService:
         }
 
     async def process_csv_import(
-        self, db: AsyncSession, csv_base64: str, default_company_id: int = None
+        self, db: AsyncSession, csv_base64: str, default_company_id: int | None = None
     ) -> dict[str, Any]:
         """Process CSV import from base64 encoded data."""
         try:

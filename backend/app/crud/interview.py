@@ -1,6 +1,12 @@
+from __future__ import annotations
+
 from datetime import datetime
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import func, or_, select
+
+if TYPE_CHECKING:
+    from app.models.calendar_integration import ExternalCalendarAccount
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
@@ -18,7 +24,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
     async def get(self, db: AsyncSession, id: int) -> Interview | None:
         """Get interview by id, excluding soft-deleted records."""
         result = await db.execute(
-            select(Interview).where(Interview.id == id, Interview.is_deleted is False)
+            select(Interview).where(Interview.id == id, ~Interview.is_deleted)
         )
         return result.scalar_one_or_none()
 
@@ -28,11 +34,11 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
         """Get multiple interviews, excluding soft-deleted records."""
         result = await db.execute(
             select(Interview)
-            .where(Interview.is_deleted is False)
+            .where(~Interview.is_deleted)
             .offset(skip)
             .limit(limit)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_with_relationships(
         self, db: AsyncSession, interview_id: int
@@ -41,7 +47,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
         # First get the interview
         result = await db.execute(
             select(Interview).where(
-                Interview.id == interview_id, Interview.is_deleted is False
+                Interview.id == interview_id, ~Interview.is_deleted
             )
         )
         interview = result.scalar_one_or_none()
@@ -118,7 +124,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
                     Interview.recruiter_id == user_id,
                     Interview.created_by == user_id,
                 ),
-                Interview.is_deleted is False,
+                ~Interview.is_deleted,
             )
             .order_by(Interview.scheduled_start.desc())
         )
@@ -132,7 +138,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
 
         query = query.offset(offset).limit(limit)
         result = await db.execute(query)
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_user_interviews_count(
         self,
@@ -149,7 +155,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
                 Interview.recruiter_id == user_id,
                 Interview.created_by == user_id,
             ),
-            Interview.is_deleted is False,
+            ~Interview.is_deleted,
         )
 
         if status_filter:
@@ -184,12 +190,12 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
                 Interview.status.in_(
                     [InterviewStatus.SCHEDULED, InterviewStatus.CONFIRMED]
                 ),
-                Interview.is_deleted is False,
+                ~Interview.is_deleted,
             )
             .order_by(Interview.scheduled_start.asc())
             .limit(limit)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_interview_stats(self, db: AsyncSession, user_id: int) -> dict:
         """Get interview statistics for a user, excluding soft-deleted."""
@@ -201,7 +207,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
                     Interview.recruiter_id == user_id,
                     Interview.created_by == user_id,
                 ),
-                Interview.is_deleted is False,
+                ~Interview.is_deleted,
             )
         )
         total = total_result.scalar() or 0
@@ -214,7 +220,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
                     Interview.created_by == user_id,
                 ),
                 Interview.status == InterviewStatus.SCHEDULED,
-                Interview.is_deleted is False,
+                ~Interview.is_deleted,
             )
         )
         scheduled = scheduled_result.scalar() or 0
@@ -227,7 +233,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
                     Interview.created_by == user_id,
                 ),
                 Interview.status == InterviewStatus.COMPLETED,
-                Interview.is_deleted is False,
+                ~Interview.is_deleted,
             )
         )
         completed = completed_result.scalar() or 0
@@ -240,7 +246,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
                     Interview.created_by == user_id,
                 ),
                 Interview.status == InterviewStatus.CANCELLED,
-                Interview.is_deleted is False,
+                ~Interview.is_deleted,
             )
         )
         cancelled = cancelled_result.scalar() or 0
@@ -264,7 +270,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
         )
 
         # Add soft delete filter
-        not_deleted_condition = Interview.is_deleted is False
+        not_deleted_condition = ~Interview.is_deleted
 
         # Total interviews
         total_result = await db.execute(
@@ -282,7 +288,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
             .where(base_condition, not_deleted_condition)
             .group_by(Interview.status)
         )
-        by_status = dict(status_result.all())
+        by_status = {row[0]: row[1] for row in status_result.all()}
 
         # By type
         type_result = await db.execute(
@@ -290,7 +296,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
             .where(base_condition, not_deleted_condition)
             .group_by(Interview.interview_type)
         )
-        by_type = dict(type_result.all())
+        by_type = {row[0]: row[1] for row in type_result.all()}
 
         # Upcoming interviews
         upcoming_result = await db.execute(
@@ -353,7 +359,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
                         InterviewStatus.COMPLETED.value,
                     ]
                 ),
-                Interview.is_deleted is False,
+                ~Interview.is_deleted,
             )
         )
 
@@ -363,7 +369,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
             query = query.where(Interview.scheduled_start <= end_date)
 
         result = await db.execute(query)
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_active_proposals_count(
         self, db: AsyncSession, interview_id: int
@@ -378,8 +384,22 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
         )
         return active_proposals_result.scalar() or 0
 
+    async def get_calendar_accounts_by_user(
+        self, db: AsyncSession, user_id: int
+    ) -> list[ExternalCalendarAccount]:
+        """Get active calendar accounts for a user."""
+        from app.models.calendar_integration import ExternalCalendarAccount
 
-class CRUDInterviewProposal(CRUDBase[InterviewProposal, dict, dict]):
+        result = await db.execute(
+            select(ExternalCalendarAccount).where(
+                ExternalCalendarAccount.user_id == user_id,
+                ExternalCalendarAccount.is_active,
+            )
+        )
+        return list(result.scalars().all())
+
+
+class CRUDInterviewProposal(CRUDBase[InterviewProposal, Any, Any]):
     """Interview proposal CRUD operations."""
 
     async def get_by_interview(
@@ -392,7 +412,7 @@ class CRUDInterviewProposal(CRUDBase[InterviewProposal, dict, dict]):
             .where(InterviewProposal.interview_id == interview_id)
             .order_by(InterviewProposal.created_at.desc())
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_pending_proposals(
         self, db: AsyncSession, user_id: int
@@ -419,21 +439,7 @@ class CRUDInterviewProposal(CRUDBase[InterviewProposal, dict, dict]):
             )
             .order_by(InterviewProposal.created_at.desc())
         )
-        return result.scalars().all()
-
-    async def get_calendar_accounts_by_user(
-        self, db: AsyncSession, user_id: int
-    ) -> list:
-        """Get active calendar accounts for a user."""
-        from app.models.calendar_integration import ExternalCalendarAccount
-
-        result = await db.execute(
-            select(ExternalCalendarAccount).where(
-                ExternalCalendarAccount.user_id == user_id,
-                ExternalCalendarAccount.is_active is True,
-            )
-        )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
 
 # Create the CRUD instances

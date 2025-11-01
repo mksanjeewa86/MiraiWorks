@@ -87,6 +87,46 @@ class Settings(BaseSettings):
     def REDIS_URL(self) -> str:
         return self.redis_url
 
+    @property
+    def DB_HOST(self) -> str:
+        """Extract host from db_url."""
+        from urllib.parse import urlparse
+
+        parsed = urlparse(self.db_url)
+        return parsed.hostname or "localhost"
+
+    @property
+    def DB_PORT(self) -> int:
+        """Extract port from db_url."""
+        from urllib.parse import urlparse
+
+        parsed = urlparse(self.db_url)
+        return parsed.port or 3306
+
+    @property
+    def DB_USER(self) -> str:
+        """Extract user from db_url."""
+        from urllib.parse import urlparse
+
+        parsed = urlparse(self.db_url)
+        return parsed.username or ""
+
+    @property
+    def DB_PASSWORD(self) -> str:
+        """Extract password from db_url."""
+        from urllib.parse import urlparse
+
+        parsed = urlparse(self.db_url)
+        return parsed.password or ""
+
+    @property
+    def DB_NAME(self) -> str:
+        """Extract database name from db_url."""
+        from urllib.parse import urlparse
+
+        parsed = urlparse(self.db_url)
+        return parsed.path.lstrip("/") if parsed.path else "miraiworks"
+
 
 settings = Settings()
 if settings.environment.lower() == "test":

@@ -40,7 +40,7 @@ class TestPermissionMatrixEdgeCases:
             email="superadmin@system.com",
             hashed_password="hashed_password",
             company_id=None,
-            role=UserRole.SUPER_ADMIN,
+            role=UserRole.SYSTEM_ADMIN,
             is_active=True,
             is_verified=True,
             first_name="Super",
@@ -53,7 +53,7 @@ class TestPermissionMatrixEdgeCases:
             email="admin@edgecase.com",
             hashed_password="hashed_password",
             company_id=company.id,
-            role=UserRole.COMPANY_ADMIN,
+            role=UserRole.ADMIN,
             is_active=True,
             is_verified=True,
             first_name="Company",
@@ -66,7 +66,7 @@ class TestPermissionMatrixEdgeCases:
             email="recruiter@edgecase.com",
             hashed_password="hashed_password",
             company_id=company.id,
-            role=UserRole.RECRUITER,
+            role=UserRole.MEMBER,
             is_active=True,
             is_verified=True,
             first_name="Test",
@@ -92,7 +92,7 @@ class TestPermissionMatrixEdgeCases:
             email="inactive@edgecase.com",
             hashed_password="hashed_password",
             company_id=company.id,
-            role=UserRole.RECRUITER,
+            role=UserRole.MEMBER,
             is_active=False,
             is_verified=True,
             first_name="Inactive",
@@ -105,7 +105,7 @@ class TestPermissionMatrixEdgeCases:
             email="unverified@edgecase.com",
             hashed_password="hashed_password",
             company_id=company.id,
-            role=UserRole.EMPLOYER,
+            role=UserRole.MEMBER,
             is_active=True,
             is_verified=False,
             first_name="Unverified",
@@ -146,7 +146,7 @@ class TestPermissionMatrixEdgeCases:
         expire = get_utc_now() - timedelta(hours=1)
         to_encode = {"sub": user.email, "exp": expire}
 
-        return jwt.encode(to_encode, settings.SECRET_KEY, algorithm="HS256")
+        return jwt.encode(to_encode, settings.jwt_secret, algorithm="HS256")
 
     def _create_malformed_token(self) -> str:
         """Create a malformed JWT token for testing."""
@@ -335,7 +335,6 @@ class TestPermissionMatrixEdgeCases:
             client.post(
                 "/api/positions", json=position_data_2, headers=recruiter_headers
             ),
-            return_exceptions=True,
         )
 
         assert responses[0].status_code == 201
@@ -645,7 +644,7 @@ class TestPermissionMatrixEdgeCases:
             User(
                 id=new_user["id"],
                 email=new_user["email"],
-                role=UserRole.RECRUITER,
+                role=UserRole.MEMBER,
                 company_id=scenario["company"].id,
             )
         )

@@ -1,27 +1,29 @@
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
-from sqlalchemy.orm import relationship
+from datetime import datetime
+
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import BaseModel
 
 
 class CalendarEvent(BaseModel):
     __tablename__ = "calendar_events"
-    title = Column(String(255), nullable=False)
-    description = Column(Text, nullable=True)
-    start_datetime = Column(DateTime(timezone=True), nullable=False, index=True)
-    end_datetime = Column(DateTime(timezone=True), nullable=True)
-    is_all_day = Column(Boolean, default=False, nullable=False)
-    location = Column(String(255), nullable=True)
-    event_type = Column(String(50), default="event", nullable=False, index=True)
-    status = Column(String(20), default="confirmed", nullable=False, index=True)
-    creator_id = Column(
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    start_datetime: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    end_datetime: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    is_all_day: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    location: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    event_type: Mapped[str] = mapped_column(String(50), default="event", nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(20), default="confirmed", nullable=False, index=True)
+    creator_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
     )
-    recurrence_rule = Column(String(255), nullable=True)
-    parent_event_id = Column(
+    recurrence_rule: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    parent_event_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("calendar_events.id", ondelete="CASCADE"), nullable=True
     )
-    timezone = Column(String(50), default="UTC", nullable=False)
+    timezone: Mapped[str] = mapped_column(String(50), default="UTC", nullable=False)
 
     # Relationships
     creator = relationship("User", back_populates="calendar_events")

@@ -1,5 +1,7 @@
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
-from sqlalchemy.orm import relationship
+from datetime import datetime
+
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import BaseModel
 from app.utils.constants import InterviewStatus
@@ -9,19 +11,19 @@ class Interview(BaseModel):
     __tablename__ = "interviews"
 
     # Participants
-    candidate_id = Column(
+    candidate_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    recruiter_id = Column(
+    recruiter_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    employer_company_id = Column(
+    employer_company_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("companies.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    recruiter_company_id = Column(
+    recruiter_company_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("companies.id", ondelete="CASCADE"),
         nullable=False,
@@ -29,7 +31,7 @@ class Interview(BaseModel):
     )
 
     # Workflow relationship
-    workflow_id = Column(
+    workflow_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey("workflows.id", ondelete="SET NULL"),
         nullable=True,
@@ -37,55 +39,55 @@ class Interview(BaseModel):
     )
 
     # Basic info
-    title = Column(String(500), nullable=False)
-    description = Column(Text, nullable=True)
-    position_title = Column(String(255), nullable=True)
+    title: Mapped[str] = mapped_column(String(500), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    position_title: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # Status and workflow
-    status = Column(
+    status: Mapped[str] = mapped_column(
         String(50),
         nullable=False,
         default=InterviewStatus.PENDING_SCHEDULE.value,
         index=True,
     )
-    interview_type = Column(
+    interview_type: Mapped[str] = mapped_column(
         String(50), nullable=False, default="video"
     )  # video, phone, in_person
 
     # Scheduling (finalized details)
-    scheduled_start = Column(DateTime(timezone=True), nullable=True, index=True)
-    scheduled_end = Column(DateTime(timezone=True), nullable=True)
-    timezone = Column(String(100), nullable=True, default="UTC")
-    location = Column(String(500), nullable=True)  # Meeting link or physical address
+    scheduled_start: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    scheduled_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    timezone: Mapped[str | None] = mapped_column(String(100), nullable=True, default="UTC")
+    location: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     # Meeting details
-    meeting_url = Column(String(1000), nullable=True)  # Video meeting link
-    video_call_type = Column(String(50), nullable=True)  # system_generated, custom_url
-    meeting_id = Column(String(255), nullable=True)  # Meeting platform ID
-    meeting_password = Column(String(100), nullable=True)
+    meeting_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    video_call_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    meeting_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    meeting_password: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
     # Additional data
-    duration_minutes = Column(Integer, nullable=True, default=60)
-    notes = Column(Text, nullable=True)
-    preparation_notes = Column(Text, nullable=True)
+    duration_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True, default=60)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    preparation_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Workflow tracking
-    created_by = Column(
+    created_by: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
-    confirmed_by = Column(
+    confirmed_by: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
-    confirmed_at = Column(DateTime(timezone=True), nullable=True)
-    cancelled_by = Column(
+    confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    cancelled_by: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
-    cancelled_at = Column(DateTime(timezone=True), nullable=True)
-    cancellation_reason = Column(Text, nullable=True)
+    cancelled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    cancellation_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Soft delete
-    is_deleted = Column(Boolean, nullable=False, default=False, index=True)
-    deleted_at = Column(DateTime(timezone=True), nullable=True)
+    is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Relationships (using noload to prevent lazy loading in async context)
     candidate = relationship("User", foreign_keys=[candidate_id], lazy="noload")
@@ -134,7 +136,7 @@ class Interview(BaseModel):
 
 class InterviewProposal(BaseModel):
     __tablename__ = "interview_proposals"
-    interview_id = Column(
+    interview_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("interviews.id", ondelete="CASCADE"),
         nullable=False,
@@ -142,36 +144,36 @@ class InterviewProposal(BaseModel):
     )
 
     # Proposal details
-    proposed_by = Column(
+    proposed_by: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    proposer_role = Column(
+    proposer_role: Mapped[str] = mapped_column(
         String(50), nullable=False, index=True
     )  # candidate, employer, recruiter
 
     # Time slot
-    start_datetime = Column(DateTime(timezone=True), nullable=False, index=True)
-    end_datetime = Column(DateTime(timezone=True), nullable=False)
-    timezone = Column(String(100), nullable=False, default="UTC")
+    start_datetime: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    end_datetime: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    timezone: Mapped[str] = mapped_column(String(100), nullable=False, default="UTC")
 
     # Additional details
-    location = Column(String(500), nullable=True)
-    notes = Column(Text, nullable=True)
+    location: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Status
-    status = Column(
+    status: Mapped[str] = mapped_column(
         String(50), nullable=False, default="pending", index=True
     )  # pending, accepted, declined, expired
 
     # Response tracking
-    responded_by = Column(
+    responded_by: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
-    responded_at = Column(DateTime(timezone=True), nullable=True)
-    response_notes = Column(Text, nullable=True)
+    responded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    response_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Expiration
-    expires_at = Column(DateTime(timezone=True), nullable=True, index=True)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
 
     # Relationships
     interview = relationship("Interview", back_populates="proposals")

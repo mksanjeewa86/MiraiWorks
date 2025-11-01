@@ -21,7 +21,7 @@ try:
         class _About:
             __version__ = getattr(bcrypt, "__version__", "unknown")
 
-        bcrypt.__about__ = _About()
+        setattr(bcrypt, "__about__", _About())
 except ImportError:
     pass
 
@@ -853,7 +853,7 @@ async def test_video_call(db_session, test_users):
     call_data = VideoCallCreate(
         candidate_id=candidate.id,
         scheduled_at=datetime.now(UTC) + timedelta(hours=1),
-        enable_transcription=True,
+        transcription_enabled=True,
         transcription_language="ja",
     )
 

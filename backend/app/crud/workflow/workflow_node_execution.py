@@ -11,7 +11,7 @@ from app.models.workflow_node_execution import WorkflowNodeExecution
 from app.utils.datetime_utils import get_utc_now
 
 
-class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, dict, dict]):
+class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, Any, Any]):
     async def create(
         self, db: AsyncSession, *, obj_in: dict[str, Any]
     ) -> WorkflowNodeExecution:
@@ -46,7 +46,8 @@ class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, dict, dict]):
         ]
 
         if status:
-            conditions.append(WorkflowNodeExecution.status == status)
+            conditions.append(  # type: ignore[arg-type]
+            WorkflowNodeExecution.status == status)
 
         result = await db.execute(
             select(WorkflowNodeExecution)
@@ -54,7 +55,7 @@ class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, dict, dict]):
             .where(and_(*conditions))
             .order_by(asc(WorkflowNodeExecution.node.sequence_order))
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_by_node_id(
         self,
@@ -69,7 +70,8 @@ class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, dict, dict]):
         conditions = [WorkflowNodeExecution.node_id == node_id]
 
         if status:
-            conditions.append(WorkflowNodeExecution.status == status)
+            conditions.append(  # type: ignore[arg-type]
+            WorkflowNodeExecution.status == status)
 
         result = await db.execute(
             select(WorkflowNodeExecution)
@@ -84,7 +86,7 @@ class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, dict, dict]):
             .offset(skip)
             .limit(limit)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_assigned_to_user(
         self,
@@ -99,7 +101,8 @@ class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, dict, dict]):
         conditions = [WorkflowNodeExecution.assigned_to == user_id]
 
         if status:
-            conditions.append(WorkflowNodeExecution.status == status)
+            conditions.append(  # type: ignore[arg-type]
+            WorkflowNodeExecution.status == status)
 
         result = await db.execute(
             select(WorkflowNodeExecution)
@@ -114,7 +117,7 @@ class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, dict, dict]):
             .offset(skip)
             .limit(limit)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_overdue_executions(
         self, db: AsyncSession, *, assigned_to: int | None = None, limit: int = 100
@@ -126,7 +129,8 @@ class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, dict, dict]):
         ]
 
         if assigned_to:
-            conditions.append(WorkflowNodeExecution.assigned_to == assigned_to)
+            conditions.append(  # type: ignore[arg-type]
+            WorkflowNodeExecution.assigned_to == assigned_to)
 
         result = await db.execute(
             select(WorkflowNodeExecution)
@@ -141,7 +145,7 @@ class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, dict, dict]):
             .order_by(asc(WorkflowNodeExecution.due_date))
             .limit(limit)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_with_details(
         self, db: AsyncSession, *, id: int
@@ -155,7 +159,7 @@ class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, dict, dict]):
                     CandidateWorkflow.candidate
                 ),
                 selectinload(WorkflowNodeExecution.candidate_workflow).selectinload(
-                    CandidateWorkflow.process
+                    CandidateWorkflow.process  # type: ignore[attr-defined]
                 ),
                 selectinload(WorkflowNodeExecution.assignee),
                 selectinload(WorkflowNodeExecution.completer),
@@ -328,15 +332,18 @@ class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, dict, dict]):
         conditions = []
 
         if node_id:
-            conditions.append(WorkflowNodeExecution.node_id == node_id)
+            conditions.append(  # type: ignore[arg-type]
+            WorkflowNodeExecution.node_id == node_id)
 
         if workflow_id:
-            conditions.append(
+            conditions.append(  # type: ignore[arg-type]
+
                 WorkflowNodeExecution.candidate_workflow.has(workflow_id=workflow_id)
             )
 
         if candidate_workflow_id:
-            conditions.append(
+            conditions.append(  # type: ignore[arg-type]
+
                 WorkflowNodeExecution.candidate_workflow_id == candidate_workflow_id
             )
 
@@ -346,11 +353,11 @@ class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, dict, dict]):
                 WorkflowNodeExecution.status,
                 func.count(WorkflowNodeExecution.id).label("count"),
             )
-            .where(and_(*conditions) if conditions else True)
+            .where(and_(*conditions) if conditions else True)  # type: ignore[arg-type]
             .group_by(WorkflowNodeExecution.status)
         )
 
-        status_dict = {row.status: row.count for row in status_counts}
+        status_dict = {row[0]: row[1] for row in status_counts.all()}
 
         # Count by result
         result_counts = await db.execute(
@@ -366,7 +373,7 @@ class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, dict, dict]):
             .group_by(WorkflowNodeExecution.result)
         )
 
-        result_dict = {row.result: row.count for row in result_counts}
+        result_dict = {row[0]: row[1] for row in result_counts.all()}
 
         # Calculate averages
         avg_duration_result = await db.execute(
@@ -401,7 +408,7 @@ class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, dict, dict]):
             )
         )
 
-        total_executions = sum(status_dict.values())
+        total_executions = sum(list(status_dict.values()))
         completed_executions = status_dict.get("completed", 0)
         completion_rate = (
             (completed_executions / total_executions * 100)
@@ -425,8 +432,9 @@ class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, dict, dict]):
         conditions = [WorkflowNodeExecution.assigned_to.isnot(None)]
 
         if workflow_id:
-            conditions.append(
-                WorkflowNodeExecution.candidate_workflow.has(workflow_id=workflow_id)
+            conditions.append(  # type: ignore[arg-type]
+
+                WorkflowNodeExecution.candidate_workflow.has(workflow_id=workflow_id)  # type: ignore[arg-type]
             )
 
         result = await db.execute(

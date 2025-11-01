@@ -164,7 +164,7 @@ async def list_positions(
     else:
         positions = await position_crud.get_positions_by_status(
             db=db,
-            status=status,
+            status=status or "open",
             skip=skip,
             limit=limit,
         )

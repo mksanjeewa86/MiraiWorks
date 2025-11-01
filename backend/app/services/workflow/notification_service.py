@@ -244,12 +244,12 @@ class RecruitmentWorkflowNotificationService:
         notifications = []
 
         # Notify candidate
-        status_message = {
+        status_message = {  # type: ignore
             "hired": "Congratulations! You have been selected.",
             "rejected": "Thank you for your interest. We have decided to move forward with other candidates.",
             "withdrawn": "Your application has been withdrawn as requested.",
         }.get(
-            candidate_process.final_result,
+            candidate_process.final_result,  # type: ignore
             "Your application process has been completed.",
         )
 

@@ -1,5 +1,5 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Text
-from sqlalchemy.orm import relationship
+from sqlalchemy import Boolean, ForeignKey, Integer, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import BaseModel
 
@@ -18,25 +18,25 @@ class Feature(BaseModel):
     __tablename__ = "features"
 
     # Feature identification
-    name = Column(String(50), nullable=False, unique=True, index=True)
-    display_name = Column(String(100), nullable=False)
-    description = Column(Text, nullable=True)
+    name: Mapped[str] = mapped_column(String(50), nullable=False, unique=True, index=True)
+    display_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Hierarchical support
-    parent_feature_id = Column(
+    parent_feature_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("features.id"), nullable=True, index=True
     )
-    permission_key = Column(
+    permission_key: Mapped[str | None] = mapped_column(
         String(100), nullable=True, index=True
     )  # e.g., 'user_management.deactivate'
 
     # Feature categorization
-    category = Column(
+    category: Mapped[str | None] = mapped_column(
         String(50), nullable=True, index=True
     )  # 'core', 'premium', 'integrations'
 
     # Status
-    is_active = Column(Boolean, nullable=False, default=True, index=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, index=True)
 
     # Relationships
     parent = relationship(

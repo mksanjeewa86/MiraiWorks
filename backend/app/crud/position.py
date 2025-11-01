@@ -71,7 +71,7 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
         query = query.options(selectinload(Position.company))
 
         result = await db.execute(query)
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_published_positions_with_count(
         self,
@@ -161,9 +161,9 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
             .options(selectinload(Position.company))
         )
         data_result = await db.execute(data_query)
-        positions = data_result.scalars().all()
+        positions = list(data_result.scalars().all())
 
-        return positions, total_count
+        return positions, total_count or 0
 
     async def get_by_company(
         self, db: AsyncSession, *, company_id: int, skip: int = 0, limit: int = 100
@@ -177,7 +177,7 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
             .limit(limit)
             .options(selectinload(Position.company))
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def search_positions(
         self, db: AsyncSession, *, query_text: str, skip: int = 0, limit: int = 100
@@ -198,7 +198,7 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
             .limit(limit)
             .options(selectinload(Position.company))
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_positions_by_status(
         self, db: AsyncSession, *, status: str, skip: int = 0, limit: int = 100
@@ -212,7 +212,7 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
             .limit(limit)
             .options(selectinload(Position.company))
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def increment_view_count(
         self, db: AsyncSession, *, position_id: int
@@ -243,7 +243,7 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
             .limit(limit)
             .options(selectinload(Position.company))
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_recent_positions(
         self, db: AsyncSession, *, days: int = 7, skip: int = 0, limit: int = 100
@@ -261,7 +261,7 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
             .limit(limit)
             .options(selectinload(Position.company))
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_positions_expiring_soon(
         self, db: AsyncSession, *, days: int = 7, skip: int = 0, limit: int = 100
@@ -283,7 +283,7 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
             .limit(limit)
             .options(selectinload(Position.company))
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_position_statistics(self, db: AsyncSession) -> dict[str, Any]:
         """Get position posting statistics."""
@@ -291,7 +291,7 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
         status_counts = await db.execute(
             select(Position.status, func.count(Position.id)).group_by(Position.status)
         )
-        status_stats = dict(status_counts.all())
+        status_stats = {row[0]: row[1] for row in status_counts.all()}
 
         # Total applications
         total_applications = await db.execute(
@@ -305,13 +305,13 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
             .where(Position.status == "published")
             .group_by(Position.job_type)
         )
-        type_stats = dict(type_counts.all())
+        type_stats = {row[0]: row[1] for row in type_counts.all()}
 
         # Average salary by type
         salary_stats = await db.execute(
             select(
                 Position.job_type,
-                func.avg((Position.salary_min + Position.salary_max) / 2).label(
+                func.avg((Position.salary_min + Position.salary_max) / 2).label(  # type: ignore[operator]
                     "avg_salary"
                 ),
             )
@@ -326,7 +326,7 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
         )
         avg_salaries = {row[0]: float(row[1]) for row in salary_stats.all()}
 
-        total_positions = sum(status_stats.values())
+        total_positions = sum(list(status_stats.values()))
         published_positions = status_stats.get("published", 0)
         draft_positions = status_stats.get("draft", 0)
         closed_positions = status_stats.get("closed", 0)
@@ -359,7 +359,7 @@ class CRUDPosition(CRUDBase[Position, PositionCreate, PositionUpdate]):
     ) -> list[Position]:
         """Bulk update position status."""
         result = await db.execute(select(Position).where(Position.id.in_(position_ids)))
-        positions = result.scalars().all()
+        positions = list(result.scalars().all())
 
         for position in positions:
             position.status = status

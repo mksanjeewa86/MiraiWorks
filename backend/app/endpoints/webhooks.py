@@ -38,6 +38,10 @@ async def google_calendar_webhook(
         if not all([resource_id, resource_state, channel_id]):
             raise HTTPException(status_code=400, detail="Missing required headers")
 
+        # Type narrowing: all three are non-None after the check above
+        assert channel_id is not None
+        assert resource_state is not None
+
         logger.info(
             f"Received Google Calendar webhook: {resource_state} for {resource_id}"
         )
@@ -206,6 +210,15 @@ async def process_calendar_event_update(
 ):
     """Process a calendar event update from webhook notification."""
     try:
+        # Initialize all variables at the start to prevent "possibly unbound" errors
+        event_id = None
+        title = ""
+        description = None
+        location = None
+        start_datetime = None
+        end_datetime = None
+        is_all_day = False
+
         if provider == "google":
             event_id = event_data.get("id")
             title = event_data.get("summary", "")
@@ -215,10 +228,6 @@ async def process_calendar_event_update(
             # Parse start/end times
             start_data = event_data.get("start", {})
             end_data = event_data.get("end", {})
-
-            start_datetime = None
-            end_datetime = None
-            is_all_day = False
 
             if "date" in start_data:
                 # All-day event
@@ -263,6 +272,11 @@ async def process_calendar_event_update(
         if not all([event_id, start_datetime, end_datetime]):
             logger.warning(f"Incomplete event data for {event_id}")
             return
+
+        # Type narrowing: all three are non-None after the check above
+        assert event_id is not None
+        assert start_datetime is not None
+        assert end_datetime is not None
 
         # Check if this is an interview-related event
         interview_service = InterviewService()

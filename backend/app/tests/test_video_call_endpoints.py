@@ -159,6 +159,7 @@ class TestVideoCallEndpoints:
 
         # Get updated call from database
         updated_call = await video_call_crud.get(db_session, id=test_video_call.id)
+        assert updated_call is not None
         print(f"Status after endpoint call: {updated_call.status}")
         print(f"Updated call object: {updated_call}")
 
@@ -203,6 +204,7 @@ class TestVideoCallEndpoints:
         # Verify call status updated - refresh session to see committed changes
         await db_session.commit()
         updated_call = await video_call_crud.get(db_session, id=test_video_call.id)
+        assert updated_call is not None
         assert updated_call.status == "completed"
         assert updated_call.ended_at is not None
 

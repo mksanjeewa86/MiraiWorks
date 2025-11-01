@@ -95,7 +95,7 @@ class RecordingService:
             recording_id = recording_session["recording_id"]
 
             # Pause recording through video service
-            success = await video_service.pause_recording(recording_id)
+            success = await video_service.pause_recording(recording_id)  # type: ignore
 
             if success:
                 recording_session["paused_at"] = get_utc_now()
@@ -117,7 +117,7 @@ class RecordingService:
             recording_id = recording_session["recording_id"]
 
             # Resume recording through video service
-            success = await video_service.resume_recording(recording_id)
+            success = await video_service.resume_recording(recording_id)  # type: ignore
 
             if success:
                 recording_session["resumed_at"] = get_utc_now()

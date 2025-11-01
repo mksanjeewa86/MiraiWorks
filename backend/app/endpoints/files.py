@@ -246,7 +246,7 @@ async def upload_file(
         file_path, file_hash, file_size = await storage_service.upload_file_data(
             file_content,
             file.filename,
-            file.content_type,
+            file.content_type or "application/octet-stream",
             current_user.id,
             upload_category,
         )

@@ -94,7 +94,9 @@ async def list_resumes(
         total = len(all_resumes)
 
         return ResumeListResponse(
-            resumes=resumes, total=total, has_more=offset + len(resumes) < total
+            resumes=[ResumeInfo.model_validate(r) for r in resumes],
+            total=total,
+            has_more=offset + len(resumes) < total,
         )
     except Exception as e:
         logger.error(f"Error listing resumes: {str(e)}")
@@ -537,7 +539,7 @@ async def bulk_resume_action(
                     db,
                     resume_id,
                     current_user.id,
-                    ResumeUpdate(status=ResumeStatus.ARCHIVED),
+                    ResumeUpdate.model_validate({"status": ResumeStatus.ARCHIVED.value}),
                 )
             # Add other bulk actions...
 
@@ -603,9 +605,11 @@ async def get_japanese_templates(
     current_user: User = Depends(get_current_user),
 ):
     """Get Japanese resume format templates (履歴書, 職務経歴書)."""
+    from app.utils.constants import ResumeFormat
+
     templates = [
         JapaneseResumeTemplate(
-            format_type="rirekisho",
+            format_type=ResumeFormat.RIREKISHO,
             sections=[
                 "personal_info",
                 "education",
@@ -649,7 +653,7 @@ async def get_japanese_templates(
             },
         ),
         JapaneseResumeTemplate(
-            format_type="shokumu_keirekisho",
+            format_type=ResumeFormat.SHOKUMU_KEIREKISHO,
             sections=[
                 "career_summary",
                 "detailed_experience",
@@ -699,21 +703,22 @@ async def convert_to_rirekisho(
     # Convert to Rirekisho format
     from app.utils.constants import ResumeFormat, ResumeLanguage
 
+    update_data = {
+        "resume_format": ResumeFormat.RIREKISHO,
+        "resume_language": ResumeLanguage.JAPANESE,
+        # Map rirekisho_data to resume fields
+        "furigana_name": rirekisho_data.personal_info.get("furigana_name"),
+        "birth_date": rirekisho_data.personal_info.get("birth_date"),
+        "gender": rirekisho_data.personal_info.get("gender"),
+        "nationality": rirekisho_data.personal_info.get("nationality"),
+        "marital_status": rirekisho_data.personal_info.get("marital_status"),
+        "emergency_contact": rirekisho_data.personal_info.get("emergency_contact"),
+    }
     updated_resume = await resume_service.update_resume(
         db,
         resume_id,
         current_user.id,
-        ResumeUpdate(
-            resume_format=ResumeFormat.RIREKISHO,
-            resume_language=ResumeLanguage.JAPANESE,
-            # Map rirekisho_data to resume fields
-            furigana_name=rirekisho_data.personal_info.get("furigana_name"),
-            birth_date=rirekisho_data.personal_info.get("birth_date"),
-            gender=rirekisho_data.personal_info.get("gender"),
-            nationality=rirekisho_data.personal_info.get("nationality"),
-            marital_status=rirekisho_data.personal_info.get("marital_status"),
-            emergency_contact=rirekisho_data.personal_info.get("emergency_contact"),
-        ),
+        ResumeUpdate.model_validate(update_data),
     )
 
     return updated_resume
@@ -736,16 +741,17 @@ async def convert_to_shokumu_keirekisho(
     # Convert to Shokumu Keirekisho format
     from app.utils.constants import ResumeFormat, ResumeLanguage
 
+    update_data = {
+        "resume_format": ResumeFormat.SHOKUMU_KEIREKISHO,
+        "resume_language": ResumeLanguage.JAPANESE,
+        "professional_summary": shokumu_data.career_summary,
+        "objective": shokumu_data.self_pr,
+    }
     updated_resume = await resume_service.update_resume(
         db,
         resume_id,
         current_user.id,
-        ResumeUpdate(
-            resume_format=ResumeFormat.SHOKUMU_KEIREKISHO,
-            resume_language=ResumeLanguage.JAPANESE,
-            professional_summary=shokumu_data.career_summary,
-            objective=shokumu_data.self_pr,
-        ),
+        ResumeUpdate.model_validate(update_data),
     )
 
     return updated_resume
@@ -834,9 +840,9 @@ async def get_public_resume(slug: str, db: AsyncSession = Depends(get_db)):
         professional_summary=resume.professional_summary,
         resume_format=resume.resume_format,
         resume_language=resume.resume_language,
-        view_count=resume.view_count,
+        view_count=resume.view_count or 0,
         last_viewed_at=resume.last_viewed_at,
-        can_download_pdf=resume.can_download_pdf,
+        can_download_pdf=resume.can_download_pdf or False,
         theme_color=resume.theme_color,
         font_family=resume.font_family,
         experiences=resume.experiences[:5],  # Limit to first 5
@@ -893,10 +899,10 @@ async def send_resume_by_email(
             db,
             resume,
             email_request.recipient_emails,
-            email_request.subject,
-            email_request.message,
-            email_request.include_pdf,
-            email_request.sender_name or current_user.full_name,
+            email_request.subject or "",
+            email_request.message or "",
+            email_request.include_pdf or True,
+            email_request.sender_name or current_user.full_name or "",
         )
 
         return {
@@ -983,7 +989,7 @@ async def update_resume_protection(
         db,
         resume_id,
         current_user.id,
-        ResumeUpdate(can_edit=can_edit, can_delete=can_delete),
+        ResumeUpdate.model_validate({"can_edit": can_edit, "can_delete": can_delete}),
     )
 
     if not resume:

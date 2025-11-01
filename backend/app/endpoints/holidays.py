@@ -33,6 +33,9 @@ async def get_holidays(
     date_to: date | None = Query(None, description="Filter holidays to this date"),
 ):
     """Get holidays with optional filters"""
+    # Ensure country is not None (has default value)
+    assert country is not None
+
     # Default to current year if no filters provided
     if not any([year, date_from, date_to]):
         year = datetime.now().year
@@ -65,7 +68,10 @@ async def get_holidays(
         holidays = [h for h in holidays if h.is_national == is_national]
 
     return HolidayListResponse(
-        holidays=holidays, total=len(holidays), year=year, country=country.value
+        holidays=[HolidayInfo.model_validate(h) for h in holidays],
+        total=len(holidays),
+        year=year,
+        country=country.value,
     )
 
 
@@ -136,10 +142,10 @@ async def create_holiday(
         )
 
     # Add year to holiday data
-    holiday_data = holiday_in.dict()
+    holiday_data = holiday_in.model_dump()
     holiday_data["year"] = holiday_in.date.year
 
-    holiday = await holiday_crud.create(db, obj_in=holiday_data)
+    holiday = await holiday_crud.create(db, obj_in=HolidayCreate(**holiday_data))
     return holiday
 
 

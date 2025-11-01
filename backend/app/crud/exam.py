@@ -66,9 +66,9 @@ class CRUDExam(CRUDBase[Exam, ExamCreate, ExamUpdate]):
                     or_(
                         Exam.company_id == company_id,  # Own company's exams
                         and_(
-                            Exam.company_id.is_(None), Exam.is_public is True
+                            Exam.company_id.is_(None), Exam.is_public
                         ),  # Global public exams
-                        Exam.is_public is True,  # Any public exam
+                        Exam.is_public,  # Any public exam
                     )
                 )
             else:
@@ -80,7 +80,7 @@ class CRUDExam(CRUDBase[Exam, ExamCreate, ExamUpdate]):
 
         query = query.offset(skip).limit(limit).order_by(desc(Exam.created_at))
         result = await db.execute(query)
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_with_details(self, db: AsyncSession, id: int) -> Exam | None:
         """Get exam with all related data."""
@@ -214,7 +214,7 @@ class CRUDExam(CRUDBase[Exam, ExamCreate, ExamUpdate]):
                     "options": bank_question.options,
                     "correct_answers": bank_question.correct_answers,
                     "points": bank_question.points,
-                    "time_limit_seconds": bank_question.time_limit_seconds,
+                    "time_limit_seconds": bank_question.time_limit_seconds,  # type: ignore[attr-defined]
                     "is_required": True,
                     "max_length": bank_question.max_length,
                     "min_length": bank_question.min_length,
@@ -312,7 +312,9 @@ class CRUDExam(CRUDBase[Exam, ExamCreate, ExamUpdate]):
         avg_time = time_stats.scalar()
 
         completion_rate = (
-            (total_completed / total_started * 100) if total_started > 0 else 0
+            (total_completed / total_started * 100)
+            if total_started is not None and total_completed is not None and total_started > 0
+            else 0
         )
 
         return {
@@ -337,7 +339,7 @@ class CRUDExamQuestion(CRUDBase[ExamQuestion, ExamQuestionCreate, ExamQuestionUp
         )
 
         result = await db.execute(query)
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_randomized_questions(
         self, db: AsyncSession, exam_id: int
@@ -363,7 +365,7 @@ class CRUDExamQuestion(CRUDBase[ExamQuestion, ExamQuestionCreate, ExamQuestionUp
                         ExamQuestion.exam_id == exam_id,
                     )
                 )
-                .update({"order_index": order_data["order_index"]})
+                .update({"order_index": order_data["order_index"]})  # type: ignore[attr-defined]
             )
 
         await db.commit()
@@ -387,7 +389,7 @@ class CRUDExamSession(CRUDBase[ExamSession, ExamSessionCreate, ExamSessionUpdate
         )
 
         result = await db.execute(query)
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_active_session(
         self, db: AsyncSession, candidate_id: int, exam_id: int
@@ -430,9 +432,9 @@ class CRUDExamSession(CRUDBase[ExamSession, ExamSessionCreate, ExamSessionUpdate
                     ExamSession.exam_id == exam_id,
                 )
             )
-        )
+        ) or 0
 
-        if existing_count >= exam.max_attempts:
+        if exam.max_attempts is not None and existing_count >= exam.max_attempts:
             raise ValueError(f"Maximum attempts ({exam.max_attempts}) exceeded")
 
         # Calculate expiration time
@@ -534,16 +536,22 @@ class CRUDExamSession(CRUDBase[ExamSession, ExamSessionCreate, ExamSessionUpdate
                 )
             )
 
-            session.score = total_points or 0
-            session.max_score = max_points or 0
+            total_points_value = total_points or 0
+            max_points_value = max_points or 0
+
+            session.score = total_points_value
+            session.max_score = max_points_value
             session.percentage = (
-                (total_points / max_points * 100) if max_points > 0 else 0
+                (total_points_value / max_points_value * 100) if max_points_value > 0 else 0
             )
 
             # Check if passed
             exam = await db.get(Exam, session.exam_id)
-            if exam and exam.passing_score is not None:
-                session.passed = session.percentage >= exam.passing_score
+            if exam:
+                passing_score = exam.passing_score
+                percentage = session.percentage
+                if passing_score is not None and percentage is not None:
+                    session.passed = percentage >= passing_score
 
         await db.commit()
         await db.refresh(session)
@@ -579,7 +587,7 @@ class CRUDExamSession(CRUDBase[ExamSession, ExamSessionCreate, ExamSessionUpdate
         query = query.order_by(desc(ExamSession.created_at))
 
         result = await db.execute(query)
-        return result.scalars().all()
+        return list(result.scalars().all())
 
 
 class CRUDExamAnswer(CRUDBase[ExamAnswer, ExamAnswerSubmit, ExamAnswerSubmit]):
@@ -617,7 +625,7 @@ class CRUDExamAnswer(CRUDBase[ExamAnswer, ExamAnswerSubmit, ExamAnswerSubmit]):
         # Update answer data
         answer.answer_data = answer_data.answer_data
         answer.answer_text = answer_data.answer_text
-        answer.selected_options = answer_data.selected_options
+        answer.selected_options = answer_data.selected_options  # type: ignore[assignment]
         answer.time_spent_seconds = answer_data.time_spent_seconds
         answer.answered_at = get_utc_now()
 
@@ -684,7 +692,7 @@ class CRUDExamAssignment(
                     and_(
                         ExamAssignment.exam_id == assignment_data.exam_id,
                         ExamAssignment.candidate_id == candidate_id,
-                        ExamAssignment.is_active is True,
+                        ExamAssignment.is_active,
                     )
                 )
             )
@@ -733,7 +741,7 @@ class CRUDExamAssignment(
         )
 
         result = await db.execute(query)
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_by_exam(self, db: AsyncSession, exam_id: int) -> list[ExamAssignment]:
         """Get all assignments for an exam."""
@@ -747,7 +755,7 @@ class CRUDExamAssignment(
         )
 
         result = await db.execute(query)
-        return result.scalars().all()
+        return list(result.scalars().all())
 
 
 class CRUDExamMonitoringEvent(
@@ -776,7 +784,7 @@ class CRUDExamMonitoringEvent(
 
         query = query.order_by(ExamMonitoringEvent.timestamp.desc())
         result = await db.execute(query)
-        return result.scalars().all()
+        return list(result.scalars().all())
 
 
 # Create instances

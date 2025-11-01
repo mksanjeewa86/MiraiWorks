@@ -1,6 +1,7 @@
 """CRUD operations for todo extension requests."""
 
 from datetime import datetime, timedelta
+from typing import Any
 
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,7 +19,7 @@ from app.utils.constants import ExtensionRequestStatus, TodoStatus
 from app.utils.datetime_utils import get_utc_now
 
 
-class CRUDTodoExtensionRequest(CRUDBase[TodoExtensionRequest, dict, dict]):
+class CRUDTodoExtensionRequest(CRUDBase[TodoExtensionRequest, Any, Any]):
     """CRUD operations for todo extension requests."""
 
     async def create_extension_request(
@@ -149,7 +150,7 @@ class CRUDTodoExtensionRequest(CRUDBase[TodoExtensionRequest, dict, dict]):
             )
 
         total_result = await db.execute(count_query)
-        total = total_result.scalar()
+        total = total_result.scalar() or 0
 
         # Get paginated results
         query = (
@@ -198,7 +199,7 @@ class CRUDTodoExtensionRequest(CRUDBase[TodoExtensionRequest, dict, dict]):
             )
 
         total_result = await db.execute(count_query)
-        total = total_result.scalar()
+        total = total_result.scalar() or 0
 
         # Get paginated results
         query = (
@@ -349,10 +350,10 @@ class CRUDTodoExtensionRequest(CRUDBase[TodoExtensionRequest, dict, dict]):
         )
 
         result = await db.execute(query)
-        stats = {row.status: row.count for row in result}
+        stats = {row[0]: row[1] for row in result.all()}
 
         return {
-            "total": sum(stats.values()),
+            "total": sum(list(stats.values())),
             "pending": stats.get(ExtensionRequestStatus.PENDING.value, 0),
             "approved": stats.get(ExtensionRequestStatus.APPROVED.value, 0),
             "rejected": stats.get(ExtensionRequestStatus.REJECTED.value, 0),

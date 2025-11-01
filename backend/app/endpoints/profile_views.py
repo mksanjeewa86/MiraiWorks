@@ -64,7 +64,7 @@ async def record_profile_view(
     )
 
     return ProfileViewInfo(
-        id=profile_view.id,
+        id=profile_view.id or 0,
         profile_user_id=profile_view.profile_user_id,
         viewer_user_id=profile_view.viewer_user_id,
         viewer_company_id=profile_view.viewer_company_id,
@@ -100,7 +100,7 @@ async def get_my_profile_views(
 
     return [
         ProfileViewInfo(
-            id=view.id,
+            id=view.id or 0,
             profile_user_id=view.profile_user_id,
             viewer_user_id=view.viewer_user_id,
             viewer_company_id=view.viewer_company_id,

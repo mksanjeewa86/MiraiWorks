@@ -36,8 +36,8 @@ class CRUDCompany(CRUDBase[Company, CompanyCreate, CompanyUpdate]):
         admin_query = select(func.count(User.id)).where(
             and_(
                 User.company_id == company_id,
-                User.is_admin is True,
-                User.is_deleted is False,
+                User.is_admin,
+                ~User.is_deleted,
             )
         )
         result = await db.execute(admin_query)
@@ -61,7 +61,7 @@ async def get_companies(
 
     # Handle logical deletion
     if not include_deleted:
-        conditions.append(Company.is_deleted is False)
+        conditions.append(~Company.is_deleted)
 
     if search:
         search_term = f"%{search}%"
@@ -128,7 +128,7 @@ async def update_company(
 
 async def delete_company(db: AsyncSession, company: Company) -> bool:
     """Delete company (soft delete by setting is_active to False)."""
-    company.is_active = False
+    company.is_active = False  # type: ignore[assignment]
     await db.commit()
     return True
 

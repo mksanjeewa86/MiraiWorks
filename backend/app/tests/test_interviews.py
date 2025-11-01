@@ -107,6 +107,7 @@ async def create_interview_model(
     await db_session.refresh(candidate_user)
 
     start = get_utc_now() + timedelta(days=3)
+    assert employer_user.company_id is not None
     interview = await interview_service.create_interview(
         db=db_session,
         candidate_id=candidate_user.id,
@@ -125,6 +126,7 @@ async def create_interview_model(
     full_interview = await interview_crud.get_with_relationships(
         db_session, interview.id
     )
+    assert full_interview is not None
     return full_interview, recruiter
 
 
@@ -240,6 +242,7 @@ async def test_update_interview_title(
     await db_session.commit()
 
     updated = await interview_crud.get_with_relationships(db_session, interview.id)
+    assert updated is not None
     assert updated.title == "Updated Interview Title"
 
 
@@ -274,9 +277,11 @@ async def test_proposal_lifecycle(
         response="accepted",
         responded_by=test_candidate_only_user.id,
     )
+    assert response is not None
     assert response.status == "accepted"
 
     refreshed = await interview_crud.get_with_relationships(db_session, interview.id)
+    assert refreshed is not None
     assert refreshed.status == InterviewStatus.CONFIRMED.value
 
 

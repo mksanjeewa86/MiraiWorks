@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
@@ -12,6 +14,8 @@ from app.schemas.meeting import (
     MeetingListParams,
     MeetingListResponse,
     MeetingResponse,
+    MeetingStatus,
+    MeetingType,
     MeetingUpdate,
 )
 from app.services.meeting_service import MeetingService
@@ -46,10 +50,10 @@ async def list_meetings(
     """List meetings with filtering and pagination"""
 
     params = MeetingListParams(
-        status=status,
-        meeting_type=meeting_type,
-        start_date=start_date,
-        end_date=end_date,
+        status=MeetingStatus(status) if status else None,
+        meeting_type=MeetingType(meeting_type) if meeting_type else None,
+        start_date=datetime.fromisoformat(start_date) if start_date else None,
+        end_date=datetime.fromisoformat(end_date) if end_date else None,
         participant_id=participant_id,
         page=page,
         limit=limit,

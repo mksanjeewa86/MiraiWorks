@@ -12,7 +12,7 @@ from app.crud.base import CRUDBase
 from app.models.system_update import SystemUpdate
 
 
-class CRUDSystemUpdate(CRUDBase[SystemUpdate, dict, dict]):
+class CRUDSystemUpdate(CRUDBase[SystemUpdate, Any, Any]):
     """CRUD operations for system updates."""
 
     async def get_all_active(
@@ -37,7 +37,7 @@ class CRUDSystemUpdate(CRUDBase[SystemUpdate, dict, dict]):
         query = select(SystemUpdate).order_by(desc(SystemUpdate.created_at))
 
         if not include_inactive:
-            query = query.where(SystemUpdate.is_active is True)
+            query = query.where(SystemUpdate.is_active)
 
         query = query.offset(skip).limit(limit)
 
@@ -90,7 +90,7 @@ class CRUDSystemUpdate(CRUDBase[SystemUpdate, dict, dict]):
         query = select(SystemUpdate).order_by(desc(SystemUpdate.created_at))
 
         if not include_inactive:
-            query = query.where(SystemUpdate.is_active is True)
+            query = query.where(SystemUpdate.is_active)
 
         # Filter by tags - match if any tag in the list matches
         if tags:

@@ -100,22 +100,17 @@ class ExamTodoService:
 
         # 4. Create TODO
         todo_data = {
-            "owner_id": candidate_id,
-            "created_by": created_by_id,
             "assignee_id": candidate_id,
-            "workflow_id": workflow_node_execution.workflow_id,
+            "workflow_id": workflow_node_execution.candidate_workflow.workflow_id,
             "title": f"Complete Exam: {exam.title}",
             "description": exam.description
             or f"You have been assigned the {exam.title} exam.",
             "status": TodoStatus.PENDING.value,
             "todo_type": TodoType.EXAM.value,
-            "due_date": due_date,
-            "exam_id": exam_id,
-            "exam_assignment_id": exam_assignment.id,
-            "exam_config": exam_config,
+            "due_datetime": due_date,
         }
 
-        todo = await todo_crud.create(db, obj_in=todo_data)
+        todo = await todo_crud.create(db, obj_in=todo_data)  # type: ignore[arg-type]
 
         # 5. Link assignment back to TODO and workflow node execution
         exam_assignment.todo_id = todo.id
@@ -126,9 +121,16 @@ class ExamTodoService:
 
         # 6. Send notification email to candidate
         try:
+            from app.crud.user import user as user_crud
+
+            candidate = await user_crud.get(db, id=candidate_id)
+            if not candidate:
+                raise ValueError(f"Candidate {candidate_id} not found")
+
             await exam_email_service.send_exam_assignment_notification(
-                db=db,
-                exam_assignment_id=exam_assignment.id,
+                candidate=candidate,
+                exam=exam,
+                assignment_id=exam_assignment.id,
             )
             exam_assignment.notification_sent = True
             await db.commit()

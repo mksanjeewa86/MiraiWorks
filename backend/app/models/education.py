@@ -1,7 +1,10 @@
 """Education model for user profiles."""
 
-from sqlalchemy import Column, Date, ForeignKey, Integer, Numeric, String, Text
-from sqlalchemy.orm import relationship
+from datetime import date
+from decimal import Decimal
+
+from sqlalchemy import Date, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import BaseModel
 
@@ -10,7 +13,7 @@ class ProfileEducation(BaseModel):
     """Education entries for user profiles."""
 
     __tablename__ = "profile_educations"
-    user_id = Column(
+    user_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
@@ -18,28 +21,28 @@ class ProfileEducation(BaseModel):
     )
 
     # Institution Information
-    institution_name = Column(String(255), nullable=False)
-    institution_logo_url = Column(String(500), nullable=True)
+    institution_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    institution_logo_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     # Degree Information
-    degree_type = Column(String(100), nullable=False)  # Bachelor's, Master's, PhD, etc.
-    field_of_study = Column(String(255), nullable=False)
+    degree_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    field_of_study: Mapped[str] = mapped_column(String(255), nullable=False)
 
     # Duration
-    start_date = Column(Date, nullable=True)
-    end_date = Column(Date, nullable=True)  # NULL if currently enrolled
-    graduation_year = Column(Integer, nullable=True)
+    start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    graduation_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     # Academic Performance
-    gpa = Column(Numeric(3, 2), nullable=True)  # e.g., 3.85
-    gpa_max = Column(Numeric(3, 2), nullable=True)  # e.g., 4.00
+    gpa: Mapped[Decimal | None] = mapped_column(Numeric(3, 2), nullable=True)
+    gpa_max: Mapped[Decimal | None] = mapped_column(Numeric(3, 2), nullable=True)
 
     # Additional Information
-    honors_awards = Column(Text, nullable=True)  # Honors, awards, achievements
-    description = Column(Text, nullable=True)  # Additional details
+    honors_awards: Mapped[str | None] = mapped_column(Text, nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Display Order
-    display_order = Column(Integer, default=0, nullable=False)
+    display_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     # Relationships
     user = relationship("User", back_populates="educations")

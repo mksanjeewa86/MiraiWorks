@@ -17,7 +17,7 @@ logger = get_logger(__name__)
 class StructuredLoggingMiddleware(BaseHTTPMiddleware):
     """Middleware for structured request/response logging."""
 
-    def __init__(self, app, exclude_paths: list[str] = None):
+    def __init__(self, app, exclude_paths: list[str] | None = None):
         super().__init__(app)
         self.exclude_paths = exclude_paths or [
             "/health",

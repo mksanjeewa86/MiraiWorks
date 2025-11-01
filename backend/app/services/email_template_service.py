@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 from typing import Any
 
@@ -7,7 +8,8 @@ try:
     JINJA2_AVAILABLE = True
 except ImportError:
     JINJA2_AVAILABLE = False
-    import re
+    Environment = None  # type: ignore
+    FileSystemLoader = None  # type: ignore
 
 
 class EmailTemplateService:
@@ -15,7 +17,7 @@ class EmailTemplateService:
         self.template_dir = Path(__file__).parent.parent / "templates" / "emails"
         self.base_template_path = self.template_dir / "base.html"
 
-        if JINJA2_AVAILABLE:
+        if JINJA2_AVAILABLE and Environment is not None and FileSystemLoader is not None:
             # Use Jinja2 for proper template rendering
             # Disable autoescape for email templates since they contain HTML content
             self.jinja_env = Environment(
@@ -52,7 +54,7 @@ class EmailTemplateService:
 
     def _render_template(self, template_content: str, context: dict[str, Any]) -> str:
         """Render a template with the given context."""
-        if JINJA2_AVAILABLE:
+        if JINJA2_AVAILABLE and self.jinja_env is not None:
             # Use Jinja2 for proper template rendering
             template = self.jinja_env.from_string(template_content)
             try:
@@ -91,7 +93,7 @@ class EmailTemplateService:
             Tuple of (html_content, text_content)
         """
         try:
-            if JINJA2_AVAILABLE:
+            if JINJA2_AVAILABLE and self.jinja_env is not None:
                 # Use Jinja2 for proper template rendering with inheritance
                 # Load the content template
                 content_template = self.jinja_env.get_template(f"{template_path}.html")

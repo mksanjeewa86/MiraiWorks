@@ -41,6 +41,7 @@ async def test_employer_creates_and_lists_job(
     auth_headers: dict,
     test_employer_user: User,
 ):
+    assert test_employer_user.company_id is not None
     created_position = await create_position(
         client,
         auth_headers,
@@ -72,6 +73,7 @@ async def test_admin_updates_job_status(
     admin_auth_headers: dict,
     test_employer_user: User,
 ):
+    assert test_employer_user.company_id is not None
     position = await create_position(
         client,
         auth_headers,
@@ -115,6 +117,8 @@ async def test_interview_created_for_job_candidate(
             )
         )
         await db_session.commit()
+
+    assert test_employer_user.company_id is not None
     interview = await interview_service.create_interview(
         db=db_session,
         candidate_id=test_candidate_only_user.id,

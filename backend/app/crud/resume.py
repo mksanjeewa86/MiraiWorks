@@ -1,5 +1,6 @@
 import secrets
 import string
+from typing import Any
 
 from sqlalchemy import and_, desc, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -99,7 +100,7 @@ class CRUDResume(CRUDBase[Resume, ResumeCreate, ResumeUpdate]):
         query = query.order_by(desc(Resume.updated_at)).offset(skip).limit(limit)
 
         result = await db.execute(query)
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_with_details(
         self, db: AsyncSession, *, id: int, user_id: int
@@ -138,7 +139,7 @@ class CRUDResume(CRUDBase[Resume, ResumeCreate, ResumeUpdate]):
             .where(
                 and_(
                     Resume.public_url_slug == slug,
-                    Resume.is_public is True,
+                    Resume.is_public,
                     Resume.status == ResumeStatus.PUBLISHED,
                 )
             )
@@ -155,11 +156,11 @@ class CRUDResume(CRUDBase[Resume, ResumeCreate, ResumeUpdate]):
             .where(
                 and_(
                     Resume.public_url_slug == slug,
-                    Resume.is_public is True,
+                    Resume.is_public,
                     Resume.status == ResumeStatus.PUBLISHED,
                 )
             )
-            .values(view_count=Resume.view_count + 1, last_viewed_at=get_utc_now())
+            .values(view_count=Resume.view_count + 1, last_viewed_at=get_utc_now())  # type: ignore[operator]
             .returning(Resume.id)
         )
 
@@ -264,7 +265,7 @@ class CRUDResume(CRUDBase[Resume, ResumeCreate, ResumeUpdate]):
             .group_by(Resume.status)
         )
         status_result = await db.execute(status_query)
-        by_status = dict(status_result.fetchall())
+        by_status = {row[0]: row[1] for row in status_result.fetchall()}
 
         # Get total views and downloads
         views_query = select(func.sum(Resume.view_count)).where(
@@ -291,7 +292,7 @@ class CRUDResume(CRUDBase[Resume, ResumeCreate, ResumeUpdate]):
         result = await db.execute(
             update(Resume)
             .where(Resume.id == resume_id)
-            .values(download_count=Resume.download_count + 1)
+            .values(download_count=Resume.download_count + 1)  # type: ignore[operator]
         )
         await db.commit()
         return result.rowcount > 0
@@ -389,7 +390,7 @@ class CRUDWorkExperience(
             .where(WorkExperience.resume_id == resume_id)
             .order_by(WorkExperience.display_order, desc(WorkExperience.start_date))
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
 
 class CRUDEducation(CRUDBase[Education, EducationCreate, EducationUpdate]):
@@ -412,7 +413,7 @@ class CRUDEducation(CRUDBase[Education, EducationCreate, EducationUpdate]):
             .where(Education.resume_id == resume_id)
             .order_by(Education.display_order, desc(Education.start_date))
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
 
 class CRUDSkill(CRUDBase[Skill, SkillCreate, SkillUpdate]):
@@ -433,10 +434,10 @@ class CRUDSkill(CRUDBase[Skill, SkillCreate, SkillUpdate]):
             .where(Skill.resume_id == resume_id)
             .order_by(Skill.display_order, Skill.category, Skill.name)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
 
-class CRUDResumeMessageAttachment(CRUDBase[ResumeMessageAttachment, dict, dict]):
+class CRUDResumeMessageAttachment(CRUDBase[ResumeMessageAttachment, Any, Any]):
     async def create_attachment(
         self,
         db: AsyncSession,
@@ -467,7 +468,7 @@ class CRUDResumeMessageAttachment(CRUDBase[ResumeMessageAttachment, dict, dict])
                 ResumeMessageAttachment.message_id == message_id
             )
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
 
 # Initialize CRUD instances

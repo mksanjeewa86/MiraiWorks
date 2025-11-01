@@ -1,14 +1,15 @@
+from datetime import datetime
+
 from sqlalchemy import (
     JSON,
     Boolean,
-    Column,
     DateTime,
     ForeignKey,
     Integer,
     String,
     Text,
 )
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import BaseModel
 
@@ -16,32 +17,32 @@ from app.models.base import BaseModel
 class ExternalCalendarAccount(BaseModel):
     __tablename__ = "external_calendar_accounts"
 
-    user_id = Column(
+    user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    provider = Column(String(50), nullable=False, index=True)  # 'google', 'microsoft'
-    provider_account_id = Column(String(255), nullable=False, index=True)
-    email = Column(String(255), nullable=False, index=True)
-    display_name = Column(String(255), nullable=True)
+    provider: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    provider_account_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    email: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    display_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # OAuth tokens (encrypted in production)
-    access_token = Column(Text, nullable=True)
-    refresh_token = Column(Text, nullable=True)
-    token_expires_at = Column(DateTime(timezone=True), nullable=True)
+    access_token: Mapped[str | None] = mapped_column(Text, nullable=True)
+    refresh_token: Mapped[str | None] = mapped_column(Text, nullable=True)
+    token_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Calendar-specific data
-    calendar_id = Column(String(255), nullable=True)  # Primary calendar ID
-    calendar_timezone = Column(String(100), nullable=True, default="UTC")
+    calendar_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    calendar_timezone: Mapped[str | None] = mapped_column(String(100), nullable=True, default="UTC")
 
     # Sync settings
-    is_active = Column(Boolean, nullable=False, default=True, index=True)
-    sync_enabled = Column(Boolean, nullable=False, default=True)
-    last_sync_at = Column(DateTime(timezone=True), nullable=True)
-    sync_token = Column(Text, nullable=True)  # For incremental sync
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, index=True)
+    sync_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    last_sync_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    sync_token: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Webhook settings
-    webhook_id = Column(String(255), nullable=True)  # Provider webhook/subscription ID
-    webhook_expires_at = Column(DateTime(timezone=True), nullable=True)
+    webhook_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    webhook_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Relationships
     user = relationship("User")
@@ -86,7 +87,7 @@ class ExternalCalendarAccount(BaseModel):
 class SyncedEvent(BaseModel):
     __tablename__ = "synced_events"
 
-    calendar_account_id = Column(
+    calendar_account_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("external_calendar_accounts.id", ondelete="CASCADE"),
         nullable=False,
@@ -94,36 +95,36 @@ class SyncedEvent(BaseModel):
     )
 
     # External event data
-    external_event_id = Column(String(255), nullable=False, index=True)
-    external_calendar_id = Column(String(255), nullable=False)
+    external_event_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    external_calendar_id: Mapped[str] = mapped_column(String(255), nullable=False)
 
     # Event details
-    title = Column(String(500), nullable=False)
-    description = Column(Text, nullable=True)
-    location = Column(String(500), nullable=True)
+    title: Mapped[str] = mapped_column(String(500), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    location: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     # Timing
-    start_datetime = Column(DateTime(timezone=True), nullable=False, index=True)
-    end_datetime = Column(DateTime(timezone=True), nullable=False, index=True)
-    timezone = Column(String(100), nullable=True)
-    is_all_day = Column(Boolean, nullable=False, default=False)
+    start_datetime: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    end_datetime: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    timezone: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    is_all_day: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     # Event metadata
-    is_recurring = Column(Boolean, nullable=False, default=False)
-    recurrence_rule = Column(Text, nullable=True)  # RRULE format
-    organizer_email = Column(String(255), nullable=True)
-    attendees = Column(JSON, nullable=True)  # List of attendee emails
+    is_recurring: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    recurrence_rule: Mapped[str | None] = mapped_column(Text, nullable=True)
+    organizer_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    attendees: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
     # Sync metadata
-    event_status = Column(String(50), nullable=True)  # confirmed, cancelled, tentative
-    visibility = Column(
+    event_status: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    visibility: Mapped[str | None] = mapped_column(
         String(50), nullable=True, default="default"
     )  # public, private, default
-    last_modified = Column(DateTime(timezone=True), nullable=True)
-    etag = Column(String(255), nullable=True)  # For conflict resolution
+    last_modified: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    etag: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # Internal linking
-    interview_id = Column(
+    interview_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey("interviews.id", ondelete="SET NULL"),
         nullable=True,

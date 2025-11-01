@@ -115,6 +115,12 @@ async def send_message(
         db, new_message.id
     )
 
+    if not message_with_relations:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve message",
+        )
+
     # Handle notifications (email and in-app)
     await notification_service.handle_new_message_notifications(
         db, current_user.id, message_with_relations.recipient_id, message_with_relations

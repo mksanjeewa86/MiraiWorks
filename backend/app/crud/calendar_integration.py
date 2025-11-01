@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,7 +9,7 @@ from app.models.calendar_integration import ExternalCalendarAccount
 from app.models.user import User
 
 
-class CRUDCalendarIntegration(CRUDBase[ExternalCalendarAccount, dict, dict]):
+class CRUDCalendarIntegration(CRUDBase[ExternalCalendarAccount, Any, Any]):
     """Calendar integration CRUD operations."""
 
     async def get_by_user_and_provider_account(
@@ -39,11 +40,11 @@ class CRUDCalendarIntegration(CRUDBase[ExternalCalendarAccount, dict, dict]):
             select(ExternalCalendarAccount)
             .where(
                 ExternalCalendarAccount.user_id == user_id,
-                ExternalCalendarAccount.is_active is True,
+                ExternalCalendarAccount.is_active,
             )
             .order_by(ExternalCalendarAccount.created_at)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_user_account_by_id(
         self, db: AsyncSession, account_id: int, user_id: int
@@ -68,7 +69,7 @@ class CRUDCalendarIntegration(CRUDBase[ExternalCalendarAccount, dict, dict]):
                 and_(
                     ExternalCalendarAccount.id == account_id,
                     ExternalCalendarAccount.user_id == user_id,
-                    ExternalCalendarAccount.is_active is True,
+                    ExternalCalendarAccount.is_active,
                 )
             )
         )
@@ -81,11 +82,11 @@ class CRUDCalendarIntegration(CRUDBase[ExternalCalendarAccount, dict, dict]):
         result = await db.execute(
             select(ExternalCalendarAccount).where(
                 ExternalCalendarAccount.user_id == user_id,
-                ExternalCalendarAccount.is_active is True,
-                ExternalCalendarAccount.sync_enabled is True,
+                ExternalCalendarAccount.is_active,
+                ExternalCalendarAccount.sync_enabled,
             )
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_filtered_accounts_by_user(
         self, db: AsyncSession, user_id: int, account_id: int | None = None
@@ -93,14 +94,14 @@ class CRUDCalendarIntegration(CRUDBase[ExternalCalendarAccount, dict, dict]):
         """Get calendar accounts for a user, optionally filtered by account ID."""
         query = select(ExternalCalendarAccount).where(
             ExternalCalendarAccount.user_id == user_id,
-            ExternalCalendarAccount.is_active is True,
+            ExternalCalendarAccount.is_active,
         )
 
         if account_id:
             query = query.where(ExternalCalendarAccount.id == account_id)
 
         result = await db.execute(query)
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def create_calendar_account(
         self,

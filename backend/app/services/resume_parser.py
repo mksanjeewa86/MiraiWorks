@@ -71,7 +71,7 @@ class ResumeParser:
         try:
             from io import BytesIO
 
-            import PyPDF2
+            import PyPDF2  # type: ignore
 
             pdf_reader = PyPDF2.PdfReader(BytesIO(file_content))
             text_content = ""
@@ -86,7 +86,7 @@ class ResumeParser:
             try:
                 from io import BytesIO
 
-                import pdfplumber
+                import pdfplumber  # type: ignore
 
                 text_content = ""
                 with pdfplumber.open(BytesIO(file_content)) as pdf:
@@ -110,7 +110,7 @@ class ResumeParser:
         try:
             from io import BytesIO
 
-            import docx
+            import docx  # type: ignore
 
             if file_extension == ".docx":
                 doc = docx.Document(BytesIO(file_content))

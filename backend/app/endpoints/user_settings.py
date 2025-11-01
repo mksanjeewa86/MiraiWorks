@@ -63,8 +63,7 @@ async def update_user_settings(
     if (
         "sms_notifications" in update_data
         and update_data["sms_notifications"]
-        and not current_user.phone
-        or not current_user.phone.strip()
+        and (not current_user.phone or not current_user.phone.strip())
     ):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

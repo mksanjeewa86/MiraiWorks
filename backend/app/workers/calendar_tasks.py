@@ -2,8 +2,7 @@ import asyncio
 import logging
 
 from celery import Celery
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.config import settings
 from app.models.interview import Interview
@@ -38,7 +37,7 @@ logger = logging.getLogger(__name__)
 
 # Database setup for async tasks
 engine = create_async_engine(settings.DATABASE_URL, echo=False)
-AsyncSessionLocal = sessionmaker(
+AsyncSessionLocal = async_sessionmaker(  # type: ignore[call-overload]
     bind=engine, class_=AsyncSession, expire_on_commit=False
 )
 
@@ -127,7 +126,7 @@ async def _check_interview_conflicts(interview_id: int):
     async with AsyncSessionLocal() as db:
         try:
             interview_service = InterviewService()
-            conflicts = await interview_service.check_interview_conflicts(
+            conflicts = await interview_service.check_interview_conflicts(  # type: ignore[attr-defined]
                 db, interview_id
             )
 
@@ -161,7 +160,7 @@ async def _sync_interview_to_calendar(interview_id: int, operation: str = "creat
     async with AsyncSessionLocal() as db:
         try:
             interview_service = InterviewService()
-            interview = await interview_service.get_interview(db, interview_id)
+            interview = await interview_service.get_interview(db, interview_id)  # type: ignore[attr-defined]
 
             if not interview:
                 logger.warning(f"Interview {interview_id} not found")
@@ -218,21 +217,21 @@ async def _delete_calendar_event_for_interview(
 
 
 # Periodic task scheduling
-@celery_app.on_after_configure.connect
+@celery_app.on_after_configure.connect  # type: ignore[union-attr]
 def setup_periodic_tasks(sender, **kwargs):
     """Setup periodic tasks for calendar synchronization."""
 
     # Sync all calendar integrations every 15 minutes
     sender.add_periodic_task(
         900.0,  # 15 minutes
-        sync_all_calendar_integrations_task.s(),
+        sync_all_calendar_integrations_task.s(),  # type: ignore[attr-defined]
         name="sync all calendar integrations",
     )
 
     # Clean up expired tokens every hour
     sender.add_periodic_task(
         3600.0,  # 1 hour
-        cleanup_expired_calendar_tokens_task.s(),
+        cleanup_expired_calendar_tokens_task.s(),  # type: ignore[attr-defined]
         name="cleanup expired calendar tokens",
     )
 

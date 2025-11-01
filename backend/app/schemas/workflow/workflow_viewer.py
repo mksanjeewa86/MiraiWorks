@@ -90,7 +90,7 @@ class BulkViewerAdd(BaseModel):
     """Schema for adding multiple viewers to a process"""
 
     viewers: list[WorkflowViewerCreate] = Field(
-        ..., min_items=1, description="List of viewers to add"
+        ..., min_length=1, description="List of viewers to add"
     )
 
     @field_validator("viewers")

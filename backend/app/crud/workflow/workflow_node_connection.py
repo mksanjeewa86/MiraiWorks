@@ -8,7 +8,7 @@ from app.crud.base import CRUDBase
 from app.models.workflow_node_connection import WorkflowNodeConnection
 
 
-class CRUDWorkflowNodeConnection(CRUDBase[WorkflowNodeConnection, dict, dict]):
+class CRUDWorkflowNodeConnection(CRUDBase[WorkflowNodeConnection, Any, Any]):
     async def create(
         self, db: AsyncSession, *, obj_in: dict[str, Any]
     ) -> WorkflowNodeConnection:
@@ -32,7 +32,7 @@ class CRUDWorkflowNodeConnection(CRUDBase[WorkflowNodeConnection, dict, dict]):
             .where(WorkflowNodeConnection.workflow_id == workflow_id)
             .order_by(desc(WorkflowNodeConnection.created_at))
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_outgoing_connections(
         self, db: AsyncSession, *, source_node_id: int
@@ -44,7 +44,7 @@ class CRUDWorkflowNodeConnection(CRUDBase[WorkflowNodeConnection, dict, dict]):
             .where(WorkflowNodeConnection.source_node_id == source_node_id)
             .order_by(WorkflowNodeConnection.condition_type)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_incoming_connections(
         self, db: AsyncSession, *, target_node_id: int
@@ -56,7 +56,7 @@ class CRUDWorkflowNodeConnection(CRUDBase[WorkflowNodeConnection, dict, dict]):
             .where(WorkflowNodeConnection.target_node_id == target_node_id)
             .order_by(WorkflowNodeConnection.condition_type)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_connection(
         self, db: AsyncSession, *, source_node_id: int, target_node_id: int

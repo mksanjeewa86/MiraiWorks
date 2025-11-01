@@ -128,7 +128,7 @@ class AuthService:
         """Revoke all refresh tokens for a user."""
         result = await db.execute(
             update(RefreshToken)
-            .where(RefreshToken.user_id == user_id, RefreshToken.is_revoked is False)
+            .where(RefreshToken.user_id == user_id, ~RefreshToken.is_revoked)
             .values(is_revoked=True, revoked_at=get_utc_now())
         )
 
@@ -148,7 +148,7 @@ class AuthService:
             )
             .where(
                 RefreshToken.token_hash == token_hash,
-                RefreshToken.is_revoked is False,
+                ~RefreshToken.is_revoked,
                 RefreshToken.expires_at > get_utc_now(),
             )
         )
@@ -169,7 +169,7 @@ class AuthService:
                 selectinload(User.company),
                 selectinload(User.user_roles).selectinload(UserRoleModel.role),
             )
-            .where(User.email == email, User.is_deleted is False)
+            .where(User.email == email, ~User.is_deleted)
         )
 
         user = result.scalar_one_or_none()
@@ -215,12 +215,12 @@ class AuthService:
 
     def generate_activation_token(self, email: str) -> str:
         """Generate an activation token for user email verification."""
-        data = {"sub": email, "type": "activation"}
+        data: dict[str, str | int] = {"sub": email, "type": "activation"}
         # Activation tokens expire in 24 hours
         expire_delta = timedelta(hours=24)
         to_encode = data.copy()
         expire = get_utc_now() + expire_delta
-        to_encode.update({"exp": expire})
+        to_encode["exp"] = int(expire.timestamp())
 
         encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
         return encoded_jwt

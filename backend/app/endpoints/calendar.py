@@ -116,12 +116,12 @@ async def google_oauth_callback(
     # Set up webhook
     try:
         webhook_data = await google_calendar_service.create_webhook_watch(account)
-        if webhook_data:
+        if webhook_data and webhook_data.get("id"):
             webhook_expires_at = datetime.fromtimestamp(
                 webhook_data.get("expiration", 0) / 1000
             )
             account = await calendar_integration.update_webhook_info(
-                db, account, webhook_data.get("id"), webhook_expires_at
+                db, account, webhook_data["id"], webhook_expires_at
             )
     except Exception as e:
         logger.warning(f"Failed to set up Google Calendar webhook: {e}")
@@ -137,7 +137,7 @@ async def start_microsoft_oauth(
     current_user: User = Depends(get_current_active_user), state: str | None = None
 ):
     """Start Microsoft Calendar OAuth flow."""
-    auth_url = microsoft_calendar_service.get_auth_url(current_user.id, state)
+    auth_url = microsoft_calendar_service.get_auth_url(current_user.id, state or "")
     return {"auth_url": auth_url}
 
 
@@ -165,6 +165,10 @@ async def microsoft_oauth_callback(
     if not user_id:
         # Try to find user by email
         user_email = user_info.get("mail") or user_info.get("userPrincipalName")
+        if not user_email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="No email found in user info"
+            )
         user = await calendar_integration.get_user_by_email(db, user_email)
         if not user:
             raise HTTPException(
@@ -178,7 +182,7 @@ async def microsoft_oauth_callback(
     )
 
     token_expires_at = get_utc_now() + timedelta(seconds=tokens.get("expires_in", 3600))
-    user_email = user_info.get("mail", user_info.get("userPrincipalName"))
+    user_email = user_info.get("mail") or user_info.get("userPrincipalName") or ""
     display_name = user_info.get("displayName")
 
     if account:
@@ -211,12 +215,14 @@ async def microsoft_oauth_callback(
         subscription_data = (
             await microsoft_calendar_service.create_webhook_subscription(account)
         )
-        if subscription_data:
+        if subscription_data and subscription_data.get("id"):
+            expiration_dt = subscription_data.get("expirationDateTime")
+            assert expiration_dt is not None
             webhook_expires_at = datetime.fromisoformat(
-                subscription_data.get("expirationDateTime").replace("Z", "+00:00")
+                expiration_dt.replace("Z", "+00:00")
             )
             account = await calendar_integration.update_webhook_info(
-                db, account, subscription_data.get("id"), webhook_expires_at
+                db, account, subscription_data["id"], webhook_expires_at
             )
     except Exception as e:
         logger.warning(f"Failed to set up Microsoft Calendar webhook: {e}")
@@ -295,9 +301,10 @@ async def sync_calendar_account(
 
     # Trigger sync (this would typically be done by a background worker)
     try:
-        if account.provider == "google":
+        if account.provider == "google" and account.access_token:
             events = await google_calendar_service.get_events(
-                account,
+                account.access_token,
+                account.calendar_id or "primary",
                 time_min=get_utc_now() - timedelta(days=30),
                 time_max=get_utc_now() + timedelta(days=90),
             )
@@ -338,8 +345,8 @@ async def get_calendars(
 
     for account in accounts:
         try:
-            if account.provider == "google":
-                calendars = await google_calendar_service.get_calendars(account)
+            if account.provider == "google" and account.access_token:
+                calendars = await google_calendar_service.get_calendars(account.access_token)
                 for cal in calendars:
                     all_calendars.append(
                         CalendarInfo(
@@ -410,18 +417,18 @@ async def get_events(
                 title=event["title"],
                 description=event.get("description"),
                 location=event.get("location"),
-                start_datetime=datetime.fromisoformat(event["start"]),
-                end_datetime=datetime.fromisoformat(event["end"])
+                startDatetime=datetime.fromisoformat(event["start"]),
+                endDatetime=datetime.fromisoformat(event["end"])
                 if event["end"]
-                else None,
+                else datetime.fromisoformat(event["start"]),
                 timezone="UTC",
-                is_all_day=event["allDay"],
-                is_recurring=False,  # Will be enhanced later for recurring events
-                organizer_email=current_user.email,
+                isAllDay=event["allDay"],
+                isRecurring=False,  # Will be enhanced later for recurring events
+                organizerEmail=current_user.email or "",
                 attendees=[],
                 status=event["status"],
-                created_at=get_utc_now(),  # This should come from the event data
-                updated_at=get_utc_now(),  # This should come from the event data
+                createdAt=get_utc_now(),  # This should come from the event data
+                updatedAt=get_utc_now(),  # This should come from the event data
             )
             all_events.append(event_info)
 
@@ -432,16 +439,16 @@ async def get_events(
                 title=holiday["title"],
                 description=holiday.get("description"),
                 location=None,
-                start_datetime=datetime.fromisoformat(holiday["start"]),
-                end_datetime=datetime.fromisoformat(holiday["end"]),
+                startDatetime=datetime.fromisoformat(holiday["start"]),
+                endDatetime=datetime.fromisoformat(holiday["end"]),
                 timezone="Asia/Tokyo",
-                is_all_day=holiday["allDay"],
-                is_recurring=False,
-                organizer_email=None,
+                isAllDay=holiday["allDay"],
+                isRecurring=False,
+                organizerEmail="",
                 attendees=[],
                 status="confirmed",
-                created_at=get_utc_now(),
-                updated_at=get_utc_now(),
+                createdAt=get_utc_now(),
+                updatedAt=get_utc_now(),
             )
             all_events.append(holiday_event)
 
@@ -773,17 +780,21 @@ async def get_events_in_range(
     start_date: datetime = Query(...),
     end_date: datetime = Query(...),
     event_type: str = Query(None),
-    status: str = Query(None),
+    event_status: str = Query(None),
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Get calendar events within a specific date range."""
     try:
+        from app.schemas.calendar_event import EventStatus, EventType
+
         query_params = CalendarEventQueryParams(
             start_date=start_date,
             end_date=end_date,
-            event_type=event_type,
-            status=status,
+            event_type=EventType(event_type) if event_type else None,
+            status=EventStatus(event_status) if event_status else None,
+            creator_id=current_user.id,
+            timezone="UTC",
         )
 
         events = await calendar_service.get_user_events(

@@ -163,7 +163,7 @@ async def update_system_update(
 
     # Convert Pydantic model to dict and handle enum serialization
     update_data = update_in.model_dump(exclude_unset=True)
-    if "tags" in update_data and update_data["tags"] is not None:
+    if "tags" in update_data and update_data["tags"] is not None and update_in.tags:
         update_data["tags"] = [tag.value for tag in update_in.tags]
 
     updated = await system_update_crud.update(db, db_obj=update, obj_in=update_data)

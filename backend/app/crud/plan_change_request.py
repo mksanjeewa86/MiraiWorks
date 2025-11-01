@@ -1,3 +1,6 @@
+
+from typing import Any
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -7,7 +10,7 @@ from app.models.plan_change_request import PlanChangeRequest
 from app.utils.constants import PlanChangeRequestStatus
 
 
-class CRUDPlanChangeRequest(CRUDBase[PlanChangeRequest, dict, dict]):
+class CRUDPlanChangeRequest(CRUDBase[PlanChangeRequest, Any, Any]):
     """CRUD operations for plan change requests."""
 
     async def get_by_company_id(
@@ -27,7 +30,7 @@ class CRUDPlanChangeRequest(CRUDBase[PlanChangeRequest, dict, dict]):
             .offset(skip)
             .limit(limit)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_by_status(
         self,
@@ -52,7 +55,7 @@ class CRUDPlanChangeRequest(CRUDBase[PlanChangeRequest, dict, dict]):
             .offset(skip)
             .limit(limit)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_pending_requests(
         self, db: AsyncSession, *, skip: int = 0, limit: int = 100

@@ -208,7 +208,6 @@ class PositionUpdate(BaseModel):
 
 class PositionInfo(PositionBase, PositionSalaryInfo):
     title: str = Field(default="", max_length=255)
-    description: str | None = None
     id: int
     slug: str | None = None
     company_id: int
@@ -271,9 +270,9 @@ class PositionInfo(PositionBase, PositionSalaryInfo):
         if value is None:
             return None
         if isinstance(value, str):
-            try:
-                import json
+            import json
 
+            try:
                 return json.loads(value)
             except (json.JSONDecodeError, ValueError):
                 # If it's not valid JSON, return empty list

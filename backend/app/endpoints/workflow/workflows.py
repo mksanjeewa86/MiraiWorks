@@ -165,7 +165,7 @@ async def get_workflow(
         # Check if user has viewer access
         has_access = await workflow_viewer.check_user_access(
             db,
-            process_id=workflow_id,
+            workflow_id=workflow_id,
             user_id=current_user.id,
             required_permission="view_process",
         )
@@ -270,7 +270,7 @@ async def activate_workflow(
 
     try:
         activated_wf = await workflow_engine.activate_process(
-            db, process_id=workflow_id, user_id=current_user.id
+            db, workflow_id=workflow_id, user_id=current_user.id
         )
         return activated_wf
     except ValueError as e:
@@ -358,7 +358,7 @@ async def clone_workflow(
     elif any(role in user_roles for role in [UserRole.MEMBER.value, "candidate"]):
         has_access = await workflow_viewer.check_user_access(
             db,
-            process_id=workflow_id,
+            workflow_id=workflow_id,
             user_id=current_user.id,
             required_permission="view_process",
         )
@@ -379,7 +379,7 @@ async def clone_workflow(
 
     cloned_wf = await workflow_engine.clone_process(
         db,
-        source_process_id=workflow_id,
+        source_workflow_id=workflow_id,
         new_name=clone_data.new_name,
         created_by=current_user.id,
         clone_candidates=clone_data.clone_candidates,
@@ -464,7 +464,7 @@ async def validate_workflow(
     elif UserRole.MEMBER.value in user_roles:
         has_access = await workflow_viewer.check_user_access(
             db,
-            process_id=workflow_id,
+            workflow_id=workflow_id,
             user_id=current_user.id,
             required_permission="view_process",
         )
@@ -505,7 +505,7 @@ async def get_workflow_analytics(
     elif UserRole.MEMBER.value in user_roles:
         has_access = await workflow_viewer.check_user_access(
             db,
-            process_id=workflow_id,
+            workflow_id=workflow_id,
             user_id=current_user.id,
             required_permission="view_analytics",
         )
@@ -517,7 +517,7 @@ async def get_workflow_analytics(
     analytics = await workflow_engine.get_process_analytics(db, workflow_id)
 
     return ProcessAnalytics(
-        process_id=workflow_id,
+        workflow_id=workflow_id,
         process_name=wf.name,
         total_candidates=analytics["total_candidates"],
         completed_candidates=analytics["by_status"].get("completed", 0),

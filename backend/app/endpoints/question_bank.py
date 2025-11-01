@@ -307,7 +307,9 @@ async def add_question_to_bank(
     # Create question
     question_dict = question_data.model_dump()
     question_dict["bank_id"] = bank_id
-    question = await question_bank_item_crud.create(db=db, obj_in=question_dict)
+    question = await question_bank_item_crud.create(
+        db=db, obj_in=QuestionBankItemCreate(**question_dict)
+    )
 
     return question
 

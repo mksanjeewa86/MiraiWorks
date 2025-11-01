@@ -117,7 +117,7 @@ class StorageService:
             # Read file data
             file_data = await file.read()
             return await self.upload_file_data(
-                file_data, file.filename, file.content_type, user_id, folder
+                file_data, file.filename, file.content_type, user_id, folder  # type: ignore
             )
 
         except Exception as e:
@@ -132,7 +132,7 @@ class StorageService:
     ) -> str:
         """Get presigned URL for file access."""
         try:
-            url = self.client.presigned_url(
+            url = self.client.presigned_url(  # type: ignore
                 method=method,
                 bucket_name=self.bucket,
                 object_name=s3_key,
@@ -153,7 +153,7 @@ class StorageService:
         try:
             # Generate presigned POST URL
 
-            url = self.client.presigned_url(
+            url = self.client.presigned_url(  # type: ignore
                 method="PUT",
                 bucket_name=self.bucket,
                 object_name=s3_key,

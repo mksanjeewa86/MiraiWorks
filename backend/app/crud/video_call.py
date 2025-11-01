@@ -63,7 +63,7 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
             .offset(skip)
             .limit(limit)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_upcoming_calls(
         self, db: AsyncSession, *, user_id: int, from_datetime: datetime
@@ -81,7 +81,7 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
             )
             .order_by(VideoCall.scheduled_at.asc())
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def update_call_status(
         self, db: AsyncSession, *, db_obj: VideoCall, status: str, **kwargs
@@ -192,7 +192,7 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
             .where(RecordingConsent.video_call_id == video_call_id)
             .options(selectinload(RecordingConsent.user))
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def save_transcription_segment(
         self, db: AsyncSession, *, video_call_id: int, segment_data: dict
@@ -252,7 +252,7 @@ class CRUDVideoCall(CRUDBase[VideoCall, VideoCallCreate, VideoCallUpdate]):
                 )
             )
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def end_all_participants(
         self, db: AsyncSession, *, video_call_id: int

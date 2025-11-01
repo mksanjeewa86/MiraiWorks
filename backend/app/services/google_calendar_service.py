@@ -99,6 +99,65 @@ class GoogleCalendarService:
             logger.error(f"Error getting Google Calendar event: {str(e)}")
             return None
 
+    async def create_webhook_watch(self, account: Any) -> dict[str, Any] | None:
+        """
+        Create a webhook watch for Google Calendar events.
+
+        Args:
+            account: Calendar account object
+
+        Returns:
+            Webhook data with id and expiration
+        """
+        try:
+            logger.info(f"Creating webhook watch for account {account.id}")
+            # Placeholder implementation
+            return None
+        except Exception as e:
+            logger.error(f"Error creating webhook watch: {str(e)}")
+            return None
+
+    async def get_events(
+        self, access_token: str, calendar_id: str, time_min: datetime, time_max: datetime
+    ) -> list[dict[str, Any]]:
+        """
+        Get events from Google Calendar within a time range.
+
+        Args:
+            access_token: OAuth access token
+            calendar_id: Calendar ID
+            time_min: Start of time range
+            time_max: End of time range
+
+        Returns:
+            List of events
+        """
+        try:
+            logger.info(f"Getting events from {calendar_id} between {time_min} and {time_max}")
+            # Placeholder implementation
+            return []
+        except Exception as e:
+            logger.error(f"Error getting events: {str(e)}")
+            return []
+
+    async def get_calendars(self, access_token: str) -> list[dict[str, Any]]:
+        """
+        Get list of calendars for the user.
+
+        Args:
+            access_token: OAuth access token
+
+        Returns:
+            List of calendar data
+        """
+        try:
+            logger.info("Getting Google calendars")
+            # Placeholder implementation
+            return []
+        except Exception as e:
+            logger.error(f"Error getting calendars: {str(e)}")
+            return []
+
 
 # Global instance for compatibility
 google_calendar_service = GoogleCalendarService()

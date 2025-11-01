@@ -551,11 +551,13 @@ class TestWorkflowViewer:
         # Grant permission
         viewer.grant_permission("execute_nodes")
         assert viewer.has_permission("execute_nodes")
+        assert viewer.permissions is not None
         assert viewer.permissions["execute_nodes"] is True
 
         # Revoke permission
         viewer.revoke_permission("execute_nodes")
         assert not viewer.has_permission("execute_nodes")
+        assert viewer.permissions is not None
         assert viewer.permissions["execute_nodes"] is False
 
 

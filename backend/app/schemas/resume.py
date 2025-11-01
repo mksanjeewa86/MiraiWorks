@@ -129,6 +129,8 @@ class ResumeUpdate(BaseModel):
     is_primary: bool | None = None
     is_public: bool | None = None
     can_download_pdf: bool | None = None
+    can_edit: bool | None = None
+    can_delete: bool | None = None
 
 
 # Work Experience schemas
@@ -483,29 +485,25 @@ class ResumeInfo(ResumeBase):
     user_id: int
     status: ResumeStatus
     visibility: ResumeVisibility
-    resume_format: ResumeFormat
-    resume_language: ResumeLanguage
     is_primary: bool
     view_count: int
     download_count: int
     last_viewed_at: datetime | None
 
     # Enhanced sharing features
-    is_public: bool
     public_url_slug: str | None
     share_token: str
-    can_download_pdf: bool
     can_edit: bool
     can_delete: bool
 
     # Japanese-specific fields
-    furigana_name: str | None
-    birth_date: datetime | None
-    gender: str | None
-    nationality: str | None
-    marital_status: str | None
-    emergency_contact: dict | None
-    photo_path: str | None
+    furigana_name: str | None = None
+    birth_date: datetime | None = None
+    gender: str | None = None
+    nationality: str | None = None
+    marital_status: str | None = None
+    emergency_contact: dict | None = None
+    photo_path: str | None = None
 
     # File paths
     pdf_file_path: str | None

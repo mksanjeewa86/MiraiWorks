@@ -84,7 +84,7 @@ class VideoCallConnectionManager:
                     logger.error(f"Failed to send message to user {user_id}: {e}")
 
     async def broadcast_to_room(
-        self, room_id: str, message: dict, exclude_user: int = None
+        self, room_id: str, message: dict, exclude_user: int | None = None
     ):
         """Broadcast a message to all users in a room."""
         if room_id in self.active_connections:
@@ -125,19 +125,19 @@ async def websocket_video_endpoint(
     websocket: WebSocket, room_id: str, db: AsyncSession = Depends(get_db)
 ):
     """WebSocket endpoint for video call signaling."""
-    user_id = None
+    user_id: int | None = None
 
     try:
         # For simplicity, we'll extract user info from query params
         # In production, you'd want proper WebSocket authentication
         query_params = dict(websocket.query_params)
-        user_id = query_params.get("user_id")
+        user_id_str = query_params.get("user_id")
 
-        if not user_id:
+        if not user_id_str:
             await websocket.close(code=4000, reason="Missing user_id parameter")
             return
 
-        user_id = int(user_id)
+        user_id = int(user_id_str)
 
         # Verify the video call exists and user has permission
         video_call = await crud.video_call.get_by_room_id(db, room_id=room_id)

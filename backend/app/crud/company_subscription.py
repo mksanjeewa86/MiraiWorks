@@ -34,7 +34,7 @@ class CRUDCompanySubscription(
         result = await db.execute(
             select(CompanySubscription)
             .where(CompanySubscription.company_id == company_id)
-            .where(CompanySubscription.is_active is True)
+            .where(CompanySubscription.is_active)
             .options(selectinload(CompanySubscription.plan))
         )
         return result.scalar_one_or_none()
@@ -65,7 +65,7 @@ class CRUDCompanySubscription(
             .offset(skip)
             .limit(limit)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_active_subscriptions(
         self, db: AsyncSession, *, skip: int = 0, limit: int = 100
@@ -73,7 +73,7 @@ class CRUDCompanySubscription(
         """Get all active subscriptions."""
         result = await db.execute(
             select(CompanySubscription)
-            .where(CompanySubscription.is_active is True)
+            .where(CompanySubscription.is_active)
             .options(
                 selectinload(CompanySubscription.company),
                 selectinload(CompanySubscription.plan),
@@ -81,7 +81,7 @@ class CRUDCompanySubscription(
             .offset(skip)
             .limit(limit)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_trial_subscriptions(
         self, db: AsyncSession, *, skip: int = 0, limit: int = 100
@@ -89,8 +89,8 @@ class CRUDCompanySubscription(
         """Get all trial subscriptions."""
         result = await db.execute(
             select(CompanySubscription)
-            .where(CompanySubscription.is_trial is True)
-            .where(CompanySubscription.is_active is True)
+            .where(CompanySubscription.is_trial)
+            .where(CompanySubscription.is_active)
             .options(
                 selectinload(CompanySubscription.company),
                 selectinload(CompanySubscription.plan),
@@ -98,7 +98,7 @@ class CRUDCompanySubscription(
             .offset(skip)
             .limit(limit)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def cancel_subscription(
         self, db: AsyncSession, *, company_id: int, reason: str | None = None

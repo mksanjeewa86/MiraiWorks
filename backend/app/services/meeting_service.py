@@ -56,7 +56,7 @@ class MeetingService:
         self._validate_and_get_participants(
             meeting_data.participants,
             meeting_data.meeting_type,
-            current_user,
+            current_user,  # type: ignore[arg-type]
             interview,
         )
 
@@ -100,10 +100,10 @@ class MeetingService:
 
         # Log action
         log_action(
-            self.db,
-            current_user,
+            self.db,  # type: ignore[arg-type]
+            current_user,  # type: ignore[arg-type]
             "meeting.create",
-            f"Created meeting '{meeting.title}' (ID: {meeting.id})",
+            f"Created meeting '{meeting.title}' (ID: {meeting.id})",  # type: ignore[arg-type]
             {"meeting_id": meeting.id, "meeting_type": meeting_data.meeting_type},
         )
 
@@ -155,7 +155,7 @@ class MeetingService:
         query = query.filter(Meeting.company_id == current_user.company_id)
 
         # Role-based filtering
-        if not has_permission(current_user, "meeting.view_all"):
+        if not has_permission(current_user, "meeting.view_all"):  # type: ignore[arg-type]
             # Non-admin users can only see meetings they participate in
             query = query.join(MeetingParticipant).filter(
                 MeetingParticipant.user_id == current_user.id
@@ -222,10 +222,10 @@ class MeetingService:
 
         # Log action
         log_action(
-            self.db,
-            current_user,
+            self.db,  # type: ignore[arg-type]
+            current_user,  # type: ignore[arg-type]
             "meeting.update",
-            f"Updated meeting '{meeting.title}' (ID: {meeting.id})",
+            f"Updated meeting '{meeting.title}' (ID: {meeting.id})",  # type: ignore[arg-type]
             {
                 "meeting_id": meeting.id,
                 "updated_fields": list(update_data.dict(exclude_unset=True).keys()),

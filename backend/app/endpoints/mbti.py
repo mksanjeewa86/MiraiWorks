@@ -14,14 +14,16 @@ from app.schemas.mbti import (
     MBTITestProgress,
     MBTITestResult,
     MBTITestStart,
+    MBTITestStatus,
     MBTITestSubmit,
     MBTITestSummary,
     MBTITypeInfo,
     get_mbti_type_info,
 )
 from app.services.todo_permissions import TodoPermissionService
-from app.utils.constants import MBTITestStatus
+from app.utils.constants import MBTITestStatus as MBTITestStatusConst
 from app.utils.constants import UserRole as UserRoleEnum
+from app.utils.datetime_utils import get_utc_now
 
 router = APIRouter()
 
@@ -50,6 +52,15 @@ async def start_mbti_test(
 
     # Get progress information
     progress = await mbti_test.get_test_progress(db, user_id=current_user.id)
+
+    if not progress:
+        return MBTITestProgress(
+            status=MBTITestStatusConst.NOT_TAKEN,
+            completion_percentage=0,
+            current_question=None,
+            total_questions=60,
+            started_at=None,
+        )
 
     return MBTITestProgress(**progress)
 
@@ -102,6 +113,13 @@ async def submit_mbti_answer(
 
     # Get updated progress
     progress = await mbti_test.get_test_progress(db, user_id=current_user.id)
+
+    if not progress:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get test progress",
+        )
+
     return MBTITestProgress(**progress)
 
 
@@ -173,6 +191,12 @@ async def get_mbti_summary(
         )
 
     # Get type information
+    if not user_test.mbti_type:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="MBTI type not set",
+        )
+
     type_info = get_mbti_type_info(user_test.mbti_type)
     if not type_info:
         raise HTTPException(
@@ -182,7 +206,7 @@ async def get_mbti_summary(
 
     return MBTITestSummary(
         mbti_type=user_test.mbti_type,
-        completed_at=user_test.completed_at,
+        completed_at=user_test.completed_at or get_utc_now(),
         dimension_preferences=user_test.dimension_preferences,
         strength_scores=user_test.strength_scores,
         type_name_en=type_info.name_en,

@@ -11,8 +11,8 @@ from app.models.workflow_node_execution import WorkflowNodeExecution
 from app.utils.datetime_utils import get_utc_now
 
 
-class CRUDWorkflowNode(CRUDBase[WorkflowNode, dict, dict]):
-    async def create(
+class CRUDWorkflowNode(CRUDBase[WorkflowNode, Any, Any]):
+    async def create(  # type: ignore[override]
         self, db: AsyncSession, *, obj_in: dict[str, Any], created_by: int
     ) -> WorkflowNode:
         """Create a new process node"""
@@ -45,7 +45,7 @@ class CRUDWorkflowNode(CRUDBase[WorkflowNode, dict, dict]):
             .where(and_(*conditions))
             .order_by(asc(WorkflowNode.sequence_order))
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_with_connections(
         self, db: AsyncSession, *, id: int
@@ -94,12 +94,12 @@ class CRUDWorkflowNode(CRUDBase[WorkflowNode, dict, dict]):
                 and_(
                     WorkflowNode.workflow_id == workflow_id,
                     WorkflowNode.status == "active",
-                    WorkflowNode.id.notin_(subquery),
+                    WorkflowNode.id.notin_(subquery),  # type: ignore[arg-type]
                 )
             )
             .order_by(asc(WorkflowNode.sequence_order))
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_next_nodes(
         self,
@@ -129,7 +129,7 @@ class CRUDWorkflowNode(CRUDBase[WorkflowNode, dict, dict]):
 
         return next_nodes
 
-    async def update(
+    async def update(  # type: ignore[override]
         self,
         db: AsyncSession,
         *,
@@ -229,7 +229,7 @@ class CRUDWorkflowNode(CRUDBase[WorkflowNode, dict, dict]):
             .group_by(WorkflowNodeExecution.status)
         )
 
-        status_dict = {row.status: row.count for row in status_counts}
+        status_dict = {row[0]: row[1] for row in status_counts.all()}
 
         # Count executions by result
         result_counts = await db.execute(
@@ -246,7 +246,7 @@ class CRUDWorkflowNode(CRUDBase[WorkflowNode, dict, dict]):
             .group_by(WorkflowNodeExecution.result)
         )
 
-        result_dict = {row.result: row.count for row in result_counts}
+        result_dict = {row[0]: row[1] for row in result_counts.all()}
 
         # Calculate average duration
         avg_duration_result = await db.execute(
@@ -282,7 +282,7 @@ class CRUDWorkflowNode(CRUDBase[WorkflowNode, dict, dict]):
 
         avg_score = avg_score_result.scalar()
 
-        total_executions = sum(status_dict.values())
+        total_executions = sum(list(status_dict.values()))
         completed_executions = status_dict.get("completed", 0)
         completion_rate = (
             (completed_executions / total_executions * 100)

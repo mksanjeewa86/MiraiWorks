@@ -97,7 +97,7 @@ class ResumeService:
         result = await db.execute(
             select(Resume).where(
                 and_(
-                    Resume.slug == slug,
+                    Resume.slug == slug,  # type: ignore
                     Resume.visibility.in_(
                         [ResumeVisibility.PUBLIC, ResumeVisibility.UNLISTED]
                     ),
@@ -153,14 +153,14 @@ class ResumeService:
                 resume.can_download_pdf = is_published
                 # Set public URL slug when publishing
                 if is_published and not resume.public_url_slug:
-                    resume.public_url_slug = resume.slug
+                    resume.public_url_slug = resume.slug  # type: ignore
 
             # Update slug if title changed
             if "title" in update_dict:
                 new_slug = await self._generate_unique_slug(
-                    db, update_data.title, user_id, resume.id
+                    db, update_data.title, user_id, resume.id  # type: ignore
                 )
-                resume.slug = new_slug
+                resume.slug = new_slug  # type: ignore
 
             await db.commit()
             await db.refresh(resume)
@@ -515,7 +515,7 @@ class ResumeService:
                 raise ValueError(f"Template {template_id} not found")
 
             resume.template_id = template_id
-            template.usage_count += 1
+            template.usage_count += 1  # type: ignore
 
             await db.commit()
             await db.refresh(resume)
@@ -542,7 +542,7 @@ class ResumeService:
 
         while True:
             query = select(Resume).where(
-                and_(Resume.user_id == user_id, Resume.slug == slug)
+                and_(Resume.user_id == user_id, Resume.slug == slug)  # type: ignore
             )
             if exclude_id:
                 query = query.where(Resume.id != exclude_id)

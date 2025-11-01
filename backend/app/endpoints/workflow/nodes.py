@@ -38,10 +38,10 @@ def _get_user_roles(user: User) -> set[str]:
     return {user_role.role.name for user_role in user.user_roles}
 
 
-def _ensure_workflow_can_be_edited(workflow_obj, user: User) -> Response:
+def _ensure_workflow_can_be_edited(workflow_obj, user: User) -> None:
     roles = _get_user_roles(user)
     if UserRole.SYSTEM_ADMIN.value in roles:
-        return
+        return None
 
     if not roles.intersection({UserRole.MEMBER.value, UserRole.ADMIN.value}):
         raise HTTPException(
@@ -62,7 +62,7 @@ def _ensure_workflow_can_be_edited(workflow_obj, user: User) -> Response:
         )
 
 
-def _ensure_node_type_allowed(node_type: NodeType | str) -> Response:
+def _ensure_node_type_allowed(node_type: NodeType | str) -> None:
     value = node_type.value if isinstance(node_type, NodeType) else str(node_type)
     if value not in ALLOWED_NODE_TYPES:
         raise HTTPException(
@@ -71,7 +71,7 @@ def _ensure_node_type_allowed(node_type: NodeType | str) -> Response:
         )
 
 
-def _normalise_position(node_dict: dict[str, object]) -> Response:
+def _normalise_position(node_dict: dict[str, object]) -> None:
     position = node_dict.pop("position", None)
     if isinstance(position, dict):
         node_dict["position_x"] = position.get("x", 0)
@@ -99,8 +99,8 @@ async def _shift_sequence_numbers(
     starting_order: int,
     updated_by: int,
 ) -> Response:
-    existing_nodes = await workflow_node.get_by_process_id(
-        db, process_id=workflow_id, include_inactive=True
+    existing_nodes = await workflow_node.get_by_workflow_id(
+        db, workflow_id=workflow_id, include_inactive=True
     )
     updates: list[dict[str, int]] = []
     for node in existing_nodes:
@@ -112,7 +112,7 @@ async def _shift_sequence_numbers(
     if updates:
         await workflow_node.reorder_nodes(
             db,
-            process_id=workflow_id,
+            workflow_id=workflow_id,
             node_sequence_updates=updates,
             updated_by=updated_by,
         )
@@ -134,14 +134,14 @@ async def _create_node(
 
     sequence_order = int(payload.get("sequence_order") or 0)
     if sequence_order <= 0:
-        existing = await workflow_node.get_by_process_id(
-            db, process_id=workflow_id, include_inactive=True
+        existing = await workflow_node.get_by_workflow_id(
+            db, workflow_id=workflow_id, include_inactive=True
         )
         payload["sequence_order"] = len(existing) + 1
     else:
         await _shift_sequence_numbers(
             db,
-            process_id=workflow_id,
+            workflow_id=workflow_id,
             starting_order=sequence_order,
             updated_by=actor.id,
         )
@@ -219,17 +219,17 @@ async def _create_todo_integration(
         due_date = get_utc_now() + timedelta(days=due_in_days)
 
     todo_type = TodoType.ASSIGNMENT.value
-    if integration.is_assignment is False:
+    if not integration.is_assignment:
         todo_type = TodoType.REGULAR.value
 
     todo_payload = TodoCreate(
         title=integration.title or node.title,
         description=integration.description or node.description,
         priority=integration.priority,
-        due_date=due_date,
+        due_datetime=due_date,
         assignee_id=integration.assigned_to,
         todo_type=todo_type,
-        visibility=(
+        visibility_status=(
             TodoVisibility.PUBLIC.value
             if integration.assigned_to is not None
             else TodoVisibility.PRIVATE.value
@@ -298,7 +298,7 @@ async def create_workflow_node_with_integration(
     created_interview = None
     created_todo = None
 
-    if node.node_type == NodeType.INTERVIEW.value:
+    if node.node_type == NodeType.INTERVIEW.value and node_data.create_interview:
         created_interview = await _create_interview_integration(
             db,
             workflow_obj=wf,
@@ -306,7 +306,7 @@ async def create_workflow_node_with_integration(
             integration=node_data.create_interview,
             actor=current_user,
         )
-    elif node.node_type == NodeType.TODO.value:
+    elif node.node_type == NodeType.TODO.value and node_data.create_todo:
         created_todo = await _create_todo_integration(
             db,
             node=node,
@@ -334,7 +334,7 @@ async def update_workflow_node_endpoint(
 ) -> WorkflowNodeInfo:
     wf = await _load_workflow(db, workflow_id)
     node = await workflow_node.get(db, id=node_id)
-    if not node or node.process_id != workflow_id:
+    if not node or node.workflow_id != workflow_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Workflow node not found",
@@ -344,12 +344,12 @@ async def update_workflow_node_endpoint(
 
     update_data = node_update.model_dump(exclude_unset=True)
     _normalise_position(update_data)
-    update_data["updated_by"] = current_user.id
 
     updated_node = await workflow_node.update(
         db,
         db_obj=node,
         obj_in=update_data,
+        updated_by=current_user.id,
     )
 
     return _serialise_node(updated_node)
@@ -368,7 +368,7 @@ async def delete_workflow_node_endpoint(
 ) -> Response:
     wf = await _load_workflow(db, workflow_id)
     node = await workflow_node.get(db, id=node_id)
-    if not node or node.process_id != workflow_id:
+    if not node or node.workflow_id != workflow_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Workflow node not found",
@@ -391,9 +391,9 @@ async def delete_workflow_node_endpoint(
         )
 
     # Resequence remaining nodes to keep workflow linear
-    remaining_nodes = await workflow_node.get_by_process_id(
+    remaining_nodes = await workflow_node.get_by_workflow_id(
         db,
-        process_id=workflow_id,
+        workflow_id=workflow_id,
         include_inactive=True,
     )
     updates: list[dict[str, int]] = []
@@ -406,7 +406,7 @@ async def delete_workflow_node_endpoint(
     if updates:
         await workflow_node.reorder_nodes(
             db,
-            process_id=workflow_id,
+            workflow_id=workflow_id,
             node_sequence_updates=updates,
             updated_by=current_user.id,
         )

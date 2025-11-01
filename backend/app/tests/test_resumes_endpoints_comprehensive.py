@@ -27,7 +27,7 @@ async def test_user(db: AsyncSession):
     from app.schemas.user import UserCreate
 
     # Create test user
-    UserCreate(email="test@example.com", full_name="Test User", password="testpassword")
+    UserCreate(email="test@example.com", first_name="Test", last_name="User")
 
     # Create user with hash password
     hashed_password = auth_service.get_password_hash("testpassword")

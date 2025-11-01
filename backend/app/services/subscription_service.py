@@ -143,7 +143,7 @@ class SubscriptionService:
             # Get all system admin emails
             result = await db.execute(
                 select(User).where(
-                    User.role == UserRole.SYSTEM_ADMIN, User.is_active is True
+                    User.role == UserRole.SYSTEM_ADMIN, User.is_active  # type: ignore
                 )
             )
             system_admins = result.scalars().all()
@@ -151,7 +151,7 @@ class SubscriptionService:
 
             if admin_emails:
                 await subscription_email_service.send_plan_change_request_notification(
-                    request=full_request,
+                    request=full_request,  # type: ignore
                     admin_emails=admin_emails,
                 )
         except Exception as e:
@@ -211,10 +211,10 @@ class SubscriptionService:
                 updated_request = await plan_change_request_crud.get_with_details(
                     db, request_id=request_id
                 )
-                if updated_request.requester and updated_request.requester.email:
+                if updated_request.requester and updated_request.requester.email:  # type: ignore
                     await subscription_email_service.send_plan_change_approved_notification(
-                        request=updated_request,
-                        requester_email=updated_request.requester.email,
+                        request=updated_request,  # type: ignore
+                        requester_email=updated_request.requester.email,  # type: ignore
                     )
             except Exception as e:
                 print(f"Failed to send approval email: {e}")
@@ -232,10 +232,10 @@ class SubscriptionService:
                 updated_request = await plan_change_request_crud.get_with_details(
                     db, request_id=request_id
                 )
-                if updated_request.requester and updated_request.requester.email:
+                if updated_request.requester and updated_request.requester.email:  # type: ignore
                     await subscription_email_service.send_plan_change_rejected_notification(
-                        request=updated_request,
-                        requester_email=updated_request.requester.email,
+                        request=updated_request,  # type: ignore
+                        requester_email=updated_request.requester.email,  # type: ignore
                     )
             except Exception as e:
                 print(f"Failed to send rejection email: {e}")

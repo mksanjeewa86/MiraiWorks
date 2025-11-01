@@ -1,7 +1,9 @@
 """Work Experience model for user profiles."""
 
-from sqlalchemy import Boolean, Column, Date, ForeignKey, Integer, String, Text
-from sqlalchemy.orm import relationship
+from datetime import date
+
+from sqlalchemy import Boolean, Date, ForeignKey, Integer, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import BaseModel
 
@@ -10,7 +12,7 @@ class ProfileWorkExperience(BaseModel):
     """Work experience entries for user profiles."""
 
     __tablename__ = "profile_work_experiences"
-    user_id = Column(
+    user_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
@@ -18,29 +20,29 @@ class ProfileWorkExperience(BaseModel):
     )
 
     # Company Information
-    company_name = Column(String(255), nullable=False)
-    company_logo_url = Column(String(500), nullable=True)
+    company_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    company_logo_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     # Position Information
-    position_title = Column(String(255), nullable=False)
-    employment_type = Column(
+    position_title: Mapped[str] = mapped_column(String(255), nullable=False)
+    employment_type: Mapped[str | None] = mapped_column(
         String(50), nullable=True
     )  # Full-time, Part-time, Contract, etc.
-    location = Column(String(255), nullable=True)
+    location: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # Duration
-    start_date = Column(Date, nullable=False)
-    end_date = Column(Date, nullable=True)  # NULL if current position
-    is_current = Column(Boolean, default=False, nullable=False)
+    start_date: Mapped[date] = mapped_column(Date, nullable=False)
+    end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    is_current: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     # Description
-    description = Column(Text, nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Skills used (stored as comma-separated values for now, could be normalized later)
-    skills = Column(Text, nullable=True)
+    skills: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Display Order
-    display_order = Column(Integer, default=0, nullable=False)
+    display_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     # Relationships
     user = relationship("User", back_populates="work_experiences")

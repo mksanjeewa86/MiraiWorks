@@ -41,7 +41,9 @@ async def check_video_call_tables():
                 """
                     )
                 )
-                count = result.fetchone()[0]
+                row = result.fetchone()
+                assert row is not None
+                count = row[0]
                 status = "✅" if count > 0 else "❌"
                 print(
                     f"{status} Table '{table}': {'exists' if count > 0 else 'missing'}"
@@ -53,7 +55,9 @@ async def check_video_call_tables():
                         result = await session.execute(
                             text(f"SELECT COUNT(*) FROM {table}")
                         )
-                        row_count = result.fetchone()[0]
+                        count_row = result.fetchone()
+                        assert count_row is not None
+                        row_count = count_row[0]
                         print(f"   📊 Records: {row_count}")
                     except Exception as e:
                         print(f"   ⚠️  Could not count records: {e}")
@@ -139,7 +143,9 @@ async def test_video_call_crud_basic():
         async with AsyncSessionLocal() as session:
             # Check if we can query video calls
             result = await session.execute(text("SELECT COUNT(*) FROM video_calls"))
-            call_count = result.fetchone()[0]
+            call_row = result.fetchone()
+            assert call_row is not None
+            call_count = call_row[0]
             print("✅ Database connection successful")
             print(f"📊 Current video calls in database: {call_count}")
 
@@ -147,14 +153,18 @@ async def test_video_call_crud_basic():
             result = await session.execute(
                 text("SELECT COUNT(*) FROM call_participants")
             )
-            participant_count = result.fetchone()[0]
+            participant_row = result.fetchone()
+            assert participant_row is not None
+            participant_count = participant_row[0]
             print(f"📊 Call participants recorded: {participant_count}")
 
             # Check transcriptions
             result = await session.execute(
                 text("SELECT COUNT(*) FROM call_transcriptions")
             )
-            transcript_count = result.fetchone()[0]
+            transcript_row = result.fetchone()
+            assert transcript_row is not None
+            transcript_count = transcript_row[0]
             print(f"📊 Call transcriptions: {transcript_count}")
 
             print("✅ Basic database operations working correctly")

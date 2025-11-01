@@ -386,6 +386,8 @@ async def review_plan_change_request(
         review_message=review_data.review_message,
     )
 
+    assert reviewed_request is not None
+
     # Create a dict from the model, excluding relationship fields
     req_dict = {
         "id": reviewed_request.id,
@@ -440,6 +442,8 @@ async def cancel_plan_change_request(
         request_id=request_id,
         user_id=current_user.id,
     )
+
+    assert cancelled_request is not None
 
     # Create a dict from the model, excluding relationship fields
     req_dict = {

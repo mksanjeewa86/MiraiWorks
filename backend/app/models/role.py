@@ -1,5 +1,7 @@
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text
-from sqlalchemy.orm import relationship
+from datetime import datetime
+
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 from app.database import Base
@@ -8,10 +10,10 @@ from app.database import Base
 class Role(Base):
     __tablename__ = "roles"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(50), nullable=False, unique=True, index=True)
-    description = Column(Text, nullable=True)
-    created_at = Column(
+    id: Mapped[int | None] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(50), nullable=False, unique=True, index=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 
@@ -27,17 +29,17 @@ class Role(Base):
 class UserRole(Base):
     __tablename__ = "user_roles"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(
+    id: Mapped[int | None] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    role_id = Column(
+    role_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("roles.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    scope = Column(
+    scope: Mapped[str | None] = mapped_column(
         String(255), nullable=True
     )  # Additional scoping (e.g., company-specific)
-    created_at = Column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 

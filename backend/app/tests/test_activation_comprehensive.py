@@ -84,6 +84,7 @@ class TestAccountActivation:
         async with test_engine.begin() as conn:
             result = await conn.execute(select(User).where(User.id == user.id))
             updated_user = result.fetchone()
+            assert updated_user is not None
             assert updated_user.is_active is True
             assert updated_user.last_login is not None
 
@@ -428,6 +429,7 @@ class TestAccountActivation:
         async with test_engine.begin() as conn:
             result = await conn.execute(select(User).where(User.id == user.id))
             updated_user = result.fetchone()
+            assert updated_user is not None
             assert updated_user.phone == "+1-555-0100"
 
     async def test_activation_preserves_existing_phone(

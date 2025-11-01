@@ -68,8 +68,8 @@ class CompanyConnectionService:
                     CompanyConnection.source_type == "company",
                     CompanyConnection.source_company_id == user1.company_id,
                     CompanyConnection.target_company_id == user2.company_id,
-                    CompanyConnection.is_active is True,
-                    CompanyConnection.can_message is True,
+                    CompanyConnection.is_active,
+                    CompanyConnection.can_message,
                 )
             )
             # Reverse direction
@@ -78,8 +78,8 @@ class CompanyConnectionService:
                     CompanyConnection.source_type == "company",
                     CompanyConnection.source_company_id == user2.company_id,
                     CompanyConnection.target_company_id == user1.company_id,
-                    CompanyConnection.is_active is True,
-                    CompanyConnection.can_message is True,
+                    CompanyConnection.is_active,
+                    CompanyConnection.can_message,
                 )
             )
 
@@ -90,8 +90,8 @@ class CompanyConnectionService:
                     CompanyConnection.source_type == "user",
                     CompanyConnection.source_user_id == user1_id,
                     CompanyConnection.target_company_id == user2.company_id,
-                    CompanyConnection.is_active is True,
-                    CompanyConnection.can_message is True,
+                    CompanyConnection.is_active,
+                    CompanyConnection.can_message,
                 )
             )
 
@@ -102,8 +102,8 @@ class CompanyConnectionService:
                     CompanyConnection.source_type == "user",
                     CompanyConnection.source_user_id == user2_id,
                     CompanyConnection.target_company_id == user1.company_id,
-                    CompanyConnection.is_active is True,
-                    CompanyConnection.can_message is True,
+                    CompanyConnection.is_active,
+                    CompanyConnection.can_message,
                 )
             )
 
@@ -330,8 +330,8 @@ class CompanyConnectionService:
                     and_(
                         CompanyConnection.source_type == "company",
                         CompanyConnection.source_company_id == user.company_id,
-                        CompanyConnection.is_active is True,
-                        CompanyConnection.can_message is True,
+                        CompanyConnection.is_active,
+                        CompanyConnection.can_message,
                     )
                 )
             )
@@ -343,8 +343,8 @@ class CompanyConnectionService:
                     and_(
                         CompanyConnection.source_type == "company",
                         CompanyConnection.target_company_id == user.company_id,
-                        CompanyConnection.is_active is True,
-                        CompanyConnection.can_message is True,
+                        CompanyConnection.is_active,
+                        CompanyConnection.can_message,
                     )
                 )
             )
@@ -356,8 +356,8 @@ class CompanyConnectionService:
                 and_(
                     CompanyConnection.source_type == "user",
                     CompanyConnection.source_user_id == user_id,
-                    CompanyConnection.is_active is True,
-                    CompanyConnection.can_message is True,
+                    CompanyConnection.is_active,
+                    CompanyConnection.can_message,
                 )
             )
         )
@@ -370,8 +370,8 @@ class CompanyConnectionService:
                     and_(
                         CompanyConnection.source_type == "user",
                         CompanyConnection.target_company_id == user.company_id,
-                        CompanyConnection.is_active is True,
-                        CompanyConnection.can_message is True,
+                        CompanyConnection.is_active,
+                        CompanyConnection.can_message,
                         CompanyConnection.source_user_id.isnot(None),
                     )
                 )
@@ -396,14 +396,14 @@ class CompanyConnectionService:
                 and_(
                     or_(*conditions),
                     User.id != user_id,  # Exclude self
-                    User.is_active is True,
-                    User.is_deleted is False,
+                    User.is_active,
+                    ~User.is_deleted,
                 )
             )
             .options(selectinload(User.company))
         )
 
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def check_connection(
         self,
@@ -431,7 +431,7 @@ class CompanyConnectionService:
                         CompanyConnection.source_type == "user",
                         CompanyConnection.source_user_id == source_id,
                         CompanyConnection.target_company_id == target_company_id,
-                        CompanyConnection.is_active is True,
+                        CompanyConnection.is_active,
                     )
                 )
             )
@@ -442,7 +442,7 @@ class CompanyConnectionService:
                         CompanyConnection.source_type == "company",
                         CompanyConnection.source_company_id == source_id,
                         CompanyConnection.target_company_id == target_company_id,
-                        CompanyConnection.is_active is True,
+                        CompanyConnection.is_active,
                     )
                 )
             )

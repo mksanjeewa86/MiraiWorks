@@ -1,31 +1,32 @@
+from datetime import datetime
+
 from sqlalchemy import (
     JSON,
     Boolean,
-    Column,
     DateTime,
     ForeignKey,
     Integer,
     String,
     Text,
 )
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import BaseModel
 
 
 class Notification(BaseModel):
     __tablename__ = "notifications"
-    user_id = Column(
+    user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    type = Column(
+    type: Mapped[str] = mapped_column(
         String(50), nullable=False, index=True
     )  # NotificationType enum values
-    title = Column(String(255), nullable=False)
-    message = Column(Text, nullable=False)
-    payload = Column(JSON, nullable=True)  # Additional data for the notification
-    is_read = Column(Boolean, nullable=False, default=False, index=True)
-    read_at = Column(DateTime(timezone=True), nullable=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    message: Mapped[str] = mapped_column(Text, nullable=False)
+    payload: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    is_read: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True)
+    read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Relationships
     user = relationship("User", back_populates="notifications")

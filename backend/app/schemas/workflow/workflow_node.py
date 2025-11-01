@@ -82,7 +82,7 @@ class DecisionNodeConfig(BaseModel):
     """Configuration for decision nodes"""
 
     decision_makers: list[int] = Field(
-        ..., min_items=1, description="List of decision maker user IDs"
+        ..., min_length=1, description="List of decision maker user IDs"
     )
     decision_criteria: list[str] = Field(
         default_factory=list, description="Decision criteria"

@@ -1,5 +1,7 @@
-from sqlalchemy import Boolean, Column, Integer, Numeric, String, Text
-from sqlalchemy.orm import relationship
+from decimal import Decimal
+
+from sqlalchemy import Boolean, Integer, Numeric, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import BaseModel
 
@@ -13,33 +15,33 @@ class SubscriptionPlan(BaseModel):
     __tablename__ = "subscription_plans"
 
     # Plan identification
-    name = Column(
+    name: Mapped[str] = mapped_column(
         String(50), nullable=False, unique=True, index=True
     )  # 'basic', 'premium'
-    display_name = Column(String(100), nullable=False)  # 'Basic Plan', 'Premium Plan'
-    description = Column(Text, nullable=True)
+    display_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Pricing
-    price_monthly = Column(Numeric(10, 2), nullable=False)
-    price_yearly = Column(Numeric(10, 2), nullable=True)
-    currency = Column(
+    price_monthly: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    price_yearly: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
+    currency: Mapped[str] = mapped_column(
         String(3), nullable=False, default="JPY"
     )  # ISO 4217 currency code
 
     # Limits (optional)
-    max_users = Column(Integer, nullable=True)
-    max_exams = Column(Integer, nullable=True)
-    max_workflows = Column(Integer, nullable=True)
-    max_storage_gb = Column(Integer, nullable=True)
+    max_users: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    max_exams: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    max_workflows: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    max_storage_gb: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     # Plan status
-    is_active = Column(Boolean, nullable=False, default=True, index=True)
-    is_public = Column(
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, index=True)
+    is_public: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=True
     )  # Show in public pricing page
 
     # Display order
-    display_order = Column(Integer, nullable=False, default=0)
+    display_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     # Relationships
     plan_features = relationship(

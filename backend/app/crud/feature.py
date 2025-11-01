@@ -29,9 +29,9 @@ class CRUDFeature(CRUDBase[Feature, FeatureCreate, FeatureUpdate]):
     ) -> list[Feature]:
         """Get all active features."""
         result = await db.execute(
-            select(Feature).where(Feature.is_active is True).offset(skip).limit(limit)
+            select(Feature).where(Feature.is_active).offset(skip).limit(limit)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_root_features(self, db: AsyncSession) -> list[Feature]:
         """
@@ -41,21 +41,21 @@ class CRUDFeature(CRUDBase[Feature, FeatureCreate, FeatureUpdate]):
         result = await db.execute(
             select(Feature)
             .where(Feature.parent_feature_id.is_(None))
-            .where(Feature.is_active is True)
+            .where(Feature.is_active)
             .options(selectinload(Feature.children))
             .order_by(Feature.display_name)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_children(self, db: AsyncSession, *, parent_id: int) -> list[Feature]:
         """Get all child features of a parent feature."""
         result = await db.execute(
             select(Feature)
             .where(Feature.parent_feature_id == parent_id)
-            .where(Feature.is_active is True)
+            .where(Feature.is_active)
             .order_by(Feature.display_name)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_with_children(
         self, db: AsyncSession, *, feature_id: int
@@ -78,7 +78,7 @@ class CRUDFeature(CRUDBase[Feature, FeatureCreate, FeatureUpdate]):
         # Get all active features
         result = await db.execute(
             select(Feature)
-            .where(Feature.is_active is True)
+            .where(Feature.is_active)
             .options(selectinload(Feature.children))
         )
         all_features = result.scalars().all()
@@ -119,11 +119,11 @@ class CRUDFeature(CRUDBase[Feature, FeatureCreate, FeatureUpdate]):
         result = await db.execute(
             select(Feature)
             .where(Feature.category == category)
-            .where(Feature.is_active is True)
+            .where(Feature.is_active)
             .offset(skip)
             .limit(limit)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def search_features(
         self, db: AsyncSession, *, search_term: str
@@ -136,9 +136,9 @@ class CRUDFeature(CRUDBase[Feature, FeatureCreate, FeatureUpdate]):
                 (Feature.name.ilike(search_pattern))
                 | (Feature.display_name.ilike(search_pattern))
             )
-            .where(Feature.is_active is True)
+            .where(Feature.is_active)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
 
 feature = CRUDFeature(Feature)

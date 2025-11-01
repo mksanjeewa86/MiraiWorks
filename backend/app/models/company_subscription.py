@@ -1,5 +1,7 @@
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
-from sqlalchemy.orm import relationship
+from datetime import datetime
+
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 from app.models.base import BaseModel
@@ -14,34 +16,34 @@ class CompanySubscription(BaseModel):
     __tablename__ = "company_subscriptions"
 
     # Foreign keys
-    company_id = Column(
+    company_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("companies.id"), nullable=False, unique=True, index=True
     )
-    plan_id = Column(
+    plan_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("subscription_plans.id"), nullable=False, index=True
     )
 
     # Subscription status
-    is_active = Column(Boolean, nullable=False, default=True, index=True)
-    is_trial = Column(Boolean, nullable=False, default=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, index=True)
+    is_trial: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     # Subscription period
-    start_date = Column(
+    start_date: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
-    end_date = Column(DateTime(timezone=True), nullable=True)  # NULL = no expiration
-    trial_end_date = Column(DateTime(timezone=True), nullable=True)
+    end_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    trial_end_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Billing
-    billing_cycle = Column(
+    billing_cycle: Mapped[str] = mapped_column(
         String(20), nullable=False, default="monthly"
     )  # 'monthly', 'yearly'
-    next_billing_date = Column(DateTime(timezone=True), nullable=True)
-    auto_renew = Column(Boolean, nullable=False, default=True)
+    next_billing_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    auto_renew: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
     # Cancellation
-    cancelled_at = Column(DateTime(timezone=True), nullable=True)
-    cancellation_reason = Column(String(255), nullable=True)
+    cancelled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    cancellation_reason: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # Relationships
     company = relationship("Company", backref="subscription")

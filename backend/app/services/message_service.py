@@ -29,7 +29,7 @@ class MessageService:
         # Verify recipient exists and is active
         recipient = await db.execute(
             select(User).where(
-                User.id == message_data.recipient_id, User.is_active is True
+                User.id == message_data.recipient_id, User.is_active
             )
         )
         if not recipient.scalar_one_or_none():
@@ -97,12 +97,12 @@ class MessageService:
                     and_(
                         Message.sender_id == current_user_id,
                         Message.recipient_id == other_user_id,
-                        Message.is_deleted_by_sender is False,
+                        ~Message.is_deleted_by_sender,
                     ),
                     and_(
                         Message.sender_id == other_user_id,
                         Message.recipient_id == current_user_id,
-                        Message.is_deleted_by_recipient is False,
+                        ~Message.is_deleted_by_recipient,
                     ),
                 )
             )
@@ -202,12 +202,12 @@ class MessageService:
                         and_(
                             Message.sender_id == user_id,
                             Message.recipient_id == other_user_id,
-                            Message.is_deleted_by_sender is False,
+                            ~Message.is_deleted_by_sender,
                         ),
                         and_(
                             Message.sender_id == other_user_id,
                             Message.recipient_id == user_id,
-                            Message.is_deleted_by_recipient is False,
+                            ~Message.is_deleted_by_recipient,
                         ),
                     )
                 )
@@ -221,8 +221,8 @@ class MessageService:
                 select(func.count(Message.id)).where(
                     Message.sender_id == other_user_id,
                     Message.recipient_id == user_id,
-                    Message.is_read is False,
-                    Message.is_deleted_by_recipient is False,
+                    ~Message.is_read,
+                    ~Message.is_deleted_by_recipient,
                 )
             )
             unread_count = unread_result.scalar()
@@ -258,7 +258,7 @@ class MessageService:
                 if other_user.company
                 else None,
                 last_message=last_message_info,
-                unread_count=unread_count,
+                unread_count=unread_count or 0,
                 last_activity=row.last_activity,
             )
             conversations.append(conversation)
@@ -279,11 +279,11 @@ class MessageService:
                 or_(
                     and_(
                         Message.sender_id == user_id,
-                        Message.is_deleted_by_sender is False,
+                        ~Message.is_deleted_by_sender,
                     ),
                     and_(
                         Message.recipient_id == user_id,
-                        Message.is_deleted_by_recipient is False,
+                        ~Message.is_deleted_by_recipient,
                     ),
                 )
             )
@@ -316,7 +316,7 @@ class MessageService:
         )
 
         result = await db.execute(query)
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def mark_messages_as_read(
         self, db: AsyncSession, user_id: int, message_ids: list[int]
@@ -327,7 +327,7 @@ class MessageService:
             select(Message).where(
                 Message.id.in_(message_ids),
                 Message.recipient_id == user_id,
-                Message.is_read is False,
+                ~Message.is_read,
             )
         )
         messages = result.scalars().all()
@@ -356,8 +356,8 @@ class MessageService:
             select(Message).where(
                 Message.sender_id == other_user_id,
                 Message.recipient_id == user_id,
-                Message.is_read is False,
-                Message.is_deleted_by_recipient is False,
+                ~Message.is_read,
+                ~Message.is_deleted_by_recipient,
             )
         )
         messages = result.scalars().all()

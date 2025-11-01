@@ -10,7 +10,7 @@ from app.models.workflow_node_execution import WorkflowNodeExecution
 from app.utils.datetime_utils import get_utc_now
 
 
-class CRUDCandidateWorkflow(CRUDBase[CandidateWorkflow, dict, dict]):
+class CRUDCandidateWorkflow(CRUDBase[CandidateWorkflow, Any, Any]):
     async def create(
         self, db: AsyncSession, *, obj_in: dict[str, Any]
     ) -> CandidateWorkflow:
@@ -62,7 +62,7 @@ class CRUDCandidateWorkflow(CRUDBase[CandidateWorkflow, dict, dict]):
             .offset(skip)
             .limit(limit)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_by_candidate_id(
         self,
@@ -82,7 +82,7 @@ class CRUDCandidateWorkflow(CRUDBase[CandidateWorkflow, dict, dict]):
         result = await db.execute(
             select(CandidateWorkflow)
             .options(
-                selectinload(CandidateWorkflow.process),
+                selectinload(CandidateWorkflow.process),  # type: ignore[attr-defined]
                 selectinload(CandidateWorkflow.assigned_recruiter),
                 selectinload(CandidateWorkflow.executions),
             )
@@ -91,7 +91,7 @@ class CRUDCandidateWorkflow(CRUDBase[CandidateWorkflow, dict, dict]):
             .offset(skip)
             .limit(limit)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_by_recruiter_id(
         self,
@@ -112,7 +112,7 @@ class CRUDCandidateWorkflow(CRUDBase[CandidateWorkflow, dict, dict]):
             select(CandidateWorkflow)
             .options(
                 selectinload(CandidateWorkflow.candidate),
-                selectinload(CandidateWorkflow.process),
+                selectinload(CandidateWorkflow.process),  # type: ignore[attr-defined]
                 selectinload(CandidateWorkflow.executions),
             )
             .where(and_(*conditions))
@@ -120,7 +120,7 @@ class CRUDCandidateWorkflow(CRUDBase[CandidateWorkflow, dict, dict]):
             .offset(skip)
             .limit(limit)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_with_details(
         self, db: AsyncSession, *, id: int
@@ -130,7 +130,7 @@ class CRUDCandidateWorkflow(CRUDBase[CandidateWorkflow, dict, dict]):
             select(CandidateWorkflow)
             .options(
                 selectinload(CandidateWorkflow.candidate),
-                selectinload(CandidateWorkflow.process),
+                selectinload(CandidateWorkflow.process),  # type: ignore[attr-defined]
                 selectinload(CandidateWorkflow.current_node),
                 selectinload(CandidateWorkflow.assigned_recruiter),
                 selectinload(CandidateWorkflow.executions).selectinload(
@@ -293,7 +293,7 @@ class CRUDCandidateWorkflow(CRUDBase[CandidateWorkflow, dict, dict]):
                     "timestamp": candidate_workflow.started_at,
                     "event_type": "process_started",
                     "title": "Process Started",
-                    "description": f"Started workflow: {candidate_workflow.process.name}",
+                    "description": f"Started workflow: {candidate_workflow.process.name}",  # type: ignore[attr-defined]
                     "icon": "play",
                 }
             )
@@ -364,10 +364,10 @@ class CRUDCandidateWorkflow(CRUDBase[CandidateWorkflow, dict, dict]):
             .group_by(CandidateWorkflow.status)
         )
 
-        status_dict = {row.status: row.count for row in status_counts}
+        status_dict = {row[0]: row[1] for row in status_counts.all()}
 
         # Calculate completion rate
-        total_candidates = sum(status_dict.values())
+        total_candidates = sum(list(status_dict.values()))
         completed_candidates = status_dict.get("completed", 0)
         completion_rate = (
             (completed_candidates / total_candidates * 100)

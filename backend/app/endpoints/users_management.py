@@ -40,8 +40,8 @@ async def get_super_admin_user(db: AsyncSession) -> User | None:
         .where(
             and_(
                 Role.name == UserRoleEnum.SYSTEM_ADMIN.value,
-                User.is_active is True,
-                User.is_deleted is False,
+                User.is_active,
+                ~User.is_deleted,
             )
         )
         .limit(1)
@@ -139,10 +139,10 @@ async def get_users(
         )
         user_list.append(user_info)
 
-    pages = (total + size - 1) // size
+    pages = ((total or 0) + size - 1) // size
     return UserListResponse(
         users=user_list,
-        total=total,
+        total=total or 0,
         pages=pages,
         page=page,
         per_page=size,
@@ -192,7 +192,7 @@ async def create_user(
         .where(
             and_(
                 Role.name == UserRoleEnum.SYSTEM_ADMIN.value,
-                User.is_deleted is False,
+                ~User.is_deleted,
             )
         )
         .limit(1)
@@ -237,8 +237,8 @@ async def create_user(
             existing_admin_query = select(func.count(User.id)).where(
                 and_(
                     User.company_id == current_user.company_id,
-                    User.is_admin is True,
-                    User.is_deleted is False,
+                    User.is_admin,
+                    ~User.is_deleted,
                     User.id != current_user.id,  # Exclude current user
                 )
             )
@@ -292,8 +292,8 @@ async def create_user(
         existing_admin_query = select(func.count(User.id)).where(
             and_(
                 User.company_id == user_data.company_id,
-                User.is_admin is True,
-                User.is_deleted is False,
+                User.is_admin,
+                ~User.is_deleted,
             )
         )
         existing_admin_result = await db.execute(existing_admin_query)
@@ -512,7 +512,7 @@ async def bulk_reset_passwords(
             # Send email if requested
             if operation.send_email:
                 try:
-                    await email_service.send_password_reset_email(
+                    await email_service.send_password_reset(
                         user.email, user.first_name, temp_password
                     )
                 except Exception as e:
@@ -829,7 +829,7 @@ async def update_user(
             .where(
                 and_(
                     Role.name == UserRoleEnum.SYSTEM_ADMIN.value,
-                    User.is_deleted is False,
+                    ~User.is_deleted,
                 )
             )
             .limit(1)
@@ -1024,7 +1024,7 @@ async def reset_user_password(
     # Send email if requested
     if reset_data.send_email:
         try:
-            await email_service.send_password_reset_email(
+            await email_service.send_password_reset(
                 user.email, user.first_name, temp_password
             )
         except Exception as e:

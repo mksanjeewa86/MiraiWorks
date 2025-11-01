@@ -1,16 +1,16 @@
 from typing import Any, Generic, TypeVar
 
 from fastapi.encoders import jsonable_encoder
-from pydantic import BaseModel
+from pydantic import BaseModel as PydanticBaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import Base
 from app.utils.datetime_utils import get_utc_now
 
-ModelType = TypeVar("ModelType", bound=Base)
-CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
-UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
+ModelType = TypeVar("ModelType", bound=Base)  # type: ignore[valid-type]
+CreateSchemaType = TypeVar("CreateSchemaType", bound=PydanticBaseModel)
+UpdateSchemaType = TypeVar("UpdateSchemaType", bound=PydanticBaseModel)
 
 
 class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
@@ -37,7 +37,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     ) -> list[ModelType]:
         """Get multiple objects."""
         result = await db.execute(select(self.model).offset(skip).limit(limit))
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def create(self, db: AsyncSession, *, obj_in: CreateSchemaType) -> ModelType:
         """Create new object."""
@@ -82,6 +82,8 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     async def remove(self, db: AsyncSession, *, id: int) -> ModelType:
         """Delete object by id (hard delete)."""
         obj = await self.get(db, id)
+        if obj is None:
+            raise ValueError(f"Object with id {id} not found")
         await db.delete(obj)
         await db.commit()
         return obj
@@ -89,7 +91,9 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     async def soft_delete(self, db: AsyncSession, *, id: int) -> ModelType:
         """Soft delete object by id (set is_deleted=True, deleted_at=now)."""
         obj = await self.get(db, id)
-        if obj and hasattr(obj, "is_deleted") and hasattr(obj, "deleted_at"):
+        if obj is None:
+            raise ValueError(f"Object with id {id} not found")
+        if hasattr(obj, "is_deleted") and hasattr(obj, "deleted_at"):
             obj.is_deleted = True
             obj.deleted_at = get_utc_now()
             db.add(obj)

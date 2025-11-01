@@ -57,7 +57,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             pass
         else:
             # When include_deleted is False (default), show only non-deleted users
-            query_conditions.append(User.is_deleted is False)
+            query_conditions.append(~User.is_deleted)
 
         # Apply filters
         if company_id is not None:
@@ -135,8 +135,8 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         admin_query = select(func.count(User.id)).where(
             and_(
                 User.company_id == company_id,
-                User.is_admin is True,
-                User.is_deleted is False,
+                User.is_admin,
+                ~User.is_deleted,
             )
         )
         result = await db.execute(admin_query)
@@ -241,7 +241,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
         await db.commit()
 
-    async def soft_delete(self, db: AsyncSession, user_id: int, deleted_by: int):
+    async def soft_delete(self, db: AsyncSession, user_id: int, deleted_by: int):  # type: ignore[override]
         """Soft delete a user."""
         user = await self.get(db, user_id)
         if user:

@@ -51,7 +51,7 @@ class CRUDWorkExperience(
                 desc(ProfileWorkExperience.start_date),
             )
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_user_experience(
         self, db: AsyncSession, *, id: int, user_id: int
@@ -90,7 +90,7 @@ class CRUDEducation(CRUDBase[ProfileEducation, EducationCreate, EducationUpdate]
             .where(ProfileEducation.user_id == user_id)
             .order_by(ProfileEducation.display_order, desc(ProfileEducation.start_date))
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_user_education(
         self, db: AsyncSession, *, id: int, user_id: int
@@ -133,7 +133,7 @@ class CRUDSkill(CRUDBase[ProfileSkill, SkillCreate, SkillUpdate]):
                 ProfileSkill.skill_name,
             )
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_by_category(
         self, db: AsyncSession, *, user_id: int, category: str
@@ -144,7 +144,7 @@ class CRUDSkill(CRUDBase[ProfileSkill, SkillCreate, SkillUpdate]):
             .where(ProfileSkill.user_id == user_id, ProfileSkill.category == category)
             .order_by(ProfileSkill.display_order, ProfileSkill.skill_name)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_user_skill(
         self, db: AsyncSession, *, id: int, user_id: int
@@ -188,7 +188,7 @@ class CRUDCertification(
                 desc(ProfileCertification.issue_date),
             )
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_user_certification(
         self, db: AsyncSession, *, id: int, user_id: int
@@ -227,7 +227,7 @@ class CRUDProject(CRUDBase[ProfileProject, ProjectCreate, ProjectUpdate]):
             .where(ProfileProject.user_id == user_id)
             .order_by(ProfileProject.display_order, desc(ProfileProject.start_date))
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_user_project(
         self, db: AsyncSession, *, id: int, user_id: int
@@ -273,7 +273,7 @@ class CRUDJobPreference(
         preference = await self.get_by_user(db, user_id=user_id)
         if not preference:
             preference = await self.create_for_user(
-                db, obj_in=JobPreferenceCreate(), user_id=user_id
+                db, obj_in=JobPreferenceCreate(), user_id=user_id  # type: ignore[call-arg]
             )
         return preference
 

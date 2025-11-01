@@ -1,3 +1,6 @@
+
+from typing import Any
+
 from sqlalchemy import and_, case, desc, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -192,7 +195,7 @@ async def get_unread_message_count(db: AsyncSession, user_id: int) -> int:
     return result.scalar() or 0
 
 
-class CRUDMessage(CRUDBase[Message, dict, dict]):
+class CRUDMessage(CRUDBase[Message, Any, Any]):
     """Message CRUD operations."""
 
     async def get_users_with_roles(
@@ -204,7 +207,7 @@ class CRUDMessage(CRUDBase[Message, dict, dict]):
             .where(User.id.in_(user_ids))
             .options(selectinload(User.user_roles).selectinload(UserRole.role))
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_message_with_relationships(
         self, db: AsyncSession, message_id: int
@@ -228,11 +231,11 @@ class CRUDMessage(CRUDBase[Message, dict, dict]):
         base_conditions = or_(
             and_(
                 Message.sender_id == user_id,
-                Message.is_deleted_by_sender is False,
+                ~Message.is_deleted_by_sender,
             ),
             and_(
                 Message.recipient_id == user_id,
-                Message.is_deleted_by_recipient is False,
+                ~Message.is_deleted_by_recipient,
             ),
         )
 
@@ -282,7 +285,7 @@ class CRUDMessage(CRUDBase[Message, dict, dict]):
         messages_result = await db.execute(messages_query)
         count_result = await db.execute(count_query)
 
-        return messages_result.scalars().all(), count_result.scalar() or 0
+        return list(messages_result.scalars().all()), count_result.scalar() or 0
 
     async def get_message_participants(
         self,
@@ -298,7 +301,7 @@ class CRUDMessage(CRUDBase[Message, dict, dict]):
             select(User)
             .join(User.user_roles)
             .join(UserRole.role)
-            .where(User.is_active is True, User.id != current_user_id)
+            .where(User.is_active, User.id != current_user_id)
             .options(
                 selectinload(User.company),
                 selectinload(User.user_roles).selectinload(UserRole.role),
@@ -328,7 +331,7 @@ class CRUDMessage(CRUDBase[Message, dict, dict]):
             )
 
         result = await db.execute(query_stmt)
-        return result.scalars().all()
+        return list(result.scalars().all())
 
 
 # Create the CRUD instance

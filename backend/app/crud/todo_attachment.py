@@ -51,7 +51,7 @@ class CRUDTodoAttachment(
             .limit(limit)
         )
         result = await db.execute(query)
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_attachment_by_id(
         self, db: AsyncSession, *, attachment_id: int, todo_id: int | None = None
@@ -77,7 +77,7 @@ class CRUDTodoAttachment(
             .limit(limit)
         )
         result = await db.execute(query)
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_attachments_by_file_type(
         self,
@@ -91,7 +91,7 @@ class CRUDTodoAttachment(
         """Get attachments by MIME type pattern (e.g., 'image/%', 'application/pdf')."""
         conditions = [TodoAttachment.mime_type.like(mime_type_pattern)]
         if todo_id is not None:
-            conditions.append(TodoAttachment.todo_id == todo_id)
+            conditions.append(TodoAttachment.todo_id == todo_id)  # type: ignore[arg-type]
 
         query = (
             select(TodoAttachment)
@@ -101,7 +101,7 @@ class CRUDTodoAttachment(
             .limit(limit)
         )
         result = await db.execute(query)
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def update_attachment_description(
         self,
@@ -171,7 +171,7 @@ class CRUDTodoAttachment(
         """Delete multiple attachments in bulk."""
         conditions = [TodoAttachment.id.in_(attachment_ids)]
         if todo_id is not None:
-            conditions.append(TodoAttachment.todo_id == todo_id)
+            conditions.append(TodoAttachment.todo_id == todo_id)  # type: ignore[arg-type]
 
         query = select(TodoAttachment).where(and_(*conditions))
         result = await db.execute(query)
@@ -233,7 +233,9 @@ class CRUDTodoAttachment(
         if conditions:
             count_query = count_query.where(and_(*conditions))
         count_result = await db.execute(count_query)
-        total_count, total_size = count_result.first()
+        count_row = count_result.first()
+        assert count_row is not None
+        total_count, total_size = count_row
 
         total_size = total_size or 0
 

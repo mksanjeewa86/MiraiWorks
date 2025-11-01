@@ -117,11 +117,12 @@ async def get_companies(
         for company in companies
     ]
 
-    pages = (total + size - 1) // size if total > 0 else 1
+    total_count = total or 0
+    pages = (total_count + size - 1) // size if total_count > 0 else 1
 
     return CompanyListResponse(
         companies=company_responses,
-        total=total,
+        total=total_count,
         page=page,
         size=size,
         pages=pages,
@@ -415,7 +416,7 @@ async def delete_company(
 
     users_query = select(func.count(User.id)).where(User.company_id == company_id)
     users_result = await db.execute(users_query)
-    user_count = users_result.scalar()
+    user_count = users_result.scalar() or 0
 
     if user_count > 0:
         raise HTTPException(

@@ -258,7 +258,7 @@ async def get_company_exams(
     total = len(exams)  # For simplicity, could be optimized with count query
 
     return ExamListResponse(
-        exams=exams,
+        exams=[ExamInfo.model_validate(e) for e in exams],
         total=total,
         page=skip // limit + 1,
         page_size=limit,
@@ -458,17 +458,17 @@ async def clone_exam(
         exam_type=source_exam.exam_type,
         company_id=current_user.company_id,  # Set to current company
         time_limit_minutes=source_exam.time_limit_minutes,
-        max_attempts=source_exam.max_attempts,
+        max_attempts=source_exam.max_attempts or 0,
         passing_score=source_exam.passing_score,
-        is_randomized=source_exam.is_randomized,
+        is_randomized=source_exam.is_randomized or False,
         is_public=False,  # Cloned exams are private by default
-        allow_web_usage=source_exam.allow_web_usage,
-        monitor_web_usage=source_exam.monitor_web_usage,
-        require_face_verification=source_exam.require_face_verification,
-        face_check_interval_minutes=source_exam.face_check_interval_minutes,
-        show_results_immediately=source_exam.show_results_immediately,
-        show_correct_answers=source_exam.show_correct_answers,
-        show_score=source_exam.show_score,
+        allow_web_usage=source_exam.allow_web_usage or False,
+        monitor_web_usage=source_exam.monitor_web_usage or False,
+        require_face_verification=source_exam.require_face_verification or False,
+        face_check_interval_minutes=source_exam.face_check_interval_minutes or 0,
+        show_results_immediately=source_exam.show_results_immediately or False,
+        show_correct_answers=source_exam.show_correct_answers or False,
+        show_score=source_exam.show_score or False,
         instructions=source_exam.instructions,
     )
 
@@ -479,16 +479,16 @@ async def clone_exam(
             question_text=q.question_text,
             question_type=q.question_type,
             order_index=q.order_index,
-            points=q.points,
+            points=q.points or 0.0,
             time_limit_seconds=q.time_limit_seconds,
-            is_required=q.is_required,
+            is_required=q.is_required or False,
             options=q.options,
-            correct_answers=q.correct_answers,
+            correct_answers=q.correct_answers if isinstance(q.correct_answers, list) else [],
             max_length=q.max_length,
             min_length=q.min_length,
             rating_scale=q.rating_scale,
             explanation=q.explanation,
-            tags=q.tags,
+            tags=q.tags if isinstance(q.tags, list) else [],
         )
         for q in source_questions
     ]
@@ -715,8 +715,8 @@ async def create_exam_assignments(
     # Verify exam can be assigned
     # Allow if:
     # 1. Own company's exam (exam.company_id == current_user.company_id)
-    # 2. Global exam (exam.company_id is NULL and exam.is_public is True)
-    # 3. Public exam from another company (exam.is_public is True)
+    # 2. Global exam (exam.company_id is NULL and exam.is_public)
+    # 3. Public exam from another company (exam.is_public)
     can_assign = (
         exam.company_id == current_user.company_id  # Own company's exam
         or (exam.company_id is None and exam.is_public)  # Global public exam
@@ -902,11 +902,13 @@ async def start_exam(
         public_questions.append(public_q)
 
     current_question = (
-        public_questions[session.current_question_index] if public_questions else None
+        public_questions[session.current_question_index]
+        if public_questions and session.current_question_index is not None
+        else None
     )
 
     return ExamTakeResponse(
-        session=session,
+        session=ExamSessionInfo.model_validate(session),
         questions=public_questions,
         current_question=current_question,
         time_remaining_seconds=session.time_remaining_seconds,
@@ -1023,12 +1025,15 @@ async def get_exam_results(
             status_code=status.HTTP_403_FORBIDDEN, detail="Results not available"
         )
 
-    result_summary = ExamResultSummary(session=session, answers=session.answers)
+    result_summary = ExamResultSummary(
+        session=ExamSessionInfo.model_validate(session),
+        answers=[ExamAnswerInfo.model_validate(a) for a in session.answers],
+    )
 
     # Include questions with correct answers if allowed
     if exam.show_correct_answers:
         questions = await exam_question_crud.get_by_exam(db=db, exam_id=exam.id)
-        result_summary.questions = questions
+        result_summary.questions = [ExamQuestionInfo.model_validate(q) for q in questions]
 
     return result_summary
 
@@ -1063,11 +1068,11 @@ async def create_monitoring_event(
     # Update session counters based on event type
     if event_data.event_type == "web_usage":
         session.web_usage_detected = True
-        session.web_usage_count += 1
+        session.web_usage_count = (session.web_usage_count or 0) + 1
         await db.commit()
     elif event_data.event_type == "face_check_failed":
         session.face_verification_failed = True
-        session.face_check_count += 1
+        session.face_check_count = (session.face_check_count or 0) + 1
         await db.commit()
 
     return event

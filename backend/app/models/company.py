@@ -1,5 +1,7 @@
-from sqlalchemy import Boolean, Column, DateTime, Enum, Integer, String, Text
-from sqlalchemy.orm import relationship
+from datetime import datetime
+
+from sqlalchemy import Boolean, DateTime, Enum, Integer, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import BaseModel
 from app.utils.constants import CompanyType
@@ -7,20 +9,20 @@ from app.utils.constants import CompanyType
 
 class Company(BaseModel):
     __tablename__ = "companies"
-    name = Column(String(255), nullable=False, index=True)
-    type = Column(Enum(CompanyType), nullable=False, index=True)
-    email = Column(String(255), nullable=False, index=True)
-    phone = Column(String(50), nullable=False)
-    website = Column(String(255), nullable=True)
-    postal_code = Column(String(10), nullable=True)
-    prefecture = Column(String(50), nullable=True)
-    city = Column(String(100), nullable=True)
-    description = Column(Text, nullable=True)
-    is_active = Column(String(1), nullable=False, default="1", index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    type: Mapped[CompanyType] = mapped_column(Enum(CompanyType), nullable=False, index=True)
+    email: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    phone: Mapped[str] = mapped_column(String(50), nullable=False)
+    website: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    postal_code: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    prefecture: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    city: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    is_active: Mapped[str] = mapped_column(String(1), nullable=False, default="1", index=True)
     # Logical deletion fields
-    is_deleted = Column(Boolean, nullable=False, default=False, index=True)
-    deleted_at = Column(DateTime(timezone=True), nullable=True)
-    deleted_by = Column(Integer, nullable=True)  # ID of user who deleted this company
+    is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    deleted_by: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     # Relationships
     users = relationship("User", back_populates="company", cascade="all, delete-orphan")

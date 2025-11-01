@@ -30,7 +30,7 @@ class MicrosoftCalendarService:
         self.token_url = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
         self.graph_api_base = "https://graph.microsoft.com/v1.0"
 
-    def get_auth_url(self, user_id: int, state: str = None) -> str:
+    def get_auth_url(self, user_id: int, state: str | None = None) -> str:  # type: ignore[arg-type]
         """Generate Microsoft OAuth authorization URL."""
         scopes = [
             "https://graph.microsoft.com/User.Read",
@@ -122,13 +122,13 @@ class MicrosoftCalendarService:
 
                 if response.status_code != 200:
                     logger.error(f"Token refresh failed: {response.text}")
-                    return None
+                    return None  # type: ignore[arg-type]
 
                 return response.json()
 
         except httpx.HTTPError as e:
             logger.error(f"Error refreshing token: {e}")
-            return None
+            return None  # type: ignore[arg-type]
 
     async def _ensure_valid_token(
         self, calendar_account: ExternalCalendarAccount
@@ -141,7 +141,7 @@ class MicrosoftCalendarService:
             <= get_utc_now() + timedelta(minutes=5)
         ):
             # Refresh the token
-            token_data = await self.refresh_access_token(calendar_account.refresh_token)
+            token_data = await self.refresh_access_token(calendar_account.refresh_token)  # type: ignore[arg-type]
             if not token_data:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
@@ -165,7 +165,7 @@ class MicrosoftCalendarService:
 
             return token_data["access_token"]
 
-        return calendar_account.access_token
+        return calendar_account.access_token  # type: ignore[arg-type]
 
     async def get_calendars(
         self, calendar_account: ExternalCalendarAccount
@@ -200,7 +200,7 @@ class MicrosoftCalendarService:
     async def get_events(
         self,
         calendar_account: ExternalCalendarAccount,
-        calendar_id: str = None,
+        calendar_id: str = None,  # type: ignore[arg-type]
         time_min: datetime | None = None,
         time_max: datetime | None = None,
         max_results: int = 100,
@@ -252,11 +252,36 @@ class MicrosoftCalendarService:
                 detail="Calendar service temporarily unavailable",
             ) from e
 
+    async def get_event(
+        self, access_token: str, event_id: str
+    ) -> dict[str, Any] | None:
+        """Get a single event by ID."""
+        event_endpoint = f"{self.graph_api_base}/me/events/{event_id}"
+
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    event_endpoint,
+                    headers={"Authorization": f"Bearer {access_token}"},
+                )
+
+                if response.status_code == 200:
+                    return response.json()
+                elif response.status_code == 404:
+                    return None
+                else:
+                    logger.error(f"Failed to get event: {response.text}")
+                    return None
+
+        except httpx.HTTPError as e:
+            logger.error(f"Error fetching event: {e}")
+            return None
+
     async def create_event(
         self,
         calendar_account: ExternalCalendarAccount,
         event_data: dict[str, Any],
-        calendar_id: str = None,
+        calendar_id: str = None,  # type: ignore[arg-type]
     ) -> dict[str, Any]:
         """Create event in calendar."""
         access_token = await self._ensure_valid_token(calendar_account)
@@ -300,7 +325,7 @@ class MicrosoftCalendarService:
         calendar_account: ExternalCalendarAccount,
         event_id: str,
         event_data: dict[str, Any],
-        calendar_id: str = None,
+        calendar_id: str = None,  # type: ignore[arg-type]
     ) -> dict[str, Any]:
         """Update event in calendar."""
         access_token = await self._ensure_valid_token(calendar_account)
@@ -343,7 +368,7 @@ class MicrosoftCalendarService:
         self,
         calendar_account: ExternalCalendarAccount,
         event_id: str,
-        calendar_id: str = None,
+        calendar_id: str = None,  # type: ignore[arg-type]
     ) -> bool:
         """Delete event from calendar."""
         access_token = await self._ensure_valid_token(calendar_account)
@@ -369,7 +394,7 @@ class MicrosoftCalendarService:
             return False
 
     async def create_webhook_subscription(
-        self, calendar_account: ExternalCalendarAccount, calendar_id: str = None
+        self, calendar_account: ExternalCalendarAccount, calendar_id: str = None  # type: ignore[arg-type]
     ) -> dict[str, Any] | None:
         """Create webhook subscription for calendar changes."""
         access_token = await self._ensure_valid_token(calendar_account)

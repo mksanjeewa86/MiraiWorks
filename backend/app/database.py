@@ -1,5 +1,6 @@
+
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import DeclarativeBase, declarative_base
 from sqlalchemy.pool import QueuePool
 
 from app.config import settings
@@ -22,8 +23,8 @@ AsyncSessionLocal = async_sessionmaker(
     expire_on_commit=False,
 )
 
-# Base class for models
-Base = declarative_base()
+# Base class for models - use type annotation for proper type checking
+Base: type[DeclarativeBase] = declarative_base()  # type: ignore[assignment]
 
 
 async def get_db():

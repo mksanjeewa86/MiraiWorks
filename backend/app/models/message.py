@@ -1,13 +1,14 @@
+from datetime import datetime
+
 from sqlalchemy import (
     Boolean,
-    Column,
     DateTime,
     ForeignKey,
     Integer,
     String,
     Text,
 )
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import BaseModel
 from app.utils.constants import MessageType
@@ -17,30 +18,30 @@ class Message(BaseModel):
     """Message between two users."""
 
     __tablename__ = "messages"
-    sender_id = Column(
+    sender_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    recipient_id = Column(
+    recipient_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    content = Column(Text, nullable=False)  # Message content
-    type = Column(
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    type: Mapped[str] = mapped_column(
         String(50), nullable=False, default=MessageType.TEXT.value, index=True
     )
-    is_read = Column(Boolean, nullable=False, default=False, index=True)
-    is_deleted_by_sender = Column(Boolean, nullable=False, default=False)
-    is_deleted_by_recipient = Column(Boolean, nullable=False, default=False)
-    reply_to_id = Column(
+    is_read: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True)
+    is_deleted_by_sender: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    is_deleted_by_recipient: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    reply_to_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey("messages.id", ondelete="SET NULL"),
         nullable=True,
         index=True,
     )
-    file_url = Column(String(500), nullable=True)
-    file_name = Column(String(255), nullable=True)
-    file_size = Column(Integer, nullable=True)
-    file_type = Column(String(100), nullable=True)
-    read_at = Column(DateTime(timezone=True), nullable=True)
+    file_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    file_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    file_size: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    file_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Relationships
     sender = relationship("User", foreign_keys=[sender_id])

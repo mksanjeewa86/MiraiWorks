@@ -104,6 +104,9 @@ class Position(BaseModel):
     expires_at: Mapped[datetime | None] = mapped_column(
         DateTime, nullable=True, index=True
     )
+    closed_at: Mapped[datetime | None] = mapped_column(
+        DateTime, nullable=True, index=True
+    )
 
     # Metadata
     posted_by: Mapped[int] = mapped_column(

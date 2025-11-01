@@ -7,6 +7,8 @@ Tests the permission boundaries between:
 - Recruiter/Employer/Candidate: Cannot manage users
 """
 
+from typing import Any
+
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -614,7 +616,7 @@ class TestUserManagementPermissionMatrix:
         target_user = await self._create_user_in_company(db_session, test_company)
         headers = await self._get_auth_headers(client, recruiter)
 
-        bulk_data = {"user_ids": [target_user.id]}
+        bulk_data: dict[str, Any] = {"user_ids": [target_user.id]}
 
         # Cannot bulk suspend
         bulk_data["reason"] = "Test"

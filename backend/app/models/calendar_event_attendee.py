@@ -1,5 +1,5 @@
-from sqlalchemy import Column, ForeignKey, Integer, String
-from sqlalchemy.orm import relationship
+from sqlalchemy import ForeignKey, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import BaseModel
 
@@ -12,20 +12,20 @@ class CalendarEventAttendee(BaseModel):
 
     __tablename__ = "calendar_event_attendees"
 
-    event_id = Column(
+    event_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("calendar_events.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    user_id = Column(
+    user_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    email = Column(String(255), nullable=False, index=True)  # For non-system users
-    response_status = Column(
+    email: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    response_status: Mapped[str] = mapped_column(
         String(20), default="pending", nullable=False
     )  # pending, accepted, declined, tentative
 

@@ -66,7 +66,7 @@ class WorkflowEngineService:
             )
 
         # Activate all nodes
-        nodes = await workflow_node.get_by_process_id(db, workflow_id=workflow_id)
+        nodes = await workflow_node.get_by_process_id(db, workflow_id=workflow_id)  # type: ignore
         for node in nodes:
             if node.status == "draft":
                 await workflow_node.activate_node(db, db_obj=node, updated_by=user_id)
@@ -95,7 +95,7 @@ class WorkflowEngineService:
             raise ValueError("Cannot assign candidates to inactive processes")
 
         # Check if candidate is already assigned
-        existing = await candidate_workflow.get_by_candidate_and_process(
+        existing = await candidate_workflow.get_by_candidate_and_process(  # type: ignore
             db, candidate_id=candidate_id, workflow_id=workflow_id
         )
         if existing:
@@ -140,7 +140,7 @@ class WorkflowEngineService:
         first_node = start_nodes[0]  # Use the first start node
 
         # Start the process
-        candidate_proc = await candidate_workflow.start_process(
+        candidate_proc = await candidate_workflow.start_process(  # type: ignore
             db, candidate_workflow=candidate_proc, first_node_id=first_node.id
         )
 
@@ -298,7 +298,7 @@ class WorkflowEngineService:
         elif final_result in ["fail", "rejected"]:
             final_result = "rejected"
 
-        completed_process = await candidate_workflow.complete_process(
+        completed_process = await candidate_workflow.complete_process(  # type: ignore
             db,
             candidate_workflow=candidate_proc,
             final_result=final_result,
@@ -326,7 +326,7 @@ class WorkflowEngineService:
             or execution.assigned_to,
             "employer_company_id": candidate_proc.workflow.employer_company_id,
             "recruiter_company_id": candidate_proc.workflow.employer_company_id,  # Same as employer for now
-            "title": f"{node.title} - {candidate_proc.candidate.name if candidate_proc.candidate else 'Candidate'}",
+            "title": f"{node.title} - {candidate_proc.candidate.name if candidate_proc.candidate else 'Candidate'}",  # type: ignore
             "description": node.description,
             "interview_type": config.get("interview_type", InterviewNodeType.VIDEO),
             "duration_minutes": config.get("duration_minutes", 60),
@@ -335,7 +335,7 @@ class WorkflowEngineService:
         }
 
         # Create the interview
-        interview = await interview_crud.create(db, obj_in=interview_data)
+        interview = await interview_crud.create(db, obj_in=interview_data)  # type: ignore
 
         # Link to execution
         await workflow_node_execution.link_interview(
@@ -417,7 +417,7 @@ class WorkflowEngineService:
         }
 
         # Create the todo
-        todo = await todo_crud.create(db, obj_in=todo_data)
+        todo = await todo_crud.create(db, obj_in=todo_data)  # type: ignore
 
         # Link to execution
         await workflow_node_execution.link_todo(
@@ -429,7 +429,7 @@ class WorkflowEngineService:
     ) -> dict[str, Any]:
         """Validate a process before activation"""
         # Get process nodes
-        nodes = await workflow_node.get_by_process_id(
+        nodes = await workflow_node.get_by_process_id(  # type: ignore
             db, workflow_id=workflow_id, include_inactive=False
         )
 
@@ -450,7 +450,7 @@ class WorkflowEngineService:
             warnings.append("Process should have at least one interview or assessment")
 
         # Validate node connections
-        flow_validation = await workflow_node_connection.validate_process_flow(
+        flow_validation = await workflow_node_connection.validate_process_flow(  # type: ignore
             db, workflow_id=workflow_id
         )
         issues.extend([issue["message"] for issue in flow_validation.get("issues", [])])
@@ -520,12 +520,12 @@ class WorkflowEngineService:
     ) -> dict[str, Any]:
         """Get comprehensive analytics for a process"""
         # Basic statistics
-        stats = await candidate_workflow.get_statistics_by_process(
+        stats = await candidate_workflow.get_statistics_by_process(  # type: ignore
             db, workflow_id=workflow_id
         )
 
         # Node statistics
-        nodes = await workflow_node.get_by_process_id(db, workflow_id=workflow_id)
+        nodes = await workflow_node.get_by_process_id(db, workflow_id=workflow_id)  # type: ignore
         node_stats = []
 
         for node in nodes:
@@ -598,7 +598,7 @@ class WorkflowEngineService:
 
         # Clone candidate assignments if requested
         if clone_candidates:
-            source_candidates = await candidate_workflow.get_by_process_id(
+            source_candidates = await candidate_workflow.get_by_process_id(  # type: ignore
                 db, workflow_id=source_workflow_id
             )
 

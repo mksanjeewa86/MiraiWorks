@@ -166,9 +166,9 @@ class TodoExtensionNotificationService:
             """
 
             await email_service.send_email(
-                to_email=extension_request.creator.email,
+                to_emails=[extension_request.creator.email],
                 subject=subject,
-                html_content=email_content,
+                html_body=email_content,
             )
 
         except Exception as e:
@@ -245,9 +245,9 @@ class TodoExtensionNotificationService:
             """
 
             await email_service.send_email(
-                to_email=extension_request.requested_by.email,
+                to_emails=[extension_request.requested_by.email],
                 subject=subject,
-                html_content=email_content,
+                html_body=email_content,
             )
 
         except Exception as e:

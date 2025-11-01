@@ -419,7 +419,7 @@ class TestMBTIPerformance:
 
         # Run operations concurrently
         results = await asyncio.gather(
-            start_test(), get_progress(), return_exceptions=True
+            start_test(), get_progress()
         )
 
         # Check that at least one operation succeeded

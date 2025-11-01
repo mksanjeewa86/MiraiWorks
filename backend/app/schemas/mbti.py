@@ -245,7 +245,7 @@ MBTI_TYPE_INFO = {
 }
 
 
-def get_mbti_type_info(mbti_type: str) -> MBTITypeInfo:
+def get_mbti_type_info(mbti_type: str) -> MBTITypeInfo | None:
     """Get detailed information about an MBTI type."""
     try:
         type_enum = MBTIType(mbti_type)

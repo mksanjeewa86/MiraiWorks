@@ -92,7 +92,7 @@ class VideoCallOptimizer:
             # Batch process pending transcription segments
             pending_segments_query = (
                 select(TranscriptionSegment)
-                .where(TranscriptionSegment.processed_at.is_(None))
+                .where(TranscriptionSegment.processed_at.is_(None))  # type: ignore[attr-defined]
                 .limit(100)
             )  # Process in batches
 
@@ -106,7 +106,7 @@ class VideoCallOptimizer:
                     segment.segment_text = self._compress_text(segment.segment_text)
                     optimizations["compressed_texts"] += 1
 
-                segment.processed_at = get_utc_now()
+                segment.processed_at = get_utc_now()  # type: ignore[attr-defined]
                 optimizations["batched_segments"] += 1
 
             await db.commit()

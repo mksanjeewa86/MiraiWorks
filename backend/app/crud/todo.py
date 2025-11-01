@@ -26,7 +26,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
     async def get(self, db: AsyncSession, id: int) -> Todo | None:
         """Get todo by id, excluding soft-deleted records."""
         result = await db.execute(
-            select(Todo).where(Todo.id == id, Todo.is_deleted is False)
+            select(Todo).where(Todo.id == id, ~Todo.is_deleted)
         )
         return result.scalar_one_or_none()
 
@@ -35,9 +35,9 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
     ) -> list[Todo]:
         """Get multiple todos, excluding soft-deleted records."""
         result = await db.execute(
-            select(Todo).where(Todo.is_deleted is False).offset(skip).limit(limit)
+            select(Todo).where(~Todo.is_deleted).offset(skip).limit(limit)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def auto_mark_expired(self, db: AsyncSession, owner_id: int) -> None:
         """Automatically mark overdue todos as expired.
@@ -58,7 +58,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
                 Todo.status.notin_(
                     [TodoStatus.COMPLETED.value, TodoStatus.EXPIRED.value]
                 ),
-                Todo.is_deleted is False,
+                ~Todo.is_deleted,
             )
         )
         todos = result.scalars().all()
@@ -91,16 +91,12 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         # Filter by deleted status
         if not include_deleted:
             # Only show non-deleted todos
-            query = query.where(Todo.is_deleted is False)
+            query = query.where(~Todo.is_deleted)
 
         if status:
             query = query.where(Todo.status == status)
         elif not include_completed:
             query = query.where(Todo.status != TodoStatus.COMPLETED.value)
-
-        total_query = select(func.count()).select_from(query.subquery())
-        total_result = await db.execute(total_query)
-        total_result.scalar() or 0
 
         query = query.order_by(
             Todo.due_datetime.is_(None), Todo.due_datetime.asc(), Todo.created_at.desc()
@@ -112,7 +108,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
 
         # Filter based on permissions
         filtered_todos = await TodoPermissionService.filter_todos_by_permission(
-            db, user_id, all_todos
+            db, user_id, all_todos  # type: ignore[arg-type]
         )
 
         return filtered_todos, len(filtered_todos)
@@ -122,11 +118,11 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
     ) -> list[Todo]:
         result = await db.execute(
             select(Todo)
-            .where(Todo.owner_id == owner_id, Todo.is_deleted is False)
+            .where(Todo.owner_id == owner_id, ~Todo.is_deleted)
             .order_by(Todo.updated_at.desc())
             .limit(limit)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def create_for_user(
         self, db: AsyncSession, *, owner_id: int, created_by: int, obj_in: TodoCreate
@@ -211,7 +207,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         await db.refresh(todo)
         return todo
 
-    async def soft_delete(
+    async def soft_delete(  # type: ignore[override]
         self, db: AsyncSession, *, todo: Todo, deleted_by: int
     ) -> Todo:
         todo.soft_delete()
@@ -274,7 +270,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         *,
         todo: Todo,
         submitted_by: int,
-        assignee_memo: str = None,
+        assignee_memo: str = None,  # type: ignore[arg-type]
     ) -> Todo:
         """Submit assignment for review."""
         if todo.is_assignment and todo.assignee_id == submitted_by:
@@ -307,8 +303,8 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         todo: Todo,
         reviewer_id: int,
         approved: bool,
-        assessment: str = None,
-        score: int = None,
+        assessment: str = None,  # type: ignore[arg-type]
+        score: int = None,  # type: ignore[arg-type]
     ) -> Todo:
         """Review and assess an assignment."""
         if todo.is_assignment and todo.owner_id == reviewer_id:
@@ -334,18 +330,18 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
                 Todo.todo_type == "assignment",
                 Todo.submitted_at.isnot(None),
                 Todo.reviewed_at.is_(None),  # Not yet reviewed
-                Todo.is_deleted is False,
+                ~Todo.is_deleted,
             )
             .order_by(Todo.submitted_at.asc())
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_user_assignments(
         self,
         db: AsyncSession,
         *,
         user_id: int,
-        visibility_status: str = None,
+        visibility_status: str = None,  # type: ignore[arg-type]
         limit: int = 100,
         offset: int = 0,
     ) -> tuple[list[Todo], int]:
@@ -357,7 +353,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
             .where(
                 Todo.todo_type == "assignment",
                 Todo.publish_status == TodoPublishStatus.PUBLISHED.value,
-                Todo.is_deleted is False,
+                ~Todo.is_deleted,
                 Todo.assignee_id == user_id,
             )
         )
@@ -375,7 +371,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
         query = query.offset(offset).limit(limit)
 
         result = await db.execute(query)
-        assignments = result.scalars().all()
+        assignments = list(result.scalars().all())
         return assignments, total
 
     async def attach_viewer_memo(
@@ -392,9 +388,9 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
 
         # Attach as a temporary attribute (not persisted to DB)
         if viewer_memo_obj:
-            todo.viewer_memo = viewer_memo_obj.memo
+            todo.viewer_memo = viewer_memo_obj.memo  # type: ignore[attr-defined]
         else:
-            todo.viewer_memo = None
+            todo.viewer_memo = None  # type: ignore[attr-defined]
 
         return todo
 

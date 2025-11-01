@@ -8,6 +8,7 @@ from app.crud.todo import todo as todo_crud
 from app.crud.todo_extension_request import todo_extension_request
 from app.database import get_db
 from app.dependencies import get_current_active_user
+from app.models.todo_extension_request import TodoExtensionRequest
 from app.models.user import User
 from app.schemas.todo import TodoExtensionValidation
 from app.schemas.todo_extension import (
@@ -27,7 +28,7 @@ router = APIRouter()
 
 async def _get_extension_request_or_404(
     db: AsyncSession, *, request_id: int, current_user: User
-) -> object:
+) -> TodoExtensionRequest:
     """Get extension request by ID and check permissions."""
     extension_request_obj = await todo_extension_request.get_by_id_with_relationships(
         db, request_id=request_id
@@ -219,7 +220,7 @@ async def list_my_extension_requests(
     )
 
     return TodoExtensionRequestList(
-        items=requests,
+        items=[TodoExtensionRequestRead.model_validate(r) for r in requests],
         total=total,
         pending_count=stats.get("pending", 0),
         approved_count=stats.get("approved", 0),
@@ -252,7 +253,7 @@ async def list_extension_requests_to_review(
     )
 
     return TodoExtensionRequestList(
-        items=requests,
+        items=[TodoExtensionRequestRead.model_validate(r) for r in requests],
         total=total,
         pending_count=stats.get("pending", 0),
         approved_count=stats.get("approved", 0),

@@ -7,7 +7,6 @@ from urllib.parse import urlencode
 import aiohttp
 import structlog
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Session
 
 from app.crud.calendar_event import calendar_event
 from app.crud.holiday import holiday
@@ -419,7 +418,7 @@ class CalendarService:
         return f"{self.outlook_auth_url}?{urlencode(params)}"
 
     async def create_google_connection(
-        self, auth_code: str, user_id: int, db: Session
+        self, auth_code: str, user_id: int, db: AsyncSession
     ) -> CalendarConnection:
         """Create Google Calendar connection from OAuth code"""
         try:
@@ -430,15 +429,16 @@ class CalendarService:
             profile_data = await self._get_google_profile(token_data["access_token"])
 
             # Check for existing connection
-            existing = (
-                db.query(CalendarConnection)
-                .filter(
+            from sqlalchemy import select
+
+            result = await db.execute(
+                select(CalendarConnection).where(
                     CalendarConnection.user_id == user_id,
                     CalendarConnection.provider == "google",
                     CalendarConnection.provider_account_id == profile_data["id"],
                 )
-                .first()
             )
+            existing = result.scalars().first()
 
             if existing:
                 # Update existing connection
@@ -450,8 +450,8 @@ class CalendarService:
                     seconds=token_data.get("expires_in", 3600)
                 )
                 existing.sync_error = None
-                db.commit()
-                db.refresh(existing)
+                await db.commit()
+                await db.refresh(existing)
                 return existing
             else:
                 # Create new connection
@@ -468,8 +468,8 @@ class CalendarService:
                 )
 
                 db.add(connection)
-                db.commit()
-                db.refresh(connection)
+                await db.commit()
+                await db.refresh(connection)
                 return connection
 
         except Exception as e:
@@ -481,7 +481,7 @@ class CalendarService:
             raise
 
     async def create_outlook_connection(
-        self, auth_code: str, user_id: int, db: Session
+        self, auth_code: str, user_id: int, db: AsyncSession
     ) -> CalendarConnection:
         """Create Outlook Calendar connection from OAuth code"""
         try:
@@ -492,15 +492,16 @@ class CalendarService:
             profile_data = await self._get_outlook_profile(token_data["access_token"])
 
             # Check for existing connection
-            existing = (
-                db.query(CalendarConnection)
-                .filter(
+            from sqlalchemy import select
+
+            result = await db.execute(
+                select(CalendarConnection).where(
                     CalendarConnection.user_id == user_id,
                     CalendarConnection.provider == "outlook",
                     CalendarConnection.provider_account_id == profile_data["id"],
                 )
-                .first()
             )
+            existing = result.scalars().first()
 
             if existing:
                 # Update existing connection
@@ -512,8 +513,8 @@ class CalendarService:
                     seconds=token_data.get("expires_in", 3600)
                 )
                 existing.sync_error = None
-                db.commit()
-                db.refresh(existing)
+                await db.commit()
+                await db.refresh(existing)
                 return existing
             else:
                 # Create new connection
@@ -533,8 +534,8 @@ class CalendarService:
                 )
 
                 db.add(connection)
-                db.commit()
-                db.refresh(connection)
+                await db.commit()
+                await db.refresh(connection)
                 return connection
 
         except Exception as e:
@@ -649,7 +650,7 @@ class CalendarService:
             )
 
     async def sync_calendar(
-        self, connection: CalendarConnection, db: Session
+        self, connection: CalendarConnection, db: AsyncSession
     ) -> dict[str, Any]:
         """Sync calendar events (placeholder implementation)"""
         try:
@@ -661,14 +662,14 @@ class CalendarService:
 
             connection.last_sync_at = get_utc_now()
             connection.sync_error = None
-            db.commit()
+            await db.commit()
 
             logger.info("Calendar sync completed", connection_id=connection.id)
             return {"status": "success", "message": "Calendar synced successfully"}
 
         except Exception as e:
             connection.sync_error = str(e)
-            db.commit()
+            await db.commit()
             logger.error(
                 "Calendar sync failed", error=str(e), connection_id=connection.id
             )

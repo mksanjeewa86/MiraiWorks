@@ -83,7 +83,7 @@ class FreeTranscriptionService:
         try:
             import json
 
-            import vosk
+            import vosk  # type: ignore
 
             # Vosk model selection based on language
             model_paths = {"ja": "vosk-model-ja-0.22", "en": "vosk-model-en-us-0.22"}
@@ -119,7 +119,7 @@ class FreeTranscriptionService:
     ) -> str | None:
         """Transcribe using SpeechRecognition library."""
         try:
-            import speech_recognition as sr
+            import speech_recognition as sr  # type: ignore
 
             r = sr.Recognizer()
 

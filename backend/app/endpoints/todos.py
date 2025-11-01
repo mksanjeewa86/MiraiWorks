@@ -87,7 +87,7 @@ async def list_todos(
     for todo_item in todos:
         await todo_crud.attach_viewer_memo(db, todo=todo_item, user_id=current_user.id)
 
-    return TodoListResponse(items=todos, total=total)
+    return TodoListResponse(items=[TodoRead.model_validate(t) for t in todos], total=total)
 
 
 @router.get(API_ROUTES.TODOS.RECENT, response_model=list[TodoRead])
@@ -284,7 +284,7 @@ async def list_assigned_todos(
     for todo_item in todos:
         await todo_crud.attach_viewer_memo(db, todo=todo_item, user_id=current_user.id)
 
-    return TodoListResponse(items=todos, total=total)
+    return TodoListResponse(items=[TodoRead.model_validate(t) for t in todos], total=total)
 
 
 # =============================================================================
@@ -304,7 +304,7 @@ async def list_viewable_todos(
     for todo_item in todos:
         await todo_crud.attach_viewer_memo(db, todo=todo_item, user_id=current_user.id)
 
-    return TodoListResponse(items=todos, total=len(todos))
+    return TodoListResponse(items=[TodoRead.model_validate(t) for t in todos], total=len(todos))
 
 
 @router.get(API_ROUTES.TODOS.VIEWER_LIST, response_model=TodoViewerListResponse)

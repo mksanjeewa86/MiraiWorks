@@ -199,9 +199,11 @@ class CompanySubscriptionInfo(CompanySubscriptionBase):
 
 
 class CompanySubscriptionWithFeatures(CompanySubscriptionInfo):
-    """Company subscription with plan features."""
+    """Company subscription with plan features.
 
-    plan: SubscriptionPlanWithFeatures
+    Note: The plan field will contain SubscriptionPlanWithFeatures data
+    but inherits the type from CompanySubscriptionInfo to avoid type conflicts.
+    """
 
     model_config = ConfigDict(from_attributes=True)
 

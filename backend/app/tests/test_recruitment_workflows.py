@@ -38,6 +38,7 @@ async def test_job_statistics_endpoint(
     admin_auth_headers: dict,
     test_employer_user: User,
 ):
+    assert test_employer_user.company_id is not None
     position = await create_position(
         client,
         auth_headers,
@@ -65,6 +66,7 @@ async def test_job_search_returns_matching_titles(
     auth_headers: dict,
     test_employer_user: User,
 ):
+    assert test_employer_user.company_id is not None
     position = await create_position(
         client,
         auth_headers,
@@ -96,6 +98,7 @@ async def test_employer_updates_job_details(
     db_session: AsyncSession,
     test_employer_user: User,
 ):
+    assert test_employer_user.company_id is not None
     position = await create_position(
         client,
         auth_headers,

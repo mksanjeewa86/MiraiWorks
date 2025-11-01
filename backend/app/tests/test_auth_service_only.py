@@ -129,6 +129,7 @@ class TestAuthService:
             }
 
             decoded = auth_service.decode_token(token)
+            assert decoded is not None
 
             assert decoded["sub"] == "test@example.com"
             assert decoded["user_id"] == 123

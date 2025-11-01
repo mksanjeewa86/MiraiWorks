@@ -168,7 +168,7 @@ class BulkExecutionUpdate(BaseModel):
     """Schema for bulk updating executions"""
 
     execution_ids: list[int] = Field(
-        ..., min_items=1, description="List of execution IDs to update"
+        ..., min_length=1, description="List of execution IDs to update"
     )
     status: ExecutionStatus | None = None
     assigned_to: int | None = None
@@ -187,7 +187,7 @@ class ExecutionBatchCompletion(BaseModel):
 
     completions: list[dict[str, Any]] = Field(
         ...,
-        min_items=1,
+        min_length=1,
         description="List of {execution_id, result, score, feedback} objects",
     )
 

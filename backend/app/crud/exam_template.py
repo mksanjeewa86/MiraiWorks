@@ -49,12 +49,12 @@ class CRUDExamTemplate(CRUDBase[ExamTemplate, ExamTemplateCreate, ExamTemplateUp
             if company_id:
                 conditions.append(
                     or_(
-                        ExamTemplate.is_public is True,
+                        ExamTemplate.is_public,
                         ExamTemplate.company_id == company_id,
                     )
                 )
             else:
-                conditions.append(ExamTemplate.is_public is True)
+                conditions.append(ExamTemplate.is_public)
         # System admins can see all templates
 
         # Additional filters
@@ -77,7 +77,7 @@ class CRUDExamTemplate(CRUDBase[ExamTemplate, ExamTemplateCreate, ExamTemplateUp
 
         # Execute query
         result = await db.execute(query)
-        templates = result.scalars().all()
+        templates = list(result.scalars().all())
 
         return templates, total
 
@@ -127,7 +127,7 @@ class CRUDExamTemplate(CRUDBase[ExamTemplate, ExamTemplateCreate, ExamTemplateUp
                 "question_type": q.question_type,
                 "points": q.points,
                 "options": q.options,
-                "correct_answer": q.correct_answer,
+                "correct_answers": q.correct_answers,
                 "explanation": q.explanation,
                 "order_index": q.order_index,
             }
@@ -141,14 +141,9 @@ class CRUDExamTemplate(CRUDBase[ExamTemplate, ExamTemplateCreate, ExamTemplateUp
             time_limit_minutes=exam.time_limit_minutes,
             max_attempts=exam.max_attempts,
             passing_score=exam.passing_score,
-            shuffle_questions=exam.shuffle_questions,
-            shuffle_options=exam.shuffle_options,
             show_score=exam.show_score,
             show_correct_answers=exam.show_correct_answers,
             show_results_immediately=exam.show_results_immediately,
-            enable_monitoring=exam.enable_monitoring,
-            enable_face_recognition=exam.enable_face_recognition,
-            require_full_screen=exam.require_full_screen,
             questions_template={"questions": questions_template},
             created_by_id=created_by_id,
             company_id=company_id,

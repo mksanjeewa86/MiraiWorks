@@ -15,7 +15,7 @@ from app.utils.datetime_utils import get_utc_now
 
 async def seed_notification_data(
     db: AsyncSession, auth_result: dict[str, Any]
-) -> dict[str, int]:
+) -> dict[str, int | dict[str, int]]:
     """
     Seed notification data for testing the notification system.
 

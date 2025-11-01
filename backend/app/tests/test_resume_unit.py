@@ -54,7 +54,7 @@ class TestResumeServiceUnit:
     @pytest.fixture
     def sample_resume_create_data(self):
         """Sample resume creation data."""
-        return ResumeCreate(
+        return ResumeCreate.model_construct(
             title="Software Engineer Resume",
             full_name="John Doe",
             email="john.doe@example.com",
@@ -115,7 +115,7 @@ class TestResumeServiceUnit:
                 resume_service, "_generate_unique_slug", return_value="new-slug"
             ),
         ):
-            update_data = ResumeUpdate(
+            update_data = ResumeUpdate.model_construct(
                 title="Updated Resume Title", professional_summary="Updated summary"
             )
 
@@ -242,7 +242,7 @@ class TestResumeServiceUnit:
             mock_exp_instance.company_name = "TechCorp"
             MockWorkExp.return_value = mock_exp_instance
 
-            exp_data = WorkExperienceCreate(
+            exp_data = WorkExperienceCreate.model_construct(
                 company_name="TechCorp",
                 position_title="Software Engineer",
                 start_date=datetime(2020, 1, 1),
@@ -258,7 +258,7 @@ class TestResumeServiceUnit:
     async def test_add_work_experience_invalid_resume(self, resume_service, mock_db):
         """Test adding work experience to non-existent resume."""
         with patch.object(resume_service, "get_resume", return_value=None):
-            exp_data = WorkExperienceCreate(
+            exp_data = WorkExperienceCreate.model_construct(
                 company_name="TechCorp",
                 position_title="Software Engineer",
                 start_date=datetime(2020, 1, 1),
@@ -350,7 +350,7 @@ class TestResumeServiceUnit:
         with patch.object(resume_service, "get_resume", return_value=sample_resume):
             mock_db.commit.side_effect = Exception("Database error")
 
-            update_data = ResumeUpdate(title="Updated Title")
+            update_data = ResumeUpdate.model_construct(title="Updated Title")
 
             with pytest.raises(Exception, match="Database error"):
                 await resume_service.update_resume(mock_db, 1, 1, update_data)
@@ -380,7 +380,7 @@ class TestResumeServiceUnit:
             ),
         ):
             # 1. Create resume
-            resume_data = ResumeCreate(
+            resume_data = ResumeCreate.model_construct(
                 title="Test Resume",
                 full_name="Test User",
                 email="test@example.com",
@@ -388,7 +388,7 @@ class TestResumeServiceUnit:
             resume = await resume_service.create_resume(mock_db, resume_data, 1)
 
             # 2. Add work experience
-            exp_data = WorkExperienceCreate(
+            exp_data = WorkExperienceCreate.model_construct(
                 company_name="TechCorp",
                 position_title="Developer",
                 start_date=datetime(2020, 1, 1),
@@ -400,7 +400,7 @@ class TestResumeServiceUnit:
             )
 
             # 3. Update resume status
-            update_data = ResumeUpdate(status=ResumeStatus.PUBLISHED)
+            update_data = ResumeUpdate.model_construct(status=ResumeStatus.PUBLISHED)
             updated_resume = await resume_service.update_resume(
                 mock_db, resume.id, 1, update_data
             )

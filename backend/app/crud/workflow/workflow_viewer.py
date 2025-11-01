@@ -8,8 +8,8 @@ from app.crud.base import CRUDBase
 from app.models.workflow_viewer import WorkflowViewer
 
 
-class CRUDWorkflowViewer(CRUDBase[WorkflowViewer, dict, dict]):
-    async def create(
+class CRUDWorkflowViewer(CRUDBase[WorkflowViewer, Any, Any]):
+    async def create(  # type: ignore[override]
         self, db: AsyncSession, *, obj_in: dict[str, Any], added_by: int
     ) -> WorkflowViewer:
         """Add a viewer to a process"""
@@ -35,7 +35,7 @@ class CRUDWorkflowViewer(CRUDBase[WorkflowViewer, dict, dict]):
             .where(WorkflowViewer.workflow_id == workflow_id)
             .order_by(desc(WorkflowViewer.added_at))
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_by_user_id(
         self, db: AsyncSession, *, user_id: int
@@ -44,13 +44,13 @@ class CRUDWorkflowViewer(CRUDBase[WorkflowViewer, dict, dict]):
         result = await db.execute(
             select(WorkflowViewer)
             .options(
-                selectinload(WorkflowViewer.process),
+                selectinload(WorkflowViewer.process),  # type: ignore[attr-defined]
                 selectinload(WorkflowViewer.added_by_user),
             )
             .where(WorkflowViewer.user_id == user_id)
             .order_by(desc(WorkflowViewer.added_at))
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_by_workflow_and_user(
         self, db: AsyncSession, *, workflow_id: int, user_id: int
@@ -81,7 +81,7 @@ class CRUDWorkflowViewer(CRUDBase[WorkflowViewer, dict, dict]):
             )
             .order_by(desc(WorkflowViewer.added_at))
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_recruiters(
         self, db: AsyncSession, *, workflow_id: int
@@ -198,7 +198,7 @@ class CRUDWorkflowViewer(CRUDBase[WorkflowViewer, dict, dict]):
         result = await db.execute(
             select(WorkflowViewer)
             .options(selectinload(WorkflowViewer.user))
-            .where(and_(*conditions) if conditions else True)
+            .where(and_(*conditions) if conditions else True)  # type: ignore[arg-type]
             .order_by(desc(WorkflowViewer.added_at))
         )
 
@@ -208,7 +208,7 @@ class CRUDWorkflowViewer(CRUDBase[WorkflowViewer, dict, dict]):
                 {
                     "viewer_id": viewer.id,
                     "user_id": viewer.user_id,
-                    "user_name": viewer.user.name if viewer.user else "Unknown",
+                    "user_name": viewer.user.name if viewer.user else "Unknown",  # type: ignore[attr-defined]
                     "role": viewer.role,
                     "last_activity": None,  # Would come from activity logs
                     "actions_count": 0,  # Would come from activity logs
@@ -250,7 +250,7 @@ class CRUDWorkflowViewer(CRUDBase[WorkflowViewer, dict, dict]):
                 CandidateWorkflow.assigned_recruiter_id == WorkflowViewer.user_id,
             )
             .options(selectinload(WorkflowViewer.user))
-            .where(and_(*conditions) if conditions else True)
+            .where(and_(*conditions) if conditions else True)  # type: ignore[arg-type]
             .group_by(WorkflowViewer.id, WorkflowViewer.user_id, WorkflowViewer.role)
             .order_by(desc("assigned_processes"))
         )
@@ -321,9 +321,9 @@ class CRUDWorkflowViewer(CRUDBase[WorkflowViewer, dict, dict]):
             .group_by(WorkflowViewer.role)
         )
 
-        role_dict = {row.role: row.count for row in role_counts}
+        role_dict = {row[0]: row[1] for row in role_counts.all()}
 
-        total_viewers = sum(role_dict.values())
+        total_viewers = sum(list(role_dict.values()))
 
         return {
             "total_viewers": total_viewers,

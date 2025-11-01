@@ -398,6 +398,8 @@ class TestCompanyManagementPermissionMatrix:
                 )
             elif method == "DELETE":
                 response = await client.delete(endpoint, headers=headers)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
 
             assert response.status_code == 403, f"Failed for {method} {endpoint}"
 
@@ -444,6 +446,8 @@ class TestCompanyManagementPermissionMatrix:
                 )
             elif method == "DELETE":
                 response = await client.delete(endpoint, headers=headers)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
 
             assert response.status_code == 403, f"Failed for {method} {endpoint}"
 
@@ -474,6 +478,8 @@ class TestCompanyManagementPermissionMatrix:
                 response = await client.put(endpoint, json={"description": "Updated"})
             elif method == "DELETE":
                 response = await client.delete(endpoint)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
 
             assert response.status_code == 401, f"Failed for {method} {endpoint}"
 

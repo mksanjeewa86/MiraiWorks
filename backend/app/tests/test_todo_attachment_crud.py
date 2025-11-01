@@ -239,6 +239,8 @@ class TestTodoAttachmentCRUD:
                 file_size=len(f"test content {i}"),
                 mime_type="text/plain",
                 uploaded_by=user.id,
+                description=f"Test attachment {i}",
+                file_extension=".txt",
             )
 
             attachment = await todo_attachment.create_attachment(
@@ -373,6 +375,8 @@ class TestTodoAttachmentCRUD:
             file_size=100,
             mime_type="text/plain",
             uploaded_by=user.id,
+            description="Orphan test attachment",
+            file_extension=".txt",
         )
 
         orphan_attachment = await todo_attachment.create_attachment(
@@ -419,6 +423,8 @@ class TestTodoAttachmentCRUD:
         ]
 
         for filename, mime_type, expected_category in test_cases:
+            import os
+            file_ext = os.path.splitext(filename)[1]
             attachment_data = TodoAttachmentCreate(
                 todo_id=test_todo.id,
                 original_filename=filename,
@@ -427,6 +433,8 @@ class TestTodoAttachmentCRUD:
                 file_size=1000,
                 mime_type=mime_type,
                 uploaded_by=user.id,
+                description=f"Test file {filename}",
+                file_extension=file_ext,
             )
 
             attachment = await todo_attachment.create_attachment(

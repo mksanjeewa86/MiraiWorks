@@ -39,7 +39,7 @@ class PublicService:
         featured_companies = (
             self.db.query(Company)
             .join(CompanyProfile)
-            .filter(Company.is_active == "1", CompanyProfile.is_public is True)
+            .filter(Company.is_active == "1", CompanyProfile.is_public)
             .limit(6)
             .all()
         )
@@ -55,15 +55,15 @@ class PublicService:
 
         # Position categories (position types)
         position_categories = dict(
-            self.db.query(Position.position_type, func.count(Position.id))
+            self.db.query(Position.position_type, func.count(Position.id))  # type: ignore
             .filter(Position.status == PositionStatus.PUBLISHED)
-            .group_by(Position.position_type)
+            .group_by(Position.position_type)  # type: ignore
             .all()
         )
 
         # Location stats
-        location_stats = dict(
-            self.db.query(Position.country, func.count(Position.id))
+        location_stats = dict(  # type: ignore
+            self.db.query(Position.country, func.count(Position.id))  # type: ignore
             .filter(
                 Position.status == PositionStatus.PUBLISHED,
                 Position.country.isnot(None),
@@ -121,8 +121,8 @@ class PublicService:
             query = query.filter(Position.company_id == params.company_id)
 
         # Position type filters
-        if params.position_type:
-            query = query.filter(Position.position_type == params.position_type)
+        if params.position_type:  # type: ignore
+            query = query.filter(Position.position_type == params.position_type)  # type: ignore
 
         if params.experience_level:
             query = query.filter(Position.experience_level == params.experience_level)
@@ -153,7 +153,7 @@ class PublicService:
 
         # Featured only
         if params.featured_only:
-            query = query.filter(Position.is_featured is True)
+            query = query.filter(Position.is_featured)
 
         # Sorting
         if params.sort_by == "published_date":
@@ -215,7 +215,7 @@ class PublicService:
         query = (
             self.db.query(Company)
             .join(CompanyProfile)
-            .filter(Company.is_active == "1", CompanyProfile.is_public is True)
+            .filter(Company.is_active == "1", CompanyProfile.is_public)
         )
 
         # Text search
@@ -276,10 +276,10 @@ class PublicService:
             .filter(
                 or_(
                     CompanyProfile.custom_slug == slug,
-                    Company.domain.like(f"{slug}.%"),  # Match domain prefix
+                    Company.domain.like(f"{slug}.%"),  # Match domain prefix  # type: ignore
                 ),
                 Company.is_active == "1",
-                CompanyProfile.is_public is True,
+                CompanyProfile.is_public,
             )
             .first()
         )
@@ -365,10 +365,10 @@ class PublicService:
 
         # Log action
         log_action(
-            self.db,
-            candidate,
+            self.db,  # type: ignore
+            candidate,  # type: ignore
             "position.apply",
-            f"Applied to position '{position.title}' (ID: {position.id})",
+            f"Applied to position '{position.title}' (ID: {position.id})",  # type: ignore
             {"position_id": position.id, "application_id": application.id},
         )
 
@@ -411,7 +411,7 @@ class PublicService:
             "countries": sorted(countries),
             "cities": sorted(cities),
             "companies": [{"id": c.id, "name": c.name} for c in companies],
-            "position_types": [t.value for t in Position.position_type.type.enums],
+            "position_types": [t.value for t in Position.position_type.type.enums],  # type: ignore
             "experience_levels": [
                 e.value for e in Position.experience_level.type.enums
             ],
@@ -457,10 +457,10 @@ class CompanyProfileService:
 
         # Log action
         log_action(
-            self.db,
-            current_user,
+            self.db,  # type: ignore
+            current_user,  # type: ignore
             "company_profile.update",
-            f"Updated company profile for company ID {company_id}",
+            f"Updated company profile for company ID {company_id}",  # type: ignore
             {
                 "company_id": company_id,
                 "updated_fields": list(update_data.dict(exclude_unset=True).keys()),

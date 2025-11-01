@@ -67,6 +67,7 @@ async def create_interview_record(
     )
 
     start = get_utc_now() + timedelta(days=2)
+    assert employer_user.company_id is not None
     interview = await interview_service.create_interview(
         db=db_session,
         candidate_id=candidate_user.id,
@@ -83,6 +84,7 @@ async def create_interview_record(
     )
 
     full = await interview_crud.get_with_relationships(db_session, interview.id)
+    assert full is not None
     return full, recruiter
 
 
@@ -110,7 +112,9 @@ async def confirm_interview(
         responded_by=candidate_user.id,
     )
 
-    return await interview_crud.get_with_relationships(db_session, interview.id)
+    result = await interview_crud.get_with_relationships(db_session, interview.id)
+    assert result is not None
+    return result
 
 
 @pytest.mark.asyncio

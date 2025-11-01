@@ -139,7 +139,7 @@ class TodoPermissionService:
         """Check if assigner can assign todos to assignee."""
         # Any creator can assign to any active user
         query = select(User).where(
-            User.id == assignee_id, User.is_active is True, User.is_deleted is False
+            User.id == assignee_id, User.is_active, ~User.is_deleted
         )
         result = await db.execute(query)
         user = result.scalars().first()
@@ -162,8 +162,8 @@ class TodoPermissionService:
             if not connected_users:
                 query = select(User).where(
                     User.id == assigner_id,
-                    User.is_active is True,
-                    User.is_deleted is False,
+                    User.is_active,
+                    ~User.is_deleted,
                 )
                 result = await db.execute(query)
                 self_user = result.scalars().first()
@@ -175,8 +175,8 @@ class TodoPermissionService:
             # Fallback to original behavior if connection service fails
             print(f"Connection service error, falling back: {e}")
             query = select(User).where(
-                User.is_active is True,
-                User.is_deleted is False,
+                User.is_active,
+                ~User.is_deleted,
                 User.id != assigner_id,  # Don't include the assigner themselves
             )
 

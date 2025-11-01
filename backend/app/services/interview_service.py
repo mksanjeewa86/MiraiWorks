@@ -309,6 +309,11 @@ class InterviewService:
 
         # Update interview timing
         old_start = interview.scheduled_start
+        if old_start is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Interview has no scheduled start time",
+            )
         interview.scheduled_start = new_start
         interview.scheduled_end = new_end
 
@@ -370,7 +375,7 @@ class InterviewService:
         )
 
         result = await db.execute(query)
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     # Private helper methods
 
@@ -568,8 +573,8 @@ class InterviewService:
             calendar_accounts = await db.execute(
                 select(ExternalCalendarAccount).where(
                     ExternalCalendarAccount.user_id == participant.id,
-                    ExternalCalendarAccount.is_active is True,
-                    ExternalCalendarAccount.sync_enabled is True,
+                    ExternalCalendarAccount.is_active,
+                    ExternalCalendarAccount.sync_enabled,
                 )
             )
 
@@ -591,6 +596,9 @@ class InterviewService:
     ):
         """Create calendar event for specific calendar account."""
         # Prepare event data
+        if not interview.scheduled_start or not interview.scheduled_end:
+            raise ValueError("Interview must have scheduled start and end times")
+
         event_data = {
             "summary": interview.title,
             "description": f"Interview: {interview.description or interview.title}\n\nPosition: {interview.position_title or 'N/A'}",
@@ -606,16 +614,16 @@ class InterviewService:
         }
 
         # Add attendees
-        attendees = []
+        attendees: list[dict[str, str]] = []
         if interview.candidate.email:
-            attendees.append({"email": interview.candidate.email})
+            attendees.append({"email": interview.candidate.email})  # type: ignore[call-arg]
         if interview.recruiter.email:
-            attendees.append({"email": interview.recruiter.email})
+            attendees.append({"email": interview.recruiter.email})  # type: ignore[call-arg]
 
         if calendar_account.provider == "google":
             event_data["attendees"] = attendees
             created_event = await google_calendar_service.create_event(
-                calendar_account, event_data
+                calendar_account, event_data  # type: ignore[call-arg]
             )
         elif calendar_account.provider == "microsoft":
             # Microsoft Graph format
@@ -759,7 +767,7 @@ class InterviewService:
                 if calendar_account.provider == "google":
                     await google_calendar_service.delete_event(
                         calendar_account,
-                        synced_event.external_event_id,
+                        synced_event.external_event_id,  # type: ignore[call-arg]
                         synced_event.external_calendar_id,
                     )
                 elif calendar_account.provider == "microsoft":
@@ -776,6 +784,9 @@ class InterviewService:
         self, db: AsyncSession, interview: Interview, reason: str | None
     ):
         """Update calendar events for rescheduled interview."""
+        if not interview.scheduled_start or not interview.scheduled_end:
+            raise ValueError("Interview must have scheduled start and end times")
+
         for synced_event in interview.synced_events:
             try:
                 calendar_account = synced_event.calendar_account
@@ -798,7 +809,7 @@ class InterviewService:
                 if calendar_account.provider == "google":
                     await google_calendar_service.update_event(
                         calendar_account,
-                        synced_event.external_event_id,
+                        synced_event.external_event_id,  # type: ignore[call-arg]
                         event_data,
                         synced_event.external_calendar_id,
                     )
@@ -817,6 +828,47 @@ class InterviewService:
 
             except Exception as e:
                 logger.error(f"Failed to update calendar event {synced_event.id}: {e}")
+
+    async def get_interview_by_external_event_id(
+        self, db: AsyncSession, external_event_id: str
+    ) -> Interview | None:
+        """Get interview by external calendar event ID."""
+        from app.models.calendar_event import SyncedEvent  # type: ignore[attr-defined]
+
+        result = await db.execute(
+            select(Interview)
+            .join(SyncedEvent, SyncedEvent.interview_id == Interview.id)
+            .where(SyncedEvent.external_event_id == external_event_id)
+        )
+        return result.scalar_one_or_none()
+
+    async def update_interview_from_calendar_event(
+        self,
+        db: AsyncSession,
+        interview_id: int,
+        event_data: dict,
+    ) -> Interview | None:
+        """Update interview from calendar event data."""
+        from app.crud.interview import interview as interview_crud
+        from app.schemas.interview import InterviewUpdate
+
+        interview = await interview_crud.get(db, id=interview_id)
+        if not interview:
+            return None
+
+        update_data = InterviewUpdate(
+            scheduled_start=event_data.get("scheduled_start"),
+            scheduled_end=event_data.get("scheduled_end"),
+            location=event_data.get("location"),
+            title=event_data.get("title"),
+        )
+
+        updated_interview = await interview_crud.update(
+            db, db_obj=interview, obj_in=update_data
+        )
+        await db.commit()
+        await db.refresh(updated_interview)
+        return updated_interview
 
 
 # Global instance

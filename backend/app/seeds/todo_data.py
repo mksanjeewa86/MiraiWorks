@@ -47,7 +47,7 @@ async def seed_todo_data(
             "notes": "Focus on time-to-hire and candidate satisfaction scores",
             "status": TodoStatus.PENDING.value,
             "priority": "high",
-            "visibility": TodoVisibility.COMPANY.value,
+            "visibility": TodoVisibility.PUBLIC.value,
             "due_date": get_utc_now() + timedelta(days=7),
         },
         {
@@ -80,7 +80,7 @@ async def seed_todo_data(
             "notes": "Focus on React, TypeScript, and testing experience",
             "status": TodoStatus.PENDING.value,
             "priority": "high",
-            "visibility": TodoVisibility.TEAM.value,
+            "visibility": TodoVisibility.PUBLIC.value,
             "due_date": get_utc_now() + timedelta(days=3),
         },
         {
@@ -91,7 +91,7 @@ async def seed_todo_data(
             "description": "Send follow-up emails to candidates from last week's interviews",
             "status": TodoStatus.IN_PROGRESS.value,
             "priority": "medium",
-            "visibility": TodoVisibility.COMPANY.value,
+            "visibility": TodoVisibility.PUBLIC.value,
             "due_date": get_utc_now() + timedelta(days=2),
         },
         {
@@ -114,7 +114,7 @@ async def seed_todo_data(
             "notes": "Include company culture presentation and IT setup checklist",
             "status": TodoStatus.PENDING.value,
             "priority": "high",
-            "visibility": TodoVisibility.TEAM.value,
+            "visibility": TodoVisibility.PUBLIC.value,
             "due_date": get_utc_now() + timedelta(days=5),
         },
         {
@@ -125,7 +125,7 @@ async def seed_todo_data(
             "description": "Annual review of employee handbook for compliance updates",
             "status": TodoStatus.IN_PROGRESS.value,
             "priority": "medium",
-            "visibility": TodoVisibility.COMPANY.value,
+            "visibility": TodoVisibility.PUBLIC.value,
             "due_date": get_utc_now() + timedelta(days=21),
         },
         # Candidate todos (self-assigned)
@@ -172,7 +172,7 @@ async def seed_todo_data(
             "notes": "Include budget considerations and team expansion plans",
             "status": TodoStatus.PENDING.value,
             "priority": "medium",
-            "visibility": TodoVisibility.TEAM.value,
+            "visibility": TodoVisibility.PUBLIC.value,
             "due_date": get_utc_now() + timedelta(days=10),
         },
     ]

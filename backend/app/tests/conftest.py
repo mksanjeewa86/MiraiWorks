@@ -21,7 +21,7 @@ try:
         class _About:
             __version__ = getattr(bcrypt, "__version__", "unknown")
 
-        bcrypt.__about__ = _About()
+        setattr(bcrypt, "__about__", _About())
 except ImportError:
     pass
 
@@ -43,19 +43,16 @@ from app.utils.constants import CompanyType
 from app.utils.constants import UserRole as UserRoleEnum
 
 # Test database URL - support both CI and local development
-if os.getenv("DATABASE_URL"):
+_database_url = os.getenv("DATABASE_URL")
+if _database_url:
     # Use explicit DATABASE_URL from environment (CI/CD)
-    TEST_DATABASE_URL = os.getenv("DATABASE_URL")
+    TEST_DATABASE_URL: str = _database_url
 elif os.getenv("GITHUB_ACTIONS"):
     # GitHub Actions default
-    TEST_DATABASE_URL = (
-        "mysql+asyncmy://changeme:changeme@127.0.0.1:3307/miraiworks_test"
-    )
+    TEST_DATABASE_URL = "mysql+asyncmy://changeme:changeme@127.0.0.1:3307/miraiworks_test"
 else:
     # Local Docker development
-    TEST_DATABASE_URL = (
-        "mysql+asyncmy://changeme:changeme@localhost:3307/miraiworks_test"
-    )
+    TEST_DATABASE_URL = "mysql+asyncmy://changeme:changeme@localhost:3307/miraiworks_test"
 
 # Create test engine with NullPool to avoid event loop closure issues
 test_engine = create_async_engine(
@@ -632,7 +629,8 @@ async def test_todo_with_attachments(db_session, test_user):
 
     # Create a test todo
     todo_data = TodoCreate(
-        title="Test Todo with Attachments", description="Todo for attachment testing"
+        title="Test Todo with Attachments",
+        description="Todo for attachment testing",
     )
     todo = await todo_crud.create_with_owner(
         db_session, obj_in=todo_data, owner_id=test_user.id
@@ -660,6 +658,7 @@ async def test_todo_with_attachments(db_session, test_user):
             mime_type="text/plain",
             file_extension=".txt",
             uploaded_by=test_user.id,
+            description="Test attachment for testing purposes",
         )
         attachment = await attachment_crud.create(db_session, obj_in=attachment_data)
         attachments.append(attachment)

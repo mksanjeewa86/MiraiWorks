@@ -82,6 +82,7 @@ class Todo(BaseModel):
     )
     assignment_assessment: Mapped[str | None] = mapped_column(Text, nullable=True)
     assignment_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    assignment_approved: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     submitted_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
@@ -226,10 +227,11 @@ class Todo(BaseModel):
             pass
 
     def approve_assignment(
-        self, reviewer_id: int, assessment: str = None, score: int = None
+        self, reviewer_id: int, assessment: str | None = None, score: int | None = None
     ) -> None:
         """Mark assignment as approved"""
         if self.is_assignment:
+            self.assignment_approved = True
             self.reviewed_at = get_utc_now()
             self.reviewed_by = reviewer_id
             if assessment:
@@ -238,10 +240,11 @@ class Todo(BaseModel):
                 self.assignment_score = score
 
     def reject_assignment(
-        self, reviewer_id: int, assessment: str = None, score: int = None
+        self, reviewer_id: int, assessment: str | None = None, score: int | None = None
     ) -> None:
         """Mark assignment as rejected"""
         if self.is_assignment:
+            self.assignment_approved = False
             self.reviewed_at = get_utc_now()
             self.reviewed_by = reviewer_id
             if assessment:
@@ -269,3 +272,16 @@ class Todo(BaseModel):
     def is_visible_to_assignee(self) -> bool:
         """Check if todo is visible to assignee"""
         return self.visibility_status == VisibilityStatus.VISIBLE.value
+
+    @property
+    def assignment_status(self) -> str | None:
+        """Get assignment status based on workflow state."""
+        if not self.is_assignment:
+            return None
+        if self.assignment_approved is not None:
+            return "approved" if self.assignment_approved else "rejected"
+        if self.reviewed_at is not None:
+            return "under_review"
+        if self.submitted_at is not None:
+            return "submitted"
+        return "not_submitted"

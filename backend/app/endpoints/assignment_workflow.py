@@ -79,7 +79,9 @@ async def publish_assignment(
         db, todo=todo_obj, published_by=current_user.id
     )
     return AssignmentWorkflowResponse(
-        success=True, message="Assignment published successfully", todo=todo_obj
+        success=True,
+        message="Assignment published successfully",
+        todo=TodoRead.model_validate(todo_obj),
     )
 
 
@@ -118,7 +120,7 @@ async def make_assignment_draft(
 
     todo_obj = await todo_crud.make_draft(db, todo=todo_obj, updated_by=current_user.id)
     return AssignmentWorkflowResponse(
-        success=True, message="Assignment made draft successfully", todo=todo_obj
+        success=True, message="Assignment made draft successfully", todo=TodoRead.model_validate(todo_obj)
     )
 
 
@@ -155,12 +157,12 @@ async def submit_assignment(
         )
 
     todo_obj = await todo_crud.submit_assignment(
-        db, todo=todo_obj, submitted_by=current_user.id, notes=submission_data.notes
+        db, todo=todo_obj, submitted_by=current_user.id, assignee_memo=submission_data.assignee_memo or ""
     )
     return AssignmentWorkflowResponse(
         success=True,
         message="Assignment submitted for review successfully",
-        todo=todo_obj,
+        todo=TodoRead.model_validate(todo_obj),
     )
 
 
@@ -200,16 +202,13 @@ async def review_assignment(
         db,
         todo=todo_obj,
         reviewer_id=current_user.id,
-        assignment_status=review_data.assignment_status,
-        assessment=review_data.assessment,
-        score=review_data.score,
+        approved=review_data.approved,
+        assessment=review_data.assessment or "",
     )
 
-    status_text = (
-        "approved" if review_data.assignment_status == "approved" else "rejected"
-    )
+    status_text = "approved" if review_data.approved else "rejected"
     return AssignmentWorkflowResponse(
-        success=True, message=f"Assignment {status_text} successfully", todo=todo_obj
+        success=True, message=f"Assignment {status_text} successfully", todo=TodoRead.model_validate(todo_obj)
     )
 
 
@@ -227,7 +226,7 @@ async def get_assignments_for_review(
 
 @router.get(API_ROUTES.ASSIGNMENTS.BASE, response_model=TodoListResponse)
 async def list_user_assignments(
-    assignment_status: str = Query(None, description="Filter by assignment status"),
+    visibility_status: str = Query(None, description="Filter by visibility status"),
     limit: int = Query(100, ge=1, le=200),
     offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_db),
@@ -237,8 +236,10 @@ async def list_user_assignments(
     assignments, total = await todo_crud.get_user_assignments(
         db,
         user_id=current_user.id,
-        assignment_status=assignment_status,
+        visibility_status=visibility_status,
         limit=limit,
         offset=offset,
     )
-    return TodoListResponse(items=assignments, total=total)
+    return TodoListResponse(
+        items=[TodoRead.model_validate(a) for a in assignments], total=total
+    )

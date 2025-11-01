@@ -1,7 +1,9 @@
 """Project model for user profiles."""
 
-from sqlalchemy import Column, Date, ForeignKey, Integer, String, Text
-from sqlalchemy.orm import relationship
+from datetime import date
+
+from sqlalchemy import Date, ForeignKey, Integer, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import BaseModel
 
@@ -10,7 +12,7 @@ class ProfileProject(BaseModel):
     """Project entries for user profiles."""
 
     __tablename__ = "profile_projects"
-    user_id = Column(
+    user_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
@@ -18,30 +20,30 @@ class ProfileProject(BaseModel):
     )
 
     # Project Information
-    project_name = Column(String(255), nullable=False)
-    description = Column(Text, nullable=True)
+    project_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Role Information
-    role = Column(
+    role: Mapped[str | None] = mapped_column(
         String(100), nullable=True
     )  # Developer, Designer, Project Manager, etc.
 
     # Technologies Used (stored as comma-separated values for now)
-    technologies = Column(Text, nullable=True)
+    technologies: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Links
-    project_url = Column(String(500), nullable=True)
-    github_url = Column(String(500), nullable=True)
+    project_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    github_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     # Project Images (stored as comma-separated URLs for now)
-    image_urls = Column(Text, nullable=True)
+    image_urls: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Duration
-    start_date = Column(Date, nullable=True)
-    end_date = Column(Date, nullable=True)  # NULL if ongoing
+    start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
 
     # Display Order
-    display_order = Column(Integer, default=0, nullable=False)
+    display_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     # Relationships
     user = relationship("User", back_populates="projects")

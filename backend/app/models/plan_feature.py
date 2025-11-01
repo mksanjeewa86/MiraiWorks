@@ -1,5 +1,7 @@
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, UniqueConstraint
-from sqlalchemy.orm import relationship
+from datetime import datetime
+
+from sqlalchemy import DateTime, ForeignKey, Integer, UniqueConstraint
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 from app.database import Base
@@ -19,21 +21,21 @@ class PlanFeature(Base):
         UniqueConstraint("plan_id", "feature_id", name="uq_plan_feature"),
     )
 
-    id = Column(Integer, primary_key=True, index=True)
+    id: Mapped[int | None] = mapped_column(Integer, primary_key=True, index=True)
 
     # Foreign keys
-    plan_id = Column(
+    plan_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("subscription_plans.id"), nullable=False, index=True
     )
-    feature_id = Column(Integer, ForeignKey("features.id"), nullable=False, index=True)
+    feature_id: Mapped[int] = mapped_column(Integer, ForeignKey("features.id"), nullable=False, index=True)
 
     # Audit trail
-    added_by = Column(
+    added_by: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id"), nullable=True
     )  # System admin who added this feature
 
     # Timestamps
-    added_at = Column(
+    added_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 

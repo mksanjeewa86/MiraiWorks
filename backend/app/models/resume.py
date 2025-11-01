@@ -1,7 +1,8 @@
+from datetime import datetime
+
 from sqlalchemy import (
     JSON,
     Boolean,
-    Column,
     DateTime,
     ForeignKey,
     Integer,
@@ -9,7 +10,7 @@ from sqlalchemy import (
     Text,
 )
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import BaseModel
 from app.utils.constants import (
@@ -25,79 +26,79 @@ from app.utils.datetime_utils import get_utc_now
 class Resume(BaseModel):
     __tablename__ = "resumes"
 
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False, index=True)
 
     # Basic info
-    title = Column(String(200), nullable=False)
-    description = Column(Text)
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text)
 
     # Personal information
-    full_name = Column(String(100))
-    email = Column(String(255))
-    phone = Column(String(20))
-    location = Column(String(200))
-    website = Column(String(500))
-    linkedin_url = Column(String(500))
-    github_url = Column(String(500))
+    full_name: Mapped[str | None] = mapped_column(String(100))
+    email: Mapped[str | None] = mapped_column(String(255))
+    phone: Mapped[str | None] = mapped_column(String(20))
+    location: Mapped[str | None] = mapped_column(String(200))
+    website: Mapped[str | None] = mapped_column(String(500))
+    linkedin_url: Mapped[str | None] = mapped_column(String(500))
+    github_url: Mapped[str | None] = mapped_column(String(500))
 
     # Professional summary
-    professional_summary = Column(Text)
-    objective = Column(Text)
+    professional_summary: Mapped[str | None] = mapped_column(Text)
+    objective: Mapped[str | None] = mapped_column(Text)
 
     # Status and visibility
-    status = Column(
+    status: Mapped[ResumeStatus] = mapped_column(
         SQLEnum(ResumeStatus, values_callable=lambda x: [e.value for e in x]),
         default=ResumeStatus.DRAFT.value,
     )
-    visibility = Column(
+    visibility: Mapped[ResumeVisibility] = mapped_column(
         SQLEnum(ResumeVisibility, values_callable=lambda x: [e.value for e in x]),
         default=ResumeVisibility.PRIVATE.value,
     )
 
     # Template and styling
-    template_id = Column(String(50), default="modern")
-    resume_format = Column(
+    template_id: Mapped[str | None] = mapped_column(String(50), default="modern")
+    resume_format: Mapped[ResumeFormat] = mapped_column(
         SQLEnum(ResumeFormat, values_callable=lambda x: [e.value for e in x]),
         default=ResumeFormat.INTERNATIONAL.value,
     )
-    resume_language = Column(
+    resume_language: Mapped[ResumeLanguage] = mapped_column(
         SQLEnum(ResumeLanguage, values_callable=lambda x: [e.value for e in x]),
         default=ResumeLanguage.ENGLISH.value,
     )
-    theme_color = Column(String(7), default="#2563eb")  # Hex color
-    font_family = Column(String(50), default="Inter")
-    custom_css = Column(Text)
+    theme_color: Mapped[str | None] = mapped_column(String(7), default="#2563eb")
+    font_family: Mapped[str | None] = mapped_column(String(50), default="Inter")
+    custom_css: Mapped[str | None] = mapped_column(Text)
 
     # Japanese-specific fields
-    furigana_name = Column(String(100))  # phonetic name (furigana)
-    birth_date = Column(DateTime)  # birth date
-    gender = Column(String(10))  # gender
-    nationality = Column(String(50))  # nationality
-    marital_status = Column(String(20))  # marital status
-    emergency_contact = Column(JSON)  # emergency contact info
-    photo_path = Column(String(500))  # optional profile photo
+    furigana_name: Mapped[str | None] = mapped_column(String(100))  # phonetic name (furigana)
+    birth_date: Mapped[datetime | None] = mapped_column(DateTime)
+    gender: Mapped[str | None] = mapped_column(String(10))
+    nationality: Mapped[str | None] = mapped_column(String(50))
+    marital_status: Mapped[str | None] = mapped_column(String(20))
+    emergency_contact: Mapped[dict | None] = mapped_column(JSON)
+    photo_path: Mapped[str | None] = mapped_column(String(500))
 
     # Metadata
-    is_primary = Column(Boolean, default=False)
-    view_count = Column(Integer, default=0)
-    download_count = Column(Integer, default=0)
-    last_viewed_at = Column(DateTime)
+    is_primary: Mapped[bool | None] = mapped_column(Boolean, default=False)
+    view_count: Mapped[int | None] = mapped_column(Integer, default=0)
+    download_count: Mapped[int | None] = mapped_column(Integer, default=0)
+    last_viewed_at: Mapped[datetime | None] = mapped_column(DateTime)
 
     # File attachments
-    pdf_file_path = Column(String(500))
-    pdf_generated_at = Column(DateTime)
-    original_file_path = Column(String(500))  # For parsed resumes
+    pdf_file_path: Mapped[str | None] = mapped_column(String(500))
+    pdf_generated_at: Mapped[datetime | None] = mapped_column(DateTime)
+    original_file_path: Mapped[str | None] = mapped_column(String(500))
 
     # Sharing and public access
-    is_public = Column(Boolean, default=False)
-    public_url_slug = Column(String(100), unique=True, index=True)
-    share_token = Column(String(64), unique=True, index=True)
-    can_download_pdf = Column(Boolean, default=True)
-    can_edit = Column(Boolean, default=True)  # Owner can disable editing
-    can_delete = Column(Boolean, default=True)  # Owner can disable deletion
+    is_public: Mapped[bool | None] = mapped_column(Boolean, default=False)
+    public_url_slug: Mapped[str | None] = mapped_column(String(100), unique=True, index=True)
+    share_token: Mapped[str | None] = mapped_column(String(64), unique=True, index=True)
+    can_download_pdf: Mapped[bool | None] = mapped_column(Boolean, default=True)
+    can_edit: Mapped[bool | None] = mapped_column(Boolean, default=True)
+    can_delete: Mapped[bool | None] = mapped_column(Boolean, default=True)
 
-    created_at = Column(DateTime, default=get_utc_now, nullable=False)
-    updated_at = Column(
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=get_utc_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=get_utc_now, onupdate=get_utc_now, nullable=False
     )
 
@@ -148,7 +149,7 @@ class Resume(BaseModel):
         from sqlalchemy import select
 
         result = await db.execute(
-            select(cls).where(cls.public_url_slug == slug, cls.is_public is True)
+            select(cls).where(cls.public_url_slug == slug, cls.is_public.is_(True))
         )
         return result.scalars().first()
 
@@ -171,32 +172,29 @@ class Resume(BaseModel):
 
     def can_be_edited(self) -> bool:
         """Check if resume can be edited."""
-        return self.can_edit and self.status != ResumeStatus.ARCHIVED
+        return bool(self.can_edit and self.status != ResumeStatus.ARCHIVED)
 
     def can_be_deleted(self) -> bool:
         """Check if resume can be deleted."""
-        return self.can_delete and self.status != ResumeStatus.ARCHIVED
+        return bool(self.can_delete and self.status != ResumeStatus.ARCHIVED)
 
 
 class ResumeSection(BaseModel):
     __tablename__ = "resume_sections"
 
-    resume_id = Column(Integer, ForeignKey("resumes.id"), nullable=False)
+    resume_id: Mapped[int] = mapped_column(Integer, ForeignKey("resumes.id"), nullable=False)
 
     # Section info
-    section_type = Column(SQLEnum(SectionType), nullable=False)
-    title = Column(String(100), nullable=False)
-    content = Column(Text)
+    section_type: Mapped[SectionType] = mapped_column(SQLEnum(SectionType), nullable=False)
+    title: Mapped[str] = mapped_column(String(100), nullable=False)
+    content: Mapped[str | None] = mapped_column(Text)
 
     # Display options
-    is_visible = Column(Boolean, default=True)
-    display_order = Column(Integer, default=0)
+    is_visible: Mapped[bool | None] = mapped_column(Boolean, default=True)
+    display_order: Mapped[int | None] = mapped_column(Integer, default=0)
 
     # Custom styling
-    custom_css = Column(Text)
-
-    created_at = Column(DateTime, default=get_utc_now)
-    updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
+    custom_css: Mapped[str | None] = mapped_column(Text)
 
     # Relationships
     resume = relationship("Resume", back_populates="sections")
@@ -205,30 +203,27 @@ class ResumeSection(BaseModel):
 class WorkExperience(BaseModel):
     __tablename__ = "work_experiences"
 
-    resume_id = Column(Integer, ForeignKey("resumes.id"), nullable=False)
+    resume_id: Mapped[int] = mapped_column(Integer, ForeignKey("resumes.id"), nullable=False)
 
     # Job details
-    company_name = Column(String(200), nullable=False)
-    position_title = Column(String(200), nullable=False)
-    location = Column(String(200))
-    company_website = Column(String(500))
+    company_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    position_title: Mapped[str] = mapped_column(String(200), nullable=False)
+    location: Mapped[str | None] = mapped_column(String(200))
+    company_website: Mapped[str | None] = mapped_column(String(500))
 
     # Employment period
-    start_date = Column(DateTime, nullable=False)
-    end_date = Column(DateTime)  # NULL for current position
-    is_current = Column(Boolean, default=False)
+    start_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    end_date: Mapped[datetime | None] = mapped_column(DateTime)
+    is_current: Mapped[bool | None] = mapped_column(Boolean, default=False)
 
     # Job description
-    description = Column(Text)
-    achievements = Column(JSON)  # List of achievement strings
-    technologies = Column(JSON)  # List of technology strings
+    description: Mapped[str | None] = mapped_column(Text)
+    achievements: Mapped[dict | None] = mapped_column(JSON)
+    technologies: Mapped[dict | None] = mapped_column(JSON)
 
     # Display options
-    is_visible = Column(Boolean, default=True)
-    display_order = Column(Integer, default=0)
-
-    created_at = Column(DateTime, default=get_utc_now)
-    updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
+    is_visible: Mapped[bool | None] = mapped_column(Boolean, default=True)
+    display_order: Mapped[int | None] = mapped_column(Integer, default=0)
 
     # Relationships
     resume = relationship("Resume", back_populates="experiences")
@@ -237,33 +232,30 @@ class WorkExperience(BaseModel):
 class Education(BaseModel):
     __tablename__ = "educations"
 
-    resume_id = Column(Integer, ForeignKey("resumes.id"), nullable=False)
+    resume_id: Mapped[int] = mapped_column(Integer, ForeignKey("resumes.id"), nullable=False)
 
     # Education details
-    institution_name = Column(String(200), nullable=False)
-    degree = Column(String(200), nullable=False)
-    field_of_study = Column(String(200))
-    location = Column(String(200))
+    institution_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    degree: Mapped[str] = mapped_column(String(200), nullable=False)
+    field_of_study: Mapped[str | None] = mapped_column(String(200))
+    location: Mapped[str | None] = mapped_column(String(200))
 
     # Academic period
-    start_date = Column(DateTime, nullable=False)
-    end_date = Column(DateTime)
-    is_current = Column(Boolean, default=False)
+    start_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    end_date: Mapped[datetime | None] = mapped_column(DateTime)
+    is_current: Mapped[bool | None] = mapped_column(Boolean, default=False)
 
     # Academic performance
-    gpa = Column(String(10))  # e.g., "3.8/4.0"
-    honors = Column(String(200))  # e.g., "Summa Cum Laude"
+    gpa: Mapped[str | None] = mapped_column(String(10))
+    honors: Mapped[str | None] = mapped_column(String(200))
 
     # Additional info
-    description = Column(Text)
-    courses = Column(JSON)  # List of relevant courses
+    description: Mapped[str | None] = mapped_column(Text)
+    courses: Mapped[dict | None] = mapped_column(JSON)
 
     # Display options
-    is_visible = Column(Boolean, default=True)
-    display_order = Column(Integer, default=0)
-
-    created_at = Column(DateTime, default=get_utc_now)
-    updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
+    is_visible: Mapped[bool | None] = mapped_column(Boolean, default=True)
+    display_order: Mapped[int | None] = mapped_column(Integer, default=0)
 
     # Relationships
     resume = relationship("Resume", back_populates="educations")
@@ -272,19 +264,18 @@ class Education(BaseModel):
 class Skill(BaseModel):
     __tablename__ = "skills"
 
-    resume_id = Column(Integer, ForeignKey("resumes.id"), nullable=False)
+    resume_id: Mapped[int] = mapped_column(Integer, ForeignKey("resumes.id"), nullable=False)
 
     # Skill details
-    name = Column(String(100), nullable=False)
-    category = Column(String(50))  # e.g., "Programming", "Design", "Languages"
-    proficiency_level = Column(Integer)  # 1-5 or 1-10 scale
-    proficiency_label = Column(String(20))  # e.g., "Expert", "Advanced", "Intermediate"
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    category: Mapped[str | None] = mapped_column(String(50))
+    proficiency_level: Mapped[int | None] = mapped_column(Integer)
+    proficiency_label: Mapped[str | None] = mapped_column(String(20))
 
     # Display options
-    is_visible = Column(Boolean, default=True)
-    display_order = Column(Integer, default=0)
+    is_visible: Mapped[bool | None] = mapped_column(Boolean, default=True)
+    display_order: Mapped[int | None] = mapped_column(Integer, default=0)
 
-    created_at = Column(DateTime, default=get_utc_now)
 
     # Relationships
     resume = relationship("Resume", back_populates="skills")
@@ -293,32 +284,29 @@ class Skill(BaseModel):
 class Project(BaseModel):
     __tablename__ = "projects"
 
-    resume_id = Column(Integer, ForeignKey("resumes.id"), nullable=False)
+    resume_id: Mapped[int] = mapped_column(Integer, ForeignKey("resumes.id"), nullable=False)
 
     # Project details
-    name = Column(String(200), nullable=False)
-    description = Column(Text, nullable=False)
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
 
     # Project links
-    project_url = Column(String(500))
-    github_url = Column(String(500))
-    demo_url = Column(String(500))
+    project_url: Mapped[str | None] = mapped_column(String(500))
+    github_url: Mapped[str | None] = mapped_column(String(500))
+    demo_url: Mapped[str | None] = mapped_column(String(500))
 
     # Project period
-    start_date = Column(DateTime)
-    end_date = Column(DateTime)
-    is_ongoing = Column(Boolean, default=False)
+    start_date: Mapped[datetime | None] = mapped_column(DateTime)
+    end_date: Mapped[datetime | None] = mapped_column(DateTime)
+    is_ongoing: Mapped[bool | None] = mapped_column(Boolean, default=False)
 
     # Technical details
-    technologies = Column(JSON)  # List of technologies used
-    role = Column(String(100))  # e.g., "Lead Developer", "Team Member"
+    technologies: Mapped[dict | None] = mapped_column(JSON)
+    role: Mapped[str | None] = mapped_column(String(100))
 
     # Display options
-    is_visible = Column(Boolean, default=True)
-    display_order = Column(Integer, default=0)
-
-    created_at = Column(DateTime, default=get_utc_now)
-    updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
+    is_visible: Mapped[bool | None] = mapped_column(Boolean, default=True)
+    display_order: Mapped[int | None] = mapped_column(Integer, default=0)
 
     # Relationships
     resume = relationship("Resume", back_populates="projects")
@@ -327,27 +315,26 @@ class Project(BaseModel):
 class Certification(BaseModel):
     __tablename__ = "certifications"
 
-    resume_id = Column(Integer, ForeignKey("resumes.id"), nullable=False)
+    resume_id: Mapped[int] = mapped_column(Integer, ForeignKey("resumes.id"), nullable=False)
 
     # Certification details
-    name = Column(String(200), nullable=False)
-    issuing_organization = Column(String(200), nullable=False)
-    credential_id = Column(String(100))
-    credential_url = Column(String(500))
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    issuing_organization: Mapped[str] = mapped_column(String(200), nullable=False)
+    credential_id: Mapped[str | None] = mapped_column(String(100))
+    credential_url: Mapped[str | None] = mapped_column(String(500))
 
     # Dates
-    issue_date = Column(DateTime, nullable=False)
-    expiration_date = Column(DateTime)
-    does_not_expire = Column(Boolean, default=False)
+    issue_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    expiration_date: Mapped[datetime | None] = mapped_column(DateTime)
+    does_not_expire: Mapped[bool | None] = mapped_column(Boolean, default=False)
 
     # Additional info
-    description = Column(Text)
+    description: Mapped[str | None] = mapped_column(Text)
 
     # Display options
-    is_visible = Column(Boolean, default=True)
-    display_order = Column(Integer, default=0)
+    is_visible: Mapped[bool | None] = mapped_column(Boolean, default=True)
+    display_order: Mapped[int | None] = mapped_column(Integer, default=0)
 
-    created_at = Column(DateTime, default=get_utc_now)
 
     # Relationships
     resume = relationship("Resume", back_populates="certifications")
@@ -356,19 +343,18 @@ class Certification(BaseModel):
 class Language(BaseModel):
     __tablename__ = "languages"
 
-    resume_id = Column(Integer, ForeignKey("resumes.id"), nullable=False)
+    resume_id: Mapped[int] = mapped_column(Integer, ForeignKey("resumes.id"), nullable=False)
 
     # Language details
-    name = Column(String(50), nullable=False)
-    proficiency = Column(
+    name: Mapped[str] = mapped_column(String(50), nullable=False)
+    proficiency: Mapped[str] = mapped_column(
         String(100), nullable=False
     )  # e.g., "Native", "Fluent", "Conversational", "Professional Working Proficiency (TOEIC 800)"
 
     # Display options
-    is_visible = Column(Boolean, default=True)
-    display_order = Column(Integer, default=0)
+    is_visible: Mapped[bool | None] = mapped_column(Boolean, default=True)
+    display_order: Mapped[int | None] = mapped_column(Integer, default=0)
 
-    created_at = Column(DateTime, default=get_utc_now)
 
     # Relationships
     resume = relationship("Resume", back_populates="languages")
@@ -377,22 +363,19 @@ class Language(BaseModel):
 class Reference(BaseModel):
     __tablename__ = "references"
 
-    resume_id = Column(Integer, ForeignKey("resumes.id"), nullable=False)
+    resume_id: Mapped[int] = mapped_column(Integer, ForeignKey("resumes.id"), nullable=False)
 
     # Reference details
-    full_name = Column(String(100), nullable=False)
-    position_title = Column(String(100))
-    company_name = Column(String(200))
-    email = Column(String(255))
-    phone = Column(String(20))
-    reference_relationship = Column(String(100))  # e.g., "Former Manager", "Colleague"
+    full_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    position_title: Mapped[str | None] = mapped_column(String(100))
+    company_name: Mapped[str | None] = mapped_column(String(200))
+    email: Mapped[str | None] = mapped_column(String(255))
+    phone: Mapped[str | None] = mapped_column(String(20))
+    reference_relationship: Mapped[str | None] = mapped_column(String(100))
 
     # Display options
-    is_visible = Column(Boolean, default=True)
-    display_order = Column(Integer, default=0)
-
-    created_at = Column(DateTime, default=get_utc_now)
-    updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
+    is_visible: Mapped[bool | None] = mapped_column(Boolean, default=True)
+    display_order: Mapped[int | None] = mapped_column(Integer, default=0)
 
     # Relationships
     resume = relationship("Resume", back_populates="references")
@@ -402,39 +385,36 @@ class ResumeTemplate(BaseModel):
     __tablename__ = "resume_templates"
 
     # Template details
-    name = Column(String(100), nullable=False, unique=True)
-    display_name = Column(String(100), nullable=False)
-    description = Column(Text)
+    name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
+    display_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text)
 
     # Template structure
-    template_data = Column(JSON, nullable=False)  # Template configuration
-    css_styles = Column(Text, nullable=False)  # CSS for the template
-    html_template = Column(Text, nullable=False)  # HTML template
+    template_data: Mapped[dict] = mapped_column(JSON, nullable=False)
+    css_styles: Mapped[str] = mapped_column(Text, nullable=False)
+    html_template: Mapped[str] = mapped_column(Text, nullable=False)
 
     # Template metadata
-    category = Column(String(50))  # e.g., "Modern", "Classic", "Creative"
-    color_scheme = Column(JSON)  # Available color options
-    font_options = Column(JSON)  # Available font options
+    category: Mapped[str | None] = mapped_column(String(50))
+    color_scheme: Mapped[dict | None] = mapped_column(JSON)
+    font_options: Mapped[dict | None] = mapped_column(JSON)
 
     # Usage and status
-    is_active = Column(Boolean, default=True)
-    is_premium = Column(Boolean, default=False)
-    usage_count = Column(Integer, default=0)
+    is_active: Mapped[bool | None] = mapped_column(Boolean, default=True)
+    is_premium: Mapped[bool | None] = mapped_column(Boolean, default=False)
+    usage_count: Mapped[int | None] = mapped_column(Integer, default=0)
 
     # Preview
-    preview_image_url = Column(String(500))
-
-    created_at = Column(DateTime, default=get_utc_now)
-    updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
+    preview_image_url: Mapped[str | None] = mapped_column(String(500))
 
     @classmethod
     async def get_active_templates(cls, db, include_premium: bool = False):
         """Get all active templates."""
         from sqlalchemy import select
 
-        query = select(cls).where(cls.is_active is True)
+        query = select(cls).where(cls.is_active.is_(True))
         if not include_premium:
-            query = query.where(cls.is_premium is False)
+            query = query.where(cls.is_premium.is_(False))
         result = await db.execute(query.order_by(cls.usage_count.desc()))
         return result.scalars().all()
 
@@ -442,28 +422,27 @@ class ResumeTemplate(BaseModel):
 class ResumeShare(BaseModel):
     __tablename__ = "resume_shares"
 
-    resume_id = Column(Integer, ForeignKey("resumes.id"), nullable=False)
+    resume_id: Mapped[int] = mapped_column(Integer, ForeignKey("resumes.id"), nullable=False)
 
     # Share details
-    share_token = Column(String(64), nullable=False, unique=True, index=True)
-    recipient_email = Column(String(255))
-    recipient_name = Column(String(100))
+    share_token: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
+    recipient_email: Mapped[str | None] = mapped_column(String(255))
+    recipient_name: Mapped[str | None] = mapped_column(String(100))
 
     # Access control
-    password_protected = Column(Boolean, default=False)
-    password_hash = Column(String(255))
-    expires_at = Column(DateTime)
-    max_views = Column(Integer)
-    view_count = Column(Integer, default=0)
+    password_protected: Mapped[bool | None] = mapped_column(Boolean, default=False)
+    password_hash: Mapped[str | None] = mapped_column(String(255))
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime)
+    max_views: Mapped[int | None] = mapped_column(Integer)
+    view_count: Mapped[int | None] = mapped_column(Integer, default=0)
 
     # Share options
-    allow_download = Column(Boolean, default=True)
-    show_contact_info = Column(Boolean, default=True)
+    allow_download: Mapped[bool | None] = mapped_column(Boolean, default=True)
+    show_contact_info: Mapped[bool | None] = mapped_column(Boolean, default=True)
 
     # Tracking
-    last_viewed_at = Column(DateTime)
+    last_viewed_at: Mapped[datetime | None] = mapped_column(DateTime)
 
-    created_at = Column(DateTime, default=get_utc_now)
 
     # Relationships
     resume = relationship("Resume")
@@ -478,24 +457,24 @@ class ResumeShare(BaseModel):
 
     def is_expired(self) -> bool:
         """Check if share is expired."""
-        return (self.expires_at and self.expires_at < get_utc_now()) or (
-            self.max_views and self.view_count >= self.max_views
+        return bool(
+            (self.expires_at and self.expires_at < get_utc_now())
+            or (self.max_views and self.view_count is not None and self.view_count >= self.max_views)
         )
 
 
 class ResumeMessageAttachment(BaseModel):
     __tablename__ = "resume_message_attachments"
 
-    resume_id = Column(Integer, ForeignKey("resumes.id"), nullable=False)
-    message_id = Column(Integer, ForeignKey("messages.id"), nullable=False)
+    resume_id: Mapped[int] = mapped_column(Integer, ForeignKey("resumes.id"), nullable=False)
+    message_id: Mapped[int] = mapped_column(Integer, ForeignKey("messages.id"), nullable=False)
 
     # Attachment settings
-    auto_attached = Column(
+    auto_attached: Mapped[bool | None] = mapped_column(
         Boolean, default=False
     )  # Automatically attached when contacting
-    attachment_format = Column(String(20), default="pdf")  # pdf, json, etc.
+    attachment_format: Mapped[str | None] = mapped_column(String(20), default="pdf")
 
-    created_at = Column(DateTime, default=get_utc_now)
 
     # Relationships
     resume = relationship("Resume")

@@ -79,7 +79,7 @@ class TestResumeComprehensive:
         """Test successful resume creation."""
         from app.schemas.resume import ResumeCreate
 
-        resume_data = ResumeCreate(**sample_resume_data)
+        resume_data = ResumeCreate.model_construct(**sample_resume_data)
 
         resume = await resume_service.create_resume(db, resume_data, test_user.id)
 
@@ -102,7 +102,7 @@ class TestResumeComprehensive:
         from app.schemas.resume import ResumeCreate
 
         # Create resume first
-        resume_data = ResumeCreate(**sample_resume_data)
+        resume_data = ResumeCreate.model_construct(**sample_resume_data)
         created_resume = await resume_service.create_resume(
             db, resume_data, test_user.id
         )
@@ -127,13 +127,13 @@ class TestResumeComprehensive:
         from app.schemas.resume import ResumeCreate, ResumeUpdate
 
         # Create resume first
-        resume_data = ResumeCreate(**sample_resume_data)
+        resume_data = ResumeCreate.model_construct(**sample_resume_data)
         created_resume = await resume_service.create_resume(
             db, resume_data, test_user.id
         )
 
         # Update resume
-        update_data = ResumeUpdate(
+        update_data = ResumeUpdate.model_construct(
             title="Updated Software Engineer Resume",
             professional_summary="Updated professional summary with more experience.",
         )
@@ -160,7 +160,7 @@ class TestResumeComprehensive:
         from app.schemas.resume import ResumeCreate
 
         # Create resume first
-        resume_data = ResumeCreate(**sample_resume_data)
+        resume_data = ResumeCreate.model_construct(**sample_resume_data)
         created_resume = await resume_service.create_resume(
             db, resume_data, test_user.id
         )
@@ -189,13 +189,13 @@ class TestResumeComprehensive:
         from app.schemas.resume import ResumeCreate, WorkExperienceCreate
 
         # Create resume first
-        resume_data = ResumeCreate(**sample_resume_data)
+        resume_data = ResumeCreate.model_construct(**sample_resume_data)
         created_resume = await resume_service.create_resume(
             db, resume_data, test_user.id
         )
 
         # Add work experience
-        exp_data = WorkExperienceCreate(
+        exp_data = WorkExperienceCreate.model_construct(
             company_name="TechCorp Inc.",
             position_title="Senior Software Engineer",
             location="San Francisco, CA",
@@ -217,7 +217,9 @@ class TestResumeComprehensive:
         assert experience is not None
         assert experience.company_name == "TechCorp Inc."
         assert experience.position_title == "Senior Software Engineer"
+        assert experience.achievements is not None
         assert len(experience.achievements) == 2
+        assert experience.technologies is not None
         assert len(experience.technologies) == 4
 
     async def test_duplicate_resume_success(
@@ -231,7 +233,7 @@ class TestResumeComprehensive:
         from app.schemas.resume import ResumeCreate
 
         # Create resume first
-        resume_data = ResumeCreate(**sample_resume_data)
+        resume_data = ResumeCreate.model_construct(**sample_resume_data)
         original_resume = await resume_service.create_resume(
             db, resume_data, test_user.id
         )
@@ -260,7 +262,7 @@ class TestResumeComprehensive:
         from app.schemas.resume import ResumeCreate
 
         # Create resume
-        resume_data = ResumeCreate(**sample_resume_data)
+        resume_data = ResumeCreate.model_construct(**sample_resume_data)
         created_resume = await resume_service.create_resume(
             db, resume_data, test_user.id
         )
@@ -278,7 +280,7 @@ class TestResumeComprehensive:
         """Test updating non-existent resume fails."""
         from app.schemas.resume import ResumeUpdate
 
-        update_data = ResumeUpdate(title="Updated Title")
+        update_data = ResumeUpdate.model_construct(title="Updated Title")
 
         updated_resume = await resume_service.update_resume(
             db, 999999, test_user.id, update_data
@@ -300,7 +302,7 @@ class TestResumeComprehensive:
         """Test adding work experience to non-existent resume fails."""
         from app.schemas.resume import WorkExperienceCreate
 
-        exp_data = WorkExperienceCreate(
+        exp_data = WorkExperienceCreate.model_construct(
             company_name="TechCorp Inc.",
             position_title="Senior Software Engineer",
             start_date=datetime(2020, 1, 1),
@@ -327,23 +329,25 @@ class TestResumeComprehensive:
         from app.schemas.resume import ResumeCreate, ResumeUpdate
 
         # Create draft resume
-        resume_data = ResumeCreate(**sample_resume_data)
+        resume_data = ResumeCreate.model_construct(**sample_resume_data)
         resume = await resume_service.create_resume(db, resume_data, test_user.id)
 
         assert resume.status == ResumeStatus.DRAFT
 
         # Publish resume
         updated_resume = await resume_service.update_resume(
-            db, resume.id, test_user.id, ResumeUpdate(status=ResumeStatus.PUBLISHED)
+            db, resume.id, test_user.id, ResumeUpdate.model_construct(status=ResumeStatus.PUBLISHED)
         )
 
+        assert updated_resume is not None
         assert updated_resume.status == ResumeStatus.PUBLISHED
 
         # Archive resume
         archived_resume = await resume_service.update_resume(
-            db, resume.id, test_user.id, ResumeUpdate(status=ResumeStatus.ARCHIVED)
+            db, resume.id, test_user.id, ResumeUpdate.model_construct(status=ResumeStatus.ARCHIVED)
         )
 
+        assert archived_resume is not None
         assert archived_resume.status == ResumeStatus.ARCHIVED
 
     async def test_resume_visibility_settings(
@@ -357,7 +361,7 @@ class TestResumeComprehensive:
         from app.schemas.resume import ResumeCreate, ResumeUpdate
 
         # Create private resume
-        resume_data = ResumeCreate(**sample_resume_data)
+        resume_data = ResumeCreate.model_construct(**sample_resume_data)
         resume = await resume_service.create_resume(db, resume_data, test_user.id)
 
         assert resume.visibility == ResumeVisibility.PRIVATE
@@ -367,9 +371,10 @@ class TestResumeComprehensive:
             db,
             resume.id,
             test_user.id,
-            ResumeUpdate(visibility=ResumeVisibility.PUBLIC),
+            ResumeUpdate.model_construct(visibility=ResumeVisibility.PUBLIC),
         )
 
+        assert public_resume is not None
         assert public_resume.visibility == ResumeVisibility.PUBLIC
 
     async def test_japanese_resume_format(
@@ -383,7 +388,7 @@ class TestResumeComprehensive:
         from app.schemas.resume import ResumeCreate, ResumeUpdate
 
         # Create resume
-        resume_data = ResumeCreate(**sample_resume_data)
+        resume_data = ResumeCreate.model_construct(**sample_resume_data)
         resume = await resume_service.create_resume(db, resume_data, test_user.id)
 
         # Convert to Japanese format
@@ -391,7 +396,7 @@ class TestResumeComprehensive:
             db,
             resume.id,
             test_user.id,
-            ResumeUpdate(
+            ResumeUpdate.model_construct(
                 resume_format=ResumeFormat.RIREKISHO,
                 resume_language=ResumeLanguage.JAPANESE,
                 furigana_name="ジョン ドウ",
@@ -401,6 +406,7 @@ class TestResumeComprehensive:
             ),
         )
 
+        assert japanese_resume is not None
         assert japanese_resume.resume_format == ResumeFormat.RIREKISHO
         assert japanese_resume.resume_language == ResumeLanguage.JAPANESE
         assert japanese_resume.furigana_name == "ジョン ドウ"
@@ -418,7 +424,7 @@ class TestResumeComprehensive:
         from app.schemas.resume import ResumeCreate
 
         # Create resume
-        resume_data = ResumeCreate(**sample_resume_data)
+        resume_data = ResumeCreate.model_construct(**sample_resume_data)
         resume = await resume_service.create_resume(db, resume_data, test_user.id)
 
         # Create share link
@@ -445,7 +451,7 @@ class TestResumeComprehensive:
         from app.schemas.resume import ResumeCreate
 
         # Create resume
-        resume_data = ResumeCreate(**sample_resume_data)
+        resume_data = ResumeCreate.model_construct(**sample_resume_data)
         resume = await resume_service.create_resume(db, resume_data, test_user.id)
 
         # Create share link
@@ -453,6 +459,7 @@ class TestResumeComprehensive:
             db, resume.id, test_user.id, expires_in_days=30
         )
 
+        assert share_token is not None
         # Access shared resume
         shared_resume = await resume_service.get_shared_resume(db, share_token)
 
@@ -472,7 +479,7 @@ class TestResumeComprehensive:
         from app.schemas.resume import ResumeCreate
 
         # Create resume
-        resume_data = ResumeCreate(**sample_resume_data)
+        resume_data = ResumeCreate.model_construct(**sample_resume_data)
         resume = await resume_service.create_resume(db, resume_data, test_user.id)
 
         # Make public
@@ -480,6 +487,9 @@ class TestResumeComprehensive:
             db, resume.id, test_user.id, is_public=True, can_download_pdf=True
         )
 
+        # Refresh to get public_url_slug
+        await db.refresh(resume)
+        assert resume.public_url_slug is not None
         # Access public resume
         public_resume = await resume_service.get_public_resume(
             db, resume.public_url_slug
@@ -496,7 +506,7 @@ class TestResumeComprehensive:
         """Test resume creation with minimal data."""
         from app.schemas.resume import ResumeCreate
 
-        minimal_data = ResumeCreate(
+        minimal_data = ResumeCreate.model_construct(
             title="Minimal Resume", full_name="Test User", email="test@example.com"
         )
 
@@ -513,7 +523,7 @@ class TestResumeComprehensive:
         """Test resume with all fields populated."""
         from app.schemas.resume import ResumeCreate
 
-        max_data = ResumeCreate(
+        max_data = ResumeCreate.model_construct(
             title="Complete Software Engineer Resume",
             description="Comprehensive resume with all details",
             full_name="Jane Smith",
@@ -569,7 +579,7 @@ class TestResumeComprehensive:
             data["title"] = f"Resume {i + 1}"
             data["email"] = f"user{i + 1}@example.com"
 
-            resume_data = ResumeCreate(**data)
+            resume_data = ResumeCreate.model_construct(**data)
             resume = await resume_service.create_resume(db, resume_data, test_user.id)
             resumes.append(resume)
 
@@ -595,11 +605,11 @@ class TestResumeComprehensive:
         )
 
         # Create resume
-        resume_data = ResumeCreate(**sample_resume_data)
+        resume_data = ResumeCreate.model_construct(**sample_resume_data)
         resume = await resume_service.create_resume(db, resume_data, test_user.id)
 
         # Add work experience
-        exp_data = WorkExperienceCreate(
+        exp_data = WorkExperienceCreate.model_construct(
             company_name="TechCorp",
             position_title="Software Engineer",
             start_date=datetime(2020, 1, 1),
@@ -609,7 +619,7 @@ class TestResumeComprehensive:
         await resume_service.add_work_experience(db, resume.id, test_user.id, exp_data)
 
         # Add education
-        edu_data = EducationCreate(
+        edu_data = EducationCreate.model_construct(
             institution_name="University of Technology",
             degree="Bachelor of Science",
             field_of_study="Computer Science",
@@ -620,7 +630,7 @@ class TestResumeComprehensive:
         await resume_service.add_education(db, resume.id, test_user.id, edu_data)
 
         # Add skills
-        skill_data = SkillCreate(
+        skill_data = SkillCreate.model_construct(
             name="Python",
             category="Programming Languages",
             proficiency_level=5,
@@ -631,8 +641,12 @@ class TestResumeComprehensive:
         # Verify all sections
         complete_resume = await resume_service.get_resume(db, resume.id, test_user.id)
 
+        assert complete_resume is not None
+        assert complete_resume.experiences is not None
         assert len(complete_resume.experiences) == 1
+        assert complete_resume.educations is not None
         assert len(complete_resume.educations) == 1
+        assert complete_resume.skills is not None
         assert len(complete_resume.skills) == 1
         assert complete_resume.experiences[0].company_name == "TechCorp"
         assert (
@@ -803,7 +817,7 @@ class TestResumeIntegrationScenarios:
         )
 
         # 1. Create resume
-        resume_data = ResumeCreate(
+        resume_data = ResumeCreate.model_construct(
             title="Complete Lifecycle Resume",
             full_name="Test User",
             email="test@example.com",
@@ -812,7 +826,7 @@ class TestResumeIntegrationScenarios:
         resume = await resume_service.create_resume(db, resume_data, test_user.id)
 
         # 2. Add work experience
-        exp_data = WorkExperienceCreate(
+        exp_data = WorkExperienceCreate.model_construct(
             company_name="StartupCorp",
             position_title="Junior Developer",
             start_date=datetime(2021, 1, 1),
@@ -822,7 +836,7 @@ class TestResumeIntegrationScenarios:
         await resume_service.add_work_experience(db, resume.id, test_user.id, exp_data)
 
         # 3. Add education
-        edu_data = EducationCreate(
+        edu_data = EducationCreate.model_construct(
             institution_name="Tech University",
             degree="Bachelor's",
             field_of_study="Computer Science",
@@ -832,14 +846,14 @@ class TestResumeIntegrationScenarios:
         await resume_service.add_education(db, resume.id, test_user.id, edu_data)
 
         # 4. Add skills
-        skill_data = SkillCreate(
+        skill_data = SkillCreate.model_construct(
             name="JavaScript", category="Programming", proficiency_level=4
         )
         await resume_service.add_skill(db, resume.id, test_user.id, skill_data)
 
         # 5. Update resume status
         await resume_service.update_resume(
-            db, resume.id, test_user.id, ResumeUpdate(status=ResumeStatus.PUBLISHED)
+            db, resume.id, test_user.id, ResumeUpdate.model_construct(status=ResumeStatus.PUBLISHED)
         )
 
         # 6. Make resume public
@@ -858,10 +872,14 @@ class TestResumeIntegrationScenarios:
         # 9. Verify final state
         final_resume = await resume_service.get_resume(db, resume.id, test_user.id)
 
+        assert final_resume is not None
         assert final_resume.status == ResumeStatus.PUBLISHED
         assert final_resume.is_public is True
+        assert final_resume.experiences is not None
         assert len(final_resume.experiences) == 1
+        assert final_resume.educations is not None
         assert len(final_resume.educations) == 1
+        assert final_resume.skills is not None
         assert len(final_resume.skills) == 1
         assert duplicate is not None
         assert share_token is not None
@@ -895,7 +913,7 @@ class TestResumeIntegrationScenarios:
         await db.refresh(user2)
 
         # Create resume for user1
-        resume_data = ResumeCreate(
+        resume_data = ResumeCreate.model_construct(
             title="User 1 Resume", full_name="User One", email="user1@example.com"
         )
         user1_resume = await resume_service.create_resume(db, resume_data, user1.id)

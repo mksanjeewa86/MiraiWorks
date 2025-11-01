@@ -30,7 +30,7 @@ class CRUDCalendarEvent(
             .offset(skip)
             .limit(limit)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_by_date_range(
         self,
@@ -78,7 +78,7 @@ class CRUDCalendarEvent(
             conditions.append(CalendarEvent.status == status.value)
 
         if not include_all_day:
-            conditions.append(CalendarEvent.is_all_day is False)
+            conditions.append(~CalendarEvent.is_all_day)
 
         result = await db.execute(
             select(CalendarEvent)
@@ -86,7 +86,7 @@ class CRUDCalendarEvent(
             .where(and_(*conditions))
             .order_by(CalendarEvent.start_datetime)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_by_date(
         self, db: AsyncSession, *, target_date: datetime, creator_id: int | None = None
@@ -128,7 +128,7 @@ class CRUDCalendarEvent(
             .order_by(CalendarEvent.start_datetime)
             .limit(limit)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_by_type(
         self,
@@ -153,7 +153,7 @@ class CRUDCalendarEvent(
             .offset(skip)
             .limit(limit)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_by_status(
         self,
@@ -178,7 +178,7 @@ class CRUDCalendarEvent(
             .offset(skip)
             .limit(limit)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_recurring_events(
         self,
@@ -197,14 +197,14 @@ class CRUDCalendarEvent(
             conditions = [CalendarEvent.recurrence_rule.is_not(None)]
 
         if creator_id is not None:
-            conditions.append(CalendarEvent.creator_id == creator_id)
+            conditions.append(CalendarEvent.creator_id == creator_id)  # type: ignore[arg-type]
 
         result = await db.execute(
             select(CalendarEvent)
             .where(and_(*conditions))
             .order_by(CalendarEvent.start_datetime)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_event_instances(
         self, db: AsyncSession, *, parent_event_id: int
@@ -215,7 +215,7 @@ class CRUDCalendarEvent(
             .where(CalendarEvent.parent_event_id == parent_event_id)
             .order_by(CalendarEvent.start_datetime)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def create_with_creator(
         self, db: AsyncSession, *, obj_in: CalendarEventCreate, creator_id: int
@@ -305,7 +305,7 @@ class CRUDCalendarEvent(
             .where(and_(*conditions))
             .order_by(CalendarEvent.start_datetime)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def search_events(
         self,
@@ -337,7 +337,7 @@ class CRUDCalendarEvent(
             .offset(skip)
             .limit(limit)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_with_relationships(
         self, db: AsyncSession, *, event_id: int
@@ -412,7 +412,7 @@ class CRUDCalendarEvent(
 
         # Delete existing attendees
         await db.execute(
-            CalendarEventAttendee.__table__.delete().where(
+            CalendarEventAttendee.__table__.delete().where(  # type: ignore[attr-defined]
                 CalendarEventAttendee.event_id == event_id
             )
         )
@@ -464,7 +464,7 @@ class CRUDCalendarEvent(
             )
             .order_by(CalendarEvent.start_datetime)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_accepted_invitations_by_date_range(
         self,
@@ -516,7 +516,7 @@ class CRUDCalendarEvent(
             )
             .order_by(CalendarEvent.start_datetime)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def update_invitation_status(
         self,

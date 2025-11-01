@@ -21,7 +21,7 @@ class CRUDCalendarConnection(
         result = await db.execute(
             select(CalendarConnection).where(CalendarConnection.user_id == user_id)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_by_user_and_id(
         self, db: AsyncSession, user_id: int, connection_id: int
@@ -42,10 +42,10 @@ class CRUDCalendarConnection(
         result = await db.execute(
             select(CalendarConnection).where(
                 CalendarConnection.user_id == user_id,
-                CalendarConnection.is_enabled is True,
+                CalendarConnection.is_enabled,
             )
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_by_provider_and_user(
         self, db: AsyncSession, user_id: int, provider: str

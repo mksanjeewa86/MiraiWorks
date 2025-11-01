@@ -64,7 +64,7 @@ class UserConnectionService:
                     UserConnection.user_id == user_id,
                     UserConnection.connected_user_id == user_id,
                 ),
-                UserConnection.is_active is True,
+                UserConnection.is_active,
             )
         )
 
@@ -93,8 +93,8 @@ class UserConnectionService:
             .where(
                 and_(
                     User.id.in_(connected_user_ids),
-                    User.is_active is True,
-                    User.is_deleted is False,
+                    User.is_active,
+                    ~User.is_deleted,
                 )
             )
         )
@@ -116,7 +116,7 @@ class UserConnectionService:
 
     async def _get_connection(
         self, db: AsyncSession, user_id: int, connected_user_id: int
-    ) -> UserConnection:
+    ) -> UserConnection | None:
         """Get connection between two users (either direction)."""
 
         query = select(UserConnection).where(

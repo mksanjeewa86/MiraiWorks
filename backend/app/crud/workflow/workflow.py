@@ -14,11 +14,11 @@ from app.models.workflow_viewer import WorkflowViewer
 from app.utils.datetime_utils import get_utc_now
 
 
-class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
+class CRUDWorkflow(CRUDBase[Workflow, Any, Any]):
     async def get(self, db: AsyncSession, id: int) -> Workflow | None:
         """Get workflow by id, excluding soft-deleted records."""
         result = await db.execute(
-            select(Workflow).where(Workflow.id == id, Workflow.is_deleted is False)
+            select(Workflow).where(Workflow.id == id, ~Workflow.is_deleted)
         )
         return result.scalar_one_or_none()
 
@@ -28,11 +28,11 @@ class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
         """Get multiple workflowes, excluding soft-deleted records."""
         result = await db.execute(
             select(Workflow)
-            .where(Workflow.is_deleted is False)
+            .where(~Workflow.is_deleted)
             .offset(skip)
             .limit(limit)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def soft_delete(self, db: AsyncSession, *, id: int) -> Workflow:
         """
@@ -44,7 +44,7 @@ class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
         # Get the workflow
         workflow = await self.get(db, id)
         if not workflow:
-            return None
+            return None  # type: ignore[return-value]
 
         # Soft delete the workflow
         workflow.is_deleted = True
@@ -54,14 +54,14 @@ class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
         # Cascade soft delete to related interviews
         await db.execute(
             update(Interview)
-            .where(Interview.workflow_id == id, Interview.is_deleted is False)
+            .where(Interview.workflow_id == id, ~Interview.is_deleted)
             .values(is_deleted=True, deleted_at=get_utc_now())
         )
 
         # Cascade soft delete to related todos
         await db.execute(
             update(Todo)
-            .where(Todo.workflow_id == id, Todo.is_deleted is False)
+            .where(Todo.workflow_id == id, ~Todo.is_deleted)
             .values(is_deleted=True, deleted_at=get_utc_now())
         )
 
@@ -69,7 +69,7 @@ class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
         await db.refresh(workflow)
         return workflow
 
-    async def create(
+    async def create(  # type: ignore[override]
         self, db: AsyncSession, *, obj_in: dict[str, Any], created_by: int
     ) -> Workflow:
         """Create a new workflow"""
@@ -90,13 +90,13 @@ class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
             select(Workflow)
             .where(
                 Workflow.employer_company_id == company_id,
-                Workflow.is_deleted is False,
+                ~Workflow.is_deleted,
             )
             .order_by(desc(Workflow.created_at))
             .offset(skip)
             .limit(limit)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_active_by_company_id(
         self, db: AsyncSession, *, company_id: int
@@ -108,12 +108,12 @@ class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
                 and_(
                     Workflow.employer_company_id == company_id,
                     Workflow.status == "active",
-                    Workflow.is_deleted is False,
+                    ~Workflow.is_deleted,
                 )
             )
             .order_by(desc(Workflow.activated_at))
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_with_nodes(self, db: AsyncSession, *, id: int) -> Workflow | None:
         """Get process with its nodes, excluding soft-deleted."""
@@ -124,7 +124,7 @@ class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
                 selectinload(Workflow.candidate_workflows),
                 selectinload(Workflow.viewers),
             )
-            .where(Workflow.id == id, Workflow.is_deleted is False)
+            .where(Workflow.id == id, ~Workflow.is_deleted)
         )
         return result.scalars().first()
 
@@ -133,12 +133,12 @@ class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
         result = await db.execute(
             select(Workflow)
             .where(
-                Workflow.job_id == job_id,
-                Workflow.is_deleted is False,
+                Workflow.job_id == job_id,  # type: ignore[attr-defined]
+                ~Workflow.is_deleted,
             )
             .order_by(desc(Workflow.created_at))
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_templates(
         self,
@@ -152,14 +152,14 @@ class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
         """Get process templates, excluding soft-deleted."""
         conditions = [
             Workflow.is_template is True,
-            Workflow.is_deleted is False,
+            ~Workflow.is_deleted,
         ]
 
         if company_id is not None:
             conditions.append(
                 or_(
                     Workflow.employer_company_id == company_id,
-                    Workflow.employer_company_id.is_(None) if is_public else False,
+                    Workflow.employer_company_id.is_(None) if is_public else False,  # type: ignore[arg-type]
                 )
             )
 
@@ -170,9 +170,9 @@ class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
             .offset(skip)
             .limit(limit)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
-    async def update(
+    async def update(  # type: ignore[override]
         self,
         db: AsyncSession,
         *,
@@ -237,7 +237,7 @@ class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
             "name": new_name,
             "description": source_process.description,
             "employer_company_id": source_process.employer_company_id,
-            "job_id": source_process.job_id,
+            "job_id": source_process.job_id,  # type: ignore[attr-defined]
             "settings": source_process.settings,
             "created_by": created_by,
             "status": "draft",
@@ -301,12 +301,12 @@ class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
             )
             .where(
                 Workflow.employer_company_id == company_id,
-                Workflow.is_deleted is False,
+                ~Workflow.is_deleted,
             )
             .group_by(Workflow.status)
         )
 
-        status_dict = {row.status: row.count for row in status_counts}
+        status_dict = {row[0]: row[1] for row in status_counts.all()}
 
         # Count candidates by status
         candidate_counts = await db.execute(
@@ -317,12 +317,12 @@ class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
             .join(Workflow)
             .where(
                 Workflow.employer_company_id == company_id,
-                Workflow.is_deleted is False,
+                ~Workflow.is_deleted,
             )
             .group_by(CandidateWorkflow.status)
         )
 
-        candidate_dict = {row.status: row.count for row in candidate_counts}
+        candidate_dict = {row[0]: row[1] for row in candidate_counts.all()}
 
         # Calculate completion rate
         total_candidates = sum(candidate_dict.values())
@@ -348,7 +348,7 @@ class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
             .where(
                 and_(
                     Workflow.employer_company_id == company_id,
-                    Workflow.is_deleted is False,
+                    ~Workflow.is_deleted,
                     CandidateWorkflow.status == "completed",
                     CandidateWorkflow.started_at.isnot(None),
                     CandidateWorkflow.completed_at.isnot(None),
@@ -383,7 +383,7 @@ class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
         """Search processes by name or description, excluding soft-deleted."""
         conditions = [
             Workflow.employer_company_id == company_id,
-            Workflow.is_deleted is False,
+            ~Workflow.is_deleted,
         ]
 
         if query:
@@ -404,7 +404,7 @@ class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
             .limit(limit)
         )
 
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_for_user(
         self,
@@ -423,7 +423,7 @@ class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
                 .join(Workflow.employer_company)
                 .where(
                     Workflow.created_by == user_id,
-                    Workflow.is_deleted is False,
+                    ~Workflow.is_deleted,
                 )
                 .order_by(desc(Workflow.created_at))
                 .offset(skip)
@@ -436,14 +436,14 @@ class CRUDWorkflow(CRUDBase[Workflow, dict, dict]):
                 .join(WorkflowViewer)
                 .where(
                     WorkflowViewer.user_id == user_id,
-                    Workflow.is_deleted is False,
+                    ~Workflow.is_deleted,
                 )
                 .order_by(desc(Workflow.created_at))
                 .offset(skip)
                 .limit(limit)
             )
 
-        return result.scalars().all()
+        return list(result.scalars().all())
 
 
 workflow = CRUDWorkflow(Workflow)

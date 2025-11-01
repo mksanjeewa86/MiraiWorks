@@ -7,7 +7,7 @@ Pydantic schemas for system-wide update announcements.
 from datetime import datetime
 from enum import Enum
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class SystemUpdateTag(str, Enum):
@@ -71,20 +71,16 @@ class SystemUpdateUpdate(BaseModel):
 class SystemUpdateInfo(SystemUpdateBase):
     """Schema for system update information."""
 
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     is_active: bool
     created_by_id: int | None = None
     created_at: datetime
     updated_at: datetime | None = None
 
-    class Config:
-        from_attributes = True
-
 
 class SystemUpdateWithCreator(SystemUpdateInfo):
     """Schema for system update with creator information."""
 
     created_by_name: str | None = None
-
-    class Config:
-        from_attributes = True

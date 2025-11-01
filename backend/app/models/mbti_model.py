@@ -89,11 +89,17 @@ class MBTITest(BaseModel):
         if not self.is_completed:
             return {}
 
+        # Safe access with default values
+        ei_score = self.extraversion_introversion_score or 0
+        sn_score = self.sensing_intuition_score or 0
+        tf_score = self.thinking_feeling_score or 0
+        jp_score = self.judging_perceiving_score or 0
+
         return {
-            "E_I": "I" if self.extraversion_introversion_score > 50 else "E",
-            "S_N": "N" if self.sensing_intuition_score > 50 else "S",
-            "T_F": "F" if self.thinking_feeling_score > 50 else "T",
-            "J_P": "P" if self.judging_perceiving_score > 50 else "J",
+            "E_I": "I" if ei_score > 50 else "E",
+            "S_N": "N" if sn_score > 50 else "S",
+            "T_F": "F" if tf_score > 50 else "T",
+            "J_P": "P" if jp_score > 50 else "J",
         }
 
     @property
@@ -102,11 +108,17 @@ class MBTITest(BaseModel):
         if not self.is_completed:
             return {}
 
+        # Safe access with default values
+        ei_score = self.extraversion_introversion_score or 0
+        sn_score = self.sensing_intuition_score or 0
+        tf_score = self.thinking_feeling_score or 0
+        jp_score = self.judging_perceiving_score or 0
+
         return {
-            "E_I": abs(self.extraversion_introversion_score - 50),
-            "S_N": abs(self.sensing_intuition_score - 50),
-            "T_F": abs(self.thinking_feeling_score - 50),
-            "J_P": abs(self.judging_perceiving_score - 50),
+            "E_I": abs(ei_score - 50),
+            "S_N": abs(sn_score - 50),
+            "T_F": abs(tf_score - 50),
+            "J_P": abs(jp_score - 50),
         }
 
     def calculate_mbti_type(self) -> str:

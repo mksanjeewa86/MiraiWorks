@@ -12,7 +12,7 @@ from app.utils.constants import MBTITestStatus
 from app.utils.datetime_utils import get_utc_now
 
 
-class CRUDMBTITest(CRUDBase[MBTITest, dict, dict]):
+class CRUDMBTITest(CRUDBase[MBTITest, Any, Any]):
     """CRUD operations for MBTI tests."""
 
     async def get_by_user_id(
@@ -176,7 +176,7 @@ class CRUDMBTITest(CRUDBase[MBTITest, dict, dict]):
         }
 
 
-class CRUDMBTIQuestion(CRUDBase[MBTIQuestion, dict, dict]):
+class CRUDMBTIQuestion(CRUDBase[MBTIQuestion, Any, Any]):
     """CRUD operations for MBTI questions."""
 
     async def get_all_active(
@@ -186,7 +186,7 @@ class CRUDMBTIQuestion(CRUDBase[MBTIQuestion, dict, dict]):
         query = (
             select(MBTIQuestion)
             .where(
-                and_(MBTIQuestion.is_active is True, MBTIQuestion.version == version)
+                and_(MBTIQuestion.is_active, MBTIQuestion.version == version)
             )
             .order_by(MBTIQuestion.question_number)
         )

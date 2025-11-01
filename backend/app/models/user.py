@@ -1,38 +1,40 @@
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
-from sqlalchemy.orm import relationship
+from datetime import datetime
+
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import BaseModel
 
 
 class User(BaseModel):
     __tablename__ = "users"
-    company_id = Column(
+    company_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey("companies.id", ondelete="CASCADE"),
         nullable=True,
         index=True,
     )
-    email = Column(String(255), nullable=False, unique=True, index=True)
-    hashed_password = Column(String(255), nullable=True)  # Nullable for SSO-only users
-    first_name = Column(String(100), nullable=False)
-    last_name = Column(String(100), nullable=False)
-    phone = Column(String(50), nullable=True)
-    is_active = Column(Boolean, nullable=False, default=False, index=True)
-    is_admin = Column(Boolean, nullable=False, default=False, index=True)
-    require_2fa = Column(Boolean, nullable=False, default=False, index=True)
-    last_login = Column(DateTime(timezone=True), nullable=True)
+    email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    hashed_password: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    first_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    last_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True)
+    is_admin: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True)
+    require_2fa: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True)
+    last_login: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     # Creation tracking
-    created_by = Column(
+    created_by: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )  # ID of user who created this user (NULL for self-registration)
     # Logical deletion fields
-    is_deleted = Column(Boolean, nullable=False, default=False, index=True)
-    deleted_at = Column(DateTime(timezone=True), nullable=True)
-    deleted_by = Column(Integer, nullable=True)  # ID of user who deleted this user
+    is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    deleted_by: Mapped[int | None] = mapped_column(Integer, nullable=True)
     # Suspension fields
-    is_suspended = Column(Boolean, nullable=False, default=False, index=True)
-    suspended_at = Column(DateTime(timezone=True), nullable=True)
-    suspended_by = Column(Integer, nullable=True)  # ID of user who suspended this user
+    is_suspended: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True)
+    suspended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    suspended_by: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     # Relationships
     company = relationship("Company", back_populates="users", lazy="noload")
@@ -286,6 +288,14 @@ class User(BaseModel):
     @property
     def full_name(self):
         return f"{self.first_name} {self.last_name}"
+
+    @property
+    def role(self) -> str | None:
+        """Get the user's primary role name."""
+        if not self.user_roles:
+            return None
+        # Return the first role's name
+        return self.user_roles[0].role.name if self.user_roles[0].role else None
 
     def __repr__(self):
         return (

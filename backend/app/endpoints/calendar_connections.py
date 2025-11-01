@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config.endpoints import API_ROUTES
-from app.crud import calendar_connection as calendar_connection_crud
+from app.crud.calendar_connection import calendar_connection
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.models.user import User
@@ -30,7 +30,7 @@ async def get_calendar_connections(
 ):
     """Get all calendar connections for the current user"""
     try:
-        connections = await calendar_connection_crud.get_by_user(db, current_user.id)
+        connections = await calendar_connection.get_by_user(db, current_user.id)
 
         return CalendarListResponse(
             connections=[
@@ -56,7 +56,7 @@ async def get_calendar_connection(
     db: AsyncSession = Depends(get_db),
 ):
     """Get a specific calendar connection"""
-    connection = await calendar_connection_crud.get_by_user_and_id(
+    connection = await calendar_connection.get_by_user_and_id(
         db, current_user.id, connection_id
     )
 
@@ -80,7 +80,7 @@ async def update_calendar_connection(
 ):
     """Update calendar connection settings"""
     try:
-        connection = await calendar_connection_crud.get_by_user_and_id(
+        connection = await calendar_connection.get_by_user_and_id(
             db, current_user.id, connection_id
         )
 
@@ -90,7 +90,7 @@ async def update_calendar_connection(
                 detail="Calendar connection not found",
             )
 
-        connection = await calendar_connection_crud.update(
+        connection = await calendar_connection.update(
             db, db_obj=connection, obj_in=connection_update
         )
 
@@ -125,7 +125,7 @@ async def delete_calendar_connection(
 ):
     """Delete a calendar connection"""
     try:
-        connection = await calendar_connection_crud.get_by_user_and_id(
+        connection = await calendar_connection.get_by_user_and_id(
             db, current_user.id, connection_id
         )
 
@@ -145,7 +145,7 @@ async def delete_calendar_connection(
                 connection_id=connection_id,
             )
 
-        await calendar_connection_crud.remove(db, id=connection_id)
+        await calendar_connection.remove(db, id=connection_id)
 
         logger.info(
             "Calendar connection deleted",
@@ -285,7 +285,7 @@ async def sync_calendar_connection(
 ):
     """Manually trigger calendar sync"""
     try:
-        connection = await calendar_connection_crud.get_by_user_and_id(
+        connection = await calendar_connection.get_by_user_and_id(
             db, current_user.id, connection_id
         )
 

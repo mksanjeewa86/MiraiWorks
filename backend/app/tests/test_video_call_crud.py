@@ -20,7 +20,7 @@ class TestVideoCallCRUD:
         call_data = VideoCallCreate(
             candidate_id=candidate.id,
             scheduled_at=datetime.now(UTC) + timedelta(hours=1),
-            enable_transcription=True,
+            transcription_enabled=True,
             transcription_language="ja",
         )
 
@@ -116,8 +116,10 @@ class TestVideoCallCRUD:
             started_at=start_time,
         )
 
+        assert updated_call is not None
         assert updated_call.status == "in_progress"
         # Compare without timezone since database stores timezone-naive datetime
+        assert updated_call.started_at is not None
         assert updated_call.started_at.replace(tzinfo=UTC) == start_time
 
     @pytest.mark.asyncio
@@ -288,6 +290,7 @@ class TestVideoCallCRUD:
             db_session, video_call_id=test_video_call.id, status="processing"
         )
 
+        assert transcription is not None
         assert transcription.processing_status == "processing"
 
         # Update to completed
@@ -299,6 +302,7 @@ class TestVideoCallCRUD:
             processed_at=datetime.now(UTC),
         )
 
+        assert updated is not None
         assert updated.processing_status == "completed"
         assert updated.transcript_text == "Final transcript"
         assert updated.processed_at is not None

@@ -207,7 +207,7 @@ class BulkCandidateAssignment(BaseModel):
     """Schema for bulk assigning candidates to a process"""
 
     candidate_ids: list[int] = Field(
-        ..., min_items=1, description="List of candidate user IDs"
+        ..., min_length=1, description="List of candidate user IDs"
     )
     assigned_recruiter_id: int | None = Field(
         None, description="Recruiter to assign to all candidates"

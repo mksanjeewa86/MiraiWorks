@@ -74,7 +74,7 @@ async def test_create_workflow_with_linked_interviews_and_todos(
     assert todo.workflow_id == workflow.id
 
     # Verify we can query by workflow
-    workflow_with_relations = await workflow.get_with_nodes(
+    workflow_with_relations = await workflow.get_with_nodes(  # type: ignore[attr-defined]
         db=db_session, id=workflow.id
     )
     assert workflow_with_relations is not None
@@ -125,7 +125,9 @@ async def test_workflow_soft_delete_cascades_to_interviews(
     interview_ids = [interview.id for interview in interviews]
 
     # Soft delete the workflow
-    deleted_workflow = await workflow.soft_delete(db=db_session, id=workflow.id)
+    deleted_workflow = await workflow.soft_delete(  # type: ignore[attr-defined]
+        db=db_session, id=workflow.id
+    )
 
     assert deleted_workflow is not None
     assert deleted_workflow.is_deleted is True
@@ -185,7 +187,9 @@ async def test_workflow_soft_delete_cascades_to_todos(
     todo_ids = [todo.id for todo in todos]
 
     # Soft delete the workflow
-    deleted_workflow = await workflow.soft_delete(db=db_session, id=workflow.id)
+    deleted_workflow = await workflow.soft_delete(  # type: ignore[attr-defined]
+        db=db_session, id=workflow.id
+    )
 
     assert deleted_workflow is not None
     assert deleted_workflow.is_deleted is True
@@ -259,7 +263,9 @@ async def test_workflow_soft_delete_cascades_to_both_interviews_and_todos(
         await db_session.refresh(todo)
 
     # Soft delete the workflow
-    await workflow.soft_delete(db=db_session, id=workflow.id)
+    await workflow.soft_delete(  # type: ignore[attr-defined]
+        db=db_session, id=workflow.id
+    )
 
     # Verify all interviews are soft deleted
     for interview in interviews:
@@ -296,14 +302,20 @@ async def test_soft_deleted_workflow_not_in_get_query(
     workflow_id = workflow.id
 
     # Verify workflow is retrievable before deletion
-    retrieved = await workflow.get(db=db_session, id=workflow_id)
+    retrieved = await workflow.get(  # type: ignore[attr-defined]
+        db=db_session, id=workflow_id
+    )
     assert retrieved is not None
 
     # Soft delete the workflow
-    await workflow.soft_delete(db=db_session, id=workflow_id)
+    await workflow.soft_delete(  # type: ignore[attr-defined]
+        db=db_session, id=workflow_id
+    )
 
     # Verify workflow is not retrievable after soft deletion
-    not_found = await workflow.get(db=db_session, id=workflow_id)
+    not_found = await workflow.get(  # type: ignore[attr-defined]
+        db=db_session, id=workflow_id
+    )
     assert not_found is None
 
 
@@ -364,7 +376,9 @@ async def test_only_non_deleted_interviews_affected_by_cascade(
     initial_deleted_at = interview2.deleted_at
 
     # Soft delete the workflow
-    await workflow.soft_delete(db=db_session, id=workflow.id)
+    await workflow.soft_delete(  # type: ignore[attr-defined]
+        db=db_session, id=workflow.id
+    )
 
     # Verify interview1 is now soft deleted
     await db_session.refresh(interview1)
@@ -479,7 +493,9 @@ async def test_interviews_and_todos_without_workflow_unaffected(
     await db_session.refresh(standalone_todo)
 
     # Soft delete the workflow
-    await workflow.soft_delete(db=db_session, id=workflow.id)
+    await workflow.soft_delete(  # type: ignore[attr-defined]
+        db=db_session, id=workflow.id
+    )
 
     # Verify standalone records are unaffected
     await db_session.refresh(standalone_interview)
@@ -530,7 +546,7 @@ async def test_query_workflows_with_interview_count(
     # Query interviews linked to workflow
     result = await db_session.execute(
         select(Interview).where(
-            Interview.workflow_id == workflow.id, Interview.is_deleted is False
+            Interview.workflow_id == workflow.id, Interview.is_deleted == False  # type: ignore[arg-type]
         )
     )
     interviews = result.scalars().all()
@@ -572,8 +588,9 @@ async def test_query_workflows_with_todo_count(
 
     # Query todos linked to workflow
     result = await db_session.execute(
-        select(Todo).where(Todo.workflow_id == workflow.id, Todo.is_deleted is False)
+        select(Todo).where(Todo.workflow_id == workflow.id, Todo.is_deleted == False)  # type: ignore[arg-type]
     )
     todos = result.scalars().all()
 
     assert len(todos) == 7
+

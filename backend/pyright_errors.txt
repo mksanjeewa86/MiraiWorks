@@ -1,0 +1,33 @@
+
+PS C:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend> npx pyright app\endpoints        
+c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\app\endpoints\video_calls.py
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\app\endpoints\video_calls.py:50:24 - error: "video_call" is unbound (reportUnboundVariable)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\app\endpoints\video_calls.py:50:35 - error: Cannot access attribute "create_with_interviewer" for class "Unbound" (reportAttributeAccessIssue)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\app\endpoints\video_calls.py:72:24 - error: "video_call" is unbound (reportUnboundVariable)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\app\endpoints\video_calls.py:72:35 - error: Cannot access attribute "get_by_room_id" for class "Unbound" (reportAttributeAccessIssue)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\app\endpoints\video_calls.py:99:24 - error: "video_call" is unbound (reportUnboundVariable)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\app\endpoints\video_calls.py:99:35 - error: Cannot access attribute "get" for class "Unbound" (reportAttributeAccessIssue)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\app\endpoints\video_calls.py:126:24 - error: "video_call" is unbound (reportUnboundVariable)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\app\endpoints\video_calls.py:126:35 - error: Cannot access attribute "get_by_room_id" for class "Unbound" (reportAttributeAccessIssue)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\app\endpoints\video_calls.py:167:24 - error: "video_call" is unbound (reportUnboundVariable)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\app\endpoints\video_calls.py:167:35 - error: Cannot access attribute "get" for class "Unbound" (reportAttributeAccessIssue)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\app\endpoints\video_calls.py:213:24 - error: "video_call" is unbound (reportUnboundVariable)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\app\endpoints\video_calls.py:213:35 - error: Cannot access attribute "get_by_room_id" for class "Unbound" (reportAttributeAccessIssue)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\app\endpoints\video_calls.py:260:24 - error: "video_call" is unbound (reportUnboundVariable)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\app\endpoints\video_calls.py:260:35 - error: Cannot access attribute "get" for class "Unbound" (reportAttributeAccessIssue)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\app\endpoints\video_calls.py:307:24 - error: "video_call" is unbound (reportUnboundVariable)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\app\endpoints\video_calls.py:307:35 - error: Cannot access attribute "get" for class "Unbound" (reportAttributeAccessIssue)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\app\endpoints\video_calls.py:340:24 - error: "video_call" is unbound (reportUnboundVariable)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\app\endpoints\video_calls.py:340:35 - error: Cannot access attribute "get_by_room_id" for class "Unbound" (reportAttributeAccessIssue)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\app\endpoints\video_calls.py:375:24 - error: "video_call" is unbound (reportUnboundVariable)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\app\endpoints\video_calls.py:375:35 - error: Cannot access attribute "get" for class "Unbound" (reportAttributeAccessIssue)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\app\endpoints\video_calls.py:409:24 - error: "video_call" is unbound (reportUnboundVariable)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\app\endpoints\video_calls.py:409:35 - error: Cannot access attribute "get" for class "Unbound" (reportAttributeAccessIssue)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\app\endpoints\video_calls.py:443:24 - error: "video_call" is unbound (reportUnboundVariable)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\app\endpoints\video_calls.py:443:35 - error: Cannot access attribute "get" for class "Unbound" (reportAttributeAccessIssue)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\app\endpoints\video_calls.py:490:24 - error: "video_call" is unbound (reportUnboundVariable)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\app\endpoints\video_calls.py:490:35 - error: Cannot access attribute "get" for class "Unbound" (reportAttributeAccessIssue)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\app\endpoints\video_calls.py:529:24 - error: "video_call" is unbound (reportUnboundVariable)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\app\endpoints\video_calls.py:529:35 - error: Cannot access attribute "get" for class "Unbound" (reportAttributeAccessIssue)
+28 errors, 0 warnings, 0 informations
+PS C:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend> 
