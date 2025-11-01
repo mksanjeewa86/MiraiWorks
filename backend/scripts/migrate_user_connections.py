@@ -125,7 +125,7 @@ async def create_company_to_company_connection(
         db,
         source_type="company",
         source_company_id=user1.company_id,
-        target_company_id=user2.company_id,
+        target_company_id=user2.company_id,  # type: ignore[arg-type]
         created_by=user_conn.created_by,
         creation_type=user_conn.creation_type or "manual",
         stats=stats,
@@ -139,7 +139,7 @@ async def create_company_to_company_connection(
             db,
             source_type="company",
             source_company_id=user2.company_id,
-            target_company_id=user1.company_id,
+            target_company_id=user1.company_id,  # type: ignore[arg-type]
             created_by=user_conn.created_by,
             creation_type=user_conn.creation_type or "manual",
             stats=stats,

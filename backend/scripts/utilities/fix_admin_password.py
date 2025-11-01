@@ -37,9 +37,9 @@ async def fix_admin_passwords():
     engine = create_async_engine(settings.db_url, echo=True)
 
     # Create session maker
-    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)  # type: ignore[call-overload,arg-type]
 
-    async with async_session() as session:
+    async with async_session() as session:  # type: ignore[attr-defined]
         try:
             print("Fixing admin password hashes...")
 

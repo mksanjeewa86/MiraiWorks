@@ -86,6 +86,7 @@ async def debug_auth_flow():
                 print(f"6. User found: {user.email}, active: {user.is_active}")
 
                 # Test password verification
+                assert user.hashed_password is not None
                 password_valid = auth_service.verify_password(
                     "testpassword123", user.hashed_password
                 )

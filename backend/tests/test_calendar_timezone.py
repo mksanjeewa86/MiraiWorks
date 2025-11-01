@@ -17,7 +17,7 @@ def test_event_info_serializes_datetime_with_timezone():
     naive_datetime = datetime(2025, 10, 20, 4, 0, 0)  # 2025-10-20 04:00:00 (UTC)
 
     # Create EventInfo with naive datetime
-    event = EventInfo(
+    event = EventInfo.model_construct(
         id="event-1",
         title="Test Event",
         description="Test Description",
@@ -62,7 +62,7 @@ def test_calendar_event_info_serializes_datetime_with_timezone():
     naive_datetime = datetime(2025, 10, 20, 4, 0, 0)  # 2025-10-20 04:00:00 (UTC)
 
     # Create CalendarEventInfo with naive datetime
-    event = CalendarEventInfo(
+    event = CalendarEventInfo.model_construct(
         id=1,
         creator_id=123,
         title="Test Calendar Event",
@@ -111,7 +111,7 @@ def test_timezone_aware_datetime_preserved():
     aware_datetime = datetime(2025, 10, 20, 4, 0, 0, tzinfo=UTC)
 
     # Create EventInfo with timezone-aware datetime
-    event = EventInfo(
+    event = EventInfo.model_construct(
         id="event-2",
         title="Test Event with Timezone",
         description="Test",
@@ -149,7 +149,7 @@ def test_fullcalendar_can_parse_serialized_datetime():
     # Simulate what happens in the calendar page
     naive_datetime = datetime(2025, 10, 20, 4, 0, 0)  # 2025-10-20 04:00:00 UTC
 
-    event = EventInfo(
+    event = EventInfo.model_construct(
         id="event-3",
         title="Interview",
         description="",

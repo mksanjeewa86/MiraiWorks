@@ -81,7 +81,7 @@ def main():
 
     finally:
         if "connection" in locals():
-            connection.close()
+            connection.close()  # type: ignore[possibly-unbound]
 
     return 0
 

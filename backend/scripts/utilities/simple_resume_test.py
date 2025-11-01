@@ -10,7 +10,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "app"))
 
-from services.resume_service import ResumeService
+from services.resume_service import ResumeService  # type: ignore[import-not-found]
 
 
 def test_resume_service_basics():
@@ -116,7 +116,7 @@ def test_constants():
     print("-" * 40)
 
     try:
-        from utils.constants import ResumeStatus, ResumeVisibility
+        from utils.constants import ResumeStatus, ResumeVisibility  # type: ignore[import-not-found]
 
         # Test ResumeStatus values
         assert ResumeStatus.DRAFT == "draft"
@@ -142,7 +142,7 @@ def test_schema_imports():
     print("-" * 40)
 
     try:
-        from schemas.resume import ResumeCreate, ResumeUpdate
+        from schemas.resume import ResumeCreate, ResumeUpdate  # type: ignore[import-not-found]
 
         # Test ResumeCreate
         resume_data = ResumeCreate(

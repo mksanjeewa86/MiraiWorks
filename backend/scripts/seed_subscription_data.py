@@ -388,7 +388,7 @@ async def main():
             features = await create_features(db)
 
             # Assign features to plans
-            await assign_features_to_plans(db, plans, features)
+            await assign_features_to_plans(db, plans, features)  # type: ignore[arg-type]
 
             print("\n" + "=" * 60)
             print("[SUCCESS] Seed data completed successfully!")

@@ -1,0 +1,92 @@
+c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\connect_users.py
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\connect_users.py:7:26 - error: "async_session_maker" is unknown import symbol (reportAttributeAccessIssue)
+c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\migrate_user_connections.py
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\migrate_user_connections.py:128:27 - error: Argument of type "int | None" cannot be assigned to parameter "target_company_id" of type "int" in function "create_single_company_connection"
+    Type "int | None" is not assignable to type "int"
+      "None" is not assignable to "int" (reportArgumentType)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\migrate_user_connections.py:142:31 - error: Argument of type "int | None" cannot be assigned to parameter "target_company_id" of type "int" in function "create_single_company_connection"
+    Type "int | None" is not assignable to type "int"
+      "None" is not assignable to "int" (reportArgumentType)
+c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\seed_notifications.py
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\seed_notifications.py:40:16 - error: Type "None" is not assignable to return type "dict[Unknown, Unknown]"
+    "None" is not assignable to "dict[Unknown, Unknown]" (reportReturnType)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\seed_notifications.py:85:61 - error: Cannot access attribute "items" for class "int"
+    Attribute "items" is unknown (reportAttributeAccessIssue)
+c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\seed_subscription_data.py
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\seed_subscription_data.py:391:48 - error: Argument of type "Sequence[SubscriptionPlan] | list[SubscriptionPlan]" cannot be assigned to parameter "plans" of type "list[SubscriptionPlan]" in function "assign_features_to_plans"
+    Type "Sequence[SubscriptionPlan] | list[SubscriptionPlan]" is not assignable to type "list[SubscriptionPlan]"
+      "Sequence[SubscriptionPlan]" is not assignable to "list[SubscriptionPlan]" (reportArgumentType)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\seed_subscription_data.py:391:55 - error: Argument of type "Sequence[Feature]" cannot be assigned to parameter "features" of type "list[Feature]" in function "assign_features_to_plans"
+    "Sequence[Feature]" is not assignable to "list[Feature]" (reportArgumentType)
+c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\test_query_debug.py
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\test_query_debug.py:30:25 - error: Argument of type "bool" cannot be assigned to parameter "clauses" of type "_ColumnExpressionArgument[bool]" in function "and_"
+    Type "bool" is not assignable to type "_ColumnExpressionArgument[bool]"
+      "bool" is not assignable to "ColumnElement[bool]"
+      "bool" is incompatible with protocol "_HasClauseElement"
+        "__clause_element__" is not present
+      "bool" is not assignable to "SQLCoreOperations[bool]"
+      "bool" is not assignable to "ExpressionElementRole[bool]"
+      Type "bool" is not assignable to type "() -> ColumnElement[bool]"
+      "bool" is not assignable to "LambdaElement" (reportArgumentType)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\test_query_debug.py:35:25 - error: Argument of type "bool" cannot be assigned to parameter "clauses" of type "_ColumnExpressionArgument[bool]" in function "and_"
+    Type "bool" is not assignable to type "_ColumnExpressionArgument[bool]"
+      "bool" is not assignable to "ColumnElement[bool]"
+      "bool" is incompatible with protocol "_HasClauseElement"
+        "__clause_element__" is not present
+      "bool" is not assignable to "SQLCoreOperations[bool]"
+      "bool" is not assignable to "ExpressionElementRole[bool]"
+      Type "bool" is not assignable to type "() -> ColumnElement[bool]"
+      "bool" is not assignable to "LambdaElement" (reportArgumentType)
+c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\utilities\create_working_admin.py
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\utilities\create_working_admin.py:12:26 - error: "get_db_session" is unknown import symbol (reportAttributeAccessIssue)
+c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\utilities\fix_admin_password.py
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\utilities\fix_admin_password.py:40:21 - error: No overloads for "__init__" match the provided arguments (reportCallIssue)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\utilities\fix_admin_password.py:40:34 - error: Argument of type "AsyncEngine" cannot be assigned to parameter "bind" of type "_SessionBind | None" in function "__init__"
+    Type "AsyncEngine" is not assignable to type "_SessionBind | None"
+      "AsyncEngine" is not assignable to "Engine"
+      "AsyncEngine" is not assignable to "Connection"
+      "AsyncEngine" is not assignable to "None" (reportArgumentType)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\utilities\fix_admin_password.py:42:16 - error: Object of type "Session" cannot be used with "async with" because it does not correctly implement __aenter__
+    Attribute "__aenter__" is unknown (reportGeneralTypeIssues)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\utilities\fix_admin_password.py:42:16 - error: Object of type "Session" cannot be used with "with" because it does not correctly implement __aexit__
+    Attribute "__aexit__" is unknown (reportGeneralTypeIssues)
+c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\utilities\fix_admin_password_docker.py
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\utilities\fix_admin_password_docker.py:84:13 - error: "connection" is possibly unbound (reportPossiblyUnboundVariable)
+c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\utilities\fix_resume_enum_values.py
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\utilities\fix_resume_enum_values.py:53:27 - error: Cannot access attribute "rowcount" for class "Result[Any]"
+    Attribute "rowcount" is unknown (reportAttributeAccessIssue)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\utilities\fix_resume_enum_values.py:54:63 - error: Cannot access attribute "rowcount" for class "Result[Any]"
+    Attribute "rowcount" is unknown (reportAttributeAccessIssue)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\utilities\fix_resume_enum_values.py:77:27 - error: Cannot access attribute "rowcount" for class "Result[Any]"
+    Attribute "rowcount" is unknown (reportAttributeAccessIssue)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\utilities\fix_resume_enum_values.py:78:63 - error: Cannot access attribute "rowcount" for class "Result[Any]"
+    Attribute "rowcount" is unknown (reportAttributeAccessIssue)
+c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\utilities\simple_resume_test.py
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\utilities\simple_resume_test.py:13:6 - error: Import "services.resume_service" could not be resolved (reportMissingImports)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\utilities\simple_resume_test.py:119:14 - error: Import "utils.constants" could not be resolved (reportMissingImports)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\utilities\simple_resume_test.py:145:14 - error: Import "schemas.resume" could not be resolved (reportMissingImports)
+c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\validate_imports.py
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\validate_imports.py:164:21 - error: Type "dict[str, str | list[str]]" is not assignable to return type "dict[str, list[str]]"
+    "str" is not assignable to "list[str]" (reportReturnType)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\validate_imports.py:170:67 - error: Expected class but received "(iterable: Iterable[object], /) -> bool" (reportGeneralTypeIssues)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\validate_imports.py:216:48 - error: Expected class but received "(iterable: Iterable[object], /) -> bool" (reportGeneralTypeIssues)
+c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\verify_migration.py
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\verify_migration.py:39:49 - error: Operator ">" not supported for "None" (reportOptionalOperand)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\verify_migration.py:47:17 - error: Operator ">" not supported for "None" (reportOptionalOperand)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\verify_migration.py:56:44 - error: Operator ">" not supported for "None" (reportOptionalOperand)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\verify_migration.py:64:17 - error: Operator ">" not supported for "None" (reportOptionalOperand)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\verify_migration.py:117:41 - error: Operator ">" not supported for "None" (reportOptionalOperand)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\verify_migration.py:152:20 - error: Operator ">" not supported for "None" (reportOptionalOperand)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\verify_migration.py:171:20 - error: Operator ">" not supported for "None" (reportOptionalOperand)
+c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\verify_role_migration.py
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\verify_role_migration.py:30:21 - error: No overloads for "__init__" match the provided arguments (reportCallIssue)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\verify_role_migration.py:30:34 - error: Argument of type "AsyncEngine" cannot be assigned to parameter "bind" of type "_SessionBind | None" in function "__init__"
+    Type "AsyncEngine" is not assignable to type "_SessionBind | None"
+      "AsyncEngine" is not assignable to "Engine"
+      "AsyncEngine" is not assignable to "Connection"
+      "AsyncEngine" is not assignable to "None" (reportArgumentType)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\verify_role_migration.py:32:16 - error: Object of type "Session" cannot be used with "async with" because it does not correctly implement __aenter__
+    Attribute "__aenter__" is unknown (reportGeneralTypeIssues)
+  c:\Users\mksan\OneDrive\ドキュメント\projects\MiraiWorks\backend\scripts\verify_role_migration.py:32:16 - error: Object of type "Session" cannot be used with "with" because it does not correctly implement __aexit__
+    Attribute "__aexit__" is unknown (reportGeneralTypeIssues)
+36 errors, 0 warnings, 0 informations

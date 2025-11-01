@@ -27,12 +27,12 @@ async def test_query():
                     and_(
                         Message.sender_id == current_user_id,
                         Message.recipient_id == other_user_id,
-                        Message.is_deleted_by_sender is False,
+                        Message.is_deleted_by_sender == False,  # type: ignore[arg-type]
                     ),
                     and_(
                         Message.sender_id == other_user_id,
                         Message.recipient_id == current_user_id,
-                        Message.is_deleted_by_recipient is False,
+                        Message.is_deleted_by_recipient == False,  # type: ignore[arg-type]
                     ),
                 )
             )

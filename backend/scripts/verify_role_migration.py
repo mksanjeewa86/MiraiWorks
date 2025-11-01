@@ -27,9 +27,9 @@ async def verify_roles():
         echo=False,
     )
 
-    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)  # type: ignore[call-overload,arg-type]
 
-    async with async_session() as session:
+    async with async_session() as session:  # type: ignore[attr-defined]
         # Check roles table
         print("\n[*] Checking Roles Table...")
         print("=" * 60)

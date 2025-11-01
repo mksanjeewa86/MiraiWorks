@@ -308,14 +308,14 @@ def upgrade() -> None:
         "status",
         existing_type=mysql.ENUM("draft", "published", "archived"),
         nullable=True,
-        existing_server_default=sa.text("'draft'"),
+        existing_server_default=sa.text("'draft'"),  # type: ignore[arg-type]
     )
     op.alter_column(
         "resumes",
         "visibility",
         existing_type=mysql.ENUM("private", "public", "unlisted"),
         nullable=True,
-        existing_server_default=sa.text("'private'"),
+        existing_server_default=sa.text("'private'"),  # type: ignore[arg-type]
     )
     op.drop_index("ix_resumes_slug", table_name="resumes")
     op.drop_column("resumes", "slug")
@@ -353,7 +353,7 @@ def upgrade() -> None:
         comment="Type of creation: 'automatic' or 'manual'",
         existing_comment="Type of creation: automatic or manual",
         existing_nullable=False,
-        existing_server_default=sa.text("'manual'"),
+        existing_server_default=sa.text("'manual'"),  # type: ignore[arg-type]
     )
     op.alter_column(
         "users",
@@ -541,7 +541,7 @@ def downgrade() -> None:
         "workflow_viewers",
         sa.Column("process_id", mysql.INTEGER(), autoincrement=False, nullable=False),
     )
-    op.drop_constraint(None, "workflow_viewers", type_="foreignkey")
+    op.drop_constraint(None, "workflow_viewers", type_="foreignkey")  # type: ignore[arg-type]
     op.create_foreign_key(
         "workflow_viewers_ibfk_1",
         "workflow_viewers",
@@ -584,7 +584,7 @@ def downgrade() -> None:
         "workflow_nodes",
         sa.Column("process_id", mysql.INTEGER(), autoincrement=False, nullable=False),
     )
-    op.drop_constraint(None, "workflow_nodes", type_="foreignkey")
+    op.drop_constraint(None, "workflow_nodes", type_="foreignkey")  # type: ignore[arg-type]
     op.create_foreign_key(
         "workflow_nodes_ibfk_1",
         "workflow_nodes",
@@ -652,10 +652,10 @@ def downgrade() -> None:
         comment="Type of creation: automatic or manual",
         existing_comment="Type of creation: 'automatic' or 'manual'",
         existing_nullable=False,
-        existing_server_default=sa.text("'manual'"),
+        existing_server_default=sa.text("'manual'"),  # type: ignore[arg-type]
     )
-    op.drop_constraint(None, "todos", type_="foreignkey")
-    op.drop_constraint(None, "todos", type_="foreignkey")
+    op.drop_constraint(None, "todos", type_="foreignkey")  # type: ignore[arg-type]
+    op.drop_constraint(None, "todos", type_="foreignkey")  # type: ignore[arg-type]
     op.drop_index(op.f("ix_todos_visibility"), table_name="todos")
     op.drop_index(op.f("ix_todos_exam_id"), table_name="todos")
     op.drop_index(op.f("ix_todos_exam_assignment_id"), table_name="todos")
@@ -676,14 +676,14 @@ def downgrade() -> None:
         "visibility",
         existing_type=mysql.ENUM("private", "public", "unlisted"),
         nullable=False,
-        existing_server_default=sa.text("'private'"),
+        existing_server_default=sa.text("'private'"),  # type: ignore[arg-type]
     )
     op.alter_column(
         "resumes",
         "status",
         existing_type=mysql.ENUM("draft", "published", "archived"),
         nullable=False,
-        existing_server_default=sa.text("'draft'"),
+        existing_server_default=sa.text("'draft'"),  # type: ignore[arg-type]
     )
     op.drop_index(op.f("ix_messages_type"), table_name="messages")
     op.drop_index(op.f("ix_messages_sender_id"), table_name="messages")
@@ -715,14 +715,14 @@ def downgrade() -> None:
         "ix_holidays_date_country", "holidays", ["date", "country"], unique=False
     )
     op.drop_column("exams", "question_selection_rules")
-    op.drop_constraint(None, "exam_questions", type_="foreignkey")
-    op.drop_constraint(None, "exam_questions", type_="foreignkey")
+    op.drop_constraint(None, "exam_questions", type_="foreignkey")  # type: ignore[arg-type]
+    op.drop_constraint(None, "exam_questions", type_="foreignkey")  # type: ignore[arg-type]
     op.drop_index(op.f("ix_exam_questions_source_type"), table_name="exam_questions")
     op.drop_column("exam_questions", "source_question_id")
     op.drop_column("exam_questions", "source_bank_id")
     op.drop_column("exam_questions", "source_type")
-    op.drop_constraint(None, "exam_assignments", type_="foreignkey")
-    op.drop_constraint(None, "exam_assignments", type_="foreignkey")
+    op.drop_constraint(None, "exam_assignments", type_="foreignkey")  # type: ignore[arg-type]
+    op.drop_constraint(None, "exam_assignments", type_="foreignkey")  # type: ignore[arg-type]
     op.drop_index(
         op.f("ix_exam_assignments_workflow_node_execution_id"),
         table_name="exam_assignments",
@@ -759,7 +759,7 @@ def downgrade() -> None:
         unique=False,
     )
     op.drop_index(op.f("ix_calendar_connections_id"), table_name="calendar_connections")
-    op.drop_constraint(None, "attachments", type_="foreignkey")
+    op.drop_constraint(None, "attachments", type_="foreignkey")  # type: ignore[arg-type]
     op.create_table(
         "node_connections",
         sa.Column("id", mysql.INTEGER(), autoincrement=True, nullable=False),

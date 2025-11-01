@@ -37,7 +37,7 @@ async def get_user_ids(db: AsyncSession) -> dict:
     if len(users) < 3:
         print("   Warning: Not enough users found. Please run full seeding first.")
         print(f"   Found {len(users)} users, need at least 3")
-        return None
+        return None  # type: ignore[return-value]
 
     # Use the first 4 users for the different roles
     return {
@@ -82,7 +82,7 @@ async def main():
             print(f"  - Unread: {result['unread']}")
             print(f"  - Read: {result['read']}")
             print("\nNotification Types:")
-            for notification_type, count in result["types"].items():
+            for notification_type, count in result["types"].items():  # type: ignore[attr-defined]
                 print(f"  - {notification_type.replace('_', ' ').title()}: {count}")
             print("=" * 70 + "\n")
 

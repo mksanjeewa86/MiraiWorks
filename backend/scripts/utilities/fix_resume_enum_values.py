@@ -50,8 +50,8 @@ async def fix_resume_enum_values():
 
             for update_sql, description in status_updates:
                 result = await db.execute(text(update_sql))
-                if result.rowcount > 0:
-                    print(f"  SUCCESS {description} - {result.rowcount} rows updated")
+                if result.rowcount > 0:  # type: ignore[attr-defined]
+                    print(f"  SUCCESS {description} - {result.rowcount} rows updated")  # type: ignore[attr-defined]
                 else:
                     print(f"  SKIP {description} - no rows to update")
 
@@ -74,8 +74,8 @@ async def fix_resume_enum_values():
 
             for update_sql, description in visibility_updates:
                 result = await db.execute(text(update_sql))
-                if result.rowcount > 0:
-                    print(f"  SUCCESS {description} - {result.rowcount} rows updated")
+                if result.rowcount > 0:  # type: ignore[attr-defined]
+                    print(f"  SUCCESS {description} - {result.rowcount} rows updated")  # type: ignore[attr-defined]
                 else:
                     print(f"  SKIP {description} - no rows to update")
 

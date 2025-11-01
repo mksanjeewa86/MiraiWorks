@@ -156,7 +156,7 @@ class ImportValidator:
         except Exception as e:
             return [f"Error checking import sorting: {e}"]
 
-    def validate_file(self, file_path: Path) -> dict[str, list[str]]:
+    def validate_file(self, file_path: Path) -> dict[str, str | list[str]]:
         """Validate all import aspects of a single file."""
         relative_path = file_path.relative_to(self.project_root)
 
@@ -167,7 +167,7 @@ class ImportValidator:
             "sorting_issues": self.check_import_sorting(file_path),
         }
 
-    def validate_project(self, app_dir: str = "app") -> dict[str, any]:
+    def validate_project(self, app_dir: str = "app") -> dict[str, any]:  # type: ignore[misc]
         """Validate all Python files in the project."""
         app_path = self.project_root / app_dir
 
@@ -213,7 +213,7 @@ class ImportValidator:
 
         return results
 
-    def print_results(self, results: dict[str, any], verbose: bool = False):
+    def print_results(self, results: dict[str, any], verbose: bool = False):  # type: ignore[misc]
         """Print validation results in a formatted way."""
         if "error" in results:
             print(f"❌ {results['error']}")

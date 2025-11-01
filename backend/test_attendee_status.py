@@ -51,7 +51,7 @@ async def test_attendee_status():
         start_time = datetime.utcnow() + timedelta(days=1)
         end_time = start_time + timedelta(hours=1)
 
-        event_data = CalendarEventCreate(
+        event_data = CalendarEventCreate.model_construct(
             title="Test Event - Attendee Status",
             description="Testing attendee status display",
             start_datetime=start_time,
@@ -146,6 +146,8 @@ async def test_attendee_status():
         updated_event = await calendar_event.get_with_relationships(
             db, event_id=created_event.id
         )
+        assert updated_event is not None
+        assert updated_event.attendees is not None
 
         for att in updated_event.attendees:
             print(f"  - Email: {att.email}")
@@ -202,6 +204,8 @@ async def test_attendee_status():
         declined_event = await calendar_event.get_with_relationships(
             db, event_id=created_event.id
         )
+        assert declined_event is not None
+        assert declined_event.attendees is not None
 
         for att in declined_event.attendees:
             if att.email == attendee.email:

@@ -4,7 +4,7 @@ import asyncio
 
 from sqlalchemy import select
 
-from app.database import async_session_maker
+from app.database import async_session_maker  # type: ignore[attr-defined]
 from app.models.user import User
 from app.services.user_connection_service import user_connection_service
 

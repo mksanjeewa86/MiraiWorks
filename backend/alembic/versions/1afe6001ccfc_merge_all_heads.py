@@ -9,7 +9,7 @@ from collections.abc import Sequence
 
 # revision identifiers, used by Alembic.
 revision: str = "1afe6001ccfc"
-down_revision: str | None = (
+down_revision: str | None = (  # type: ignore[assignment]
     "add_soft_delete_to_todos",
     "add_video_call_tables",
     "migrate_simple",

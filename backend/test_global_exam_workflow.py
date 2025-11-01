@@ -85,8 +85,10 @@ async def test_global_exam_workflow():
         print("-" * 80)
         total = 0
         for row in counts:
-            print(f"{row.exam_type:10s}: {row.count:3d} exams")
-            total += row.count
+            exam_type = row.exam_type  # type: ignore[attr-defined]
+            count = row.count  # type: ignore[attr-defined]
+            print(f"{exam_type:10s}: {count:3d} exams")
+            total += count  # type: ignore[operator]
         print(f"{'TOTAL':10s}: {total:3d} exams")
 
         # Step 2: Check user roles

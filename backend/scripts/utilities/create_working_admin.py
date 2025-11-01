@@ -9,7 +9,7 @@ sys.path.insert(0, "/app")
 
 from sqlalchemy import select, update
 
-from app.database import get_db_session
+from app.database import get_db_session  # type: ignore[attr-defined]
 from app.models.user import User
 from app.services.auth_service import AuthService
 

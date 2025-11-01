@@ -36,7 +36,7 @@ async def verify_tables_exist() -> dict[str, Any]:
                     "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = 'positions'"
                 )
             )
-            results["positions_table_exists"] = positions_check.scalar() > 0
+            results["positions_table_exists"] = positions_check.scalar() > 0  # type: ignore[operator]
 
             position_applications_check = await db.execute(
                 text(
@@ -44,7 +44,7 @@ async def verify_tables_exist() -> dict[str, Any]:
                 )
             )
             results["position_applications_table_exists"] = (
-                position_applications_check.scalar() > 0
+                position_applications_check.scalar() > 0  # type: ignore[operator]
             )
 
             # Check if old tables are gone
@@ -53,7 +53,7 @@ async def verify_tables_exist() -> dict[str, Any]:
                     "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = 'jobs'"
                 )
             )
-            results["jobs_table_exists"] = jobs_check.scalar() > 0
+            results["jobs_table_exists"] = jobs_check.scalar() > 0  # type: ignore[operator]
 
             job_applications_check = await db.execute(
                 text(
@@ -61,7 +61,7 @@ async def verify_tables_exist() -> dict[str, Any]:
                 )
             )
             results["job_applications_table_exists"] = (
-                job_applications_check.scalar() > 0
+                job_applications_check.scalar() > 0  # type: ignore[operator]
             )
 
             # Overall success check
@@ -114,7 +114,7 @@ async def verify_data_integrity() -> dict[str, Any]:
                 fk_count == results["position_applications_count"]
             )
 
-            results["data_preserved"] = results["positions_count"] > 0
+            results["data_preserved"] = results["positions_count"] > 0  # type: ignore[operator]
 
     except Exception as e:
         results["error"] = str(e)
@@ -149,7 +149,7 @@ async def verify_indexes() -> dict[str, Any]:
                         f"SELECT COUNT(*) FROM information_schema.statistics WHERE index_name = '{index_name}'"
                     )
                 )
-                if index_check.scalar() > 0:
+                if index_check.scalar() > 0:  # type: ignore[operator]
                     results["new_indexes_exist"].append(index_name)
 
             # Check for old indexes (should not exist)
@@ -168,7 +168,7 @@ async def verify_indexes() -> dict[str, Any]:
                         f"SELECT COUNT(*) FROM information_schema.statistics WHERE index_name = '{index_name}'"
                     )
                 )
-                if index_check.scalar() > 0:
+                if index_check.scalar() > 0:  # type: ignore[operator]
                     results["old_indexes_exist"].append(index_name)
 
             results["indexes_updated"] = (
