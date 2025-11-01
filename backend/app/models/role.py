@@ -11,7 +11,9 @@ class Role(Base):
     __tablename__ = "roles"
 
     id: Mapped[int | None] = mapped_column(Integer, primary_key=True, index=True)
-    name: Mapped[str] = mapped_column(String(50), nullable=False, unique=True, index=True)
+    name: Mapped[str] = mapped_column(
+        String(50), nullable=False, unique=True, index=True
+    )
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False

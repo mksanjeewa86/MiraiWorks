@@ -336,7 +336,10 @@ class TestResumeComprehensive:
 
         # Publish resume
         updated_resume = await resume_service.update_resume(
-            db, resume.id, test_user.id, ResumeUpdate.model_construct(status=ResumeStatus.PUBLISHED)
+            db,
+            resume.id,
+            test_user.id,
+            ResumeUpdate.model_construct(status=ResumeStatus.PUBLISHED),
         )
 
         assert updated_resume is not None
@@ -344,7 +347,10 @@ class TestResumeComprehensive:
 
         # Archive resume
         archived_resume = await resume_service.update_resume(
-            db, resume.id, test_user.id, ResumeUpdate.model_construct(status=ResumeStatus.ARCHIVED)
+            db,
+            resume.id,
+            test_user.id,
+            ResumeUpdate.model_construct(status=ResumeStatus.ARCHIVED),
         )
 
         assert archived_resume is not None
@@ -853,7 +859,10 @@ class TestResumeIntegrationScenarios:
 
         # 5. Update resume status
         await resume_service.update_resume(
-            db, resume.id, test_user.id, ResumeUpdate.model_construct(status=ResumeStatus.PUBLISHED)
+            db,
+            resume.id,
+            test_user.id,
+            ResumeUpdate.model_construct(status=ResumeStatus.PUBLISHED),
         )
 
         # 6. Make resume public

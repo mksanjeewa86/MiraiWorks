@@ -57,7 +57,9 @@ class Exam(BaseModel):
     monitor_web_usage: Mapped[bool | None] = mapped_column(Boolean, default=False)
 
     # Face recognition settings
-    require_face_verification: Mapped[bool | None] = mapped_column(Boolean, default=False)
+    require_face_verification: Mapped[bool | None] = mapped_column(
+        Boolean, default=False
+    )
     face_check_interval_minutes: Mapped[int | None] = mapped_column(Integer, default=5)
 
     # Result settings
@@ -103,7 +105,9 @@ class ExamQuestion(BaseModel):
 
     # Question content
     question_text: Mapped[str] = mapped_column(Text, nullable=False)
-    question_type: Mapped[QuestionType] = mapped_column(SQLAlchemyEnum(QuestionType), nullable=False)
+    question_type: Mapped[QuestionType] = mapped_column(
+        SQLAlchemyEnum(QuestionType), nullable=False
+    )
     order_index: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     # Question settings
@@ -178,9 +182,15 @@ class ExamSession(BaseModel):
     attempt_number: Mapped[int | None] = mapped_column(Integer, default=1)
 
     # Timing
-    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    completed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     time_remaining_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     # Progress
@@ -197,7 +207,9 @@ class ExamSession(BaseModel):
     # Monitoring data
     web_usage_detected: Mapped[bool | None] = mapped_column(Boolean, default=False)
     web_usage_count: Mapped[int | None] = mapped_column(Integer, default=0)
-    face_verification_failed: Mapped[bool | None] = mapped_column(Boolean, default=False)
+    face_verification_failed: Mapped[bool | None] = mapped_column(
+        Boolean, default=False
+    )
     face_check_count: Mapped[int | None] = mapped_column(Integer, default=0)
     face_verification_data: Mapped[dict | None] = mapped_column(
         JSON, nullable=True
@@ -283,8 +295,12 @@ class ExamAssignment(BaseModel):
     )
 
     # Assignment settings (override exam defaults)
-    due_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    custom_time_limit_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    due_date: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    custom_time_limit_minutes: Mapped[int | None] = mapped_column(
+        Integer, nullable=True
+    )
     custom_max_attempts: Mapped[int | None] = mapped_column(Integer, nullable=True)
     custom_is_randomized: Mapped[bool | None] = mapped_column(
         Boolean, nullable=True

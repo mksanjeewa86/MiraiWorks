@@ -21,7 +21,7 @@ try:
         class _About:
             __version__ = getattr(bcrypt, "__version__", "unknown")
 
-        setattr(bcrypt, "__about__", _About())
+        bcrypt.__about__ = _About()  # type: ignore[attr-defined]
 except ImportError:
     pass
 

@@ -313,7 +313,9 @@ class CRUDExam(CRUDBase[Exam, ExamCreate, ExamUpdate]):
 
         completion_rate = (
             (total_completed / total_started * 100)
-            if total_started is not None and total_completed is not None and total_started > 0
+            if total_started is not None
+            and total_completed is not None
+            and total_started > 0
             else 0
         )
 
@@ -425,14 +427,17 @@ class CRUDExamSession(CRUDBase[ExamSession, ExamSessionCreate, ExamSessionUpdate
         )
 
         # Check existing attempts
-        existing_count = await db.scalar(
-            select(func.count(ExamSession.id)).where(
-                and_(
-                    ExamSession.candidate_id == candidate_id,
-                    ExamSession.exam_id == exam_id,
+        existing_count = (
+            await db.scalar(
+                select(func.count(ExamSession.id)).where(
+                    and_(
+                        ExamSession.candidate_id == candidate_id,
+                        ExamSession.exam_id == exam_id,
+                    )
                 )
             )
-        ) or 0
+            or 0
+        )
 
         if exam.max_attempts is not None and existing_count >= exam.max_attempts:
             raise ValueError(f"Maximum attempts ({exam.max_attempts}) exceeded")
@@ -542,7 +547,9 @@ class CRUDExamSession(CRUDBase[ExamSession, ExamSessionCreate, ExamSessionUpdate
             session.score = total_points_value
             session.max_score = max_points_value
             session.percentage = (
-                (total_points_value / max_points_value * 100) if max_points_value > 0 else 0
+                (total_points_value / max_points_value * 100)
+                if max_points_value > 0
+                else 0
             )
 
             # Check if passed

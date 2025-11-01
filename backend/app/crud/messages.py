@@ -1,4 +1,3 @@
-
 from typing import Any
 
 from sqlalchemy import and_, case, desc, func, or_, select, update

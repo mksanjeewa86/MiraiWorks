@@ -44,7 +44,10 @@ class PDFService:
             # Upload to storage
             filename = f"resume_{resume.id}_{uuid.uuid4().hex[:8]}.pdf"
             file_path = await get_storage_service().upload_file(
-                pdf_data, filename, "resumes/pdfs", content_type="application/pdf"  # type: ignore
+                pdf_data,
+                filename,
+                "resumes/pdfs",
+                content_type="application/pdf",  # type: ignore
             )
 
             # Generate temporary download URL

@@ -18,7 +18,9 @@ class Feature(BaseModel):
     __tablename__ = "features"
 
     # Feature identification
-    name: Mapped[str] = mapped_column(String(50), nullable=False, unique=True, index=True)
+    name: Mapped[str] = mapped_column(
+        String(50), nullable=False, unique=True, index=True
+    )
     display_name: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
@@ -36,7 +38,9 @@ class Feature(BaseModel):
     )  # 'core', 'premium', 'integrations'
 
     # Status
-    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, index=True)
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, index=True
+    )
 
     # Relationships
     parent = relationship(

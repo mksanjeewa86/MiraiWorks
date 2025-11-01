@@ -273,7 +273,9 @@ class CRUDJobPreference(
         preference = await self.get_by_user(db, user_id=user_id)
         if not preference:
             preference = await self.create_for_user(
-                db, obj_in=JobPreferenceCreate(), user_id=user_id  # type: ignore[call-arg]
+                db,
+                obj_in=JobPreferenceCreate(),  # type: ignore[call-arg]
+                user_id=user_id,  # type: ignore[call-arg]
             )
         return preference
 

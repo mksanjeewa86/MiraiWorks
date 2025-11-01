@@ -323,7 +323,8 @@ async def get_interview_calendar_events(
                 interview_id=interview.id,
                 title=interview.title,
                 start=interview.scheduled_start,
-                end=interview.scheduled_end or (interview.scheduled_start + timedelta(hours=1)),
+                end=interview.scheduled_end
+                or (interview.scheduled_start + timedelta(hours=1)),
                 status=interview.status,
                 participants=participants,
                 location=interview.location,

@@ -118,7 +118,11 @@ class GoogleCalendarService:
             return None
 
     async def get_events(
-        self, access_token: str, calendar_id: str, time_min: datetime, time_max: datetime
+        self,
+        access_token: str,
+        calendar_id: str,
+        time_min: datetime,
+        time_max: datetime,
     ) -> list[dict[str, Any]]:
         """
         Get events from Google Calendar within a time range.
@@ -133,7 +137,9 @@ class GoogleCalendarService:
             List of events
         """
         try:
-            logger.info(f"Getting events from {calendar_id} between {time_min} and {time_max}")
+            logger.info(
+                f"Getting events from {calendar_id} between {time_min} and {time_max}"
+            )
             # Placeholder implementation
             return []
         except Exception as e:

@@ -394,7 +394,9 @@ class MicrosoftCalendarService:
             return False
 
     async def create_webhook_subscription(
-        self, calendar_account: ExternalCalendarAccount, calendar_id: str = None  # type: ignore[arg-type]
+        self,
+        calendar_account: ExternalCalendarAccount,
+        calendar_id: str = None,  # type: ignore[arg-type]
     ) -> dict[str, Any] | None:
         """Create webhook subscription for calendar changes."""
         access_token = await self._ensure_valid_token(calendar_account)

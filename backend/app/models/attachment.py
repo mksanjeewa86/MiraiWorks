@@ -42,15 +42,21 @@ class Attachment(BaseModel):
         String(20), nullable=False, default=VirusStatus.PENDING.value, index=True
     )
     virus_scan_result: Mapped[str | None] = mapped_column(Text, nullable=True)
-    scanned_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    scanned_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Metadata
     is_available: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, index=True
     )  # Only true after clean scan
-    is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True)
+    is_deleted: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, index=True
+    )
     upload_ip: Mapped[str | None] = mapped_column(String(45), nullable=True)
-    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Relationships
     message = relationship("Message", back_populates="attachments")

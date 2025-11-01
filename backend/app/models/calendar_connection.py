@@ -35,13 +35,17 @@ class CalendarConnection(BaseModel):
     # OAuth tokens (encrypted)
     access_token: Mapped[str] = mapped_column(Text, nullable=False)
     refresh_token: Mapped[str | None] = mapped_column(Text, nullable=True)
-    token_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    token_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Calendar sync settings
     is_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     sync_events: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     sync_reminders: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    auto_create_meetings: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    auto_create_meetings: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False
+    )
 
     # Sync preferences
     calendar_ids: Mapped[dict | None] = mapped_column(JSON, nullable=True)
@@ -53,7 +57,9 @@ class CalendarConnection(BaseModel):
     display_name: Mapped[str | None] = mapped_column(
         String(255), nullable=True
     )  # User-friendly name for this connection
-    last_sync_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_sync_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     sync_error: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Relationships

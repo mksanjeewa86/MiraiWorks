@@ -120,7 +120,9 @@ async def make_assignment_draft(
 
     todo_obj = await todo_crud.make_draft(db, todo=todo_obj, updated_by=current_user.id)
     return AssignmentWorkflowResponse(
-        success=True, message="Assignment made draft successfully", todo=TodoRead.model_validate(todo_obj)
+        success=True,
+        message="Assignment made draft successfully",
+        todo=TodoRead.model_validate(todo_obj),
     )
 
 
@@ -157,7 +159,10 @@ async def submit_assignment(
         )
 
     todo_obj = await todo_crud.submit_assignment(
-        db, todo=todo_obj, submitted_by=current_user.id, assignee_memo=submission_data.assignee_memo or ""
+        db,
+        todo=todo_obj,
+        submitted_by=current_user.id,
+        assignee_memo=submission_data.assignee_memo or "",
     )
     return AssignmentWorkflowResponse(
         success=True,
@@ -208,7 +213,9 @@ async def review_assignment(
 
     status_text = "approved" if review_data.approved else "rejected"
     return AssignmentWorkflowResponse(
-        success=True, message=f"Assignment {status_text} successfully", todo=TodoRead.model_validate(todo_obj)
+        success=True,
+        message=f"Assignment {status_text} successfully",
+        todo=TodoRead.model_validate(todo_obj),
     )
 
 

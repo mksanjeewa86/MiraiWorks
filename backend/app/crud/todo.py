@@ -25,9 +25,7 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
 
     async def get(self, db: AsyncSession, id: int) -> Todo | None:
         """Get todo by id, excluding soft-deleted records."""
-        result = await db.execute(
-            select(Todo).where(Todo.id == id, ~Todo.is_deleted)
-        )
+        result = await db.execute(select(Todo).where(Todo.id == id, ~Todo.is_deleted))
         return result.scalar_one_or_none()
 
     async def get_multi(
@@ -108,7 +106,9 @@ class CRUDTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
 
         # Filter based on permissions
         filtered_todos = await TodoPermissionService.filter_todos_by_permission(
-            db, user_id, all_todos  # type: ignore[arg-type]
+            db,
+            user_id,
+            all_todos,  # type: ignore[arg-type]
         )
 
         return filtered_todos, len(filtered_todos)

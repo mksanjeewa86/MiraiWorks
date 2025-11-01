@@ -418,9 +418,7 @@ class TestMBTIPerformance:
             return await client.get("/api/mbti/progress", headers=candidate_headers)
 
         # Run operations concurrently
-        results = await asyncio.gather(
-            start_test(), get_progress()
-        )
+        results = await asyncio.gather(start_test(), get_progress())
 
         # Check that at least one operation succeeded
         success_count = sum(

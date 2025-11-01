@@ -34,7 +34,9 @@ class JobPreference(BaseModel):
     )  # yearly, monthly, hourly
 
     # Location Preferences
-    willing_to_relocate: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    willing_to_relocate: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False
+    )
     preferred_locations: Mapped[str | None] = mapped_column(
         Text, nullable=True
     )  # Comma-separated list of locations

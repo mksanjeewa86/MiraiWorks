@@ -483,7 +483,9 @@ async def clone_exam(
             time_limit_seconds=q.time_limit_seconds,
             is_required=q.is_required or False,
             options=q.options,
-            correct_answers=q.correct_answers if isinstance(q.correct_answers, list) else [],
+            correct_answers=q.correct_answers
+            if isinstance(q.correct_answers, list)
+            else [],
             max_length=q.max_length,
             min_length=q.min_length,
             rating_scale=q.rating_scale,
@@ -1033,7 +1035,9 @@ async def get_exam_results(
     # Include questions with correct answers if allowed
     if exam.show_correct_answers:
         questions = await exam_question_crud.get_by_exam(db=db, exam_id=exam.id)
-        result_summary.questions = [ExamQuestionInfo.model_validate(q) for q in questions]
+        result_summary.questions = [
+            ExamQuestionInfo.model_validate(q) for q in questions
+        ]
 
     return result_summary
 

@@ -21,7 +21,7 @@ try:
         class _About:
             __version__ = getattr(bcrypt, "__version__", "unknown")
 
-        setattr(bcrypt, "__about__", _About())
+        bcrypt.__about__ = _About()  # type: ignore[attr-defined]
 except ImportError:
     pass
 
@@ -49,10 +49,14 @@ if _database_url:
     TEST_DATABASE_URL: str = _database_url
 elif os.getenv("GITHUB_ACTIONS"):
     # GitHub Actions default
-    TEST_DATABASE_URL = "mysql+asyncmy://changeme:changeme@127.0.0.1:3307/miraiworks_test"
+    TEST_DATABASE_URL = (
+        "mysql+asyncmy://changeme:changeme@127.0.0.1:3307/miraiworks_test"
+    )
 else:
     # Local Docker development
-    TEST_DATABASE_URL = "mysql+asyncmy://changeme:changeme@localhost:3307/miraiworks_test"
+    TEST_DATABASE_URL = (
+        "mysql+asyncmy://changeme:changeme@localhost:3307/miraiworks_test"
+    )
 
 # Create test engine with NullPool to avoid event loop closure issues
 test_engine = create_async_engine(

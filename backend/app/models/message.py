@@ -28,9 +28,15 @@ class Message(BaseModel):
     type: Mapped[str] = mapped_column(
         String(50), nullable=False, default=MessageType.TEXT.value, index=True
     )
-    is_read: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True)
-    is_deleted_by_sender: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    is_deleted_by_recipient: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    is_read: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, index=True
+    )
+    is_deleted_by_sender: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False
+    )
+    is_deleted_by_recipient: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False
+    )
     reply_to_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey("messages.id", ondelete="SET NULL"),
@@ -41,7 +47,9 @@ class Message(BaseModel):
     file_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     file_size: Mapped[int | None] = mapped_column(Integer, nullable=True)
     file_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    read_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Relationships
     sender = relationship("User", foreign_keys=[sender_id])

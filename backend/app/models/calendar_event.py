@@ -10,12 +10,20 @@ class CalendarEvent(BaseModel):
     __tablename__ = "calendar_events"
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    start_datetime: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
-    end_datetime: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    start_datetime: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, index=True
+    )
+    end_datetime: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     is_all_day: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     location: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    event_type: Mapped[str] = mapped_column(String(50), default="event", nullable=False, index=True)
-    status: Mapped[str] = mapped_column(String(20), default="confirmed", nullable=False, index=True)
+    event_type: Mapped[str] = mapped_column(
+        String(50), default="event", nullable=False, index=True
+    )
+    status: Mapped[str] = mapped_column(
+        String(20), default="confirmed", nullable=False, index=True
+    )
     creator_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
     )

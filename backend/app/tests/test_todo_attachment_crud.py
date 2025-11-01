@@ -424,6 +424,7 @@ class TestTodoAttachmentCRUD:
 
         for filename, mime_type, expected_category in test_cases:
             import os
+
             file_ext = os.path.splitext(filename)[1]
             attachment_data = TodoAttachmentCreate(
                 todo_id=test_todo.id,

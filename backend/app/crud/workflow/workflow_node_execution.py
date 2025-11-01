@@ -47,7 +47,8 @@ class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, Any, Any]):
 
         if status:
             conditions.append(  # type: ignore[arg-type]
-            WorkflowNodeExecution.status == status)
+                WorkflowNodeExecution.status == status
+            )
 
         result = await db.execute(
             select(WorkflowNodeExecution)
@@ -71,7 +72,8 @@ class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, Any, Any]):
 
         if status:
             conditions.append(  # type: ignore[arg-type]
-            WorkflowNodeExecution.status == status)
+                WorkflowNodeExecution.status == status
+            )
 
         result = await db.execute(
             select(WorkflowNodeExecution)
@@ -102,7 +104,8 @@ class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, Any, Any]):
 
         if status:
             conditions.append(  # type: ignore[arg-type]
-            WorkflowNodeExecution.status == status)
+                WorkflowNodeExecution.status == status
+            )
 
         result = await db.execute(
             select(WorkflowNodeExecution)
@@ -130,7 +133,8 @@ class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, Any, Any]):
 
         if assigned_to:
             conditions.append(  # type: ignore[arg-type]
-            WorkflowNodeExecution.assigned_to == assigned_to)
+                WorkflowNodeExecution.assigned_to == assigned_to
+            )
 
         result = await db.execute(
             select(WorkflowNodeExecution)
@@ -333,17 +337,16 @@ class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, Any, Any]):
 
         if node_id:
             conditions.append(  # type: ignore[arg-type]
-            WorkflowNodeExecution.node_id == node_id)
+                WorkflowNodeExecution.node_id == node_id
+            )
 
         if workflow_id:
             conditions.append(  # type: ignore[arg-type]
-
                 WorkflowNodeExecution.candidate_workflow.has(workflow_id=workflow_id)
             )
 
         if candidate_workflow_id:
             conditions.append(  # type: ignore[arg-type]
-
                 WorkflowNodeExecution.candidate_workflow_id == candidate_workflow_id
             )
 
@@ -433,7 +436,6 @@ class CRUDWorkflowNodeExecution(CRUDBase[WorkflowNodeExecution, Any, Any]):
 
         if workflow_id:
             conditions.append(  # type: ignore[arg-type]
-
                 WorkflowNodeExecution.candidate_workflow.has(workflow_id=workflow_id)  # type: ignore[arg-type]
             )
 

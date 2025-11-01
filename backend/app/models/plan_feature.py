@@ -27,7 +27,9 @@ class PlanFeature(Base):
     plan_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("subscription_plans.id"), nullable=False, index=True
     )
-    feature_id: Mapped[int] = mapped_column(Integer, ForeignKey("features.id"), nullable=False, index=True)
+    feature_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("features.id"), nullable=False, index=True
+    )
 
     # Audit trail
     added_by: Mapped[int | None] = mapped_column(

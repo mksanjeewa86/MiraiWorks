@@ -208,7 +208,9 @@ class CSVImportService:
                 created_user_ids.append(user.id)
 
             except Exception as e:
-                logger.error(f"Failed to create user from row {int(index) + 2}: {str(e)}")  # type: ignore[arg-type]
+                logger.error(
+                    f"Failed to create user from row {int(index) + 2}: {str(e)}"  # type: ignore[arg-type]
+                )  # type: ignore[arg-type]
                 failed_users.append(f"Row {int(index) + 2}: {str(e)}")  # type: ignore[arg-type]
                 continue
 

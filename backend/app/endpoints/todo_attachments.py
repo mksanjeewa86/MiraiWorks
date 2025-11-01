@@ -437,7 +437,9 @@ async def cleanup_orphaned_attachments(
 ):
     """Clean up orphaned attachment records and files (Admin only)."""
     # Check if user is admin (you may need to adjust this based on your role system)
-    if not getattr(current_user, "is_superuser", False):  # Adjust based on your user model
+    if not getattr(
+        current_user, "is_superuser", False
+    ):  # Adjust based on your user model
         raise HTTPException(status_code=403, detail="Admin access required")
 
     result = await todo_attachment.cleanup_orphaned_attachments(db)

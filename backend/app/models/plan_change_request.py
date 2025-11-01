@@ -17,7 +17,9 @@ class PlanChangeRequest(BaseModel):
     __tablename__ = "plan_change_requests"
 
     # Foreign keys
-    company_id: Mapped[int] = mapped_column(Integer, ForeignKey("companies.id"), nullable=False, index=True)
+    company_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("companies.id"), nullable=False, index=True
+    )
     subscription_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("company_subscriptions.id"), nullable=False, index=True
     )
@@ -52,7 +54,9 @@ class PlanChangeRequest(BaseModel):
         Integer, ForeignKey("users.id"), nullable=True
     )  # System admin user ID
     review_message: Mapped[str | None] = mapped_column(Text, nullable=True)
-    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    reviewed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Relationships
     company = relationship("Company", foreign_keys=[company_id])

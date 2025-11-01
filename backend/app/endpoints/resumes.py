@@ -539,7 +539,9 @@ async def bulk_resume_action(
                     db,
                     resume_id,
                     current_user.id,
-                    ResumeUpdate.model_validate({"status": ResumeStatus.ARCHIVED.value}),
+                    ResumeUpdate.model_validate(
+                        {"status": ResumeStatus.ARCHIVED.value}
+                    ),
                 )
             # Add other bulk actions...
 

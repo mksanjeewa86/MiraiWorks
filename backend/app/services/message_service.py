@@ -28,9 +28,7 @@ class MessageService:
         """Send a direct message to another user."""
         # Verify recipient exists and is active
         recipient = await db.execute(
-            select(User).where(
-                User.id == message_data.recipient_id, User.is_active
-            )
+            select(User).where(User.id == message_data.recipient_id, User.is_active)
         )
         if not recipient.scalar_one_or_none():
             raise HTTPException(

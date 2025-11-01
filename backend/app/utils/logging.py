@@ -159,7 +159,10 @@ def log_db_query(
 
 
 def log_error(
-    logger: FilteringBoundLogger, error: Exception, context: str | None = None, **kwargs: Any
+    logger: FilteringBoundLogger,
+    error: Exception,
+    context: str | None = None,
+    **kwargs: Any,
 ) -> None:
     """Log error with context."""
     logger.error(

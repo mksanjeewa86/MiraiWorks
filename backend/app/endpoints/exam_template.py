@@ -50,7 +50,9 @@ async def create_exam_template(
     template_dict = template_data.model_dump()
     template_dict["created_by_id"] = current_user.id
 
-    template = await exam_template_crud.create(db=db, obj_in=ExamTemplateCreate(**template_dict))
+    template = await exam_template_crud.create(
+        db=db, obj_in=ExamTemplateCreate(**template_dict)
+    )
 
     return template
 

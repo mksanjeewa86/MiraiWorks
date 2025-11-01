@@ -34,13 +34,21 @@ class ProfileView(Base):
         nullable=True,
         comment="Company of the viewer",
     )
-    viewer_ip: Mapped[str | None] = mapped_column(String(45), nullable=True, comment="IP address of viewer")
-    viewer_user_agent: Mapped[str | None] = mapped_column(Text, nullable=True, comment="Browser/device info")
+    viewer_ip: Mapped[str | None] = mapped_column(
+        String(45), nullable=True, comment="IP address of viewer"
+    )
+    viewer_user_agent: Mapped[str | None] = mapped_column(
+        Text, nullable=True, comment="Browser/device info"
+    )
     view_duration: Mapped[int | None] = mapped_column(
         Integer, nullable=True, comment="Duration of view in seconds"
     )
-    referrer: Mapped[str | None] = mapped_column(String(500), nullable=True, comment="How they found the profile")
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    referrer: Mapped[str | None] = mapped_column(
+        String(500), nullable=True, comment="How they found the profile"
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, nullable=False, index=True
+    )
 
     # Relationships
     profile_user = relationship(

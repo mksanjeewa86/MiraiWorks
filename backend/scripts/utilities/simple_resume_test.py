@@ -116,7 +116,10 @@ def test_constants():
     print("-" * 40)
 
     try:
-        from utils.constants import ResumeStatus, ResumeVisibility  # type: ignore[import-not-found]
+        from utils.constants import (  # type: ignore[import-not-found]
+            ResumeStatus,
+            ResumeVisibility,
+        )
 
         # Test ResumeStatus values
         assert ResumeStatus.DRAFT == "draft"
@@ -142,7 +145,10 @@ def test_schema_imports():
     print("-" * 40)
 
     try:
-        from schemas.resume import ResumeCreate, ResumeUpdate  # type: ignore[import-not-found]
+        from schemas.resume import (  # type: ignore[import-not-found]
+            ResumeCreate,
+            ResumeUpdate,
+        )
 
         # Test ResumeCreate
         resume_data = ResumeCreate(

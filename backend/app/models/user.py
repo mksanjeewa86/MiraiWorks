@@ -14,26 +14,44 @@ class User(BaseModel):
         nullable=True,
         index=True,
     )
-    email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    email: Mapped[str] = mapped_column(
+        String(255), nullable=False, unique=True, index=True
+    )
     hashed_password: Mapped[str | None] = mapped_column(String(255), nullable=True)
     first_name: Mapped[str] = mapped_column(String(100), nullable=False)
     last_name: Mapped[str] = mapped_column(String(100), nullable=False)
     phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True)
-    is_admin: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True)
-    require_2fa: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True)
-    last_login: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, index=True
+    )
+    is_admin: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, index=True
+    )
+    require_2fa: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, index=True
+    )
+    last_login: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     # Creation tracking
     created_by: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )  # ID of user who created this user (NULL for self-registration)
     # Logical deletion fields
-    is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True)
-    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    is_deleted: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, index=True
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     deleted_by: Mapped[int | None] = mapped_column(Integer, nullable=True)
     # Suspension fields
-    is_suspended: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True)
-    suspended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    is_suspended: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, index=True
+    )
+    suspended_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     suspended_by: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     # Relationships

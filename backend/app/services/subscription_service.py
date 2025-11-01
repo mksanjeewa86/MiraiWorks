@@ -143,7 +143,8 @@ class SubscriptionService:
             # Get all system admin emails
             result = await db.execute(
                 select(User).where(
-                    User.role == UserRole.SYSTEM_ADMIN, User.is_active  # type: ignore
+                    User.role == UserRole.SYSTEM_ADMIN,  # type: ignore[arg-type]
+                    User.is_active,
                 )
             )
             system_admins = result.scalars().all()

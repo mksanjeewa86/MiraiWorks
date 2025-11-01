@@ -21,28 +21,40 @@ class ExternalCalendarAccount(BaseModel):
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     provider: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
-    provider_account_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    provider_account_id: Mapped[str] = mapped_column(
+        String(255), nullable=False, index=True
+    )
     email: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     display_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # OAuth tokens (encrypted in production)
     access_token: Mapped[str | None] = mapped_column(Text, nullable=True)
     refresh_token: Mapped[str | None] = mapped_column(Text, nullable=True)
-    token_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    token_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Calendar-specific data
     calendar_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    calendar_timezone: Mapped[str | None] = mapped_column(String(100), nullable=True, default="UTC")
+    calendar_timezone: Mapped[str | None] = mapped_column(
+        String(100), nullable=True, default="UTC"
+    )
 
     # Sync settings
-    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, index=True)
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, index=True
+    )
     sync_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    last_sync_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_sync_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     sync_token: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Webhook settings
     webhook_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    webhook_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    webhook_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Relationships
     user = relationship("User")
@@ -95,7 +107,9 @@ class SyncedEvent(BaseModel):
     )
 
     # External event data
-    external_event_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    external_event_id: Mapped[str] = mapped_column(
+        String(255), nullable=False, index=True
+    )
     external_calendar_id: Mapped[str] = mapped_column(String(255), nullable=False)
 
     # Event details
@@ -104,8 +118,12 @@ class SyncedEvent(BaseModel):
     location: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     # Timing
-    start_datetime: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
-    end_datetime: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    start_datetime: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, index=True
+    )
+    end_datetime: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, index=True
+    )
     timezone: Mapped[str | None] = mapped_column(String(100), nullable=True)
     is_all_day: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
@@ -120,7 +138,9 @@ class SyncedEvent(BaseModel):
     visibility: Mapped[str | None] = mapped_column(
         String(50), nullable=True, default="default"
     )  # public, private, default
-    last_modified: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_modified: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     etag: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # Internal linking

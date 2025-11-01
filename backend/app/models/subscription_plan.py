@@ -35,7 +35,9 @@ class SubscriptionPlan(BaseModel):
     max_storage_gb: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     # Plan status
-    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, index=True)
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, index=True
+    )
     is_public: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=True
     )  # Show in public pricing page

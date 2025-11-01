@@ -185,9 +185,7 @@ class CRUDMBTIQuestion(CRUDBase[MBTIQuestion, Any, Any]):
         """Get all active questions for a version."""
         query = (
             select(MBTIQuestion)
-            .where(
-                and_(MBTIQuestion.is_active, MBTIQuestion.version == version)
-            )
+            .where(and_(MBTIQuestion.is_active, MBTIQuestion.version == version))
             .order_by(MBTIQuestion.question_number)
         )
 

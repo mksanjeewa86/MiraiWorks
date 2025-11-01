@@ -55,9 +55,15 @@ class Interview(BaseModel):
     )  # video, phone, in_person
 
     # Scheduling (finalized details)
-    scheduled_start: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
-    scheduled_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    timezone: Mapped[str | None] = mapped_column(String(100), nullable=True, default="UTC")
+    scheduled_start: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, index=True
+    )
+    scheduled_end: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    timezone: Mapped[str | None] = mapped_column(
+        String(100), nullable=True, default="UTC"
+    )
     location: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     # Meeting details
@@ -67,7 +73,9 @@ class Interview(BaseModel):
     meeting_password: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
     # Additional data
-    duration_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True, default=60)
+    duration_minutes: Mapped[int | None] = mapped_column(
+        Integer, nullable=True, default=60
+    )
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     preparation_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
@@ -78,16 +86,24 @@ class Interview(BaseModel):
     confirmed_by: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
-    confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    confirmed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     cancelled_by: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
-    cancelled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    cancelled_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     cancellation_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Soft delete
-    is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True)
-    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    is_deleted: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, index=True
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Relationships (using noload to prevent lazy loading in async context)
     candidate = relationship("User", foreign_keys=[candidate_id], lazy="noload")
@@ -152,8 +168,12 @@ class InterviewProposal(BaseModel):
     )  # candidate, employer, recruiter
 
     # Time slot
-    start_datetime: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
-    end_datetime: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    start_datetime: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, index=True
+    )
+    end_datetime: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     timezone: Mapped[str] = mapped_column(String(100), nullable=False, default="UTC")
 
     # Additional details
@@ -169,11 +189,15 @@ class InterviewProposal(BaseModel):
     responded_by: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
-    responded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    responded_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     response_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Expiration
-    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, index=True
+    )
 
     # Relationships
     interview = relationship("Interview", back_populates="proposals")

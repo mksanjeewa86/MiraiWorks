@@ -24,25 +24,35 @@ class CompanySubscription(BaseModel):
     )
 
     # Subscription status
-    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, index=True)
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, index=True
+    )
     is_trial: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     # Subscription period
     start_date: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
-    end_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    trial_end_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    end_date: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    trial_end_date: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Billing
     billing_cycle: Mapped[str] = mapped_column(
         String(20), nullable=False, default="monthly"
     )  # 'monthly', 'yearly'
-    next_billing_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    next_billing_date: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     auto_renew: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
     # Cancellation
-    cancelled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    cancelled_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     cancellation_reason: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # Relationships

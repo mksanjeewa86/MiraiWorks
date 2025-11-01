@@ -15,14 +15,24 @@ class RefreshToken(Base):
     user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    token_hash: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
-    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
-    is_revoked: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True)
-    remember_me: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True)
+    token_hash: Mapped[str] = mapped_column(
+        String(255), nullable=False, unique=True, index=True
+    )
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, index=True
+    )
+    is_revoked: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, index=True
+    )
+    remember_me: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, index=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
-    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Relationships
     user = relationship("User", back_populates="refresh_tokens")
@@ -38,13 +48,21 @@ class PasswordResetRequest(Base):
     user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    token_hash: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
-    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
-    is_used: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True)
+    token_hash: Mapped[str] = mapped_column(
+        String(255), nullable=False, unique=True, index=True
+    )
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, index=True
+    )
+    is_used: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, index=True
+    )
     approved_by: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
-    approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    approved_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -65,11 +83,15 @@ class OauthAccount(BaseModel):
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     provider: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
-    provider_user_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    provider_user_id: Mapped[str] = mapped_column(
+        String(255), nullable=False, index=True
+    )
     provider_email: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     access_token: Mapped[str | None] = mapped_column(Text, nullable=True)
     refresh_token: Mapped[str | None] = mapped_column(Text, nullable=True)
-    token_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    token_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Relationships
     user = relationship("User", back_populates="oauth_accounts")

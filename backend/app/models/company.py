@@ -10,7 +10,9 @@ from app.utils.constants import CompanyType
 class Company(BaseModel):
     __tablename__ = "companies"
     name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
-    type: Mapped[CompanyType] = mapped_column(Enum(CompanyType), nullable=False, index=True)
+    type: Mapped[CompanyType] = mapped_column(
+        Enum(CompanyType), nullable=False, index=True
+    )
     email: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     phone: Mapped[str] = mapped_column(String(50), nullable=False)
     website: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -18,10 +20,16 @@ class Company(BaseModel):
     prefecture: Mapped[str | None] = mapped_column(String(50), nullable=True)
     city: Mapped[str | None] = mapped_column(String(100), nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    is_active: Mapped[str] = mapped_column(String(1), nullable=False, default="1", index=True)
+    is_active: Mapped[str] = mapped_column(
+        String(1), nullable=False, default="1", index=True
+    )
     # Logical deletion fields
-    is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True)
-    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    is_deleted: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, index=True
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     deleted_by: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     # Relationships

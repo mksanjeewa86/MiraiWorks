@@ -27,10 +27,7 @@ class CRUDWorkflow(CRUDBase[Workflow, Any, Any]):
     ) -> list[Workflow]:
         """Get multiple workflowes, excluding soft-deleted records."""
         result = await db.execute(
-            select(Workflow)
-            .where(~Workflow.is_deleted)
-            .offset(skip)
-            .limit(limit)
+            select(Workflow).where(~Workflow.is_deleted).offset(skip).limit(limit)
         )
         return list(result.scalars().all())
 

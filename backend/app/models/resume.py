@@ -26,7 +26,9 @@ from app.utils.datetime_utils import get_utc_now
 class Resume(BaseModel):
     __tablename__ = "resumes"
 
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=False, index=True
+    )
 
     # Basic info
     title: Mapped[str] = mapped_column(String(200), nullable=False)
@@ -70,7 +72,9 @@ class Resume(BaseModel):
     custom_css: Mapped[str | None] = mapped_column(Text)
 
     # Japanese-specific fields
-    furigana_name: Mapped[str | None] = mapped_column(String(100))  # phonetic name (furigana)
+    furigana_name: Mapped[str | None] = mapped_column(
+        String(100)
+    )  # phonetic name (furigana)
     birth_date: Mapped[datetime | None] = mapped_column(DateTime)
     gender: Mapped[str | None] = mapped_column(String(10))
     nationality: Mapped[str | None] = mapped_column(String(50))
@@ -91,13 +95,17 @@ class Resume(BaseModel):
 
     # Sharing and public access
     is_public: Mapped[bool | None] = mapped_column(Boolean, default=False)
-    public_url_slug: Mapped[str | None] = mapped_column(String(100), unique=True, index=True)
+    public_url_slug: Mapped[str | None] = mapped_column(
+        String(100), unique=True, index=True
+    )
     share_token: Mapped[str | None] = mapped_column(String(64), unique=True, index=True)
     can_download_pdf: Mapped[bool | None] = mapped_column(Boolean, default=True)
     can_edit: Mapped[bool | None] = mapped_column(Boolean, default=True)
     can_delete: Mapped[bool | None] = mapped_column(Boolean, default=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=get_utc_now, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=get_utc_now, nullable=False
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=get_utc_now, onupdate=get_utc_now, nullable=False
     )
@@ -182,10 +190,14 @@ class Resume(BaseModel):
 class ResumeSection(BaseModel):
     __tablename__ = "resume_sections"
 
-    resume_id: Mapped[int] = mapped_column(Integer, ForeignKey("resumes.id"), nullable=False)
+    resume_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("resumes.id"), nullable=False
+    )
 
     # Section info
-    section_type: Mapped[SectionType] = mapped_column(SQLEnum(SectionType), nullable=False)
+    section_type: Mapped[SectionType] = mapped_column(
+        SQLEnum(SectionType), nullable=False
+    )
     title: Mapped[str] = mapped_column(String(100), nullable=False)
     content: Mapped[str | None] = mapped_column(Text)
 
@@ -203,7 +215,9 @@ class ResumeSection(BaseModel):
 class WorkExperience(BaseModel):
     __tablename__ = "work_experiences"
 
-    resume_id: Mapped[int] = mapped_column(Integer, ForeignKey("resumes.id"), nullable=False)
+    resume_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("resumes.id"), nullable=False
+    )
 
     # Job details
     company_name: Mapped[str] = mapped_column(String(200), nullable=False)
@@ -232,7 +246,9 @@ class WorkExperience(BaseModel):
 class Education(BaseModel):
     __tablename__ = "educations"
 
-    resume_id: Mapped[int] = mapped_column(Integer, ForeignKey("resumes.id"), nullable=False)
+    resume_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("resumes.id"), nullable=False
+    )
 
     # Education details
     institution_name: Mapped[str] = mapped_column(String(200), nullable=False)
@@ -264,7 +280,9 @@ class Education(BaseModel):
 class Skill(BaseModel):
     __tablename__ = "skills"
 
-    resume_id: Mapped[int] = mapped_column(Integer, ForeignKey("resumes.id"), nullable=False)
+    resume_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("resumes.id"), nullable=False
+    )
 
     # Skill details
     name: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -276,7 +294,6 @@ class Skill(BaseModel):
     is_visible: Mapped[bool | None] = mapped_column(Boolean, default=True)
     display_order: Mapped[int | None] = mapped_column(Integer, default=0)
 
-
     # Relationships
     resume = relationship("Resume", back_populates="skills")
 
@@ -284,7 +301,9 @@ class Skill(BaseModel):
 class Project(BaseModel):
     __tablename__ = "projects"
 
-    resume_id: Mapped[int] = mapped_column(Integer, ForeignKey("resumes.id"), nullable=False)
+    resume_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("resumes.id"), nullable=False
+    )
 
     # Project details
     name: Mapped[str] = mapped_column(String(200), nullable=False)
@@ -315,7 +334,9 @@ class Project(BaseModel):
 class Certification(BaseModel):
     __tablename__ = "certifications"
 
-    resume_id: Mapped[int] = mapped_column(Integer, ForeignKey("resumes.id"), nullable=False)
+    resume_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("resumes.id"), nullable=False
+    )
 
     # Certification details
     name: Mapped[str] = mapped_column(String(200), nullable=False)
@@ -335,7 +356,6 @@ class Certification(BaseModel):
     is_visible: Mapped[bool | None] = mapped_column(Boolean, default=True)
     display_order: Mapped[int | None] = mapped_column(Integer, default=0)
 
-
     # Relationships
     resume = relationship("Resume", back_populates="certifications")
 
@@ -343,7 +363,9 @@ class Certification(BaseModel):
 class Language(BaseModel):
     __tablename__ = "languages"
 
-    resume_id: Mapped[int] = mapped_column(Integer, ForeignKey("resumes.id"), nullable=False)
+    resume_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("resumes.id"), nullable=False
+    )
 
     # Language details
     name: Mapped[str] = mapped_column(String(50), nullable=False)
@@ -355,7 +377,6 @@ class Language(BaseModel):
     is_visible: Mapped[bool | None] = mapped_column(Boolean, default=True)
     display_order: Mapped[int | None] = mapped_column(Integer, default=0)
 
-
     # Relationships
     resume = relationship("Resume", back_populates="languages")
 
@@ -363,7 +384,9 @@ class Language(BaseModel):
 class Reference(BaseModel):
     __tablename__ = "references"
 
-    resume_id: Mapped[int] = mapped_column(Integer, ForeignKey("resumes.id"), nullable=False)
+    resume_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("resumes.id"), nullable=False
+    )
 
     # Reference details
     full_name: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -422,10 +445,14 @@ class ResumeTemplate(BaseModel):
 class ResumeShare(BaseModel):
     __tablename__ = "resume_shares"
 
-    resume_id: Mapped[int] = mapped_column(Integer, ForeignKey("resumes.id"), nullable=False)
+    resume_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("resumes.id"), nullable=False
+    )
 
     # Share details
-    share_token: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
+    share_token: Mapped[str] = mapped_column(
+        String(64), nullable=False, unique=True, index=True
+    )
     recipient_email: Mapped[str | None] = mapped_column(String(255))
     recipient_name: Mapped[str | None] = mapped_column(String(100))
 
@@ -443,7 +470,6 @@ class ResumeShare(BaseModel):
     # Tracking
     last_viewed_at: Mapped[datetime | None] = mapped_column(DateTime)
 
-
     # Relationships
     resume = relationship("Resume")
 
@@ -459,22 +485,29 @@ class ResumeShare(BaseModel):
         """Check if share is expired."""
         return bool(
             (self.expires_at and self.expires_at < get_utc_now())
-            or (self.max_views and self.view_count is not None and self.view_count >= self.max_views)
+            or (
+                self.max_views
+                and self.view_count is not None
+                and self.view_count >= self.max_views
+            )
         )
 
 
 class ResumeMessageAttachment(BaseModel):
     __tablename__ = "resume_message_attachments"
 
-    resume_id: Mapped[int] = mapped_column(Integer, ForeignKey("resumes.id"), nullable=False)
-    message_id: Mapped[int] = mapped_column(Integer, ForeignKey("messages.id"), nullable=False)
+    resume_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("resumes.id"), nullable=False
+    )
+    message_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("messages.id"), nullable=False
+    )
 
     # Attachment settings
     auto_attached: Mapped[bool | None] = mapped_column(
         Boolean, default=False
     )  # Automatically attached when contacting
     attachment_format: Mapped[str | None] = mapped_column(String(20), default="pdf")
-
 
     # Relationships
     resume = relationship("Resume")

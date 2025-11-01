@@ -276,7 +276,9 @@ class PublicService:
             .filter(
                 or_(
                     CompanyProfile.custom_slug == slug,
-                    Company.domain.like(f"{slug}.%"),  # Match domain prefix  # type: ignore
+                    Company.domain.like(  # type: ignore[attr-defined]
+                        f"{slug}.%"
+                    ),  # Match domain prefix  # type: ignore
                 ),
                 Company.is_active == "1",
                 CompanyProfile.is_public,

@@ -42,9 +42,15 @@ class VideoCall(BaseModel):
     )
 
     # Call details
-    scheduled_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    scheduled_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    started_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    ended_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="scheduled")
     room_id: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     recording_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -93,8 +99,12 @@ class CallParticipant(BaseModel):
     )
 
     # Participation details
-    joined_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    left_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    joined_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    left_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     connection_quality: Mapped[str | None] = mapped_column(String(20), nullable=True)
     device_info: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
@@ -129,7 +139,9 @@ class RecordingConsent(Base):
 
     # Consent details
     consented: Mapped[bool | None] = mapped_column(Boolean, default=False)
-    consented_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    consented_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
@@ -167,14 +179,18 @@ class CallTranscription(Base):
     transcript_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
     transcript_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     language: Mapped[str | None] = mapped_column(String(10), default="ja")
-    processing_status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending")
+    processing_status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="pending"
+    )
     word_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
-    processed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    processed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Relationships
     video_call = relationship("VideoCall", back_populates="transcriptions")

@@ -116,8 +116,14 @@ class StorageService:
         try:
             # Read file data
             file_data = await file.read()
+            assert file.filename is not None
+            assert file.content_type is not None
             return await self.upload_file_data(
-                file_data, file.filename, file.content_type, user_id, folder  # type: ignore
+                file_data,
+                file.filename,
+                file.content_type,
+                user_id,
+                folder,
             )
 
         except Exception as e:

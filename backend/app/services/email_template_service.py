@@ -17,7 +17,11 @@ class EmailTemplateService:
         self.template_dir = Path(__file__).parent.parent / "templates" / "emails"
         self.base_template_path = self.template_dir / "base.html"
 
-        if JINJA2_AVAILABLE and Environment is not None and FileSystemLoader is not None:
+        if (
+            JINJA2_AVAILABLE
+            and Environment is not None
+            and FileSystemLoader is not None
+        ):
             # Use Jinja2 for proper template rendering
             # Disable autoescape for email templates since they contain HTML content
             self.jinja_env = Environment(

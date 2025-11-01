@@ -26,14 +26,18 @@ class ProfileCertification(BaseModel):
     # Dates
     issue_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     expiry_date: Mapped[date | None] = mapped_column(Date, nullable=True)
-    does_not_expire: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    does_not_expire: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False
+    )
 
     # Credential Information
     credential_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     credential_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     # Badge/Certificate Image
-    certificate_image_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    certificate_image_url: Mapped[str | None] = mapped_column(
+        String(500), nullable=True
+    )
 
     # Description
     description: Mapped[str | None] = mapped_column(Text, nullable=True)

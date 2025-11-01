@@ -157,8 +157,12 @@ class ResumeService:
 
             # Update slug if title changed
             if "title" in update_dict:
+                assert update_data.title is not None
                 new_slug = await self._generate_unique_slug(
-                    db, update_data.title, user_id, resume.id  # type: ignore
+                    db,
+                    update_data.title,
+                    user_id,
+                    resume.id,
                 )
                 resume.slug = new_slug  # type: ignore
 

@@ -62,21 +62,23 @@ fixes = {
 
 for file_path, file_fixes in fixes.items():
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, encoding="utf-8") as f:
             lines = f.readlines()
 
         for line_num, search_str, comment in file_fixes:
             idx = line_num - 1
             if idx < len(lines):
                 line = lines[idx]
-                if search_str in line and '# type: ignore' not in line:
-                    lines[idx] = line.rstrip() + f'  {comment}\n'
+                if search_str in line and "# type: ignore" not in line:
+                    lines[idx] = line.rstrip() + f"  {comment}\n"
 
-        with open(file_path, 'w', encoding='utf-8') as f:
+        with open(file_path, "w", encoding="utf-8") as f:
             f.writelines(lines)
 
         print(f"[OK] Fixed {file_path} ({len(file_fixes)} fixes)")
     except Exception as e:
         print(f"[ERROR] Error fixing {file_path}: {e}")
 
-print(f"\nTotal: {sum(len(fixes) for fixes in fixes.values())} fixes across {len(fixes)} files")
+print(
+    f"\nTotal: {sum(len(fixes) for fixes in fixes.values())} fixes across {len(fixes)} files"
+)

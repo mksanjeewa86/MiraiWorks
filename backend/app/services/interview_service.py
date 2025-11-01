@@ -623,7 +623,8 @@ class InterviewService:
         if calendar_account.provider == "google":
             event_data["attendees"] = attendees
             created_event = await google_calendar_service.create_event(
-                calendar_account, event_data  # type: ignore[call-arg]
+                calendar_account,
+                event_data,  # type: ignore[call-arg]
             )
         elif calendar_account.provider == "microsoft":
             # Microsoft Graph format

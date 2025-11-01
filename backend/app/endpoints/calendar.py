@@ -167,7 +167,8 @@ async def microsoft_oauth_callback(
         user_email = user_info.get("mail") or user_info.get("userPrincipalName")
         if not user_email:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="No email found in user info"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No email found in user info",
             )
         user = await calendar_integration.get_user_by_email(db, user_email)
         if not user:
@@ -346,7 +347,9 @@ async def get_calendars(
     for account in accounts:
         try:
             if account.provider == "google" and account.access_token:
-                calendars = await google_calendar_service.get_calendars(account.access_token)
+                calendars = await google_calendar_service.get_calendars(
+                    account.access_token
+                )
                 for cal in calendars:
                     all_calendars.append(
                         CalendarInfo(

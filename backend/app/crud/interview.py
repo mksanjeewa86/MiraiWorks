@@ -33,10 +33,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
     ) -> list[Interview]:
         """Get multiple interviews, excluding soft-deleted records."""
         result = await db.execute(
-            select(Interview)
-            .where(~Interview.is_deleted)
-            .offset(skip)
-            .limit(limit)
+            select(Interview).where(~Interview.is_deleted).offset(skip).limit(limit)
         )
         return list(result.scalars().all())
 
@@ -46,9 +43,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
         """Get interview with all relationships loaded, excluding soft-deleted."""
         # First get the interview
         result = await db.execute(
-            select(Interview).where(
-                Interview.id == interview_id, ~Interview.is_deleted
-            )
+            select(Interview).where(Interview.id == interview_id, ~Interview.is_deleted)
         )
         interview = result.scalar_one_or_none()
 

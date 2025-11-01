@@ -441,11 +441,19 @@ async def get_my_candidate_workflows(
     """
     if current_user.role == "candidate":
         workflows = await candidate_workflow.get_by_candidate_id(
-            db, candidate_id=current_user.id, status=workflow_status, skip=skip, limit=limit
+            db,
+            candidate_id=current_user.id,
+            status=workflow_status,
+            skip=skip,
+            limit=limit,
         )
     elif current_user.role == "recruiter":
         workflows = await candidate_workflow.get_by_recruiter_id(
-            db, recruiter_id=current_user.id, status=workflow_status, skip=skip, limit=limit
+            db,
+            recruiter_id=current_user.id,
+            status=workflow_status,
+            skip=skip,
+            limit=limit,
         )
     else:
         workflows = []
