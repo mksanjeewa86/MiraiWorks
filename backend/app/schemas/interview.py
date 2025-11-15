@@ -7,12 +7,11 @@ from app.utils.constants import InterviewStatus
 
 
 class InterviewCreate(BaseModel):
-    candidate_id: int
+    assignee_id: int
     recruiter_id: int
     employer_company_id: int
     title: str
     description: str | None = None
-    position_title: str | None = None
     interview_type: str = "video"
     status: str | None = None
     scheduled_start: datetime | None = None
@@ -28,7 +27,6 @@ class InterviewCreate(BaseModel):
 class InterviewUpdate(BaseModel):
     title: str | None = None
     description: str | None = None
-    position_title: str | None = None
     interview_type: str | None = None
     location: str | None = None
     meeting_url: str | None = None
@@ -112,11 +110,10 @@ class InterviewInfo(BaseModel):
     id: int
     title: str
     description: str | None = None
-    position_title: str | None = None
     status: str
     interview_type: str
 
-    candidate: ParticipantInfo
+    assignee: ParticipantInfo
     recruiter: ParticipantInfo
     employer_company_name: str | None = None
 
@@ -171,7 +168,7 @@ class InterviewReschedule(BaseModel):
 
 class InterviewsListRequest(BaseModel):
     status: str | None = None
-    candidate_id: int | None = None
+    assignee_id: int | None = None
     recruiter_id: int | None = None
     employer_company_id: int | None = None
     start_date: datetime | None = None

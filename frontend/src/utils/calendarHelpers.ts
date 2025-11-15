@@ -24,13 +24,13 @@ export const interviewToCalendarEvent = (interview: Interview): CalendarEvent =>
   const getEventTitle = () => {
     switch (interview.status) {
       case 'scheduled':
-        return `Interview: ${interview.position_title || interview.title}`;
+        return `Interview: ${interview.title}`;
       case 'confirmed':
-        return `✓ Interview: ${interview.position_title || interview.title}`;
+        return `✓ Interview: ${interview.title}`;
       case 'cancelled':
-        return `✗ Cancelled: ${interview.position_title || interview.title}`;
+        return `✗ Cancelled: ${interview.title}`;
       default:
-        return `Interview: ${interview.position_title || interview.title}`;
+        return `Interview: ${interview.title}`;
     }
   };
 
@@ -74,8 +74,8 @@ export const interviewToCalendarEvent = (interview: Interview): CalendarEvent =>
   const getAttendees = () => {
     const attendees = [];
 
-    if (interview.candidate?.email) {
-      attendees.push(interview.candidate.email);
+    if (interview.assignee?.email) {
+      attendees.push(interview.assignee.email);
     }
 
     if (interview.recruiter?.email) {

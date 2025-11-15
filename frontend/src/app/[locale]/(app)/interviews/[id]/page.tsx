@@ -23,11 +23,13 @@ import {
 import Link from 'next/link';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { interviewsApi } from '@/api/interviews';
 import { apiClient } from '@/api/apiClient';
 import { API_ENDPOINTS } from '@/api/config';
 import InterviewNotes from '@/components/interview/InterviewNotes';
+import InterviewDeleteModal from '@/components/interviews/InterviewDeleteModal';
 import type { Interview } from '@/types/interview';
 import type { VideoCall } from '@/types/video';
 import { ROUTES } from '@/routes/config';
@@ -79,6 +81,7 @@ const getTypeIcon = (type: string) => {
 function InterviewDetailsContent() {
   const params = useParams();
   const router = useRouter();
+  const { user } = useAuth();
   const { showToast } = useToast();
   const [interview, setInterview] = useState<Interview | null>(null);
   const [videoCall, setVideoCall] = useState<VideoCall | null>(null);
@@ -86,6 +89,38 @@ function InterviewDetailsContent() {
   const [error, setError] = useState<string>('');
 
   const interviewId = typeof params.id === 'string' ? parseInt(params.id) : null;
+
+  // Helper function to check if user has a specific permission
+  const hasPermission = (permission: string): boolean => {
+    if (!user || !user.roles) return false;
+
+    return user.roles.some((userRole) =>
+      userRole.role.permissions?.some((p) => p.name === permission)
+    );
+  };
+
+  // Helper function to check if user can modify interviews
+  const canModifyInterview = () => {
+    return hasPermission('interviews.update');
+  };
+
+  // Helper function to check if user can delete interviews
+  const canDeleteInterview = () => {
+    if (!hasPermission('interviews.delete')) {
+      return false;
+    }
+
+    // Check if current user is the creator of the interview
+    if (!user || !interview || interview.created_by !== user.id) {
+      return false;
+    }
+
+    return true;
+  };
+
+  // Delete modal state
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (!interviewId) {
@@ -125,7 +160,7 @@ function InterviewDetailsContent() {
               errorMessage.includes('No video call found')
             ) {
               const videoCallData = {
-                candidate_id: interview.candidate?.id || interview.candidate_id,
+                candidate_id: interview.assignee?.id || interview.assignee_id,
                 scheduled_at: interview.scheduled_start || new Date().toISOString(),
                 transcription_enabled: true,
                 transcription_language: 'ja',
@@ -152,16 +187,20 @@ function InterviewDetailsContent() {
     fetchInterview();
   }, [interviewId]);
 
-  const handleDelete = async () => {
-    if (
-      !interview ||
-      !window.confirm(
-        'Are you sure you want to delete this interview? This action cannot be undone.'
-      )
-    ) {
-      return;
-    }
+  const handleOpenDeleteModal = () => {
+    setIsDeleteModalOpen(true);
+  };
 
+  const handleCloseDeleteModal = () => {
+    if (!isDeleting) {
+      setIsDeleteModalOpen(false);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!interview) return;
+
+    setIsDeleting(true);
     try {
       await interviewsApi.delete(interview.id);
       showToast({
@@ -177,6 +216,7 @@ function InterviewDetailsContent() {
         title: 'Error',
         message: err instanceof Error ? err.message : 'Failed to delete interview',
       });
+      setIsDeleting(false);
     }
   };
 
@@ -253,7 +293,7 @@ function InterviewDetailsContent() {
                 {interview.title}
               </h1>
               <p className="text-gray-600 text-lg">
-                Interview with {interview.candidate?.full_name || 'Unknown Candidate'}
+                Interview with {interview.assignee?.full_name || 'Unknown Assignee'}
               </p>
             </div>
           </div>
@@ -275,20 +315,24 @@ function InterviewDetailsContent() {
                   <span className="font-medium">Setting up video call...</span>
                 </div>
               ))}
-            <Link
-              href={ROUTES.INTERVIEWS.EDIT(interview.id)}
-              className="group bg-white/80 backdrop-blur-sm hover:bg-white text-gray-700 hover:text-gray-900 border border-gray-200 hover:border-gray-300 px-6 py-3 rounded-xl flex items-center gap-2 shadow-sm hover:shadow-md transition-all duration-200"
-            >
-              <Edit className="h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
-              <span className="font-medium">Edit Interview</span>
-            </Link>
-            <button
-              onClick={handleDelete}
-              className="group bg-red-500/10 hover:bg-red-500 text-red-600 hover:text-white border border-red-200 hover:border-red-500 px-6 py-3 rounded-xl flex items-center gap-2 backdrop-blur-sm transition-all duration-200"
-            >
-              <Trash2 className="h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
-              <span className="font-medium">Delete</span>
-            </button>
+            {canModifyInterview() && (
+              <Link
+                href={ROUTES.INTERVIEWS.EDIT(interview.id)}
+                className="group bg-white/80 backdrop-blur-sm hover:bg-white text-gray-700 hover:text-gray-900 border border-gray-200 hover:border-gray-300 px-6 py-3 rounded-xl flex items-center gap-2 shadow-sm hover:shadow-md transition-all duration-200"
+              >
+                <Edit className="h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
+                <span className="font-medium">Edit Interview</span>
+              </Link>
+            )}
+            {canDeleteInterview() && (
+              <button
+                onClick={handleOpenDeleteModal}
+                className="group bg-red-500/10 hover:bg-red-500 text-red-600 hover:text-white border border-red-200 hover:border-red-500 px-6 py-3 rounded-xl flex items-center gap-2 backdrop-blur-sm transition-all duration-200"
+              >
+                <Trash2 className="h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
+                <span className="font-medium">Delete</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -331,17 +375,6 @@ function InterviewDetailsContent() {
                     {interview.interview_type.replace('_', ' ').toUpperCase()}
                   </div>
                 </div>
-
-                {interview.position_title && (
-                  <div className="md:col-span-2 space-y-2">
-                    <label className="block text-sm font-semibold text-gray-600 uppercase tracking-wide">
-                      Position
-                    </label>
-                    <p className="text-lg font-medium text-gray-900 bg-gradient-to-r from-gray-50 to-gray-100/50 px-4 py-3 rounded-xl border border-gray-200">
-                      {interview.position_title}
-                    </p>
-                  </div>
-                )}
 
                 {interview.description && (
                   <div className="md:col-span-2 space-y-2">
@@ -568,7 +601,7 @@ function InterviewDetailsContent() {
               </div>
 
               <div className="space-y-4">
-                {interview.candidate && (
+                {interview.assignee && (
                   <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
                     <label className="block text-xs font-bold text-blue-600 uppercase tracking-wide mb-2">
                       Candidate
@@ -579,10 +612,10 @@ function InterviewDetailsContent() {
                       </div>
                       <div>
                         <p className="text-sm font-bold text-gray-900">
-                          {interview.candidate.full_name || interview.candidate.email}
+                          {interview.assignee.full_name || interview.assignee.email}
                         </p>
                         <p className="text-sm text-gray-600 font-medium">
-                          {interview.candidate.email}
+                          {interview.assignee.email}
                         </p>
                       </div>
                     </div>
@@ -737,6 +770,15 @@ function InterviewDetailsContent() {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <InterviewDeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleCloseDeleteModal}
+        onConfirm={handleConfirmDelete}
+        interviewTitle={interview?.title || ''}
+        isDeleting={isDeleting}
+      />
     </AppLayout>
   );
 }

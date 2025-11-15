@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { interviewsApi } from '@/api/interviews';
 import InterviewModal from '@/components/interviews/InterviewModal';
+import InterviewDeleteModal from '@/components/interviews/InterviewDeleteModal';
 import type {
   InterviewListItem,
   InterviewStatusFilter,
@@ -35,6 +36,15 @@ function InterviewsPageContent() {
     return !isCandidate && user.roles.length > 0;
   };
 
+  // Helper function to check if user has a specific permission
+  const hasPermission = (permission: string): boolean => {
+    if (!user || !user.roles) return false;
+
+    return user.roles.some((userRole) =>
+      userRole.role.permissions?.some((p) => p.name === permission)
+    );
+  };
+
   // Helper function to check if user can edit/delete interviews
   const canModifyInterviews = () => {
     if (!user || !user.roles) {
@@ -48,8 +58,13 @@ function InterviewsPageContent() {
 
   // Helper function to check if interview can be deleted
   const canDeleteInterview = (interview: InterviewListItem) => {
-    // Cannot delete if user doesn't have modify permissions
-    if (!canModifyInterviews()) {
+    // Check if user has the required permission
+    if (!hasPermission('interviews.delete')) {
+      return false;
+    }
+
+    // Check if current user is the creator of the interview
+    if (!user || interview.created_by !== user.id) {
       return false;
     }
 
@@ -76,6 +91,12 @@ function InterviewsPageContent() {
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const [editingInterviewId, setEditingInterviewId] = useState<number | undefined>();
 
+  // Delete modal state
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletingInterviewId, setDeletingInterviewId] = useState<number | null>(null);
+  const [deletingInterviewTitle, setDeletingInterviewTitle] = useState<string>('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
   // Fetch interviews from API
   useEffect(() => {
     const fetchInterviews = async () => {
@@ -100,7 +121,7 @@ function InterviewsPageContent() {
           response.data?.interviews?.map((interview) => ({
             id: interview.id,
             title: interview.title,
-            candidate_name: interview.candidate?.full_name || 'Unknown Candidate',
+            assignee_name: interview.assignee?.full_name || 'Unknown Assignee',
             recruiter_name: interview.recruiter?.full_name || 'Unknown Recruiter',
             company_name: interview.employer_company_name || 'Unknown Company',
             scheduled_date: interview.scheduled_start
@@ -133,6 +154,7 @@ function InterviewsPageContent() {
             })() as InterviewListItem['status'],
             notes: interview.notes || '',
             created_at: interview.created_at,
+            created_by: interview.created_by,
           })) || [];
 
         setInterviews(interviewsData);
@@ -155,7 +177,7 @@ function InterviewsPageContent() {
     .filter((interview) => {
       const matchesSearch =
         interview.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        interview.candidate_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        interview.assignee_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         interview.company_name.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesStatus = statusFilter === 'all' || interview.status === statusFilter;
@@ -233,30 +255,47 @@ function InterviewsPageContent() {
     );
   };
 
-  const handleDelete = async (id: number, title: string) => {
-    const confirmed = window.confirm(t('delete.confirm', { title }));
+  const handleOpenDeleteModal = (id: number, title: string) => {
+    setDeletingInterviewId(id);
+    setDeletingInterviewTitle(title);
+    setIsDeleteModalOpen(true);
+  };
 
-    if (confirmed) {
-      try {
-        await interviewsApi.delete(id);
-        setInterviews((prev) => prev.filter((interview) => interview.id !== id));
+  const handleCloseDeleteModal = () => {
+    if (!isDeleting) {
+      setIsDeleteModalOpen(false);
+      setDeletingInterviewId(null);
+      setDeletingInterviewTitle('');
+    }
+  };
 
-        showToast({
-          type: 'success',
-          title: t('delete.success.title'),
-          message: t('delete.success.message', { title }),
-        });
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : t('delete.error');
-        setError(errorMessage);
-        console.error('Error deleting interview:', err);
+  const handleConfirmDelete = async () => {
+    if (!deletingInterviewId) return;
 
-        showToast({
-          type: 'error',
-          title: t('delete.errorTitle'),
-          message: errorMessage,
-        });
-      }
+    setIsDeleting(true);
+    try {
+      await interviewsApi.delete(deletingInterviewId);
+      setInterviews((prev) => prev.filter((interview) => interview.id !== deletingInterviewId));
+
+      showToast({
+        type: 'success',
+        title: t('delete.success.title'),
+        message: t('delete.success.message', { title: deletingInterviewTitle }),
+      });
+
+      handleCloseDeleteModal();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : t('delete.error');
+      setError(errorMessage);
+      console.error('Error deleting interview:', err);
+
+      showToast({
+        type: 'error',
+        title: t('delete.errorTitle'),
+        message: errorMessage,
+      });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -290,7 +329,7 @@ function InterviewsPageContent() {
         response.data?.interviews?.map((interview) => ({
           id: interview.id,
           title: interview.title,
-          candidate_name: interview.candidate?.full_name || 'Unknown Candidate',
+          assignee_name: interview.assignee?.full_name || 'Unknown Assignee',
           recruiter_name: interview.recruiter?.full_name || 'Unknown Recruiter',
           company_name: interview.employer_company_name || 'Unknown Company',
           scheduled_date: interview.scheduled_start
@@ -437,8 +476,8 @@ function InterviewsPageContent() {
               >
                 <option value="scheduled_date_asc">{t('filters.sortBy.dateEarliest')}</option>
                 <option value="scheduled_date_desc">{t('filters.sortBy.dateLatest')}</option>
-                <option value="candidate_name_asc">{t('filters.sortBy.candidateAZ')}</option>
-                <option value="candidate_name_desc">{t('filters.sortBy.candidateZA')}</option>
+                <option value="assignee_name_asc">{t('filters.sortBy.candidateAZ')}</option>
+                <option value="assignee_name_desc">{t('filters.sortBy.candidateZA')}</option>
                 <option value="status_asc">{t('filters.sortBy.statusAZ')}</option>
               </select>
             </div>
@@ -522,7 +561,7 @@ function InterviewsPageContent() {
                           <div>
                             <div className="text-sm font-medium text-gray-900 flex items-center gap-2">
                               <User size={14} />
-                              {interview.candidate_name}
+                              {interview.assignee_name}
                             </div>
                             <div className="text-sm text-gray-500">
                               {t('table.recruiter', { name: interview.recruiter_name })}
@@ -563,7 +602,7 @@ function InterviewsPageContent() {
                                 </button>
                                 {canDeleteInterview(interview) ? (
                                   <button
-                                    onClick={() => handleDelete(interview.id, interview.title)}
+                                    onClick={() => handleOpenDeleteModal(interview.id, interview.title)}
                                     className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 hover:text-red-700 rounded-lg transition-colors duration-200"
                                   >
                                     <Trash2 size={14} />
@@ -643,6 +682,15 @@ function InterviewsPageContent() {
         interviewId={editingInterviewId}
         onClose={handleCloseModal}
         onSuccess={handleModalSuccess}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <InterviewDeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleCloseDeleteModal}
+        onConfirm={handleConfirmDelete}
+        interviewTitle={deletingInterviewTitle}
+        isDeleting={isDeleting}
       />
     </AppLayout>
   );

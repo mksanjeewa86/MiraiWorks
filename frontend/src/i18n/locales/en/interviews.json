@@ -96,6 +96,8 @@
   "schedule": {
     "title": "Schedule Interview",
     "subtitle": "Create a new interview session",
+    "editTitle": "Edit Interview",
+    "editSubtitle": "Update interview details and schedule",
     "selectDate": "Select Date",
     "selectTime": "Select Time",
     "selectType": "Interview Type",
@@ -105,14 +107,21 @@
     "interviewers": "Interviewers",
     "submit": "Schedule Interview",
     "submitting": "Scheduling...",
+    "editSubmit": "Save Changes",
+    "editSubmitting": "Saving...",
     "cancel": "Cancel",
     "interviewTitle": "Interview Title",
     "interviewTitlePlaceholder": "e.g., Technical Interview - Frontend Developer",
     "selectCandidate": "Select Candidate",
+    "selectAssignee": "Select Assignee",
     "candidateSearchPlaceholder": "Search candidates...",
+    "assigneeSearchPlaceholder": "Search assignees...",
     "candidateLoadingPlaceholder": "Loading candidates...",
+    "assigneeLoadingPlaceholder": "Loading assignees...",
     "noCandidatesFound": "No candidates found matching your search",
+    "noAssigneesFound": "No assignees found matching your search",
     "noCandidatesAvailable": "No candidates available",
+    "noAssigneesAvailable": "No assignees available",
     "noActiveCandidates": "No active candidates found. Make sure candidates are registered in the system.",
     "positionTitle": "Position Title",
     "positionTitlePlaceholder": "e.g., Senior Frontend Developer",
@@ -149,6 +158,7 @@
     "validation": {
       "titleRequired": "Interview title is required",
       "candidateRequired": "Candidate is required",
+      "assigneeRequired": "Assignee is required",
       "startTimeRequired": "Start time is required",
       "endTimeRequired": "End time is required",
       "endAfterStart": "End time must be after start time",
@@ -196,7 +206,11 @@
     }
   },
   "delete": {
+    "title": "Delete Interview",
     "confirm": "Are you sure you want to delete \"{title}\"?\n\nThis action cannot be undone and will permanently remove the interview and all associated data.",
+    "confirmButton": "Yes, Delete Interview",
+    "cancelButton": "Cancel",
+    "deleting": "Deleting...",
     "success": {
       "title": "Interview Deleted",
       "message": "\"{title}\" has been successfully deleted"

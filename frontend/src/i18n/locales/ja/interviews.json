@@ -96,6 +96,8 @@
   "schedule": {
     "title": "面接をスケジュール",
     "subtitle": "新しい面接セッションを作成",
+    "editTitle": "面接を編集",
+    "editSubtitle": "面接の詳細とスケジュールを更新",
     "selectDate": "日付を選択",
     "selectTime": "時間を選択",
     "selectType": "面接形式",
@@ -105,14 +107,21 @@
     "interviewers": "面接官",
     "submit": "面接をスケジュール",
     "submitting": "スケジュール中...",
+    "editSubmit": "変更を保存",
+    "editSubmitting": "保存中...",
     "cancel": "キャンセル",
     "interviewTitle": "面接タイトル",
     "interviewTitlePlaceholder": "例：技術面接 - フロントエンド開発者",
     "selectCandidate": "候補者を選択",
+    "selectAssignee": "担当者を選択",
     "candidateSearchPlaceholder": "候補者を検索...",
+    "assigneeSearchPlaceholder": "担当者を検索...",
     "candidateLoadingPlaceholder": "候補者を読み込み中...",
+    "assigneeLoadingPlaceholder": "担当者を読み込み中...",
     "noCandidatesFound": "検索条件に一致する候補者が見つかりません",
+    "noAssigneesFound": "検索条件に一致する担当者が見つかりません",
     "noCandidatesAvailable": "利用可能な候補者がいません",
+    "noAssigneesAvailable": "利用可能な担当者がいません",
     "noActiveCandidates": "アクティブな候補者が見つかりません。候補者がシステムに登録されていることを確認してください。",
     "positionTitle": "ポジション名",
     "positionTitlePlaceholder": "例：シニアフロントエンド開発者",
@@ -149,6 +158,7 @@
     "validation": {
       "titleRequired": "面接タイトルは必須です",
       "candidateRequired": "候補者は必須です",
+      "assigneeRequired": "担当者は必須です",
       "startTimeRequired": "開始時刻は必須です",
       "endTimeRequired": "終了時刻は必須です",
       "endAfterStart": "終了時刻は開始時刻より後である必要があります",
@@ -196,7 +206,11 @@
     }
   },
   "delete": {
+    "title": "面接を削除",
     "confirm": "本当に「{title}」を削除しますか？\n\nこの操作は元に戻すことができず、面接と関連するすべてのデータが完全に削除されます。",
+    "confirmButton": "はい、面接を削除",
+    "cancelButton": "キャンセル",
+    "deleting": "削除中...",
     "success": {
       "title": "面接を削除しました",
       "message": "「{title}」が正常に削除されました"

@@ -90,6 +90,7 @@ export interface ConnectedUser {
   full_name: string;
   company_id: number | null;
   company_name: string | null;
+  roles: string[];
   is_active: boolean;
 }
 

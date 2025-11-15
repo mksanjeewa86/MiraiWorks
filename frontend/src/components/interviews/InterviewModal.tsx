@@ -18,9 +18,9 @@ import { Textarea } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { interviewsApi } from '@/api/interviews';
-import { candidatesApi } from '@/api/candidates';
+import { userConnectionsApi } from '@/api/userConnections';
 import type { Interview, InterviewFormData } from '@/types/interview';
-import type { UserManagement } from '@/types/user';
+import type { ConnectedUser } from '@/types/user';
 import type { InterviewModalProps } from '@/types/components';
 
 export default function InterviewModal({
@@ -40,8 +40,7 @@ export default function InterviewModal({
   const [formData, setFormData] = useState<InterviewFormData>({
     title: '',
     description: '',
-    candidate_id: '',
-    position_title: '',
+    assignee_id: '',
     interview_type: 'video',
     scheduled_start: '',
     scheduled_end: '',
@@ -57,12 +56,12 @@ export default function InterviewModal({
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Candidate selection state
-  const [candidates, setCandidates] = useState<UserManagement[]>([]);
-  const [candidatesLoading, setCandidatesLoading] = useState(true);
-  const [candidateSearch, setCandidateSearch] = useState('');
-  const [showCandidateDropdown, setShowCandidateDropdown] = useState(false);
-  const candidateDropdownRef = useRef<HTMLDivElement>(null);
+  // Assignee selection state (connected users only)
+  const [assignees, setAssignees] = useState<ConnectedUser[]>([]);
+  const [assigneesLoading, setAssigneesLoading] = useState(true);
+  const [assigneeSearch, setAssigneeSearch] = useState('');
+  const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false);
+  const assigneeDropdownRef = useRef<HTMLDivElement>(null);
 
   // Initialize form with default times
   useEffect(() => {
@@ -105,8 +104,7 @@ export default function InterviewModal({
         setFormData({
           title: interview.title || '',
           description: interview.description || '',
-          candidate_id: interview.candidate_id?.toString() || '',
-          position_title: interview.position_title || '',
+          assignee_id: interview.assignee_id?.toString() || '',
           interview_type: interview.interview_type || 'video',
           scheduled_start: formatDateTimeLocal(interview.scheduled_start),
           scheduled_end: formatDateTimeLocal(interview.scheduled_end),
@@ -118,9 +116,9 @@ export default function InterviewModal({
           preparation_notes: interview.preparation_notes || '',
         });
 
-        // Set candidate search display
-        if (interview.candidate) {
-          setCandidateSearch(`${interview.candidate.full_name} (${interview.candidate.email})`);
+        // Set assignee search display
+        if (interview.assignee) {
+          setAssigneeSearch(`${interview.assignee.full_name} (${interview.assignee.email})`);
         }
       } catch (error) {
         console.error('Error fetching interview:', error);
@@ -136,39 +134,40 @@ export default function InterviewModal({
     fetchInterview();
   }, [isOpen, mode, interviewId, showToast]);
 
-  // Fetch candidates list
+  // Fetch connected users with candidate role only
   useEffect(() => {
     if (!isOpen) return;
 
-    const fetchCandidates = async () => {
+    const fetchAssignees = async () => {
       try {
-        setCandidatesLoading(true);
-        const response = await candidatesApi.getCandidates({
-          is_active: true,
-          size: 100,
-        });
+        setAssigneesLoading(true);
+        const response = await userConnectionsApi.getMyConnections();
 
         if (response.success && response.data) {
-          setCandidates(response.data.users || []);
+          // Filter to only show active users with 'candidate' role
+          const candidates = response.data.filter(
+            (user) => user.is_active && user.roles?.includes('candidate')
+          );
+          setAssignees(candidates);
         }
       } catch (error) {
-        console.error('Error fetching candidates:', error);
+        console.error('Error fetching connected candidates:', error);
       } finally {
-        setCandidatesLoading(false);
+        setAssigneesLoading(false);
       }
     };
 
-    fetchCandidates();
+    fetchAssignees();
   }, [isOpen]);
 
-  // Handle click outside to close candidate dropdown
+  // Handle click outside to close assignee dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
-        candidateDropdownRef.current &&
-        !candidateDropdownRef.current.contains(event.target as Node)
+        assigneeDropdownRef.current &&
+        !assigneeDropdownRef.current.contains(event.target as Node)
       ) {
-        setShowCandidateDropdown(false);
+        setShowAssigneeDropdown(false);
       }
     };
 
@@ -178,30 +177,30 @@ export default function InterviewModal({
     };
   }, []);
 
-  // Filter candidates based on search
-  const filteredCandidates = candidates.filter((candidate) => {
-    const searchLower = candidateSearch.toLowerCase();
-    const fullName = `${candidate.first_name} ${candidate.last_name}`.toLowerCase();
-    const email = candidate.email.toLowerCase();
+  // Filter assignees based on search
+  const filteredAssignees = assignees.filter((assignee) => {
+    const searchLower = assigneeSearch.toLowerCase();
+    const fullName = `${assignee.first_name} ${assignee.last_name}`.toLowerCase();
+    const email = assignee.email.toLowerCase();
     return fullName.includes(searchLower) || email.includes(searchLower);
   });
 
-  // Handle candidate selection
-  const handleCandidateSelect = (candidate: UserManagement) => {
-    setFormData((prev) => ({ ...prev, candidate_id: candidate.id.toString() }));
-    setCandidateSearch(`${candidate.first_name} ${candidate.last_name} (${candidate.email})`);
-    setShowCandidateDropdown(false);
+  // Handle assignee selection
+  const handleAssigneeSelect = (assignee: ConnectedUser) => {
+    setFormData((prev) => ({ ...prev, assignee_id: assignee.id.toString() }));
+    setAssigneeSearch(`${assignee.first_name} ${assignee.last_name} (${assignee.email})`);
+    setShowAssigneeDropdown(false);
 
-    if (errors.candidate_id) {
-      setErrors((prev) => ({ ...prev, candidate_id: '' }));
+    if (errors.assignee_id) {
+      setErrors((prev) => ({ ...prev, assignee_id: '' }));
     }
   };
 
-  // Handle clear candidate selection
-  const handleClearCandidate = () => {
-    setFormData((prev) => ({ ...prev, candidate_id: '' }));
-    setCandidateSearch('');
-    setShowCandidateDropdown(false);
+  // Handle clear assignee selection
+  const handleClearAssignee = () => {
+    setFormData((prev) => ({ ...prev, assignee_id: '' }));
+    setAssigneeSearch('');
+    setShowAssigneeDropdown(false);
   };
 
   const handleInputChange = (
@@ -325,8 +324,8 @@ export default function InterviewModal({
       newErrors.title = t('validation.titleRequired');
     }
 
-    if (!formData.candidate_id) {
-      newErrors.candidate_id = t('validation.candidateRequired');
+    if (!formData.assignee_id) {
+      newErrors.assignee_id = t('validation.assigneeRequired');
     }
 
     if (!formData.scheduled_start) {
@@ -402,10 +401,9 @@ export default function InterviewModal({
       const interviewData: Partial<Interview> = {
         title: formData.title.trim(),
         description: formData.description.trim() || undefined,
-        candidate_id: parseInt(formData.candidate_id),
+        assignee_id: parseInt(formData.assignee_id),
         recruiter_id: user.id,
         employer_company_id: companyId,
-        position_title: formData.position_title.trim() || undefined,
         interview_type: formData.interview_type,
         scheduled_start: formData.scheduled_start,
         scheduled_end: formData.scheduled_end,
@@ -461,10 +459,10 @@ export default function InterviewModal({
               </div>
               <div className="space-y-1">
                 <DialogTitle className="text-xl font-semibold text-slate-900">
-                  {t('title')}
+                  {mode === 'edit' ? t('editTitle') : t('title')}
                 </DialogTitle>
                 <DialogDescription className="text-sm text-slate-500">
-                  {t('subtitle')}
+                  {mode === 'edit' ? t('editSubtitle') : t('subtitle')}
                 </DialogDescription>
               </div>
             </div>
@@ -516,35 +514,35 @@ export default function InterviewModal({
                     )}
                   </div>
 
-                  {/* Select Candidate */}
+                  {/* Select Assignee */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      {t('selectCandidate')} *
+                      {t('selectAssignee')} *
                     </label>
-                    <div className="relative" ref={candidateDropdownRef}>
+                    <div className="relative" ref={assigneeDropdownRef}>
                       <div className="relative">
                         <Input
                           type="text"
-                          value={candidateSearch}
+                          value={assigneeSearch}
                           onChange={(e) => {
-                            setCandidateSearch(e.target.value);
-                            setShowCandidateDropdown(true);
+                            setAssigneeSearch(e.target.value);
+                            setShowAssigneeDropdown(true);
                           }}
-                          onFocus={() => setShowCandidateDropdown(true)}
+                          onFocus={() => setShowAssigneeDropdown(true)}
                           placeholder={
-                            candidatesLoading
-                              ? t('candidateLoadingPlaceholder')
-                              : t('candidateSearchPlaceholder')
+                            assigneesLoading
+                              ? t('assigneeLoadingPlaceholder')
+                              : t('assigneeSearchPlaceholder')
                           }
-                          disabled={candidatesLoading}
+                          disabled={assigneesLoading}
                           leftIcon={<Search className="h-4 w-4 text-gray-400" />}
-                          className={`pr-16 ${errors.candidate_id ? 'border-red-300' : ''}`}
+                          className={`pr-16 ${errors.assignee_id ? 'border-red-300' : ''}`}
                         />
                         <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1 z-10">
-                          {candidateSearch && (
+                          {assigneeSearch && (
                             <button
                               type="button"
-                              onClick={handleClearCandidate}
+                              onClick={handleClearAssignee}
                               className="text-gray-400 hover:text-gray-600 transition"
                             >
                               <X className="h-4 w-4" />
@@ -552,40 +550,40 @@ export default function InterviewModal({
                           )}
                           <ChevronDown
                             className={`text-gray-400 h-4 w-4 transition-transform ${
-                              showCandidateDropdown ? 'rotate-180' : ''
+                              showAssigneeDropdown ? 'rotate-180' : ''
                             }`}
                           />
                         </div>
                       </div>
 
                       {/* Dropdown */}
-                      {showCandidateDropdown && !candidatesLoading && (
+                      {showAssigneeDropdown && !assigneesLoading && (
                         <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                          {filteredCandidates.length === 0 ? (
+                          {filteredAssignees.length === 0 ? (
                             <div className="px-4 py-3 text-sm text-gray-500">
-                              {candidateSearch
-                                ? t('noCandidatesFound')
-                                : t('noCandidatesAvailable')}
+                              {assigneeSearch
+                                ? t('noAssigneesFound')
+                                : t('noAssigneesAvailable')}
                             </div>
                           ) : (
-                            filteredCandidates.map((candidate) => (
+                            filteredAssignees.map((assignee) => (
                               <div
-                                key={candidate.id}
-                                onClick={() => handleCandidateSelect(candidate)}
+                                key={assignee.id}
+                                onClick={() => handleAssigneeSelect(assignee)}
                                 className="px-4 py-2.5 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
                               >
                                 <div className="flex items-center">
                                   <div className="flex-shrink-0 w-7 h-7 bg-blue-100 rounded-full flex items-center justify-center">
                                     <span className="text-xs font-medium text-blue-600">
-                                      {candidate.first_name.charAt(0)}
-                                      {candidate.last_name.charAt(0)}
+                                      {assignee.first_name.charAt(0)}
+                                      {assignee.last_name.charAt(0)}
                                     </span>
                                   </div>
                                   <div className="ml-2.5">
                                     <div className="text-sm font-medium text-gray-900">
-                                      {candidate.first_name} {candidate.last_name}
+                                      {assignee.first_name} {assignee.last_name}
                                     </div>
-                                    <div className="text-xs text-gray-500">{candidate.email}</div>
+                                    <div className="text-xs text-gray-500">{assignee.email}</div>
                                   </div>
                                 </div>
                               </div>
@@ -594,26 +592,12 @@ export default function InterviewModal({
                         </div>
                       )}
                     </div>
-                    {errors.candidate_id && (
+                    {errors.assignee_id && (
                       <p className="mt-1 text-xs text-red-600 flex items-center">
                         <AlertCircle className="h-3 w-3 mr-1" />
-                        {errors.candidate_id}
+                        {errors.assignee_id}
                       </p>
                     )}
-                  </div>
-
-                  {/* Position Title */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      {t('positionTitle')}
-                    </label>
-                    <Input
-                      type="text"
-                      name="position_title"
-                      value={formData.position_title}
-                      onChange={handleInputChange}
-                      placeholder={t('positionTitlePlaceholder')}
-                    />
                   </div>
 
                   {/* Description */}
@@ -916,8 +900,8 @@ export default function InterviewModal({
             {workflowContext
               ? 'Save & Return to Workflow'
               : saving
-                ? t('submitting')
-                : t('submit')}
+                ? (mode === 'edit' ? t('editSubmitting') : t('submitting'))
+                : (mode === 'edit' ? t('editSubmit') : t('submit'))}
           </Button>
         </DialogFooter>
       </DialogContent>

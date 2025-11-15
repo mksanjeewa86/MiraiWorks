@@ -94,7 +94,7 @@ const DialogOverlay = forwardRef<HTMLDivElement, DialogOverlayProps>(
     return (
       <div
         ref={ref}
-        className={clsx('fixed inset-0 z-50 bg-black/50 backdrop-blur-sm', className)}
+        className={clsx('fixed inset-0 z-50 bg-black/30 backdrop-blur-sm', className)}
         onClick={() => setOpen(false)}
         {...props}
       />

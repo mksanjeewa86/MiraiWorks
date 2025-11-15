@@ -6,6 +6,7 @@ from sqlalchemy.orm import selectinload
 
 from app.models.company import Company
 from app.models.company_connection import CompanyConnection
+from app.models.role import UserRole
 from app.models.user import User
 from app.utils.datetime_utils import get_utc_now
 
@@ -400,7 +401,10 @@ class CompanyConnectionService:
                     ~User.is_deleted,
                 )
             )
-            .options(selectinload(User.company))
+            .options(
+                selectinload(User.company),
+                selectinload(User.user_roles).selectinload(UserRole.role),
+            )
         )
 
         return list(result.scalars().all())

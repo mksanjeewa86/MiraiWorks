@@ -28,12 +28,11 @@ class InterviewService:
     async def create_interview(
         self,
         db: AsyncSession,
-        candidate_id: int,
+        assignee_id: int,
         recruiter_id: int,
         employer_company_id: int,
         title: str,
         description: str | None = None,
-        position_title: str | None = None,
         interview_type: str = "video",
         created_by: int | None = None,
         status: str | None = None,
@@ -46,9 +45,9 @@ class InterviewService:
         notes: str | None = None,
     ) -> Interview:
         """Create a new interview."""
-        # Validate participants exist and have correct roles
+        # Validate participants are connected users
         await self._validate_interview_participants(
-            db, candidate_id, recruiter_id, employer_company_id
+            db, assignee_id, recruiter_id, employer_company_id, created_by
         )
 
         # Get recruiter's company
@@ -70,13 +69,12 @@ class InterviewService:
 
         # Create interview
         interview = Interview(
-            candidate_id=candidate_id,
+            assignee_id=assignee_id,
             recruiter_id=recruiter_id,
             employer_company_id=employer_company_id,
             recruiter_company_id=recruiter_company_id,
             title=title,
             description=description,
-            position_title=position_title,
             interview_type=interview_type,
             status=interview_status,
             created_by=created_by,
@@ -122,7 +120,7 @@ class InterviewService:
         interview_result = await db.execute(
             select(Interview)
             .options(
-                selectinload(Interview.candidate),
+                selectinload(Interview.assignee),
                 selectinload(Interview.recruiter),
                 selectinload(Interview.employer_company),
             )
@@ -188,7 +186,7 @@ class InterviewService:
             select(InterviewProposal)
             .options(
                 selectinload(InterviewProposal.interview).selectinload(
-                    Interview.candidate
+                    Interview.assignee
                 ),
                 selectinload(InterviewProposal.interview).selectinload(
                     Interview.recruiter
@@ -239,7 +237,7 @@ class InterviewService:
         interview_result = await db.execute(
             select(Interview)
             .options(
-                selectinload(Interview.candidate),
+                selectinload(Interview.assignee),
                 selectinload(Interview.recruiter),
                 selectinload(Interview.synced_events),
             )
@@ -286,7 +284,7 @@ class InterviewService:
         interview_result = await db.execute(
             select(Interview)
             .options(
-                selectinload(Interview.candidate),
+                selectinload(Interview.assignee),
                 selectinload(Interview.recruiter),
                 selectinload(Interview.synced_events),
             )
@@ -343,7 +341,7 @@ class InterviewService:
         query = (
             select(Interview)
             .options(
-                selectinload(Interview.candidate),
+                selectinload(Interview.assignee),
                 selectinload(Interview.recruiter),
                 selectinload(Interview.employer_company),
                 selectinload(Interview.proposals).selectinload(
@@ -352,7 +350,7 @@ class InterviewService:
             )
             .where(
                 or_(
-                    Interview.candidate_id == user_id,
+                    Interview.assignee_id == user_id,
                     Interview.recruiter_id == user_id,
                     Interview.created_by == user_id,
                 )
@@ -382,60 +380,33 @@ class InterviewService:
     async def _validate_interview_participants(
         self,
         db: AsyncSession,
-        candidate_id: int,
+        assignee_id: int,
         recruiter_id: int,
         employer_company_id: int,
+        created_by: int | None = None,
     ):
-        """Validate that interview participants have correct roles."""
+        """Validate that interview participants are connected users."""
+        from app.models.user_connection import UserConnection
+        from app.services.user_connection_service import user_connection_service
+
         # Get users
         users_result = await db.execute(
-            select(User).where(User.id.in_([candidate_id, recruiter_id]))
+            select(User).where(User.id.in_([assignee_id, recruiter_id]))
         )
         users = {user.id: user for user in users_result.scalars().all()}
 
-        # Get user roles with role names - use explicit join since relationship loading isn't working
-        user_roles_result = await db.execute(
-            select(UserRoleModel, Role)
-            .join(Role, UserRoleModel.role_id == Role.id)
-            .where(UserRoleModel.user_id.in_([candidate_id, recruiter_id]))
-        )
-
-        # Build user -> roles mapping
-        user_role_names = {}
-        for user_role, role in user_roles_result:
-            if user_role.user_id not in user_role_names:
-                user_role_names[user_role.user_id] = []
-            user_role_names[user_role.user_id].append(role.name)
-
-        # Validate candidate
-        candidate = users.get(candidate_id)
-        if not candidate:
+        # Validate assignee exists
+        assignee = users.get(assignee_id)
+        if not assignee:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Candidate not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Assignee not found"
             )
 
-        candidate_roles = user_role_names.get(candidate_id, [])
-        if UserRole.CANDIDATE.value not in candidate_roles:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Specified user is not a candidate. Roles found: {candidate_roles}, Expected: {UserRole.CANDIDATE.value}",
-            )
-
-        # Validate recruiter
+        # Validate recruiter exists
         recruiter = users.get(recruiter_id)
         if not recruiter:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Recruiter not found"
-            )
-
-        recruiter_roles = user_role_names.get(recruiter_id, [])
-        if not (
-            UserRole.MEMBER.value in recruiter_roles
-            or UserRole.ADMIN.value in recruiter_roles
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Specified user is not a recruiter or company admin. Roles found: {recruiter_roles}",
             )
 
         # Validate employer company exists
@@ -449,12 +420,40 @@ class InterviewService:
                 detail="Employer company not found",
             )
 
+        # Validate that assignee and recruiter are connected if created_by is provided
+        if created_by:
+            # Check if creator is a super admin - they can assign anyone
+            creator_result = await db.execute(select(User).where(User.id == created_by))
+            creator = creator_result.scalar_one_or_none()
+
+            # Skip connection validation for super admins
+            if not (creator and is_super_admin(creator)):
+                # Get creator's connected users
+                connected_users = await user_connection_service.get_connected_users(
+                    db, created_by
+                )
+                connected_user_ids = {user.id for user in connected_users}
+
+                # Validate assignee is connected to creator
+                if assignee_id != created_by and assignee_id not in connected_user_ids:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="Assignee must be a connected user",
+                    )
+
+                # Validate recruiter is connected to creator (unless recruiter is creator)
+                if recruiter_id != created_by and recruiter_id not in connected_user_ids:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="Recruiter must be a connected user",
+                    )
+
     async def _get_proposer_role(
         self, db: AsyncSession, user_id: int, interview: Interview
     ) -> str:
         """Get the role of the user making the proposal."""
-        if user_id == interview.candidate_id:
-            return "candidate"
+        if user_id == interview.assignee_id:
+            return "assignee"
         elif user_id == interview.recruiter_id:
             return "recruiter"
         else:
@@ -497,7 +496,7 @@ class InterviewService:
     ):
         """Check for scheduling conflicts."""
         # Check for overlapping interviews for all participants
-        participant_ids = [interview.candidate_id, interview.recruiter_id]
+        participant_ids = [interview.assignee_id, interview.recruiter_id]
 
         # Get employer users from company (simplified - could be more specific)
         employer_users = await db.execute(
@@ -514,7 +513,7 @@ class InterviewService:
                     [InterviewStatus.CONFIRMED.value, InterviewStatus.IN_PROGRESS.value]
                 ),
                 or_(
-                    Interview.candidate_id.in_(participant_ids),
+                    Interview.assignee_id.in_(participant_ids),
                     Interview.recruiter_id.in_(participant_ids),
                 ),
                 and_(
@@ -563,7 +562,7 @@ class InterviewService:
 
     async def _create_calendar_events(self, db: AsyncSession, interview: Interview):
         """Create calendar events for interview participants."""
-        participants = [interview.candidate, interview.recruiter]
+        participants = [interview.assignee, interview.recruiter]
 
         # Filter out None participants (in case relationships aren't loaded)
         participants = [p for p in participants if p is not None]
@@ -601,7 +600,7 @@ class InterviewService:
 
         event_data = {
             "summary": interview.title,
-            "description": f"Interview: {interview.description or interview.title}\n\nPosition: {interview.position_title or 'N/A'}",
+            "description": f"Interview: {interview.description or interview.title}",
             "location": interview.location or interview.meeting_url,
             "start": {
                 "dateTime": interview.scheduled_start.isoformat(),
@@ -615,8 +614,8 @@ class InterviewService:
 
         # Add attendees
         attendees: list[dict[str, str]] = []
-        if interview.candidate.email:
-            attendees.append({"email": interview.candidate.email})  # type: ignore[call-arg]
+        if interview.assignee.email:
+            attendees.append({"email": interview.assignee.email})  # type: ignore[call-arg]
         if interview.recruiter.email:
             attendees.append({"email": interview.recruiter.email})  # type: ignore[call-arg]
 
@@ -667,8 +666,8 @@ class InterviewService:
         # Determine who can respond based on proposer role
         allowed_responders = []
 
-        if proposer_role == "candidate":
-            # Candidate proposed, recruiter or employer can respond
+        if proposer_role == "assignee":
+            # Assignee proposed, recruiter or employer can respond
             allowed_responders = [interview.recruiter_id]
             # Add employer users (simplified)
             employer_users = await db.execute(
@@ -677,12 +676,12 @@ class InterviewService:
             allowed_responders.extend([uid for (uid,) in employer_users.all()])
 
         elif proposer_role == "employer":
-            # Employer proposed, candidate or recruiter can respond
-            allowed_responders = [interview.candidate_id, interview.recruiter_id]
+            # Employer proposed, assignee or recruiter can respond
+            allowed_responders = [interview.assignee_id, interview.recruiter_id]
 
         elif proposer_role == "recruiter":
-            # Recruiter proposed, candidate or employer can respond
-            allowed_responders = [interview.candidate_id]
+            # Recruiter proposed, assignee or employer can respond
+            allowed_responders = [interview.assignee_id]
             employer_users = await db.execute(
                 select(User.id).where(User.company_id == interview.employer_company_id)
             )
@@ -699,7 +698,7 @@ class InterviewService:
     ):
         """Validate user can cancel interview."""
         # Allow participants or admins to cancel
-        allowed_users = [interview.candidate_id, interview.recruiter_id]
+        allowed_users = [interview.assignee_id, interview.recruiter_id]
 
         # Add employer users
         employer_users = await db.execute(

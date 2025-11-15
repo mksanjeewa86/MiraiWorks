@@ -174,7 +174,7 @@ const mapInterviewToEvent = (interview: Interview): CalendarEvent | null => {
 
   return {
     id: `interview-${interview.id}`,
-    title: `Interview: ${interview.position_title || interview.title || 'Untitled interview'}`,
+    title: `Interview: ${interview.title || 'Untitled interview'}`,
     description: interview.description ?? '',
     location: interview.location ?? interview.meeting_url ?? '',
     startDatetime: start.toISOString(),
@@ -185,7 +185,7 @@ const mapInterviewToEvent = (interview: Interview): CalendarEvent | null => {
     organizerEmail: interview.recruiter?.email ?? '',
     organizerName: interview.recruiter?.full_name ?? '',
     meetingUrl: interview.meeting_url ?? '',
-    attendees: [interview.candidate?.email, interview.recruiter?.email].filter(Boolean) as string[],
+    attendees: [interview.assignee?.email, interview.recruiter?.email].filter(Boolean) as string[],
     status: interviewStatusMap[interview.status] ?? 'tentative',
     type: 'interview',
     createdAt: interview.created_at ?? new Date().toISOString(),

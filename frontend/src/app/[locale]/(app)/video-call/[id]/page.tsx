@@ -68,7 +68,7 @@ function VideoCallContent() {
               errorMessage.includes('No video call found')
             ) {
               const videoCallData = {
-                candidate_id: interview.candidate?.id || interview.candidate_id,
+                candidate_id: interview.assignee?.id || interview.assignee_id,
                 scheduled_at: interview.scheduled_start || new Date().toISOString(),
                 transcription_enabled: true,
                 transcription_language: 'ja',
@@ -184,10 +184,7 @@ function VideoCallContent() {
               </Link>
               <div>
                 <h1 className="text-white font-semibold">{interview.title}</h1>
-                <p className="text-gray-400 text-sm">
-                  {interview.position_title && `${interview.position_title} • `}
-                  Video Interview
-                </p>
+                <p className="text-gray-400 text-sm">Video Interview</p>
               </div>
             </div>
           </div>

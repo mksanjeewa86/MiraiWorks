@@ -62,12 +62,11 @@ async def create_interview(
 
     interview = await interview_service.create_interview(
         db=db,
-        candidate_id=interview_data.candidate_id,
+        assignee_id=interview_data.assignee_id,
         recruiter_id=recruiter_id,
         employer_company_id=employer_company_id,
         title=interview_data.title,
         description=interview_data.description,
-        position_title=interview_data.position_title or interview_data.title,
         interview_type=interview_data.interview_type,
         created_by=current_user.id,
         status=interview_data.status,
@@ -181,8 +180,6 @@ async def update_interview(
         interview.title = interview_data.title
     if interview_data.description is not None:
         interview.description = interview_data.description
-    if interview_data.position_title is not None:
-        interview.position_title = interview_data.position_title
     if interview_data.interview_type is not None:
         interview.interview_type = interview_data.interview_type
     if interview_data.location is not None:
@@ -313,8 +310,8 @@ async def get_interview_calendar_events(
             continue
 
         participants = []
-        if interview.candidate.email:
-            participants.append(interview.candidate.email)
+        if interview.assignee.email:
+            participants.append(interview.assignee.email)
         if interview.recruiter.email:
             participants.append(interview.recruiter.email)
 
@@ -392,28 +389,27 @@ async def _format_interview_response(
         id=interview.id,
         title=interview.title,
         description=interview.description,
-        position_title=interview.position_title,
         status=interview.status,
         interview_type=interview.interview_type,
-        candidate=ParticipantInfo(
-            id=interview.candidate.id if interview.candidate else 0,
-            email=interview.candidate.email
-            if interview.candidate
+        assignee=ParticipantInfo(
+            id=interview.assignee.id if interview.assignee else 0,
+            email=interview.assignee.email
+            if interview.assignee
             else "unknown@example.com",
-            full_name=interview.candidate.full_name
-            if interview.candidate
-            else "Unknown Candidate",
-            role="candidate",
-            company_name=interview.candidate.company.name
-            if interview.candidate and interview.candidate.company
+            full_name=interview.assignee.full_name
+            if interview.assignee
+            else "Unknown Assignee",
+            role="assignee",
+            company_name=interview.assignee.company.name
+            if interview.assignee and interview.assignee.company
             else None,
         )
-        if interview.candidate
+        if interview.assignee
         else ParticipantInfo(
             id=0,
             email="unknown@example.com",
-            full_name="Unknown Candidate",
-            role="candidate",
+            full_name="Unknown Assignee",
+            role="assignee",
             company_name=None,
         ),
         recruiter=ParticipantInfo(
@@ -494,7 +490,7 @@ async def _check_interview_access(user: User, interview: Interview) -> bool:
 
     # Participants have access
     if user.id in [
-        interview.candidate_id,
+        interview.assignee_id,
         interview.recruiter_id,
         interview.created_by,
     ]:
@@ -548,7 +544,7 @@ async def create_interview_video_call(
 
     # Create video call with interview link
     video_call_data.interview_id = interview_id
-    video_call_data.candidate_id = interview.candidate_id
+    video_call_data.candidate_id = interview.assignee_id
 
     # Use scheduled time from interview if not provided
     if not video_call_data.scheduled_at and interview.scheduled_start:
@@ -673,6 +669,13 @@ async def delete_interview(
             detail="Access denied to this interview",
         )
 
+    # Check if current user is the creator of the interview
+    if interview.created_by != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the creator of the interview can delete it",
+        )
+
     # Prevent deletion of in-progress or completed interviews
     if interview.status in [InterviewStatus.IN_PROGRESS, InterviewStatus.COMPLETED]:
         raise HTTPException(
@@ -680,8 +683,8 @@ async def delete_interview(
             detail=f"Cannot delete interview with status '{interview.status}'. Only scheduled or cancelled interviews can be deleted.",
         )
 
-    # Delete the interview
-    await interview_crud.remove(db, id=interview_id)
+    # Soft delete the interview
+    await interview_crud.soft_delete(db, id=interview_id)
 
     return {"message": "Interview deleted successfully"}
 

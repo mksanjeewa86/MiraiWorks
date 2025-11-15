@@ -51,13 +51,13 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
             return None
 
         # Manually load relationships to ensure they work
-        if interview.candidate_id:
-            candidate_result = await db.execute(
+        if interview.assignee_id:
+            assignee_result = await db.execute(
                 select(User)
                 .options(joinedload(User.company))
-                .where(User.id == interview.candidate_id)
+                .where(User.id == interview.assignee_id)
             )
-            interview.candidate = candidate_result.scalar_one_or_none()
+            interview.assignee = assignee_result.scalar_one_or_none()
 
         if interview.recruiter_id:
             recruiter_result = await db.execute(
@@ -107,7 +107,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
         query = (
             select(Interview)
             .options(
-                selectinload(Interview.candidate),
+                selectinload(Interview.assignee),
                 selectinload(Interview.recruiter),
                 selectinload(Interview.employer_company),
                 selectinload(Interview.creator),
@@ -115,7 +115,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
             )
             .where(
                 or_(
-                    Interview.candidate_id == user_id,
+                    Interview.assignee_id == user_id,
                     Interview.recruiter_id == user_id,
                     Interview.created_by == user_id,
                 ),
@@ -146,7 +146,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
         """Get count of interviews for a specific user, excluding soft-deleted."""
         query = select(func.count(Interview.id)).where(
             or_(
-                Interview.candidate_id == user_id,
+                Interview.assignee_id == user_id,
                 Interview.recruiter_id == user_id,
                 Interview.created_by == user_id,
             ),
@@ -171,13 +171,13 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
         result = await db.execute(
             select(Interview)
             .options(
-                selectinload(Interview.candidate),
+                selectinload(Interview.assignee),
                 selectinload(Interview.recruiter),
                 selectinload(Interview.employer_company),
             )
             .where(
                 or_(
-                    Interview.candidate_id == user_id,
+                    Interview.assignee_id == user_id,
                     Interview.recruiter_id == user_id,
                     Interview.created_by == user_id,
                 ),
@@ -198,7 +198,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
         total_result = await db.execute(
             select(func.count(Interview.id)).where(
                 or_(
-                    Interview.candidate_id == user_id,
+                    Interview.assignee_id == user_id,
                     Interview.recruiter_id == user_id,
                     Interview.created_by == user_id,
                 ),
@@ -210,7 +210,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
         scheduled_result = await db.execute(
             select(func.count(Interview.id)).where(
                 or_(
-                    Interview.candidate_id == user_id,
+                    Interview.assignee_id == user_id,
                     Interview.recruiter_id == user_id,
                     Interview.created_by == user_id,
                 ),
@@ -223,7 +223,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
         completed_result = await db.execute(
             select(func.count(Interview.id)).where(
                 or_(
-                    Interview.candidate_id == user_id,
+                    Interview.assignee_id == user_id,
                     Interview.recruiter_id == user_id,
                     Interview.created_by == user_id,
                 ),
@@ -236,7 +236,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
         cancelled_result = await db.execute(
             select(func.count(Interview.id)).where(
                 or_(
-                    Interview.candidate_id == user_id,
+                    Interview.assignee_id == user_id,
                     Interview.recruiter_id == user_id,
                     Interview.created_by == user_id,
                 ),
@@ -259,7 +259,7 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
         """Get detailed interview statistics for a user, excluding soft-deleted."""
         # Base condition for user's interviews
         base_condition = or_(
-            Interview.candidate_id == user_id,
+            Interview.assignee_id == user_id,
             Interview.recruiter_id == user_id,
             Interview.created_by == user_id,
         )
@@ -338,11 +338,11 @@ class CRUDInterview(CRUDBase[Interview, InterviewCreate, InterviewUpdate]):
         query = (
             select(Interview)
             .options(
-                selectinload(Interview.candidate), selectinload(Interview.recruiter)
+                selectinload(Interview.assignee), selectinload(Interview.recruiter)
             )
             .where(
                 or_(
-                    Interview.candidate_id == user_id,
+                    Interview.assignee_id == user_id,
                     Interview.recruiter_id == user_id,
                     Interview.created_by == user_id,
                 ),
@@ -417,7 +417,7 @@ class CRUDInterviewProposal(CRUDBase[InterviewProposal, Any, Any]):
             select(InterviewProposal)
             .options(
                 selectinload(InterviewProposal.interview).selectinload(
-                    Interview.candidate
+                    Interview.assignee
                 ),
                 selectinload(InterviewProposal.interview).selectinload(
                     Interview.recruiter
@@ -427,7 +427,7 @@ class CRUDInterviewProposal(CRUDBase[InterviewProposal, Any, Any]):
             .join(Interview)
             .where(
                 or_(
-                    Interview.candidate_id == user_id,
+                    Interview.assignee_id == user_id,
                     Interview.recruiter_id == user_id,
                 ),
                 InterviewProposal.status == "pending",

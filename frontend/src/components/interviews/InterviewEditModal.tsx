@@ -33,7 +33,6 @@ export default function InterviewEditModal({
   const [formData, setFormData] = useState<InterviewEditFormData>({
     title: '',
     description: '',
-    position_title: '',
     interview_type: 'video',
     scheduled_start: '',
     scheduled_end: '',
@@ -74,7 +73,6 @@ export default function InterviewEditModal({
         setFormData({
           title: interview.title || '',
           description: interview.description || '',
-          position_title: interview.position_title || '',
           interview_type: interview.interview_type || 'video',
           scheduled_start: formatDateTimeLocal(interview.scheduled_start),
           scheduled_end: formatDateTimeLocal(interview.scheduled_end),
@@ -213,7 +211,6 @@ export default function InterviewEditModal({
       const updateData: Partial<Interview> = {
         title: formData.title.trim(),
         description: formData.description.trim() || undefined,
-        position_title: formData.position_title.trim() || undefined,
         interview_type: formData.interview_type,
         scheduled_start: formData.scheduled_start,
         scheduled_end: formData.scheduled_end,
@@ -350,20 +347,6 @@ export default function InterviewEditModal({
                         {errors.title}
                       </p>
                     )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Position Title
-                    </label>
-                    <input
-                      type="text"
-                      name="position_title"
-                      value={formData.position_title}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="e.g., Senior Frontend Developer"
-                    />
                   </div>
 
                   <div>

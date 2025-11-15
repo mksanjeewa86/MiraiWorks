@@ -1,12 +1,11 @@
 // Interview Types
 export interface Interview {
   id: number;
-  candidate_id: number;
+  assignee_id: number;
   recruiter_id: number;
   employer_company_id: number;
   title: string;
   description?: string;
-  position_title?: string;
   status:
     | 'pending_schedule'
     | 'scheduled'
@@ -33,7 +32,7 @@ export interface Interview {
   cancellation_reason?: string;
   created_at: string;
   updated_at: string;
-  candidate: {
+  assignee: {
     id: number;
     email: string;
     full_name: string;
@@ -128,7 +127,7 @@ export interface InterviewsListResponse<T = Interview> {
 export interface InterviewListItem {
   id: number;
   title: string;
-  candidate_name: string;
+  assignee_name: string;
   recruiter_name: string;
   company_name: string;
   scheduled_date: string;
@@ -139,19 +138,19 @@ export interface InterviewListItem {
   status: 'scheduled' | 'completed' | 'cancelled' | 'rescheduled' | 'in_progress';
   notes?: string;
   created_at: string;
+  created_by?: number;
 }
 
 // Filter and sort types for interview pages
 export type InterviewStatusFilter = 'all' | InterviewListItem['status'];
 export type InterviewTypeFilter = 'all' | InterviewListItem['type'];
-export type InterviewSortField = 'scheduled_date' | 'candidate_name' | 'status';
+export type InterviewSortField = 'scheduled_date' | 'assignee_name' | 'status';
 
 // Form data types for interview creation and editing
 export interface InterviewFormData {
   title: string;
   description: string;
-  candidate_id: string;
-  position_title: string;
+  assignee_id: string;
   interview_type: 'video' | 'phone' | 'in_person';
   scheduled_start: string;
   scheduled_end: string;
@@ -166,7 +165,6 @@ export interface InterviewFormData {
 export interface InterviewEditFormData {
   title: string;
   description: string;
-  position_title: string;
   interview_type: 'video' | 'phone' | 'in_person';
   scheduled_start: string;
   scheduled_end: string;

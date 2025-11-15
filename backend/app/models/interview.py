@@ -11,7 +11,7 @@ class Interview(BaseModel):
     __tablename__ = "interviews"
 
     # Participants
-    candidate_id: Mapped[int] = mapped_column(
+    assignee_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     recruiter_id: Mapped[int] = mapped_column(
@@ -41,7 +41,6 @@ class Interview(BaseModel):
     # Basic info
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    position_title: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # Status and workflow
     status: Mapped[str] = mapped_column(
@@ -106,7 +105,7 @@ class Interview(BaseModel):
     )
 
     # Relationships (using noload to prevent lazy loading in async context)
-    candidate = relationship("User", foreign_keys=[candidate_id], lazy="noload")
+    assignee = relationship("User", foreign_keys=[assignee_id], lazy="noload")
     recruiter = relationship("User", foreign_keys=[recruiter_id], lazy="noload")
     employer_company = relationship(
         "Company", foreign_keys=[employer_company_id], lazy="noload"
@@ -147,7 +146,7 @@ class Interview(BaseModel):
     )
 
     def __repr__(self):
-        return f"<Interview(id={self.id}, title='{self.title}', status='{self.status}', candidate_id={self.candidate_id})>"
+        return f"<Interview(id={self.id}, title='{self.title}', status='{self.status}', assignee_id={self.assignee_id})>"
 
 
 class InterviewProposal(BaseModel):

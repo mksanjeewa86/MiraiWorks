@@ -81,6 +81,9 @@ async def get_my_connections(
         db=db, user_id=current_user.id
     )
 
+    # If no connections, return empty list (interviews require actual connections)
+    # Note: For system testing, you can return [current_user] here
+
     # Format response with computed fields
     response = []
     for user in connected_users:

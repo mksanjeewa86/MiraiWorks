@@ -110,12 +110,11 @@ async def create_interview_model(
     assert employer_user.company_id is not None
     interview = await interview_service.create_interview(
         db=db_session,
-        candidate_id=candidate_user.id,
+        assignee_id=candidate_user.id,
         recruiter_id=recruiter.id,
         employer_company_id=employer_user.company_id,
         title=title,
         description="Service-created interview",
-        position_title=title,
         interview_type="video",
         created_by=employer_user.id,
         scheduled_start=start,
